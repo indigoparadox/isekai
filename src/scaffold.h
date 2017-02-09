@@ -32,7 +32,7 @@ typedef enum {
 #define scaffold_check_null( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        scaffold_print_error( "Scaffold: Null pointer at %s, line %d!", __FILE__, __LINE__ ); \
+        scaffold_print_error( "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -41,7 +41,7 @@ typedef enum {
 #define scaffold_check_bounds( index, bound ) \
     if( index >= bound ) { \
         scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS; \
-        scaffold_print_error( "Scaffold: Out of bounds at %s, line %d!", __FILE__, __LINE__ ); \
+        scaffold_print_error( "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -50,7 +50,7 @@ typedef enum {
 #define scaffold_check_negative( value ) \
     if( 0 > value ) { \
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
-        scaffold_print_error( "Scaffold: Bad negative at %s, line %d!", __FILE__, __LINE__ ); \
+        scaffold_print_error( "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
