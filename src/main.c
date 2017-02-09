@@ -8,7 +8,14 @@ int main( int argc, char** argv ) {
 
     server_listen( &server );
 
-    getchar();
+    while( TRUE ) {
+
+        connection_lock( &(server.server_connection) );
+        if( !server.running ) {
+            break;
+        }
+        connection_unlock( &(server.server_connection) );
+    }
 
     return 0;
 }
