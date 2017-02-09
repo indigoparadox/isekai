@@ -2,6 +2,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 
 #include <string.h>
@@ -10,6 +11,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netdb.h>
 
 typedef struct _connection {
     int socket;
@@ -28,7 +30,8 @@ typedef struct _connection {
 
 void connection_init( CONNECTION* c );
 void connection_listen(
-    CONNECTION* c, int socket, void* (*callback)( void* client ), void* arg
+    CONNECTION* c, uint16_t port, void* (*callback)( void* client ), void* arg
 );
+void connection_connect( CONNECTION* c, bstring server, uint16_t port );
 
 #endif /* CONNECTION_H */
