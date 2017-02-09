@@ -12,6 +12,7 @@ void vector_init( VECTOR* v ) {
 }
 
 void vector_add( VECTOR* v, void* data ) {
+
     if( 0 == v->size ) {
         v->size = 10;
         v->data = calloc( v->size, sizeof(void*) );
@@ -35,9 +36,7 @@ cleanup:
 }
 
 void vector_set( VECTOR* v, int index, void* data ) {
-    if( index >= v->count ) {
-        goto cleanup;
-    }
+    scaffold_check_bounds( index, v->count );
 
     v->data[index] = data;
 
@@ -49,9 +48,7 @@ cleanup:
 void* vector_get( VECTOR *v, int index ) {
     void* retptr = NULL;
 
-    if( index >= v->count ) {
-        goto cleanup;
-    }
+    scaffold_check_bounds( index, v->count );
 
     retptr = v->data[index];
 
@@ -63,9 +60,7 @@ cleanup:
 void vector_delete( VECTOR *v, int index ) {
     int i, j;
 
-    if( index >= v->count ) {
-        goto cleanup;
-    }
+    scaffold_check_bounds( index, v->count );
 
     for( i = index, j = index; i < v->count; i++ ) {
         v->data[j] = v->data[i];
