@@ -6,5 +6,9 @@ int main( int argc, char** argv ) {
 
     server_init( &server );
 
+    server_listen( &server );
+
+    getchar();
+
     return 0;
 }

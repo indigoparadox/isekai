@@ -7,7 +7,7 @@
 
 typedef struct {
     CONNECTION server_connection;
-    VECTOR* connections;
+    VECTOR connections;
 } SERVER;
 
 void server_init( SERVER* s );
