@@ -2,20 +2,28 @@
 #include "server.h"
 
 int main( int argc, char** argv ) {
-    SERVER server;
+    SERVER* server;
 
-    server_init( &server );
+    server = calloc( 1, sizeof( SERVER ) );
 
-    server_listen( &server );
+    server_init( server );
+
+    server_listen( server );
 
     while( TRUE ) {
 
-        connection_lock( &(server.server_connection) );
-        if( !server.running ) {
+        usleep( 2000 );
+
+        //connection_lock( &(server->server_connection) );
+        if( !server->running ) {
+            //connection_unlock( &(server->server_connection) );
             break;
         }
-        connection_unlock( &(server.server_connection) );
+        //connection_unlock( &(server->server_connection) );
     }
+
+    server_cleanup( server );
+    free( server );
 
     return 0;
 }

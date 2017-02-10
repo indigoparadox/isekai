@@ -31,6 +31,32 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Linker>
+			<Add library="pthread" />
+		</Linker>
+		<Unit filename="src/bstrlib/bstrlib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrlib/bstrlib.h" />
+		<Unit filename="src/connection.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/connection.h" />
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/scaffold.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/scaffold.h" />
+		<Unit filename="src/server.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/server.h" />
+		<Unit filename="src/vector.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/vector.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

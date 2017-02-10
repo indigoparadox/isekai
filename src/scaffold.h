@@ -4,6 +4,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <assert.h>
+
+#define SENTINAL 19691
 
 #ifndef BOOL
 typedef uint8_t BOOL;
