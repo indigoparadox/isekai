@@ -22,7 +22,7 @@ void parser_dispatch( void* caller, bstring line ) {
     const parser_entry* parser_table;
     int parser_table_len;
 
-    if( SERVER_SENTINAL == s_caller->sentinal ) {
+    if( SERVER_SENTINAL == s_caller->self.sentinal ) {
         parser_table = parser_table_server;
         parser_table_len = PARSER_TABLE_SERVER_LEN;
     }
