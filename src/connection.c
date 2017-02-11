@@ -37,7 +37,7 @@ CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     fcntl( new_client->socket, F_SETFL, O_NONBLOCK );
 
     if( 0 > new_client->socket ) {
-        scaffold_print_error( "Error while connecting: %d", new_client->socket );
+        scaffold_print_error( "Error while connecting on %d: %d\n", new_client->socket, errno );
         connection_cleanup( new_client );
         free( new_client );
         goto cleanup;

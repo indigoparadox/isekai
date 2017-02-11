@@ -17,7 +17,7 @@ int main( int argc, char** argv ) {
         server_service_clients( server );
 
         //connection_lock( &(server->server_connection) );
-        if( !server->running ) {
+        if( !server->self.running ) {
             //connection_unlock( &(server->server_connection) );
             break;
         }

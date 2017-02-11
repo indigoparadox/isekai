@@ -5,23 +5,19 @@
 #include "vector.h"
 #include "connection.h"
 #include "parser.h"
+#include "client.h"
 
 typedef struct {
     /* "Parent class" */
-    CONNECTION server_connection;
-
-    /* Items shared between server and client. */
-    BOOL running;
-    bstring buffer;
-    int sentinal;
+    CLIENT self;
 
     /* Items after this line are server-specific. */
-    VECTOR connections;
+    VECTOR clients;
 } SERVER;
 
 #define server_cleanup( s ) \
-    connection_cleanup( &(s->server_connection ) ); \
-    bdestroy( s->buffer );
+    connection_cleanup( &(s->self.link ) ); \
+    bdestroy( s->self.buffer );
 
 #define SERVER_SENTINAL 164641
 
