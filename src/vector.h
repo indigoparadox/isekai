@@ -10,7 +10,6 @@ typedef struct vector_ {
     int count;
 } VECTOR;
 
-#define vector_count( v ) v->count
 #define vector_free( v ) free( v->data )
 
 void vector_init( VECTOR* v );
@@ -19,5 +18,6 @@ void vector_set( VECTOR* v, int index, void* data );
 void vector_set( VECTOR* v, int index, void* data );
 void* vector_get( VECTOR* v, int index );
 void vector_delete( VECTOR* v, int index );
+int vector_count( VECTOR* v );
 
 #endif /* VECTOR_H */

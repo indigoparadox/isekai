@@ -14,6 +14,8 @@ int main( int argc, char** argv ) {
 
         usleep( 2000 );
 
+        server_service_clients( server );
+
         //connection_lock( &(server->server_connection) );
         if( !server->running ) {
             //connection_unlock( &(server->server_connection) );
