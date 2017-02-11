@@ -73,3 +73,7 @@ cleanup:
 
     return;
 }
+
+int vector_count( VECTOR* v ) {
+    return v->count;
+}

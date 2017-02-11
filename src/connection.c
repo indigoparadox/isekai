@@ -1,80 +1,62 @@
 
 #include "connection.h"
 
-void connection_init( CONNECTION* n ) {
-
-    memset( n, '\0', sizeof( CONNECTION ) );
-
-    pthread_mutex_init( &(n->server_lock), NULL );
-
+void connection_init_socket( CONNECTION* n ) {
     n->socket = socket( AF_INET, SOCK_STREAM, 0 );
     scaffold_check_negative( n->socket );
-
-    n->sentinal1 = SENTINAL;
-    n->sentinal2 = SENTINAL;
-    n->sentinal3 = SENTINAL;
-    n->sentinal4 = SENTINAL;
-    n->sentinal5 = SENTINAL;
-    n->sentinal6 = SENTINAL;
-    n->sentinal7 = SENTINAL;
 
 cleanup:
 
     return;
 }
 
-static void* connection_listen_thread( void* arg ) {
-    CONNECTION* n = (CONNECTION*)arg;
-    CONNECTION* new_client = NULL;
+CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
+    static CONNECTION* new_client = NULL;
+    CONNECTION* return_client = NULL;
     unsigned int new_client_addr_len = 0;
-    pthread_t tmp_thread;
-    void* (*tmp_callback)( void* );
 
-    scaffold_print_info( "Now listening for connections..." );
-
-    listen( n->socket, 5 );
-
-    while( n->listening ) {
-        /* This is a special case; don't init because we'll be using accept() */
+    /* This is a special case; don't init because we'll be using accept()   *
+     * We will only init this if it's NULL so that we're not constantly     *
+     * allocing and deallocing memory.                                      */
+    if( NULL == new_client ) {
         new_client = calloc( 1, sizeof( new_client ) );
-
-        connection_init( new_client );
-
-        /* The client's arg will be the server connection's arg, which  *
-         * should nominally be the server object.                       */
-        new_client->arg = n;
-
-        /* Accept and verify the client. */
-        new_client_addr_len = sizeof( n->address );
-        new_client->socket = accept(
-            n->socket, (struct sockaddr*)&(n->address), &new_client_addr_len
-        );
-
-        if( 0 > new_client->socket ) {
-            scaffold_print_error( "Error while connecting: %d", new_client->socket );
-            connection_cleanup( new_client );
-            free( new_client );
-            continue;
-        }
-
-        /* The client seems OK, so launch the handler. */
-        scaffold_print_info( "New client: %d\n", new_client->socket );
-
-        tmp_callback = n->callback;
-
-        pthread_create(
-            &tmp_thread, NULL, tmp_callback, new_client
-        );
-
     }
 
-    return NULL;
+    /* Accept and verify the client. */
+    new_client_addr_len = sizeof( n_server->address );
+    new_client->socket = accept(
+        n_server->socket, (struct sockaddr*)&(n_server->address),
+        &new_client_addr_len
+    );
+
+    /* No connection incoming, this time! */
+    if( 0 > new_client->socket && (EWOULDBLOCK == errno || EAGAIN == errno) ) {
+        goto cleanup;
+    }
+
+    fcntl( new_client->socket, F_SETFL, O_NONBLOCK );
+
+    if( 0 > new_client->socket ) {
+        scaffold_print_error( "Error while connecting: %d", new_client->socket );
+        connection_cleanup( new_client );
+        free( new_client );
+        goto cleanup;
+    }
+
+    /* The client seems OK, so launch the handler. */
+    scaffold_print_info( "New client: %d\n", new_client->socket );
+    return_client = new_client;
+    new_client = NULL;
+
+cleanup:
+
+    return return_client;
 }
 
-void connection_listen(
-    CONNECTION* n, uint16_t port, void* (*callback)( void* client ), void* arg
-) {
+void connection_listen( CONNECTION* n, uint16_t port ) {
     int bind_result;
+
+    fcntl( n->socket, F_SETFL, O_NONBLOCK );
 
     /* Setup and bind the port, first. */
     n->address.sin_family = AF_INET;
@@ -86,11 +68,10 @@ void connection_listen(
     );
     scaffold_check_negative( bind_result );
 
-    /* If we could bind the port, tserver_connectionhen launch the serving connection. */
-    n->callback = callback;
-    //n->arg = arg;
+    /* If we could bind the port, then launch the serving connection. */
     n->listening = TRUE;
-    pthread_create( &(n->thread), NULL, connection_listen_thread, n );
+    listen( n->socket, 5 );
+    scaffold_print_info( "Now listening for connections..." );
 
 cleanup:
 
@@ -126,7 +107,7 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer ) {
     char read_char = '\0';
 
     while( '\n' != read_char ) {
-        last_read_count = recv( n->socket, &read_char, 1, MSG_WAITALL );
+        last_read_count = recv( n->socket, &read_char, 1, 0 );
 
         if( 0 >= last_read_count ) {
             break;
@@ -147,11 +128,9 @@ cleanup:
 }
 
 void connection_lock( CONNECTION* n ) {
-    pthread_mutex_lock( &(n->server_lock) );
 }
 
 void connection_unlock( CONNECTION* n ) {
-    pthread_mutex_unlock( &(n->server_lock) );
 }
 
 void connection_cleanup( CONNECTION* n ) {
