@@ -34,7 +34,5 @@ void parser_dispatch( void* caller, bstring line ) {
         }
     }
 
-cleanup:
-
     bdestroy( test );
 }

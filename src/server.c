@@ -7,6 +7,10 @@ void server_init( SERVER* s ) {
     s->self.sentinal = SERVER_SENTINAL;
 }
 
+void server_cleanup( SERVER* s ) {
+    client_cleanup( &(s->self) );
+}
+
 void server_add_connection( SERVER* s, CONNECTION* n ) {
     connection_lock( &(s->self.link) );
     vector_add( &(s->clients), n );
@@ -21,9 +25,9 @@ CONNECTION* server_get_connection( SERVER* s, int index ) {
     return n;
 }
 
-void server_listen( SERVER* s ) {
+void server_listen( SERVER* s, int port ) {
     s->self.link.arg = s;
-    connection_listen( &(s->self.link), 33080 );
+    connection_listen( &(s->self.link), port );
     if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
         scaffold_print_error( "Unable to bind to specified port. Exiting.\n" );
         server_stop( s );

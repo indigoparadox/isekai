@@ -1,15 +1,6 @@
 
 #include "connection.h"
 
-void connection_init_socket( CONNECTION* n ) {
-    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
-    scaffold_check_negative( n->socket );
-
-cleanup:
-
-    return;
-}
-
 CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     static CONNECTION* new_client = NULL;
     CONNECTION* return_client = NULL;
@@ -56,6 +47,9 @@ cleanup:
 void connection_listen( CONNECTION* n, uint16_t port ) {
     int bind_result;
 
+    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
+    scaffold_check_negative( n->socket );
+
     fcntl( n->socket, F_SETFL, O_NONBLOCK );
 
     /* Setup and bind the port, first. */
@@ -79,26 +73,34 @@ cleanup:
 }
 
 void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
-    struct hostent* server_host;
     int connect_result;
+    struct addrinfo hints,
+        * result;
+    bstring service;
 
-    server_host = gethostbyname( bdata( server ) );
-    scaffold_check_null( server_host );
+    service = bformat( "%d", port );
+    memset( &hints, 0, sizeof hints );
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-    n->address.sin_family = AF_INET;
-    bcopy(
-        (char*)(server_host->h_addr),
-        (char*)(n->address.sin_addr.s_addr),
-        server_host->h_length
-    );
-    n->address.sin_port = htons( port );
+    getaddrinfo( bdata( server ), bdata( service ), &hints, &result );
 
-    connect_result = connect( n->socket, (struct sockaddr*)&(n->address), sizeof( n->address ) );
+    n->socket =
+        socket( result->ai_family, result->ai_socktype, result->ai_protocol );
+
+    connect_result = connect( n->socket, result->ai_addr, result->ai_addrlen);
     scaffold_check_negative( connect_result );
 
 cleanup:
 
+    bdestroy( service );
+    freeaddrinfo( result );
+
     return;
+}
+
+void connection_write_line( CONNECTION* n, bstring buffer ) {
+    send( n->socket, bdata( buffer ), blength( buffer ), 0 );
 }
 
 ssize_t connection_read_line( CONNECTION* n, bstring buffer ) {
@@ -116,12 +118,6 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer ) {
         /* No error and something was read, so add it to the string. */
         total_read_count++;
         bconchar( buffer, read_char );
-    }
-
-cleanup:
-
-    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
-        scaffold_print_error( "Connection: Error while reading line: %d\n", errno );
     }
 
     return total_read_count;

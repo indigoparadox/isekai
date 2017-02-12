@@ -5,6 +5,7 @@
 		<Option title="ProCIRCd" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="src/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
@@ -34,10 +35,19 @@
 		<Linker>
 			<Add library="pthread" />
 		</Linker>
+		<Unit filename="client.c">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="src/" />
+			<Option target="Release" />
+		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.h" />
+		<Unit filename="src/client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/client.h" />
 		<Unit filename="src/connection.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -45,6 +55,10 @@
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/parser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/parser.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
 		</Unit>
