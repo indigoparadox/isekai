@@ -22,10 +22,10 @@ typedef struct _connection {
     struct sockaddr_in address;
 } CONNECTION;
 
-void connection_init_socket( CONNECTION* c );
 CONNECTION* connection_register_incoming( CONNECTION* n_server );
 void connection_listen( CONNECTION* n, uint16_t port );
 void connection_connect( CONNECTION* c, bstring server, uint16_t port );
+void connection_write_line( CONNECTION* n, bstring buffer );
 ssize_t connection_read_line( CONNECTION* c, bstring buffer );
 void connection_lock( CONNECTION* c );
 void connection_unlock( CONNECTION* c );
