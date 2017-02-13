@@ -8,7 +8,7 @@ int main( int argc, char** argv ) {
         buffer;
     int count = 0;
 
-    localhost = bfromcstr( "localhost" );
+    localhost = bfromcstr( "127.0.0.1" );
     buffer = bfromcstr( "" );
 
     server = calloc( 1, sizeof( SERVER ) );
@@ -17,8 +17,15 @@ int main( int argc, char** argv ) {
     server_init( server );
     client_init( client );
 
-    server_listen( server, 33080 );
-    client_connect( client, localhost, 33080 );
+    do {
+        server_listen( server, 33080 );
+        usleep( 1000000 );
+    } while( 0 != scaffold_error );
+
+    do {
+        client_connect( client, localhost, 33080 );
+        usleep( 1000000 );
+    } while( 0 != scaffold_error );
 
     while( TRUE ) {
 

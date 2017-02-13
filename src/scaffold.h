@@ -21,11 +21,12 @@ typedef uint8_t BOOL;
 #endif /* FALSE */
 
 typedef enum {
-    SCAFFOLD_ERROR_NONE = 0,
-    SCAFFOLD_ERROR_MISC = 1,
-    SCAFFOLD_ERROR_NULLPO = 2,
-    SCAFFOLD_ERROR_OUTOFBOUNDS = 3,
-    SCAFFOLD_ERROR_NEGATIVE = 4,
+    SCAFFOLD_ERROR_NONE,
+    SCAFFOLD_ERROR_MISC,
+    SCAFFOLD_ERROR_NULLPO,
+    SCAFFOLD_ERROR_OUTOFBOUNDS,
+    SCAFFOLD_ERROR_NEGATIVE,
+    SCAFFOLD_ERROR_NONZERO,
 } SCAFFOLD_ERROR;
 
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
@@ -54,6 +55,15 @@ typedef enum {
     if( 0 > value ) { \
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
         scaffold_print_error( "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
+#define scaffold_check_nonzero( value ) \
+    if( 0 != value ) { \
+        scaffold_error = SCAFFOLD_ERROR_NONZERO; \
+        scaffold_print_error( "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
