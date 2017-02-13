@@ -6,7 +6,6 @@ int main( int argc, char** argv ) {
     CLIENT* client;
     bstring localhost,
         buffer;
-    int count = 0;
 
     localhost = bfromcstr( "127.0.0.1" );
     buffer = bfromcstr( "" );

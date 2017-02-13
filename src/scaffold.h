@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "bstrlib/bstrlib.h"
+
 #define SENTINAL 19691
 
 #ifndef BOOL
@@ -68,6 +70,8 @@ typedef enum {
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
+
+BOOL scaffold_is_numeric( bstring line );
 
 uint8_t scaffold_error;
 

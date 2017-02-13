@@ -8,7 +8,16 @@ void server_init( SERVER* s ) {
 }
 
 void server_cleanup( SERVER* s ) {
+    int i;
+    CLIENT* c;
+
     /* TODO: Remove clients. */
+    for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
+        c = (CLIENT*)vector_get( &(s->clients), i );
+        client_cleanup( c );
+    }
+    vector_free( &(s->clients) );
+
     client_cleanup( &(s->self) );
 }
 

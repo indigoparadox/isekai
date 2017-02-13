@@ -10,6 +10,10 @@ void client_init( CLIENT* c ) {
 void client_cleanup( CLIENT* c ) {
     connection_cleanup( &(c->link) );
     bdestroy( c->buffer );
+    bdestroy( c->nick );
+    bdestroy( c->realname );
+    bdestroy( c->remote );
+    bdestroy( c->username );
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {

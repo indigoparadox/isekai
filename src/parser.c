@@ -3,6 +3,8 @@
 
 #include "server.h"
 
+#include <ctype.h>
+
 void parser_server_stop( void* local, void* remote, struct bstrList* args ) {
     SERVER* s = (SERVER*)local;
 
@@ -10,36 +12,69 @@ void parser_server_stop( void* local, void* remote, struct bstrList* args ) {
 }
 
 void parser_server_user( void* local, void* remote, struct bstrList* args ) {
-    SERVER* s = (SERVER*)local;
     CLIENT* c = (CLIENT*)remote;
+    int i,
+        consumed = 0;
+    //BOOL has_nick
+
+    /* Start at 1, skipping the command, itself. */
+    for( i = 1 ; args->qty > i ; i++ ) {
+        if( 0 == consumed ) {
+            /* First arg: User */
+            c->username = bstrcpy( args->entry[i] );
+        } else if( 1 == consumed && scaffold_is_numeric( args->entry[i] ) ) {
+            /* Second arg: Hop count */
+        } else if( 2 >= consumed && '*' == args->entry[i]->data[0] ) {
+            /* Second or Third arg: * */
+        } else if( 3 >= consumed && ':' != args->entry[i]->data[0] ) {
+            /* Third or Fourth arg: Remote Host */
+            c->remote = bstrcpy( args->entry[i] );
+        } else if( 3 >= consumed && ':' == args->entry[i]->data[0] ) {
+            /* Fourth or Fifth arg: Real Name */
+            c->realname = bstrcpy( args->entry[i] );
+        }
+        consumed++;
+    }
+
+    /* scaffold_print_debug( "User: %s, Remote: %s\n", bdata( c->username ), bdata( c->remote ) ); */
+}
+
+void parser_server_nick( void* local, void* remote, struct bstrList* args ) {
+    CLIENT* c = (CLIENT*)remote;
+
+    c->nick = bstrcpy( args->entry[1] );
 }
 
 const parser_entry parser_table_server[] = {
     {"stop", 4, parser_server_stop},
     {"USER", 4, parser_server_user},
+    {"NICK", 4, parser_server_nick},
+    {NULL, 0, NULL}
 };
 
-#define PARSER_TABLE_SERVER_LEN 1
-
-void parser_dispatch( void* local, void* remote, bstring line ) {
-    int i;
+void parser_dispatch( void* local, void* remote, const_bstring line ) {
     SERVER* s_local = (SERVER*)local;
     bstring test = bfromcstr( "" );
     const parser_entry* parser_table;
-    int parser_table_len;
     struct bstrList* args;
+    const parser_entry* command;
 
     if( SERVER_SENTINAL == s_local->self.sentinal ) {
         parser_table = parser_table_server;
-        parser_table_len = PARSER_TABLE_SERVER_LEN;
     }
 
     args = bsplit( line, ' ' );
+    scaffold_check_null( args );
 
-    for( i = 0 ; parser_table_len > i ; i++ ) {
-        bassigncstr( test, parser_table[i].command );
-        if( 0 == bstrncmp( test, line, blength( test ) ) ) {
-            parser_table[i].callback( local, remote, args );
+    for(
+        command = &(parser_table[0]);
+        NULL != command->command;
+        command++
+    ) {
+        bassigncstr( test, command->command );
+        scaffold_print_debug( "%s vs %s\n", bdata( line ), bdata( test ) );
+        if( 0 == bstrncmp( line, test, command->command_length ) ) {
+            command->callback( local, remote, args );
         }
     }
 
