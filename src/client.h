@@ -13,6 +13,11 @@ typedef struct {
     /* Items shared between server and client. */
     BOOL running;
     bstring buffer;
+    bstring nick;
+    bstring username;
+    bstring realname;
+    bstring remote;
+    uint8_t mode;
     int sentinal;
 } CLIENT;
 
