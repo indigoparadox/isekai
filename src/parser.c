@@ -23,20 +23,31 @@ void parser_server_user( void* local, void* remote, struct bstrList* args ) {
             /* First arg: User */
             c->username = bstrcpy( args->entry[i] );
         } else if( 1 == consumed && scaffold_is_numeric( args->entry[i] ) ) {
-            /* Second arg: Hop count */
-        } else if( 2 >= consumed && '*' == args->entry[i]->data[0] ) {
+            /* Second arg: Mode */
+            c->mode = atoi( bdata( args->entry[i] ) );
+        } else if( 1 == consumed || 2 == consumed ) {
             /* Second or Third arg: * */
-        } else if( 3 >= consumed && ':' != args->entry[i]->data[0] ) {
+            if( 1 == consumed ) {
+                consumed++;
+            }
+        } else if( 3 == consumed && ':' != args->entry[i]->data[0] ) {
             /* Third or Fourth arg: Remote Host */
             c->remote = bstrcpy( args->entry[i] );
-        } else if( 3 >= consumed && ':' == args->entry[i]->data[0] ) {
+        } else if( 3 == consumed || 4 == consumed ) {
             /* Fourth or Fifth arg: Real Name */
             c->realname = bstrcpy( args->entry[i] );
+            if( 4 == consumed ) {
+                consumed++; /* Extra bump for missing host. */
+            }
+        } else if( 4 < consumed ) {
+            /* More real name. */
+            bconchar( c->realname, ' ' );
+            bconcat( c->realname, args->entry[i] );
         }
         consumed++;
     }
 
-    /* scaffold_print_debug( "User: %s, Remote: %s\n", bdata( c->username ), bdata( c->remote ) ); */
+    scaffold_print_debug( "User: %s, Real: %s, Remote: %s\n", bdata( c->username ), bdata( c->realname ), bdata( c->remote ) );
 }
 
 void parser_server_nick( void* local, void* remote, struct bstrList* args ) {
