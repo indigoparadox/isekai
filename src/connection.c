@@ -1,6 +1,13 @@
 
 #include "connection.h"
 
+static void connection_cleanup_socket( CONNECTION* n ) {
+    if( 0 < n->socket ) {
+        close( n->socket );
+    }
+    n->socket = 0;
+}
+
 CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     static CONNECTION* new_client = NULL;
     CONNECTION* return_client = NULL;
@@ -45,7 +52,7 @@ cleanup:
 }
 
 void connection_listen( CONNECTION* n, uint16_t port ) {
-    int bind_result;
+    int result;
 
     n->socket = socket( AF_INET, SOCK_STREAM, 0 );
     scaffold_check_negative( n->socket );
@@ -57,17 +64,23 @@ void connection_listen( CONNECTION* n, uint16_t port ) {
     n->address.sin_port = htons( port );
     n->address.sin_addr.s_addr = INADDR_ANY;
 
-    bind_result = bind(
+    result = bind(
         n->socket, (struct sockaddr*)&(n->address), sizeof( n->address )
     );
-    scaffold_check_negative( bind_result );
+    scaffold_check_negative( result );
 
     /* If we could bind the port, then launch the serving connection. */
-    n->listening = TRUE;
-    listen( n->socket, 5 );
     scaffold_print_info( "Now listening for connections..." );
+    result = listen( n->socket, 5 );
+    scaffold_check_negative( result );
 
 cleanup:
+
+    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+        connection_cleanup_socket( n );
+    } else {
+        n->listening = TRUE;
+    }
 
     return;
 }
@@ -83,7 +96,8 @@ void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    getaddrinfo( bdata( server ), bdata( service ), &hints, &result );
+    connect_result = getaddrinfo( bdata( server ), bdata( service ), &hints, &result );
+    scaffold_check_nonzero( connect_result );
 
     n->socket =
         socket( result->ai_family, result->ai_socktype, result->ai_protocol );
@@ -92,6 +106,10 @@ void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
     scaffold_check_negative( connect_result );
 
 cleanup:
+
+    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+        connection_cleanup_socket( n );
+    }
 
     bdestroy( service );
     freeaddrinfo( result );
@@ -130,8 +148,5 @@ void connection_unlock( CONNECTION* n ) {
 }
 
 void connection_cleanup( CONNECTION* n ) {
-    if( 0 < n->socket ) {
-        close( n->socket );
-    }
-    n->socket = 0;
+    connection_cleanup_socket( n );
 }

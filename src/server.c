@@ -30,7 +30,6 @@ void server_listen( SERVER* s, int port ) {
     connection_listen( &(s->self.link), port );
     if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
         scaffold_print_error( "Unable to bind to specified port. Exiting.\n" );
-        server_stop( s );
     }
 }
 

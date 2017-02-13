@@ -35,11 +35,6 @@
 		<Linker>
 			<Add library="pthread" />
 		</Linker>
-		<Unit filename="client.c">
-			<Option compilerVar="CC" />
-			<Option virtualFolder="src/" />
-			<Option target="Release" />
-		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
