@@ -10,9 +10,8 @@ typedef struct vector_ {
     int count;
 } VECTOR;
 
-#define vector_free( v ) free( v->data )
-
 void vector_init( VECTOR* v );
+void vector_free( VECTOR* v );
 void vector_add( VECTOR* v, void* data );
 void vector_set( VECTOR* v, int index, void* data );
 void vector_set( VECTOR* v, int index, void* data );

@@ -11,6 +11,10 @@ void vector_init( VECTOR* v ) {
     v->count = 0;
 }
 
+void vector_free( VECTOR* v ) {
+    free( v->data );
+}
+
 void vector_add( VECTOR* v, void* data ) {
 
     if( 0 == v->size ) {
