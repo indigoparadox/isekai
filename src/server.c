@@ -8,21 +8,22 @@ void server_init( SERVER* s ) {
 }
 
 void server_cleanup( SERVER* s ) {
+    /* TODO: Remove clients. */
     client_cleanup( &(s->self) );
 }
 
-void server_add_connection( SERVER* s, CONNECTION* n ) {
+void server_add_client( SERVER* s, CLIENT* n ) {
     connection_lock( &(s->self.link) );
     vector_add( &(s->clients), n );
     connection_unlock( &(s->self.link) );
 }
 
-CONNECTION* server_get_connection( SERVER* s, int index ) {
-    CONNECTION* n;
+CLIENT* server_get_client( SERVER* s, int index ) {
+    CLIENT* c;
     connection_lock( &(s->self.link) );
-    n = vector_get( &(s->clients), index );
+    c = vector_get( &(s->clients), index );
     connection_unlock( &(s->self.link) );
-    return n;
+    return c;
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -35,20 +36,26 @@ void server_listen( SERVER* s, int port ) {
 
 void server_service_clients( SERVER* s ) {
     ssize_t last_read_count = 0;
-    CONNECTION* n = NULL;
+    CLIENT* c = NULL;
+    CONNECTION* n_client = NULL;
     int i = 0;
 
-    n = connection_register_incoming( &(s->self.link) );
-    if( NULL != n ) {
-        server_add_connection( s, n );
+    /* Check for new clients. */
+    n_client = connection_register_incoming( &(s->self.link) );
+    if( NULL != n_client ) {
+        c = calloc( 1, sizeof( CLIENT ) );
+        memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
+        free( n_client ); /* Don't clean up, because data is still valid. */
+        server_add_client( s, c );
     }
 
+    /* Check for commands from existing clients. */
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
         bassigncstr( s->self.buffer, "" );
 
-        n = vector_get( &(s->clients), i );
+        c = vector_get( &(s->clients), i );
 
-        last_read_count = connection_read_line( n, s->self.buffer );
+        last_read_count = connection_read_line( &(c->link), s->self.buffer );
 
         if( 0 >= last_read_count ) {
             /* TODO */
@@ -56,10 +63,11 @@ void server_service_clients( SERVER* s ) {
         }
 
         scaffold_print_debug(
-            "Server: Line received from %d: %s\n", n->socket, bdata( s->self.buffer )
+            "Server: Line received from %d: %s\n",
+            c->link.socket, bdata( s->self.buffer )
         );
 
-        parser_dispatch( s, s->self.buffer );
+        parser_dispatch( s, c, s->self.buffer );
     }
 }
 

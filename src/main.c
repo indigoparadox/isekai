@@ -34,6 +34,7 @@ int main( int argc, char** argv ) {
         server_service_clients( server );
         client_update( client );
 
+#if 0
         if( 3 > count ) {
             bassigncstr( buffer, "foo" );
         } else {
@@ -43,6 +44,7 @@ int main( int argc, char** argv ) {
         client_send( client, buffer );
 
         count++;
+#endif
 
         //connection_lock( &(server->server_connection) );
         if( !server->self.running ) {
