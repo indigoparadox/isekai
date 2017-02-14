@@ -1,7 +1,7 @@
 
 #include "scaffold.h"
 
-const char* scaffold_blank_string = "";
+struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 
 BOOL scaffold_is_numeric( bstring line ) {

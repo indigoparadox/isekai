@@ -195,6 +195,27 @@ cleanup:
     return;
 }
 
+/* Returns 0 if successful or IRC numeric error otherwise. */
+int server_set_client_nick( SERVER* s, CLIENT* c, bstring nick ) {
+    int retval = 0;
+
+    if( NULL == nick ) {
+        retval = ERR_NONICKNAMEGIVEN;
+        goto cleanup;
+    }
+
+    if( NULL != server_get_client_by_nick( s, nick, TRUE ) ) {
+        retval = ERR_NICKNAMEINUSE;
+        goto cleanup;
+    }
+
+    scaffold_copy_string( c->nick, nick );
+
+cleanup:
+
+    return retval;
+}
+
 void server_stop( SERVER* s ) {
     s->self.running = FALSE;
 }

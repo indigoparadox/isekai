@@ -9,6 +9,9 @@ typedef struct {
     void (*callback)( void* local, void* remote, struct bstrList* args );
 } parser_entry;
 
+#define ERR_NONICKNAMEGIVEN 431
+#define ERR_NICKNAMEINUSE 433
+
 /*
 void parser_server_reply_welcome( void* local, void* remote );
 void parser_server_reply_nick( void* local, void* remote, bstring oldnick );
