@@ -35,10 +35,6 @@ typedef enum {
 #define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
-#define scaffold_blank_string( dest ) \
-    dest = bfromcstr( scaffold_blank_string ); \
-    assert( NULL != dest )
-
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
@@ -85,7 +81,7 @@ typedef enum {
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );
 
-const char* scaffold_blank_string;
+struct tagbstring scaffold_empty_string;
 struct tagbstring scaffold_space_string;
 uint8_t scaffold_error;
 

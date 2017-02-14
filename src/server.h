@@ -31,6 +31,7 @@ CLIENT* server_get_client_by_nick( SERVER* s, bstring nick, BOOL lock );
 void server_drop_client( SERVER* s, int index );
 void server_listen( SERVER* s, int port );
 void server_service_clients( SERVER* s );
+int server_set_client_nick( SERVER* s, CLIENT* c, bstring nick );
 void server_stop( SERVER* s );
 
 #endif /* SERVER_H */

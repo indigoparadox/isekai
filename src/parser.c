@@ -134,8 +134,10 @@ cleanup:
 
 static void parser_server_user( void* local, void* remote, struct bstrList* args ) {
     CLIENT* c = (CLIENT*)remote;
+    SERVER* s = (SERVER*)local;
     int i,
         consumed = 0;
+    bstring buffer = NULL;
 
     /* TODO: Error on already registered. */
 
@@ -169,7 +171,18 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
         consumed++;
     }
 
-    scaffold_copy_string( c->nick, c->username );
+    /* Try to set the nick. */
+    if(
+        0 == bstrcmp( &scaffold_empty_string, c->nick ) &&
+        0 != server_set_client_nick( s, c, c->username )
+    ) {
+        buffer = bformat(
+            ":%s 433 %s :Nickname is already in use",
+            bdata( s->self.remote ),
+            bdata( c->username )
+        );
+        client_send( c, buffer );
+    }
 
     //scaffold_print_debug( "User: %s, Real: %s, Remote: %s\n", bdata( c->username ), bdata( c->realname ), bdata( c->remote ) );
 
@@ -179,19 +192,52 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
         parser_server_reply_welcome( local, remote );
     }
     //parser_server_reply_nick( local, remote, NULL );
+
+cleanup:
+
+    bdestroy( buffer );
+
+    return;
 }
 
 static void parser_server_nick( void* local, void* remote, struct bstrList* args ) {
     CLIENT* c = (CLIENT*)remote;
+    SERVER* s = (SERVER*)local;
     bstring oldnick = NULL;
+    bstring newnick = NULL;
+    bstring buffer = NULL;
+    int nick_return;
 
-    /* TODO: Error on already registered. */
+    if( 2 >= args->qty ) {
+        newnick = args->entry[1];
+    }
+
+    nick_return = server_set_client_nick( s, c, newnick );
+    if( ERR_NONICKNAMEGIVEN == nick_return ) {
+        buffer = bformat(
+            ":%s 431 %s :No nickname given",
+            bdata( s->self.remote ),
+            bdata( c->nick )
+        );
+        client_send( c, buffer );
+        goto cleanup;
+    }
+
+    if( ERR_NICKNAMEINUSE == nick_return ) {
+        buffer = bformat(
+            ":%s 433 %s :Nickname is already in use",
+            bdata( s->self.remote ),
+            bdata( c->nick )
+        );
+        client_send( c, buffer );
+        goto cleanup;
+    }
 
     if( 0 < blength( c->nick ) ) {
         oldnick = bstrcpy( c->nick );
     }
 
-    scaffold_copy_string( c->nick, args->entry[1] );
+    scaffold_copy_string( c->nick, newnick );
 
     c->flags |= CLIENT_FLAGS_HAVE_NICK;
 
@@ -209,6 +255,9 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
 cleanup:
 
     bdestroy( oldnick );
+    bdestroy( buffer );
+
+    return;
 }
 
 static void parser_server_quit( void* local, void* remote, struct bstrList* args ) {
