@@ -20,11 +20,8 @@ int main( int argc, char** argv ) {
     localhost = bfromcstr( "127.0.0.1" );
     buffer = bfromcstr( "" );
 
-    server = calloc( 1, sizeof( SERVER ) );
-    client = calloc( 1, sizeof( CLIENT ) );
-
-    server_init( server, localhost );
-    client_init( client );
+    server_new( server, localhost );
+    client_new( client );
 
     do {
         server_listen( server, 33080 );

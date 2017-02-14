@@ -235,10 +235,22 @@ static void parser_server_quit( void* local, void* remote, struct bstrList* args
     bdestroy( space );
 }
 
+static void parser_server_ison( void* local, void* remote, struct bstrList* args ) {
+}
+
+static void parser_server_join( void* local, void* remote, struct bstrList* args ) {
+}
+
+static void parser_server_part( void* local, void* remote, struct bstrList* args ) {
+}
+
 const parser_entry parser_table_server[] = {
     {bsStatic( "USER" ), parser_server_user},
     {bsStatic( "NICK" ), parser_server_nick},
     {bsStatic( "QUIT" ), parser_server_quit},
+    {bsStatic( "ISON" ), parser_server_ison},
+    {bsStatic( "JOIN" ), parser_server_join},
+    {bsStatic( "PART" ), parser_server_part},
     {bsStatic( "" ), NULL}
 };
 
@@ -265,6 +277,7 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
             line, &(command->command), blength( &(command->command) )
         ) ) {
             command->callback( local, remote, args );
+            goto cleanup;
         }
     }
 
