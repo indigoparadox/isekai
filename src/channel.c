@@ -5,6 +5,7 @@ void channel_init( CHANNEL* l, const bstring name ) {
     vector_init( &(l->clients) );
     //l->name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     l->name = bstrcpy( name );
+    l->topic = bfromcstr( "No topic" );
     scaffold_check_null( l->name );
 cleanup:
     return;
@@ -57,6 +58,24 @@ void channel_remove_client( CHANNEL* l, CLIENT* c ) {
 cleanup:
     channel_unlock( l );
     return;
+}
+
+CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick ) {
+    CLIENT* c_test = NULL;
+    int i;
+
+    channel_lock( l );
+    for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+        c_test = (CLIENT*)vector_get( &(l->clients), i );
+        if( NULL != c_test && 0 == bstrcmp( c_test->nick, nick ) ) {
+            goto cleanup;
+        }
+    }
+    c_test = NULL;
+
+cleanup:
+    channel_unlock( l );
+    return c_test;
 }
 
 struct bstrList* channel_list_clients( CHANNEL* l ) {

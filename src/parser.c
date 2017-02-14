@@ -353,7 +353,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
 
     if( TRUE != scaffold_string_is_printable( namehunt ) ) {
         parser_client_printf(
-            c, ":%b 477 %b %b :Channel doesn't support modes",
+            c, ":%b 403 %b %b :No such channel",
             s->self.remote, c->username, namehunt
         );
         goto cleanup;
@@ -369,6 +369,16 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
         scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
     }
 
+    /* Make sure the user is not already in the channel. If they are, then  *
+     * just shut up and explode.                                            */
+    if( NULL != channel_get_client_by_name( l, c->nick ) ) {
+        scaffold_print_debug(
+            "%s already in channel %s; ignoring.\n",
+            bdata( c->nick ), bdata( l->name )
+        );
+        goto cleanup;
+    }
+
     /* Announce the new join. */
     channel_lock( l );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
@@ -381,6 +391,12 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     channel_unlock( l );
 
     channel_add_client( l, c );
+
+    /* Now tell the joining client. */
+    parser_client_printf(
+        c, ":%b!%b@%b JOIN %b",
+        c->nick, c->username, c->remote, l->name
+    );
 
     names = bfromcstr( "" );
     channel_lock( l );
@@ -395,12 +411,17 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     channel_unlock( l );
 
     parser_client_printf(
-        c, ":%b RPL_NAMREPLY %b @ %b :%b",
+        c, ":%b 332 %b %b :%b",
+        s->self.remote, c->nick, l->name, l->topic
+    );
+
+    parser_client_printf(
+        c, ":%b 353 %b = %b :%b",
         s->self.remote, c->nick, l->name, names
     );
 
     parser_client_printf(
-        c, ":%b RPL_ENDOFNAMES %b %b",
+        c, ":%b 366 %b %b :End of NAMES list",
         s->self.remote, c->nick, l->name
     );
 
@@ -417,7 +438,9 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
     SERVER* s = (SERVER*)local;
     CLIENT* c = (CLIENT*)remote;
     CLIENT* c_dest = NULL;
+    CHANNEL* l_dest = NULL;
     bstring msg = NULL;
+    int i;
 
     //bdestroy( scaffold_pop_string( args ) );
     msg = bjoin( args, &scaffold_space_string );
@@ -427,10 +450,31 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
         parser_client_printf(
             c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
         );
+        goto cleanup;
     }
 
-    bdestroy( msg );
+    /* Maybe it's for a channel, instead? */
+    l_dest = server_get_channel_by_name( s, args->entry[1] );
+    if( NULL != l_dest ) {
+        for( i = 0 ; vector_count( &(l_dest->clients) ) > i ; i++ ) {
+            c_dest = (CLIENT*)vector_get( &(l_dest->clients), i );
 
+            if( 0 == bstrcmp( c_dest->nick, c->nick ) ) {
+                /* No local echo! */
+                continue;
+            }
+
+            parser_client_printf(
+                c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+            );
+        }
+        goto cleanup;
+    }
+
+    /* TODO: Handle error? */
+
+cleanup:
+    bdestroy( msg );
     return;
 }
 
