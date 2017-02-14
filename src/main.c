@@ -16,12 +16,14 @@ void handle_interrupt( int arg ) {
 int main( int argc, char** argv ) {
     CLIENT* client;
     bstring localhost,
-        buffer;
+        buffer,
+        channel;
     time_t t;
 
     srand( (unsigned)time(&t) );
 
     localhost = bfromcstr( "127.0.0.1" );
+    channel = bfromcstr( "#testchannel" );
     buffer = bfromcstr( "" );
 
     server_new( server, localhost );
@@ -45,6 +47,8 @@ int main( int argc, char** argv ) {
         client_connect( client, localhost, 33080 );
         usleep( 1000000 );
     } while( 0 != scaffold_error );
+
+    client_join_channel( client, channel );
 
     while( TRUE ) {
 
@@ -75,6 +79,7 @@ int main( int argc, char** argv ) {
 
     bdestroy( localhost );
     bdestroy( buffer );
+    bdestroy( channel );
     server_cleanup( server );
     free( server );
 

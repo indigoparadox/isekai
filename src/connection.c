@@ -154,11 +154,13 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer ) {
     return total_read_count;
 }
 
+/*
 void connection_lock( CONNECTION* n ) {
 }
 
 void connection_unlock( CONNECTION* n ) {
 }
+*/
 
 void connection_assign_remote_name( CONNECTION* n, bstring buffer ) {
 #if 0

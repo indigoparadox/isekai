@@ -11,7 +11,7 @@ typedef struct {
     VECTOR clients;
 } CHANNEL;
 
-void channel_init( CHANNEL* l );
+void channel_init( CHANNEL* l, const bstring name );
 BOOL channel_client_present( CHANNEL* l, CLIENT* c );
 void channel_add_client( CHANNEL* l, CLIENT* c );
 void channel_remove_client( CHANNEL* l, CLIENT* c );

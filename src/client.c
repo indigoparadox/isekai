@@ -44,6 +44,14 @@ cleanup:
 void client_update( CLIENT* c ) {
 }
 
+void client_join_channel( CLIENT* c, bstring name ) {
+    bstring buffer = NULL;
+    buffer = bfromcstr( "JOIN " );
+    bconcat( buffer, name );
+    client_send( c, buffer );
+    bdestroy( buffer );
+}
+
 void client_send( CLIENT* c, bstring buffer ) {
 
     /* TODO: Make sure we're still connected. */

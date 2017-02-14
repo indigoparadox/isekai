@@ -30,3 +30,18 @@ bstring scaffold_pop_string( struct bstrList* list ) {
 
     return popped;
 }
+
+BOOL scaffold_string_is_printable( bstring str ) {
+    BOOL is_printable = TRUE;
+    int i;
+    const char* strdata = bdata( str );
+
+    for( i = 0 ; blength( str ) > i ; i++ ) {
+        if( !scaffold_char_is_printable( strdata[i] ) ) {
+            is_printable = FALSE;
+            break;
+        }
+    }
+
+    return is_printable;
+}

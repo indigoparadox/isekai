@@ -1,11 +1,11 @@
 
 #include "channel.h"
 
-void channel_init( CHANNEL* l ) {
+void channel_init( CHANNEL* l, const bstring name ) {
     vector_init( &(l->clients) );
-    l->name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    //l->name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    l->name = bstrcpy( name );
     scaffold_check_null( l->name );
-
 cleanup:
     return;
 }
@@ -87,8 +87,18 @@ cleanup:
     return list;
 }
 
-void channel_send( CHANNEL* l, bstring message ) {
+void channel_send( CHANNEL* l, bstring buffer ) {
+    CLIENT* c;
+    int i;
 
+    channel_lock( l );
+    for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+        c = (CLIENT*)vector_get( &(l->clients), i );
+        if( NULL != c ) {
+            client_send( c, buffer );
+        }
+    }
+    channel_unlock( l );
 }
 
 void channel_lock( CHANNEL* l ) {

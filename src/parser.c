@@ -307,18 +307,20 @@ static void parser_server_ison( void* local, void* remote, struct bstrList* args
     bconcat( reply, c->nick );
     bconcat( reply, scaffold_static_string( " :" ) );
 
-    connection_lock( &(s->self.link) );
+    server_lock_clients( s, TRUE );
 
     for( i = 1 ; args->qty > i ; i++ ) {
         if( NULL != server_get_client_by_nick(
             s, args->entry[i], FALSE
         ) ) {
             bconcat( reply, args->entry[i] );
-            bconchar( reply, ' ' );
+            if( args->qty - 1 != i ) {
+                bconchar( reply, ' ' );
+            }
         }
     }
 
-    connection_unlock( &(s->self.link) );
+    server_lock_clients( s, FALSE );
 
     client_send( c, reply );
     bdestroy( reply );
@@ -327,6 +329,85 @@ static void parser_server_ison( void* local, void* remote, struct bstrList* args
 }
 
 static void parser_server_join( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    CHANNEL* l = NULL;
+    int i;
+    CLIENT* c_iter = NULL;
+    bstring namehunt = NULL;
+    int bstr_result = 0;
+    bstring names = NULL;
+    int clients_count;
+
+    if( 2 > args->qty ) {
+        parser_client_printf(
+            c, ":%b 461 %b %b :Not enough parameters",
+            s->self.remote, c->username, args->entry[0]
+        );
+        goto cleanup;
+    }
+
+    namehunt = bstrcpy( args->entry[1] );
+    bstr_result = btrimws( namehunt );
+    scaffold_check_nonzero( bstr_result );
+
+    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
+        parser_client_printf(
+            c, ":%b 477 %b %b :Channel doesn't support modes",
+            s->self.remote, c->username, namehunt
+        );
+        goto cleanup;
+    }
+
+    /* Get the channel, or create it if it does not exist. */
+    l = server_get_channel_by_name( s, namehunt );
+    if( NULL == l ) {
+        l = calloc( 1, sizeof( CHANNEL ) );
+        scaffold_check_null( l );
+        channel_init( l, namehunt );
+        server_add_channel( s, l );
+        scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
+    }
+
+    /* Announce the new join. */
+    channel_lock( l );
+    for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+        c_iter = (CLIENT*)vector_get( &(l->clients), i );
+        parser_client_printf(
+            c_iter, ":%b!%b@%b JOIN %b",
+            c->nick, c->username, c->remote, l->name
+        );
+    }
+    channel_unlock( l );
+
+    channel_add_client( l, c );
+
+    names = bfromcstr( "" );
+    channel_lock( l );
+    clients_count = vector_count( &(l->clients) );
+    for( i = 0 ; clients_count > i ; i++ ) {
+        c_iter = (CLIENT*)vector_get( &(l->clients), i );
+        bconcat( names, c_iter->nick );
+        if( clients_count - 1 != i ) {
+            bconchar( names, ' ' );
+        };
+    }
+    channel_unlock( l );
+
+    parser_client_printf(
+        c, ":%b RPL_NAMREPLY %b @ %b :%b",
+        s->self.remote, c->nick, l->name, names
+    );
+
+    parser_client_printf(
+        c, ":%b RPL_ENDOFNAMES %b %b",
+        s->self.remote, c->nick, l->name
+    );
+
+cleanup:
+    bdestroy( names );
+    bdestroy( namehunt );
+    return;
 }
 
 static void parser_server_part( void* local, void* remote, struct bstrList* args ) {
@@ -353,6 +434,31 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
     return;
 }
 
+static void parser_server_who( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    CHANNEL* l = NULL;
+    CLIENT* c_iter = NULL;
+    int i;
+
+    l = server_get_channel_by_name( s, args->entry[1] );
+    scaffold_check_null( l );
+
+    /* Announce the new join. */
+    channel_lock( l );
+    for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+        c_iter = (CLIENT*)vector_get( &(l->clients), i );
+        parser_client_printf(
+            c, ":%b RPL_WHOREPLY %b %b",
+            s->self.remote, c_iter->nick, l->name
+        );
+    }
+    channel_unlock( l );
+
+cleanup:
+    return;
+}
+
 const parser_entry parser_table_server[] = {
     {bsStatic( "USER" ), parser_server_user},
     {bsStatic( "NICK" ), parser_server_nick},
@@ -361,6 +467,7 @@ const parser_entry parser_table_server[] = {
     {bsStatic( "JOIN" ), parser_server_join},
     {bsStatic( "PART" ), parser_server_part},
     {bsStatic( "PRIVMSG" ), parser_server_privmsg},
+    {bsStatic( "WHO" ), parser_server_who},
     {bsStatic( "" ), NULL}
 };
 
