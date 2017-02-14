@@ -39,6 +39,9 @@ typedef enum {
     dest = bfromcstr( scaffold_blank_string ); \
     assert( NULL != dest )
 
+#define scaffold_static_string( cstr ) \
+    blk2bstr( bsStaticBlkParms( cstr ) )
+
 #define scaffold_copy_string( dest, src ) \
     bassignformat( dest, "%s", bdata( src ) ); \
     assert( NULL != dest );
@@ -80,8 +83,10 @@ typedef enum {
     }
 
 BOOL scaffold_is_numeric( bstring line );
+bstring scaffold_pop_string( struct bstrList* list );
 
 const char* scaffold_blank_string;
+struct tagbstring scaffold_space_string;
 uint8_t scaffold_error;
 
 #endif /* SCAFFOLD_H */

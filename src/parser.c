@@ -236,12 +236,70 @@ static void parser_server_quit( void* local, void* remote, struct bstrList* args
 }
 
 static void parser_server_ison( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    int i;
+    bstring reply;
+
+    reply = bfromcstralloc( 128, ":" );
+    bconcat( reply, s->self.remote );
+    bconcat( reply, scaffold_static_string( " 303 " ) );
+    bconcat( reply, c->nick );
+    bconcat( reply, scaffold_static_string( " :" ) );
+
+    connection_lock( &(s->self.link) );
+
+    for( i = 1 ; args->qty > i ; i++ ) {
+        if( NULL != server_get_client_by_nick(
+            s, args->entry[i], FALSE
+        ) ) {
+            bconcat( reply, args->entry[i] );
+            bconchar( reply, ' ' );
+        }
+    }
+
+cleanup:
+
+    connection_unlock( &(s->self.link) );
+
+    client_send( c, reply );
+    bdestroy( reply );
+
+    return;
 }
 
 static void parser_server_join( void* local, void* remote, struct bstrList* args ) {
 }
 
 static void parser_server_part( void* local, void* remote, struct bstrList* args ) {
+}
+
+static void parser_server_privmsg( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    CLIENT* c_dest = NULL;
+    bstring msg = NULL;
+    bstring reply = NULL;
+
+    //bdestroy( scaffold_pop_string( args ) );
+    msg = bjoin( args, &scaffold_space_string );
+
+    c_dest = server_get_client_by_nick( s, args->entry[1], TRUE );
+    if( NULL != c_dest ) {
+        reply = bformat(
+            ":%s!%s@%s %s",
+            bdata( c->nick ),
+            bdata( c->username ),
+            bdata( c->remote ),
+            bdata( msg )
+        );
+        client_send( c_dest, reply );
+    }
+
+    bdestroy( msg );
+    bdestroy( reply );
+
+    return;
 }
 
 const parser_entry parser_table_server[] = {
@@ -251,6 +309,7 @@ const parser_entry parser_table_server[] = {
     {bsStatic( "ISON" ), parser_server_ison},
     {bsStatic( "JOIN" ), parser_server_join},
     {bsStatic( "PART" ), parser_server_part},
+    {bsStatic( "PRIVMSG" ), parser_server_privmsg},
     {bsStatic( "" ), NULL}
 };
 
