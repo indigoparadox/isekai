@@ -9,6 +9,7 @@ void server_init( SERVER* s, bstring myhost ) {
     s->self.remote = bstrcpy( myhost );
     s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
     s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
+    //s->last_serial = SERVER_SERIAL_MIN + rand();
     s->self.sentinal = SERVER_SENTINAL;
 }
 
@@ -189,8 +190,6 @@ void server_service_clients( SERVER* s ) {
         }
 #endif
     }
-
-cleanup:
 
     return;
 }

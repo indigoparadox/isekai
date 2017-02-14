@@ -19,6 +19,7 @@ typedef struct {
     bstring remote;
     uint8_t mode;
     uint8_t flags;
+    //uint64_t serial;
     int sentinal;
 } CLIENT;
 
@@ -28,6 +29,9 @@ typedef struct {
 #define CLIENT_FLAGS_HAVE_NICK 0x08
 
 #define CLIENT_SENTINAL 254542
+
+#define CLIENT_NAME_ALLOC 32
+#define CLIENT_BUFFER_ALLOC 256
 
 #define client_new( c ) \
     c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \

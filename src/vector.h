@@ -14,7 +14,6 @@ void vector_init( VECTOR* v );
 void vector_free( VECTOR* v );
 void vector_add( VECTOR* v, void* data );
 void vector_set( VECTOR* v, int index, void* data );
-void vector_set( VECTOR* v, int index, void* data );
 void* vector_get( VECTOR* v, int index );
 void vector_delete( VECTOR* v, int index );
 int vector_count( VECTOR* v );
