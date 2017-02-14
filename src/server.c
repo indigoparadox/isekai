@@ -100,8 +100,7 @@ void server_service_clients( SERVER* s ) {
     /* Check for new clients. */
     n_client = connection_register_incoming( &(s->self.link) );
     if( NULL != n_client ) {
-        c = calloc( 1, sizeof( CLIENT ) );
-        client_init( c );
+        client_new( c );
         memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
         free( n_client ); /* Don't clean up, because data is still valid. */
 

@@ -29,6 +29,10 @@ typedef struct {
 
 #define CLIENT_SENTINAL 254542
 
+#define client_new( c ) \
+    c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \
+    client_init( c );
+
 void client_init( CLIENT* c );
 void client_cleanup( CLIENT* c );
 void client_connect( CLIENT* c, bstring server, int port );

@@ -17,8 +17,11 @@ typedef struct {
     bstring version;
 } SERVER;
 
-
 #define SERVER_SENTINAL 164641
+
+#define server_new( s, myhost ) \
+    s = (SERVER*)calloc( 1, sizeof( SERVER ) ); \
+    server_init( s, myhost );
 
 void server_init( SERVER* s, bstring myhost );
 void server_cleanup( SERVER* s );
