@@ -8,6 +8,7 @@
 
 typedef struct {
     bstring name;
+    bstring topic;
     VECTOR clients;
 } CHANNEL;
 
@@ -15,6 +16,7 @@ void channel_init( CHANNEL* l, const bstring name );
 BOOL channel_client_present( CHANNEL* l, CLIENT* c );
 void channel_add_client( CHANNEL* l, CLIENT* c );
 void channel_remove_client( CHANNEL* l, CLIENT* c );
+CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick );
 struct bstrList* channel_list_clients( CHANNEL* l );
 void channel_send( CHANNEL* l, bstring message );
 void channel_lock( CHANNEL* l );
