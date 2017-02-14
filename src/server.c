@@ -10,7 +10,6 @@ void server_init( SERVER* s, const bstring myhost ) {
     s->self.remote = bstrcpy( myhost );
     s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
     s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
-    //s->last_serial = SERVER_SERIAL_MIN + rand();
     s->self.sentinal = SERVER_SENTINAL;
 }
 
@@ -18,7 +17,7 @@ void server_cleanup( SERVER* s ) {
     int i;
     CLIENT* c;
 
-    /* TODO: Remove clients. */
+    /* Remove clients. */
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
         c = (CLIENT*)vector_get( &(s->clients), i );
         client_cleanup( c );
@@ -83,7 +82,6 @@ CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick, BOOL lock ) {
 
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
         c = vector_get( &(s->clients), i );
-        /* scaffold_print_debug( "%s vs %s: %d\n", bdata( c->nick ), bdata( nick ), bstrcmp( c->nick, nick ) ); */
         if( 0 == bstrcmp( c->nick, nick ) ) {
             /* Skip the reset below. */
             goto cleanup;
@@ -105,7 +103,6 @@ CHANNEL* server_get_channel_by_name( SERVER* s, const bstring name ) {
     CHANNEL* l = NULL;
     int i;
 
-    /* TODO: Individual locks for each list. */
     server_lock_channels( s, TRUE );
     for( i = 0 ; vector_count( &(s->channels) ) > i ; i++ ) {
         l = vector_get( &(s->channels), i );
@@ -126,16 +123,10 @@ void server_drop_client( SERVER* s, int socket ) {
     int index;
 
     server_lock_clients( s, TRUE );
-
     index = server_get_client_index_by_socket( s, socket, FALSE );
-
     c = vector_get( &(s->clients), index );
-
-    //connection_cleanup_socket( &(c->link) );
     client_cleanup( c );
-
     vector_delete( &(s->clients), index );
-
     server_lock_clients( s, FALSE );
 }
 
@@ -175,7 +166,7 @@ void server_service_clients( SERVER* s ) {
         btrimws( s->self.buffer );
 
         if( 0 >= last_read_count ) {
-            /* TODO */
+            /* TODO: Handle error reading. */
             continue;
         }
 
@@ -185,37 +176,6 @@ void server_service_clients( SERVER* s ) {
         );
 
         parser_dispatch( s, c, s->self.buffer );
-
-#if 0
-        /* Send a reply if we need to. */
-
-        /* WELCOME not sent, yet. */
-        if( !(c->flags & CLIENT_FLAGS_HAVE_WELCOME) ) {
-
-            /* USER and NICK received. */
-            if(
-                (c->flags & CLIENT_FLAGS_HAVE_USER &&
-                    c->flags & CLIENT_FLAGS_LAST_NICK)
-            ) {
-                parser_server_reply_welcome( s, c );
-                goto cleanup;
-            }
-
-            goto cleanup;
-        }
-
-        /* NICK received. */
-        if( c->flags & CLIENT_FLAGS_LAST_NICK ) {
-            parser_server_reply_nick( s, c );
-            c->flags &= ~CLIENT_FLAGS_LAST_NICK;
-            goto cleanup;
-        }
-
-        if( !(c->flags & CLIENT_FLAGS_HAVE_MOTD) ) {
-            parser_server_reply_motd( s, c );
-            goto cleanup;
-        }
-#endif
     }
 
     return;
@@ -240,10 +200,6 @@ int server_set_client_nick( SERVER* s, CLIENT* c, bstring nick ) {
 cleanup:
 
     return retval;
-}
-
-void server_stop( SERVER* s ) {
-    s->self.running = FALSE;
 }
 
 void server_lock_clients( SERVER* s, BOOL locked ) {

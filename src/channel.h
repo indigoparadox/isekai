@@ -19,7 +19,6 @@ void channel_remove_client( CHANNEL* l, CLIENT* c );
 CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick );
 struct bstrList* channel_list_clients( CHANNEL* l );
 void channel_send( CHANNEL* l, bstring message );
-void channel_lock( CHANNEL* l );
-void channel_unlock( CHANNEL* l );
+void channel_lock_clients( CHANNEL* l, BOOL lock );
 
 #endif /* CHANNEL_H */
