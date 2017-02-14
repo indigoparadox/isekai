@@ -57,24 +57,10 @@ int main( int argc, char** argv ) {
         server_service_clients( server );
         client_update( client );
 
-#if 0
-        if( 3 > count ) {
-            bassigncstr( buffer, "foo" );
-        } else {
-            bassigncstr( buffer, "stop " );
-        }
 
-        client_send( client, buffer );
-
-        count++;
-#endif
-
-        //connection_lock( &(server->server_connection) );
         if( !server->self.running ) {
-            //connection_unlock( &(server->server_connection) );
             break;
         }
-        //connection_unlock( &(server->server_connection) );
     }
 
     bdestroy( localhost );

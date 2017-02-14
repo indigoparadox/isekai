@@ -3,7 +3,6 @@
 
 void channel_init( CHANNEL* l, const bstring name ) {
     vector_init( &(l->clients) );
-    //l->name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     l->name = bstrcpy( name );
     l->topic = bfromcstr( "No topic" );
     scaffold_check_null( l->name );
@@ -16,7 +15,7 @@ BOOL channel_client_present( CHANNEL* l, CLIENT* c ) {
     CLIENT* c_test = NULL;
     BOOL found = FALSE;
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_test = (CLIENT*)vector_get( &(l->clients), i );
         if( NULL != c_test && 0 == bstrcmp( c_test->nick, c->nick ) ) {
@@ -24,7 +23,7 @@ BOOL channel_client_present( CHANNEL* l, CLIENT* c ) {
             break;
         }
     }
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 
     return found;
 }
@@ -34,9 +33,9 @@ void channel_add_client( CHANNEL* l, CLIENT* c ) {
         goto cleanup;
     }
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     vector_add( &(l->clients), c );
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 
 cleanup:
     return;
@@ -46,7 +45,7 @@ void channel_remove_client( CHANNEL* l, CLIENT* c ) {
     CLIENT* c_test = NULL;
     int i;
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_test = (CLIENT*)vector_get( &(l->clients), i );
         if( NULL != c_test && 0 == bstrcmp( c_test->nick, c->nick ) ) {
@@ -56,7 +55,7 @@ void channel_remove_client( CHANNEL* l, CLIENT* c ) {
     }
 
 cleanup:
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
     return;
 }
 
@@ -64,7 +63,7 @@ CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick ) {
     CLIENT* c_test = NULL;
     int i;
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_test = (CLIENT*)vector_get( &(l->clients), i );
         if( NULL != c_test && 0 == bstrcmp( c_test->nick, nick ) ) {
@@ -74,7 +73,7 @@ CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick ) {
     c_test = NULL;
 
 cleanup:
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
     return c_test;
 }
 
@@ -85,7 +84,7 @@ struct bstrList* channel_list_clients( CHANNEL* l ) {
     int i;
     CLIENT* c;
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
 
     client_count = vector_count( &(l->clients) );
     list = bstrListCreate();
@@ -102,7 +101,7 @@ struct bstrList* channel_list_clients( CHANNEL* l ) {
     }
 
 cleanup:
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
     return list;
 }
 
@@ -110,20 +109,16 @@ void channel_send( CHANNEL* l, bstring buffer ) {
     CLIENT* c;
     int i;
 
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c = (CLIENT*)vector_get( &(l->clients), i );
         if( NULL != c ) {
             client_send( c, buffer );
         }
     }
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 }
 
-void channel_lock( CHANNEL* l ) {
-
-}
-
-void channel_unlock( CHANNEL* l ) {
+void channel_lock_clients( CHANNEL* l, BOOL lock ) {
 
 }

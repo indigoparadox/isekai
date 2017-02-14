@@ -12,12 +12,6 @@ typedef struct {
 #define ERR_NONICKNAMEGIVEN 431
 #define ERR_NICKNAMEINUSE 433
 
-/*
-void parser_server_reply_welcome( void* local, void* remote );
-void parser_server_reply_nick( void* local, void* remote, bstring oldnick );
-void parser_server_reply_motd( void* local, void* remote );
-*/
-
 /* "caller" can be a SERVER or a CLIENT. as they should start with the same *
  * layout.                                                                  */
 void parser_dispatch( void* local, void* remote, const_bstring line );

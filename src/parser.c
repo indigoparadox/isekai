@@ -380,7 +380,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     }
 
     /* Announce the new join. */
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_iter = (CLIENT*)vector_get( &(l->clients), i );
         parser_client_printf(
@@ -388,7 +388,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
             c->nick, c->username, c->remote, l->name
         );
     }
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 
     channel_add_client( l, c );
 
@@ -399,7 +399,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     );
 
     names = bfromcstr( "" );
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     clients_count = vector_count( &(l->clients) );
     for( i = 0 ; clients_count > i ; i++ ) {
         c_iter = (CLIENT*)vector_get( &(l->clients), i );
@@ -408,7 +408,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
             bconchar( names, ' ' );
         };
     }
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 
     parser_client_printf(
         c, ":%b 332 %b %b :%b",
@@ -489,7 +489,7 @@ static void parser_server_who( void* local, void* remote, struct bstrList* args 
     scaffold_check_null( l );
 
     /* Announce the new join. */
-    channel_lock( l );
+    channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_iter = (CLIENT*)vector_get( &(l->clients), i );
         parser_client_printf(
@@ -497,7 +497,7 @@ static void parser_server_who( void* local, void* remote, struct bstrList* args 
             s->self.remote, c_iter->nick, l->name
         );
     }
-    channel_unlock( l );
+    channel_lock_clients( l, FALSE );
 
 cleanup:
     return;
