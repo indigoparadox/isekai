@@ -65,6 +65,34 @@ cleanup:
     return i;
 }
 
+CLIENT* server_get_client_by_nick( SERVER* s, bstring nick, BOOL lock ) {
+    CLIENT* c = NULL;
+    int i;
+
+    if( lock ) {
+        connection_lock( &(s->self.link) );
+    }
+
+    for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
+        c = vector_get( &(s->clients), i );
+        /* scaffold_print_debug( "%s vs %s: %d\n", bdata( c->nick ), bdata( nick ), bstrcmp( c->nick, nick ) ); */
+        if( 0 == bstrcmp( c->nick, nick ) ) {
+            /* Skip the reset below. */
+            goto cleanup;
+        }
+    }
+
+    c = NULL;
+
+cleanup:
+
+    if( lock ) {
+        connection_unlock( &(s->self.link) );
+    }
+
+    return c;
+}
+
 void server_drop_client( SERVER* s, int socket ) {
     CLIENT* c;
     int index;
