@@ -1,6 +1,15 @@
 
 #include "connection.h"
 
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
+
 static void connection_cleanup_socket( CONNECTION* n ) {
     if( 0 < n->socket ) {
         close( n->socket );
@@ -11,7 +20,8 @@ static void connection_cleanup_socket( CONNECTION* n ) {
 CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     static CONNECTION* new_client = NULL;
     CONNECTION* return_client = NULL;
-    unsigned int new_client_addr_len = 0;
+    unsigned int address_length;
+    struct sockaddr_in address;
 
     /* This is a special case; don't init because we'll be using accept()   *
      * We will only init this if it's NULL so that we're not constantly     *
@@ -21,10 +31,10 @@ CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     }
 
     /* Accept and verify the client. */
-    new_client_addr_len = sizeof( n_server->address );
+    address_length = sizeof( address );
     new_client->socket = accept(
-        n_server->socket, (struct sockaddr*)&(n_server->address),
-        &new_client_addr_len
+        n_server->socket, (struct sockaddr*)&address,
+        &address_length
     );
 
     /* No connection incoming, this time! */
@@ -41,10 +51,12 @@ CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
         goto cleanup;
     }
 
-    /* The client seems OK, so launch the handler. */
+    /* The client seems OK. */
     scaffold_print_info( "New client: %d\n", new_client->socket );
     return_client = new_client;
     new_client = NULL;
+
+    /* TODO: Grab the remote hostname. */
 
 cleanup:
 
@@ -53,6 +65,7 @@ cleanup:
 
 void connection_listen( CONNECTION* n, uint16_t port ) {
     int result;
+    struct sockaddr_in address;
 
     n->socket = socket( AF_INET, SOCK_STREAM, 0 );
     scaffold_check_negative( n->socket );
@@ -60,12 +73,12 @@ void connection_listen( CONNECTION* n, uint16_t port ) {
     fcntl( n->socket, F_SETFL, O_NONBLOCK );
 
     /* Setup and bind the port, first. */
-    n->address.sin_family = AF_INET;
-    n->address.sin_port = htons( port );
-    n->address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_family = AF_INET;
+    address.sin_port = htons( port );
+    address.sin_addr.s_addr = INADDR_ANY;
 
     result = bind(
-        n->socket, (struct sockaddr*)&(n->address), sizeof( n->address )
+        n->socket, (struct sockaddr*)&address, sizeof( address )
     );
     scaffold_check_negative( result );
 
@@ -145,6 +158,18 @@ void connection_lock( CONNECTION* n ) {
 }
 
 void connection_unlock( CONNECTION* n ) {
+}
+
+void connection_assign_remote_name( CONNECTION* n, bstring buffer ) {
+#if 0
+    getpeername(
+        n->socket,
+        (struct sockaddr*)&(n->address),
+        &(n->address_length)
+    );
+    bassignformat( buffer, "%s", inet_ntoa( n->address.sin_addr ) );
+#endif
+    bassignformat( buffer, "localhost" );
 }
 
 void connection_cleanup( CONNECTION* n ) {

@@ -1,12 +1,14 @@
 
 #include "server.h"
 
+#include <stdlib.h>
+
 void server_init( SERVER* s, bstring myhost ) {
     client_init( &(s->self) );
     vector_init( &(s->clients) );
     s->self.remote = bstrcpy( myhost );
-    s->servername = bfromcstr( "ProCIRCd" );
-    s->version = bfromcstr( "0.1" );
+    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
+    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
     s->self.sentinal = SERVER_SENTINAL;
 }
 
@@ -102,15 +104,18 @@ void server_service_clients( SERVER* s ) {
         client_init( c );
         memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
         free( n_client ); /* Don't clean up, because data is still valid. */
+
+        /* Add some details to c before stowing it. */
+        connection_assign_remote_name( &(c->link), c->remote );
+
         server_add_client( s, c );
     }
 
     /* Check for commands from existing clients. */
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
-        bassigncstr( s->self.buffer, "" );
-
         c = vector_get( &(s->clients), i );
 
+        btrunc( s->self.buffer, 0 );
         last_read_count = connection_read_line( &(c->link), s->self.buffer );
         btrimws( s->self.buffer );
 

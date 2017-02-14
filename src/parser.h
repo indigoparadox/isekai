@@ -5,8 +5,7 @@
 #include "bstrlib/bstrlib.h"
 
 typedef struct {
-    const char* command;
-    int command_length;
+    struct tagbstring command;
     void (*callback)( void* local, void* remote, struct bstrList* args );
 } parser_entry;
 

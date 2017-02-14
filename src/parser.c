@@ -4,6 +4,7 @@
 #include "server.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. */
@@ -194,11 +195,18 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
 
     c->flags |= CLIENT_FLAGS_HAVE_NICK;
 
-    if( !( c->flags & CLIENT_FLAGS_HAVE_WELCOME ) ) {
+    /* Don't reply yet if there's been no USER statement yet. */
+    if( !(c->flags & CLIENT_FLAGS_HAVE_USER) ) {
+        goto cleanup;
+    }
+
+    if( !(c->flags & CLIENT_FLAGS_HAVE_WELCOME) ) {
         parser_server_reply_welcome( local, remote );
     }
 
     parser_server_reply_nick( local, remote, oldnick );
+
+cleanup:
 
     bdestroy( oldnick );
 }
@@ -228,15 +236,14 @@ static void parser_server_quit( void* local, void* remote, struct bstrList* args
 }
 
 const parser_entry parser_table_server[] = {
-    {"USER", 4, parser_server_user},
-    {"NICK", 4, parser_server_nick},
-    {"QUIT", 4, parser_server_quit},
-    {NULL, 0, NULL}
+    {bsStatic( "USER" ), parser_server_user},
+    {bsStatic( "NICK" ), parser_server_nick},
+    {bsStatic( "QUIT" ), parser_server_quit},
+    {bsStatic( "" ), NULL}
 };
 
 void parser_dispatch( void* local, void* remote, const_bstring line ) {
     SERVER* s_local = (SERVER*)local;
-    bstring test = bfromcstr( "" );
     const parser_entry* parser_table;
     struct bstrList* args;
     const parser_entry* command;
@@ -250,12 +257,13 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
 
     for(
         command = &(parser_table[0]);
-        NULL != command->command;
+        NULL != command->callback;
         command++
     ) {
-        bassigncstr( test, command->command );
         /* scaffold_print_debug( "%s vs %s\n", bdata( line ), bdata( test ) ); */
-        if( 0 == bstrncmp( line, test, command->command_length ) ) {
+        if( 0 == bstrncmp(
+            line, &(command->command), blength( &(command->command) )
+        ) ) {
             command->callback( local, remote, args );
         }
     }
@@ -263,5 +271,4 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
 cleanup:
 
     bstrListDestroy( args );
-    bdestroy( test );
 }
