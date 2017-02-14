@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 static SERVER* server;
 
@@ -16,6 +17,9 @@ int main( int argc, char** argv ) {
     CLIENT* client;
     bstring localhost,
         buffer;
+    time_t t;
+
+    srand( (unsigned)time(&t) );
 
     localhost = bfromcstr( "127.0.0.1" );
     buffer = bfromcstr( "" );

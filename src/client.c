@@ -3,11 +3,11 @@
 
 void client_init( CLIENT* c ) {
     c->running = TRUE;
-    c->buffer = bfromcstralloc( 256, "" );
-    c->nick = bfromcstralloc( 32, "" );
-    c->realname = bfromcstralloc( 32, "" );
-    c->remote = bfromcstralloc( 32, "" );
-    c->username = bfromcstralloc( 32, "" );
+    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
+    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->sentinal = CLIENT_SENTINAL;
 }
 

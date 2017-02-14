@@ -15,8 +15,10 @@ typedef struct {
     VECTOR clients;
     bstring servername;
     bstring version;
+    //uint64_t last_serial;
 } SERVER;
 
+#define SERVER_SERIAL_MIN 10000
 #define SERVER_SENTINAL 164641
 
 #define server_new( s, myhost ) \
