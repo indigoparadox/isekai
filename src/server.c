@@ -3,9 +3,10 @@
 
 #include <stdlib.h>
 
-void server_init( SERVER* s, bstring myhost ) {
+void server_init( SERVER* s, const bstring myhost ) {
     client_init( &(s->self) );
     vector_init( &(s->clients) );
+    vector_init( &(s->channels) );
     s->self.remote = bstrcpy( myhost );
     s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
     s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
@@ -28,16 +29,22 @@ void server_cleanup( SERVER* s ) {
 }
 
 void server_add_client( SERVER* s, CLIENT* n ) {
-    connection_lock( &(s->self.link) );
+    server_lock_clients( s, TRUE );
     vector_add( &(s->clients), n );
-    connection_unlock( &(s->self.link) );
+    server_lock_clients( s, FALSE );
+}
+
+void server_add_channel( SERVER* s, CHANNEL* l ) {
+    server_lock_channels( s, TRUE );
+    vector_add( &(s->channels), l );
+    server_lock_channels( s, FALSE );
 }
 
 CLIENT* server_get_client( SERVER* s, int index ) {
     CLIENT* c;
-    connection_lock( &(s->self.link) );
+    server_lock_clients( s, TRUE );
     c = vector_get( &(s->clients), index );
-    connection_unlock( &(s->self.link) );
+    server_lock_clients( s, FALSE );
     return c;
 }
 
@@ -46,7 +53,7 @@ static int server_get_client_index_by_socket( SERVER* s, int socket, BOOL lock )
     int i;
 
     if( lock ) {
-        connection_lock( &(s->self.link) );
+        server_lock_clients( s, TRUE );
     }
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
         c = vector_get( &(s->clients), i );
@@ -60,18 +67,18 @@ static int server_get_client_index_by_socket( SERVER* s, int socket, BOOL lock )
 cleanup:
 
     if( lock ) {
-        connection_unlock( &(s->self.link) );
+        server_lock_clients( s, FALSE );
     }
 
     return i;
 }
 
-CLIENT* server_get_client_by_nick( SERVER* s, bstring nick, BOOL lock ) {
+CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick, BOOL lock ) {
     CLIENT* c = NULL;
     int i;
 
     if( lock ) {
-        connection_lock( &(s->self.link) );
+        server_lock_clients( s, TRUE );
     }
 
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
@@ -88,17 +95,37 @@ CLIENT* server_get_client_by_nick( SERVER* s, bstring nick, BOOL lock ) {
 cleanup:
 
     if( lock ) {
-        connection_unlock( &(s->self.link) );
+        server_lock_clients( s, FALSE );
     }
 
     return c;
+}
+
+CHANNEL* server_get_channel_by_name( SERVER* s, const bstring name ) {
+    CHANNEL* l = NULL;
+    int i;
+
+    /* TODO: Individual locks for each list. */
+    server_lock_channels( s, TRUE );
+    for( i = 0 ; vector_count( &(s->channels) ) > i ; i++ ) {
+        l = vector_get( &(s->channels), i );
+        if( 0 == bstrcmp( l->name, name ) ) {
+            /* Skip the reset below. */
+            goto cleanup;
+        }
+    }
+    l = NULL;
+
+cleanup:
+    server_lock_channels( s, FALSE );
+    return l;
 }
 
 void server_drop_client( SERVER* s, int socket ) {
     CLIENT* c;
     int index;
 
-    connection_lock( &(s->self.link) );
+    server_lock_clients( s, TRUE );
 
     index = server_get_client_index_by_socket( s, socket, FALSE );
 
@@ -109,7 +136,7 @@ void server_drop_client( SERVER* s, int socket ) {
 
     vector_delete( &(s->clients), index );
 
-    connection_unlock( &(s->self.link) );
+    server_lock_clients( s, FALSE );
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -217,4 +244,10 @@ cleanup:
 
 void server_stop( SERVER* s ) {
     s->self.running = FALSE;
+}
+
+void server_lock_clients( SERVER* s, BOOL locked ) {
+}
+
+void server_lock_channels( SERVER* s, BOOL locked ) {
 }

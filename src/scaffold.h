@@ -78,8 +78,12 @@ typedef enum {
         scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
 
+#define scaffold_char_is_printable( c ) \
+    (0x7f > (c) && 0x20 < (c))
+
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );
+BOOL scaffold_string_is_printable( bstring str );
 
 struct tagbstring scaffold_empty_string;
 struct tagbstring scaffold_space_string;
