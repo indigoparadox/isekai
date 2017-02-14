@@ -23,7 +23,8 @@ typedef struct {
 void server_init( SERVER* s, bstring myhost );
 void server_cleanup( SERVER* s );
 void server_add_connection( SERVER* s, CLIENT* n );
-CLIENT* server_get_connection( SERVER* s, int index );
+CLIENT* server_get_client( SERVER* s, int index );
+void server_drop_client( SERVER* s, int index );
 void server_listen( SERVER* s, int port );
 void server_service_clients( SERVER* s );
 void server_stop( SERVER* s );
