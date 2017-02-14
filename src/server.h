@@ -13,12 +13,14 @@ typedef struct {
 
     /* Items after this line are server-specific. */
     VECTOR clients;
+    bstring servername;
+    bstring version;
 } SERVER;
 
 
 #define SERVER_SENTINAL 164641
 
-void server_init( SERVER* s );
+void server_init( SERVER* s, bstring myhost );
 void server_cleanup( SERVER* s );
 void server_add_connection( SERVER* s, CLIENT* n );
 CLIENT* server_get_connection( SERVER* s, int index );

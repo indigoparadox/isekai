@@ -1,6 +1,8 @@
 
 #include "scaffold.h"
 
+const char* scaffold_blank_string = "";
+
 BOOL scaffold_is_numeric( bstring line ) {
     int i;
     BOOL is_numeric = TRUE;
