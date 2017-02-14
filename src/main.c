@@ -1,6 +1,8 @@
 
 #include "server.h"
 
+/* TODO: Handle SIGINT */
+
 int main( int argc, char** argv ) {
     SERVER* server;
     CLIENT* client;
@@ -13,7 +15,7 @@ int main( int argc, char** argv ) {
     server = calloc( 1, sizeof( SERVER ) );
     client = calloc( 1, sizeof( CLIENT ) );
 
-    server_init( server );
+    server_init( server, localhost );
     client_init( client );
 
     do {

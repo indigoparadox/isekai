@@ -1,9 +1,12 @@
 
 #include "server.h"
 
-void server_init( SERVER* s ) {
+void server_init( SERVER* s, bstring myhost ) {
     client_init( &(s->self) );
     vector_init( &(s->clients) );
+    s->self.remote = bstrcpy( myhost );
+    s->servername = bfromcstr( "ProCIRCd" );
+    s->version = bfromcstr( "0.1" );
     s->self.sentinal = SERVER_SENTINAL;
 }
 
@@ -53,6 +56,7 @@ void server_service_clients( SERVER* s ) {
     n_client = connection_register_incoming( &(s->self.link) );
     if( NULL != n_client ) {
         c = calloc( 1, sizeof( CLIENT ) );
+        client_init( c );
         memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
         free( n_client ); /* Don't clean up, because data is still valid. */
         server_add_client( s, c );
@@ -65,6 +69,7 @@ void server_service_clients( SERVER* s ) {
         c = vector_get( &(s->clients), i );
 
         last_read_count = connection_read_line( &(c->link), s->self.buffer );
+        btrimws( s->self.buffer );
 
         if( 0 >= last_read_count ) {
             /* TODO */
@@ -77,7 +82,42 @@ void server_service_clients( SERVER* s ) {
         );
 
         parser_dispatch( s, c, s->self.buffer );
+
+#if 0
+        /* Send a reply if we need to. */
+
+        /* WELCOME not sent, yet. */
+        if( !(c->flags & CLIENT_FLAGS_HAVE_WELCOME) ) {
+
+            /* USER and NICK received. */
+            if(
+                (c->flags & CLIENT_FLAGS_HAVE_USER &&
+                    c->flags & CLIENT_FLAGS_LAST_NICK)
+            ) {
+                parser_server_reply_welcome( s, c );
+                goto cleanup;
+            }
+
+            goto cleanup;
+        }
+
+        /* NICK received. */
+        if( c->flags & CLIENT_FLAGS_LAST_NICK ) {
+            parser_server_reply_nick( s, c );
+            c->flags &= ~CLIENT_FLAGS_LAST_NICK;
+            goto cleanup;
+        }
+
+        if( !(c->flags & CLIENT_FLAGS_HAVE_MOTD) ) {
+            parser_server_reply_motd( s, c );
+            goto cleanup;
+        }
+#endif
     }
+
+cleanup:
+
+    return;
 }
 
 void server_stop( SERVER* s ) {
