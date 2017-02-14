@@ -2,6 +2,8 @@
 #include "server.h"
 
 #include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 static SERVER* server;
 
@@ -30,6 +32,13 @@ int main( int argc, char** argv ) {
     } while( 0 != scaffold_error );
 
     signal( SIGINT, handle_interrupt );
+
+    bdestroy( client->nick );
+    client->nick = bfromcstr( "TestNick" );
+    bdestroy( client->realname );
+    client->realname = bfromcstr( "Tester Tester" );
+    bdestroy( client->username );
+    client->username = bfromcstr( "TestUser" );
 
     do {
         client_connect( client, localhost, 33080 );

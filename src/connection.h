@@ -5,21 +5,13 @@
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
-#include <fcntl.h>
 
 typedef struct _connection {
     int socket;
     BOOL listening;
     void* (*callback)( void* client );
     void* arg;
-    struct sockaddr_in address;
 } CONNECTION;
 
 CONNECTION* connection_register_incoming( CONNECTION* n_server );
@@ -29,6 +21,7 @@ void connection_write_line( CONNECTION* n, bstring buffer );
 ssize_t connection_read_line( CONNECTION* c, bstring buffer );
 void connection_lock( CONNECTION* c );
 void connection_unlock( CONNECTION* c );
+void connection_assign_remote_name( CONNECTION* n, bstring buffer );
 void connection_cleanup( CONNECTION* c );
 
 #endif /* CONNECTION_H */
