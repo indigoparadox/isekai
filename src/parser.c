@@ -131,12 +131,6 @@ cleanup:
     return;
 }
 
-static void parser_server_stop( void* local, void* remote, struct bstrList* args ) {
-    SERVER* s = (SERVER*)local;
-
-    server_stop( s );
-}
-
 static void parser_server_user( void* local, void* remote, struct bstrList* args ) {
     CLIENT* c = (CLIENT*)remote;
     int i,
@@ -209,10 +203,34 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
     bdestroy( oldnick );
 }
 
+static void parser_server_quit( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    bstring message;
+    bstring buffer;
+    bstring space;
+
+    /* TODO: Send everyone parting message. */
+    space = bfromcstr( " " );
+    message = bjoin( args, space );
+
+    buffer = bformat(
+        "ERROR :Closing Link: %s (Client Quit)",
+        bdata( c->nick )
+    );
+    client_send( c, buffer );
+
+    server_drop_client( s, c->link.socket );
+
+    bdestroy( buffer );
+    bdestroy( message );
+    bdestroy( space );
+}
+
 const parser_entry parser_table_server[] = {
-    {"stop", 4, parser_server_stop},
     {"USER", 4, parser_server_user},
     {"NICK", 4, parser_server_nick},
+    {"QUIT", 4, parser_server_quit},
     {NULL, 0, NULL}
 };
 

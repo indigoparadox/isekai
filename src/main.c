@@ -1,10 +1,16 @@
 
 #include "server.h"
 
+#include <signal.h>
+
+static SERVER* server;
+
 /* TODO: Handle SIGINT */
+void handle_interrupt( int arg ) {
+    server->self.running = FALSE;
+}
 
 int main( int argc, char** argv ) {
-    SERVER* server;
     CLIENT* client;
     bstring localhost,
         buffer;
@@ -22,6 +28,8 @@ int main( int argc, char** argv ) {
         server_listen( server, 33080 );
         usleep( 1000000 );
     } while( 0 != scaffold_error );
+
+    signal( SIGINT, handle_interrupt );
 
     do {
         client_connect( client, localhost, 33080 );

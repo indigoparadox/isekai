@@ -38,6 +38,49 @@ CLIENT* server_get_client( SERVER* s, int index ) {
     return c;
 }
 
+static int server_get_client_index_by_socket( SERVER* s, int socket, BOOL lock ) {
+    CLIENT* c = NULL;
+    int i;
+
+    if( lock ) {
+        connection_lock( &(s->self.link) );
+    }
+    for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
+        c = vector_get( &(s->clients), i );
+        if( socket == c->link.socket ) {
+            /* Skip the reset below. */
+            goto cleanup;
+        }
+    }
+    i = -1;
+
+cleanup:
+
+    if( lock ) {
+        connection_unlock( &(s->self.link) );
+    }
+
+    return i;
+}
+
+void server_drop_client( SERVER* s, int socket ) {
+    CLIENT* c;
+    int index;
+
+    connection_lock( &(s->self.link) );
+
+    index = server_get_client_index_by_socket( s, socket, FALSE );
+
+    c = vector_get( &(s->clients), index );
+
+    //connection_cleanup_socket( &(c->link) );
+    client_cleanup( c );
+
+    vector_delete( &(s->clients), index );
+
+    connection_unlock( &(s->self.link) );
+}
+
 void server_listen( SERVER* s, int port ) {
     s->self.link.arg = s;
     connection_listen( &(s->self.link), port );
