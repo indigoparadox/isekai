@@ -52,7 +52,7 @@ int main( int argc, char** argv ) {
 
     while( TRUE ) {
 
-        usleep( 2000000 );
+        usleep( 500000 );
 
         server_service_clients( server );
         client_update( client );
