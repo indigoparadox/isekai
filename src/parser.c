@@ -7,114 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bstring parser_printf( bstring buffer, const char* message, va_list varg ) {
-    const char* chariter;
-    bstring insert = NULL;
-    int bstr_res;
-    int i;
-
-    scaffold_error = 0;
-
-    for( chariter = message ; '\0' != *chariter ; chariter++ ) {
-        if( '%' != *chariter ) {
-            bconchar( buffer, *chariter );
-            continue;
-		}
-
-        switch( *++chariter ) {
-            case 'c':
-                i = va_arg( varg, int );
-                bstr_res = bconchar( buffer, i );
-                scaffold_check_nonzero( bstr_res );
-                break;
-
-            case 'd':
-                i = va_arg( varg, int );
-                insert = bformat( "%d", i );
-                scaffold_check_null( insert );
-                bstr_res = bconcat( buffer, insert );
-                bdestroy( insert );
-                insert = NULL;
-                scaffold_check_nonzero( bstr_res );
-                break;
-
-            case 's':
-                insert = bfromcstr( va_arg( varg, char* ) );
-                scaffold_check_null( insert );
-                bstr_res = bconcat( buffer, insert );
-                bdestroy( insert );
-                insert = NULL;
-                scaffold_check_nonzero( bstr_res );
-                break;
-
-            case 'b':
-                insert = va_arg( varg, bstring );
-                bstr_res = bconcat( buffer, insert );
-                insert = NULL;
-                scaffold_check_nonzero( bstr_res );
-                break;
-
-            case '%':
-                bstr_res = bconchar( buffer, '%' );
-                scaffold_check_nonzero( bstr_res );
-                break;
-            }
-    }
-
-cleanup:
-
-    bdestroy( insert );
-
-    return buffer;
-}
-
-static void parser_client_printf( CLIENT* c, const char* message, ... ) {
-    bstring buffer = NULL;
-    va_list varg;
-
-    buffer = bfromcstralloc( strlen( message ), "" );
-    scaffold_check_null( buffer );
-
-    va_start( varg, message );
-    buffer = parser_printf( buffer, message, varg );
-    va_end( varg );
-
-    if( 0 == scaffold_error ) {
-        client_send( c, buffer );
-    }
-
-cleanup:
-    bdestroy( buffer );
-    return;
-}
-
-void parser_channel_printf( CHANNEL* l, const char* message, ... ) {
-    bstring buffer = NULL;
-    va_list varg;
-    CLIENT* c = NULL;
-    int i;
-
-    buffer = bfromcstralloc( strlen( message ), "" );
-    scaffold_check_null( buffer );
-
-    va_start( varg, message );
-    buffer = parser_printf( buffer, message, varg );
-    va_end( varg );
-
-    if( 0 == scaffold_error ) {
-        channel_lock_clients( l, TRUE );
-        for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
-            c = (CLIENT*)vector_get( &(l->clients), i );
-            client_send( c, buffer );
-        }
-        channel_lock_clients( l, FALSE );
-    }
-
-cleanup:
-    bdestroy( buffer );
-    return;
-}
-
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -122,27 +14,27 @@ static void parser_server_reply_welcome( void* local, void* remote ) {
     CLIENT* c = (CLIENT*)remote;
     SERVER* s = (SERVER*)local;
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
         s->self.remote, c->nick, c->nick, c->username, c->remote
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 002 %b :Your host is %b, running version %b",
         s->self.remote, c->nick, s->servername, s->version
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 003 %b :This server was created 01/01/1970",
         s->self.remote, c->nick
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
         s->self.remote, c->nick, s->self.remote, s->servername, s->version
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
         s->self.remote, c->nick, vector_count( &(s->clients) )
     );
@@ -162,7 +54,7 @@ static void parser_server_reply_nick( void* local, void* remote, bstring oldnick
         oldnick = c->username;
     }
 
-    parser_client_printf(
+    client_printf(
         c, ":%b %b :%b!%b@%b NICK %b",
         s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
     );
@@ -183,7 +75,7 @@ void parser_server_reply_motd( void* local, void* remote ) {
         goto cleanup;
     }
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 433 %b :MOTD File is missing",
         s->self.remote, c->nick
     );
@@ -239,7 +131,7 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
         0 == bstrcmp( &scaffold_empty_string, c->nick ) &&
         0 != server_set_client_nick( s, c, c->username )
     ) {
-        parser_client_printf(
+        client_printf(
             c, ":%b 433 %b :Nickname is already in use",
             s->self.remote, c->username
         );
@@ -270,7 +162,7 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
 
     nick_return = server_set_client_nick( s, c, newnick );
     if( ERR_NONICKNAMEGIVEN == nick_return ) {
-        parser_client_printf(
+        client_printf(
             c, ":%b 431 %b :No nickname given",
             s->self.remote, c->nick
         );
@@ -278,7 +170,7 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
     }
 
     if( ERR_NICKNAMEINUSE == nick_return ) {
-        parser_client_printf(
+        client_printf(
             c, ":%b 433 %b :Nickname is already in use",
             s->self.remote, c->nick
         );
@@ -321,7 +213,7 @@ static void parser_server_quit( void* local, void* remote, struct bstrList* args
     space = bfromcstr( " " );
     message = bjoin( args, space );
 
-    parser_client_printf(
+    client_printf(
         c, "ERROR :Closing Link: %b (Client Quit)",
         c->nick
     );
@@ -377,7 +269,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     int clients_count;
 
     if( 2 > args->qty ) {
-        parser_client_printf(
+        client_printf(
             c, ":%b 461 %b %b :Not enough parameters",
             s->self.remote, c->username, args->entry[0]
         );
@@ -389,7 +281,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     scaffold_check_nonzero( bstr_result );
 
     if( TRUE != scaffold_string_is_printable( namehunt ) ) {
-        parser_client_printf(
+        client_printf(
             c, ":%b 403 %b %b :No such channel",
             s->self.remote, c->username, namehunt
         );
@@ -420,7 +312,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_iter = (CLIENT*)vector_get( &(l->clients), i );
-        parser_client_printf(
+        client_printf(
             c_iter, ":%b!%b@%b JOIN %b",
             c->nick, c->username, c->remote, l->name
         );
@@ -430,7 +322,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     channel_add_client( l, c );
 
     /* Now tell the joining client. */
-    parser_client_printf(
+    client_printf(
         c, ":%b!%b@%b JOIN %b",
         c->nick, c->username, c->remote, l->name
     );
@@ -447,17 +339,17 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     }
     channel_lock_clients( l, FALSE );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 332 %b %b :%b",
         s->self.remote, c->nick, l->name, l->topic
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 353 %b = %b :%b",
         s->self.remote, c->nick, l->name, names
     );
 
-    parser_client_printf(
+    client_printf(
         c, ":%b 366 %b %b :End of NAMES list",
         s->self.remote, c->nick, l->name
     );
@@ -484,7 +376,7 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
 
     c_dest = server_get_client_by_nick( s, args->entry[1], TRUE );
     if( NULL != c_dest ) {
-        parser_client_printf(
+        client_printf(
             c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
         );
         goto cleanup;
@@ -501,7 +393,7 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
                 continue;
             }
 
-            parser_client_printf(
+            client_printf(
                 c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
             );
         }
@@ -529,7 +421,7 @@ static void parser_server_who( void* local, void* remote, struct bstrList* args 
     channel_lock_clients( l, TRUE );
     for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
         c_iter = (CLIENT*)vector_get( &(l->clients), i );
-        parser_client_printf(
+        client_printf(
             c, ":%b RPL_WHOREPLY %b %b",
             s->self.remote, c_iter->nick, l->name
         );
@@ -567,11 +459,11 @@ static void parser_server_gu( void* local, void* remote, struct bstrList* args )
     scaffold_check_null( c );
 
     if( NULL != reply_c ) {
-        parser_client_printf( c, "%b", reply_c );
+        client_printf( c, "%b", reply_c );
     }
 
     if( NULL != reply_l ) {
-        parser_channel_printf( l, "%b", reply_l );
+        channel_printf( l, "%b", reply_l );
     }
 
 cleanup:

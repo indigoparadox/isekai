@@ -64,3 +64,23 @@ void client_send( CLIENT* c, bstring buffer ) {
 
     scaffold_print_debug( "Sent: %s", bdata( buffer ) );
 }
+
+void client_printf( CLIENT* c, const char* message, ... ) {
+    bstring buffer = NULL;
+    va_list varg;
+
+    buffer = bfromcstralloc( strlen( message ), "" );
+    scaffold_check_null( buffer );
+
+    va_start( varg, message );
+    scaffold_snprintf( buffer, message, varg );
+    va_end( varg );
+
+    if( 0 == scaffold_error ) {
+        client_send( c, buffer );
+    }
+
+cleanup:
+    bdestroy( buffer );
+    return;
+}
