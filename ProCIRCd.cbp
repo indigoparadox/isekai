@@ -50,6 +50,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/connection.h" />
+		<Unit filename="src/gamedata.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gamedata.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -65,6 +69,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/server.h" />
+		<Unit filename="src/tilemap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/tilemap.h" />
 		<Unit filename="src/vector.c">
 			<Option compilerVar="CC" />
 		</Unit>

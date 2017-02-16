@@ -4,7 +4,6 @@
 
 #include "vector.h"
 #include "connection.h"
-#include "parser.h"
 #include "client.h"
 #include "channel.h"
 

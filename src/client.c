@@ -1,6 +1,8 @@
 
 #include "client.h"
 
+#include "parser.h"
+
 void client_init( CLIENT* c ) {
     c->running = TRUE;
     c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );

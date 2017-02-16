@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "parser.h"
+
 void server_init( SERVER* s, const bstring myhost ) {
     client_init( &(s->self) );
     vector_init( &(s->clients) );

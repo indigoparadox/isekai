@@ -6,6 +6,7 @@ void channel_init( CHANNEL* l, const bstring name ) {
     l->name = bstrcpy( name );
     l->topic = bfromcstr( "No topic" );
     scaffold_check_null( l->name );
+    gamedata_init( &(l->gamedata), name );
 cleanup:
     return;
 }

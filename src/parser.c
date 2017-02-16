@@ -7,19 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void parser_client_printf( CLIENT* c, const char* message, ... ) {
-    va_list varg;
+static bstring parser_printf( bstring buffer, const char* message, va_list varg ) {
     const char* chariter;
-    bstring buffer = NULL;
     bstring insert = NULL;
     int bstr_res;
     int i;
 
     scaffold_error = 0;
-    buffer = bfromcstralloc( strlen( message ), "" );
-    scaffold_check_null( buffer );
-
-    va_start( varg, message );
 
     for( chariter = message ; '\0' != *chariter ; chariter++ ) {
         if( '%' != *chariter ) {
@@ -71,17 +65,58 @@ cleanup:
 
     bdestroy( insert );
 
+    return buffer;
+}
+
+static void parser_client_printf( CLIENT* c, const char* message, ... ) {
+    bstring buffer = NULL;
+    va_list varg;
+
+    buffer = bfromcstralloc( strlen( message ), "" );
+    scaffold_check_null( buffer );
+
+    va_start( varg, message );
+    buffer = parser_printf( buffer, message, varg );
+    va_end( varg );
+
     if( 0 == scaffold_error ) {
         client_send( c, buffer );
     }
 
+cleanup:
     bdestroy( buffer );
+    return;
+}
 
+void parser_channel_printf( CHANNEL* l, const char* message, ... ) {
+    bstring buffer = NULL;
+    va_list varg;
+    CLIENT* c = NULL;
+    int i;
+
+    buffer = bfromcstralloc( strlen( message ), "" );
+    scaffold_check_null( buffer );
+
+    va_start( varg, message );
+    buffer = parser_printf( buffer, message, varg );
     va_end( varg );
+
+    if( 0 == scaffold_error ) {
+        channel_lock_clients( l, TRUE );
+        for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+            c = (CLIENT*)vector_get( &(l->clients), i );
+            client_send( c, buffer );
+        }
+        channel_lock_clients( l, FALSE );
+    }
+
+cleanup:
+    bdestroy( buffer );
+    return;
 }
 
 /* This file contains our (possibly limited, slightly incompatible) version *
- * of the IRC protocol, as it interacts with our server and client objects. */
+ * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
 static void parser_server_reply_welcome( void* local, void* remote ) {
     CLIENT* c = (CLIENT*)remote;
@@ -164,6 +199,7 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
     SERVER* s = (SERVER*)local;
     int i,
         consumed = 0;
+    char* c_mode = NULL;
 
     /* TODO: Error on already registered. */
 
@@ -174,7 +210,8 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
             scaffold_copy_string( c->username, args->entry[i] );
         } else if( 1 == consumed && scaffold_is_numeric( args->entry[i] ) ) {
             /* Second arg: Mode */
-            c->mode = atoi( bdata( args->entry[i] ) );
+            c_mode = bdata( args->entry[i] );
+            c->mode = atoi( c_mode );
         } else if( 1 == consumed || 2 == consumed ) {
             /* Second or Third arg: * */
             if( 1 == consumed ) {
@@ -503,6 +540,46 @@ cleanup:
     return;
 }
 
+/* GU #channel px+1y+2z+3 */
+static void parser_server_gu( void* local, void* remote, struct bstrList* args ) {
+    SERVER* s = (SERVER*)local;
+    CLIENT* c = (CLIENT*)remote;
+    CHANNEL* l = NULL;
+    bstring reply_c = NULL;
+    bstring reply_l = NULL;
+    struct bstrList gu_args;
+
+    /* Strip off the command "header". */
+    memcpy( &gu_args, args, sizeof( struct bstrList ) );
+    scaffold_pop_string( &gu_args ); /* Source */
+    scaffold_pop_string( &gu_args ); /* Channel */
+
+    /* Find out if this command affects a certain channel. */
+    if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
+        l = server_get_channel_by_name( s, args->entry[1] );
+        scaffold_check_null( l );
+    }
+
+    gamedata_update( &(l->gamedata), c, args, &reply_c, &reply_l );
+
+    /* TODO: Make sure client is actually in the channel requested. */
+    c = channel_get_client_by_name( l, c->nick );
+    scaffold_check_null( c );
+
+    if( NULL != reply_c ) {
+        parser_client_printf( c, "%b", reply_c );
+    }
+
+    if( NULL != reply_l ) {
+        parser_channel_printf( l, "%b", reply_l );
+    }
+
+cleanup:
+    bdestroy( reply_l );
+    bdestroy( reply_c );
+    return;
+}
+
 const parser_entry parser_table_server[] = {
     {bsStatic( "USER" ), parser_server_user},
     {bsStatic( "NICK" ), parser_server_nick},
@@ -512,6 +589,7 @@ const parser_entry parser_table_server[] = {
     {bsStatic( "PART" ), parser_server_part},
     {bsStatic( "PRIVMSG" ), parser_server_privmsg},
     {bsStatic( "WHO" ), parser_server_who},
+    {bsStatic( "GU" ), parser_server_gu },
     {bsStatic( "" ), NULL}
 };
 
