@@ -89,6 +89,7 @@ typedef enum {
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );
 BOOL scaffold_string_is_printable( bstring str );
+void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 
 struct tagbstring scaffold_empty_string;
 struct tagbstring scaffold_space_string;

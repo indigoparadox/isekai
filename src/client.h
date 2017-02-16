@@ -44,5 +44,6 @@ void client_connect( CLIENT* c, bstring server, int port );
 void client_update( CLIENT* c );
 void client_join_channel( CLIENT* c, bstring name );
 void client_send( CLIENT* c, bstring buffer );
+void client_printf( CLIENT* c, const char* message, ... );
 
 #endif /* CLIENT_H */

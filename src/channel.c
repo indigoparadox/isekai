@@ -120,6 +120,33 @@ void channel_send( CHANNEL* l, bstring buffer ) {
     channel_lock_clients( l, FALSE );
 }
 
+void channel_printf( CHANNEL* l, const char* message, ... ) {
+    bstring buffer = NULL;
+    va_list varg;
+    CLIENT* c = NULL;
+    int i;
+
+    buffer = bfromcstralloc( strlen( message ), "" );
+    scaffold_check_null( buffer );
+
+    va_start( varg, message );
+    scaffold_snprintf( buffer, message, varg );
+    va_end( varg );
+
+    if( 0 == scaffold_error ) {
+        channel_lock_clients( l, TRUE );
+        for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+            c = (CLIENT*)vector_get( &(l->clients), i );
+            client_send( c, buffer );
+        }
+        channel_lock_clients( l, FALSE );
+    }
+
+cleanup:
+    bdestroy( buffer );
+    return;
+}
+
 void channel_lock_clients( CHANNEL* l, BOOL lock ) {
 
 }

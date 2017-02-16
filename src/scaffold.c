@@ -45,3 +45,62 @@ BOOL scaffold_string_is_printable( bstring str ) {
 
     return is_printable;
 }
+
+void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
+    const char* chariter;
+    bstring insert = NULL;
+    int bstr_res;
+    int i;
+
+    scaffold_error = 0;
+
+    for( chariter = message ; '\0' != *chariter ; chariter++ ) {
+        if( '%' != *chariter ) {
+            bconchar( buffer, *chariter );
+            continue;
+		}
+
+        switch( *++chariter ) {
+            case 'c':
+                i = va_arg( varg, int );
+                bstr_res = bconchar( buffer, i );
+                scaffold_check_nonzero( bstr_res );
+                break;
+
+            case 'd':
+                i = va_arg( varg, int );
+                insert = bformat( "%d", i );
+                scaffold_check_null( insert );
+                bstr_res = bconcat( buffer, insert );
+                bdestroy( insert );
+                insert = NULL;
+                scaffold_check_nonzero( bstr_res );
+                break;
+
+            case 's':
+                insert = bfromcstr( va_arg( varg, char* ) );
+                scaffold_check_null( insert );
+                bstr_res = bconcat( buffer, insert );
+                bdestroy( insert );
+                insert = NULL;
+                scaffold_check_nonzero( bstr_res );
+                break;
+
+            case 'b':
+                insert = va_arg( varg, bstring );
+                bstr_res = bconcat( buffer, insert );
+                insert = NULL;
+                scaffold_check_nonzero( bstr_res );
+                break;
+
+            case '%':
+                bstr_res = bconchar( buffer, '%' );
+                scaffold_check_nonzero( bstr_res );
+                break;
+            }
+    }
+
+cleanup:
+    bdestroy( insert );
+    return;
+}
