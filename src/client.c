@@ -55,7 +55,7 @@ void client_update( CLIENT* c ) {
         goto cleanup;
     }
 
-    scaffold_print_error(
+    scaffold_print_debug(
         "Client: Line received from %d: %s\n",
         c->link.socket, bdata( c->buffer )
     );

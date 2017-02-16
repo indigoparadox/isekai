@@ -184,7 +184,7 @@ void server_service_clients( SERVER* s ) {
 }
 
 /* Returns 0 if successful or IRC numeric error otherwise. */
-int server_set_client_nick( SERVER* s, CLIENT* c, bstring nick ) {
+int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
     int retval = 0;
 
     if( NULL == nick ) {

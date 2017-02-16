@@ -471,14 +471,14 @@ const parser_entry parser_table_server[] = {
 
 void parser_dispatch( void* local, void* remote, const_bstring line ) {
     SERVER* s_local = (SERVER*)local;
-    const parser_entry* parser_table;
-    struct bstrList* args;
-    const parser_entry* command;
+    const parser_entry* parser_table = NULL;
+    struct bstrList* args = NULL;
+    const parser_entry* command = NULL;
 
     if( SERVER_SENTINAL == s_local->self.sentinal ) {
         parser_table = parser_table_server;
     } else {
-        scaffold_print_error( "ERROR: Client dispatch table not implemented. " );
+        scaffold_print_error( "ERROR: Client dispatch table not implemented.\n" );
         goto cleanup;
     }
 
