@@ -309,15 +309,9 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     }
 
     /* Announce the new join. */
-    channel_lock_clients( l, TRUE );
-    for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
-        c_iter = (CLIENT*)vector_get( &(l->clients), i );
-        client_printf(
-            c_iter, ":%b!%b@%b JOIN %b",
-            c->nick, c->username, c->remote, l->name
-        );
-    }
-    channel_lock_clients( l, FALSE );
+    channel_printf(
+        l, c, ":%b!%b@%b JOIN %b", c->nick, c->username, c->remote, l->name
+    );
 
     channel_add_client( l, c );
 
@@ -369,7 +363,6 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
     CLIENT* c_dest = NULL;
     CHANNEL* l_dest = NULL;
     bstring msg = NULL;
-    int i;
 
     //bdestroy( scaffold_pop_string( args ) );
     msg = bjoin( args, &scaffold_space_string );
@@ -385,18 +378,9 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
     /* Maybe it's for a channel, instead? */
     l_dest = server_get_channel_by_name( s, args->entry[1] );
     if( NULL != l_dest ) {
-        for( i = 0 ; vector_count( &(l_dest->clients) ) > i ; i++ ) {
-            c_dest = (CLIENT*)vector_get( &(l_dest->clients), i );
-
-            if( 0 == bstrcmp( c_dest->nick, c->nick ) ) {
-                /* No local echo! */
-                continue;
-            }
-
-            client_printf(
-                c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
-            );
-        }
+        channel_printf(
+            l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+        );
         goto cleanup;
     }
 
@@ -463,7 +447,7 @@ static void parser_server_gu( void* local, void* remote, struct bstrList* args )
     }
 
     if( NULL != reply_l ) {
-        channel_printf( l, "%b", reply_l );
+        channel_printf( l, c, "%b", reply_l );
     }
 
 cleanup:
@@ -493,6 +477,9 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
 
     if( SERVER_SENTINAL == s_local->self.sentinal ) {
         parser_table = parser_table_server;
+    } else {
+        scaffold_print_error( "ERROR: Client dispatch table not implemented. " );
+        goto cleanup;
     }
 
     args = bsplit( line, ' ' );

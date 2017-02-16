@@ -120,7 +120,7 @@ void channel_send( CHANNEL* l, bstring buffer ) {
     channel_lock_clients( l, FALSE );
 }
 
-void channel_printf( CHANNEL* l, const char* message, ... ) {
+void channel_printf( CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
     bstring buffer = NULL;
     va_list varg;
     CLIENT* c = NULL;
@@ -137,6 +137,11 @@ void channel_printf( CHANNEL* l, const char* message, ... ) {
         channel_lock_clients( l, TRUE );
         for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
             c = (CLIENT*)vector_get( &(l->clients), i );
+
+            if( NULL != c_skip && 0 == bstrcmp( c_skip->nick, c->nick ) ) {
+                continue;
+            }
+
             client_send( c, buffer );
         }
         channel_lock_clients( l, FALSE );
