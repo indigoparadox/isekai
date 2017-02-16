@@ -57,7 +57,6 @@ int main( int argc, char** argv ) {
         server_service_clients( server );
         client_update( client );
 
-
         if( !server->self.running ) {
             break;
         }

@@ -19,7 +19,8 @@ typedef struct {
     bstring remote;
     uint8_t mode;
     uint8_t flags;
-    //uint64_t serial;
+    int x; /* Tile X */
+    int y; /* Tile Y */
     int sentinal;
 } CLIENT;
 

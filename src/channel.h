@@ -5,8 +5,10 @@
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
 #include "client.h"
+#include "gamedata.h"
 
 typedef struct {
+    GAMEDATA gamedata;
     bstring name;
     bstring topic;
     VECTOR clients;
