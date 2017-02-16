@@ -118,6 +118,8 @@ void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
     connect_result = connect( n->socket, result->ai_addr, result->ai_addrlen);
     scaffold_check_negative( connect_result );
 
+    fcntl( n->socket, F_SETFL, O_NONBLOCK );
+
 cleanup:
 
     if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {

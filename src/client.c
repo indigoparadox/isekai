@@ -44,6 +44,26 @@ cleanup:
 }
 
 void client_update( CLIENT* c ) {
+    ssize_t last_read_count = 0;
+
+    btrunc( c->buffer, 0 );
+    last_read_count = connection_read_line( &(c->link), c->buffer );
+    btrimws( c->buffer );
+
+    if( 0 >= last_read_count ) {
+        /* TODO: Handle error reading. */
+        goto cleanup;
+    }
+
+    scaffold_print_error(
+        "Client: Line received from %d: %s\n",
+        c->link.socket, bdata( c->buffer )
+    );
+
+    parser_dispatch( c, NULL, c->buffer );
+
+cleanup:
+    return;
 }
 
 void client_join_channel( CLIENT* c, bstring name ) {
