@@ -24,8 +24,6 @@ typedef struct _CLIENT {
     int x; /* Tile X */
     int y; /* Tile Y */
     int sentinal;
-
-    GRAPHICS* graphics;
 } CLIENT;
 
 #define CLIENT_FLAGS_HAVE_USER 0x01

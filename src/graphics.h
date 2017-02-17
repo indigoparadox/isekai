@@ -14,7 +14,7 @@ typedef enum {
     GRAPHICS_TRANSIT_FX_FADEOUT,
 } GRAPHICS_TRANSIT_FX;
 
-typedef struct {
+typedef struct _GRAPHICS {
     gu x;
     gu y;
     gu w;

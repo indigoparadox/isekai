@@ -58,7 +58,7 @@ int main( int argc, char** argv ) {
     client->realname = bfromcstr( "Tester Tester" );
     bdestroy( client->username );
     client->username = bfromcstr( "TestUser" );
-    client->graphics = &g;
+    d.screen = &g;
 
     do {
         client_connect( client, localhost, 33080 );
