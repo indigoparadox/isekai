@@ -31,6 +31,7 @@ typedef enum {
     SCAFFOLD_ERROR_NONZERO,
 } SCAFFOLD_ERROR;
 
+#ifndef GFX_CURSES
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
@@ -39,6 +40,12 @@ typedef enum {
 #else
 #define scaffold_print_debug( ... )
 #endif /* DEBUG */
+
+#else
+#define scaffold_print_info( ... )
+#define scaffold_print_error( ... )
+#define scaffold_print_debug( ... )
+#endif /* GFX_CURSES */
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )

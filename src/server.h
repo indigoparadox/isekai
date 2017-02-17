@@ -18,7 +18,6 @@ typedef struct {
     bstring version;
 } SERVER;
 
-#define SERVER_SERIAL_MIN 10000
 #define SERVER_SENTINAL 164641
 
 #define server_new( s, myhost ) \
