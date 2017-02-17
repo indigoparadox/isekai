@@ -36,7 +36,7 @@ typedef enum {
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
-#ifndef DEBUG
+#ifdef DEBUG
 #define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #else
 #define scaffold_print_debug( ... )
