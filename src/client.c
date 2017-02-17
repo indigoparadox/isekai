@@ -4,13 +4,14 @@
 #include "parser.h"
 
 void client_init( CLIENT* c ) {
-    c->running = TRUE;
+    vector_init( &(c->channels) );
     c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
     c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->sentinal = CLIENT_SENTINAL;
+    c->running = TRUE;
 }
 
 void client_cleanup( CLIENT* c ) {
@@ -20,6 +21,25 @@ void client_cleanup( CLIENT* c ) {
     bdestroy( c->realname );
     bdestroy( c->remote );
     bdestroy( c->username );
+}
+
+CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
+    CHANNEL* l = NULL;
+    int i;
+
+    client_lock_channels( c, TRUE );
+    for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
+        l = vector_get( &(c->channels), i );
+        if( 0 == bstrcmp( l->name, name ) ) {
+            /* Skip the reset below. */
+            goto cleanup;
+        }
+    }
+    l = NULL;
+
+cleanup:
+    client_lock_channels( c, FALSE );
+    return l;
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {
@@ -43,6 +63,7 @@ cleanup:
     return;
 }
 
+/* This runs on the local client. */
 void client_update( CLIENT* c, GAMEDATA* d ) {
     ssize_t last_read_count = 0;
 
@@ -66,7 +87,14 @@ cleanup:
     return;
 }
 
+void client_add_channel( CLIENT* c, CHANNEL* l ) {
+    client_lock_channels( c, TRUE );
+    vector_add( &(c->channels), l );
+    client_lock_channels( c, FALSE );
+}
+
 void client_join_channel( CLIENT* c, bstring name ) {
+    /* We won't record the channel in our list until the server confirms it. */
     bstring buffer = NULL;
     buffer = bfromcstr( "JOIN " );
     bconcat( buffer, name );
@@ -103,4 +131,8 @@ void client_printf( CLIENT* c, const char* message, ... ) {
 cleanup:
     bdestroy( buffer );
     return;
+}
+
+void client_lock_channels( CLIENT* c, BOOL lock ) {
+
 }

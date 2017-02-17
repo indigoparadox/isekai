@@ -75,6 +75,15 @@ int main( int argc, char** argv ) {
         client_update( client, &d );
         server_service_clients( server );
 
+        if( 'q' == input_get_char( &p ) ) {
+            server_stop( server );
+        }
+
+        if( 0 < vector_count( &(client->channels) ) ) {
+            graphics_draw_text( &g, 20, 20, ((CHANNEL*)(vector_get( &(client->channels), 0 )))->name );
+            graphics_draw_text( &g, 20, 40, ((CHANNEL*)(vector_get( &(client->channels), 0 )))->topic );
+        }
+
         if( !server->self.running ) {
             break;
         }

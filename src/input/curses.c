@@ -6,6 +6,7 @@
 
 void input_init( INPUT* p ) {
     memset( p, '\0', sizeof( INPUT ) );
+    timeout( 5 );
 }
 
 int input_get_char( INPUT* input ) {

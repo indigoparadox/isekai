@@ -25,6 +25,8 @@ void gamedata_update_server(
     bstring* reply_c, bstring* reply_l
 ) {
     CHANNEL* l = gamedata_get_channel( d );
+
+
 }
 
 void gamedata_update_client(

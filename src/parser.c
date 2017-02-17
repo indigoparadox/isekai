@@ -289,12 +289,12 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     }
 
     /* Get the channel, or create it if it does not exist. */
-    l = server_get_channel_by_name( s, namehunt );
+    l = client_get_channel_by_name( &(s->self), namehunt );
     if( NULL == l ) {
         l = calloc( 1, sizeof( CHANNEL ) );
         scaffold_check_null( l );
         channel_init( l, namehunt );
-        server_add_channel( s, l );
+        client_add_channel( &(s->self), l );
         scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
     }
 
@@ -376,7 +376,7 @@ static void parser_server_privmsg( void* local, void* remote, struct bstrList* a
     }
 
     /* Maybe it's for a channel, instead? */
-    l_dest = server_get_channel_by_name( s, args->entry[1] );
+    l_dest = client_get_channel_by_name( &(s->self), args->entry[1] );
     if( NULL != l_dest ) {
         channel_printf(
             l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
@@ -398,7 +398,7 @@ static void parser_server_who( void* local, void* remote, struct bstrList* args 
     CLIENT* c_iter = NULL;
     int i;
 
-    l = server_get_channel_by_name( s, args->entry[1] );
+    l = client_get_channel_by_name( &(s->self), args->entry[1] );
     scaffold_check_null( l );
 
     /* Announce the new join. */
@@ -432,7 +432,7 @@ static void parser_server_gu( void* local, void* remote, struct bstrList* args )
 
     /* Find out if this command affects a certain channel. */
     if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
-        l = server_get_channel_by_name( s, args->entry[1] );
+        l = client_get_channel_by_name( &(s->self), args->entry[1] );
         scaffold_check_null( l );
     }
 
@@ -485,6 +485,28 @@ static void parser_client_gu( void* local, void* gamedata, struct bstrList* args
     return;
 }
 
+static void parser_client_join( void* local, void* gamedata, struct bstrList* args ) {
+    CLIENT* c = (CLIENT*)local;
+    CHANNEL* l = NULL;
+
+    scaffold_check_bounds( 3, args->mlen );
+
+    /* Get the channel, or create it if it does not exist. */
+    l = client_get_channel_by_name( c, args->entry[2] );
+    if( NULL == l ) {
+        l = calloc( 1, sizeof( CHANNEL ) );
+        scaffold_check_null( l );
+        channel_init( l, args->entry[2] );
+        client_add_channel( c, l );
+        scaffold_print_info( "Client created local channel mirror: %s", bdata( args->entry[2] ) );
+    }
+
+    scaffold_print_info( "Client joined channel: %s", bdata( args->entry[2] ) );
+
+cleanup:
+    return;
+}
+
 const parser_entry parser_table_server[] = {
     {bsStatic( "USER" ), parser_server_user},
     {bsStatic( "NICK" ), parser_server_nick},
@@ -500,6 +522,7 @@ const parser_entry parser_table_server[] = {
 
 const parser_entry parser_table_client[] = {
     {bsStatic( "GU" ), parser_client_gu },
+    {bsStatic( "JOIN" ), parser_client_join },
     {bsStatic( "" ), NULL}
 };
 
@@ -508,27 +531,33 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
     const parser_entry* parser_table = NULL;
     struct bstrList* args = NULL;
     const parser_entry* command = NULL;
+    uint8_t arg_command_index; /* Which arg has the command? */
+    bstring cmd_test = NULL; /* Don't free this. */
 
     if( SERVER_SENTINAL == s_local->self.sentinal ) {
         parser_table = parser_table_server;
+        arg_command_index = 0;
     } else {
         /* scaffold_print_error( "ERROR: Client dispatch table not implemented.\n" );
         goto cleanup; */
         parser_table = parser_table_client;
+        arg_command_index = 1; /* First index is just the server name. */
     }
 
     args = bsplit( line, ' ' );
     scaffold_check_null( args );
+    scaffold_check_bounds( (arg_command_index + 1), args->mlen );
+    cmd_test = args->entry[arg_command_index];
 
     for(
         command = &(parser_table[0]);
         NULL != command->callback;
         command++
     ) {
-        /* scaffold_print_debug( "%s vs %s\n", bdata( line ), bdata( test ) ); */
         if( 0 == bstrncmp(
-            line, &(command->command), blength( &(command->command) )
+            cmd_test, &(command->command), blength( &(command->command) )
         ) ) {
+            scaffold_print_debug( "Parse: %s\n", bdata( line ) );
             command->callback( local, arg2, args );
             goto cleanup;
         }
