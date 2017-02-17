@@ -7,7 +7,7 @@
 #include "client.h"
 #include "gamedata.h"
 
-typedef struct {
+typedef struct _CHANNEL {
     GAMEDATA gamedata;
     bstring name;
     bstring topic;

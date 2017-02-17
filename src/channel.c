@@ -38,6 +38,9 @@ void channel_add_client( CHANNEL* l, CLIENT* c ) {
     vector_add( &(l->clients), c );
     channel_lock_clients( l, FALSE );
 
+    client_lock_channels( c, TRUE );
+    client_lock_channels( c, FALSE );
+
 cleanup:
     return;
 }

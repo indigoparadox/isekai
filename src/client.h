@@ -7,6 +7,9 @@
 #include "connection.h"
 #include "graphics.h"
 #include "gamedata.h"
+#include "channel.h"
+
+typedef struct _CHANNEL CHANNEL;
 
 typedef struct _CLIENT {
     /* "Parent class" */
@@ -23,6 +26,7 @@ typedef struct _CLIENT {
     uint8_t flags;
     int x; /* Tile X */
     int y; /* Tile Y */
+    VECTOR channels; /* All channels in now; all channels avail on server. */
     int sentinal;
 } CLIENT;
 
@@ -44,10 +48,13 @@ typedef struct _GAMEDATA GAMEDATA;
 
 void client_init( CLIENT* c );
 void client_cleanup( CLIENT* c );
+void client_add_channel( CLIENT* c, CHANNEL* l );
+CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );
 void client_connect( CLIENT* c, bstring server, int port );
 void client_update( CLIENT* c, GAMEDATA* d );
 void client_join_channel( CLIENT* c, bstring name );
 void client_send( CLIENT* c, bstring buffer );
 void client_printf( CLIENT* c, const char* message, ... );
+void client_lock_channels( CLIENT* c, BOOL lock );
 
 #endif /* CLIENT_H */
