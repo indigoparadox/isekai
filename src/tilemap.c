@@ -68,8 +68,6 @@ void tilemap_parse( TILEMAP* t, const uint8_t* data ) {
     scaffold_check_null( string_buffer );
     attribute = bfromcstralloc( TILEMAP_PARSER_BUFFER_ALLOC, "" );
     scaffold_check_null( attribute );
-    list_buffer = bstrListCreate();
-    scaffold_check_null( list_buffer );
 
     while( '\0' != *i ) {
 
@@ -126,7 +124,13 @@ void tilemap_parse( TILEMAP* t, const uint8_t* data ) {
                 break;
 
             case ',':
-                parser_flags |= TILEMAP_P_FLAG_EXECUTE;
+                if( !(parser_flags & TILEMAP_P_FLAG_LIST) ) {
+                    /* Done reading a normal attribute. */
+                    parser_flags |= TILEMAP_P_FLAG_EXECUTE;
+                } else {
+                    /* In the middle of a list. */
+                    bconchar( string_buffer, *i );
+                }
                 break;
 
             case ':':
@@ -150,43 +154,28 @@ void tilemap_parse( TILEMAP* t, const uint8_t* data ) {
             /* Do something with the last object harvested. */
 
             if( (TILEMAP_P_FLAG_LIST & parser_flags) ) {
-                /* Inside of a list. */
+                /* This is the final item on this list. */
+                parser_flags &= ~TILEMAP_P_FLAG_LIST;
 
-                if( (list_buffer->qty + 1) >= list_buffer->mlen ) {
-                    /* Need more list items! */
-                    bstr_result = bstrListAlloc(
-                        list_buffer, list_buffer->mlen * 2
-                    );
-                    scaffold_check_nonzero( bstr_result );
-                }
-
-                /* Add the item to the running list. */
-                list_buffer->entry[list_buffer->qty - 1] =
-                    bstrcpy( string_buffer );
-                list_buffer->qty++;
-
-                if( ']' == *i ) {
-                    /* This is the final item on this list. */
-                    parser_flags &= ~TILEMAP_P_FLAG_LIST;
-                }
-
-                /* We're done with this list item. */
+                list_buffer = bsplit( string_buffer, ',' );
+                scaffold_check_null( list_buffer );
                 btrunc( string_buffer, 0 );
 
-                if( !(parser_flags & TILEMAP_P_FLAG_LIST) ) {
-                    /* TODO: Determine by the attribute what the list goes to. */
-                    if( 0 < list_buffer->qty ) {
-                        scaffold_print_debug(
-                            "List, %d items. First: %s, Depth: %d\n",
-                            list_buffer->qty, bdata( list_buffer->entry[0] ), tag_depth
-                        );
-                    } else {
-                        scaffold_print_debug(
-                            "Empty list, Depth: %d\n",
-                            bdata( string_buffer ), tag_depth
-                        );
-                    }
+                /* TODO: Determine by the attribute what the list goes to. */
+                if( 0 < list_buffer->qty ) {
+                    scaffold_print_debug(
+                        "List, %d items. First: %s, Depth: %d\n",
+                        list_buffer->qty, bdata( list_buffer->entry[0] ), tag_depth
+                    );
+                } else {
+                    scaffold_print_debug(
+                        "Empty list, Depth: %d\n",
+                        bdata( string_buffer ), tag_depth
+                    );
                 }
+
+                bstrListDestroy( list_buffer );
+                list_buffer = NULL;
 
             } else if( (TILEMAP_P_FLAG_ATTRIBUTE & parser_flags) ) {
                 scaffold_print_debug(
