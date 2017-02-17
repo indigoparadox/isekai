@@ -6,7 +6,7 @@
 #include "graphics.h"
 #include "bstrlib/bstrlib.h"
 
-typedef struct tUI UI;
+typedef struct _UI UI;
 
 typedef struct {
     UI* ui;
@@ -27,7 +27,7 @@ typedef struct {
     UI_CONTROL_TYPE type;
 } UI_CONTROL;
 
-typedef struct tUI {
+typedef struct _UI {
     GRAPHICS* screen;
     VECTOR windows;
 } UI;
