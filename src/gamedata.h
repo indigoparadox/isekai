@@ -4,7 +4,7 @@
 
 #include "tilemap.h"
 
-typedef struct _GRAPHICS GRAPHICS;
+typedef struct _UI UI;
 
 typedef struct {
 
@@ -12,10 +12,11 @@ typedef struct {
 
 typedef struct _GAMEDATA {
     TILEMAP tmap;
-    GRAPHICS* screen;
+    UI* ui;
 } GAMEDATA;
 
-void gamedata_init( GAMEDATA* g, const bstring name );
+void gamedata_init_server( GAMEDATA* g, const bstring name );
+void gamedata_init_client( GAMEDATA* g, UI* ui, const bstring name );
 void gamedata_update_server(
     GAMEDATA* d, CLIENT* c, const struct bstrList* args,
     bstring* reply_c, bstring* reply_l

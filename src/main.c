@@ -23,15 +23,17 @@ int main( int argc, char** argv ) {
     bstring localhost = NULL,
         buffer = NULL,
         channel = NULL;
-    time_t t;
+    time_t tm;
     GRAPHICS g;
     INPUT p;
     GAMEDATA d;
+    UI ui;
 
-    srand( (unsigned)time(&t) );
+    srand( (unsigned)time( &tm ) );
 
     graphics_init_screen( &g, 640, 480 );
     input_init( &p );
+    ui_init( &ui, &g );
 
     graphics_draw_text( &g, 20, 20, &str_loading );
     graphics_flip_screen( &g );
@@ -50,7 +52,7 @@ int main( int argc, char** argv ) {
 
     signal( SIGINT, handle_interrupt );
 
-    gamedata_init( &d, channel );
+    gamedata_init_client( &d, &ui, channel );
 
     bdestroy( client->nick );
     client->nick = bfromcstr( "TestNick" );
@@ -58,7 +60,6 @@ int main( int argc, char** argv ) {
     client->realname = bfromcstr( "Tester Tester" );
     bdestroy( client->username );
     client->username = bfromcstr( "TestUser" );
-    d.screen = &g;
 
     do {
         client_connect( client, localhost, 33080 );
