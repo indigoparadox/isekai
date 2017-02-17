@@ -436,7 +436,7 @@ static void parser_server_gu( void* local, void* remote, struct bstrList* args )
         scaffold_check_null( l );
     }
 
-    gamedata_update( &(l->gamedata), c, args, &reply_c, &reply_l );
+    gamedata_update_server( &(l->gamedata), c, &gu_args, &reply_c, &reply_l );
 
     /* TODO: Make sure client is actually in the channel requested. */
     c = channel_get_client_by_name( l, c->nick );
@@ -456,6 +456,35 @@ cleanup:
     return;
 }
 
+static void parser_client_gu( void* local, void* gamedata, struct bstrList* args ) {
+    CLIENT* c = (CLIENT*)local;
+    bstring reply = NULL;
+    struct bstrList gu_args;
+
+    memcpy( &gu_args, args, sizeof( struct bstrList ) );
+
+#if 0
+    /* Strip off the command "header". */
+    scaffold_pop_string( &gu_args ); /* Source */
+    scaffold_pop_string( &gu_args ); /* Channel */
+
+    /* Find out if this command affects a certain channel. */
+    if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
+        l = server_get_channel_by_name( s, args->entry[1] );
+        scaffold_check_null( l );
+    }
+#endif
+
+    gamedata_update_client( gamedata, c, &gu_args, &reply );
+
+    if( NULL != reply ) {
+        client_printf( c, "%b", reply );
+    }
+
+    bdestroy( reply );
+    return;
+}
+
 const parser_entry parser_table_server[] = {
     {bsStatic( "USER" ), parser_server_user},
     {bsStatic( "NICK" ), parser_server_nick},
@@ -469,7 +498,12 @@ const parser_entry parser_table_server[] = {
     {bsStatic( "" ), NULL}
 };
 
-void parser_dispatch( void* local, void* remote, const_bstring line ) {
+const parser_entry parser_table_client[] = {
+    {bsStatic( "GU" ), parser_client_gu },
+    {bsStatic( "" ), NULL}
+};
+
+void parser_dispatch( void* local, void* arg2, const_bstring line ) {
     SERVER* s_local = (SERVER*)local;
     const parser_entry* parser_table = NULL;
     struct bstrList* args = NULL;
@@ -478,8 +512,9 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
     if( SERVER_SENTINAL == s_local->self.sentinal ) {
         parser_table = parser_table_server;
     } else {
-        scaffold_print_error( "ERROR: Client dispatch table not implemented.\n" );
-        goto cleanup;
+        /* scaffold_print_error( "ERROR: Client dispatch table not implemented.\n" );
+        goto cleanup; */
+        parser_table = parser_table_client;
     }
 
     args = bsplit( line, ' ' );
@@ -494,7 +529,7 @@ void parser_dispatch( void* local, void* remote, const_bstring line ) {
         if( 0 == bstrncmp(
             line, &(command->command), blength( &(command->command) )
         ) ) {
-            command->callback( local, remote, args );
+            command->callback( local, arg2, args );
             goto cleanup;
         }
     }

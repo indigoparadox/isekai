@@ -5,8 +5,10 @@
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
 #include "connection.h"
+#include "graphics.h"
+#include "gamedata.h"
 
-typedef struct {
+typedef struct _CLIENT {
     /* "Parent class" */
     CONNECTION link;
 
@@ -22,6 +24,8 @@ typedef struct {
     int x; /* Tile X */
     int y; /* Tile Y */
     int sentinal;
+
+    GRAPHICS* graphics;
 } CLIENT;
 
 #define CLIENT_FLAGS_HAVE_USER 0x01
@@ -38,10 +42,12 @@ typedef struct {
     c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \
     client_init( c );
 
+typedef struct _GAMEDATA GAMEDATA;
+
 void client_init( CLIENT* c );
 void client_cleanup( CLIENT* c );
 void client_connect( CLIENT* c, bstring server, int port );
-void client_update( CLIENT* c );
+void client_update( CLIENT* c, GAMEDATA* d );
 void client_join_channel( CLIENT* c, bstring name );
 void client_send( CLIENT* c, bstring buffer );
 void client_printf( CLIENT* c, const char* message, ... );
