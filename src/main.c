@@ -26,6 +26,7 @@ int main( int argc, char** argv ) {
     time_t t;
     GRAPHICS g;
     INPUT p;
+    GAMEDATA d;
 
     srand( (unsigned)time(&t) );
 
@@ -49,12 +50,15 @@ int main( int argc, char** argv ) {
 
     signal( SIGINT, handle_interrupt );
 
+    gamedata_init( &d, channel );
+
     bdestroy( client->nick );
     client->nick = bfromcstr( "TestNick" );
     bdestroy( client->realname );
     client->realname = bfromcstr( "Tester Tester" );
     bdestroy( client->username );
     client->username = bfromcstr( "TestUser" );
+    client->graphics = &g;
 
     do {
         client_connect( client, localhost, 33080 );
@@ -67,7 +71,7 @@ int main( int argc, char** argv ) {
 
         usleep( 500000 );
 
-        client_update( client );
+        client_update( client, &d );
         server_service_clients( server );
 
         if( !server->self.running ) {

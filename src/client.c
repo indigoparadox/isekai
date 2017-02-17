@@ -10,6 +10,7 @@ void client_init( CLIENT* c ) {
     c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+    c->graphics = NULL;
     c->sentinal = CLIENT_SENTINAL;
 }
 
@@ -43,7 +44,7 @@ cleanup:
     return;
 }
 
-void client_update( CLIENT* c ) {
+void client_update( CLIENT* c, GAMEDATA* d ) {
     ssize_t last_read_count = 0;
 
     btrunc( c->buffer, 0 );
@@ -60,7 +61,7 @@ void client_update( CLIENT* c ) {
         c->link.socket, bdata( c->buffer )
     );
 
-    parser_dispatch( c, NULL, c->buffer );
+    parser_dispatch( c, d, c->buffer );
 
 cleanup:
     return;

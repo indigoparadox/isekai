@@ -4,9 +4,10 @@
 
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
-#include "client.h"
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
+
+typedef struct _CLIENT CLIENT;
 
 typedef struct {
     uint32_t x_previous;
