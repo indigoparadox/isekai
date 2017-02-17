@@ -31,7 +31,9 @@ int main( int argc, char** argv ) {
 
     srand( (unsigned)time( &tm ) );
 
+    #ifndef DEBUG
     graphics_init_screen( &g, 640, 480 );
+    #endif /* DEBUG */
     input_init( &p );
     ui_init( &ui, &g );
 

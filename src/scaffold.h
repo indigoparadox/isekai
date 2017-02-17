@@ -31,11 +31,12 @@ typedef enum {
     SCAFFOLD_ERROR_NONZERO,
 } SCAFFOLD_ERROR;
 
-#ifndef GFX_CURSES
+//#ifndef GFX_CURSES
+#if 1
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
-#ifdef DEBUG
+#ifndef DEBUG
 #define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #else
 #define scaffold_print_debug( ... )

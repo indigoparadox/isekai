@@ -59,5 +59,6 @@ void tilemap_iterate_screen_row(
     TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
     void (*callback)( TILEMAP* t, uint32_t x, uint32_t y, TILEMAP_TILE e )
 );
+void tilemap_load_file( TILEMAP* t, bstring filename );
 
 #endif /* TILEMAP_H */

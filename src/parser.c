@@ -294,6 +294,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
         l = calloc( 1, sizeof( CHANNEL ) );
         scaffold_check_null( l );
         channel_init( l, namehunt );
+        gamedata_init_server( &(l->gamedata), namehunt );
         client_add_channel( &(s->self), l );
         scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
     }
@@ -498,10 +499,10 @@ static void parser_client_join( void* local, void* gamedata, struct bstrList* ar
         scaffold_check_null( l );
         channel_init( l, args->entry[2] );
         client_add_channel( c, l );
-        scaffold_print_info( "Client created local channel mirror: %s", bdata( args->entry[2] ) );
+        scaffold_print_info( "Client created local channel mirror: %s\n", bdata( args->entry[2] ) );
     }
 
-    scaffold_print_info( "Client joined channel: %s", bdata( args->entry[2] ) );
+    scaffold_print_info( "Client joined channel: %s\n", bdata( args->entry[2] ) );
 
 cleanup:
     return;
