@@ -4,12 +4,15 @@
 
 #include "tilemap.h"
 
+typedef struct _GRAPHICS GRAPHICS;
+
 typedef struct {
 
 } GAMEDATA_UPDATE;
 
 typedef struct _GAMEDATA {
     TILEMAP tmap;
+    GRAPHICS* screen;
 } GAMEDATA;
 
 void gamedata_init( GAMEDATA* g, const bstring name );

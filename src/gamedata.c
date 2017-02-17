@@ -24,7 +24,7 @@ void gamedata_update_server(
 void gamedata_update_client(
     GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
 ) {
-    GRAPHICS* g = c->graphics;
+    GRAPHICS* g = d->screen;
 
 
 }

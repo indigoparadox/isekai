@@ -10,7 +10,6 @@ void client_init( CLIENT* c ) {
     c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
     c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-    c->graphics = NULL;
     c->sentinal = CLIENT_SENTINAL;
 }
 
