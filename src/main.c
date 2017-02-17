@@ -1,6 +1,9 @@
 
 #include "server.h"
 
+#include "ui.h"
+#include "input.h"
+
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,19 +11,29 @@
 
 static SERVER* server;
 
+static struct tagbstring str_loading = bsStatic( "Loading..." );
+
 /* TODO: Handle SIGINT */
 void handle_interrupt( int arg ) {
     server->self.running = FALSE;
 }
 
 int main( int argc, char** argv ) {
-    CLIENT* client;
-    bstring localhost,
-        buffer,
-        channel;
+    CLIENT* client = NULL;
+    bstring localhost = NULL,
+        buffer = NULL,
+        channel = NULL;
     time_t t;
+    GRAPHICS g;
+    INPUT p;
 
     srand( (unsigned)time(&t) );
+
+    graphics_init_screen( &g, 640, 480 );
+    input_init( &p );
+
+    graphics_draw_text( &g, 20, 20, &str_loading );
+    graphics_flip_screen( &g );
 
     localhost = bfromcstr( "127.0.0.1" );
     channel = bfromcstr( "#testchannel" );
@@ -54,8 +67,8 @@ int main( int argc, char** argv ) {
 
         usleep( 500000 );
 
-        server_service_clients( server );
         client_update( client );
+        server_service_clients( server );
 
         if( !server->self.running ) {
             break;
@@ -67,6 +80,7 @@ int main( int argc, char** argv ) {
     bdestroy( channel );
     server_cleanup( server );
     free( server );
+    graphics_shutdown( &g );
 
     return 0;
 }
