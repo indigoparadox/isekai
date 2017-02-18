@@ -14,7 +14,14 @@ typedef struct _CHANNEL {
     VECTOR clients;
 } CHANNEL;
 
+#define channel_new( l, name ) \
+    scaffold_check_null( name ); \
+    l = (CHANNEL*)calloc( 1, sizeof( CHANNEL ) ); \
+    scaffold_check_null( l ); \
+    channel_init( l, name );
+
 void channel_init( CHANNEL* l, const bstring name );
+void channel_cleanup( CHANNEL* l );
 BOOL channel_client_present( CHANNEL* l, CLIENT* c );
 void channel_add_client( CHANNEL* l, CLIENT* c );
 void channel_remove_client( CHANNEL* l, CLIENT* c );

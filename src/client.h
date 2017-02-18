@@ -42,6 +42,7 @@ typedef struct _CLIENT {
 
 #define client_new( c ) \
     c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \
+    scaffold_check_null( c ); \
     client_init( c );
 
 typedef struct _GAMEDATA GAMEDATA;

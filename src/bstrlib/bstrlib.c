@@ -38,7 +38,7 @@ void* bstr__alloc (size_t sz) {
 	return p;
 }
 #else
-#define bstr__alloc(x) malloc (x)
+#define bstr__alloc(x) calloc (1, x)
 #endif
 #endif
 

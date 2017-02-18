@@ -5,7 +5,9 @@
 #include <ncurses.h>
 
 void input_init( INPUT* p ) {
+#ifdef INIT_ZEROES
     memset( p, '\0', sizeof( INPUT ) );
+#endif /* INIT_ZEROES */
     timeout( 5 );
 }
 

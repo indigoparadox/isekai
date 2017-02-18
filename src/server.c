@@ -158,12 +158,15 @@ void server_service_clients( SERVER* s ) {
         parser_dispatch( s, c, s->self.buffer );
     }
 
+cleanup:
+
     return;
 }
 
 /* Returns 0 if successful or IRC numeric error otherwise. */
 int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
     int retval = 0;
+    int bstr_result = 0;
 
     if( NULL == nick ) {
         retval = ERR_NONICKNAMEGIVEN;
@@ -175,7 +178,8 @@ int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
         goto cleanup;
     }
 
-    scaffold_copy_string( c->nick, nick );
+    bstr_result = bassign( c->nick, nick );
+    scaffold_check_nonzero( bstr_result );
 
 cleanup:
 

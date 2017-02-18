@@ -10,6 +10,13 @@ cleanup:
     return;
 }
 
+void channel_cleanup( CHANNEL* l ) {
+    vector_free( &(l->clients) );
+    bdestroy( l->name );
+    bdestroy( l->topic );
+    gamedata_cleanup( &(l->gamedata) );
+}
+
 BOOL channel_client_present( CHANNEL* l, CLIENT* c ) {
     int i;
     CLIENT* c_test = NULL;

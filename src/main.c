@@ -91,9 +91,12 @@ int main( int argc, char** argv ) {
         }
     }
 
+cleanup:
+
     bdestroy( localhost );
     bdestroy( buffer );
     bdestroy( channel );
+    client_cleanup( client );
     server_cleanup( server );
     free( server );
     graphics_shutdown( &g );
