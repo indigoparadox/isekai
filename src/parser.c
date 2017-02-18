@@ -92,6 +92,7 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
     int i,
         consumed = 0;
     char* c_mode = NULL;
+    int bstr_result = 0;
 
     /* TODO: Error on already registered. */
 
@@ -99,7 +100,8 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
     for( i = 1 ; args->qty > i ; i++ ) {
         if( 0 == consumed ) {
             /* First arg: User */
-            scaffold_copy_string( c->username, args->entry[i] );
+            bstr_result = bassign( c->username, args->entry[i] );
+            scaffold_check_nonzero( bstr_result );
         } else if( 1 == consumed && scaffold_is_numeric( args->entry[i] ) ) {
             /* Second arg: Mode */
             c_mode = bdata( args->entry[i] );
@@ -111,10 +113,12 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
             }
         } else if( 3 == consumed && ':' != args->entry[i]->data[0] ) {
             /* Third or Fourth arg: Remote Host */
-            scaffold_copy_string( c->remote, args->entry[i] );
+            bstr_result = bassign( c->remote, args->entry[i] );
+            scaffold_check_nonzero( bstr_result );
         } else if( 3 == consumed || 4 == consumed ) {
             /* Fourth or Fifth arg: Real Name */
-            scaffold_copy_string( c->realname, args->entry[i] );
+            bstr_result = bassign( c->realname, args->entry[i] );
+            scaffold_check_nonzero( bstr_result );
             if( 3 == consumed ) {
                 consumed++; /* Extra bump for missing host. */
             }
@@ -146,6 +150,7 @@ static void parser_server_user( void* local, void* remote, struct bstrList* args
     }
     //parser_server_reply_nick( local, remote, NULL );
 
+cleanup:
     return;
 }
 
@@ -155,6 +160,7 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
     bstring oldnick = NULL;
     bstring newnick = NULL;
     int nick_return;
+    int bstr_result = 0;
 
     if( 2 >= args->qty ) {
         newnick = args->entry[1];
@@ -179,9 +185,11 @@ static void parser_server_nick( void* local, void* remote, struct bstrList* args
 
     if( 0 < blength( c->nick ) ) {
         oldnick = bstrcpy( c->nick );
+        scaffold_check_null( oldnick );
     }
 
-    scaffold_copy_string( c->nick, newnick );
+    bstr_result = bassign( c->nick, newnick );
+    scaffold_check_nonzero( bstr_result );
 
     c->flags |= CLIENT_FLAGS_HAVE_NICK;
 
@@ -228,31 +236,29 @@ static void parser_server_ison( void* local, void* remote, struct bstrList* args
     SERVER* s = (SERVER*)local;
     CLIENT* c = (CLIENT*)remote;
     int i;
-    bstring reply;
+    bstring clients = NULL;
 
-    reply = bfromcstralloc( 128, ":" );
-    bconcat( reply, s->self.remote );
-    bconcat( reply, scaffold_static_string( " 303 " ) );
-    bconcat( reply, c->nick );
-    bconcat( reply, scaffold_static_string( " :" ) );
+    clients = bfromcstralloc( 128, "" );
+    scaffold_check_null( clients );
 
     server_lock_clients( s, TRUE );
-
     for( i = 1 ; args->qty > i ; i++ ) {
         if( NULL != server_get_client_by_nick(
             s, args->entry[i], FALSE
         ) ) {
-            bconcat( reply, args->entry[i] );
+            bconcat( clients, args->entry[i] );
             if( args->qty - 1 != i ) {
-                bconchar( reply, ' ' );
+                bconchar( clients, ' ' );
             }
         }
     }
-
     server_lock_clients( s, FALSE );
 
-    client_send( c, reply );
-    bdestroy( reply );
+    client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, clients );
+
+cleanup:
+
+    bdestroy( clients );
 
     return;
 }
@@ -291,9 +297,7 @@ static void parser_server_join( void* local, void* remote, struct bstrList* args
     /* Get the channel, or create it if it does not exist. */
     l = client_get_channel_by_name( &(s->self), namehunt );
     if( NULL == l ) {
-        l = calloc( 1, sizeof( CHANNEL ) );
-        scaffold_check_null( l );
-        channel_init( l, namehunt );
+        channel_new( l, namehunt );
         gamedata_init_server( &(l->gamedata), namehunt );
         client_add_channel( &(s->self), l );
         scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
@@ -495,9 +499,7 @@ static void parser_client_join( void* local, void* gamedata, struct bstrList* ar
     /* Get the channel, or create it if it does not exist. */
     l = client_get_channel_by_name( c, args->entry[2] );
     if( NULL == l ) {
-        l = calloc( 1, sizeof( CHANNEL ) );
-        scaffold_check_null( l );
-        channel_init( l, args->entry[2] );
+        channel_new( l, args->entry[2] );
         client_add_channel( c, l );
         scaffold_print_info( "Client created local channel mirror: %s\n", bdata( args->entry[2] ) );
     }

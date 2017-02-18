@@ -51,10 +51,6 @@ typedef enum {
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
-#define scaffold_copy_string( dest, src ) \
-    bassignformat( dest, "%s", bdata( src ) ); \
-    assert( NULL != dest );
-
 #define scaffold_check_null( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \

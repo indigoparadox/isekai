@@ -15,6 +15,21 @@ void client_init( CLIENT* c ) {
 }
 
 void client_cleanup( CLIENT* c ) {
+    int i;
+    CHANNEL* l_iter = NULL;
+
+    for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
+        l_iter = vector_get( &(c->channels ), i );
+        /* XXX: Cleanup channel if it has no other clients. */
+        if( 1 >= vector_count( &(l_iter->clients) ) ) {
+            scaffold_print_debug(
+                "Channel %s has no clients. Deleting.\n", bdata( l_iter->name )
+            );
+            channel_cleanup( l_iter );
+        }
+    }
+
+    vector_free( &(c->channels) );
     connection_cleanup( &(c->link) );
     bdestroy( c->buffer );
     bdestroy( c->nick );
