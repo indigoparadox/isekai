@@ -41,37 +41,18 @@ int input_execute( INPUT* input ) {
     return FALSE;
 }
 
-int input_get_char( INPUT* input ) {
-    static VECTOR hysteresis = { 0 }; /* Kind of a hack to init this. */
-    int i;
-    int* i_test = NULL;
-    int key_out = -1;
+int16_t input_get_char( INPUT* input ) {
+    int16_t key_out = -1;
 
     poll_keyboard();
 
-    for( i = 0 ; vector_count( hysteresis ) > i ; i++ ) {
-        i_test = vector_get( hysteresis, i );
-        if( !key[*i_test] ) {
-            vector_delete( hysteresis, i );
-            break;
-        }
+    if( keypressed() ) {
+        key_out = readkey();
     }
 
-    for( i = 0 ; KEY_MAX > i ; i++ ) {
-        if( key[i] ) {
-            for( j = 0 ; vector_count( hysteresis ) > j ; j++ ) {
-                i_test = vector_get( hysteresis, j );
-                if( *i_test == i ) {
-                    // XXX
-                }
-            }
-
-            key_out = i;
-            i_test = calloc( 1, sizeof( int ) );
-            *i_test = i;
-            vector_add( hysteresis, i_test );
-        }
+    if( 0 <= key_out ) {
+        return key_out & 0xff;
+    } else {
+        return 0;
     }
-
-    return key_out;
 }
