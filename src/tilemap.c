@@ -10,6 +10,9 @@ void tilemap_init( TILEMAP* t ) {
 #ifdef INIT_ZEROES
     memset( t, '\0', sizeof( TILEMAP ) );
 #endif /* INIT_ZEROES */
+
+    vector_init( &(t->layers) );
+    vector_init( &(t->positions) );
 }
 
 void tilemap_cleanup( TILEMAP* t ) {

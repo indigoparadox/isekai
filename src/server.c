@@ -25,9 +25,12 @@ void server_cleanup( SERVER* s ) {
     /* Remove clients. */
     for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
         c = (CLIENT*)vector_get( &(s->clients), i );
+        server_cleanup_client_channels( s, c );
         client_cleanup( c );
     }
     vector_free( &(s->clients) );
+
+    /* Don't remove channels, since those will be removed as clients are. */
 
     client_cleanup( &(s->self) );
 }
@@ -98,6 +101,31 @@ cleanup:
     return c;
 }
 
+void server_cleanup_client_channels( SERVER* s, CLIENT* c ) {
+    int i, j;
+    CHANNEL* l_iter;
+
+    for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
+        l_iter = vector_get( &(c->channels ), i );
+        /* Cleanup channel if it has no other clients. */
+        if( 1 >= vector_count( &(l_iter->clients) ) ) {
+            scaffold_print_debug(
+                "Channel %s has no clients. Deleting.\n", bdata( l_iter->name )
+            );
+
+            if( NULL != s ) {
+                for( j = 0 ; vector_count( &(s->self.channels) ) > j ; j++ ) {
+                    if( 0 == bstrcmp( (((CHANNEL*)vector_get( &(s->self.channels), j ))->name), l_iter->name ) ) {
+                        vector_delete( &(s->self.channels), j );
+                    }
+                }
+            }
+
+            channel_cleanup( l_iter );
+        }
+    }
+}
+
 void server_drop_client( SERVER* s, int socket ) {
     CLIENT* c;
     int index;
@@ -105,6 +133,7 @@ void server_drop_client( SERVER* s, int socket ) {
     server_lock_clients( s, TRUE );
     index = server_get_client_index_by_socket( s, socket, FALSE );
     c = vector_get( &(s->clients), index );
+    server_cleanup_client_channels( s, c );
     client_cleanup( c );
     vector_delete( &(s->clients), index );
     server_lock_clients( s, FALSE );

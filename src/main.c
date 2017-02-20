@@ -29,13 +29,14 @@ int main( int argc, char** argv ) {
     GAMEDATA d;
     UI ui;
 
-    srand( (unsigned)time( &tm ) );
-
-    #ifndef DEBUG
-    graphics_init_screen( &g, 640, 480 );
+    #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
+    graphics_screen_init( &g, 640, 480 );
+    scaffold_check_nonzero( scaffold_error );
     #endif /* DEBUG */
     input_init( &p );
     ui_init( &ui, &g );
+
+    srand( (unsigned)time( &tm ) );
 
     graphics_draw_text( &g, 20, 20, &str_loading );
     graphics_flip_screen( &g );
@@ -46,6 +47,8 @@ int main( int argc, char** argv ) {
 
     server_new( server, localhost );
     client_new( client );
+
+    p.client = client;
 
     do {
         server_listen( server, 33080 );
@@ -100,6 +103,10 @@ cleanup:
     server_cleanup( server );
     free( server );
     graphics_shutdown( &g );
+    allegro_exit();
 
     return 0;
 }
+#ifdef USE_ALLEGRO
+END_OF_MAIN();
+#endif /* USE_ALLEGRO */
