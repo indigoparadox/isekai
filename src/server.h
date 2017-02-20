@@ -29,6 +29,7 @@ void server_cleanup( SERVER* s );
 void server_add_connection( SERVER* s, CLIENT* n );
 CLIENT* server_get_client( SERVER* s, int index );
 CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick, BOOL lock );
+void server_cleanup_client_channels( SERVER* s, CLIENT* c );
 void server_drop_client( SERVER* s, int index );
 void server_listen( SERVER* s, int port );
 void server_service_clients( SERVER* s );

@@ -541,8 +541,6 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
         parser_table = parser_table_server;
         arg_command_index = 0;
     } else {
-        /* scaffold_print_error( "ERROR: Client dispatch table not implemented.\n" );
-        goto cleanup; */
         parser_table = parser_table_client;
         arg_command_index = 1; /* First index is just the server name. */
     }

@@ -4,7 +4,7 @@
 void ui_window_init( UI_WINDOW* win, UI* ui, gu x, gu y, gu width, gu height ) {
     win->ui = ui;
     win->title = bfromcstr( "" );
-    graphics_init_surface( &(win->element), x, y, width, height );
+    graphics_surface_init( &(win->element), x, y, width, height );
 }
 
 void ui_window_transform( UI_WINDOW* win, gu x, gu y, gu width, gu height ) {

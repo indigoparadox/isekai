@@ -19,6 +19,8 @@ void gamedata_init_server( GAMEDATA* d, const bstring name ) {
     memset( d, '\0', sizeof( GAMEDATA ) );
 #endif /* INIT_ZEROES */
 
+    tilemap_init( &(d->tmap) );
+
     scaffold_print_info( "Loading data for channel: %s\n", bdata( name ) );
     mapdata_filename = bstrcpy( name );
     scaffold_check_null( mapdata_filename );
