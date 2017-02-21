@@ -58,22 +58,22 @@ DESCRIPTION:
                 table has been created to avoid string scans.
 
 DESIGN GOALS:	Specifically:
-		Code is a stand-alone utility to perform base64 
-		encoding/decoding. It should be genuinely useful 
-		when the need arises and it meets a need that is 
-		likely to occur for some users.  
-		Code acts as sample code to show the author's 
-		design and coding style.  
+		Code is a stand-alone utility to perform base64
+		encoding/decoding. It should be genuinely useful
+		when the need arises and it meets a need that is
+		likely to occur for some users.
+		Code acts as sample code to show the author's
+		design and coding style.
 
-		Generally: 
+		Generally:
 		This program is designed to survive:
 		Everything you need is in a single source file.
 		It compiles cleanly using a vanilla ANSI C compiler.
-		It does its job correctly with a minimum of fuss.  
-		The code is not overly clever, not overly simplistic 
-		and not overly verbose. 
-		Access is 'cut and paste' from a web page.  
-		Terms of use are reasonable.  
+		It does its job correctly with a minimum of fuss.
+		The code is not overly clever, not overly simplistic
+		and not overly verbose.
+		Access is 'cut and paste' from a web page.
+		Terms of use are reasonable.
 
 VALIDATION:     Non-trivial code is never without errors.  This
                 file likely has some problems, since it has only
@@ -211,9 +211,9 @@ VERSION HISTORY:
                 Bob Trower 2011/02/14 -- Cast altered to fix warning in VS6.
                 Bob Trower 2015/10/29 -- Change *bug* from 0 to EOF in putc
                                          invocation. BIG shout out to people
-                                         reviewing on sourceforge, 
+                                         reviewing on sourceforge,
                                          particularly rachidc, jorgeventura
-                                         and zeroxia. 
+                                         and zeroxia.
                                       -- Change date format to conform with
                                          latest convention.
 
@@ -221,6 +221,12 @@ VERSION HISTORY:
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+
+#ifndef USE_B64_MAIN
+#include "bstrlib/bstrlib.h"
+#include "scaffold.h"
+#endif /* USE_B64_MAIN */
 
 /*
 ** Translation Table as described in RFC1113
@@ -231,6 +237,8 @@ static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 ** Translation Table to decode (created by author)
 */
 static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
+
+#ifdef USE_B64_MAIN
 
 /*
 ** returnable errors
@@ -264,6 +272,8 @@ static char *b64_msgs[ B64_MAX_MESSAGES ] = {
 
 #define b64_message( ec ) ((ec > 0 && ec < B64_MAX_MESSAGES ) ? b64_msgs[ ec ] : b64_msgs[ 0 ])
 
+#endif /* USE_B64_MAIN */
+
 /*
 ** encodeblock
 **
@@ -282,18 +292,28 @@ static void encodeblock( unsigned char *in, unsigned char *out, int len )
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
+#ifdef USE_B64_MAIN
 static int encode( FILE *infile, FILE *outfile, int linesize )
+#else
+int encode( const uint8_t* indata, int indata_len, bstring outstring, int linesize )
+#endif /* USE_B64_MAIN */
 {
     unsigned char in[3];
 	unsigned char out[4];
     int i, len, blocksout = 0;
     int retcode = 0;
+    int indata_place = 0;
 
 	*in = (unsigned char) 0;
 	*out = (unsigned char) 0;
+#ifdef USE_B64_MAIN
     while( feof( infile ) == 0 ) {
+#else
+    while( indata_len > indata_place ) {
+#endif /* USE_B64_MAIN */
         len = 0;
         for( i = 0; i < 3; i++ ) {
+#ifdef USE_B64_MAIN
             in[i] = (unsigned char) getc( infile );
 
             if( feof( infile ) == 0 ) {
@@ -302,26 +322,46 @@ static int encode( FILE *infile, FILE *outfile, int linesize )
             else {
                 in[i] = (unsigned char) 0;
             }
+#else
+            in[i] = (unsigned char)indata[indata_place++];
+            if( indata_len > indata_place ) {
+                len++;
+            } else {
+                in[i] = (unsigned char)0;
+            }
+#endif /* USE_B64_MAIN */
         }
         if( len > 0 ) {
             encodeblock( in, out, len );
             for( i = 0; i < 4; i++ ) {
+#ifdef USE_B64_MAIN
                 if( putc( (int)(out[i]), outfile ) == EOF ){
 	                if( ferror( outfile ) != 0 )      {
-	                    perror( b64_message( B64_FILE_IO_ERROR ) );
+	                    //perror( b64_message( B64_FILE_IO_ERROR ) );
 	                    retcode = B64_FILE_IO_ERROR;
 	                }
 					break;
-				}
+#else
+                bconchar( outstring, out[i] );
+#endif /* USE_B64_MAIN */
             }
             blocksout++;
         }
+#ifdef USE_B64_MAIN
         if( blocksout >= (linesize/4) || feof( infile ) != 0 ) {
             if( blocksout > 0 ) {
                 fprintf( outfile, "\n" );
             }
             blocksout = 0;
         }
+#else
+        if( blocksout >= (linesize/4) || indata_len <= indata_place ) {
+            if( blocksout > 0 ) {
+                bconchar( outstring, '\n' );
+            }
+            blocksout = 0;
+        }
+#endif /* USE_B64_MAIN */
     }
     return( retcode );
 }
@@ -332,7 +372,7 @@ static int encode( FILE *infile, FILE *outfile, int linesize )
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
 static void decodeblock( unsigned char *in, unsigned char *out )
-{   
+{
     out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
     out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
     out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
@@ -390,6 +430,8 @@ static int decode( FILE *infile, FILE *outfile )
     }
     return( retcode );
 }
+
+#ifdef USE_B64_MAIN
 
 /*
 ** b64
@@ -587,3 +629,4 @@ int main( int argc, char **argv )
 
     return( retcode );
 }
+#endif /* USE_B64_MAIN */
