@@ -1,4 +1,3 @@
-
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
@@ -8,10 +7,10 @@
 #include <netinet/in.h>
 
 typedef struct _connection {
-    int socket;
-    BOOL listening;
-    void* (*callback)( void* client );
-    void* arg;
+   int socket;
+   BOOL listening;
+   void* (*callback)( void* client );
+   void* arg;
 } CONNECTION;
 
 CONNECTION* connection_register_incoming( CONNECTION* n_server );

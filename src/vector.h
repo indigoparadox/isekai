@@ -1,13 +1,12 @@
-
 #ifndef VECTOR_H
 #define VECTOR_H
 
 #include "scaffold.h"
 
 typedef struct vector_ {
-    void** data;
-    int size;
-    int count;
+   void** data;
+   int size;
+   int count;
 } VECTOR;
 
 void vector_init( VECTOR* v );

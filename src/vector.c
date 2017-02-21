@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,78 +5,78 @@
 #include "vector.h"
 
 void vector_init( VECTOR* v ) {
-    v->data = NULL;
-    v->size = 0;
-    v->count = 0;
+   v->data = NULL;
+   v->size = 0;
+   v->count = 0;
 }
 
 void vector_free( VECTOR* v ) {
-    free( v->data );
+   free( v->data );
 }
 
 void vector_add( VECTOR* v, void* data ) {
 
-    if( 0 == v->size ) {
-        v->size = 10;
-        v->data = calloc( v->size, sizeof(void*) );
-        scaffold_check_null( v->data );
-    }
+   if( 0 == v->size ) {
+      v->size = 10;
+      v->data = calloc( v->size, sizeof(void*) );
+      scaffold_check_null( v->data );
+   }
 
 
-    if( v->size == v->count ) {
-        v->size *= 2;
-        v->data = realloc( v->data, sizeof(void*) * v->size );
-        scaffold_check_null( v->data );
-        /* TODO: Clear new vector elements? */
-    }
+   if( v->size == v->count ) {
+      v->size *= 2;
+      v->data = realloc( v->data, sizeof(void*) * v->size );
+      scaffold_check_null( v->data );
+      /* TODO: Clear new vector elements? */
+   }
 
-    v->data[v->count] = data;
-    v->count++;
+   v->data[v->count] = data;
+   v->count++;
 
 cleanup:
 
-    return;
+   return;
 }
 
 void vector_set( VECTOR* v, int index, void* data ) {
-    scaffold_check_bounds( index, v->count );
+   scaffold_check_bounds( index, v->count );
 
-    v->data[index] = data;
+   v->data[index] = data;
 
 cleanup:
 
-    return;
+   return;
 }
 
-void* vector_get( VECTOR *v, int index ) {
-    void* retptr = NULL;
+void* vector_get( VECTOR* v, int index ) {
+   void* retptr = NULL;
 
-    scaffold_check_bounds( index, v->count );
+   scaffold_check_bounds( index, v->count );
 
-    retptr = v->data[index];
+   retptr = v->data[index];
 
 cleanup:
 
-    return retptr;
+   return retptr;
 }
 
-void vector_delete( VECTOR *v, int index ) {
-    int i, j;
+void vector_delete( VECTOR* v, int index ) {
+   int i, j;
 
-    scaffold_check_bounds( index, v->count );
+   scaffold_check_bounds( index, v->count );
 
-    for( i = index, j = index; i < v->count; i++ ) {
-        v->data[j] = v->data[i];
-        j++;
-    }
+   for( i = index, j = index; i < v->count; i++ ) {
+      v->data[j] = v->data[i];
+      j++;
+   }
 
-    v->count--;
+   v->count--;
 
 cleanup:
 
-    return;
+   return;
 }
 
 int vector_count( VECTOR* v ) {
-    return v->count;
+   return v->count;
 }

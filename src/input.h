@@ -1,4 +1,3 @@
-
 #ifndef INPUT_H
 #define INPUT_H
 
@@ -7,8 +6,8 @@
 #include <stdint.h>
 
 typedef struct {
-    void* event;
-    CLIENT* client;
+   void* event;
+   CLIENT* client;
 } INPUT;
 
 void input_init( INPUT* p );
