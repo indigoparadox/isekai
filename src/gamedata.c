@@ -25,7 +25,7 @@ void gamedata_init_server( GAMEDATA* d, const bstring name ) {
     mapdata_filename = bstrcpy( name );
     scaffold_check_null( mapdata_filename );
     bdelete( mapdata_filename, 0, 1 );
-    mapdata_path = bformat( "./%s.json", bdata( mapdata_filename ) );
+    mapdata_path = bformat( "./%s.tmx", bdata( mapdata_filename ) );
     scaffold_check_null( mapdata_path );
     scaffold_print_info( "Loading for data in: %s\n", bdata( mapdata_path ) );
     tilemap_load_file( &(d->tmap), mapdata_path );
