@@ -1,4 +1,3 @@
-
 #include "../input.h"
 
 #include <memory.h>
@@ -6,15 +5,15 @@
 
 void input_init( INPUT* p ) {
 #ifdef INIT_ZEROES
-    memset( p, '\0', sizeof( INPUT ) );
+   memset( p, '\0', sizeof( INPUT ) );
 #endif /* INIT_ZEROES */
-    timeout( 5 );
+   timeout( 5 );
 }
 
 int input_get_char( INPUT* input ) {
-    int key;
+   int key;
 
-    key = getch();
+   key = getch();
 
-    return key;
+   return key;
 }

@@ -1,4 +1,3 @@
-
 #ifndef TILEMAP_H
 #define TILEMAP_H
 
@@ -11,61 +10,61 @@
 typedef struct _CLIENT CLIENT;
 
 typedef enum {
-    TILEMAP_ORIENTATION_ORTHO,
-    TILEMAP_ORIENTATION_ISO,
+   TILEMAP_ORIENTATION_ORTHO,
+   TILEMAP_ORIENTATION_ISO,
 } TILEMAP_ORIENTATION;
 
 typedef struct {
-    GRAPHICS* image;
+   GRAPHICS* image;
 } TILEMAP_TILESET_IMAGE;
 
 typedef struct {
-    bstring name;
-    int32_t tile;
+   bstring name;
+   int32_t tile;
 } TILEMAP_TERRAIN_DATA;
 
 typedef struct {
-    int32_t id;
-    int32_t terrain[4];
+   int32_t id;
+   int32_t terrain[4];
 } TILEMAP_TILE_DATA;
 
 typedef struct {
-    int32_t firstgid;
-    uint32_t tileheight;
-    uint32_t tilewidth;
-    VECTOR images;
-    VECTOR terrain;
-    VECTOR tiles;
+   int32_t firstgid;
+   uint32_t tileheight;
+   uint32_t tilewidth;
+   VECTOR images;
+   VECTOR terrain;
+   VECTOR tiles;
 } TILEMAP_TILESET;
 
 typedef struct {
-    uint32_t x_previous;
-    uint32_t y_previous;
-    uint32_t z_previous;
-    uint32_t x;
-    uint32_t y;
-    uint32_t z;
-    CLIENT* entity;
+   uint32_t x_previous;
+   uint32_t y_previous;
+   uint32_t z_previous;
+   uint32_t x;
+   uint32_t y;
+   uint32_t z;
+   CLIENT* entity;
 } TILEMAP_POSITION;
 
 typedef struct {
-    uint32_t x;
-    uint32_t y;
-    uint32_t width;
-    uint32_t height;
-    uint16_t* tiles;
-    uint32_t tiles_count;
-    uint32_t tiles_alloc;
+   uint32_t x;
+   uint32_t y;
+   uint32_t width;
+   uint32_t height;
+   uint16_t* tiles;
+   uint32_t tiles_count;
+   uint32_t tiles_alloc;
 } TILEMAP_LAYER;
 
 typedef struct {
-    uint32_t width;
-    uint32_t height;
-    VECTOR layers;
-    VECTOR positions;
-    uint32_t starting_x;
-    uint32_t starting_y;
-    TILEMAP_ORIENTATION orientation;
+   uint32_t width;
+   uint32_t height;
+   VECTOR layers;
+   VECTOR positions;
+   uint32_t starting_x;
+   uint32_t starting_y;
+   TILEMAP_ORIENTATION orientation;
 } TILEMAP;
 
 /* y xxxxx
@@ -116,8 +115,8 @@ void tilemap_layer_cleanup( TILEMAP_LAYER* layer );
 void tilemap_position_init( TILEMAP_POSITION* position );
 void tilemap_position_cleanup( TILEMAP_POSITION* position );
 void tilemap_iterate_screen_row(
-    TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
+   TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
+   void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
 void tilemap_load( TILEMAP* t, const uint8_t* tmdata, int datasize );
 void tilemap_load_file( TILEMAP* t, bstring filename );

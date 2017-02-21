@@ -1,4 +1,3 @@
-
 #ifndef CLIENT_H
 #define CLIENT_H
 
@@ -12,22 +11,22 @@
 typedef struct _CHANNEL CHANNEL;
 
 typedef struct _CLIENT {
-    /* "Parent class" */
-    CONNECTION link;
+   /* "Parent class" */
+   CONNECTION link;
 
-    /* Items shared between server and client. */
-    BOOL running;
-    bstring buffer;
-    bstring nick;
-    bstring username;
-    bstring realname;
-    bstring remote;
-    uint8_t mode;
-    uint8_t flags;
-    int x; /* Tile X */
-    int y; /* Tile Y */
-    VECTOR channels; /* All channels in now; all channels avail on server. */
-    int sentinal;
+   /* Items shared between server and client. */
+   BOOL running;
+   bstring buffer;
+   bstring nick;
+   bstring username;
+   bstring realname;
+   bstring remote;
+   uint8_t mode;
+   uint8_t flags;
+   int x; /* Tile X */
+   int y; /* Tile Y */
+   VECTOR channels; /* All channels in now; all channels avail on server. */
+   int sentinal;
 } CLIENT;
 
 #define CLIENT_FLAGS_HAVE_USER 0x01

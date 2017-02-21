@@ -1,4 +1,3 @@
-
 #ifndef SERVER_H
 #define SERVER_H
 
@@ -8,13 +7,13 @@
 #include "channel.h"
 
 typedef struct {
-    /* "Parent class" */
-    CLIENT self;
+   /* "Parent class" */
+   CLIENT self;
 
-    /* Items after this line are server-specific. */
-    VECTOR clients;
-    bstring servername;
-    bstring version;
+   /* Items after this line are server-specific. */
+   VECTOR clients;
+   bstring servername;
+   bstring version;
 } SERVER;
 
 #define SERVER_SENTINAL 164641

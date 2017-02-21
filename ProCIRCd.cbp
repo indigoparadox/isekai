@@ -125,9 +125,6 @@
 		<Unit filename="src/json/AUTHORS" />
 		<Unit filename="src/json/LICENSE" />
 		<Unit filename="src/json/README.md" />
-		<Unit filename="src/json/json.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/json/json.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />

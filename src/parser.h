@@ -1,12 +1,11 @@
-
 #ifndef PARSER_H
 #define PARSER_H
 
 #include "bstrlib/bstrlib.h"
 
 typedef struct {
-    struct tagbstring command;
-    void (*callback)( void* local, void* remote, struct bstrList* args );
+   struct tagbstring command;
+   void (*callback)( void* local, void* remote, struct bstrList* args );
 } parser_entry;
 
 #define ERR_NONICKNAMEGIVEN 431

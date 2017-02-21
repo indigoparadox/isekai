@@ -1,4 +1,3 @@
-
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
@@ -8,10 +7,10 @@
 #include "gamedata.h"
 
 typedef struct _CHANNEL {
-    GAMEDATA gamedata;
-    bstring name;
-    bstring topic;
-    VECTOR clients;
+   GAMEDATA gamedata;
+   bstring name;
+   bstring topic;
+   VECTOR clients;
 } CHANNEL;
 
 #define channel_new( l, name ) \

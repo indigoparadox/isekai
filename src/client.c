@@ -1,138 +1,137 @@
-
 #include "client.h"
 
 #include "parser.h"
 #include "server.h"
 
 void client_init( CLIENT* c ) {
-    vector_init( &(c->channels) );
-    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
-    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-    c->sentinal = CLIENT_SENTINAL;
-    c->running = TRUE;
+   vector_init( &(c->channels) );
+   c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
+   c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->sentinal = CLIENT_SENTINAL;
+   c->running = TRUE;
 }
 
 void client_cleanup( CLIENT* c ) {
-    vector_free( &(c->channels) );
-    connection_cleanup( &(c->link) );
-    bdestroy( c->buffer );
-    bdestroy( c->nick );
-    bdestroy( c->realname );
-    bdestroy( c->remote );
-    bdestroy( c->username );
+   vector_free( &(c->channels) );
+   connection_cleanup( &(c->link) );
+   bdestroy( c->buffer );
+   bdestroy( c->nick );
+   bdestroy( c->realname );
+   bdestroy( c->remote );
+   bdestroy( c->username );
 }
 
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
-    CHANNEL* l = NULL;
-    int i;
+   CHANNEL* l = NULL;
+   int i;
 
-    client_lock_channels( c, TRUE );
-    for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
-        l = vector_get( &(c->channels), i );
-        if( 0 == bstrcmp( l->name, name ) ) {
-            /* Skip the reset below. */
-            goto cleanup;
-        }
-    }
-    l = NULL;
+   client_lock_channels( c, TRUE );
+   for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
+      l = vector_get( &(c->channels), i );
+      if( 0 == bstrcmp( l->name, name ) ) {
+         /* Skip the reset below. */
+         goto cleanup;
+      }
+   }
+   l = NULL;
 
 cleanup:
-    client_lock_channels( c, FALSE );
-    return l;
+   client_lock_channels( c, FALSE );
+   return l;
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {
-    bstring buffer;
+   bstring buffer;
 
-    connection_connect( &(c->link), server , port );
-    scaffold_check_negative( scaffold_error );
+   connection_connect( &(c->link), server , port );
+   scaffold_check_negative( scaffold_error );
 
-    buffer = bfromcstr( "NICK " );
-    bconcat( buffer, c->nick );
-    client_send( c, buffer );
-    bdestroy( buffer );
+   buffer = bfromcstr( "NICK " );
+   bconcat( buffer, c->nick );
+   client_send( c, buffer );
+   bdestroy( buffer );
 
-    buffer = bfromcstr( "USER " );
-    bconcat( buffer, c->realname );
-    client_send( c, buffer );
-    bdestroy( buffer );
+   buffer = bfromcstr( "USER " );
+   bconcat( buffer, c->realname );
+   client_send( c, buffer );
+   bdestroy( buffer );
 
 cleanup:
 
-    return;
+   return;
 }
 
 /* This runs on the local client. */
 void client_update( CLIENT* c, GAMEDATA* d ) {
-    ssize_t last_read_count = 0;
+   ssize_t last_read_count = 0;
 
-    btrunc( c->buffer, 0 );
-    last_read_count = connection_read_line( &(c->link), c->buffer );
-    btrimws( c->buffer );
+   btrunc( c->buffer, 0 );
+   last_read_count = connection_read_line( &(c->link), c->buffer );
+   btrimws( c->buffer );
 
-    if( 0 >= last_read_count ) {
-        /* TODO: Handle error reading. */
-        goto cleanup;
-    }
+   if( 0 >= last_read_count ) {
+      /* TODO: Handle error reading. */
+      goto cleanup;
+   }
 
-    scaffold_print_debug(
-        "Client: Line received from %d: %s\n",
-        c->link.socket, bdata( c->buffer )
-    );
+   scaffold_print_debug(
+      "Client: Line received from %d: %s\n",
+      c->link.socket, bdata( c->buffer )
+   );
 
-    parser_dispatch( c, d, c->buffer );
+   parser_dispatch( c, d, c->buffer );
 
 cleanup:
-    return;
+   return;
 }
 
 void client_add_channel( CLIENT* c, CHANNEL* l ) {
-    client_lock_channels( c, TRUE );
-    vector_add( &(c->channels), l );
-    client_lock_channels( c, FALSE );
+   client_lock_channels( c, TRUE );
+   vector_add( &(c->channels), l );
+   client_lock_channels( c, FALSE );
 }
 
 void client_join_channel( CLIENT* c, bstring name ) {
-    /* We won't record the channel in our list until the server confirms it. */
-    bstring buffer = NULL;
-    buffer = bfromcstr( "JOIN " );
-    bconcat( buffer, name );
-    client_send( c, buffer );
-    bdestroy( buffer );
+   /* We won't record the channel in our list until the server confirms it. */
+   bstring buffer = NULL;
+   buffer = bfromcstr( "JOIN " );
+   bconcat( buffer, name );
+   client_send( c, buffer );
+   bdestroy( buffer );
 }
 
 void client_send( CLIENT* c, bstring buffer ) {
 
-    /* TODO: Make sure we're still connected. */
+   /* TODO: Make sure we're still connected. */
 
-    bconchar( buffer, '\r' );
-    bconchar( buffer, '\n' );
-    connection_write_line( &(c->link), buffer );
+   bconchar( buffer, '\r' );
+   bconchar( buffer, '\n' );
+   connection_write_line( &(c->link), buffer );
 
-    scaffold_print_debug( "Sent: %s", bdata( buffer ) );
+   scaffold_print_debug( "Sent: %s", bdata( buffer ) );
 }
 
 void client_printf( CLIENT* c, const char* message, ... ) {
-    bstring buffer = NULL;
-    va_list varg;
+   bstring buffer = NULL;
+   va_list varg;
 
-    buffer = bfromcstralloc( strlen( message ), "" );
-    scaffold_check_null( buffer );
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
 
-    va_start( varg, message );
-    scaffold_snprintf( buffer, message, varg );
-    va_end( varg );
+   va_start( varg, message );
+   scaffold_snprintf( buffer, message, varg );
+   va_end( varg );
 
-    if( 0 == scaffold_error ) {
-        client_send( c, buffer );
-    }
+   if( 0 == scaffold_error ) {
+      client_send( c, buffer );
+   }
 
 cleanup:
-    bdestroy( buffer );
-    return;
+   bdestroy( buffer );
+   return;
 }
 
 void client_lock_channels( CLIENT* c, BOOL lock ) {

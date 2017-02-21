@@ -1,4 +1,3 @@
-
 #ifndef GAMEDATA_H
 #define GAMEDATA_H
 
@@ -11,8 +10,8 @@ typedef struct {
 } GAMEDATA_UPDATE;
 
 typedef struct _GAMEDATA {
-    TILEMAP tmap;
-    UI* ui;
+   TILEMAP tmap;
+   UI* ui;
 } GAMEDATA;
 
 #define gamedata_new_server( d ) \
@@ -29,11 +28,11 @@ void gamedata_init_server( GAMEDATA* g, const bstring name );
 void gamedata_init_client( GAMEDATA* g, UI* ui, const bstring name );
 void gamedata_cleanup( GAMEDATA* d );
 void gamedata_update_server(
-    GAMEDATA* d, CLIENT* c, const struct bstrList* args,
-    bstring* reply_c, bstring* reply_l
+   GAMEDATA* d, CLIENT* c, const struct bstrList* args,
+   bstring* reply_c, bstring* reply_l
 );
 void gamedata_update_client(
-    GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
+   GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
 );
 
 #endif /* GAMEDATA_H */
