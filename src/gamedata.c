@@ -57,11 +57,24 @@ void gamedata_update_server(
 
 }
 
-void gamedata_update_client(
+void gamedata_react_client(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
 ) {
+}
+
+void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
    UI* ui = d->ui;
    GRAPHICS* g = ui->screen;
+   TILEMAP_TILESET* set = NULL;
+   TILEMAP_TILESET_IMAGE* image = NULL;
 
+   set = vector_get( &(d->tmap.tilesets), 0 );
+   if( NULL != set ) {
+      image = vector_get( &(set->images), 0 );
+   }
 
+   if( NULL != image ) {
+      graphics_blit( g, 0, 0, 32, 32, image->image );
+      graphics_flip_screen( g );
+   }
 }

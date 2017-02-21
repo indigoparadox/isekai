@@ -31,8 +31,9 @@ void gamedata_update_server(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args,
    bstring* reply_c, bstring* reply_l
 );
-void gamedata_update_client(
+void gamedata_react_client(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
 );
+void gamedata_update_client( GAMEDATA* d, CLIENT* c );
 
 #endif /* GAMEDATA_H */
