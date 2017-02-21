@@ -4,6 +4,7 @@
 
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
+#include "graphics.h"
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
 
@@ -15,8 +16,27 @@ typedef enum {
 } TILEMAP_ORIENTATION;
 
 typedef struct {
+    GRAPHICS* image;
+} TILEMAP_TILESET_IMAGE;
 
-} TILEMAP_TERRAIN;
+typedef struct {
+    bstring name;
+    int32_t tile;
+} TILEMAP_TERRAIN_DATA;
+
+typedef struct {
+    int32_t id;
+    int32_t terrain[4];
+} TILEMAP_TILE_DATA;
+
+typedef struct {
+    int32_t firstgid;
+    uint32_t tileheight;
+    uint32_t tilewidth;
+    VECTOR images;
+    VECTOR terrain;
+    VECTOR tiles;
+} TILEMAP_TILESET;
 
 typedef struct {
     uint32_t x_previous;
@@ -82,7 +102,7 @@ typedef struct {
     free( t );
 
 #define tilemap_layer_free( layer ) \
-    tilemap_cleanup( layer ); \
+    tilemap_layer_cleanup( layer ); \
     free( layer );
 
 #define tilemap_position_free( position ) \
