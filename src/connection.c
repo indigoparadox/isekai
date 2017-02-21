@@ -271,9 +271,11 @@ cleanup:
 }
 
 ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
-   ssize_t last_read_count = 0,
-           total_read_count = 0;
+   ssize_t total_read_count = 0;
+#ifdef USE_NETWORK
+   ssize_t last_read_count = 0;
    char read_char = '\0';
+#endif /* USE_NETWORK */
 
    scaffold_check_null( buffer );
    scaffold_check_null( n );

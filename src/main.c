@@ -17,6 +17,9 @@ void handle_interrupt( int arg ) {
    server->self.running = FALSE;
 }
 
+/* TODO: Is this really defined nowhere? */
+void allegro_exit();
+
 int main( int argc, char** argv ) {
    CLIENT* client = NULL;
    bstring localhost = NULL,

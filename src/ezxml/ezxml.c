@@ -137,18 +137,23 @@ const char **ezxml_pi(ezxml_t xml, const char *target)
 // set an error string and return root
 ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...)
 {
-    va_list ap;
-    int line = 1;
-    char *t, fmt[EZXML_ERRL];
+   va_list ap;
+   int line = 1;
+   char *t, fmt[EZXML_ERRL];
 
-    for (t = root->s; t < s; t++) if (*t == '\n') line++;
-      (fmt, EZXML_ERRL, "[error near line %d]: %s", line, err);
+   for( t = root->s ; t < s ; t++ ) {
+      if( *t == '\n' ) {
+         line++;
+      }
+      /* XXX: No effect? */
+      /* (fmt, EZXML_ERRL, "[error near line %d]: %s", line, err); */
 
-    va_start(ap, err);
-    vsnprintf(root->err, EZXML_ERRL, fmt, ap);
-    va_end(ap);
+      va_start(ap, err);
+      vsnprintf(root->err, EZXML_ERRL, fmt, ap);
+      va_end(ap);
+   }
 
-    return &root->xml;
+   return &root->xml;
 }
 
 // Recursively decodes entity and character references and normalizes new lines
@@ -363,7 +368,8 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
             else *s = '\0'; // null terminate tag name
             for (i = 0; root->attr[i] && strcmp(n, root->attr[i][0]); i++);
 
-            while (*(n = ++s + strspn(s, EZXML_WS)) && *n != '>') {
+            s++;
+            while (*(n = s + strspn(s, EZXML_WS)) && *n != '>') {
                 if (*(s = n + strcspn(n, EZXML_WS))) *s = '\0'; // attr name
                 else { ezxml_err(root, t, "malformed <!ATTLIST"); break; }
 
@@ -404,6 +410,8 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
                 root->attr[i][j + 1] = (v) ? ezxml_decode(v, root->ent, *c)
                                            : NULL;
                 root->attr[i][j] = n; // attribute name
+
+                s++;
             }
         }
         else if (! strncmp(s, "<!--", 4)) s = strstr(s + 4, "-->"); // comments
