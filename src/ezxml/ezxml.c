@@ -74,6 +74,7 @@ ezxml_t ezxml_idx(ezxml_t xml, int idx)
     return xml;
 }
 
+#ifdef EZXML_CSTR
 // returns the value of the requested tag attribute or NULL if not found
 const char *ezxml_attr(ezxml_t xml, const char *attr)
 {
@@ -90,6 +91,63 @@ const char *ezxml_attr(ezxml_t xml, const char *attr)
     while (root->attr[i][j] && strcmp(attr, root->attr[i][j])) j += 3;
     return (root->attr[i][j]) ? root->attr[i][j + 1] : NULL; // found default
 }
+#else
+/* returns the value of the requested tag attribute or NULL if not found */
+void ezxml_attr( ezxml_t xml, bstring buffer, const bstring attr ) {
+   int i = 0;
+   int j = 1;
+   ezxml_root_t root = (ezxml_root_t)xml;
+   char* c_buffer = NULL;
+   int bstr_result;
+   char* c_attr;
+
+   scaffold_check_null( attr );
+   scaffold_check_null( buffer );
+
+   c_attr = bdata( attr );
+   scaffold_check_null( c_attr );
+
+   if( !xml || !xml->attr ) {
+      goto check;
+   }
+
+   while( xml->attr[i] && strcmp( c_attr, xml->attr[i] ) ) {
+      i += 2;
+   }
+   if( xml->attr[i] ) {
+      c_buffer = xml->attr[i + 1]; /* found attribute */
+      goto check;
+   }
+
+   while( root->xml.parent ) {
+      root = (ezxml_root_t)root->xml.parent; /* root tag */
+   }
+   for( i = 0 ; root->attr[i] && strcmp( xml->name, root->attr[i][0] ) ; i++ );
+
+   if( !root->attr[i] ) {
+      goto check; /* no matching default attributes */
+   }
+   while( root->attr[i][j] && strcmp( c_attr, root->attr[i][j] ) ) {
+      j += 3;
+   }
+
+   if( root->attr[i][j] ) {
+      c_buffer = root->attr[i][j + 1]; /* found default */
+   }
+
+check:
+   /* Set the scaffold error. */
+   scaffold_check_null( c_buffer );
+
+   if( NULL != c_buffer ) {
+      bstr_result = bassigncstr( buffer, c_buffer );
+      scaffold_check_nonzero( bstr_result );
+   }
+
+cleanup:
+   return;
+}
+#endif /* EZXML_CSTR */
 
 // same as ezxml_get but takes an already initialized va_list
 ezxml_t ezxml_vget(ezxml_t xml, va_list ap)
@@ -684,6 +742,7 @@ ezxml_t ezxml_parse_file(const char *file)
     return xml;
 }
 
+#ifdef EZXML_CSTR
 // Encodes ampersand sequences appending the results to *dst, reallocating *dst
 // if length excedes max. a is non-zero for attribute encoding. Returns *dst
 char *ezxml_ampencode(const char *s, size_t len, char **dst, size_t *dlen,
@@ -708,7 +767,43 @@ char *ezxml_ampencode(const char *s, size_t len, char **dst, size_t *dlen,
     }
     return *dst;
 }
+#else
+static const struct tagbstring str_amp = bsStatic( "&" );
+static const struct tagbstring str_lt = bsStatic( "<" );
+static const struct tagbstring str_gt = bsStatic( ">" );
+static const struct tagbstring str_dquote = bsStatic( "\"" );
+static const struct tagbstring str_nl = bsStatic( "\n" );
+static const struct tagbstring str_tab = bsStatic( "\t" );
+static const struct tagbstring str_r = bsStatic( "\r" );
 
+static const struct tagbstring str_r_amp = bsStatic( "&amp;" );
+static const struct tagbstring str_r_lt = bsStatic( "&lt;" );
+static const struct tagbstring str_r_gt = bsStatic( "&gt;" );
+static const struct tagbstring str_r_dquote = bsStatic( "&quot;" );
+static const struct tagbstring str_r_nl = bsStatic( "&#xA;" );
+static const struct tagbstring str_r_tab = bsStatic( "&#x9;" );
+static const struct tagbstring str_r_r = bsStatic( "&#xD;" );
+
+// Encodes ampersand sequences appending the results to *dst, reallocating *dst
+// if length excedes max. a is non-zero for attribute encoding. Returns *dst
+void ezxml_ampencode( const bstring s, bstring* dst, short a ) {
+   if( NULL == *dst ) {
+      dst = bstrcpy( s );
+   } else {
+      bassign( *dst, s );
+   }
+
+   bfindreplace( *dst, str_amp, str_r_amp, 0 );
+   bfindreplace( *dst, str_lt, str_r_lt, 0 );
+   bfindreplace( *dst, str_gt, str_r_gt, 0 );
+   bfindreplace( *dst, str_dquote, str_r_dquote, 0 );
+   bfindreplace( *dst, str_nl, str_r_nl, 0 );
+   bfindreplace( *dst, str_tab, str_r_tab, 0 );
+   bfindreplace( *dst, str_r, str_r_r, 0 );
+}
+#endif /* EZXML_CSTR */
+
+#ifdef EZXML_CSTR
 // Recursively converts each tag to xml appending it to *s. Reallocates *s if
 // its length excedes max. start is the location of the previous tag in the
 // parent tag's character content. Returns *s.
@@ -761,6 +856,65 @@ char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
     return (xml->ordered) ? ezxml_toxml_r(xml->ordered, s, len, max, off, attr)
                           : ezxml_ampencode(txt + off, -1, s, len, max, 0);
 }
+#else
+/* Recursively converts each tag to xml appending it to *s. Reallocates *s if
+ * its length excedes max. start is the location of the previous tag in the
+ * parent tag's character content. Returns *s. */
+void ezxml_toxml_r( ezxml_t xml, bstring buffer, bstring* s, bstring** attr ) {
+   int i, j;
+   bstring txt;
+   size_t off = 0;
+
+   if( xml->parent ) {
+      txt = bfromcstr( xml->parent->txt );
+   } else {
+      txt = bfromcstr( "" );
+   }
+
+    // parent character content up to this tag
+    //ezxml_ampencode( txt  )
+    *s = ezxml_ampencode( txt + start, xml->off - start, s, len, max, 0);
+
+    while (*len + strlen(xml->name) + 4 > *max) // reallocate s
+        *s = (char*)realloc(*s, *max += EZXML_BUFSIZE);
+
+    *len += sprintf(*s + *len, "<%s", xml->name); // open tag
+    for (i = 0; xml->attr[i]; i += 2) { // tag attributes
+        if (ezxml_attr(xml, xml->attr[i]) != xml->attr[i + 1]) continue;
+        while (*len + strlen(xml->attr[i]) + 7 > *max) // reallocate s
+            *s = (char*)realloc(*s, *max += EZXML_BUFSIZE);
+
+        *len += sprintf(*s + *len, " %s=\"", xml->attr[i]);
+        ezxml_ampencode(xml->attr[i + 1], -1, s, len, max, 1);
+        *len += sprintf(*s + *len, "\"");
+    }
+
+    for (i = 0; attr[i] && strcmp(attr[i][0], xml->name); i++);
+    for (j = 1; attr[i] && attr[i][j]; j += 3) { // default attributes
+        if (! attr[i][j + 1] || ezxml_attr(xml, attr[i][j]) != attr[i][j + 1])
+            continue; // skip duplicates and non-values
+        while (*len + strlen(attr[i][j]) + 7 > *max) // reallocate s
+            *s = (char*)realloc(*s, *max += EZXML_BUFSIZE);
+
+        *len += sprintf(*s + *len, " %s=\"", attr[i][j]);
+        ezxml_ampencode(attr[i][j + 1], -1, s, len, max, 1);
+        *len += sprintf(*s + *len, "\"");
+    }
+    *len += sprintf(*s + *len, ">");
+
+    *s = (xml->child) ? ezxml_toxml_r(xml->child, s, len, max, 0, attr) //child
+                      : ezxml_ampencode(xml->txt, -1, s, len, max, 0);  //data
+
+    while (*len + strlen(xml->name) + 4 > *max) // reallocate s
+        *s = (char*)realloc(*s, *max += EZXML_BUFSIZE);
+
+    *len += sprintf(*s + *len, "</%s>", xml->name); // close tag
+
+    while (txt[off] && off < xml->off) off++; // make sure off is within bounds
+    return (xml->ordered) ? ezxml_toxml_r(xml->ordered, s, len, max, off, attr)
+                          : ezxml_ampencode(txt + off, -1, s, len, max, 0);
+}
+#endif /* EZXML_CSTR */
 
 // Converts an ezxml structure back to xml. Returns a string of xml data that
 // must be freed.
