@@ -13,28 +13,28 @@ static void parser_server_reply_welcome( void* local, void* remote ) {
    CLIENT* c = (CLIENT*)remote;
    SERVER* s = (SERVER*)local;
 
-   client_printf(
-      c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
+   server_client_printf(
+      s, c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
       s->self.remote, c->nick, c->nick, c->username, c->remote
    );
 
-   client_printf(
-      c, ":%b 002 %b :Your host is %b, running version %b",
+   server_client_printf(
+      s, c, ":%b 002 %b :Your host is %b, running version %b",
       s->self.remote, c->nick, s->servername, s->version
    );
 
-   client_printf(
-      c, ":%b 003 %b :This server was created 01/01/1970",
+   server_client_printf(
+      s, c, ":%b 003 %b :This server was created 01/01/1970",
       s->self.remote, c->nick
    );
 
-   client_printf(
-      c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
+   server_client_printf(
+      s, c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
       s->self.remote, c->nick, s->self.remote, s->servername, s->version
    );
 
-   client_printf(
-      c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
+   server_client_printf(
+      s, c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
       s->self.remote, c->nick, vector_count( &(s->clients) )
    );
 
@@ -319,15 +319,15 @@ static void parser_server_join( void* local, void* remote,
    }
 
    /* Announce the new join. */
-   channel_printf(
-      l, c, ":%b!%b@%b JOIN %b", c->nick, c->username, c->remote, l->name
+   server_channel_printf(
+      s, l, c, ":%b!%b@%b JOIN %b", c->nick, c->username, c->remote, l->name
    );
 
    channel_add_client( l, c );
 
    /* Now tell the joining client. */
-   client_printf(
-      c, ":%b!%b@%b JOIN %b",
+   server_client_printf(
+      s, c, ":%b!%b@%b JOIN %b",
       c->nick, c->username, c->remote, l->name
    );
 
@@ -343,18 +343,18 @@ static void parser_server_join( void* local, void* remote,
    }
    channel_lock_clients( l, FALSE );
 
-   client_printf(
-      c, ":%b 332 %b %b :%b",
+   server_client_printf(
+      s, c, ":%b 332 %b %b :%b",
       s->self.remote, c->nick, l->name, l->topic
    );
 
-   client_printf(
-      c, ":%b 353 %b = %b :%b",
+   server_client_printf(
+      s, c, ":%b 353 %b = %b :%b",
       s->self.remote, c->nick, l->name, names
    );
 
-   client_printf(
-      c, ":%b 366 %b %b :End of NAMES list",
+   server_client_printf(
+      s, c, ":%b 366 %b %b :End of NAMES list",
       s->self.remote, c->nick, l->name
    );
 
@@ -390,8 +390,8 @@ static void parser_server_privmsg( void* local, void* remote,
    /* Maybe it's for a channel, instead? */
    l_dest = client_get_channel_by_name( &(s->self), args->entry[1] );
    if( NULL != l_dest ) {
-      channel_printf(
-         l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+      server_channel_printf(
+         s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
       );
       goto cleanup;
    }
@@ -457,11 +457,11 @@ static void parser_server_gu( void* local, void* remote,
    scaffold_check_null( c );
 
    if( NULL != reply_c ) {
-      client_printf( c, "%b", reply_c );
+      server_client_printf( s, c, "%b", reply_c );
    }
 
    if( NULL != reply_l ) {
-      channel_printf( l, c, "%b", reply_l );
+      server_channel_printf( s, l, c, "%b", reply_l );
    }
 
 cleanup:

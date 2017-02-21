@@ -51,7 +51,9 @@ cleanup:
 void* vector_get( VECTOR* v, int index ) {
    void* retptr = NULL;
 
-   scaffold_check_bounds( index, v->count );
+   if( v->count <= index ) {
+      goto cleanup;
+   }
 
    retptr = v->data[index];
 
@@ -61,13 +63,12 @@ cleanup:
 }
 
 void vector_delete( VECTOR* v, int index ) {
-   int i, j;
+   int i;
 
    scaffold_check_bounds( index, v->count );
 
-   for( i = index, j = index; i < v->count; i++ ) {
-      v->data[j] = v->data[i];
-      j++;
+   for( i = index; v->count - 1 > i ; i++ ) {
+      v->data[i] = v->data[i + 1];
    }
 
    v->count--;

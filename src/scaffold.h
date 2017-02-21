@@ -30,6 +30,12 @@ typedef enum {
    SCAFFOLD_ERROR_NONZERO,
 } SCAFFOLD_ERROR;
 
+typedef enum {
+   SCAFFOLD_TRACE_NONE,
+   SCAFFOLD_TRACE_CLIENT,
+   SCAFFOLD_TRACE_SERVER,
+} SCAFFOLD_TRACE;
+
 //#ifndef GFX_CURSES
 #if 1
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
@@ -94,6 +100,7 @@ bstring scaffold_pop_string( struct bstrList* list );
 BOOL scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 
+SCAFFOLD_TRACE scaffold_trace_path;
 struct tagbstring scaffold_empty_string;
 struct tagbstring scaffold_space_string;
 uint8_t scaffold_error;

@@ -46,6 +46,10 @@ cleanup:
 void client_connect( CLIENT* c, bstring server, int port ) {
    bstring buffer;
 
+#ifdef DEBUG
+   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+#endif /* DEBUG */
+
    connection_connect( &(c->link), server , port );
    scaffold_check_negative( scaffold_error );
 
@@ -65,11 +69,16 @@ cleanup:
 }
 
 /* This runs on the local client. */
+/* TODO: Process multiple lines? */
 void client_update( CLIENT* c, GAMEDATA* d ) {
    ssize_t last_read_count = 0;
 
+#ifdef DEBUG
+   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+#endif /* DEBUG */
+
    btrunc( c->buffer, 0 );
-   last_read_count = connection_read_line( &(c->link), c->buffer );
+   last_read_count = connection_read_line( &(c->link), c->buffer, TRUE );
    btrimws( c->buffer );
 
    if( 0 >= last_read_count ) {
@@ -77,10 +86,14 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
       goto cleanup;
    }
 
+#ifdef DEBUG
+   /* TODO: If for trace path? */
    scaffold_print_debug(
-      "Client: Line received from %d: %s\n",
+      "Client %d: Line received from server: %s\n",
       c->link.socket, bdata( c->buffer )
    );
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+#endif /* DEBUG */
 
    parser_dispatch( c, d, c->buffer );
 
@@ -109,14 +122,17 @@ void client_send( CLIENT* c, bstring buffer ) {
 
    bconchar( buffer, '\r' );
    bconchar( buffer, '\n' );
-   connection_write_line( &(c->link), buffer );
+   connection_write_line( &(c->link), buffer, TRUE );
 
-   scaffold_print_debug( "Sent: %s", bdata( buffer ) );
+   scaffold_print_debug( "Client sent to server: %s", bdata( buffer ) );
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 }
 
 void client_printf( CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
+
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 
    buffer = bfromcstralloc( strlen( message ), "" );
    scaffold_check_null( buffer );

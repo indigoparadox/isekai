@@ -34,6 +34,79 @@ void server_cleanup( SERVER* s ) {
    client_cleanup( &(s->self) );
 }
 
+void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
+
+   /* TODO: Make sure we're still connected. */
+
+   bconchar( buffer, '\r' );
+   bconchar( buffer, '\n' );
+   connection_write_line( &(c->link), buffer, FALSE );
+
+   scaffold_print_debug( "Server sent to client %d: %s", c->link.socket, bdata( buffer ) );
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+}
+
+void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... ) {
+   bstring buffer = NULL;
+   va_list varg;
+
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
+
+   va_start( varg, message );
+   scaffold_snprintf( buffer, message, varg );
+   va_end( varg );
+
+   if( 0 == scaffold_error ) {
+      server_client_send( s, c, buffer );
+   }
+
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+
+cleanup:
+   bdestroy( buffer );
+   return;
+}
+
+void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
+   CLIENT* c;
+   int i;
+
+   channel_lock_clients( l, TRUE );
+   for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
+      c = (CLIENT*)vector_get( &(l->clients), i );
+      if( NULL != c_skip && 0 == bstrcmp( c_skip->nick, c->nick ) ) {
+         continue;
+      }
+      server_client_send( s, c, buffer );
+   }
+   channel_lock_clients( l, FALSE );
+
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+}
+
+void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
+   bstring buffer = NULL;
+   va_list varg;
+
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
+
+   va_start( varg, message );
+   scaffold_snprintf( buffer, message, varg );
+   va_end( varg );
+
+   if( 0 == scaffold_error ) {
+      server_channel_send( s, l, c_skip, buffer );
+   }
+
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+
+cleanup:
+   bdestroy( buffer );
+   return;
+}
+
 void server_add_client( SERVER* s, CLIENT* n ) {
    server_lock_clients( s, TRUE );
    vector_add( &(s->clients), n );
@@ -154,6 +227,10 @@ void server_service_clients( SERVER* s ) {
    CONNECTION* n_client = NULL;
    int i = 0;
 
+#ifdef DEBUG
+   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
+#endif /* DEBUG */
+
    /* Check for new clients. */
    n_client = connection_register_incoming( &(s->self.link) );
    if( NULL != n_client ) {
@@ -172,7 +249,7 @@ void server_service_clients( SERVER* s ) {
       c = vector_get( &(s->clients), i );
 
       btrunc( s->self.buffer, 0 );
-      last_read_count = connection_read_line( &(c->link), s->self.buffer );
+      last_read_count = connection_read_line( &(c->link), s->self.buffer, FALSE );
       btrimws( s->self.buffer );
 
       if( 0 >= last_read_count ) {
