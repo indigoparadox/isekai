@@ -6,13 +6,25 @@
 #include <allegro.h>
 
 typedef struct _GRAPHICS_FMEM_INFO {
-   AL_CONST unsigned char *block;
-   long length;
-   long offset;
+    AL_CONST unsigned char *block;
+    long length;
+    long alloc;
+    long offset;
 } GRAPHICS_FMEM_INFO;
 
 static int graphics_fmem_fclose( void* userdata ) {
-   return 0;
+    GRAPHICS_FMEM_INFO* info = userdata;
+    ASSERT( info );
+    ASSERT( info->offset <= info->length );
+
+    /* Shorten the allocation back down to the stated length. */
+    if( info->alloc > info->length ) {
+        info->block = realloc( (unsigned char*)info->block, info->length );
+        ASSERT( NULL !=info->block );
+        info->alloc = info->length;
+    }
+
+    return 0;
 }
 
 static int graphics_fmem_getc( void* userdata ) {
@@ -55,13 +67,37 @@ static long graphics_fmem_fread( void* p, long n, void* userdata ) {
 }
 
 static int graphics_fmem_putc( int c, void* userdata ) {
-    /* STUB */
-    return EOF;
+    GRAPHICS_FMEM_INFO* info = userdata;
+    ASSERT( info );
+    ASSERT( info->offset <= info->length );
+
+    if( info->offset == info->length ) {
+        /* Grab some more memory if's getting longer. */
+        if( info->alloc <= info->length ) {
+            info->alloc *= 2;
+            info->block = realloc( (unsigned char*)info->block, info->alloc );
+        }
+        info->length++;
+    }
+
+    return info->block[info->offset++];
 }
 
 static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
-    /* STUB */
-    return 0;
+    long i;
+    uint8_t* c = (unsigned char*)p;
+    ASSERT( info );
+    ASSERT( info->offset <= info->length );
+
+    for( i = 0 ; n > i ; i++ ) {
+        if( *c != graphics_fmem_putc( *c, userdata ) ) {
+            /* Something went wrong. */
+            break;
+        }
+        c++;
+    }
+
+    return i;
 }
 
 static int graphics_fmem_fseek( void* userdata, int offset ) {
@@ -125,7 +161,11 @@ cleanup:
 }
 
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
-    g->surface = create_bitmap( w, h );
+    if( 0 < w && 0 < h) {
+        g->surface = create_bitmap( w, h );
+    } else {
+        g->surface = NULL;
+    }
     g->x = x;
     g->y = y;
     g->w = w;
@@ -164,7 +204,7 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 
 void graphics_set_image_data( GRAPHICS* g, const uint8_t* data, uint32_t length ) {
     GRAPHICS_FMEM_INFO fmem_info;
-    PACKFILE* fmem;
+    PACKFILE* fmem = NULL;
 
     if( NULL != g->surface ) {
         destroy_bitmap( g->surface );
@@ -173,6 +213,7 @@ void graphics_set_image_data( GRAPHICS* g, const uint8_t* data, uint32_t length 
     fmem_info.block = data;
     fmem_info.length = length;
     fmem_info.offset = 0;
+    fmem_info.alloc = 0;
 
     fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
     scaffold_check_null( fmem );
@@ -183,6 +224,33 @@ void graphics_set_image_data( GRAPHICS* g, const uint8_t* data, uint32_t length 
     scaffold_check_null( g->surface );
 
 cleanup:
+    if( NULL != fmem ){
+        pack_fclose( fmem );
+    }
+    return;
+}
+
+void graphics_export_image_data( GRAPHICS* g, uint8_t* data, uint32_t* length ) {
+    GRAPHICS_FMEM_INFO fmem_info;
+    PACKFILE* fmem = NULL;
+
+    scaffold_check_null( g->surface );
+
+    fmem_info.block = data;
+    fmem_info.length = *length;
+    fmem_info.offset = 0;
+    fmem_info.alloc = *length;
+
+    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
+    scaffold_check_null( fmem );
+
+    save_bmp_pf( fmem, g->surface, NULL );
+    *length = fmem_info.length;
+
+cleanup:
+    if( NULL != fmem ){
+        pack_fclose( fmem );
+    }
     return;
 }
 

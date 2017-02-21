@@ -35,10 +35,10 @@ typedef struct {
     gu h;
 } GRAPHICS_RECT;
 
-#define graphics_surface_new( g ) \
-    g = calloc( 1, sizeof( GRAPHICS ); \
+#define graphics_surface_new( g, x, y, w, h ) \
+    g = calloc( 1, sizeof( GRAPHICS ) ); \
     scaffold_check_null( g ); \
-    graphics_surface_init( g );
+    graphics_surface_init( g, x, y, w, h );
 
 void graphics_screen_init( GRAPHICS* g, gu w, gu h );
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h );
@@ -49,6 +49,7 @@ void graphics_set_font( GRAPHICS* g, bstring name );
 void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data( GRAPHICS* g, const uint8_t* data, uint32_t length );
+void graphics_export_image_data( GRAPHICS* g, uint8_t* data, uint32_t* length );
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );
