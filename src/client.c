@@ -97,6 +97,8 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
 
    parser_dispatch( c, d, c->buffer );
 
+   gamedata_update_client( d, c );
+
 cleanup:
    return;
 }

@@ -473,6 +473,7 @@ cleanup:
 static void parser_client_gu( void* local, void* gamedata,
                               struct bstrList* args ) {
    CLIENT* c = (CLIENT*)local;
+   GAMEDATA* d = (GAMEDATA*)gamedata;
    bstring reply = NULL;
    struct bstrList gu_args;
 
@@ -490,7 +491,8 @@ static void parser_client_gu( void* local, void* gamedata,
    }
 #endif
 
-   gamedata_update_client( gamedata, c, &gu_args, &reply );
+   /* TODO: Modify gamedata based on new information. */
+   gamedata_react_client( d, c, &gu_args, &reply );
 
    if( NULL != reply ) {
       client_printf( c, "%b", reply );

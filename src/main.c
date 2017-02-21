@@ -77,7 +77,7 @@ int main( int argc, char** argv ) {
 
    while( TRUE ) {
 
-      usleep( 500000 );
+      graphics_sleep( 50 );
 
       client_update( client, &d );
       server_service_clients( server );

@@ -62,6 +62,7 @@ typedef struct {
    uint32_t height;
    VECTOR layers;
    VECTOR positions;
+   VECTOR tilesets;
    uint32_t starting_x;
    uint32_t starting_y;
    TILEMAP_ORIENTATION orientation;

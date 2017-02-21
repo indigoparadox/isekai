@@ -12,6 +12,7 @@ void tilemap_init( TILEMAP* t ) {
 
    vector_init( &(t->layers) );
    vector_init( &(t->positions) );
+   vector_init( &(t->tilesets) );
 }
 
 void tilemap_cleanup( TILEMAP* t ) {
@@ -24,6 +25,11 @@ void tilemap_cleanup( TILEMAP* t ) {
       tilemap_position_free( vector_get( &(t->positions), i ) );
    }
    vector_free( &(t->positions) );
+   for( i = 0 ; vector_count( &(t->tilesets) ) > i ; i++ ) {
+      // TODO: tilemap_tileset_free( vector_get( &(t->positions), i ) );
+   }
+   vector_free( &(t->tilesets) );
+
 }
 
 void tilemap_layer_init( TILEMAP_LAYER* layer ) {
@@ -176,7 +182,10 @@ void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
       xml_tile = ezxml_next( xml_tile );
    }
 
+   vector_add( &(t->tilesets), set );
+
 cleanup:
+   /* TODO: Don't scrap the whole tileset for a bad tile or two. */
    bdestroy( buffer );
    if( NULL != image_info ) {
       graphics_surface_cleanup( image_info->image );
