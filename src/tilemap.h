@@ -15,6 +15,10 @@ typedef enum {
 } TILEMAP_ORIENTATION;
 
 typedef struct {
+
+} TILEMAP_TERRAIN;
+
+typedef struct {
     uint32_t x_previous;
     uint32_t y_previous;
     uint32_t z_previous;
@@ -25,16 +29,13 @@ typedef struct {
 } TILEMAP_POSITION;
 
 typedef struct {
-    int tile;
-    char textrep;
-} TILEMAP_TILE;
-
-typedef struct {
     uint32_t x;
     uint32_t y;
     uint32_t width;
     uint32_t height;
-    VECTOR tiles;
+    uint16_t* tiles;
+    uint32_t tiles_count;
+    uint32_t tiles_alloc;
 } TILEMAP_LAYER;
 
 typedef struct {
@@ -96,7 +97,7 @@ void tilemap_position_init( TILEMAP_POSITION* position );
 void tilemap_position_cleanup( TILEMAP_POSITION* position );
 void tilemap_iterate_screen_row(
     TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y, TILEMAP_TILE e )
+    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
 void tilemap_load( TILEMAP* t, const uint8_t* tmdata, int datasize );
 void tilemap_load_file( TILEMAP* t, bstring filename );

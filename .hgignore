@@ -3,3 +3,6 @@ glob:obj
 glob:bin
 glob:*.layout
 glob:*.depend
+glob:images
+glob:testchannel.*
+glob:*.swp

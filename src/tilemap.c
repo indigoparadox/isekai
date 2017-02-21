@@ -28,11 +28,13 @@ void tilemap_cleanup( TILEMAP* t ) {
 }
 
 void tilemap_layer_init( TILEMAP_LAYER* layer ) {
-    vector_init( &(layer->tiles) );
+    layer->tiles = NULL;
 }
 
 void tilemap_layer_cleanup( TILEMAP_LAYER* layer ) {
-
+    if( NULL != layer->tiles ) {
+        free( layer->tiles );
+    }
 }
 
 void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
@@ -42,10 +44,11 @@ void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
 typedef struct {
     struct tagbstring path;
     json_type type;
-    void (*callback)( TILEMAP* t, json_value* j, bstring path );
+    /* Return TRUE to continue descending, or FALSE to not. */
+    BOOL (*callback)( TILEMAP* t, json_value* j, bstring path );
 } tilemap_loader_entry;
 
-static void tilemap_parse_layer( TILEMAP* t, json_value* j, bstring path ) {
+static BOOL tilemap_parse_layer( TILEMAP* t, json_value* j, bstring path ) {
     TILEMAP_LAYER* layer = NULL;
     int layer_index;
     struct bstrList* path_list = NULL;
@@ -64,35 +67,58 @@ static void tilemap_parse_layer( TILEMAP* t, json_value* j, bstring path ) {
         /* We're starting a new layer. */
         /* TODO: Allow for out-of-order layers? */
         tilemap_layer_new( layer );
-        /* TODO: Fail on init failure. */
+
         vector_add( &(t->layers), layer );
+
+        layer->tiles = calloc( j->u.array.length, sizeof( uint16_t ) );
+        scaffold_check_null( layer->tiles );
     }
 
 cleanup:
     bstrListDestroy( path_list );
-    return;
+    return TRUE;
 }
 
-static void tilemap_parse_tile( TILEMAP* t, json_value* j, bstring path ) {
+static BOOL tilemap_parse_tile( TILEMAP* t, json_value* j, bstring path ) {
     TILEMAP_LAYER* layer = NULL;
-    TILEMAP_TILE* tile = NULL;
 
     /* This must be a tile. */
     layer = vector_get( &(t->layers), (vector_count( &(t->layers) ) - 1) );
     scaffold_check_null( layer );
+    scaffold_check_null( layer->tiles );
+    scaffold_check_bounds( layer->tiles_count, layer->tiles_alloc );
 
-    tile = calloc( 1, sizeof( TILEMAP_TILE ) );
-    scaffold_check_null( tile );
-
-    tile->tile = j->u.integer;
+    layer->tiles[layer->tiles_count++] = j->u.integer;
 
 cleanup:
-    return;
+    return TRUE;
+}
+
+static BOOL tilemap_parse_tileset_properties( TILEMAP* t, json_value* j, bstring path ) {
+    return FALSE;
+}
+
+static BOOL tilemap_parse_tileset( TILEMAP* t, json_value* j, bstring path ) {
+    struct bstrList* path_list = NULL;
+
+    path_list = bsplit( path, '/' );
+
+    if( 0 == bstrcmp( scaffold_static_string( "properties" ), path_list->entry[path_list->qty - 1] ) ) {
+        tilemap_parse_tileset_properties( t, j, path );
+        goto cleanup;
+    }
+
+
+
+cleanup:
+    bstrListDestroy( path_list );
+    return FALSE;
 }
 
 static const tilemap_loader_entry tilemap_loader_table[] = {
     {bsStatic( "/layers" ), json_array, tilemap_parse_layer},
     {bsStatic( "/layers/data" ), json_integer, tilemap_parse_tile},
+    {bsStatic( "/tilesets" ), json_object, tilemap_parse_tileset},
     {bsStatic( "" ), json_none, NULL}
 };
 
@@ -126,7 +152,9 @@ static void tilemap_parse_walk(
                 &(loader_entry->path), path, blength( &(loader_entry->path) )
             ) && json_array == j->type
         ) {
-            loader_entry->callback( t, j, path );
+            if( loader_entry->callback( t, j, path ) ) {
+                goto cleanup;
+            }
         }
         loader_entry++;
     }
@@ -176,7 +204,7 @@ cleanup:
     return;
 }
 
-void tilemap_load( TILEMAP* t, const uint8_t* tmdata, int datasize ) {
+void tilemap_load_data( TILEMAP* t, const uint8_t* tmdata, int datasize ) {
     json_value* tmapjson = NULL;
 
     tmapjson = json_parse( (json_char*)tmdata, datasize );
@@ -209,16 +237,18 @@ void tilemap_load_file( TILEMAP* t, bstring filename ) {
     fclose( tmfile );
     tmfile = NULL;
 
-    tilemap_load( t, tmdata, datasize );
+    tilemap_load_data( t, tmdata, datasize );
 
 cleanup:
-    free( tmdata );
+    if( NULL != tmdata ) {
+        free( tmdata );
+    }
     return;
 }
 
 void tilemap_iterate_screen_row(
     TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y, TILEMAP_TILE e )
+    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 ) {
 
 }
