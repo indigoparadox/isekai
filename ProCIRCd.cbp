@@ -94,6 +94,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/connection.h" />
+		<Unit filename="src/ezxml/ezxml.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ezxml/ezxml.h" />
 		<Unit filename="src/gamedata.c">
 			<Option compilerVar="CC" />
 		</Unit>
