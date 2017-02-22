@@ -57,23 +57,23 @@ DESCRIPTION:
                 Decoding is the process in reverse.  A 'decode' lookup
                 table has been created to avoid string scans.
 
-DESIGN GOALS:	Specifically:
-		Code is a stand-alone utility to perform base64
-		encoding/decoding. It should be genuinely useful
-		when the need arises and it meets a need that is
-		likely to occur for some users.
-		Code acts as sample code to show the author's
-		design and coding style.
+DESIGN GOALS:  Specifically:
+      Code is a stand-alone utility to perform base64
+      encoding/decoding. It should be genuinely useful
+      when the need arises and it meets a need that is
+      likely to occur for some users.
+      Code acts as sample code to show the author's
+      design and coding style.
 
-		Generally:
-		This program is designed to survive:
-		Everything you need is in a single source file.
-		It compiles cleanly using a vanilla ANSI C compiler.
-		It does its job correctly with a minimum of fuss.
-		The code is not overly clever, not overly simplistic
-		and not overly verbose.
-		Access is 'cut and paste' from a web page.
-		Terms of use are reasonable.
+      Generally:
+      This program is designed to survive:
+      Everything you need is in a single source file.
+      It compiles cleanly using a vanilla ANSI C compiler.
+      It does its job correctly with a minimum of fuss.
+      The code is not overly clever, not overly simplistic
+      and not overly verbose.
+      Access is 'cut and paste' from a web page.
+      Terms of use are reasonable.
 
 VALIDATION:     Non-trivial code is never without errors.  This
                 file likely has some problems, since it has only
@@ -223,68 +223,33 @@ VERSION HISTORY:
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef USE_B64_MAIN
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
-#endif /* USE_B64_MAIN */
 
 /*
 ** Translation Table as described in RFC1113
 */
-static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char cb64[]=
+   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /*
 ** Translation Table to decode (created by author)
 */
-static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
-
-#ifdef USE_B64_MAIN
-
-/*
-** returnable errors
-**
-** Error codes returned to the operating system.
-**
-*/
-#define B64_SYNTAX_ERROR        1
-#define B64_FILE_ERROR          2
-#define B64_FILE_IO_ERROR       3
-#define B64_ERROR_OUT_CLOSE     4
-#define B64_LINE_SIZE_TO_MIN    5
-#define B64_SYNTAX_TOOMANYARGS  6
-
-/*
-** b64_message
-**
-** Gather text messages in one place.
-**
-*/
-#define B64_MAX_MESSAGES 7
-static char *b64_msgs[ B64_MAX_MESSAGES ] = {
-            "b64:000:Invalid Message Code.",
-            "b64:001:Syntax Error -- check help (-h) for usage.",
-            "b64:002:File Error Opening/Creating Files.",
-            "b64:003:File I/O Error -- Note: output file not removed.",
-            "b64:004:Error on output file close.",
-            "b64:005:linesize set to minimum.",
-            "b64:006:Syntax: Too many arguments."
-};
-
-#define b64_message( ec ) ((ec > 0 && ec < B64_MAX_MESSAGES ) ? b64_msgs[ ec ] : b64_msgs[ 0 ])
-
-#endif /* USE_B64_MAIN */
+static const char cd64[]=
+   "|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
 /*
 ** encodeblock
 **
 ** encode 3 8-bit binary bytes as 4 '6-bit' characters
 */
-static void encodeblock( unsigned char *in, unsigned char *out, int len )
-{
-    out[0] = (unsigned char) cb64[ (int)(in[0] >> 2) ];
-    out[1] = (unsigned char) cb64[ (int)(((in[0] & 0x03) << 4) | ((in[1] & 0xf0) >> 4)) ];
-    out[2] = (unsigned char) (len > 1 ? cb64[ (int)(((in[1] & 0x0f) << 2) | ((in[2] & 0xc0) >> 6)) ] : '=');
-    out[3] = (unsigned char) (len > 2 ? cb64[ (int)(in[2] & 0x3f) ] : '=');
+static void encodeblock( unsigned char* in, unsigned char* out, int len ) {
+   out[0] = (unsigned char) cb64[ (int)(in[0] >> 2) ];
+   out[1] = (unsigned char) cb64[ (int)(((in[0] & 0x03) << 4) | ((
+                                           in[1] & 0xf0) >> 4)) ];
+   out[2] = (unsigned char) (len > 1 ? cb64[ (int)(((in[1] & 0x0f) << 2) | ((
+                                in[2] & 0xc0) >> 6)) ] : '=');
+   out[3] = (unsigned char) (len > 2 ? cb64[ (int)(in[2] & 0x3f) ] : '=');
 }
 
 /*
@@ -292,78 +257,45 @@ static void encodeblock( unsigned char *in, unsigned char *out, int len )
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
-#ifdef USE_B64_MAIN
-static int encode( FILE *infile, FILE *outfile, int linesize )
-#else
-int encode( const uint8_t* indata, int indata_len, bstring outstring, int linesize )
-#endif /* USE_B64_MAIN */
-{
-    unsigned char in[3];
-	unsigned char out[4];
-    int i, len, blocksout = 0;
-    int retcode = 0;
-    int indata_place = 0;
+void b64_encode( uint8_t* indata, long indata_len, bstring outstring, int linesz ) {
+   unsigned char in[3];
+   unsigned char out[4];
+   int i, len, blocksout = 0;
+   long indata_place = 0;
+   int bstr_result;
 
-	*in = (unsigned char) 0;
-	*out = (unsigned char) 0;
-#ifdef USE_B64_MAIN
-    while( feof( infile ) == 0 ) {
-#else
-    while( indata_len > indata_place ) {
-#endif /* USE_B64_MAIN */
-        len = 0;
-        for( i = 0; i < 3; i++ ) {
-#ifdef USE_B64_MAIN
-            in[i] = (unsigned char) getc( infile );
+   *in = (unsigned char) 0;
+   *out = (unsigned char) 0;
+   while( indata_place < indata_len ) {
+      len = 0;
+      for( i = 0; i < 3; i++ ) {
+         in[i] = (unsigned char) indata[indata_place++];
 
-            if( feof( infile ) == 0 ) {
-                len++;
-            }
-            else {
-                in[i] = (unsigned char) 0;
-            }
-#else
-            in[i] = (unsigned char)indata[indata_place++];
-            if( indata_len > indata_place ) {
-                len++;
-            } else {
-                in[i] = (unsigned char)0;
-            }
-#endif /* USE_B64_MAIN */
-        }
-        if( len > 0 ) {
-            encodeblock( in, out, len );
-            for( i = 0; i < 4; i++ ) {
-#ifdef USE_B64_MAIN
-                if( putc( (int)(out[i]), outfile ) == EOF ){
-	                if( ferror( outfile ) != 0 )      {
-	                    //perror( b64_message( B64_FILE_IO_ERROR ) );
-	                    retcode = B64_FILE_IO_ERROR;
-	                }
-					break;
-#else
-                bconchar( outstring, out[i] );
-#endif /* USE_B64_MAIN */
-            }
-            blocksout++;
-        }
-#ifdef USE_B64_MAIN
-        if( blocksout >= (linesize/4) || feof( infile ) != 0 ) {
-            if( blocksout > 0 ) {
-                fprintf( outfile, "\n" );
-            }
-            blocksout = 0;
-        }
-#else
-        if( blocksout >= (linesize/4) || indata_len <= indata_place ) {
-            if( blocksout > 0 ) {
-                bconchar( outstring, '\n' );
-            }
-            blocksout = 0;
-        }
-#endif /* USE_B64_MAIN */
-    }
-    return( retcode );
+         if( indata_place < indata_len ) {
+            len++;
+         } else {
+            in[i] = (unsigned char) 0;
+         }
+      }
+      if( len > 0 ) {
+         encodeblock( in, out, len );
+         for( i = 0; i < 4; i++ ) {
+            bstr_result = bconchar( outstring, out[i] );
+            scaffold_check_nonzero( bstr_result );
+         }
+         blocksout++;
+      }
+      if( blocksout >= (linesz/4) || indata_place >= indata_len ) {
+         if( blocksout > 0 ) {
+            bstr_result = bconchar( outstring, '\n' );
+            scaffold_check_nonzero( bstr_result );
+         }
+         blocksout = 0;
+      }
+   }
+
+cleanup:
+   return;
 }
 
 /*
@@ -371,11 +303,10 @@ int encode( const uint8_t* indata, int indata_len, bstring outstring, int linesi
 **
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
-static void decodeblock( unsigned char *in, unsigned char *out )
-{
-    out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
-    out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
-    out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
+static void decodeblock( unsigned char* in, unsigned char* out ) {
+   out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
+   out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
+   out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
 }
 
 /*
@@ -383,250 +314,61 @@ static void decodeblock( unsigned char *in, unsigned char *out )
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-static int decode( FILE *infile, FILE *outfile )
-{
-	int retcode = 0;
-    unsigned char in[4];
-    unsigned char out[3];
-    int v;
-    int i, len;
+uint8_t* b64_decode( long* outdata_len, bstring instring ) {
+   unsigned char in[4];
+   unsigned char out[3];
+   int v;
+   int i, len;
+   long instring_place = 0;
+   long outdata_place = 0;
+   uint8_t* outdata;
 
-	*in = (unsigned char) 0;
-	*out = (unsigned char) 0;
-    while( feof( infile ) == 0 ) {
-        for( len = 0, i = 0; i < 4 && feof( infile ) == 0; i++ ) {
-            v = 0;
-            while( feof( infile ) == 0 && v == 0 ) {
-                v = getc( infile );
-                if( feof( infile ) == 0 ) {
-	                v = ((v < 43 || v > 122) ? 0 : (int) cd64[ v - 43 ]);
-					if( v != 0 ) {
-						v = ((v == (int)'$') ? 0 : v - 61);
-					}
-                }
+   *outdata_len = 1;
+   outdata = calloc( *outdata_len, sizeof( uint8_t ) );
+   scaffold_check_null( outdata );
+
+   *in = (unsigned char) 0;
+   *out = (unsigned char) 0;
+   while( blength( instring ) > instring_place ) {
+      for( len = 0, i = 0; i < 4 && blength( instring ) > instring_place; i++ ) {
+         v = 0;
+         while( blength( instring ) > instring_place && v == 0 ) {
+            v = bchar( instring, instring_place );
+            if( blength( instring ) > instring_place ) {
+               v = ((v < 43 || v > 122) ? 0 : (int) cd64[ v - 43 ]);
+               if( v != 0 ) {
+                  v = ((v == (int)'$') ? 0 : v - 61);
+               }
             }
-            if( feof( infile ) == 0 ) {
-                len++;
-                if( v != 0 ) {
-                    in[ i ] = (unsigned char) (v - 1);
-                }
+         }
+         if( blength( instring ) > instring_place ) {
+            len++;
+            if( v != 0 ) {
+               in[ i ] = (unsigned char) (v - 1);
             }
-            else {
-                in[i] = (unsigned char) 0;
+         } else {
+            in[i] = (unsigned char) 0;
+         }
+      }
+      if( len > 0 ) {
+         decodeblock( in, out );
+         for( i = 0; i < len - 1; i++ ) {
+            if( *outdata_len <= outdata_place ) {
+               *outdata_len *= 2;
+               outdata = realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+               scaffold_check_null( outdata );
             }
-        }
-        if( len > 0 ) {
-            decodeblock( in, out );
-            for( i = 0; i < len - 1; i++ ) {
-                if( putc( (int) out[i], outfile ) == EOF ){
-	                if( ferror( outfile ) != 0 )      {
-	                    perror( b64_message( B64_FILE_IO_ERROR ) );
-	                    retcode = B64_FILE_IO_ERROR;
-	                }
-					break;
-				}
-            }
-        }
-    }
-    return( retcode );
+            outdata[outdata_place++] = out[i];
+         }
+      }
+   }
+
+cleanup:
+   if( NULL != outdata ) {
+      *outdata_len = outdata_place;
+      outdata = realloc( outdata, outdata_place * sizeof( uint8_t ) );
+      /* This loop is OK since the condition above won't be triggered. */
+      scaffold_check_null( outdata );
+   }
+   return outdata;
 }
-
-#ifdef USE_B64_MAIN
-
-/*
-** b64
-**
-** 'engine' that opens streams and calls encode/decode
-*/
-
-static int b64( char opt, char *infilename, char *outfilename, int linesize )
-{
-    FILE *infile;
-    int retcode = B64_FILE_ERROR;
-
-    if( !infilename ) {
-        infile = stdin;
-    }
-    else {
-        infile = fopen( infilename, "rb" );
-    }
-    if( !infile ) {
-        perror( infilename );
-    }
-    else {
-        FILE *outfile;
-        if( !outfilename ) {
-            outfile = stdout;
-        }
-        else {
-            outfile = fopen( outfilename, "wb" );
-        }
-        if( !outfile ) {
-            perror( outfilename );
-        }
-        else {
-            if( opt == 'e' ) {
-                retcode = encode( infile, outfile, linesize );
-            }
-            else {
-                retcode = decode( infile, outfile );
-            }
-			if( retcode == 0 ) {
-	            if (ferror( infile ) != 0 || ferror( outfile ) != 0) {
-                    perror( b64_message( B64_FILE_IO_ERROR ) );
-	                retcode = B64_FILE_IO_ERROR;
-	            }
-            }
-            if( outfile != stdout ) {
-                if( fclose( outfile ) != 0 ) {
-                    perror( b64_message( B64_ERROR_OUT_CLOSE ) );
-                    retcode = B64_FILE_IO_ERROR;
-                }
-            }
-        }
-        if( infile != stdin ) {
-			if( fclose( infile ) != 0 ) {
-				perror( b64_message( B64_ERROR_OUT_CLOSE ) );
-				retcode = B64_FILE_IO_ERROR;
-			}
-        }
-    }
-
-    return( retcode );
-}
-
-/*
-** showuse
-**
-** display usage information, help, version info
-*/
-static void showuse( int morehelp )
-{
-    {
-        printf( "\n" );
-        printf( "  b64      (Base64 Encode/Decode)    Bob Trower 2001/08/03 \n" );
-        printf( "           (C) Copr Bob Trower 1986-2015     Version 0.94R \n" );
-        printf( "  Usage:   b64 -option [-l<num>] [<FileIn> [<FileOut>]]\n" );
-        printf( "  Purpose: This program is a simple utility that implements\n" );
-        printf( "           Base64 Content-Transfer-Encoding (RFC1113).\n" );
-    }
-    if( morehelp == 0 ) {
-        printf( "           Use -h option for additional help.\n" );
-    }
-    else {
-        printf( "  Options: -e  encode to Base64   -h  This help text.\n" );
-        printf( "           -d  decode from Base64 -?  This help text.\n" );
-        printf( "           -t  Show test instructions. Under Windows the\n" );
-        printf( "               following command line will pipe the help\n" );
-        printf( "               text to run a test:\n" );
-        printf( "                   b64 -t | cmd\n" );
-        printf( "  Note:    -l  use to change line size (from 72 characters)\n" );
-        printf( "  Returns: 0 = success.  Non-zero is an error code.\n" );
-        printf( "  ErrCode: 1 = Bad Syntax, 2 = File Open, 3 = File I/O\n" );
-        printf( "  Example: b64 -e binfile b64file     <- Encode to b64\n" );
-        printf( "           b64 -d b64file binfile     <- Decode from b64\n" );
-        printf( "           b64 -e -l40 infile outfile <- Line Length of 40\n" );
-        printf( "  Note:    Will act as a filter, but this should only be\n" );
-        printf( "           used on text files due to translations made by\n" );
-        printf( "           operating systems.\n" );
-        printf( "  Source:  Source code and latest releases can be found at:\n" );
-        printf( "           http://base64.sourceforge.net\n" );
-        printf( "  Release: 0.94.00, Thu Oct 29 01:36:00 2015, ANSI-SOURCE C\n" );
-    }
-}
-
-void dotest(void)
-{
-    printf(":See source code at sourceforge.net for\n");
-    printf(":Unit test information.\n");
-    printf(":\n");
-    printf(":Under Windows the following batch file will\n");
-    printf(":do a quick reality check:\n");
-    printf("\n");
-    printf("@echo off&cls\n");
-    printf("copy /b /y b64.exe b64.bin 1>>nul 2>>nul\n");
-    printf("b64 -e b64.bin b64.b64\n");
-    printf("b64 -d b64.b64 b64.bin.exe\n");
-    printf("fc /b b64.exe b64.bin.exe\n");
-    printf(":/\\ Should say no differences enountered /\\\n");
-    printf("\n");
-}
-
-#define B64_DEF_LINE_SIZE   72
-#define B64_MIN_LINE_SIZE    4
-
-#define THIS_OPT(ac, av) ((char)(ac > 1 ? av[1][0] == '-' ? av[1][1] : 0 : 0))
-
-/*
-** main
-**
-** parse and validate arguments and call b64 engine or help
-*/
-int main( int argc, char **argv )
-{
-    char opt = (char) 0;
-    int retcode = 0;
-    int linesize = B64_DEF_LINE_SIZE;
-    char *infilename = NULL, *outfilename = NULL;
-
-    while( THIS_OPT( argc, argv ) != (char) 0 ) {
-        switch( THIS_OPT(argc, argv) ) {
-            case 'l':
-                    linesize = atoi( &(argv[1][2]) );
-                    if( linesize < B64_MIN_LINE_SIZE ) {
-                        linesize = B64_MIN_LINE_SIZE;
-                        printf( "%s\n", b64_message( B64_LINE_SIZE_TO_MIN ) );
-                    }
-                    break;
-            case '?':
-            case 'h':
-                    opt = 'h';
-                    break;
-            case 'e':
-            case 'd':
-                    opt = THIS_OPT(argc, argv);
-                    break;
-            case 't':
-                    opt = THIS_OPT(argc, argv);
-                    break;
-             default:
-                    opt = (char) 0;
-                    break;
-        }
-        argv++;
-        argc--;
-    }
-    if( argc > 3 ) {
-        printf( "%s\n", b64_message( B64_SYNTAX_TOOMANYARGS ) );
-        opt = (char) 0;
-    }
-    switch( opt ) {
-        case 'e':
-        case 'd':
-            infilename = argc > 1 ? argv[1] : NULL;
-            outfilename = argc > 2 ? argv[2] : NULL;
-            retcode = b64( opt, infilename, outfilename, linesize );
-            break;
-        case 0:
-			if( argv[1] == NULL ) {
-				showuse( 0 );
-			}
-			else {
-				retcode = B64_SYNTAX_ERROR;
-			}
-			break;
-        case 'h':
-            showuse( (int) opt );
-            break;
-        case 't':
-            dotest();
-            break;
-
-    }
-    if( retcode != 0 ) {
-        printf( "%s\n", b64_message( retcode ) );
-    }
-
-    return( retcode );
-}
-#endif /* USE_B64_MAIN */
