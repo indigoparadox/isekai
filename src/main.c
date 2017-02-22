@@ -2,6 +2,7 @@
 
 #include "ui.h"
 #include "input.h"
+#include "b64/b64.h"
 
 #include <signal.h>
 #include <stdlib.h>
@@ -30,6 +31,11 @@ int main( int argc, char** argv ) {
    INPUT p;
    GAMEDATA d;
    UI ui;
+#ifdef DEBUG_B64
+   bstring b64_test = NULL;
+   long b64_test_len = 0;
+   char* b64_test_decode = NULL;
+#endif /* DEBUG_B64 */
 
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
    graphics_screen_init( &g, 640, 480 );
@@ -37,6 +43,18 @@ int main( int argc, char** argv ) {
 #endif /* DEBUG */
    input_init( &p );
    ui_init( &ui, &g );
+
+#ifdef DEBUG_B64
+   scaffold_print_debug( "Testing Base64:\n" );
+   b64_test = bfromcstralloc( 100, "" );
+   b64_encode( (unsigned char*)"abcdefghijk", 11, b64_test, 20 );
+   scaffold_print_debug( "Base64 Encoded: %s\n", bdata( b64_test ) );
+   b64_test_decode = (char*)b64_decode( &b64_test_len, b64_test );
+   scaffold_print_debug(
+      "Base64 Decoding Got: %s, Length: %ld\n", b64_test_decode, b64_test_len
+   );
+   free( b64_test_decode );
+#endif /* DEBUG_B64 */
 
    srand( (unsigned)time( &tm ) );
 

@@ -235,6 +235,8 @@ static const char cb64[]=
 static const char cd64[]=
    "|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
+#define b64_beof( i, l ) (i <= l)
+
 /*
 ** encodeblock
 **
@@ -263,12 +265,12 @@ void b64_encode( uint8_t* indata, long indata_len, bstring outstring, int linesz
 
    *in = (unsigned char) 0;
    *out = (unsigned char) 0;
-   while( indata_place < indata_len ) {
+   while( b64_beof( indata_place, indata_len ) ) {
       len = 0;
       for( i = 0; i < 3; i++ ) {
          in[i] = (unsigned char) indata[indata_place++];
 
-         if( indata_place < indata_len ) {
+         if( b64_beof( indata_place, indata_len ) ) {
             len++;
          } else {
             in[i] = (unsigned char) 0;
@@ -282,7 +284,7 @@ void b64_encode( uint8_t* indata, long indata_len, bstring outstring, int linesz
          }
          blocksout++;
       }
-      if( blocksout >= (linesz/4) || indata_place >= indata_len ) {
+      if( blocksout >= (linesz/4) || !b64_beof( indata_place, indata_len ) ) {
          if( blocksout > 0 ) {
             bstr_result = bconchar( outstring, '\n' );
             scaffold_check_nonzero( bstr_result );
@@ -324,13 +326,21 @@ uint8_t* b64_decode( long* outdata_len, bstring instring ) {
    outdata = calloc( *outdata_len, sizeof( uint8_t ) );
    scaffold_check_null( outdata );
 
-   *in = (unsigned char) 0;
-   *out = (unsigned char) 0;
+#ifdef DEBUG_B64
+   scaffold_print_debug( "B64: Decoding: %s\n", bdata( instring ) );
+#endif /* DEBUG_B64 */
+
+   *in = (uint8_t) 0;
+   *out = (uint8_t) 0;
    while( blength( instring ) > instring_place ) {
       for( len = 0, i = 0; i < 4 && blength( instring ) > instring_place; i++ ) {
          v = 0;
          while( blength( instring ) > instring_place && v == 0 ) {
             v = bchar( instring, instring_place );
+            instring_place += 1;
+#ifdef DEBUG_B64
+            scaffold_print_debug( "B64: In Place: %ld, Got Char: %c\n", instring_place, (char)v );
+#endif /* DEBUG_B64 */
             if( blength( instring ) > instring_place ) {
                v = ((v < 43 || v > 122) ? 0 : (int) cd64[ v - 43 ]);
                if( v != 0 ) {
@@ -341,10 +351,10 @@ uint8_t* b64_decode( long* outdata_len, bstring instring ) {
          if( blength( instring ) > instring_place ) {
             len++;
             if( v != 0 ) {
-               in[ i ] = (unsigned char) (v - 1);
+               in[i] = (uint8_t)(v - 1);
             }
          } else {
-            in[i] = (unsigned char) 0;
+            in[i] = (uint8_t)0;
          }
       }
       if( len > 0 ) {
@@ -352,7 +362,7 @@ uint8_t* b64_decode( long* outdata_len, bstring instring ) {
          for( i = 0; i < len - 1; i++ ) {
             if( *outdata_len <= outdata_place ) {
                *outdata_len *= 2;
-               outdata = realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+               outdata = (uint8_t*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
                scaffold_check_null( outdata );
             }
             outdata[outdata_place++] = out[i];
