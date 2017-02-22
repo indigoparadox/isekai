@@ -219,12 +219,9 @@ VERSION HISTORY:
 
 \******************************************************************* */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include "b64.h"
 
-#include "bstrlib/bstrlib.h"
-#include "scaffold.h"
+#include <stdlib.h>
 
 /*
 ** Translation Table as described in RFC1113
