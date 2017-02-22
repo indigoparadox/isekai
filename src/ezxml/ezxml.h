@@ -37,7 +37,7 @@
 extern "C" {
 #endif
 
-#define EZXML_BUFSIZE 1024 // size of internal memory buffers
+#define EZXML_BUFSIZE 4096 // size of internal memory buffers
 #define EZXML_NAMEM   0x80 // name is malloced
 #define EZXML_TXTM    0x40 // txt is malloced
 #define EZXML_DUP     0x20 // attribute name and value are strduped
@@ -94,7 +94,11 @@ ezxml_t ezxml_idx(ezxml_t xml, int idx);
 #define ezxml_txt(xml) ((xml) ? xml->txt : "")
 
 // returns the value of the requested tag attribute, or NULL if not found
+#ifdef EZXML_CSTR
 const char *ezxml_attr(ezxml_t xml, const char *attr);
+#else
+void ezxml_attr( ezxml_t xml, bstring buffer, const bstring attr );
+#endif
 
 // Traverses the ezxml sturcture to retrieve a specific subtag. Takes a
 // variable length list of tag names and indexes. The argument list must be

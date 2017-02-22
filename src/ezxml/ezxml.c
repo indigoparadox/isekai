@@ -786,20 +786,22 @@ static const struct tagbstring str_r_r = bsStatic( "&#xD;" );
 
 // Encodes ampersand sequences appending the results to *dst, reallocating *dst
 // if length excedes max. a is non-zero for attribute encoding. Returns *dst
-void ezxml_ampencode( const bstring s, bstring* dst, short a ) {
+void ezxml_ampencode( const bstring s, bstring* dst, short attr ) {
    if( NULL == *dst ) {
       dst = bstrcpy( s );
    } else {
       bassign( *dst, s );
    }
 
-   bfindreplace( *dst, str_amp, str_r_amp, 0 );
-   bfindreplace( *dst, str_lt, str_r_lt, 0 );
-   bfindreplace( *dst, str_gt, str_r_gt, 0 );
-   bfindreplace( *dst, str_dquote, str_r_dquote, 0 );
-   bfindreplace( *dst, str_nl, str_r_nl, 0 );
-   bfindreplace( *dst, str_tab, str_r_tab, 0 );
-   bfindreplace( *dst, str_r, str_r_r, 0 );
+   bfindreplace( *dst, &str_amp, &str_r_amp, 0 );
+   bfindreplace( *dst, &str_lt, &str_r_lt, 0 );
+   bfindreplace( *dst, &str_gt, &str_r_gt, 0 );
+   if( 0 != attr ) {
+      bfindreplace( *dst, &str_dquote, &str_r_dquote, 0 );
+      bfindreplace( *dst, &str_nl, &str_r_nl, 0 );
+      bfindreplace( *dst, &str_tab, &str_r_tab, 0 );
+   }
+   bfindreplace( *dst, &str_r, &str_r_r, 0 );
 }
 #endif /* EZXML_CSTR */
 
@@ -813,6 +815,9 @@ char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
     int i, j;
     char *txt = (xml->parent) ? xml->parent->txt : "";
     size_t off = 0;
+#ifdef DEBUG
+    char* sub_s = *s + *len;
+#endif /* DEBUG */
 
     // parent character content up to this tag
     *s = ezxml_ampencode(txt + start, xml->off - start, s, len, max, 0);
@@ -872,7 +877,7 @@ void ezxml_toxml_r( ezxml_t xml, bstring buffer, bstring* s, bstring** attr ) {
    }
 
     // parent character content up to this tag
-    //ezxml_ampencode( txt  )
+    ezxml_ampencode( txt  )
     *s = ezxml_ampencode( txt + start, xml->off - start, s, len, max, 0);
 
     while (*len + strlen(xml->name) + 4 > *max) // reallocate s
