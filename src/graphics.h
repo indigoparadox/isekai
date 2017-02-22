@@ -49,7 +49,7 @@ void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
                               uint32_t length );
-void graphics_export_image_data( GRAPHICS* g, uint8_t* data, uint32_t* length );
+uint8_t* graphics_export_image_data( GRAPHICS* g, size_t* out_len );
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );

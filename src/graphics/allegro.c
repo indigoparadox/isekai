@@ -4,8 +4,12 @@
 
 #include <allegro.h>
 
+#ifdef USE_ALLEGRO_PNG
+#include <loadpng.h>
+#endif /* USE_ALLEGRO_PNG */
+
 typedef struct _GRAPHICS_FMEM_INFO {
-   AL_CONST unsigned char* block;
+   unsigned char* block;
    long length;
    long alloc;
    long offset;
@@ -70,6 +74,10 @@ static int graphics_fmem_putc( int c, void* userdata ) {
    ASSERT( info );
    ASSERT( info->offset <= info->length );
 
+   if( NULL == info->block ) {
+      info->block = calloc( info->alloc, sizeof( unsigned char ) );
+   }
+
    if( info->offset == info->length ) {
       /* Grab some more memory if's getting longer. */
       if( info->alloc <= info->length ) {
@@ -78,6 +86,8 @@ static int graphics_fmem_putc( int c, void* userdata ) {
       }
       info->length++;
    }
+
+   info->block[info->offset] = (unsigned char)c;
 
    return info->block[info->offset++];
 }
@@ -147,6 +157,10 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
 
    allegro_init();
 
+#ifdef USE_ALLEGRO_PNG
+   loadpng_init();
+#endif /* USE_ALLEGRO_PNG */
+
    scaffold_error = 0;
 
    screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0);
@@ -198,7 +212,11 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
-   load_bitmap( bdata( path ), NULL );
+   g->surface = load_bitmap( bdata( path ), NULL );
+   if( NULL == g->surface ) {
+      scaffold_print_error( "Image load error: %s: %s\n", bdata( path ), allegro_error );
+   }
+   return;
 }
 
 void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
@@ -230,29 +248,37 @@ cleanup:
    return;
 }
 
-void graphics_export_image_data( GRAPHICS* g, uint8_t* data,
-                                 uint32_t* length ) {
+uint8_t* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
    GRAPHICS_FMEM_INFO fmem_info;
    PACKFILE* fmem = NULL;
+   //uint8_t* image_out = NULL;
 
+   //image_out = calloc( *out_len, sizeof( uint8_t ) );
+
+   memset( &fmem_info, '\0', sizeof( GRAPHICS_FMEM_INFO ) );
+
+   scaffold_check_null( g );
    scaffold_check_null( g->surface );
+   scaffold_check_null( out_len );
+   //scaffold_check_null( image_out );
 
-   fmem_info.block = data;
-   fmem_info.length = *length;
+   //fmem_info.block = image_out;
+   fmem_info.length = *out_len;
    fmem_info.offset = 0;
-   fmem_info.alloc = *length;
+   fmem_info.alloc = *out_len;
 
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
    scaffold_check_null( fmem );
 
    save_bmp_pf( fmem, g->surface, NULL );
-   *length = fmem_info.length;
+   *out_len = fmem_info.length;
+   //image_out = fmem_info.block;
 
 cleanup:
    if( NULL != fmem ) {
       pack_fclose( fmem );
    }
-   return;
+   return fmem_info.block;
 }
 
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {

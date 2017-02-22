@@ -28,6 +28,7 @@ typedef enum {
    SCAFFOLD_ERROR_OUTOFBOUNDS,
    SCAFFOLD_ERROR_NEGATIVE,
    SCAFFOLD_ERROR_NONZERO,
+   SCAFFOLD_ERROR_ZERO,
 } SCAFFOLD_ERROR;
 
 typedef enum {
@@ -87,6 +88,15 @@ typedef enum {
     if( 0 != value ) { \
         scaffold_error = SCAFFOLD_ERROR_NONZERO; \
         scaffold_print_error( "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
+#define scaffold_check_zero( value ) \
+    if( 0 == value ) { \
+        scaffold_error = SCAFFOLD_ERROR_ZERO; \
+        scaffold_print_error( "Scaffold: Zero error on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \

@@ -68,16 +68,24 @@
 					<Add option="-g" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
+					<Add option="-DEZXML_CSTR" />
+					<Add option="-DMINIZ_NO_STDIO" />
+					<Add option="-DUSE_ALLEGRO_PNG" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
 					<Add library="alleg" />
+					<Add library="loadpng" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="src/b64/b64.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/b64/b64.h" />
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -127,6 +135,9 @@
 		<Unit filename="src/json/README.md" />
 		<Unit filename="src/json/json.h" />
 		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/miniz.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/parser.c">

@@ -2,6 +2,7 @@
 #define TILEMAP_H
 
 #include "bstrlib/bstrlib.h"
+#include "ezxml/ezxml.h"
 #include "vector.h"
 #include "graphics.h"
 
@@ -66,7 +67,11 @@ typedef struct {
    uint32_t starting_x;
    uint32_t starting_y;
    TILEMAP_ORIENTATION orientation;
+   ezxml_t xml_data;
 } TILEMAP;
+
+#define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
+#define TILEMAP_SERIALIZE_CHUNKSIZE 80
 
 /* y xxxxx
  * y xxxxx
@@ -119,7 +124,8 @@ void tilemap_iterate_screen_row(
    TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
-void tilemap_load( TILEMAP* t, const uint8_t* tmdata, int datasize );
+void tilemap_serialize( TILEMAP* t, bstring buffer );
+void tilemap_load_data( TILEMAP* t, const uint8_t* tmdata, int datasize );
 void tilemap_load_file( TILEMAP* t, bstring filename );
 
 #endif /* TILEMAP_H */

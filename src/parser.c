@@ -278,6 +278,8 @@ static void parser_server_join( void* local, void* remote,
    int bstr_result = 0;
    bstring names = NULL;
    int clients_count;
+   bstring map_serial = NULL;
+   struct bstrList* map_serial_list = NULL;
 
    if( 2 > args->qty ) {
       client_printf(
@@ -358,7 +360,22 @@ static void parser_server_join( void* local, void* remote,
       s->self.remote, c->nick, l->name
    );
 
+   /* Send the current map. */
+   map_serial = bfromcstralloc( 1024, "" );
+   tilemap_serialize( &(l->gamedata.tmap), map_serial );
+   scaffold_check_nonzero( scaffold_error );
+   map_serial_list = bsplit( map_serial, '\n' );
+   for( i = 0 ; map_serial_list->qty > i ; i++ ) {
+      server_client_printf(
+         s, c, ":%b GDB %b %b TILEMAP %d %d :%b",
+         s->self.remote, c->nick, l->name, i, map_serial_list->qty,
+         map_serial_list->entry[i]
+      );
+   }
+
 cleanup:
+   bstrListDestroy( map_serial_list );
+   bdestroy( map_serial );
    bdestroy( names );
    bdestroy( namehunt );
    return;
