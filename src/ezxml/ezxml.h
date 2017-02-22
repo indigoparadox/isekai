@@ -30,14 +30,11 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-#include "../bstrlib/bstrlib.h"
-#include "../scaffold.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define EZXML_BUFSIZE 4096 // size of internal memory buffers
+#define EZXML_BUFSIZE 1024 // size of internal memory buffers
 #define EZXML_NAMEM   0x80 // name is malloced
 #define EZXML_TXTM    0x40 // txt is malloced
 #define EZXML_DUP     0x20 // attribute name and value are strduped
@@ -69,7 +66,7 @@ ezxml_t ezxml_parse_fd(int fd);
 
 // a wrapper for ezxml_parse_fd() that accepts a file name
 ezxml_t ezxml_parse_file(const char *file);
-
+    
 // Wrapper for ezxml_parse_str() that accepts a file stream. Reads the entire
 // stream into memory and then parses it. For xml files, use ezxml_parse_file()
 // or ezxml_parse_fd()
@@ -94,15 +91,11 @@ ezxml_t ezxml_idx(ezxml_t xml, int idx);
 #define ezxml_txt(xml) ((xml) ? xml->txt : "")
 
 // returns the value of the requested tag attribute, or NULL if not found
-#ifdef EZXML_CSTR
 const char *ezxml_attr(ezxml_t xml, const char *attr);
-#else
-void ezxml_attr( ezxml_t xml, bstring buffer, const bstring attr );
-#endif
 
 // Traverses the ezxml sturcture to retrieve a specific subtag. Takes a
 // variable length list of tag names and indexes. The argument list must be
-// terminated by either an index of -1 or an empty string tag name. Example:
+// terminated by either an index of -1 or an empty string tag name. Example: 
 // title = ezxml_get(library, "shelf", 0, "book", 2, "title", -1);
 // This retrieves the title of the 3rd book on the 1st shelf of library.
 // Returns NULL if not found.
@@ -118,7 +111,7 @@ const char **ezxml_pi(ezxml_t xml, const char *target);
 
 // frees the memory allocated for an ezxml structure
 void ezxml_free(ezxml_t xml);
-
+    
 // returns parser error message or empty string if none
 const char *ezxml_error(ezxml_t xml);
 
