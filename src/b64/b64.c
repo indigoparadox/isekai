@@ -313,13 +313,13 @@ static void decodeblock( unsigned char* in, unsigned char* out ) {
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-uint8_t* b64_decode( long* outdata_len, bstring instring ) {
+uint8_t* b64_decode( size_t* outdata_len, bstring instring ) {
    unsigned char in[4];
    unsigned char out[3];
    int v;
    int i, len;
-   long instring_place = 0;
-   long outdata_place = 0;
+   size_t instring_place = 0;
+   size_t outdata_place = 0;
    uint8_t* outdata;
 
    *outdata_len = 1;
