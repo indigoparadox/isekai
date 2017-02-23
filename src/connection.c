@@ -27,7 +27,7 @@ static VECTOR envelopes = { 0 };
 static uint16_t last_socket = 0;
 static int32_t server_socket = -1;
 
-static void envelopes_lock( BOOL lock ) {
+void envelopes_lock( BOOL lock ) {
 #ifdef USE_THREADS
 #error Locking mechanism undefined!
 #endif /* USE_THREADS */
@@ -37,6 +37,17 @@ static int fake_listen() {
     vector_init( &envelopes );
     server_socket = last_socket++;
     return server_socket;
+}
+
+static void* fake_envelope_cmp( VECTOR* v, void* iter, void* arg ) {
+   CONNECTION_ENVELOPE* envelope = (CONNECTION_ENVELOPE*)iter;
+   bstring str_search = (bstring)arg;
+
+   if( 0 == bstrcmp( str_search, envelope->contents ) ) {
+      return envelope;
+   }
+
+   return NULL;
 }
 
 static int fake_accept( int socket_dest ) {

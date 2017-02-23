@@ -68,6 +68,10 @@ void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
    TILEMAP_TILESET* set = NULL;
    TILEMAP_TILESET_IMAGE* image = NULL;
 
+   if( 0 < vector_count( &(d->tmap.tilesets) ) ) {
+      return;
+   }
+
    set = vector_get( &(d->tmap.tilesets), 0 );
    if( NULL != set ) {
       image = vector_get( &(set->images), 0 );

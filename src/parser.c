@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+   SERVER* s;
+   CLIENT* c;
+   CHANNEL* l;
+} PARSER_TRIO;
+
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -54,8 +60,8 @@ static void parser_server_reply_nick( void* local, void* remote,
       oldnick = c->username;
    }
 
-   client_printf(
-      c, ":%b %b :%b!%b@%b NICK %b",
+   server_client_printf(
+      s, c, ":%b %b :%b!%b@%b NICK %b",
       s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
    );
 
@@ -75,8 +81,8 @@ void parser_server_reply_motd( void* local, void* remote ) {
       goto cleanup;
    }
 
-   client_printf(
-      c, ":%b 433 %b :MOTD File is missing",
+   server_client_printf(
+      s, c, ":%b 433 %b :MOTD File is missing",
       s->self.remote, c->nick
    );
 
@@ -136,8 +142,8 @@ static void parser_server_user( void* local, void* remote,
       0 == bstrcmp( &scaffold_empty_string, c->nick ) &&
       0 != server_set_client_nick( s, c, c->username )
    ) {
-      client_printf(
-         c, ":%b 433 %b :Nickname is already in use",
+      server_client_printf(
+         s, c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->username
       );
    }
@@ -170,16 +176,16 @@ static void parser_server_nick( void* local, void* remote,
 
    nick_return = server_set_client_nick( s, c, newnick );
    if( ERR_NONICKNAMEGIVEN == nick_return ) {
-      client_printf(
-         c, ":%b 431 %b :No nickname given",
+      server_client_printf(
+         s, c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
       );
       goto cleanup;
    }
 
    if( ERR_NICKNAMEINUSE == nick_return ) {
-      client_printf(
-         c, ":%b 433 %b :Nickname is already in use",
+      server_client_printf(
+         s, c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->nick
       );
       goto cleanup;
@@ -224,47 +230,67 @@ static void parser_server_quit( void* local, void* remote,
    space = bfromcstr( " " );
    message = bjoin( args, space );
 
-   client_printf(
-      c, "ERROR :Closing Link: %b (Client Quit)",
+   server_client_printf(
+      s, c, "ERROR :Closing Link: %b (Client Quit)",
       c->nick
    );
 
-   server_drop_client( s, c->link.socket );
+   server_drop_client( s, c->nick );
 
    bdestroy( message );
    bdestroy( space );
+}
+
+typedef struct {
+   bstring clients;
+   struct bstrList* args;
+} PARSER_ISON;
+
+static void* parser_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c;
+   PARSER_ISON* ison = (PARSER_ISON*)arg;
+   size_t i;
+
+   for( i = 0 ; ison->args->qty > i ; i++ ) {
+      c = client_cmp_nick( v, idx, iter, ison->args->entry[i] );
+      if( NULL != c ) {
+         bconcat( ison->clients, c->nick );
+         bconchar( ison->clients, ' ' );
+      }
+   }
+
+   return NULL;
 }
 
 static void parser_server_ison( void* local, void* remote,
                                 struct bstrList* args ) {
    SERVER* s = (SERVER*)local;
    CLIENT* c = (CLIENT*)remote;
-   int i;
-   bstring clients = NULL;
+   PARSER_ISON ison = { 0 };
 
-   clients = bfromcstralloc( 128, "" );
-   scaffold_check_null( clients );
+   ison.clients = bfromcstralloc( 128, "" );
+   ison.args = args;
+   scaffold_check_null( ison.clients );
+   scaffold_check_null( ison.args );
 
-   server_lock_clients( s, TRUE );
-   for( i = 1 ; args->qty > i ; i++ ) {
-      if( NULL != server_get_client_by_nick(
-               s, args->entry[i], FALSE
-            ) ) {
-         bconcat( clients, args->entry[i] );
-         if( args->qty - 1 != i ) {
-            bconchar( clients, ' ' );
-         }
-      }
-   }
-   server_lock_clients( s, FALSE );
-
-   client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, clients );
+   vector_iterate( &(s->clients), parser_cmp_ison, &ison );
+   server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, ison.clients );
 
 cleanup:
 
-   bdestroy( clients );
+   bdestroy( ison.clients );
 
    return;
+}
+
+static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   bstring names = (bstring)arg;
+   bconcat( names, c->nick );
+   if( vector_count( v ) - 1 != idx ) {
+      bconchar( names, ' ' );
+   };
+   return NULL;
 }
 
 static void parser_server_join( void* local, void* remote,
@@ -273,17 +299,15 @@ static void parser_server_join( void* local, void* remote,
    CLIENT* c = (CLIENT*)remote;
    CHANNEL* l = NULL;
    int i;
-   CLIENT* c_iter = NULL;
    bstring namehunt = NULL;
    int bstr_result = 0;
    bstring names = NULL;
-   int clients_count;
    bstring map_serial = NULL;
    struct bstrList* map_serial_list = NULL;
 
    if( 2 > args->qty ) {
-      client_printf(
-         c, ":%b 461 %b %b :Not enough parameters",
+      server_client_printf(
+         s, c, ":%b 461 %b %b :Not enough parameters",
          s->self.remote, c->username, args->entry[0]
       );
       goto cleanup;
@@ -294,38 +318,20 @@ static void parser_server_join( void* local, void* remote,
    scaffold_check_nonzero( bstr_result );
 
    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
-      client_printf(
-         c, ":%b 403 %b %b :No such channel",
+      server_client_printf(
+         s, c, ":%b 403 %b %b :No such channel",
          s->self.remote, c->username, namehunt
       );
       goto cleanup;
    }
 
-   /* Get the channel, or create it if it does not exist. */
-   l = client_get_channel_by_name( &(s->self), namehunt );
-   if( NULL == l ) {
-      channel_new( l, namehunt );
-      gamedata_init_server( &(l->gamedata), namehunt );
-      client_add_channel( &(s->self), l );
-      scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
-   }
-
-   /* Make sure the user is not already in the channel. If they are, then  *
-    * just shut up and explode.                                            */
-   if( NULL != channel_get_client_by_name( l, c->nick ) ) {
-      scaffold_print_debug(
-         "%s already in channel %s; ignoring.\n",
-         bdata( c->nick ), bdata( l->name )
-      );
-      goto cleanup;
-   }
+   l = server_add_channel( s, namehunt, c );
+   scaffold_check_null( l );
 
    /* Announce the new join. */
    server_channel_printf(
       s, l, c, ":%b!%b@%b JOIN %b", c->nick, c->username, c->remote, l->name
    );
-
-   channel_add_client( l, c );
 
    /* Now tell the joining client. */
    server_client_printf(
@@ -334,16 +340,8 @@ static void parser_server_join( void* local, void* remote,
    );
 
    names = bfromcstr( "" );
-   channel_lock_clients( l, TRUE );
-   clients_count = vector_count( &(l->clients) );
-   for( i = 0 ; clients_count > i ; i++ ) {
-      c_iter = (CLIENT*)vector_get( &(l->clients), i );
-      bconcat( names, c_iter->nick );
-      if( clients_count - 1 != i ) {
-         bconchar( names, ' ' );
-      };
-   }
-   channel_lock_clients( l, FALSE );
+   scaffold_check_null( names );
+   vector_iterate( &(l->clients), parser_cat_names, names );
 
    server_client_printf(
       s, c, ":%b 332 %b %b :%b",
@@ -362,7 +360,7 @@ static void parser_server_join( void* local, void* remote,
 
    /* Send the current map. */
    map_serial = bfromcstralloc( 1024, "" );
-   tilemap_serialize( &(l->gamedata.tmap), map_serial );
+   //tilemap_serialize( &(l->gamedata.tmap), map_serial );
    scaffold_check_nonzero( scaffold_error );
    map_serial_list = bsplit( map_serial, '\n' );
    for( i = 0 ; map_serial_list->qty > i ; i++ ) {
@@ -372,6 +370,9 @@ static void parser_server_join( void* local, void* remote,
          map_serial_list->entry[i]
       );
    }
+
+   assert( vector_count( &(c->channels) ) > 0 );
+   assert( vector_count( &(s->self.channels) ) > 0 );
 
 cleanup:
    bstrListDestroy( map_serial_list );
@@ -396,10 +397,10 @@ static void parser_server_privmsg( void* local, void* remote,
    //bdestroy( scaffold_pop_string( args ) );
    msg = bjoin( args, &scaffold_space_string );
 
-   c_dest = server_get_client_by_nick( s, args->entry[1], TRUE );
+   c_dest = server_get_client_by_nick( s, args->entry[1] );
    if( NULL != c_dest ) {
-      client_printf(
-         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+      server_client_printf(
+         s, c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
       );
       goto cleanup;
    }
@@ -420,27 +421,32 @@ cleanup:
    return;
 }
 
+static void* parser_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   PARSER_TRIO* trio = (PARSER_TRIO*)arg;
+   CLIENT* c_iter = (CLIENT*)iter;
+   server_client_printf(
+      trio->s, trio->c, ":%b RPL_WHOREPLY %b %b",
+      trio->s->self.remote, c_iter->nick, trio->l->name
+   );
+   return NULL;
+}
+
 static void parser_server_who( void* local, void* remote,
                                struct bstrList* args ) {
    SERVER* s = (SERVER*)local;
    CLIENT* c = (CLIENT*)remote;
    CHANNEL* l = NULL;
-   CLIENT* c_iter = NULL;
-   int i;
+   PARSER_TRIO trio = { 0 };
 
    l = client_get_channel_by_name( &(s->self), args->entry[1] );
    scaffold_check_null( l );
 
+   trio.c = c;
+   trio.l = l;
+   trio.s = s;
+
    /* Announce the new join. */
-   channel_lock_clients( l, TRUE );
-   for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
-      c_iter = (CLIENT*)vector_get( &(l->clients), i );
-      client_printf(
-         c, ":%b RPL_WHOREPLY %b %b",
-         s->self.remote, c_iter->nick, l->name
-      );
-   }
-   channel_lock_clients( l, FALSE );
+   vector_iterate( &(l->clients), parser_prn_who, &trio );
 
 cleanup:
    return;
@@ -536,6 +542,8 @@ static void parser_client_join( void* local, void* gamedata,
    }
 
    scaffold_print_info( "Client joined channel: %s\n", bdata( args->entry[2] ) );
+
+   assert( vector_count( &(c->channels) ) > 0 );
 
 cleanup:
    return;

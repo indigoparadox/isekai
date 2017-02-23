@@ -19,13 +19,14 @@ typedef struct _CHANNEL {
     scaffold_check_null( l ); \
     channel_init( l, name );
 
+void* channel_cmp_name( VECTOR* v, size_t idx, void* iter, void* arg );
+
 void channel_init( CHANNEL* l, const bstring name );
 void channel_cleanup( CHANNEL* l );
-BOOL channel_client_present( CHANNEL* l, CLIENT* c );
+CLIENT* channel_client_present( CHANNEL* l, CLIENT* c );
 void channel_add_client( CHANNEL* l, CLIENT* c );
 void channel_remove_client( CHANNEL* l, CLIENT* c );
 CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick );
 struct bstrList* channel_list_clients( CHANNEL* l );
-void channel_lock_clients( CHANNEL* l, BOOL lock );
 
 #endif /* CHANNEL_H */

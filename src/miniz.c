@@ -4096,7 +4096,11 @@ mz_bool mz_zip_writer_init_from_reader(mz_zip_archive *pZip, const char *pFilena
   if (pState->m_pFile)
   {
 #ifdef MINIZ_NO_STDIO
+#ifdef KEEP_3P_NOEFFECT
     pFilename; return MZ_FALSE;
+#else
+    return MZ_FALSE;
+#endif /* KEEP_3P_NOEFFECT */
 #else
     // Archive is being read from stdio - try to reopen as writable.
     if (pZip->m_pIO_opaque != pZip)

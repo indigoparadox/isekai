@@ -4,6 +4,61 @@
 
 #include "parser.h"
 
+typedef struct {
+   SERVER* s;
+   bstring buffer;
+   CLIENT* c_sender;
+} SERVER_PBUFFER;
+
+typedef struct {
+   SERVER* s;
+   bstring nick;
+} SERVER_DUO;
+
+/* This callback doesn't cleanup the channel, since it's just removing it     *
+ * from a client's list.                                                      */
+static void* server_client_del_chan(
+   VECTOR* v, size_t idx, void* iter, void* arg
+) {
+   CHANNEL* l = (CHANNEL*)iter;
+   CLIENT* c = (CLIENT*)arg;
+
+   /* Remove the channel from the client's list, but don't free it. It might  *
+    * still be in use!                                                        */
+   channel_remove_client( l, c );
+   return NULL;
+}
+
+static void* server_del_all_clients(
+   VECTOR* v, size_t idx, void* iter, void* arg
+) {
+   CLIENT* c = (CLIENT*)iter;
+   vector_delete_cb( &(c->channels), server_client_del_chan, c, TRUE );
+   client_cleanup( c );
+   return c;
+}
+
+static void* server_del_chan( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CHANNEL* l = (CHANNEL*)iter;
+   if( 0 >= vector_count( &(l->clients ) ) ) {
+      /* No clients left in this channel, so remove it from the server. */
+      channel_cleanup( l );
+      return l;
+   }
+   return NULL;
+}
+
+static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   SERVER_DUO* duo = (SERVER_DUO*)arg;
+   if( 0 == bstrcmp( c->nick, duo->nick ) ) {
+      /* Locks shouldn't conflict, since it's two different vectors. */
+      vector_delete_cb( &(c->channels), server_client_del_chan, c, TRUE );
+      return c;
+   }
+   return NULL;
+}
+
 void server_init( SERVER* s, const bstring myhost ) {
    client_init( &(s->self) );
    vector_init( &(s->clients) );
@@ -18,18 +73,22 @@ inline void server_stop( SERVER* s ) {
 }
 
 void server_cleanup( SERVER* s ) {
-   int i;
-   CLIENT* c;
+   size_t deleted = 0;
 
    /* Remove clients. */
-   for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
-      c = (CLIENT*)vector_get( &(s->clients), i );
-      server_cleanup_client_channels( s, c );
-      client_cleanup( c );
-   }
+   deleted = vector_delete_cb( &(s->clients), server_del_all_clients, NULL, TRUE );
+   scaffold_print_debug(
+      "Removed %d clients from server. %d remaining.\n",
+      deleted, vector_count( &(s->clients) )
+   );
    vector_free( &(s->clients) );
 
-   /* Don't remove channels, since those will be removed as clients are. */
+   deleted = vector_delete_cb( &(s->self.channels), server_del_chan, NULL, TRUE );
+   scaffold_print_debug(
+      "Removed %d channels from server. %d remaining.\n",
+      deleted, vector_count( &(s->self.channels) )
+   );
+   /* Channels vector is freed in client_cleanup() below. */
 
    client_cleanup( &(s->self) );
 }
@@ -68,19 +127,24 @@ cleanup:
    return;
 }
 
-void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
-   CLIENT* c;
-   int i;
-
-   channel_lock_clients( l, TRUE );
-   for( i = 0 ; vector_count( &(l->clients) ) > i ; i++ ) {
-      c = (CLIENT*)vector_get( &(l->clients), i );
-      if( NULL != c_skip && 0 == bstrcmp( c_skip->nick, c->nick ) ) {
-         continue;
-      }
-      server_client_send( s, c, buffer );
+static void* server_prn_channel( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   SERVER_PBUFFER* pbuffer = (SERVER_PBUFFER*)arg;
+   CLIENT* c_iter = (CLIENT*)iter;
+   if( 0 == bstrcmp( pbuffer->c_sender->nick, c_iter->nick ) ) {
+      return NULL;
    }
-   channel_lock_clients( l, FALSE );
+   server_client_send( pbuffer->s, c_iter, pbuffer->buffer );
+   return NULL;
+}
+
+void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
+   SERVER_PBUFFER pbuffer;
+
+   pbuffer.s = s;
+   pbuffer.buffer = buffer;
+   pbuffer.c_sender = c_skip;
+
+   vector_iterate( &(l->clients), server_prn_channel, &pbuffer );
 
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
 }
@@ -107,110 +171,94 @@ cleanup:
    return;
 }
 
-void server_add_client( SERVER* s, CLIENT* n ) {
-   server_lock_clients( s, TRUE );
-   vector_add( &(s->clients), n );
-   server_lock_clients( s, FALSE );
+void server_add_client( SERVER* s, CLIENT* c ) {
+   vector_add( &(s->clients), c );
+}
+
+CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
+   CHANNEL* l = NULL;
+
+   /* Get the channel, or create it if it does not exist. */
+   l = server_get_channel_by_name( s, l_name );
+
+   if( NULL == l ) {
+      channel_new( l, l_name );
+      gamedata_init_server( &(l->gamedata), l_name );
+      client_add_channel( &(s->self), l );
+      scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
+   } else {
+      scaffold_print_info( "Channel found on server: %s\n", bdata( l->name ) );
+   }
+
+   /* Make sure the user is not already in the channel. If they are, then  *
+    * just shut up and explode.                                            */
+   if( NULL != channel_get_client_by_name( l, c_first->nick ) ) {
+      scaffold_print_debug(
+         "%s already in channel %s; ignoring.\n",
+         bdata( c_first->nick ), bdata( l->name )
+      );
+      goto cleanup;
+   }
+
+   channel_add_client( l, c_first );
+   client_add_channel( c_first, l );
+
+cleanup:
+   assert( 0 < vector_count( &(l->clients) ) );
+   assert( 0 < vector_count( &(c_first->channels) ) );
+   return l;
 }
 
 CLIENT* server_get_client( SERVER* s, int index ) {
-   CLIENT* c;
-   server_lock_clients( s, TRUE );
-   c = vector_get( &(s->clients), index );
-   server_lock_clients( s, FALSE );
-   return c;
+   return (CLIENT*)vector_get( &(s->clients), index );
 }
 
-static int server_get_client_index_by_socket( SERVER* s, int socket,
-      BOOL lock ) {
-   CLIENT* c = NULL;
-   int i;
-
-   if( lock ) {
-      server_lock_clients( s, TRUE );
-   }
-   for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
-      c = vector_get( &(s->clients), i );
-      if( socket == c->link.socket ) {
-         /* Skip the reset below. */
-         goto cleanup;
-      }
-   }
-   i = -1;
-
-cleanup:
-
-   if( lock ) {
-      server_lock_clients( s, FALSE );
-   }
-
-   return i;
+CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick ) {
+   return vector_iterate( &(s->clients), client_cmp_nick, (bstring)nick );
 }
 
-CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick, BOOL lock ) {
-   CLIENT* c = NULL;
-   int i;
-
-   if( lock ) {
-      server_lock_clients( s, TRUE );
-   }
-
-   for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
-      c = vector_get( &(s->clients), i );
-      if( 0 == bstrcmp( c->nick, nick ) ) {
-         /* Skip the reset below. */
-         goto cleanup;
-      }
-   }
-
-   c = NULL;
-
-cleanup:
-
-   if( lock ) {
-      server_lock_clients( s, FALSE );
-   }
-
-   return c;
+CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick ) {
+   return client_get_channel_by_name( &(s->self), nick );
 }
 
-void server_cleanup_client_channels( SERVER* s, CLIENT* c ) {
-   int i, j;
-   CHANNEL* l_iter;
+void server_drop_client( SERVER* s, bstring nick ) {
+   size_t deleted;
+   SERVER_DUO duo = { 0 };
+#ifdef DEBUG
+   size_t old_count = 0;
+   size_t new_count = 0;
+#endif /* DEBUG */
 
-   for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
-      l_iter = vector_get( &(c->channels ), i );
-      /* Cleanup channel if it has no other clients. */
-      if( 1 >= vector_count( &(l_iter->clients) ) ) {
-         scaffold_print_debug(
-            "Channel %s has no clients. Deleting.\n", bdata( l_iter->name )
-         );
+   duo.s = s;
+   duo.nick = nick;
 
-         if( NULL != s ) {
-            for( j = 0 ; vector_count( &(s->self.channels) ) > j ; j++ ) {
-               if( 0 == bstrcmp( (((CHANNEL*)vector_get( &(s->self.channels), j ))->name),
-                                 l_iter->name ) ) {
-                  vector_delete( &(s->self.channels), j );
-               }
-            }
-         }
+#ifdef DEBUG
+   old_count = vector_count( &(s->clients) );
+#endif /* DEBUG */
 
-         channel_cleanup( l_iter );
-      }
-   }
-}
+   deleted = vector_delete_cb( &(s->clients), server_del_client, &duo, FALSE );
+   scaffold_print_debug(
+      "Removed %d clients from server. %d remaining.\n",
+      deleted, vector_count( &(s->clients) )
+   );
 
-void server_drop_client( SERVER* s, int socket ) {
-   CLIENT* c;
-   int index;
+#ifdef DEBUG
+   new_count = vector_count( &(s->clients) );
+   assert( new_count == old_count - deleted );
 
-   server_lock_clients( s, TRUE );
-   index = server_get_client_index_by_socket( s, socket, FALSE );
-   c = vector_get( &(s->clients), index );
-   server_cleanup_client_channels( s, c );
-   client_cleanup( c );
-   vector_delete( &(s->clients), index );
-   server_lock_clients( s, FALSE );
+   old_count = vector_count( &(s->self.channels) );
+#endif /* DEBUG */
+
+   deleted = vector_delete_cb( &(s->self.channels), server_del_chan, NULL, TRUE );
+   scaffold_print_debug(
+      "Removed %d channels from server. %d remaining.\n",
+      deleted, vector_count( &(s->self.channels) )
+   );
+
+#ifdef DEBUG
+   new_count = vector_count( &(s->self.channels) );
+   assert( new_count == old_count - deleted );
+#endif /* DEBUG */
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -242,6 +290,8 @@ void server_service_clients( SERVER* s ) {
       connection_assign_remote_name( &(c->link), c->remote );
 
       server_add_client( s, c );
+
+      assert( NULL != c );
    }
 
    /* Check for commands from existing clients. */
@@ -280,7 +330,7 @@ int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
       goto cleanup;
    }
 
-   if( NULL != server_get_client_by_nick( s, nick, TRUE ) ) {
+   if( NULL != server_get_client_by_nick( s, nick ) ) {
       retval = ERR_NICKNAMEINUSE;
       goto cleanup;
    }
@@ -291,10 +341,4 @@ int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
 cleanup:
 
    return retval;
-}
-
-void server_lock_clients( SERVER* s, BOOL locked ) {
-#ifdef USE_THREADS
-#error Locking mechanism undefined!
-#endif /* USE_THREADS */
 }
