@@ -5,16 +5,24 @@
 
 typedef struct vector_ {
    void** data;
-   int size;
-   int count;
+   size_t size;
+   size_t count;
+#if defined( DEBUG ) && !defined( USE_THREADS )
+   int lock_count;
+#endif /* DEBUG, USE_THREADS */
 } VECTOR;
+
+typedef void* (*vector_callback)( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void vector_init( VECTOR* v );
 void vector_free( VECTOR* v );
 void vector_add( VECTOR* v, void* data );
-void vector_set( VECTOR* v, int index, void* data );
-void* vector_get( VECTOR* v, int index );
-void vector_delete( VECTOR* v, int index );
-int vector_count( VECTOR* v );
+void vector_set( VECTOR* v, size_t index, void* data );
+void* vector_get( VECTOR* v, size_t index );
+void* vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, size_t deleted );
+void vector_delete( VECTOR* v, size_t index );
+inline size_t vector_count( VECTOR* v );
+inline void vector_lock( VECTOR* v, BOOL lock );
+void* vector_iterate( VECTOR* v, vector_callback, void* arg );
 
 #endif /* VECTOR_H */

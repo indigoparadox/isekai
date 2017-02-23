@@ -16,12 +16,13 @@ void vector_free( VECTOR* v ) {
 
 void vector_add( VECTOR* v, void* data ) {
 
+   vector_lock( v, TRUE );
+
    if( 0 == v->size ) {
       v->size = 10;
       v->data = calloc( v->size, sizeof(void*) );
       scaffold_check_null( v->data );
    }
-
 
    if( v->size == v->count ) {
       v->size *= 2;
@@ -35,20 +36,21 @@ void vector_add( VECTOR* v, void* data ) {
 
 cleanup:
 
+   vector_lock( v, FALSE );
+
    return;
 }
 
-void vector_set( VECTOR* v, int index, void* data ) {
+void vector_set( VECTOR* v, size_t index, void* data ) {
+   vector_lock( v, TRUE );
    scaffold_check_bounds( index, v->count );
-
    v->data[index] = data;
-
 cleanup:
-
+   vector_lock( v, FALSE );
    return;
 }
 
-void* vector_get( VECTOR* v, int index ) {
+void* vector_get( VECTOR* v, size_t index ) {
    void* retptr = NULL;
 
    if( v->count <= index ) {
@@ -62,8 +64,49 @@ cleanup:
    return retptr;
 }
 
-void vector_delete( VECTOR* v, int index ) {
-   int i;
+void* vector_delete_cb(
+   VECTOR* v, vector_callback callback, void* arg, size_t* deleted
+) {
+   size_t i;
+   void* result = NULL;
+   void* tmp = NULL;
+   size_t backshift = 0;
+
+   vector_lock( v, TRUE );
+
+   for( i = 0; v->count > i ; i++ ) {
+
+      /* Run the callback until we find a match. */
+      tmp = callback( v, i, v->data[i], arg );
+      if( NULL != tmp ) {
+         backshift++;
+
+         /* Add the removed node to an array before we delete it. */
+         if( NULL == result ) {
+            result = calloc( backshift, sizeof( void* ) );
+         } else {
+            result = realloc( result, backshift * sizeof( void* ) );
+         }
+         result[backshift - 1] = tmp;
+
+      }
+
+      if( v->count - 1 > i && 0 < backshift ) {
+         /* The callback found a match so start deleting. */
+         v->data[i] = v->data[i + backshift];
+      }
+   }
+
+   v->count--;
+
+   vector_lock( v, FALSE );
+   return backshift;
+}
+
+void vector_delete( VECTOR* v, size_t index ) {
+   size_t i;
+
+   vector_lock( v, TRUE );
 
    scaffold_check_bounds( index, v->count );
 
@@ -74,10 +117,42 @@ void vector_delete( VECTOR* v, int index ) {
    v->count--;
 
 cleanup:
-
+   vector_lock( v, FALSE );
    return;
 }
 
-int vector_count( VECTOR* v ) {
+inline size_t vector_count( VECTOR* v ) {
    return v->count;
+}
+
+inline void vector_lock( VECTOR* v, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #elif defined( DEBUG )
+   if( TRUE == lock ) {
+      assert( 0 == v->lock_count );
+      v->lock_count++;
+   } else {
+      assert( 1 == v->lock_count );
+      v->lock_count--;
+   }
+   #endif /* USE_THREADS */
+}
+
+void* vector_iterate( VECTOR* v, vector_callback callback, void* arg ) {
+   void* cb_return = NULL;
+   void* current_iter = NULL;
+   size_t i;
+
+   vector_lock( v, TRUE );
+   for( i = 0 ; vector_count( v ) > i ; i++ ) {
+      current_iter = vector_get( v, i );
+      cb_return = callback( v, i, current_iter, arg );
+      if( NULL != cb_return ) {
+         break;
+      }
+   }
+   vector_lock( v, FALSE );
+
+   return cb_return;
 }
