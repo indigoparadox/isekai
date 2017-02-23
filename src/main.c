@@ -91,6 +91,41 @@ int main( int argc, char** argv ) {
       usleep( 1000000 );
    } while( 0 != scaffold_error );
 
+#ifdef DEBUG_TEST_CHANNELS
+   server_service_clients( server );
+   assert( 1 == vector_count( &(server->clients) ) );
+   CLIENT* client_b = NULL;
+   client_new( client_b );
+   bdestroy( client_b->nick );
+   client_b->nick = bfromcstr( "TestUnit" );
+   bdestroy( client_b->realname );
+   client_b->realname = bfromcstr( "Unit Tester" );
+   bdestroy( client_b->username );
+   client_b->username = bfromcstr( "TestUnit" );
+   do {
+      client_connect( client_b, localhost, 33080 );
+      usleep( 1000000 );
+   } while( 0 != scaffold_error );
+   server_service_clients( server );
+   assert( 0 == vector_count( &(server->self.channels) ) );
+   CHANNEL* l = server_add_channel( server, channel, client );
+   assert( 1 == vector_count( &(server->self.channels) ) );
+   assert( 1 == vector_count( &(l->clients) ) );
+   assert( 2 == vector_count( &(server->clients) ) );
+   CHANNEL* l_b = server_add_channel( server, channel, client_b );
+   assert( 1 == vector_count( &(server->self.channels) ) );
+   assert( l == l_b );
+   assert( 2 == vector_count( &(l->clients) ) );
+   assert( 2 == vector_count( &(l_b->clients) ) );
+   assert( 2 == vector_count( &(server->clients) ) );
+   server_drop_client( server, client_b->nick );
+   assert( 1 == vector_count( &(server->self.channels) ) );
+   assert( l == l_b );
+   //assert( 1 == vector_count( &(l->clients) ) );
+   //assert( 1 == vector_count( &(l_b->clients) ) );
+   assert( 1 == vector_count( &(server->clients) ) );
+#endif /* DEBUG */
+
    client_join_channel( client, channel );
 
    while( TRUE ) {

@@ -228,7 +228,7 @@ void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
       destroy_bitmap( g->surface );
    }
 
-   fmem_info.block = data;
+   fmem_info.block = (unsigned char*)data;
    fmem_info.length = length;
    fmem_info.offset = 0;
    fmem_info.alloc = 0;

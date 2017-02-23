@@ -133,7 +133,7 @@ static void tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
       /* Save the image to the XML to share later. */
       image_export = graphics_export_image_data( image_info->image, &image_len );
       scaffold_check_null( image_export );
-      scaffold_check_zero( strlen( image_export ) );
+      scaffold_check_zero( strlen( (char*)image_export ) );
 
       b64_encode( image_export, image_len, image_buffer, 40 );
       scaffold_check_nonzero( scaffold_error );
@@ -173,7 +173,6 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    struct bstrList* terrain_list = NULL;
    int i;
-   int bstr_result;
 
    scaffold_error = 0;
 

@@ -64,42 +64,40 @@ cleanup:
    return retptr;
 }
 
-void* vector_delete_cb(
-   VECTOR* v, vector_callback callback, void* arg, size_t* deleted
-) {
+
+/* Use a callback to delete items. The callback returns a pointer to the   *
+ * item to free, and this function frees it. It is assumed that the        *
+ * callback prepares the item to be freed.                                 */
+size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL do_free ) {
    size_t i;
-   void* result = NULL;
-   void* tmp = NULL;
+   void* found_item = NULL;
    size_t backshift = 0;
 
    vector_lock( v, TRUE );
 
+   assert( 0 <= v->count );
+
    for( i = 0; v->count > i ; i++ ) {
 
       /* Run the callback until we find a match. */
-      tmp = callback( v, i, v->data[i], arg );
-      if( NULL != tmp ) {
+      found_item = callback( v, i, v->data[i], arg );
+      if( NULL != found_item ) {
          backshift++;
-
-         /* Add the removed node to an array before we delete it. */
-         if( NULL == result ) {
-            result = calloc( backshift, sizeof( void* ) );
-         } else {
-            result = realloc( result, backshift * sizeof( void* ) );
+         if( TRUE == do_free ) {
+            free( found_item );
          }
-         result[backshift - 1] = tmp;
-
       }
 
       if( v->count - 1 > i && 0 < backshift ) {
-         /* The callback found a match so start deleting. */
+         /* The callback found a match, so start deleting! */
          v->data[i] = v->data[i + backshift];
       }
    }
 
-   v->count--;
+   v->count -= backshift;
 
    vector_lock( v, FALSE );
+
    return backshift;
 }
 

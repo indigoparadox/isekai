@@ -3,6 +3,15 @@
 #include "parser.h"
 #include "server.h"
 
+void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   bstring nick = (bstring)arg;
+   if( 0 == bstrcmp( c->nick, nick ) ) {
+      return c;
+   }
+   return NULL;
+}
+
 void client_init( CLIENT* c ) {
    vector_init( &(c->channels) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
@@ -25,22 +34,7 @@ void client_cleanup( CLIENT* c ) {
 }
 
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
-   CHANNEL* l = NULL;
-   int i;
-
-   client_lock_channels( c, TRUE );
-   for( i = 0 ; vector_count( &(c->channels) ) > i ; i++ ) {
-      l = vector_get( &(c->channels), i );
-      if( 0 == bstrcmp( l->name, name ) ) {
-         /* Skip the reset below. */
-         goto cleanup;
-      }
-   }
-   l = NULL;
-
-cleanup:
-   client_lock_channels( c, FALSE );
-   return l;
+   return vector_iterate( &(c->channels), channel_cmp_name, name );
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {
@@ -104,13 +98,12 @@ cleanup:
 }
 
 void client_add_channel( CLIENT* c, CHANNEL* l ) {
-   client_lock_channels( c, TRUE );
    vector_add( &(c->channels), l );
-   client_lock_channels( c, FALSE );
 }
 
 void client_join_channel( CLIENT* c, bstring name ) {
    /* We won't record the channel in our list until the server confirms it. */
+   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
    bstring buffer = NULL;
    buffer = bfromcstr( "JOIN " );
    bconcat( buffer, name );
@@ -150,10 +143,4 @@ void client_printf( CLIENT* c, const char* message, ... ) {
 cleanup:
    bdestroy( buffer );
    return;
-}
-
-void client_lock_channels( CLIENT* c, BOOL lock ) {
-#ifdef USE_THREADS
-#error Locking mechanism undefined!
-#endif /* USE_THREADS */
 }

@@ -29,14 +29,16 @@ void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... );
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer );
 void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... );
 void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer );
+void server_add_client( SERVER* s, CLIENT* n );
+CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first );
 void server_add_connection( SERVER* s, CLIENT* n );
+CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick );
 CLIENT* server_get_client( SERVER* s, int index );
-CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick, BOOL lock );
+CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick );
 void server_cleanup_client_channels( SERVER* s, CLIENT* c );
-void server_drop_client( SERVER* s, int index );
+void server_drop_client( SERVER* s, bstring nick );
 void server_listen( SERVER* s, int port );
 void server_service_clients( SERVER* s );
 int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick );
-void server_lock_clients( SERVER* s, BOOL locked );
 
 #endif /* SERVER_H */

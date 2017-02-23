@@ -19,7 +19,7 @@ void vector_free( VECTOR* v );
 void vector_add( VECTOR* v, void* data );
 void vector_set( VECTOR* v, size_t index, void* data );
 void* vector_get( VECTOR* v, size_t index );
-void* vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, size_t deleted );
+size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL free );
 void vector_delete( VECTOR* v, size_t index );
 inline size_t vector_count( VECTOR* v );
 inline void vector_lock( VECTOR* v, BOOL lock );
