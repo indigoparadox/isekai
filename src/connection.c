@@ -27,6 +27,12 @@ static VECTOR envelopes = { 0 };
 static uint16_t last_socket = 0;
 static int32_t server_socket = -1;
 
+static void envelopes_lock( BOOL lock ) {
+#ifdef USE_THREADS
+#error Locking mechanism undefined!
+#endif /* USE_THREADS */
+}
+
 static int fake_listen() {
     vector_init( &envelopes );
     server_socket = last_socket++;
@@ -41,6 +47,7 @@ static int fake_accept( int socket_dest ) {
         goto cleanup;
     }
 
+    envelopes_lock( TRUE );
     mailbox = vector_get( &envelopes, 0 );
     if( NULL != mailbox && 0 == bstrcmp(
         &str_connect,
@@ -53,6 +60,7 @@ static int fake_accept( int socket_dest ) {
     }
 
 cleanup:
+    envelopes_lock( FALSE );
     return socket_out;
 }
 
@@ -68,7 +76,9 @@ static void fake_send( int socket_src, int socket_dest, bstring message ) {
     outgoing->socket_dest = socket_dest;
 
     ok = TRUE;
+    envelopes_lock( TRUE );
     vector_add( &envelopes, outgoing );
+    envelopes_lock( FALSE );
 
 cleanup:
     if( TRUE != ok ) {
@@ -90,6 +100,7 @@ static int fake_read( int socket_dest, bstring buffer ) {
     CONNECTION_ENVELOPE* mailbox = NULL;
     int length_out = 0;
 
+    envelopes_lock( TRUE );
     mailbox = vector_get( &envelopes, 0 );
     if( NULL != mailbox && socket_dest == mailbox->socket_dest ) {
         scaffold_check_null( mailbox->contents );
@@ -103,6 +114,7 @@ static int fake_read( int socket_dest, bstring buffer ) {
     }
 
 cleanup:
+    envelopes_lock( FALSE );
     return length_out;
 }
 

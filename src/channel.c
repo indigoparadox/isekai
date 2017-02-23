@@ -115,5 +115,7 @@ cleanup:
 }
 
 void channel_lock_clients( CHANNEL* l, BOOL lock ) {
-
+#ifdef USE_THREADS
+#error Locking mechanism undefined!
+#endif /* USE_THREADS */
 }
