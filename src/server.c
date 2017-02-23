@@ -294,4 +294,7 @@ cleanup:
 }
 
 void server_lock_clients( SERVER* s, BOOL locked ) {
+#ifdef USE_THREADS
+#error Locking mechanism undefined!
+#endif /* USE_THREADS */
 }

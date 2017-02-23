@@ -25,5 +25,7 @@ void ui_add_window( UI* ui, UI_WINDOW* win ) {
 }
 
 void ui_lock_windows( UI* ui, BOOL lock ) {
-
+#ifdef USE_THREADS
+#error Locking mechanism undefined!
+#endif /* USE_THREADS */
 }

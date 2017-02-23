@@ -195,15 +195,18 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
 
    vector_add( &(t->tilesets), set );
 
+   tilemap_tileset_lock_images( set, TRUE );
    while( NULL != xml_image ) {
       tilemap_parse_tileset_image( t, xml_image );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
+   tilemap_tileset_lock_images( set, FALSE );
 
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
+   tilemap_tileset_lock_terrain( set, TRUE );
    while( NULL != xml_terrain ) {
       terrain_info = calloc( 1, sizeof( TILEMAP_TILE_DATA ) );
       scaffold_check_null( terrain_info );
@@ -225,7 +228,9 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
 
       xml_terrain = ezxml_next( xml_terrain );
    }
+   tilemap_tileset_lock_terrain( set, FALSE );
 
+   tilemap_tileset_lock_tiles( set, TRUE );
    xml_tile = ezxml_child( xml_tileset, "tile" );
    scaffold_check_null( xml_tile );
    while( NULL != xml_tile ) {
@@ -256,6 +261,7 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
 
       xml_tile = ezxml_next( xml_tile );
    }
+   tilemap_tileset_lock_tiles( set, FALSE );
 
 cleanup:
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */
@@ -297,12 +303,14 @@ static void tilemap_parse_layer( TILEMAP* t, ezxml_t xml_layer ) {
    layer->tiles = calloc( layer->tiles_alloc, sizeof( uint16_t ) );
    scaffold_check_null( layer->tiles );
 
+   tilemap_layer_lock_tiles( layer, TRUE );
    for( i = 0 ; tiles_list->qty > i ; i++ ) {
       xml_attr = bdata( tiles_list->entry[i] );
       scaffold_check_null( xml_attr );
       layer->tiles[i] = atoi( xml_attr );
       layer->tiles_count++;
    }
+   tilemap_layer_lock_tiles( layer, FALSE );
 
    vector_add( &(t->layers), layer );
 
@@ -329,6 +337,9 @@ void tilemap_serialize( TILEMAP* t, bstring buffer ) {
    scaffold_check_null( t );
 
    /* Serialize and compress. */
+   tilemap_lock_layers( t, TRUE );
+   tilemap_lock_positions( t, TRUE );
+   tilemap_lock_tilesets( t, TRUE );
    ezxml_buffer = ezxml_toxml( t->xml_data );
    scaffold_check_null( ezxml_buffer );
 
@@ -427,3 +438,47 @@ void tilemap_iterate_screen_row(
 ) {
 
 }
+
+void tilemap_lock_layers( TILEMAP* t, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_lock_positions( TILEMAP* t, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_lock_tilesets( TILEMAP* t, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_layer_lock_tiles( TILEMAP_LAYER* layer, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_tileset_lock_images( TILEMAP_TILESET* tileset, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_tileset_lock_terrain( TILEMAP_TILESET* tileset, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+void tilemap_tileset_lock_tiles( TILEMAP_TILESET* tileset, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #endif /* USE_THREADS */
+}
+
+
