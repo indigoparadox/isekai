@@ -68,6 +68,7 @@ typedef struct {
    uint32_t starting_y;
    TILEMAP_ORIENTATION orientation;
    ezxml_t xml_data;
+   struct bstrList* serialize_buffer;
 } TILEMAP;
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
@@ -127,12 +128,5 @@ void tilemap_iterate_screen_row(
 void tilemap_serialize( TILEMAP* t, bstring buffer );
 void tilemap_load_data( TILEMAP* t, const uint8_t* tmdata, int datasize );
 void tilemap_load_file( TILEMAP* t, bstring filename );
-void tilemap_lock_layers( TILEMAP* t, BOOL lock );
-void tilemap_lock_positions( TILEMAP* t, BOOL lock );
-void tilemap_lock_tilesets( TILEMAP* t, BOOL lock );
-void tilemap_layer_lock_tiles( TILEMAP_LAYER* layer, BOOL lock );
-void tilemap_tileset_lock_images( TILEMAP_TILESET* tileset, BOOL lock );
-void tilemap_tileset_lock_terrain( TILEMAP_TILESET* tileset, BOOL lock );
-void tilemap_tileset_lock_tiles( TILEMAP_TILESET* tileset, BOOL lock );
 
 #endif /* TILEMAP_H */

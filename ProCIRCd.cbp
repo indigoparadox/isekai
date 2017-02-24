@@ -71,7 +71,6 @@
 					<Add option="-DEZXML_CSTR" />
 					<Add option="-DMINIZ_NO_STDIO" />
 					<Add option="-DUSE_ALLEGRO_PNG" />
-					<Add option="-DUSE_NETWORK" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -135,6 +134,10 @@
 		<Unit filename="src/json/LICENSE" />
 		<Unit filename="src/json/README.md" />
 		<Unit filename="src/json/json.h" />
+		<Unit filename="src/mailbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/mailbox.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
