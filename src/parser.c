@@ -360,7 +360,9 @@ static void parser_server_join( void* local, void* remote,
 
    /* Send the current map. */
    map_serial = bfromcstralloc( 1024, "" );
-   //tilemap_serialize( &(l->gamedata.tmap), map_serial );
+#ifdef USE_NO_SERIALIZE_CACHE
+   tilemap_serialize( &(l->gamedata.tmap), map_serial );
+#endif /* USE_NO_SERIALIZE_CACHE */
    scaffold_check_nonzero( scaffold_error );
    map_serial_list = bsplit( map_serial, '\n' );
    for( i = 0 ; map_serial_list->qty > i ; i++ ) {
@@ -615,7 +617,11 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
       if( 0 == bstrncmp(
                cmd_test, &(command->command), blength( &(command->command) )
             ) ) {
-         scaffold_print_debug( "Parse: %s\n", bdata( line ) );
+#ifdef DEBUG
+         if( 0 != strncmp( bdata( cmd_test ), "GDB", 3 ) ) {
+            scaffold_print_debug( "Parse: %s\n", bdata( line ) );
+         }
+#endif /* DEBUG */
          command->callback( local, arg2, args );
          goto cleanup;
       }

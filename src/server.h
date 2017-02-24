@@ -5,6 +5,7 @@
 #include "connection.h"
 #include "client.h"
 #include "channel.h"
+#include "mailbox.h"
 
 typedef struct {
    /* "Parent class" */
@@ -14,6 +15,7 @@ typedef struct {
    VECTOR clients;
    bstring servername;
    bstring version;
+   MAILBOX queue;
 } SERVER;
 
 #define SERVER_SENTINAL 164641
