@@ -184,6 +184,11 @@ void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    g->w = w;
    g->h = h;
    g->font = NULL;
+   g->color.r = 0;
+   g->color.g = 0;
+   g->color.b = 0;
+   g->color.a = 255;
+   return;
 }
 
 void graphics_surface_cleanup( GRAPHICS* g ) {
@@ -201,11 +206,18 @@ void graphics_shutdown( GRAPHICS* g ) {
 }
 
 void graphics_set_font( GRAPHICS* g, const bstring name ) {
-
+   /* TODO */
 }
 
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
+void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color ) {
+   memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) );
+}
 
+void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
+   gr->color.r = r;
+   gr->color.g = g;
+   gr->color.b = b;
+   gr->color.a = a;
 }
 
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
@@ -282,7 +294,11 @@ cleanup:
 }
 
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {
-
+   textout_centre_ex(
+      g->surface, font, bdata( text ), x, y,
+      makecol( g->color.r, g->color.g, g->color.b ),
+      -1
+   );
 }
 
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h ) {

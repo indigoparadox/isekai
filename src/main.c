@@ -126,6 +126,8 @@ int main( int argc, char** argv ) {
    assert( 1 == vector_count( &(server->clients) ) );
 #endif /* DEBUG */
 
+   graphics_set_color_ex( &g, 255, 255, 255, 255 );
+
    client_join_channel( client, channel );
 
    while( TRUE ) {
@@ -145,6 +147,8 @@ int main( int argc, char** argv ) {
          graphics_draw_text( &g, 20, 40, ((CHANNEL*)(vector_get( &(client->channels),
                                           0 )))->topic );
       }
+
+      graphics_flip_screen( &g );
 
       if( !server->self.running ) {
          break;
