@@ -170,32 +170,36 @@ cleanup:
 void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    size_t dest_socket;
    const char* buffer_chars;
+#ifdef USE_NETWORK
    size_t buffer_len;
+#endif /* USE_NETWORK */
 
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
    dest_socket = n->socket;
    buffer_chars = bdata( buffer );
+#ifdef USE_NETWORK
    buffer_len = blength( buffer );
+#endif /* USE_NETWORK */
 
    assert( NULL != buffer_chars );
 
    assert( 0 != dest_socket );
 
-   scaffold_print_debug( "SEND: %s\n", buffer_chars );
+   //scaffold_print_debug( "SEND: %s\n", buffer_chars );
 
 #ifdef USE_NETWORK
-   send( dest_socket, buffer_chars, buffer_len, 0 );
+   send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #else
    if( TRUE == client ) {
-      mailbox_send( &fake_network, n->socket, fake_server_socket, buffer );
+      mailbox_send( &fake_network, dest_socket, fake_server_socket, buffer );
    } else {
-      mailbox_send( &fake_network, fake_server_socket, n->socket, buffer );
+      mailbox_send( &fake_network, fake_server_socket, dest_socket, buffer );
    }
 #endif /* USE_NETWORK */
 cleanup:
-   scaffold_print_debug( "SEND OK: %s\n", buffer_chars );
+   //scaffold_print_debug( "SEND OK: %s\n", buffer_chars );
    return;
 }
 

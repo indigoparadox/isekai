@@ -116,6 +116,7 @@ void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
    assert( NULL != server_get_client_by_ptr( s, c ) );
+   assert( 0 != c->sentinal );
 
    bconchar( buffer, '\r' );
    bconchar( buffer, '\n' );
