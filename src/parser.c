@@ -452,6 +452,23 @@ cleanup:
    return;
 }
 
+static void parser_server_ping( void* local, void* remote,
+                               struct bstrList* args ) {
+   SERVER* s = (SERVER*)local;
+   CLIENT* c = (CLIENT*)remote;
+
+   if( 2 > args->qty ) {
+      goto cleanup;
+   }
+
+   server_client_printf(
+      s, c, ":%b PONG %b :%b", s->self.remote, s->self.remote, c->remote
+   );
+
+cleanup:
+   return;
+}
+
 /* GU #channel px+1y+2z+3 */
 static void parser_server_gu( void* local, void* remote,
                               struct bstrList* args ) {
@@ -558,6 +575,7 @@ const parser_entry parser_table_server[] = {
    {bsStatic( "PART" ), parser_server_part},
    {bsStatic( "PRIVMSG" ), parser_server_privmsg},
    {bsStatic( "WHO" ), parser_server_who},
+   {bsStatic( "PING" ), parser_server_ping},
    {bsStatic( "GU" ), parser_server_gu },
    {bsStatic( "" ), NULL}
 };
