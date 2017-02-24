@@ -90,6 +90,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 
 #ifdef EZXML_EMBEDDED_IMAGES
       bassigncstr( image_buffer, "" );
+      scaffold_check_null( image_buffer );
 
       /* Save the image to the XML to share later. */
       image_export = graphics_export_image_data( image_info->image, &image_len );
@@ -98,6 +99,11 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 
       b64_encode( image_export, image_len, image_buffer, 40 );
       scaffold_check_nonzero( scaffold_error );
+
+      scaffold_print_debug(
+         "Loaded tileset image: %d bytes. Appending to tilemap XML...\n",
+         blength( image_buffer )
+      );
 
       ezxml_set_txt_b( xml_image, image_buffer );
       ezxml_set_attr( xml_image, "source", "inline" );

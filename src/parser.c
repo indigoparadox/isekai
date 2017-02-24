@@ -471,10 +471,10 @@ cleanup:
 static void* parser_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)arg;
    CLIENT* c_iter = (CLIENT*)iter;
-   /*server_client_printf(
+   server_client_printf(
       trio->s, trio->c, ":%b RPL_WHOREPLY %b %b",
       trio->s->self.remote, c_iter->nick, trio->l->name
-   );*/
+   );
    return NULL;
 }
 
