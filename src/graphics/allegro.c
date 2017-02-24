@@ -277,11 +277,11 @@ BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
    scaffold_check_null( fmem );
 
-#ifdef USE_ALLEGRO_PNG
-   save_tga_pf( fmem, g->surface, NULL );
-#else
+//#ifdef USE_ALLEGRO_PNG
+//   save_tga_pf( fmem, g->surface, NULL );
+//#else
    save_bmp_pf( fmem, g->surface, NULL );
-#endif /* USE_ALLEGRO_PNG */
+//#endif /* USE_ALLEGRO_PNG */
    *out_len = fmem_info.length;
 
 cleanup:
