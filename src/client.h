@@ -21,6 +21,7 @@ typedef struct _CLIENT {
    bstring username;
    bstring realname;
    bstring remote;
+   bstring away;
    uint8_t mode;
    uint8_t flags;
    int x; /* Tile X */
