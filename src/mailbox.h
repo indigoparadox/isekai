@@ -4,7 +4,7 @@
 
 #include "vector.h"
 
-#define MAILBOX_SOCKET_NONE 0
+#define MAILBOX_SOCKET_NONE -1
 
 typedef enum _MAILBOX_ENVELOPE_SPECIAL {
    MAILBOX_ENVELOPE_SPECIAL_NONE,
@@ -20,7 +20,7 @@ typedef struct _MAILBOX_ENVELOPE {
 
 typedef struct _MAILBOX {
    VECTOR envelopes;
-   size_t last_socket;
+   ssize_t last_socket;
    //size_t server_socket;
 } MAILBOX;
 
@@ -31,7 +31,7 @@ void mailbox_send(
    MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
 );
 size_t mailbox_connect(
-   MAILBOX* mailbox, size_t socket_src, size_t socket_dest
+   MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
 );
 size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer );
 

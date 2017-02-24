@@ -70,18 +70,18 @@ cleanup:
 }
 
 size_t mailbox_connect(
-   MAILBOX* mailbox, size_t socket_src, size_t socket_dest
+   MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
 ) {
    MAILBOX_ENVELOPE* outgoing = NULL;
    size_t socket_out = -1;
 
-   if( 0 >= mailbox->last_socket ) {
-      mailbox->last_socket++;
+   if( 0 > mailbox->last_socket ) {
+      mailbox->last_socket = 0;
    }
 
    outgoing = calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
-   if( 0 >= socket_src ) {
+   if( 0 > socket_src ) {
       socket_out = mailbox->last_socket++;
    } else {
       socket_out = socket_src;
