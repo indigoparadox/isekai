@@ -13,129 +13,18 @@
 #endif /* USE_NETWORK */
 
 #ifndef USE_NETWORK
+#include "mailbox.h"
 
-#include "vector.h"
-
-typedef struct {
-    int socket_src;
-    int socket_dest;
-    bstring contents;
-} CONNECTION_ENVELOPE;
-
-static const struct tagbstring str_connect = bsStatic( "%%CONNECT%%" );
-static VECTOR envelopes = { 0 };
-static uint16_t last_socket = 0;
-static int32_t server_socket = -1;
-
-void envelopes_lock( BOOL lock ) {
-#ifdef USE_THREADS
-#error Locking mechanism undefined!
-#endif /* USE_THREADS */
-}
-
-static int fake_listen() {
-    vector_init( &envelopes );
-    server_socket = last_socket++;
-    return server_socket;
-}
-
-static void* fake_envelope_cmp( VECTOR* v, void* iter, void* arg ) {
-   CONNECTION_ENVELOPE* envelope = (CONNECTION_ENVELOPE*)iter;
-   bstring str_search = (bstring)arg;
-
-   if( 0 == bstrcmp( str_search, envelope->contents ) ) {
-      return envelope;
-   }
-
-   return NULL;
-}
-
-static int fake_accept( int socket_dest ) {
-    CONNECTION_ENVELOPE* mailbox = NULL;
-    int socket_out = -1;
-
-    if( 0 > socket_dest ) {
-        goto cleanup;
-    }
-
-    envelopes_lock( TRUE );
-    mailbox = vector_get( &envelopes, 0 );
-    if( NULL != mailbox && 0 == bstrcmp(
-        &str_connect,
-        mailbox->contents
-    ) && socket_dest == mailbox->socket_dest ) {
-        socket_out = mailbox->socket_src;
-        bdestroy( mailbox->contents );
-        free( mailbox );
-        vector_delete( &envelopes, 0 );
-    }
-
-cleanup:
-    envelopes_lock( FALSE );
-    return socket_out;
-}
-
-static void fake_send( int socket_src, int socket_dest, bstring message ) {
-    CONNECTION_ENVELOPE* outgoing = NULL;
-    BOOL ok = FALSE;
-
-    outgoing = calloc( 1, sizeof( CONNECTION_ENVELOPE ) );
-    scaffold_check_null( outgoing );
-    outgoing->contents = bstrcpy( message );
-    scaffold_check_null( outgoing->contents );
-    outgoing->socket_src = socket_src;
-    outgoing->socket_dest = socket_dest;
-
-    ok = TRUE;
-    envelopes_lock( TRUE );
-    vector_add( &envelopes, outgoing );
-    envelopes_lock( FALSE );
-
-cleanup:
-    if( TRUE != ok ) {
-        free( outgoing );
-    }
-    return;
-}
-
-static void fake_connect( int socket_src ) {
-    bstring buffer = NULL;
-    buffer = bstrcpy( &str_connect );
-
-    fake_send( socket_src, server_socket, buffer );
-
-    bdestroy( buffer );
-}
-
-static int fake_read( int socket_dest, bstring buffer ) {
-    CONNECTION_ENVELOPE* mailbox = NULL;
-    int length_out = 0;
-
-    envelopes_lock( TRUE );
-    mailbox = vector_get( &envelopes, 0 );
-    if( NULL != mailbox && socket_dest == mailbox->socket_dest ) {
-        scaffold_check_null( mailbox->contents );
-        bassign( buffer, mailbox->contents );
-        length_out = blength( buffer );
-        bdestroy( mailbox->contents );
-        free( mailbox );
-        vector_delete( &envelopes, 0 );
-    } else {
-        bassigncstr( buffer, "" );
-    }
-
-cleanup:
-    envelopes_lock( FALSE );
-    return length_out;
-}
-
+static MAILBOX fake_network = { 0 };
+static size_t fake_server_socket = 0;
 #endif /* USE_NETWORK */
 
-
 static void connection_cleanup_socket( CONNECTION* n ) {
+#ifdef USE_NETWORK
    if( 0 < n->socket ) {
       close( n->socket );
    }
+#endif /* USE_NETWORK */
    n->socket = 0;
 }
 
@@ -177,7 +66,7 @@ CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
       goto cleanup;
    }
 #else
-   new_client->socket = fake_accept( n_server->socket );
+   new_client->socket = mailbox_accept( &fake_network, n_server->socket );
 
    /* No connection incoming, this time! */
    if( 0 > new_client->socket ) {
@@ -222,8 +111,9 @@ void connection_listen( CONNECTION* n, uint16_t port ) {
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
 #else
-    n->socket = fake_listen();
-    scaffold_check_negative( n->socket );
+   n->socket = mailbox_listen( &fake_network );
+   scaffold_check_negative( n->socket );
+   fake_server_socket = n->socket;
 #endif /* USE_NETWORK */
 
 cleanup:
@@ -270,8 +160,8 @@ cleanup:
    bdestroy( service );
    freeaddrinfo( result );
 #else
-    n->socket = last_socket++;
-    fake_connect( n->socket );
+   n->socket =
+      mailbox_connect( &fake_network, MAILBOX_SOCKET_NONE, fake_server_socket );
 #endif /* USE_NETWORK */
 
    return;
@@ -284,9 +174,9 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    send( n->socket, bdata( buffer ), blength( buffer ), 0 );
 #else
    if( TRUE == client ) {
-      fake_send( n->socket, server_socket, buffer );
+      mailbox_send( &fake_network, n->socket, fake_server_socket, buffer );
    } else {
-      fake_send( server_socket, n->socket, buffer );
+      mailbox_send( &fake_network, fake_server_socket, n->socket, buffer );
    }
 #endif /* USE_NETWORK */
 cleanup:
@@ -317,9 +207,10 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
    }
 #else
    if( client ) {
-      total_read_count = fake_read( n->socket, buffer );
+      total_read_count = mailbox_read( &fake_network, n->socket, buffer );
    } else {
-      total_read_count = fake_read( server_socket, buffer );
+      total_read_count =
+         mailbox_read( &fake_network, fake_server_socket, buffer );
    }
 #endif /* USE_NETWORK */
 cleanup:
