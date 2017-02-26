@@ -295,6 +295,10 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
 
 static void parser_tmap_chunk_cb( CHUNKER* h ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)h->cb_arg;
+
+   /* TODO: How to tell if the client doesn't exist without reffing it? */
+   assert( 0 != trio->c->sentinal );
+
    server_client_printf(
       trio->s, trio->c, ":%b GDB %b %b TILEMAP %d %d :%b",
       trio->s->self.remote, trio->c->nick, trio->l->name, h->progress, h->src_len,
@@ -602,6 +606,20 @@ cleanup:
    return;
 }
 
+static const bstring str_closing = bsStatic( ":Closing" );
+
+static void parser_client_error( void* local, void* gamedata,
+                                struct bstrList* args ) {
+   CLIENT* c = (CLIENT*)local;
+
+   if(
+      2 <= args->qty &&
+      0 == bstrcmp( str_closing, args->entry[1] )
+   ) {
+      c->running = FALSE;
+   }
+}
+
 const parser_entry parser_table_server[] = {
    {bsStatic( "USER" ), parser_server_user},
    {bsStatic( "NICK" ), parser_server_nick},
@@ -619,6 +637,7 @@ const parser_entry parser_table_server[] = {
 const parser_entry parser_table_client[] = {
    {bsStatic( "GU" ), parser_client_gu },
    {bsStatic( "JOIN" ), parser_client_join },
+   {bsStatic( "ERROR" ), parser_client_error },
    {bsStatic( "" ), NULL}
 };
 

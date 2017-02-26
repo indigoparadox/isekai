@@ -84,6 +84,8 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       graphics_set_image_path( image_info->image, buffer );
       scaffold_check_null( image_info->image->surface );
 
+#ifdef EZXML_EMBEDDED_IMAGES
+
       /* Save the image to the XML to share later. */
       image_export = graphics_export_image_data( image_info->image, &image_len );
       scaffold_check_null( image_export );
@@ -102,6 +104,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       ezxml_set_attr( xml_image, "source", "inline" );
 
       free( image_export );
+#endif /* EZXML_EMBEDDED_IMAGES */
    }
 
    scaffold_check_null( image_info->image );
