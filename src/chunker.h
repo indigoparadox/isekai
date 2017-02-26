@@ -45,6 +45,9 @@ typedef struct _CHUNKER {
     scaffold_check_null( h ); \
     chunker_init( h, chunk_size_src, line_len_out );
 
+#define chunker_is_finished( h ) \
+   ((h)->progress >= (h)->src_len)
+
 void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out );
 void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg );
 void chunker_cleanup( CHUNKER* h );
