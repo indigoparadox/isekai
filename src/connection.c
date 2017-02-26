@@ -15,7 +15,7 @@
 #ifndef USE_NETWORK
 #include "mailbox.h"
 
-static MAILBOX fake_network = { 0 };
+static MAILBOX fake_network = { { 0, 0, 0 }, 0 };
 static size_t fake_server_socket = 0;
 #endif /* USE_NETWORK */
 

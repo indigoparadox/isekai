@@ -94,6 +94,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/channel.h" />
+		<Unit filename="src/chunker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/chunker.h" />
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
 		</Unit>

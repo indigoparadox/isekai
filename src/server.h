@@ -15,7 +15,8 @@ typedef struct {
    VECTOR clients;
    bstring servername;
    bstring version;
-   MAILBOX queue;
+   MAILBOX jobs;
+   size_t jobs_socket;
 } SERVER;
 
 #define SERVER_SENTINAL 164641
