@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "bstrlib/bstrlib.h"
+#include "chunker.h"
 
 typedef struct {
    struct tagbstring command;

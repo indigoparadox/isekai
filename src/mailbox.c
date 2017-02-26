@@ -40,10 +40,39 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
       bdestroy( top_envelope->contents );
       free( top_envelope );
       vector_delete( &(mailbox->envelopes), 0 );
+   } else if( NULL != top_envelope && NULL != top_envelope->callback ) {
+      top_envelope->callback( mailbox, top_envelope );
+      if( MAILBOX_ENVELOPE_SPECIAL_DELETE == top_envelope->special ) {
+         free( top_envelope );
+         vector_delete( &(mailbox->envelopes), 0 );
+      }
    }
 
 cleanup:
    return socket_out;
+}
+
+void mailbox_call( MAILBOX* mailbox, MAILBOX_CALLBACK callback, void* arg ) {
+   MAILBOX_ENVELOPE* outgoing = NULL;
+   BOOL ok = FALSE;
+
+   outgoing = calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   scaffold_check_null( outgoing );
+   outgoing->contents = NULL;
+   outgoing->callback = callback;
+   outgoing->socket_src = 0;
+   outgoing->socket_dest = 0;
+   outgoing->cb_arg = arg;
+
+   ok = TRUE;
+   vector_add( &(mailbox->envelopes), outgoing );
+
+cleanup:
+   if( TRUE != ok ) {
+      free( outgoing );
+   }
+   return;
+
 }
 
 void mailbox_send(

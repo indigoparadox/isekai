@@ -65,8 +65,9 @@ void server_init( SERVER* s, const bstring myhost ) {
    s->self.remote = bstrcpy( myhost );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
-   vector_init( &(s->queue.envelopes) );
-   s->queue.last_socket = 0;
+   vector_init( &(s->jobs.envelopes) );
+   s->jobs.last_socket = 0;
+   s->jobs_socket = mailbox_listen( &(s->jobs) );
    s->self.sentinal = SERVER_SENTINAL;
 }
 
@@ -192,8 +193,8 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    if( NULL == l ) {
       channel_new( l, l_name );
       gamedata_init_server( &(l->gamedata), l_name );
-#ifndef USE_NO_SERIALIZE_CACHE
-      tilemap_serialize( &(l->gamedata.tmap), map_serial );
+      tilemap_serialize( &(l->gamedata.tmap) );
+#ifdef USE_NO_SERIALIZE_CACHE
       scaffold_check_null( map_serial );
       l->gamedata.tmap.serialize_buffer = bsplit( map_serial, '\n' );
       scaffold_check_null( l->gamedata.tmap.serialize_buffer );
@@ -331,6 +332,9 @@ void server_service_clients( SERVER* s ) {
 
       parser_dispatch( s, c, s->self.buffer );
    }
+
+   /* Handle outstanding jobs. */
+   mailbox_accept( &(s->jobs), s->jobs_socket );
 
 cleanup:
 

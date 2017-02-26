@@ -327,7 +327,8 @@ cleanup:
    return;
 }
 
-void tilemap_serialize( TILEMAP* t, bstring buffer ) {
+void tilemap_serialize( TILEMAP* t ) {
+#if 0
    char* ezxml_buffer = NULL;
    mz_zip_archive buffer_archive;
    mz_bool zip_result = 0;
@@ -337,7 +338,8 @@ void tilemap_serialize( TILEMAP* t, bstring buffer ) {
 
    /* Ensure sanity. */
    memset( &buffer_archive, 0, sizeof( mz_zip_archive ) );
-   scaffold_check_null( buffer );
+#endif
+   //scaffold_check_null( buffer );
    scaffold_check_null( t );
 
    /* Serialize and compress. */
@@ -347,9 +349,11 @@ void tilemap_serialize( TILEMAP* t, bstring buffer ) {
    //tilemap_lock_tilesets( t, TRUE );
 
    scaffold_print_debug( "Serializing map data to XML...\n" );
-   ezxml_buffer = ezxml_toxml( t->xml_data );
-   scaffold_check_null( ezxml_buffer );
+   t->serialize_buffer = ezxml_toxml( t->xml_data );
+   scaffold_check_null( t->serialize_buffer );
+   t->serialize_len = strlen( t->serialize_buffer );
 
+#if 0
    xml_buffer_size = strlen( ezxml_buffer );
 
    scaffold_print_debug( "Compressing XML data...\n" );
@@ -371,7 +375,6 @@ void tilemap_serialize( TILEMAP* t, bstring buffer ) {
    scaffold_check_nonzero( scaffold_error );
 
    scaffold_print_debug( "Serialization complete.\n" );
-
 cleanup:
    if( NULL != zip_buffer ) {
       free( zip_buffer );
@@ -379,6 +382,8 @@ cleanup:
    if( NULL != ezxml_buffer ) {
       free( ezxml_buffer );
    }
+#endif
+cleanup:
    return;
 }
 

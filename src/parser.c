@@ -293,17 +293,33 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+static void parser_tmap_chunk_cb( CHUNKER* h ) {
+   PARSER_TRIO* trio = (PARSER_TRIO*)h->cb_arg;
+   server_client_printf(
+      trio->s, trio->c, ":%b GDB %b %b TILEMAP %d %d :%b",
+      trio->s->self.remote, trio->c->nick, trio->l->name, h->progress, h->src_len,
+      h->dest_buffer
+   );
+
+   if( CHUNKER_STATUS_FINISHED == h->status || CHUNKER_STATUS_ERROR == h->status ) {
+      free( trio );
+      scaffold_print_debug( "Parser map chunker transmission complete.\n" );
+      h->status = CHUNKER_STATUS_DELETE;
+   }
+}
+
 static void parser_server_join( void* local, void* remote,
                                 struct bstrList* args ) {
    SERVER* s = (SERVER*)local;
    CLIENT* c = (CLIENT*)remote;
    CHANNEL* l = NULL;
-   int i;
    bstring namehunt = NULL;
    int bstr_result = 0;
    bstring names = NULL;
-   bstring map_serial = NULL;
-   struct bstrList* map_serial_list = NULL;
+   //bstring map_serial = NULL;
+   //struct bstrList* map_serial_list = NULL;
+   PARSER_TRIO* chunker_trio = NULL;
+   CHUNKER* h = NULL;
 
    if( 2 > args->qty ) {
       server_client_printf(
@@ -359,11 +375,13 @@ static void parser_server_join( void* local, void* remote,
    );
 
    /* Send the current map. */
-   map_serial = bfromcstralloc( 1024, "" );
+   //map_serial = bfromcstralloc( 1024, "" );
 #ifdef USE_NO_SERIALIZE_CACHE
    tilemap_serialize( &(l->gamedata.tmap), map_serial );
-#endif /* USE_NO_SERIALIZE_CACHE */
    scaffold_check_nonzero( scaffold_error );
+#endif /* USE_NO_SERIALIZE_CACHE */
+
+#if 0
    map_serial_list = bsplit( map_serial, '\n' );
    for( i = 0 ; map_serial_list->qty > i ; i++ ) {
       server_client_printf(
@@ -372,13 +390,29 @@ static void parser_server_join( void* local, void* remote,
          map_serial_list->entry[i]
       );
    }
+#endif
+
+   scaffold_check_null( l->gamedata.tmap.serialize_buffer );
+   scaffold_check_zero( l->gamedata.tmap.serialize_len );
+
+   chunker_trio = calloc( 1, sizeof( PARSER_TRIO ) );
+   chunker_trio->c = c;
+   chunker_trio->l = l;
+   chunker_trio->s = s;
+
+   assert( NULL != l->gamedata.tmap.serialize_buffer );
+   assert( 0 < l->gamedata.tmap.serialize_len );
+
+   chunker_new( h, -1, -1 );
+   chunker_set_cb( h, parser_tmap_chunk_cb, &(s->jobs), chunker_trio );
+   chunker_chunk( h, namehunt, l->gamedata.tmap.serialize_buffer, l->gamedata.tmap.serialize_len );
 
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );
 
 cleanup:
-   bstrListDestroy( map_serial_list );
-   bdestroy( map_serial );
+   //bstrListDestroy( map_serial_list );
+   //bdestroy( map_serial );
    bdestroy( names );
    bdestroy( namehunt );
    return;
