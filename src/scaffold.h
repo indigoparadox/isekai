@@ -9,6 +9,10 @@
 
 #define SENTINAL 19691
 
+#ifndef BYTE
+typedef int8_t BYTE;
+#endif /* BYTE */
+
 #ifndef BOOL
 typedef uint8_t BOOL;
 #endif /* BOOL */

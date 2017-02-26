@@ -9,10 +9,10 @@
 #endif /* USE_ALLEGRO_PNG */
 
 typedef struct _GRAPHICS_FMEM_INFO {
-   unsigned char* block;
-   long length;
-   long alloc;
-   long offset;
+   BYTE* block;
+   size_t length;
+   size_t alloc;
+   size_t offset;
 } GRAPHICS_FMEM_INFO;
 
 static int graphics_fmem_fclose( void* userdata ) {
@@ -22,7 +22,7 @@ static int graphics_fmem_fclose( void* userdata ) {
 
    /* Shorten the allocation back down to the stated length. */
    if( info->alloc > info->length ) {
-      info->block = realloc( (unsigned char*)info->block, info->length );
+      info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->length );
       ASSERT( NULL !=info->block );
       info->alloc = info->length;
    }
@@ -75,26 +75,26 @@ static int graphics_fmem_putc( int c, void* userdata ) {
    ASSERT( info->offset <= info->length );
 
    if( NULL == info->block ) {
-      info->block = calloc( info->alloc, sizeof( unsigned char ) );
+      info->block = (BYTE*)calloc( info->alloc, sizeof( BYTE ) );
    }
 
    if( info->offset == info->length ) {
       /* Grab some more memory if's getting longer. */
       if( info->alloc <= info->length ) {
          info->alloc *= 2;
-         info->block = realloc( (unsigned char*)info->block, info->alloc );
+         info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->alloc );
       }
       info->length++;
    }
 
-   info->block[info->offset] = (unsigned char)c;
+   info->block[info->offset] = (BYTE)c;
 
    return info->block[info->offset++];
 }
 
 static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
    long i;
-   uint8_t* c = (unsigned char*)p;
+   BYTE* c = (BYTE*)p;
    ASSERT( info );
    ASSERT( info->offset <= info->length );
 
@@ -111,7 +111,7 @@ static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
 
 static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   long actual;
+   size_t actual;
 
    ASSERT( info );
    ASSERT( info->offset <= info->length );
@@ -231,8 +231,8 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    return;
 }
 
-void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
-                              uint32_t length ) {
+void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
+                              size_t length ) {
    GRAPHICS_FMEM_INFO fmem_info;
    PACKFILE* fmem = NULL;
 
@@ -240,7 +240,7 @@ void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
       destroy_bitmap( g->surface );
    }
 
-   fmem_info.block = (unsigned char*)data;
+   fmem_info.block = (BYTE*)data;
    fmem_info.length = length;
    fmem_info.offset = 0;
    fmem_info.alloc = 0;
@@ -260,21 +260,16 @@ cleanup:
    return;
 }
 
-uint8_t* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
+BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
    GRAPHICS_FMEM_INFO fmem_info;
    PACKFILE* fmem = NULL;
-   //uint8_t* image_out = NULL;
-
-   //image_out = calloc( *out_len, sizeof( uint8_t ) );
 
    memset( &fmem_info, '\0', sizeof( GRAPHICS_FMEM_INFO ) );
 
    scaffold_check_null( g );
    scaffold_check_null( g->surface );
    scaffold_check_null( out_len );
-   //scaffold_check_null( image_out );
 
-   //fmem_info.block = image_out;
    fmem_info.length = *out_len;
    fmem_info.offset = 0;
    fmem_info.alloc = *out_len;
@@ -284,7 +279,6 @@ uint8_t* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
 
    save_bmp_pf( fmem, g->surface, NULL );
    *out_len = fmem_info.length;
-   //image_out = fmem_info.block;
 
 cleanup:
    if( NULL != fmem ) {

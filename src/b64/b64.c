@@ -242,13 +242,13 @@ static const char cd64[]=
 **
 ** encode 3 8-bit binary bytes as 4 '6-bit' characters
 */
-static void encodeblock( unsigned char* in, unsigned char* out, int len ) {
-   out[0] = (unsigned char) cb64[ (int)(in[0] >> 2) ];
-   out[1] = (unsigned char) cb64[ (int)(((in[0] & 0x03) << 4) | ((
+static void encodeblock( BYTE* in, BYTE* out, int len ) {
+   out[0] = (BYTE)cb64[ (int)(in[0] >> 2) ];
+   out[1] = (BYTE)cb64[ (int)(((in[0] & 0x03) << 4) | ((
                                            in[1] & 0xf0) >> 4)) ];
-   out[2] = (unsigned char) (len > 1 ? cb64[ (int)(((in[1] & 0x0f) << 2) | ((
+   out[2] = (BYTE)(len > 1 ? cb64[ (int)(((in[1] & 0x0f) << 2) | ((
                                 in[2] & 0xc0) >> 6)) ] : '=');
-   out[3] = (unsigned char) (len > 2 ? cb64[ (int)(in[2] & 0x3f) ] : '=');
+   out[3] = (BYTE)(len > 2 ? cb64[ (int)(in[2] & 0x3f) ] : '=');
 }
 
 /*
@@ -256,24 +256,24 @@ static void encodeblock( unsigned char* in, unsigned char* out, int len ) {
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
-void b64_encode( uint8_t* indata, long indata_len, bstring outstring, int linesz ) {
-   unsigned char in[3];
-   unsigned char out[4];
+void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz ) {
+   BYTE in[3];
+   BYTE out[4];
    int i, len, blocksout = 0;
-   long indata_place = 0;
+   int32_t indata_place = 0;
    int bstr_result;
 
-   *in = (unsigned char) 0;
-   *out = (unsigned char) 0;
+   *in = 0;
+   *out = 0;
    while( b64_beof( indata_place, indata_len ) ) {
       len = 0;
       for( i = 0; i < 3; i++ ) {
-         in[i] = (unsigned char) indata[indata_place++];
+         in[i] = (BYTE)indata[indata_place++];
 
          if( b64_beof( indata_place, indata_len ) ) {
             len++;
          } else {
-            in[i] = (unsigned char) 0;
+            in[i] = 0;
          }
       }
       if( len > 0 ) {
@@ -302,10 +302,10 @@ cleanup:
 **
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
-static void decodeblock( unsigned char* in, unsigned char* out ) {
-   out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
-   out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
-   out[ 2 ] = (unsigned char ) (((in[2] << 6) & 0xc0) | in[3]);
+static void decodeblock( BYTE* in, BYTE* out ) {
+   out[ 0 ] = (BYTE)(in[0] << 2 | in[1] >> 4);
+   out[ 1 ] = (BYTE)(in[1] << 4 | in[2] >> 2);
+   out[ 2 ] = (BYTE)(((in[2] << 6) & 0xc0) | in[3]);
 }
 
 /*
@@ -313,25 +313,25 @@ static void decodeblock( unsigned char* in, unsigned char* out ) {
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-uint8_t* b64_decode( size_t* outdata_len, bstring instring ) {
-   unsigned char in[4];
-   unsigned char out[3];
+BYTE* b64_decode( size_t* outdata_len, bstring instring ) {
+   BYTE in[4];
+   BYTE out[3];
    int v;
    int i, len;
    size_t instring_place = 0;
    size_t outdata_place = 0;
-   uint8_t* outdata;
+   BYTE* outdata;
 
    *outdata_len = 1;
-   outdata = calloc( *outdata_len, sizeof( uint8_t ) );
+   outdata = (BYTE*)calloc( *outdata_len, sizeof( BYTE ) );
    scaffold_check_null( outdata );
 
 #ifdef DEBUG_B64
    scaffold_print_debug( "B64: Decoding: %s\n", bdata( instring ) );
 #endif /* DEBUG_B64 */
 
-   *in = (uint8_t) 0;
-   *out = (uint8_t) 0;
+   *in = (BYTE) 0;
+   *out = (BYTE) 0;
    while( blength( instring ) > instring_place ) {
       for( len = 0, i = 0; i < 4 && blength( instring ) > instring_place; i++ ) {
          v = 0;
@@ -351,10 +351,10 @@ uint8_t* b64_decode( size_t* outdata_len, bstring instring ) {
          if( blength( instring ) > instring_place ) {
             len++;
             if( v != 0 ) {
-               in[i] = (uint8_t)(v - 1);
+               in[i] = (BYTE)(v - 1);
             }
          } else {
-            in[i] = (uint8_t)0;
+            in[i] = (BYTE)0;
          }
       }
       if( len > 0 ) {
@@ -362,7 +362,7 @@ uint8_t* b64_decode( size_t* outdata_len, bstring instring ) {
          for( i = 0; i < len - 1; i++ ) {
             if( *outdata_len <= outdata_place ) {
                *outdata_len *= 2;
-               outdata = (uint8_t*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+               outdata = (BYTE*)realloc( outdata, *outdata_len * sizeof( BYTE ) );
                scaffold_check_null( outdata );
             }
             outdata[outdata_place++] = out[i];
@@ -373,7 +373,7 @@ uint8_t* b64_decode( size_t* outdata_len, bstring instring ) {
 cleanup:
    if( NULL != outdata ) {
       *outdata_len = outdata_place;
-      outdata = realloc( outdata, outdata_place * sizeof( uint8_t ) );
+      outdata = (BYTE*)realloc( outdata, outdata_place * sizeof( BYTE ) );
       /* This loop is OK since the condition above won't be triggered. */
       scaffold_check_null( outdata );
    }

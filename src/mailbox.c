@@ -56,7 +56,7 @@ void mailbox_call( MAILBOX* mailbox, MAILBOX_CALLBACK callback, void* arg ) {
    MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
-   outgoing = calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
    outgoing->contents = NULL;
    outgoing->callback = callback;
@@ -81,7 +81,7 @@ void mailbox_send(
    MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
-   outgoing = calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
    outgoing->contents = bstrcpy( message );
    scaffold_check_null( outgoing->contents );
@@ -108,7 +108,7 @@ size_t mailbox_connect(
       mailbox->last_socket = 0;
    }
 
-   outgoing = calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
    if( 0 > socket_src ) {
       socket_out = mailbox->last_socket++;

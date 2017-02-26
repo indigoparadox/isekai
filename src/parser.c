@@ -314,7 +314,7 @@ static void parser_server_join( void* local, void* remote,
    CLIENT* c = (CLIENT*)remote;
    CHANNEL* l = NULL;
    bstring namehunt = NULL;
-   int bstr_result = 0;
+   int8_t bstr_result = 0;
    bstring names = NULL;
    //bstring map_serial = NULL;
    //struct bstrList* map_serial_list = NULL;
@@ -395,7 +395,7 @@ static void parser_server_join( void* local, void* remote,
    scaffold_check_null( l->gamedata.tmap.serialize_buffer );
    scaffold_check_zero( l->gamedata.tmap.serialize_len );
 
-   chunker_trio = calloc( 1, sizeof( PARSER_TRIO ) );
+   chunker_trio = (PARSER_TRIO*)calloc( 1, sizeof( PARSER_TRIO ) );
    chunker_trio->c = c;
    chunker_trio->l = l;
    chunker_trio->s = s;
@@ -405,7 +405,7 @@ static void parser_server_join( void* local, void* remote,
 
    chunker_new( h, -1, -1 );
    chunker_set_cb( h, parser_tmap_chunk_cb, &(s->jobs), chunker_trio );
-   chunker_chunk( h, namehunt, l->gamedata.tmap.serialize_buffer, l->gamedata.tmap.serialize_len );
+   chunker_chunk( h, namehunt, (BYTE*)l->gamedata.tmap.serialize_buffer, l->gamedata.tmap.serialize_len );
 
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );

@@ -40,7 +40,7 @@ CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
     * We will only init this if it's NULL so that we're not constantly     *
     * allocing and deallocing memory.                                      */
    if( NULL == new_client ) {
-      new_client = calloc( 1, sizeof( new_client ) );
+      new_client = (CONNECTION*)calloc( 1, sizeof( CONNECTION ) );
    }
 
 #ifdef USE_NETWORK

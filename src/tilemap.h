@@ -21,55 +21,55 @@ typedef struct {
 
 typedef struct {
    bstring name;
-   int32_t tile;
+   size_t tile;
 } TILEMAP_TERRAIN_DATA;
 
 typedef struct {
-   int32_t id;
-   int32_t terrain[4];
+   size_t id;
+   size_t terrain[4];
 } TILEMAP_TILE_DATA;
 
 typedef struct {
-   int32_t firstgid;
-   uint32_t tileheight;
-   uint32_t tilewidth;
+   size_t firstgid;
+   size_t tileheight;
+   size_t tilewidth;
    VECTOR images;
    VECTOR terrain;
    VECTOR tiles;
 } TILEMAP_TILESET;
 
 typedef struct {
-   uint32_t x_previous;
-   uint32_t y_previous;
-   uint32_t z_previous;
-   uint32_t x;
-   uint32_t y;
-   uint32_t z;
+   size_t x_previous;
+   size_t y_previous;
+   size_t z_previous;
+   size_t x;
+   size_t y;
+   size_t z;
    CLIENT* entity;
 } TILEMAP_POSITION;
 
 typedef struct {
-   uint32_t x;
-   uint32_t y;
-   uint32_t width;
-   uint32_t height;
+   size_t x;
+   size_t y;
+   size_t width;
+   size_t height;
    uint16_t* tiles;
-   uint32_t tiles_count;
-   uint32_t tiles_alloc;
+   size_t tiles_count;
+   size_t tiles_alloc;
 } TILEMAP_LAYER;
 
 typedef struct {
-   uint32_t width;
-   uint32_t height;
+   size_t width;
+   size_t height;
    VECTOR layers;
    VECTOR positions;
    VECTOR tilesets;
-   uint32_t starting_x;
-   uint32_t starting_y;
+   size_t starting_x;
+   size_t starting_y;
    TILEMAP_ORIENTATION orientation;
    ezxml_t xml_data;
    //struct bstrList* serialize_buffer;
-   unsigned char* serialize_buffer;
+   char* serialize_buffer;
    size_t serialize_len;
 } TILEMAP;
 
@@ -128,7 +128,7 @@ void tilemap_iterate_screen_row(
    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
 void tilemap_serialize( TILEMAP* t );
-void tilemap_load_data( TILEMAP* t, const uint8_t* tmdata, int datasize );
+void tilemap_load_data( TILEMAP* t, const BYTE* tmdata, int datasize );
 void tilemap_load_file( TILEMAP* t, bstring filename );
 
 #endif /* TILEMAP_H */
