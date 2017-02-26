@@ -50,8 +50,24 @@ void* channel_cmp_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+#ifdef DEBUG
+void* channel_cdb_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   bstring nick = (bstring)arg;
+   if( 0 == bstrcmp( nick, c->nick ) ) {
+      assert( 0 == c->sentinal );
+      return c;
+   }
+   return NULL;
+}
+#endif /* DEBUG */
+
 void channel_remove_client( CHANNEL* l, CLIENT* c ) {
    size_t deleted = 0;
+#ifdef DEBUG
+   /* Make sure clients have been cleaned up before deleting. */
+   //vector_iterate( &(l->clients), channel_cdb_clients, c->nick );
+#endif /* DEBUG */
    deleted = vector_delete_cb( &(l->clients), channel_cmp_clients, c->nick, FALSE );
    scaffold_print_debug(
       "Removed %d clients from channel %s. %d remaining.\n",

@@ -27,8 +27,7 @@ static void* server_client_del_chan(
     * still be in use!                                                        */
    channel_remove_client( l, c );
 
-   /* TODO: Don't lie here? (return client address, see below) */
-   return NULL;
+   return c;
 }
 
 static void* server_del_all_clients(
@@ -55,8 +54,11 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
    SERVER_DUO* duo = (SERVER_DUO*)arg;
    if( 0 == bstrcmp( c->nick, duo->nick ) ) {
       /* Locks shouldn't conflict, since it's two different vectors. */
-      /* TODO: Don't lie here? (use FALSE for callback. see above) */
-      vector_delete_cb( &(c->channels), server_client_del_chan, c, TRUE );
+      vector_delete_cb( &(c->channels), server_client_del_chan, c, FALSE );
+
+      /* Make sure clients have been cleaned up before deleting. */
+      client_cleanup( c );
+      assert( 0 == c->sentinal );
       return c;
    }
    return NULL;
@@ -114,7 +116,9 @@ void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
    bconchar( buffer, '\n' );
    connection_write_line( &(c->link), buffer, FALSE );
 
-   scaffold_print_debug( "Server sent to client %d: %s", c->link.socket, bdata( buffer ) );
+#ifdef DEBUG_RAW_LINES
+   scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
+#endif /* DEBUG_RAW_LINES */
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
 }
 

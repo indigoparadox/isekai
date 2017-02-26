@@ -141,7 +141,10 @@ int main( int argc, char** argv ) {
       server_service_clients( server );
 
       if( 'q' == input_get_char( &p ) ) {
-         server_stop( server );
+         //server_stop( server );
+         scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+         //client_leave_channel( client, channel );
+         client_stop( client );
       }
 
       if( 0 < vector_count( &(client->channels) ) ) {
@@ -153,13 +156,14 @@ int main( int argc, char** argv ) {
 
       graphics_flip_screen( &g );
 
+      if( !client->running ) {
+         server_stop( server );
+      }
+
       if( !server->self.running ) {
          break;
       }
    }
-
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
-   client_leave_channel( client, channel );
 
 cleanup:
 
@@ -167,6 +171,7 @@ cleanup:
    bdestroy( buffer );
    bdestroy( channel );
    client_cleanup( client );
+   assert( 0 == vector_count( &(server->self.channels) ) );
    server_cleanup( server );
    free( server );
    graphics_shutdown( &g );

@@ -31,6 +31,7 @@ void client_cleanup( CLIENT* c ) {
    bdestroy( c->realname );
    bdestroy( c->remote );
    bdestroy( c->username );
+   c->sentinal = 0;
 }
 
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
@@ -82,10 +83,12 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
 
 #ifdef DEBUG
    /* TODO: If for trace path? */
+#ifdef DEBUG_RAW_LINES
    scaffold_print_debug(
       "Client %d: Line received from server: %s\n",
       c->link.socket, bdata( c->buffer )
    );
+#endif /* DEBUG_RAW_LINES */
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 #endif /* DEBUG */
 
@@ -97,14 +100,23 @@ cleanup:
    return;
 }
 
+void client_stop( CLIENT* c ) {
+   bstring buffer = NULL;
+
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   buffer = bfromcstr( "QUIT" );
+   client_send( c, buffer );
+   bdestroy( buffer );
+}
+
 void client_add_channel( CLIENT* c, CHANNEL* l ) {
    vector_add( &(c->channels), l );
 }
 
 void client_join_channel( CLIENT* c, bstring name ) {
+   bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
    scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
-   bstring buffer = NULL;
    buffer = bfromcstr( "JOIN " );
    bconcat( buffer, name );
    client_send( c, buffer );
@@ -112,7 +124,15 @@ void client_join_channel( CLIENT* c, bstring name ) {
 }
 
 void client_leave_channel( CLIENT* c, bstring lname ) {
+   bstring buffer = NULL;
+   /* We won't record the channel in our list until the server confirms it. */
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   //scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+   buffer = bfromcstr( "PART " );
+   bconcat( buffer, lname );
+   client_send( c, buffer );
+   bdestroy( buffer );
+
    /* TODO: Add callback from parser and only delete channel on confirm. */
    /* TODO: Cleanup channel. */
    vector_delete_cb( &(c->channels), channel_cmp_name, lname, TRUE );
@@ -126,7 +146,9 @@ void client_send( CLIENT* c, bstring buffer ) {
    bconchar( buffer, '\n' );
    connection_write_line( &(c->link), buffer, TRUE );
 
-   scaffold_print_debug( "Client sent to server: %s", bdata( buffer ) );
+#ifdef DEBUG_RAW_LINES
+   scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
+#endif /* DEBUG_RAW_LINES */
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 }
 
