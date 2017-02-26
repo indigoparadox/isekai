@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 size_t mailbox_listen( MAILBOX* mailbox ) {
-    /* vector_init( &(mailbox->envelopes) ); */
+    vector_init( &(mailbox->envelopes) );
     if( 0 >= mailbox->last_socket ) {
        mailbox->last_socket++;
     }
@@ -63,6 +63,7 @@ void mailbox_call( MAILBOX* mailbox, MAILBOX_CALLBACK callback, void* arg ) {
    outgoing->socket_src = 0;
    outgoing->socket_dest = 0;
    outgoing->cb_arg = arg;
+   outgoing->special = MAILBOX_ENVELOPE_SPECIAL_NONE;
 
    ok = TRUE;
    vector_add( &(mailbox->envelopes), outgoing );
@@ -87,6 +88,8 @@ void mailbox_send(
    scaffold_check_null( outgoing->contents );
    outgoing->socket_src = socket_src;
    outgoing->socket_dest = socket_dest;
+   outgoing->callback = NULL;
+   outgoing->special = MAILBOX_ENVELOPE_SPECIAL_NONE;
 
    ok = TRUE;
    vector_add( &(mailbox->envelopes), outgoing );

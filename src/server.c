@@ -26,6 +26,8 @@ static void* server_client_del_chan(
    /* Remove the channel from the client's list, but don't free it. It might  *
     * still be in use!                                                        */
    channel_remove_client( l, c );
+
+   /* TODO: Don't lie here? (return client address, see below) */
    return NULL;
 }
 
@@ -53,6 +55,7 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
    SERVER_DUO* duo = (SERVER_DUO*)arg;
    if( 0 == bstrcmp( c->nick, duo->nick ) ) {
       /* Locks shouldn't conflict, since it's two different vectors. */
+      /* TODO: Don't lie here? (use FALSE for callback. see above) */
       vector_delete_cb( &(c->channels), server_client_del_chan, c, TRUE );
       return c;
    }
@@ -60,15 +63,19 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
 }
 
 void server_init( SERVER* s, const bstring myhost ) {
+   int bstr_result;
    client_init( &(s->self) );
    vector_init( &(s->clients) );
-   s->self.remote = bstrcpy( myhost );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
    vector_init( &(s->jobs.envelopes) );
    s->jobs.last_socket = 0;
    s->jobs_socket = mailbox_listen( &(s->jobs) );
    s->self.sentinal = SERVER_SENTINAL;
+   bstr_result = bassign( s->self.remote, myhost );
+   scaffold_check_nonzero( bstr_result );
+cleanup:
+   return;
 }
 
 inline void server_stop( SERVER* s ) {
@@ -77,6 +84,9 @@ inline void server_stop( SERVER* s ) {
 
 void server_cleanup( SERVER* s ) {
    size_t deleted = 0;
+
+   bdestroy( s->version );
+   bdestroy( s->servername );
 
    /* Remove clients. */
    deleted = vector_delete_cb( &(s->clients), server_del_all_clients, NULL, TRUE );
@@ -193,7 +203,6 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    if( NULL == l ) {
       channel_new( l, l_name );
       gamedata_init_server( &(l->gamedata), l_name );
-      tilemap_serialize( &(l->gamedata.tmap) );
 #ifdef USE_NO_SERIALIZE_CACHE
       scaffold_check_null( map_serial );
       l->gamedata.tmap.serialize_buffer = bsplit( map_serial, '\n' );
@@ -254,6 +263,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
    old_count = vector_count( &(s->clients) );
 #endif /* DEBUG */
 
+   /* TODO: Should this actually be TRUE? */
    deleted = vector_delete_cb( &(s->clients), server_del_client, &duo, FALSE );
    scaffold_print_debug(
       "Removed %d clients from server. %d remaining.\n",
