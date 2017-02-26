@@ -5,6 +5,7 @@
 #include "channel.h"
 #include "graphics.h"
 #include "ui.h"
+#include "datafile.h"
 
 static inline CHANNEL* gamedata_get_channel( GAMEDATA* d ) {
    return (CHANNEL*)d;
@@ -27,7 +28,7 @@ void gamedata_init_server( GAMEDATA* d, const bstring name ) {
    mapdata_path = bformat( "./%s.tmx", bdata( mapdata_filename ) );
    scaffold_check_null( mapdata_path );
    scaffold_print_info( "Loading for data in: %s\n", bdata( mapdata_path ) );
-   tilemap_load_file( &(d->tmap), mapdata_path );
+   datafile_load_file( &(d->tmap), mapdata_path, datafile_parse_tilemap );
 
 cleanup:
    bdestroy( mapdata_path );

@@ -235,7 +235,7 @@ static const char cb64[]=
 static const char cd64[]=
    "|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
-#define b64_beof( i, l ) (i <= l)
+#define b64_beof( i, l ) (i < l)
 
 /*
 ** encodeblock
@@ -263,14 +263,18 @@ void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz
    int32_t indata_place = 0;
    int bstr_result;
 
+   assert( NULL != indata );
+   assert( 0 < indata_len );
+
    *in = 0;
    *out = 0;
    while( b64_beof( indata_place, indata_len ) ) {
       len = 0;
       for( i = 0; i < 3; i++ ) {
-         in[i] = (BYTE)indata[indata_place++];
-
          if( b64_beof( indata_place, indata_len ) ) {
+            assert( indata_place < indata_len );
+            in[i] = (BYTE)indata[indata_place];
+            indata_place++;
             len++;
          } else {
             in[i] = 0;

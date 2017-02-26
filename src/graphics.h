@@ -53,7 +53,7 @@ void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color );
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
-                              uint32_t length );
+                              size_t length );
 BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len );
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );

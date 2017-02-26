@@ -111,6 +111,13 @@ void client_join_channel( CLIENT* c, bstring name ) {
    bdestroy( buffer );
 }
 
+void client_leave_channel( CLIENT* c, bstring lname ) {
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   /* TODO: Add callback from parser and only delete channel on confirm. */
+   /* TODO: Cleanup channel. */
+   vector_delete_cb( &(c->channels), channel_cmp_name, lname, TRUE );
+}
+
 void client_send( CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */

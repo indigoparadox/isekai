@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <assert.h>
 
 static SERVER* server;
 
@@ -26,14 +27,14 @@ int main( int argc, char** argv ) {
    bstring localhost = NULL,
            buffer = NULL,
            channel = NULL;
-   time_t tm;
-   GRAPHICS g;
-   INPUT p;
-   GAMEDATA d;
-   UI ui;
+   time_t tm = 0;
+   GRAPHICS g = { 0 };
+   INPUT p = { 0 };
+   GAMEDATA d = { 0 };
+   UI ui = { 0 };
 #ifdef DEBUG_B64
    bstring b64_test = NULL;
-   int32_t b64_test_len = 0;
+   size_t b64_test_len = 0;
    char* b64_test_decode = NULL;
 #endif /* DEBUG_B64 */
 
@@ -47,12 +48,14 @@ int main( int argc, char** argv ) {
 #ifdef DEBUG_B64
    scaffold_print_debug( "Testing Base64:\n" );
    b64_test = bfromcstralloc( 100, "" );
-   b64_encode( "abcdefghijk", 11, b64_test, 20 );
+   b64_encode( (BYTE*)"abcdefghijk", 11, b64_test, 20 );
    scaffold_print_debug( "Base64 Encoded: %s\n", bdata( b64_test ) );
+   assert( 0 == strncmp( "YWJjZGVmZ2hpams=", bdata( b64_test ), 16 ) );
    b64_test_decode = b64_decode( &b64_test_len, b64_test );
    scaffold_print_debug(
-      "Base64 Decoding Got: %s, Length: %ld\n", b64_test_decode, b64_test_len
+      "Base64 Decoding Got: %s, Length: %d\n", b64_test_decode, b64_test_len
    );
+   assert( 0 == strncmp( "abcdefghijk", b64_test_decode, 11 ) );
    free( b64_test_decode );
 #endif /* DEBUG_B64 */
 
@@ -154,6 +157,9 @@ int main( int argc, char** argv ) {
          break;
       }
    }
+
+   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+   client_leave_channel( client, channel );
 
 cleanup:
 

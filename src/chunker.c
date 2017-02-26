@@ -78,7 +78,7 @@ cleanup:
 }
 
 void chunker_chew( CHUNKER* h ) {
-   mz_zip_archive buffer_archive;
+   mz_zip_archive buffer_archive = { 0 };
    mz_bool zip_result = 0;
    void* zip_buffer = NULL;
    size_t zip_buffer_size = 0;
