@@ -85,7 +85,7 @@ static void tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
    char* image_ezxml_import = NULL;
    int bstr_result;
    size_t image_len = 0;
-   uint8_t* image_export = NULL;
+   BYTE* image_export = NULL;
    bstring buffer = NULL;
    TILEMAP_TILESET* set = NULL;
 
@@ -99,7 +99,7 @@ static void tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
    buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( buffer );
 
-   image_info = calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
+   image_info = (TILEMAP_TILESET_IMAGE*)calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
    scaffold_check_null( image_info );
 
    /* TODO: Decode serialized image data if present. */
@@ -117,7 +117,7 @@ static void tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );
       scaffold_check_nonzero( scaffold_error );
-      graphics_set_image_data( image_info->image, (uint8_t*)image_ezxml_import, image_len );
+      graphics_set_image_data( image_info->image, (BYTE*)image_ezxml_import, image_len );
       free( image_ezxml_import );
       scaffold_check_nonzero( scaffold_error );
 
@@ -185,7 +185,7 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    xml_image = ezxml_child( xml_tileset, "image" );
    scaffold_check_null( xml_image );
 
-   set = calloc( 1, sizeof( TILEMAP_TILESET ) );
+   set = (TILEMAP_TILESET*)calloc( 1, sizeof( TILEMAP_TILESET ) );
    scaffold_check_null( set );
 
    /* vector_init( &(set->images) );
@@ -210,7 +210,7 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    // XXX
    //tilemap_tileset_lock_terrain( set, TRUE );
    while( NULL != xml_terrain ) {
-      terrain_info = calloc( 1, sizeof( TILEMAP_TILE_DATA ) );
+      terrain_info = (TILEMAP_TERRAIN_DATA*)calloc( 1, sizeof( TILEMAP_TERRAIN_DATA ) );
       scaffold_check_null( terrain_info );
 
       xml_attr = ezxml_attr( xml_terrain, "name" );
@@ -237,7 +237,7 @@ static void tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    xml_tile = ezxml_child( xml_tileset, "tile" );
    scaffold_check_null( xml_tile );
    while( NULL != xml_tile ) {
-      tile_info = calloc( 1, sizeof( TILEMAP_TILE_DATA ) );
+      tile_info = (TILEMAP_TILE_DATA*)calloc( 1, sizeof( TILEMAP_TILE_DATA ) );
       scaffold_check_null( tile_info );
 
       xml_attr = ezxml_attr( xml_tile, "id" );
@@ -303,7 +303,7 @@ static void tilemap_parse_layer( TILEMAP* t, ezxml_t xml_layer ) {
    tiles_list = bsplit( buffer, ',' );
    scaffold_check_null( tiles_list );
    layer->tiles_alloc = tiles_list->qty;
-   layer->tiles = calloc( layer->tiles_alloc, sizeof( uint16_t ) );
+   layer->tiles = (uint16_t*)calloc( layer->tiles_alloc, sizeof( uint16_t ) );
    scaffold_check_null( layer->tiles );
 
    // XXX
@@ -387,7 +387,7 @@ cleanup:
    return;
 }
 
-void tilemap_load_data( TILEMAP* t, const uint8_t* tmdata, int datasize ) {
+void tilemap_load_data( TILEMAP* t, const BYTE* tmdata, int datasize ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
       xml_tileset = NULL;
@@ -420,8 +420,8 @@ cleanup:
 
 void tilemap_load_file( TILEMAP* t, bstring filename ) {
    FILE* tmfile = NULL;
-   uint8_t* tmdata = NULL;
-   uint32_t datasize = 0;
+   BYTE* tmdata = NULL;
+   size_t datasize = 0;
 
    tmfile = fopen( bdata( filename ), "rb" );
    scaffold_check_null( tmfile );
@@ -429,12 +429,12 @@ void tilemap_load_file( TILEMAP* t, bstring filename ) {
    /* Allocate enough space to hold the map. */
    fseek( tmfile, 0, SEEK_END );
    datasize = ftell( tmfile );
-   tmdata = calloc( datasize, sizeof( uint8_t ) + 1 ); /* +1 for term. */
+   tmdata = (BYTE*)calloc( datasize, sizeof( BYTE ) + 1 ); /* +1 for term. */
    scaffold_check_null( tmdata );
    fseek( tmfile, 0, SEEK_SET );
 
    /* Read and close the map. */
-   fread( tmdata, sizeof( uint8_t ), datasize, tmfile );
+   fread( tmdata, sizeof( BYTE ), datasize, tmfile );
    fclose( tmfile );
    tmfile = NULL;
 

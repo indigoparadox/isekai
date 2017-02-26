@@ -42,7 +42,6 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
       h->callback( h );
    }
 
-cleanup:
    if( CHUNKER_STATUS_DELETE == h->status ) {
       chunker_cleanup( h );
       free( h );
@@ -56,7 +55,7 @@ cleanup:
    }
 }
 
-void chunker_chunk( CHUNKER* h, bstring filename, uint8_t* data, size_t len ) {
+void chunker_chunk( CHUNKER* h, bstring filename, BYTE* data, size_t len ) {
    /* Ensure sanity. */
    scaffold_check_null( h );
    scaffold_check_null( data );
@@ -127,7 +126,7 @@ void chunker_chew( CHUNKER* h ) {
    zip_result = mz_zip_writer_end( &buffer_archive );
    scaffold_check_zero( zip_result );
    b64_encode(
-      (unsigned char*)zip_buffer, zip_buffer_size, h->dest_buffer,
+      zip_buffer, zip_buffer_size, h->dest_buffer,
       h->chunk_size_line
    );
 

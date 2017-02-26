@@ -30,7 +30,7 @@ typedef struct _CHUNKER {
    size_t progress;
    size_t chunk_size_src;
    size_t chunk_size_line;
-   uint8_t* src_buffer;
+   BYTE* src_buffer;
    size_t src_len;
    bstring dest_buffer;
    bstring filename;
@@ -41,7 +41,7 @@ typedef struct _CHUNKER {
 } CHUNKER;
 
 #define chunker_new( h, chunk_size_src, line_len_out ) \
-    h = calloc( 1, sizeof( CHUNKER ) ); \
+    h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) ); \
     scaffold_check_null( h ); \
     chunker_init( h, chunk_size_src, line_len_out );
 
@@ -51,7 +51,7 @@ typedef struct _CHUNKER {
 void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out );
 void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg );
 void chunker_cleanup( CHUNKER* h );
-void chunker_chunk( CHUNKER* h, bstring filename, uint8_t* data, size_t len );
+void chunker_chunk( CHUNKER* h, bstring filename, BYTE* data, size_t len );
 void chunker_chew( CHUNKER* h );
 
 #endif /* CHUNKER_H */

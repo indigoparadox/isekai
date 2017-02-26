@@ -33,7 +33,7 @@ int main( int argc, char** argv ) {
    UI ui;
 #ifdef DEBUG_B64
    bstring b64_test = NULL;
-   long b64_test_len = 0;
+   int32_t b64_test_len = 0;
    char* b64_test_decode = NULL;
 #endif /* DEBUG_B64 */
 
@@ -47,9 +47,9 @@ int main( int argc, char** argv ) {
 #ifdef DEBUG_B64
    scaffold_print_debug( "Testing Base64:\n" );
    b64_test = bfromcstralloc( 100, "" );
-   b64_encode( (unsigned char*)"abcdefghijk", 11, b64_test, 20 );
+   b64_encode( "abcdefghijk", 11, b64_test, 20 );
    scaffold_print_debug( "Base64 Encoded: %s\n", bdata( b64_test ) );
-   b64_test_decode = (char*)b64_decode( &b64_test_len, b64_test );
+   b64_test_decode = b64_decode( &b64_test_len, b64_test );
    scaffold_print_debug(
       "Base64 Decoding Got: %s, Length: %ld\n", b64_test_decode, b64_test_len
    );
@@ -164,7 +164,9 @@ cleanup:
    server_cleanup( server );
    free( server );
    graphics_shutdown( &g );
+#ifdef USE_ALLEGRO
    allegro_exit();
+#endif /* USE_ALLEGRO */
 
    return 0;
 }

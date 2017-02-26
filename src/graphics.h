@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "bstrlib/bstrlib.h"
+#include "scaffold.h"
 
 typedef uint32_t gu;
 
@@ -38,7 +39,7 @@ typedef struct {
 } GRAPHICS_RECT;
 
 #define graphics_surface_new( g, x, y, w, h ) \
-    g = calloc( 1, sizeof( GRAPHICS ) ); \
+    g = (GRAPHICS*)calloc( 1, sizeof( GRAPHICS ) ); \
     scaffold_check_null( g ); \
     graphics_surface_init( g, x, y, w, h );
 
@@ -51,9 +52,9 @@ void graphics_set_font( GRAPHICS* g, bstring name );
 void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color );
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
-void graphics_set_image_data( GRAPHICS* g, const uint8_t* data,
+void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
                               uint32_t length );
-uint8_t* graphics_export_image_data( GRAPHICS* g, size_t* out_len );
+BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len );
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );

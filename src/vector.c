@@ -20,13 +20,13 @@ void vector_add( VECTOR* v, void* data ) {
 
    if( 0 == v->size ) {
       v->size = 10;
-      v->data = calloc( v->size, sizeof(void*) );
+      v->data = (void**)calloc( v->size, sizeof(void*) );
       scaffold_check_null( v->data );
    }
 
    if( v->size == v->count ) {
       v->size *= 2;
-      v->data = realloc( v->data, sizeof(void*) * v->size );
+      v->data = (void**)realloc( v->data, sizeof(void*) * v->size );
       scaffold_check_null( v->data );
       /* TODO: Clear new vector elements? */
    }
