@@ -42,6 +42,14 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
       h->callback( h, e->socket_src );
    }
 
+#ifdef DEBUG
+   h->percent = h->progress * 100 / h->src_len;
+   if( 0 == (h->percent % 10) && h->percent != h->last_percent ) {
+      scaffold_print_debug( "Chunker: %d%% complete...\n", h->percent )
+      h->last_percent = h->percent;
+   }
+#endif /* DEBUG */
+
    if( CHUNKER_STATUS_DELETE == h->status ) {
       chunker_cleanup( h );
       free( h );
