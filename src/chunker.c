@@ -39,7 +39,7 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
    chunker_chew( h );
 
    if( NULL != h->callback ) {
-      h->callback( h );
+      h->callback( h, e->socket_src );
    }
 
    if( CHUNKER_STATUS_DELETE == h->status ) {
@@ -55,7 +55,7 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
    }
 }
 
-void chunker_chunk( CHUNKER* h, bstring filename, BYTE* data, size_t len ) {
+void chunker_chunk( CHUNKER* h, ssize_t socket, bstring filename, BYTE* data, size_t len ) {
    /* Ensure sanity. */
    scaffold_check_null( h );
    scaffold_check_null( data );
@@ -70,7 +70,7 @@ void chunker_chunk( CHUNKER* h, bstring filename, BYTE* data, size_t len ) {
    h->status = CHUNKER_STATUS_WORKING;
 
    if( NULL != h->mailqueue ) {
-      mailbox_call( h->mailqueue, chunker_mailbox_cb, h );
+      mailbox_call( h->mailqueue, socket, chunker_mailbox_cb, h );
    }
 
 cleanup:
@@ -83,6 +83,7 @@ void chunker_chew( CHUNKER* h ) {
    void* zip_buffer = NULL;
    size_t zip_buffer_size = 0;
    size_t increment = 0;
+   int bstr_result;
 
    scaffold_error = 0;
 
@@ -129,6 +130,11 @@ void chunker_chew( CHUNKER* h ) {
       zip_buffer, zip_buffer_size, h->dest_buffer,
       h->chunk_size_line
    );
+
+#ifdef DEBUG
+   bstr_result = bstrchr( h->dest_buffer, '\n' );
+   assert( BSTR_ERR == bstr_result );
+#endif /* DEBUG */
 
 cleanup:
    if( SCAFFOLD_ERROR_NONE != scaffold_error ) {

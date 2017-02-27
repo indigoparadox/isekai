@@ -293,12 +293,21 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-static void parser_tmap_chunk_cb( CHUNKER* h ) {
+static void parser_tmap_chunk_cb( CHUNKER* h, ssize_t socket ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)h->cb_arg;
 
    /* TODO: How to tell if the client doesn't exist without reffing it? */
-   assert( 0 != trio->c->sentinal );
+   //assert( 0 != trio->c->sentinal );
+   if( FALSE == mailbox_is_alive( h->mailqueue, socket ) ) {
+      scaffold_print_debug(
+         "Client with socket %d no longer connected. Stopping chunk job.\n",
+         socket
+      );
+      h->status = CHUNKER_STATUS_DELETE;
+      goto cleanup;
+   }
 
+// XXX
    server_client_printf(
       trio->s, trio->c, ":%b GDB %b %b TILEMAP %d %d :%b",
       trio->s->self.remote, trio->c->nick, trio->l->name, h->progress, h->src_len,
@@ -310,6 +319,9 @@ static void parser_tmap_chunk_cb( CHUNKER* h ) {
       scaffold_print_debug( "Parser map chunker transmission complete.\n" );
       h->status = CHUNKER_STATUS_DELETE;
    }
+
+cleanup:
+   return;
 }
 
 static void parser_server_join( void* local, void* remote,
@@ -347,6 +359,13 @@ static void parser_server_join( void* local, void* remote,
 
    l = server_add_channel( s, namehunt, c );
    scaffold_check_null( l );
+
+   assert( NULL != c );
+   assert( NULL != s );
+   assert( NULL != c->nick );
+   assert( NULL != c->username );
+   assert( NULL != c->remote );
+   assert( NULL != l->name );
 
    /* Announce the new join. */
    server_channel_printf(
@@ -406,10 +425,17 @@ static void parser_server_join( void* local, void* remote,
 
    assert( NULL != l->gamedata.tmap.serialize_buffer );
    assert( 0 < l->gamedata.tmap.serialize_len );
+   assert( 0 < c->jobs_socket );
 
    chunker_new( h, -1, -1 );
-   chunker_set_cb( h, parser_tmap_chunk_cb, &(s->jobs), chunker_trio );
-   chunker_chunk( h, namehunt, (BYTE*)l->gamedata.tmap.serialize_buffer, l->gamedata.tmap.serialize_len );
+   chunker_set_cb( h, parser_tmap_chunk_cb, s->self.jobs, chunker_trio );
+   chunker_chunk(
+      h,
+      c->jobs_socket,
+      namehunt,
+      (BYTE*)l->gamedata.tmap.serialize_buffer,
+      l->gamedata.tmap.serialize_len
+   );
 
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );
@@ -606,7 +632,7 @@ cleanup:
    return;
 }
 
-static const bstring str_closing = bsStatic( ":Closing" );
+static const struct tagbstring str_closing = bsStatic( ":Closing" );
 
 static void parser_client_error( void* local, void* gamedata,
                                 struct bstrList* args ) {
@@ -614,7 +640,7 @@ static void parser_client_error( void* local, void* gamedata,
 
    if(
       2 <= args->qty &&
-      0 == bstrcmp( str_closing, args->entry[1] )
+      0 == bstrcmp( &str_closing, args->entry[1] )
    ) {
       c->running = FALSE;
    }
@@ -646,39 +672,45 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
    const parser_entry* parser_table = NULL;
    struct bstrList* args = NULL;
    const parser_entry* command = NULL;
-   uint8_t arg_command_index; /* Which arg has the command? */
+   size_t i;
    bstring cmd_test = NULL; /* Don't free this. */
 
    if( SERVER_SENTINAL == s_local->self.sentinal ) {
       parser_table = parser_table_server;
-      arg_command_index = 0;
+      //arg_command_index = 0;
    } else {
       parser_table = parser_table_client;
-      arg_command_index = 1; /* First index is just the server name. */
+      //arg_command_index = 1; /* First index is just the server name. */
    }
 
    args = bsplit( line, ' ' );
    scaffold_check_null( args );
-   scaffold_check_bounds( (arg_command_index + 1), args->mlen );
-   cmd_test = args->entry[arg_command_index];
+   //scaffold_check_bounds( (arg_command_index + 1), args->mlen );
 
-   for(
-      command = &(parser_table[0]);
-      NULL != command->callback;
-      command++
-   ) {
-      if( 0 == bstrncmp(
-               cmd_test, &(command->command), blength( &(command->command) )
-            ) ) {
+   for( i = 0 ; i < args->qty && PARSER_CMD_SEARCH_RANGE > i ; i++ ) {
+      cmd_test = args->entry[i];
+      for(
+         command = &(parser_table[0]);
+         NULL != command->callback;
+         command++
+      ) {
+         if( 0 == bstrncmp(
+            cmd_test, &(command->command), blength( &(command->command) )
+         ) ) {
 #ifdef DEBUG
-         if( 0 != strncmp( bdata( cmd_test ), "GDB", 3 ) ) {
-            scaffold_print_debug( "Parse: %s\n", bdata( line ) );
-         }
+            if( 0 != strncmp( bdata( cmd_test ), "GDB", 3 ) ) {
+               scaffold_print_debug( "Parse: %s\n", bdata( line ) );
+            }
 #endif /* DEBUG */
-         command->callback( local, arg2, args );
-         goto cleanup;
+            command->callback( local, arg2, args );
+
+            /* Found a command, so short-circuit. */
+            goto cleanup;
+         }
       }
    }
+
+   scaffold_print_error( "Parser unable to interpret: %s\n", bdata( line ) );
 
 cleanup:
 

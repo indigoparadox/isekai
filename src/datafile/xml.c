@@ -1,6 +1,8 @@
 
 #include "../datafile.h"
 
+#include "../b64/b64.h"
+
 static void datafile_tilemap_parse_properties( TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
 
@@ -36,7 +38,9 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
    char* image_ezxml_import = NULL;
    int bstr_result;
    size_t image_len = 0;
+#ifdef EZXML_EMBEDDED_IMAGES
    BYTE* image_export = NULL;
+#endif /* EZXML_EMBEDDED_IMAGES */
    bstring buffer = NULL;
    TILEMAP_TILESET* set = NULL;
 #ifdef EZXML_CSTR
@@ -66,7 +70,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       free( image_ezxml_import );
       scaffold_check_nonzero( bstr_result );
 
-      image_ezxml_import = b64_decode( &image_len, image_buffer );
+      image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
       scaffold_check_nonzero( scaffold_error );
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );

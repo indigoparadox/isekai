@@ -7,6 +7,7 @@
 #include "graphics.h"
 #include "gamedata.h"
 #include "channel.h"
+#include "mailbox.h"
 
 typedef struct _CHANNEL CHANNEL;
 
@@ -27,6 +28,8 @@ typedef struct _CLIENT {
    int x; /* Tile X */
    int y; /* Tile Y */
    VECTOR channels; /* All channels in now; all channels avail on server. */
+   MAILBOX* jobs;
+   ssize_t jobs_socket;
    int sentinal;
 } CLIENT;
 
@@ -40,16 +43,16 @@ typedef struct _CLIENT {
 #define CLIENT_NAME_ALLOC 32
 #define CLIENT_BUFFER_ALLOC 256
 
-#define client_new( c ) \
+#define client_new( c, mailbox ) \
     c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \
     scaffold_check_null( c ); \
-    client_init( c );
+    client_init( c, mailbox );
 
 typedef struct _GAMEDATA GAMEDATA;
 
 void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg );
 
-void client_init( CLIENT* c );
+void client_init( CLIENT* c, MAILBOX* m );
 void client_cleanup( CLIENT* c );
 void client_add_channel( CLIENT* c, CHANNEL* l );
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );
@@ -59,5 +62,6 @@ void client_join_channel( CLIENT* c, bstring name );
 void client_send( CLIENT* c, bstring buffer );
 void client_printf( CLIENT* c, const char* message, ... );
 void client_lock_channels( CLIENT* c, BOOL lock );
+void client_stop( CLIENT* c );
 
 #endif /* CLIENT_H */
