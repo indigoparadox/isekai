@@ -67,8 +67,7 @@ typedef struct {
    size_t starting_x;
    size_t starting_y;
    TILEMAP_ORIENTATION orientation;
-   char* serialize_buffer;
-   size_t serialize_len;
+   bstring serialize_buffer;
 } TILEMAP;
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)

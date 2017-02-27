@@ -89,6 +89,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       scaffold_check_null( image_info->image->surface );
 
 #ifdef EZXML_EMBEDDED_IMAGES
+      bassigncstr( image_buffer, "" );
 
       /* Save the image to the XML to share later. */
       image_export = graphics_export_image_data( image_info->image, &image_len );
@@ -98,13 +99,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       b64_encode( image_export, image_len, image_buffer, 40 );
       scaffold_check_nonzero( scaffold_error );
 
-#ifndef EZXML_CSTR
-      /* TODO: This's a bstr2cstr() call that will be freed with free(), FYI. */
-      ezxml_set_txt( xml_image, bstr2cstr( image_buffer, '\0' ) );
-#else
-      image_ezxml_export = bstr2cstr( image_buffer, '\0' );
-      ezxml_set_txt( xml_image, image_ezxml_export );
-#endif /* EZXML_CSTR */
+      ezxml_set_txt_b( xml_image, image_buffer );
       ezxml_set_attr( xml_image, "source", "inline" );
 
       free( image_export );
@@ -330,7 +325,6 @@ void datafile_parse_tilemap( void* targ, const BYTE* tmdata, size_t datasize ) {
    scaffold_print_debug( "Serializing map data to XML...\n" );
    t->serialize_buffer = ezxml_toxml( xml_data );
    scaffold_check_null( t->serialize_buffer );
-   t->serialize_len = strlen( t->serialize_buffer );
 
    ezxml_free( xml_data );
 
