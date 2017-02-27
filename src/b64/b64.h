@@ -9,7 +9,7 @@
 
 /* #define DEBUG_B64 */
 
-void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz );
+void b64_encode( BYTE* indata, size_t indata_len, bstring outstring, size_t linesz );
 BYTE* b64_decode( size_t* outdata_len, bstring instring );
 
 #endif /* B64_H */
