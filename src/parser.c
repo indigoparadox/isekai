@@ -397,24 +397,6 @@ static void parser_server_join( void* local, void* remote,
       s->self.remote, c->nick, l->name
    );
 
-   /* Send the current map. */
-   //map_serial = bfromcstralloc( 1024, "" );
-#ifdef USE_NO_SERIALIZE_CACHE
-   tilemap_serialize( &(l->gamedata.tmap), map_serial );
-   scaffold_check_nonzero( scaffold_error );
-#endif /* USE_NO_SERIALIZE_CACHE */
-
-#if 0
-   map_serial_list = bsplit( map_serial, '\n' );
-   for( i = 0 ; map_serial_list->qty > i ; i++ ) {
-      server_client_printf(
-         s, c, ":%b GDB %b %b TILEMAP %d %d :%b",
-         s->self.remote, c->nick, l->name, i, map_serial_list->qty,
-         map_serial_list->entry[i]
-      );
-   }
-#endif
-
    scaffold_check_null( l->gamedata.tmap.serialize_buffer );
    scaffold_check_zero( l->gamedata.tmap.serialize_len );
 
