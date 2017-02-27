@@ -57,6 +57,7 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
       vector_delete_cb( &(c->channels), server_client_del_chan, c, FALSE );
 
       /* Make sure clients have been cleaned up before deleting. */
+      mailbox_close( duo->s->self.jobs, c->jobs_socket );
       client_cleanup( c );
       assert( 0 == c->sentinal );
       return c;
@@ -66,13 +67,16 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
 
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
-   client_init( &(s->self) );
+   client_init( &(s->self), NULL );
    vector_init( &(s->clients) );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
-   vector_init( &(s->jobs.envelopes) );
-   s->jobs.last_socket = 0;
-   s->jobs_socket = mailbox_listen( &(s->jobs) );
+
+   /* Setup the jobs mailbox. */
+   s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
+   vector_init( &(s->self.jobs->envelopes) );
+   s->self.jobs->last_socket = 0;
+   s->self.jobs_socket = mailbox_listen( s->self.jobs );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
    scaffold_check_nonzero( bstr_result );
@@ -190,6 +194,7 @@ cleanup:
 
 void server_add_client( SERVER* s, CLIENT* c ) {
    vector_add( &(s->clients), c );
+   c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
 
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
@@ -225,6 +230,7 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
          "%s already in channel %s; ignoring.\n",
          bdata( c_first->nick ), bdata( l->name )
       );
+      l = NULL;
       goto cleanup;
    }
 
@@ -235,8 +241,10 @@ cleanup:
 #ifndef USE_NO_SERIALIZE_CACHE
    bdestroy( map_serial );
 #endif /* USE_NO_SERIALIZE_CACHE */
-   assert( 0 < vector_count( &(l->clients) ) );
-   assert( 0 < vector_count( &(c_first->channels) ) );
+   if( NULL != l ) {
+      assert( 0 < vector_count( &(l->clients) ) );
+      assert( 0 < vector_count( &(c_first->channels) ) );
+   }
    return l;
 }
 
@@ -247,6 +255,13 @@ CLIENT* server_get_client( SERVER* s, int index ) {
 CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick ) {
    return vector_iterate( &(s->clients), client_cmp_nick, (bstring)nick );
 }
+
+#if 0
+/* TODO: Get client by mailbox? */
+CLIENT* server_get_client_by_mbox( SERVER* s, ssize_t socket ) {
+   return vector_iterate( &(s->clients), client_cmp_mbox, &socket );
+}
+#endif
 
 CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick ) {
    return client_get_channel_by_name( &(s->self), nick );
@@ -314,12 +329,13 @@ void server_service_clients( SERVER* s ) {
    /* Check for new clients. */
    n_client = connection_register_incoming( &(s->self.link) );
    if( NULL != n_client ) {
-      client_new( c );
+      client_new( c, s->self.jobs );
       memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
       free( n_client ); /* Don't clean up, because data is still valid. */
 
       /* Add some details to c before stowing it. */
       connection_assign_remote_name( &(c->link), c->remote );
+      c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
       server_add_client( s, c );
 
@@ -348,7 +364,7 @@ void server_service_clients( SERVER* s ) {
    }
 
    /* Handle outstanding jobs. */
-   mailbox_accept( &(s->jobs), s->jobs_socket );
+   mailbox_accept( s->self.jobs, s->self.jobs_socket );
 
 cleanup:
 

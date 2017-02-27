@@ -12,7 +12,7 @@ void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-void client_init( CLIENT* c ) {
+void client_init( CLIENT* c, MAILBOX* m ) {
    vector_init( &(c->channels) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -20,6 +20,10 @@ void client_init( CLIENT* c ) {
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
+   if( NULL != m ) {
+      c->jobs = m;
+      c->jobs_socket = -1;
+   }
    c->running = TRUE;
 }
 
@@ -76,23 +80,22 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
    last_read_count = connection_read_line( &(c->link), c->buffer, TRUE );
    btrimws( c->buffer );
 
-   if( 0 >= last_read_count ) {
+   if( 0 < last_read_count ) {
       /* TODO: Handle error reading. */
-      goto cleanup;
-   }
 
 #ifdef DEBUG
-   /* TODO: If for trace path? */
+      /* TODO: If for trace path? */
 #ifdef DEBUG_RAW_LINES
-   scaffold_print_debug(
-      "Client %d: Line received from server: %s\n",
-      c->link.socket, bdata( c->buffer )
-   );
+      scaffold_print_debug(
+         "Client %d: Line received from server: %s\n",
+         c->link.socket, bdata( c->buffer )
+      );
 #endif /* DEBUG_RAW_LINES */
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 #endif /* DEBUG */
 
-   parser_dispatch( c, d, c->buffer );
+      parser_dispatch( c, d, c->buffer );
+   }
 
    gamedata_update_client( d, c );
 

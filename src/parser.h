@@ -12,6 +12,8 @@ typedef struct {
 #define ERR_NONICKNAMEGIVEN 431
 #define ERR_NICKNAMEINUSE 433
 
+#define PARSER_CMD_SEARCH_RANGE 2
+
 /* "caller" can be a SERVER or a CLIENT. as they should start with the same *
  * layout.                                                                  */
 void parser_dispatch( void* local, void* remote, const_bstring line );

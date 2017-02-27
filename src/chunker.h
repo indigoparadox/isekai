@@ -4,6 +4,8 @@
 
 #include "bstrlib/bstrlib.h"
 #include "mailbox.h"
+#include "client.h"
+#include "server.h"
 
 #include <stdint.h>
 
@@ -15,7 +17,7 @@
 
 typedef struct _CHUNKER CHUNKER;
 
-typedef void (*CHUNKER_CALLBACK)( CHUNKER* h );
+typedef void (*CHUNKER_CALLBACK)( CHUNKER* h, ssize_t socket );
 
 typedef enum _CHUNKER_STATUS {
    CHUNKER_STATUS_NONE,
@@ -51,7 +53,7 @@ typedef struct _CHUNKER {
 void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out );
 void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg );
 void chunker_cleanup( CHUNKER* h );
-void chunker_chunk( CHUNKER* h, bstring filename, BYTE* data, size_t len );
+void chunker_chunk( CHUNKER* h, ssize_t socket, bstring filename, BYTE* data, size_t len );
 void chunker_chew( CHUNKER* h );
 
 #endif /* CHUNKER_H */

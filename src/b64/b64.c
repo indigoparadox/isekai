@@ -262,6 +262,7 @@ void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz
    int i, len, blocksout = 0;
    int32_t indata_place = 0;
    int bstr_result;
+   size_t outdata_place = 0;
 
    assert( NULL != indata );
    assert( 0 < indata_len );
@@ -280,6 +281,7 @@ void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz
             in[i] = 0;
          }
       }
+      outdata_place += 4;
       if( len > 0 ) {
          encodeblock( in, out, len );
          for( i = 0; i < 4; i++ ) {
@@ -288,7 +290,7 @@ void b64_encode( BYTE* indata, int32_t indata_len, bstring outstring, int linesz
          }
          blocksout++;
       }
-      if( blocksout >= (linesz/4) || !b64_beof( indata_place, indata_len ) ) {
+      if( outdata_place > linesz ) {
          if( blocksout > 0 ) {
             bstr_result = bconchar( outstring, '\n' );
             scaffold_check_nonzero( bstr_result );

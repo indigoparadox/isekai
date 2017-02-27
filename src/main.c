@@ -30,7 +30,7 @@ int main( int argc, char** argv ) {
    time_t tm = 0;
    GRAPHICS g = { 0 };
    INPUT p = { 0 };
-   GAMEDATA d = { 0 };
+   GAMEDATA d;
    UI ui = { 0 };
 #ifdef DEBUG_B64
    bstring b64_test = NULL;
@@ -69,7 +69,7 @@ int main( int argc, char** argv ) {
    buffer = bfromcstr( "" );
 
    server_new( server, localhost );
-   client_new( client );
+   client_new( client, server->self.jobs );
 
    p.client = client;
 
