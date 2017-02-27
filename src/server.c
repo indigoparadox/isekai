@@ -199,12 +199,10 @@ void server_add_client( SERVER* s, CLIENT* c ) {
 
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    CHANNEL* l = NULL;
-#ifndef USE_NO_SERIALIZE_CACHE
    bstring map_serial = NULL;
 
    map_serial = bfromcstralloc( 1024, "" );
    scaffold_check_null( map_serial );
-#endif /* USE_NO_SERIALIZE_CACHE */
 
    /* Get the channel, or create it if it does not exist. */
    l = server_get_channel_by_name( s, l_name );
@@ -212,11 +210,6 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    if( NULL == l ) {
       channel_new( l, l_name );
       gamedata_init_server( &(l->gamedata), l_name );
-#ifdef USE_NO_SERIALIZE_CACHE
-      scaffold_check_null( map_serial );
-      l->gamedata.tmap.serialize_buffer = bsplit( map_serial, '\n' );
-      scaffold_check_null( l->gamedata.tmap.serialize_buffer );
-#endif /* USE_NO_SERIALIZE_CACHE */
       client_add_channel( &(s->self), l );
       scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
    } else {
@@ -238,9 +231,7 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    client_add_channel( c_first, l );
 
 cleanup:
-#ifndef USE_NO_SERIALIZE_CACHE
    bdestroy( map_serial );
-#endif /* USE_NO_SERIALIZE_CACHE */
    if( NULL != l ) {
       assert( 0 < vector_count( &(l->clients) ) );
       assert( 0 < vector_count( &(c_first->channels) ) );
