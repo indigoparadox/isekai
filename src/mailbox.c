@@ -65,6 +65,11 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
 #endif /* DEBUG */
+
+         scaffold_print_debug(
+            "Job removed from queue. %d jobs total.\n",
+            vector_count( &(mailbox->envelopes ) )
+         );
       }
    }
 
@@ -87,6 +92,11 @@ void mailbox_call( MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callba
 
    ok = TRUE;
    vector_add( &(mailbox->envelopes), outgoing );
+
+   scaffold_print_debug(
+      "Job added to queue. %d jobs total.\n",
+      vector_count( &(mailbox->envelopes ) )
+   );
 
 cleanup:
    if( TRUE != ok ) {
