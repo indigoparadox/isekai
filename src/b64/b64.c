@@ -238,66 +238,67 @@ static const char cd64[]=
 #define b64_beof( i, l ) (i < l)
 
 /*
-** encodeblock
-**
-** encode 3 8-bit binary bytes as 4 '6-bit' characters
-*/
-static void encodeblock( uint8_t* in, uint8_t* out, int len ) {
-   out[0] = (uint8_t)cb64[ (int)(in[0] >> 2) ];
-   out[1] = (uint8_t)cb64[ (int)(((in[0] & 0x03) << 4) | ((
-                                           in[1] & 0xf0) >> 4)) ];
-   out[2] = (uint8_t)(len > 1 ? cb64[ (int)(((in[1] & 0x0f) << 2) | ((
-                                in[2] & 0xc0) >> 6)) ] : '=');
-   out[3] = (uint8_t)(len > 2 ? cb64[ (int)(in[2] & 0x3f) ] : '=');
-}
-
-/*
 ** encode
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
-void b64_encode( BYTE* indata, size_t indata_len, bstring outstring, size_t linesz ) {
-   uint8_t in[3];
-   uint8_t out[4];
-   int i, len, blocksout = 0;
-   size_t indata_place = 0;
-   int bstr_result;
-   size_t outdata_place = 0;
+void b64_encode( void* indata, size_t indata_len, bstring outstring, size_t linesz ) {
+   const uint8_t* indata_bytes = (const uint8_t *)indata;
+   size_t i;
+   uint32_t concat32bits = 0;
+   uint8_t split6bits[4] = { 0 };
+   size_t padding = indata_len % 3;
+   int bstr_ret;
 
-   assert( NULL != indata );
-   assert( 0 < indata_len );
+   assert( NULL != outstring );
 
-   *in = 0;
-   *out = 0;
-   while( indata_place < indata_len ) {
-      len = 0;
-      for( i = 0 ; i < 3 ; i++ ) {
-         assert( indata_place < indata_len );
-         in[i] = (uint8_t)indata[indata_place++];
-         if( indata_place < indata_len ) {
-            len++;
-         } else {
-            in[i] = 0;
-         }
+   /* increment over the length of the string, three characters at a time */
+   for( i = 0; indata_len > i ; i += 3 ) {
+      /* Three bytes become one 24-bit number */
+      /* Parents prevent a situation where compiler can do the shifting       *
+       * before conversion to uint32_t, resulting in 0.                       */
+      concat32bits = ((uint32_t)indata_bytes[i]) << 16;
+
+      if( (i + 1) < indata_len ) {
+         concat32bits += ((uint32_t)indata_bytes[i + 1]) << 8;
       }
-      outdata_place += 4;
-      if( len > 0 ) {
-         encodeblock( in, out, len );
-         for( i = 0; i < 4; i++ ) {
-            bstr_result = bconchar( outstring, (char)out[i] );
-            scaffold_check_nonzero( bstr_result );
-         }
-         blocksout++;
+
+      if( (i + 2) < indata_len ) {
+         concat32bits += indata_bytes[i + 2];
       }
-      if( blocksout >= linesz / 4 || indata_place >= indata_len ) {
-         if( blocksout > 0 ) {
-            bstr_result = bconchar( outstring, '\n' );
-            scaffold_check_nonzero( bstr_result );
-         }
-         blocksout = 0;
+
+      /* 24-bit number gets separated into four 6-bit numbers. */
+      split6bits[0] = (uint8_t)(concat32bits >> 18) & 63;
+      split6bits[1] = (uint8_t)(concat32bits >> 12) & 63;
+      split6bits[2] = (uint8_t)(concat32bits >> 6) & 63;
+      split6bits[3] = (uint8_t)(concat32bits & 63);
+
+      /* Spread one byte over two characters. */
+      bstr_ret = bconchar( outstring, cb64[split6bits[0]] );
+      scaffold_check_nonzero( bstr_ret );
+      bstr_ret = bconchar( outstring, cb64[split6bits[1]] );
+      scaffold_check_nonzero( bstr_ret );
+
+      /* Add additional byte to third character. */
+      if( (i + 1) < indata_len ) {
+         bstr_ret = bconchar( outstring, cb64[split6bits[2]] );
+         scaffold_check_nonzero( bstr_ret );
+      }
+
+      /* Add third byte to fourth character. */
+      if( (i + 2) < indata_len ) {
+         bstr_ret = bconchar( outstring, cb64[split6bits[3]] );
+         scaffold_check_nonzero( bstr_ret );
       }
    }
 
+   /* Padding. */
+   if( 0 < padding ) {
+      for( ; 3 > padding ; padding++ ) {
+         bstr_ret = bconchar( outstring, '=' );
+         scaffold_check_nonzero( bstr_ret );
+      }
+   }
 cleanup:
    return;
 }
