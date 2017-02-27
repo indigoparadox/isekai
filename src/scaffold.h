@@ -112,6 +112,9 @@ typedef enum {
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );
 BOOL scaffold_string_is_printable( bstring str );
+#ifdef DEBUG
+void scaffold_printf_debug( const char* message, ... );
+#endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 
 SCAFFOLD_TRACE scaffold_trace_path;

@@ -115,6 +115,7 @@ void server_cleanup( SERVER* s ) {
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
+   assert( NULL != server_get_client_by_ptr( s, c ) );
 
    bconchar( buffer, '\r' );
    bconchar( buffer, '\n' );
@@ -247,6 +248,10 @@ CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick ) {
    return vector_iterate( &(s->clients), client_cmp_nick, (bstring)nick );
 }
 
+CLIENT* server_get_client_by_ptr( SERVER* s, CLIENT* c ) {
+   return vector_iterate( &(s->clients), client_cmp_ptr, c );
+}
+
 #if 0
 /* TODO: Get client by mailbox? */
 CLIENT* server_get_client_by_mbox( SERVER* s, ssize_t socket ) {
@@ -335,7 +340,11 @@ void server_service_clients( SERVER* s ) {
 
    /* Check for commands from existing clients. */
    for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
+      //vector_lock( &(s->clients), TRUE );
       c = vector_get( &(s->clients), i );
+      assert( vector_count( &(s->clients) ) > i );
+      assert( NULL != server_get_client_by_ptr( s, c ) );
+      //vector_lock( &(s->clients), FALSE );
 
       btrunc( s->self.buffer, 0 );
       last_read_count = connection_read_line( &(c->link), s->self.buffer, FALSE );
