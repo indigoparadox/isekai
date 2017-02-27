@@ -646,6 +646,14 @@ static void parser_client_error( void* local, void* gamedata,
    }
 }
 
+static void parser_client_gdb( void* local, void* gamedata,
+                                struct bstrList* args ) {
+   CLIENT* c = (CLIENT*)local;
+   GAMEDATA* d = (GAMEDATA*)gamedata;
+
+
+}
+
 const parser_entry parser_table_server[] = {
    {bsStatic( "USER" ), parser_server_user},
    {bsStatic( "NICK" ), parser_server_nick},
@@ -664,6 +672,7 @@ const parser_entry parser_table_client[] = {
    {bsStatic( "GU" ), parser_client_gu },
    {bsStatic( "JOIN" ), parser_client_join },
    {bsStatic( "ERROR" ), parser_client_error },
+   {bsStatic( "GDB" ), parser_client_gu },
    {bsStatic( "" ), NULL}
 };
 
