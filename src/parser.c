@@ -471,10 +471,10 @@ cleanup:
 static void* parser_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)arg;
    CLIENT* c_iter = (CLIENT*)iter;
-   server_client_printf(
+   /*server_client_printf(
       trio->s, trio->c, ":%b RPL_WHOREPLY %b %b",
       trio->s->self.remote, c_iter->nick, trio->l->name
-   );
+   );*/
    return NULL;
 }
 
@@ -492,7 +492,6 @@ static void parser_server_who( void* local, void* remote,
    trio.l = l;
    trio.s = s;
 
-   /* Announce the new join. */
    vector_iterate( &(l->clients), parser_prn_who, &trio );
 
 cleanup:
@@ -688,7 +687,7 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            if( 0 != strncmp( bdata( cmd_test ), "GDB", 3 ) ) {
+            if( 0 != bstrncmp( cmd_test, &(parser_table_client[3].command), 3 ) ) {
                scaffold_print_debug( "Parse: %s\n", bdata( line ) );
             }
 #endif /* DEBUG */

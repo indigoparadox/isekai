@@ -168,10 +168,25 @@ cleanup:
 }
 
 void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
+   size_t dest_socket;
+   const char* buffer_chars;
+   size_t buffer_len;
+
    scaffold_check_null( buffer );
    scaffold_check_null( n );
+
+   dest_socket = n->socket;
+   buffer_chars = bdata( buffer );
+   buffer_len = blength( buffer );
+
+   assert( NULL != buffer_chars );
+
+   assert( 0 != dest_socket );
+
+   scaffold_print_debug( "SEND: %s\n", buffer_chars );
+
 #ifdef USE_NETWORK
-   send( n->socket, bdata( buffer ), blength( buffer ), 0 );
+   send( dest_socket, buffer_chars, buffer_len, 0 );
 #else
    if( TRUE == client ) {
       mailbox_send( &fake_network, n->socket, fake_server_socket, buffer );
@@ -180,6 +195,7 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    }
 #endif /* USE_NETWORK */
 cleanup:
+   scaffold_print_debug( "SEND OK: %s\n", buffer_chars );
    return;
 }
 

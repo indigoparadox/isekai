@@ -33,9 +33,7 @@ void tilemap_cleanup( TILEMAP* t ) {
       // TODO: tilemap_tileset_free( vector_get( &(t->positions), i ) );
    }
    vector_free( &(t->tilesets) );
-   if( NULL != t->serialize_buffer ) {
-      free( t->serialize_buffer );
-   }
+   bdestroy( t->serialize_buffer );
 }
 
 void tilemap_layer_init( TILEMAP_LAYER* layer ) {

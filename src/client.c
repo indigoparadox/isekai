@@ -12,6 +12,15 @@ void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   CLIENT* c_ptr = (CLIENT*)arg;
+   if( c == c_ptr ) {
+      return c;
+   }
+   return NULL;
+}
+
 void client_init( CLIENT* c, MAILBOX* m ) {
    vector_init( &(c->channels) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
@@ -99,7 +108,6 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
 
    gamedata_update_client( d, c );
 
-cleanup:
    return;
 }
 

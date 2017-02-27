@@ -45,6 +45,28 @@ BOOL scaffold_string_is_printable( bstring str ) {
    return is_printable;
 }
 
+#ifdef DEBUG
+void scaffold_printf_debug( const char* message, ... ) {
+   bstring buffer = NULL;
+   va_list varg;
+
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
+
+   va_start( varg, message );
+   scaffold_snprintf( buffer, message, varg );
+   va_end( varg );
+
+   if( 0 == scaffold_error ) {
+      scaffold_printf_debug( "%s", bdata( buffer ) );
+   }
+
+cleanup:
+   bdestroy( buffer );
+   return;
+}
+#endif /* DEBUG */
+
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
    const char* chariter;
    bstring insert = NULL;

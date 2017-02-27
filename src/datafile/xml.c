@@ -101,8 +101,6 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 
       ezxml_set_txt_b( xml_image, image_buffer );
       ezxml_set_attr( xml_image, "source", "inline" );
-
-      free( image_export );
 #endif /* EZXML_EMBEDDED_IMAGES */
    }
 
@@ -116,6 +114,9 @@ cleanup:
    bdestroy( buffer );
    if( NULL != image_ezxml_export ) {
       free( image_ezxml_export );
+   }
+   if( NULL != image_export ) {
+      free( image_export );
    }
    if( NULL != image_info ) {
       graphics_surface_cleanup( image_info->image );
@@ -326,9 +327,11 @@ void datafile_parse_tilemap( void* targ, const BYTE* tmdata, size_t datasize ) {
    t->serialize_buffer = ezxml_toxml( xml_data );
    scaffold_check_null( t->serialize_buffer );
 
-   ezxml_free( xml_data );
 
 cleanup:
+   if( NULL != xml_data ) {
+      ezxml_free( xml_data );
+   }
    return;
 }
 

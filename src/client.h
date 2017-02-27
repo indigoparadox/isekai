@@ -51,6 +51,7 @@ typedef struct _CLIENT {
 typedef struct _GAMEDATA GAMEDATA;
 
 void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg );
+void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void client_init( CLIENT* c, MAILBOX* m );
 void client_cleanup( CLIENT* c );
