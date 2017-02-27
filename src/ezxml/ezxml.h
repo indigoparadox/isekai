@@ -30,6 +30,9 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
+#include "../bstrlib/bstrlib.h"
+#include "../scaffold.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -66,7 +69,7 @@ ezxml_t ezxml_parse_fd(int fd);
 
 // a wrapper for ezxml_parse_fd() that accepts a file name
 ezxml_t ezxml_parse_file(const char *file);
-    
+
 // Wrapper for ezxml_parse_str() that accepts a file stream. Reads the entire
 // stream into memory and then parses it. For xml files, use ezxml_parse_file()
 // or ezxml_parse_fd()
@@ -95,7 +98,7 @@ const char *ezxml_attr(ezxml_t xml, const char *attr);
 
 // Traverses the ezxml sturcture to retrieve a specific subtag. Takes a
 // variable length list of tag names and indexes. The argument list must be
-// terminated by either an index of -1 or an empty string tag name. Example: 
+// terminated by either an index of -1 or an empty string tag name. Example:
 // title = ezxml_get(library, "shelf", 0, "book", 2, "title", -1);
 // This retrieves the title of the 3rd book on the 1st shelf of library.
 // Returns NULL if not found.
@@ -103,7 +106,7 @@ ezxml_t ezxml_get(ezxml_t xml, ...);
 
 // Converts an ezxml structure back to xml. Returns a string of xml data that
 // must be freed.
-char *ezxml_toxml(ezxml_t xml);
+bstring ezxml_toxml(ezxml_t xml);
 
 // returns a NULL terminated array of processing instructions for the given
 // target
@@ -111,7 +114,7 @@ const char **ezxml_pi(ezxml_t xml, const char *target);
 
 // frees the memory allocated for an ezxml structure
 void ezxml_free(ezxml_t xml);
-    
+
 // returns parser error message or empty string if none
 const char *ezxml_error(ezxml_t xml);
 
@@ -131,6 +134,7 @@ ezxml_t ezxml_add_child(ezxml_t xml, const char *name, size_t off);
 
 // sets the character content for the given tag and returns the tag
 ezxml_t ezxml_set_txt(ezxml_t xml, const char *txt);
+void ezxml_set_txt_b(ezxml_t xml, bstring txt);
 
 // wrapper for ezxml_set_txt() that strdup()s txt
 #define ezxml_set_txt_d(xml, txt) \
