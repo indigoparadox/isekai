@@ -398,7 +398,6 @@ static void parser_server_join( void* local, void* remote,
    );
 
    scaffold_check_null( l->gamedata.tmap.serialize_buffer );
-   scaffold_check_zero( l->gamedata.tmap.serialize_len );
 
    chunker_trio = (PARSER_TRIO*)calloc( 1, sizeof( PARSER_TRIO ) );
    chunker_trio->c = c;
@@ -406,7 +405,7 @@ static void parser_server_join( void* local, void* remote,
    chunker_trio->s = s;
 
    assert( NULL != l->gamedata.tmap.serialize_buffer );
-   assert( 0 < l->gamedata.tmap.serialize_len );
+   assert( 0 < blength( l->gamedata.tmap.serialize_buffer ) );
    assert( 0 < c->jobs_socket );
 
    chunker_new( h, -1, -1 );
@@ -415,8 +414,8 @@ static void parser_server_join( void* local, void* remote,
       h,
       c->jobs_socket,
       namehunt,
-      (BYTE*)l->gamedata.tmap.serialize_buffer,
-      l->gamedata.tmap.serialize_len
+      (BYTE*)bdata( l->gamedata.tmap.serialize_buffer ),
+      blength( l->gamedata.tmap.serialize_buffer )
    );
 
    assert( vector_count( &(c->channels) ) > 0 );
@@ -654,7 +653,7 @@ const parser_entry parser_table_client[] = {
    {bsStatic( "GU" ), parser_client_gu },
    {bsStatic( "JOIN" ), parser_client_join },
    {bsStatic( "ERROR" ), parser_client_error },
-   {bsStatic( "GDB" ), parser_client_gu },
+   {bsStatic( "GDB" ), parser_client_gdb },
    {bsStatic( "" ), NULL}
 };
 
