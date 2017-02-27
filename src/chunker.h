@@ -40,6 +40,10 @@ typedef struct _CHUNKER {
    void* cb_arg;
    MAILBOX* mailqueue;
    CHUNKER_STATUS status;
+#ifdef DEBUG
+   size_t last_percent;
+   size_t percent;
+#endif /* DEBUG */
 } CHUNKER;
 
 #define chunker_new( h, chunk_size_src, line_len_out ) \
