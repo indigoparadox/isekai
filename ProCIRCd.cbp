@@ -122,117 +122,29 @@
 		</Compiler>
 		<Unit filename="src/b64/b64.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/b64/b64.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/b64/b64.h" />
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/bstrlib/bstrlib.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/bstrlib/bstrlib.h" />
 		<Unit filename="src/channel.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/channel.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
-		<Unit filename="src/chunker.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
-		<Unit filename="src/chunker.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/channel.h" />
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/client.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/client.h" />
 		<Unit filename="src/connection.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/connection.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
-		<Unit filename="src/datafile.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/connection.h" />
+		<Unit filename="src/datafile.h" />
 		<Unit filename="src/datafile/null.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
@@ -249,6 +161,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/ezxml/ezxml.h">
 			<Option target="Debug" />
@@ -259,29 +172,9 @@
 		</Unit>
 		<Unit filename="src/gamedata.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/gamedata.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
-		<Unit filename="src/graphics.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/gamedata.h" />
+		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
@@ -294,32 +187,22 @@
 		<Unit filename="src/graphics/null.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/hashmap.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/hashmap.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
+		<Unit filename="src/hashmap.h" />
+		<Unit filename="src/heatshrink/heatshrink_config.h" />
+		<Unit filename="src/heatshrink/heatshrink_decoder.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/input.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
+		<Unit filename="src/heatshrink/heatshrink_decoder.h" />
+		<Unit filename="src/heatshrink/heatshrink_encoder.c">
+			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/heatshrink/heatshrink_encoder.h" />
+		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
@@ -332,34 +215,13 @@
 		<Unit filename="src/input/null.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/mailbox.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/mailbox.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/mailbox.h" />
 		<Unit filename="src/main.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
-		<Unit filename="src/miniz.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
@@ -370,99 +232,43 @@
 		</Unit>
 		<Unit filename="src/parser.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/parser.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/parser.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/scaffold.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/scaffold.h" />
 		<Unit filename="src/server.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/server.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/server.h" />
 		<Unit filename="src/tilemap.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/tilemap.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/tilemap.h" />
 		<Unit filename="src/ui.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/ui.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
-		</Unit>
+		<Unit filename="src/ui.h" />
 		<Unit filename="src/vector.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/vector.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
+		<Unit filename="src/vector.h" />
+		<Unit filename="test/check_b64.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_channel.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_client.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_main.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="test/check_vector.c">
 			<Option compilerVar="CC" />

@@ -295,41 +295,6 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-#if 0
-static void parser_tmap_chunk_cb( CHUNKER* h, ssize_t socket ) {
-   PARSER_TRIO* trio = (PARSER_TRIO*)h->cb_arg;
-
-   /* TODO: How to tell if the client doesn't exist without reffing it? */
-   //assert( 0 != trio->c->sentinal );
-   if( FALSE == mailbox_is_alive( h->mailqueue, socket ) ) {
-      scaffold_print_debug(
-         "Client with socket %d no longer connected. Stopping chunk job.\n",
-         socket
-      );
-      h->status = CHUNKER_STATUS_DELETE;
-      goto cleanup;
-   }
-
-// XXX
-   server_client_printf(
-      trio->s, trio->c, ":%b GDB %b %b TILEMAP %b %d %d : %b",
-      trio->s->self.remote, trio->c->nick, trio->l->name, h->filename,
-      h->progress, h->src_len, h->dest_buffer
-   );
-
-   btrunc( h->dest_buffer, 0 );
-
-   if( CHUNKER_STATUS_FINISHED == h->status || CHUNKER_STATUS_ERROR == h->status ) {
-      free( trio );
-      scaffold_print_debug( "Parser map chunker transmission complete.\n" );
-      h->status = CHUNKER_STATUS_DELETE;
-   }
-
-cleanup:
-   return;
-}
-#endif
-
 static void parser_server_join( void* local, void* remote,
                                 struct bstrList* args ) {
    SERVER* s = (SERVER*)local;
@@ -338,13 +303,11 @@ static void parser_server_join( void* local, void* remote,
    bstring namehunt = NULL;
    int8_t bstr_result = 0;
    bstring names = NULL;
-   //bstring map_serial = NULL;
-   //struct bstrList* map_serial_list = NULL;
-   PARSER_TRIO* chunker_trio = NULL;
-   //CHUNKER* h = NULL;
+   //PARSER_TRIO* chunker_trio = NULL;
    heatshrink_encoder* h = NULL;
    HSE_sink_res hse_res;
    HSE_poll_res hsp_res;
+   size_t consumed = 0;
 
    if( 2 > args->qty ) {
       server_client_printf(
@@ -408,28 +371,6 @@ static void parser_server_join( void* local, void* remote,
 
    scaffold_check_null( l->gamedata.tmap.serialize_buffer );
 
-   chunker_trio = (PARSER_TRIO*)calloc( 1, sizeof( PARSER_TRIO ) );
-   chunker_trio->c = c;
-   chunker_trio->l = l;
-   chunker_trio->s = s;
-
-   assert( NULL != l->gamedata.tmap.serialize_buffer );
-   assert( 0 < blength( l->gamedata.tmap.serialize_buffer ) );
-   //assert( 0 < c->jobs_socket );
-
-#if 0
-   chunker_new( h, -1, -1 );
-   chunker_set_cb( h, parser_tmap_chunk_cb, s->self.jobs, chunker_trio );
-   chunker_chunk(
-      h,
-      c->jobs_socket,
-      l->gamedata.tmap.serialize_filename,
-      (BYTE*)bdata( l->gamedata.tmap.serialize_buffer ),
-      blength( l->gamedata.tmap.serialize_buffer )
-   );
-
-#endif
-
    if( NULL != c->chunker.encoder ) {
       /* TODO: What if the client has a chunker already? */
    }
@@ -443,12 +384,34 @@ static void parser_server_join( void* local, void* remote,
    c->chunker.foreign_buffer = l->gamedata.tmap.serialize_buffer;
    c->chunker.filename = l->gamedata.tmap.serialize_filename;
 
+   // FIXME: Encode before transmission.
+	const char* foreign_buffer_c = bdata( c->chunker.foreign_buffer );
+
+   /* Sink the map data into the encoder. */
+   /* TODO: Finish this accross multiple requests. */
+   while( blength( c->chunker.foreign_buffer ) > c->chunker.pos ) {
+      hse_res = heatshrink_encoder_sink(
+         h,
+         (uint8_t*)&(foreign_buffer_c[c->chunker.pos]),
+         (size_t)blength( c->chunker.foreign_buffer ) - c->chunker.pos,
+         &consumed
+      );
+      assert( HSER_SINK_OK == hse_res );
+      c->chunker.pos += consumed;
+   }
+   if( c->chunker.pos == blength( c->chunker.foreign_buffer ) ) {
+      heatshrink_encoder_finish( h );
+   }
+   assert( c->chunker.pos == blength( c->chunker.foreign_buffer ) );
+
+   c->chunker.pos = 0;
+
+   server_xmit_chunk( s );
+
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );
 
 cleanup:
-   //bstrListDestroy( map_serial_list );
-   //bdestroy( map_serial );
    bdestroy( names );
    bdestroy( namehunt );
    return;
