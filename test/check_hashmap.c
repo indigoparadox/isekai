@@ -9,14 +9,14 @@ START_TEST( test_hashmap_add_get ) {
    blob = create_blob( 12121, 65000, 32, 4545 );
    hashmap_init( &h );   hashmap_put( &h, &str_key_hit, blob );   test_blob = hashmap_get( &h, &str_key_hit );   ck_assert_ptr_ne( NULL, test_blob );   ck_assert_int_eq( test_blob->sentinal_start, 12121 );
 
-cleanup:   free_blob( blob );   hashmap_cleanup( &h );
+/* cleanup: */   free_blob( blob );   hashmap_cleanup( &h );
 }
 END_TESTSTART_TEST( test_hashmap_delete ) {
    HASHMAP h;   BLOB* blob = NULL;   BLOB* test_blob = NULL;
    hashmap_init( &h );
-   blob = create_blob( 7171, 4350, 32, 4311 );   hashmap_put( &h, &str_key_also2, blob );   ck_assert_int_eq( hashmap_length( &h ), 1 );   //free_blob( blob );   blob = create_blob( 12121, 4300, 32, 4545 );   hashmap_put( &h, &str_key_hit, blob );   ck_assert_int_eq( hashmap_length( &h ), 2 );   blob = create_blob( 7878, 4300, 32, 4300 );   hashmap_put( &h, &str_key_also1, blob );   ck_assert_int_eq( hashmap_length( &h ), 3 );   //free_blob( blob );   hashmap_remove( &h, &str_key_also2 );   ck_assert_int_eq( hashmap_length( &h ), 2 );   hashmap_remove( &h, &str_key_also1 );   ck_assert_int_eq( hashmap_length( &h ), 1 );   test_blob = hashmap_get( &h, &str_key_hit );   ck_assert_ptr_ne( NULL, test_blob );   ck_assert_int_eq( test_blob->sentinal_start, 12121 );
+   blob = create_blob( 7171, 4350, 32, 4311 );   hashmap_put( &h, &str_key_also2, blob );   ck_assert_int_eq( hashmap_count( &h ), 1 );   //free_blob( blob );   blob = create_blob( 12121, 4300, 32, 4545 );   hashmap_put( &h, &str_key_hit, blob );   ck_assert_int_eq( hashmap_count( &h ), 2 );   blob = create_blob( 7878, 4300, 32, 4300 );   hashmap_put( &h, &str_key_also1, blob );   ck_assert_int_eq( hashmap_count( &h ), 3 );   //free_blob( blob );   hashmap_remove( &h, &str_key_also2 );   ck_assert_int_eq( hashmap_count( &h ), 2 );   hashmap_remove( &h, &str_key_also1 );   ck_assert_int_eq( hashmap_count( &h ), 1 );   test_blob = hashmap_get( &h, &str_key_hit );   ck_assert_ptr_ne( NULL, test_blob );   ck_assert_int_eq( test_blob->sentinal_start, 12121 );
 
-cleanup:   free_blob( blob );   hashmap_cleanup( &h );
+/* cleanup: */   free_blob( blob );   hashmap_cleanup( &h );
 }
 END_TEST
 

@@ -3,7 +3,7 @@
 
 #include "scaffold.h"
 
-typedef struct vector_ {
+typedef struct _VECTOR {   uint16_t sentinal;
    void** data;
    size_t size;
    size_t count;
@@ -13,7 +13,7 @@ typedef struct vector_ {
    int lock_count;
 #endif /* DEBUG, USE_THREADS */
 } VECTOR;
-
+#define VECTOR_SENTINAL 12121
 typedef void* (*vector_callback)( VECTOR* v, size_t idx, void* iter, void* arg );
 
 #define vector_new( v ) \
