@@ -14,7 +14,7 @@ int main( void ) {
    main_add_test( vector );
    //main_add_test( client );
    main_add_test( b64 );
-   //main_add_test( channel );
+   //main_add_test( channel );   main_add_test( hashmap );
 
    return( number_failed == 0 ) ? 0 : 1;
 }
