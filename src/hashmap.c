@@ -146,11 +146,12 @@ static unsigned long crc32_tab[] = {
 
 /* Return a 32-bit CRC of the contents of the buffer. */
 
-unsigned long crc32(bstring string) {
+uint32_t hashmap_crc32( bstring string ) {
    unsigned int i;
-   unsigned long crc32val;
+   uint32_t crc32val;
 
-   const unsigned char* s = (const unsigned char*)bdata(string);
+   const unsigned char* s = (const unsigned char*)bdata( string );
+   scaffold_check_null( s );
 
    crc32val = 0;
    for (i = 0;  i < blength(string);  i ++) {
@@ -158,16 +159,18 @@ unsigned long crc32(bstring string) {
          crc32_tab[(crc32val ^ s[i]) & 0xff] ^
          (crc32val >> 8);
    }
+
+cleanup:
    return crc32val;
 }
 
 /*
  * Hashing function for a string
  */
-unsigned int hashmap_hash_int(hashmap_map* m, bstring keystring) {
+uint32_t hashmap_hash_int( hashmap_map* m, bstring keystring ) {
 
 
-   unsigned long key = crc32(keystring);
+   uint32_t key = hashmap_crc32( keystring );
 
    /* Robert Jenkins' 32 bit Mix Function */
    key += (key << 12);
@@ -180,7 +183,7 @@ unsigned int hashmap_hash_int(hashmap_map* m, bstring keystring) {
    key ^= (key >> 12);
 
    /* Knuth's Multiplicative Method */
-   key = (key >> 3) * 2654435761;
+   key = (key >> 3) * (uint32_t)2654435761;
 
    return key % m->table_size;
 }
@@ -189,26 +192,28 @@ unsigned int hashmap_hash_int(hashmap_map* m, bstring keystring) {
  * Return the integer of the location in data
  * to store the point to the item, or MAP_FULL.
  */
-int hashmap_hash(map_t in, bstring key) {
+int hashmap_hash( map_t in, bstring key ) {
    int curr;
    int i;
-
-   /* Cast the hashmap */
-   hashmap_map* m = (hashmap_map*) in;
+   hashmap_map* m = (hashmap_map*)in;
 
    /* If full, return immediately */
-   if(m->size >= (m->table_size/2)) return MAP_FULL;
+   if( m->size >= (m->table_size / 2) ) {
+      return MAP_FULL;
+   }
 
    /* Find the best index */
-   curr = hashmap_hash_int(m, key);
+   curr = hashmap_hash_int( m, key );
 
    /* Linear probing */
-   for(i = 0; i< MAX_CHAIN_LENGTH; i++) {
-      if(m->data[curr].in_use == 0)
+   for( i = 0 ; i < MAX_CHAIN_LENGTH ; i++ ) {
+      if( m->data[curr].in_use == 0) {
          return curr;
+      }
 
-      if(m->data[curr].in_use == 1 && (bstrcmp(m->data[curr].key,key)==0))
+      if( 1 == m->data[curr].in_use && (0 == bstrcmp( m->data[curr].key, key )) ) {
          return curr;
+      }
 
       curr = (curr + 1) % m->table_size;
    }
@@ -219,7 +224,7 @@ int hashmap_hash(map_t in, bstring key) {
 /*
  * Doubles the size of the hashmap, and rehashes all the elements
  */
-int hashmap_rehash(map_t in) {
+int hashmap_rehash( map_t in ) {
    int i;
    int old_size;
    hashmap_element* curr;
@@ -259,7 +264,7 @@ int hashmap_rehash(map_t in) {
 /*
  * Add a pointer to the hashmap with some key
  */
-int hashmap_put(map_t in, bstring key, any_t value) {
+int hashmap_put( map_t in, bstring key, any_t value ) {
    int index;
    hashmap_map* m;
 
@@ -277,7 +282,7 @@ int hashmap_put(map_t in, bstring key, any_t value) {
 
    /* Set the data */
    m->data[index].data = value;
-   m->data[index].key = key;
+   m->data[index].key = bstrcpy( key );
    m->data[index].in_use = 1;
    m->size++;
 
@@ -287,23 +292,24 @@ int hashmap_put(map_t in, bstring key, any_t value) {
 /*
  * Get your pointer out of the hashmap with a key
  */
-int hashmap_get(map_t in, bstring key, any_t* arg) {
+int hashmap_get( map_t in, bstring key, any_t* arg ) {
    int curr;
    int i;
    hashmap_map* m;
+   int in_use;
 
    /* Cast the hashmap */
    m = (hashmap_map*) in;
 
    /* Find data location */
-   curr = hashmap_hash_int(m, key);
+   curr = hashmap_hash_int( m, key );
 
    /* Linear probing, if necessary */
-   for(i = 0; i<MAX_CHAIN_LENGTH; i++) {
-
-      int in_use = m->data[curr].in_use;
+   for( i = 0 ; MAX_CHAIN_LENGTH > i ; i++ ) {
+      in_use = m->data[curr].in_use;
       if (in_use == 1) {
-         if (bstrcmp(m->data[curr].key,key)==0) {
+         //scaffold_print_debug( "Hash check: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+         if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             *arg = (m->data[curr].data);
             return MAP_OK;
          }
@@ -369,6 +375,7 @@ int hashmap_remove(map_t in, bstring key) {
             /* Blank out the fields */
             m->data[curr].in_use = 0;
             m->data[curr].data = NULL;
+            bdestroy( m->data[curr].key );
             m->data[curr].key = NULL;
 
             /* Reduce the size */

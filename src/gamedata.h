@@ -2,6 +2,7 @@
 #define GAMEDATA_H
 
 #include "tilemap.h"
+#include "hashmap.h"
 
 typedef struct _UI UI;
 
@@ -12,6 +13,7 @@ typedef struct {
 typedef struct _GAMEDATA {
    TILEMAP tmap;
    UI* ui;
+   map_t incoming_chunkers;
 } GAMEDATA;
 
 #define gamedata_new_server( d ) \

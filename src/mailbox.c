@@ -5,6 +5,7 @@
 
 size_t mailbox_listen( MAILBOX* mailbox ) {
     vector_init( &(mailbox->envelopes) );
+    vector_init( &(mailbox->sockets_assigned ) );
     if( 0 >= mailbox->last_socket ) {
        mailbox->last_socket++;
     }
@@ -39,6 +40,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
    /* Iterate through jobs and handle urgent things, like new clients. */
    top_envelope = vector_get( &(mailbox->envelopes), i );
    while( NULL!= top_envelope ) {
+      assert( NULL == top_envelope || NULL == top_envelope->callback || NULL == top_envelope->contents );
       if(
          MAILBOX_ENVELOPE_SPECIAL_CONNECT == top_envelope->special &&
          socket_dest == top_envelope->socket_dest
@@ -55,8 +57,14 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
       top_envelope = vector_get( &(mailbox->envelopes), ++i );
    }
 
+   if( 0 >= vector_count( &(mailbox->envelopes) ) ) {
+      goto cleanup;
+   }
+
    /* Do one callback job per cycle. */
+   //VECTOR* envelopes =  &(mailbox->envelopes);
    top_envelope = vector_get( &(mailbox->envelopes), 0 );
+   assert( NULL == top_envelope || NULL == top_envelope->callback || NULL == top_envelope->contents );
    if( NULL != top_envelope && NULL != top_envelope->callback ) {
       top_envelope->callback( mailbox, top_envelope );
       if( MAILBOX_ENVELOPE_SPECIAL_DELETE == top_envelope->special ) {
@@ -112,6 +120,8 @@ void mailbox_send(
    MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
+   scaffold_check_null( message );
+
    outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
    outgoing->contents = bstrcpy( message );
@@ -152,6 +162,7 @@ size_t mailbox_connect(
    outgoing->socket_src = socket_out;
    outgoing->socket_dest = socket_dest;
    outgoing->special = MAILBOX_ENVELOPE_SPECIAL_CONNECT;
+   outgoing->callback = NULL;
    vector_add( &(mailbox->envelopes), outgoing );
 
 cleanup:

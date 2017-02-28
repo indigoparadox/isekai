@@ -52,6 +52,11 @@ typedef enum {
 #define scaffold_print_debug( ... )
 #endif /* DEBUG */
 
+#define scaffold_debug_file( handlename, filename, data_ptr, data_size ) \
+   FILE* handlename = fopen( filename, "w" ); \
+   fwrite( data_ptr, sizeof( uint8_t ), data_size, handlename ); \
+   fclose( handlename );
+
 #else
 #define scaffold_print_info( ... )
 #define scaffold_print_error( ... )

@@ -75,6 +75,7 @@ void server_init( SERVER* s, const bstring myhost ) {
    /* Setup the jobs mailbox. */
    s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
    vector_init( &(s->self.jobs->envelopes) );
+   vector_init( &(s->self.jobs->sockets_assigned) );
    s->self.jobs->last_socket = 0;
    s->self.jobs_socket = mailbox_listen( s->self.jobs );
    s->self.sentinal = SERVER_SENTINAL;

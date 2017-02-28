@@ -70,7 +70,9 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       free( image_ezxml_import );
       scaffold_check_nonzero( bstr_result );
 
-      image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
+      //image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
+      image_ezxml_import = calloc( 2048, sizeof( uint8_t ) );
+      b64_decode( buffer, image_ezxml_import, &image_len );
       scaffold_check_nonzero( scaffold_error );
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );
@@ -298,12 +300,15 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap( void* targ, const BYTE* tmdata, size_t datasize ) {
+void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, size_t datasize ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
       xml_tileset = NULL,
       xml_data;
    TILEMAP* t = (TILEMAP*)targ;
+
+   bassign( t->serialize_filename, filename );
+   scaffold_check_null( t->serialize_filename );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
@@ -364,7 +369,7 @@ void datafile_load_file( void* targ_struct, bstring filename, datafile_cb cb ) {
    fclose( tmfile );
    tmfile = NULL;
 
-   cb( targ_struct, tmdata, datasize );
+   cb( targ_struct, filename, tmdata, datasize );
 
 cleanup:
    if( NULL != tmdata ) {

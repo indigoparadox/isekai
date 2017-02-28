@@ -59,5 +59,7 @@ void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg );
 void chunker_cleanup( CHUNKER* h );
 void chunker_chunk( CHUNKER* h, ssize_t socket, bstring filename, BYTE* data, size_t len );
 void chunker_chew( CHUNKER* h );
+void chunker_unchunk( CHUNKER* h, bstring filename, bstring buffer, size_t offset );
+BOOL chunker_incoming_full( CHUNKER* h );
 
 #endif /* CHUNKER_H */

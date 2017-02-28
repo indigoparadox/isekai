@@ -16,6 +16,11 @@ typedef struct vector_ {
 
 typedef void* (*vector_callback)( VECTOR* v, size_t idx, void* iter, void* arg );
 
+#define vector_new( v ) \
+   v = (VECTOR*)calloc( 1, sizeof( VECTOR ) ); \
+   scaffold_check_null( v ); \
+   vector_init( v );
+
 void vector_init( VECTOR* v );
 void vector_free( VECTOR* v );
 void vector_add( VECTOR* v, void* data );
