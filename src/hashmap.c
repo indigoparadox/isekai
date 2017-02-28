@@ -15,19 +15,26 @@
  */
 void hashmap_init( HASHMAP* m ) {
    //HASHMAP* m = (hashmap_map*) malloc(sizeof(hashmap_map));
-   //if(!m) goto err;   scaffold_check_null( m );
+   //if(!m) goto err;
+
+   scaffold_check_null( m );
 
    m->data = (HASHMAP_ELEMENT*)calloc( INITIAL_SIZE, sizeof( HASHMAP_ELEMENT ) );
    scaffold_check_null( m->data );
 
    m->table_size = INITIAL_SIZE;
-   m->size = 0;   m->sentinal = HASHMAP_SENTINAL;
+   m->size = 0;
+   m->sentinal = HASHMAP_SENTINAL;
 
-cleanup:   return;/*err:
-   if (m)
-      hashmap_free(m);
-   return NULL;
-*/}
+cleanup:
+   return;
+   /*
+   err:
+      if (m)
+         hashmap_free(m);
+      return NULL;
+   */
+}
 
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the
@@ -133,7 +140,10 @@ static unsigned long crc32_tab[] = {
 uint32_t hashmap_crc32( bstring string ) {
    unsigned int i;
    uint32_t crc32val;
-   const unsigned char* s;   scaffold_check_null( string );   s = (const unsigned char*)bdata( string );
+   const unsigned char* s;
+
+   scaffold_check_null( string );
+   s = (const unsigned char*)bdata( string );
    scaffold_check_null( s );
 
    crc32val = 0;
@@ -151,7 +161,12 @@ cleanup:
  * Hashing function for a string
  */
 uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
-   uint32_t key = 0;   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );   key = hashmap_crc32( keystring );
+   uint32_t key = 0;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
+   key = hashmap_crc32( keystring );
 
    /* Robert Jenkins' 32 bit Mix Function */
    key += (key << 12);
@@ -165,7 +180,9 @@ uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
 
    /* Knuth's Multiplicative Method */
    key = (key >> 3) * (uint32_t)2654435761;
-   key %= m->table_size;cleanup:
+   key %= m->table_size;
+
+cleanup:
    return key;
 }
 
@@ -175,10 +192,15 @@ uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
  */
 int hashmap_hash( HASHMAP* m, bstring key ) {
    int curr;
-   int i;   int out = HASHMAP_FULL;   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+   int i;
+   int out = HASHMAP_FULL;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* If full, return immediately */
-   if( m->size >= (m->table_size / 2) ) {      goto cleanup;
+   if( m->size >= (m->table_size / 2) ) {
+      goto cleanup;
    }
 
    /* Find the best index */
@@ -187,17 +209,20 @@ int hashmap_hash( HASHMAP* m, bstring key ) {
    /* Linear probing */
    for( i = 0 ; i < MAX_CHAIN_LENGTH ; i++ ) {
       if( m->data[curr].in_use == 0) {
-         out = curr;         goto cleanup;
+         out = curr;
+         goto cleanup;
       }
 
       if( 1 == m->data[curr].in_use && (0 == bstrcmp( m->data[curr].key, key )) ) {
-         out = curr;         goto cleanup;
+         out = curr;
+         goto cleanup;
       }
 
       curr = (curr + 1) % m->table_size;
    }
 
-cleanup:   return out;
+cleanup:
+   return out;
 }
 
 /*
@@ -206,7 +231,11 @@ cleanup:   return out;
 void hashmap_rehash( HASHMAP* m ) {
    int i;
    int old_size;
-   HASHMAP_ELEMENT* curr;   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+   HASHMAP_ELEMENT* curr;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
    /* Setup the new elements */
    HASHMAP_ELEMENT* temp = (HASHMAP_ELEMENT*)
                            calloc(2 * m->table_size, sizeof(HASHMAP_ELEMENT));
@@ -224,25 +253,33 @@ void hashmap_rehash( HASHMAP* m ) {
    /* Rehash the elements */
    for( i = 0; i < old_size; i++ ) {
       if( 0 == curr[i].in_use ) {
-         continue;      }
+         continue;
+      }
 
-      hashmap_put( m, curr[i].key, curr[i].data );      scaffold_check_nonzero( scaffold_error );
+      hashmap_put( m, curr[i].key, curr[i].data );
+      scaffold_check_nonzero( scaffold_error );
    }
 
    free( curr );
 
-cleanup:   return;
+cleanup:
+   return;
 }
 
 /*
  * Add a pointer to the hashmap with some key
  */
 void hashmap_put( HASHMAP* m, bstring key, void* value ) {
-   int index;   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+   int index;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
    /* Find a place to put our value */
    index = hashmap_hash( m, key );
    while( HASHMAP_FULL == index ) {
-      hashmap_rehash( m );      scaffold_check_nonzero( scaffold_error );
+      hashmap_rehash( m );
+      scaffold_check_nonzero( scaffold_error );
       index = hashmap_hash( m, key );
    }
 
@@ -252,7 +289,8 @@ void hashmap_put( HASHMAP* m, bstring key, void* value ) {
    m->data[index].in_use = 1;
    m->size++;
 
-cleanup:   return;
+cleanup:
+   return;
 }
 
 /*
@@ -261,9 +299,13 @@ cleanup:   return;
 void* hashmap_get( HASHMAP* m, bstring key ) {
    int curr;
    int i;
-   int in_use;   void* element_out = NULL;   scaffold_check_null( m );
+   int in_use;
+   void* element_out = NULL;
+
+   scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
-   /* Find data location */
+
+   /* Find data location */
    curr = hashmap_hash_int( m, key );
 
    /* Linear probing, if necessary */
@@ -283,7 +325,7 @@ void* hashmap_get( HASHMAP* m, bstring key ) {
 cleanup:
    return element_out;
 }
-#if 0
+#if 0
 /*
  * Iterate the function parameter over each element in the hashmap.  The
  * additional any_t argument is passed to the function as its first
@@ -311,14 +353,18 @@ int hashmap_iterate(HASHMAP* in, PFany f, any_t item) {
 
    return MAP_OK;
 }
-#endif // 0
+#endif // 0
+
 /*
  * Remove an element with that key from the map
  */
 void hashmap_remove( HASHMAP* m, bstring key ) {
    int i;
-   int curr;   int in_use;
-   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+   int curr;
+   int in_use;
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
    /* Find key */
    curr = hashmap_hash_int(m, key);
 
@@ -335,31 +381,45 @@ void hashmap_remove( HASHMAP* m, bstring key ) {
             m->data[curr].key = NULL;
 
             /* Reduce the size */
-            m->size--;            goto cleanup;
+            m->size--;
+            goto cleanup;
          }
       }
       curr = (curr + 1) % m->table_size;
    }
-cleanup:
+cleanup:
    return;
 }
 
 /* Deallocate the hashmap */
-void hashmap_cleanup( HASHMAP* m ) {   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
-   free( m->data );   m->sentinal = 0;
-cleanup:   return;}
+void hashmap_cleanup( HASHMAP* m ) {
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+   free( m->data );
+   m->sentinal = 0;
+cleanup:
+   return;
+}
 
 /* Return the length of the hashmap */
-int hashmap_count( HASHMAP* m ) {   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
-   return m->size;cleanup:   return 0;}
+int hashmap_count( HASHMAP* m ) {
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+   return m->size;
+cleanup:
+   return 0;
+}
 
 int hashmap_active_length( HASHMAP* m ) {
    int i;
    int count = 0;
-   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
    /* On empty hashmap, return immediately */
    if( 0 >= hashmap_count( m ) ) {
-      goto cleanup;   }
+      goto cleanup;
+   }
 
    /* Linear probing */
    for( i = 0; i < m->table_size ; i++ ) {
@@ -368,5 +428,6 @@ int hashmap_active_length( HASHMAP* m ) {
       }
    }
 
-cleanup:   return count;
+cleanup:
+   return count;
 }
