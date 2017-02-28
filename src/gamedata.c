@@ -48,7 +48,7 @@ void gamedata_init_client( GAMEDATA* d, UI* ui, const bstring name ) {
 #endif /* INIT_ZEROES */
    d->ui = ui;
    //vector_init( &(d->incoming_chunkers ) );
-   hashmap_init( d->incoming_chunkers );
+   hashmap_init( &(d->incoming_chunkers) );
 }
 
 void gamedata_update_server(
