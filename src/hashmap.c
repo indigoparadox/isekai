@@ -10,40 +10,24 @@
 #define INITIAL_SIZE (256)
 #define MAX_CHAIN_LENGTH (8)
 
-/* We need to keep keys and values */
-typedef struct _hashmap_element {
-   bstring key;
-   int in_use;
-   any_t data;
-} hashmap_element;
-
-/* A hashmap has some maximum size and current size,
- * as well as the data to hold. */
-typedef struct _hashmap_map {
-   int table_size;
-   int size;
-   hashmap_element* data;
-} hashmap_map;
-
 /*
  * Return an empty hashmap, or NULL on failure.
  */
-map_t hashmap_new() {
-   hashmap_map* m = (hashmap_map*) malloc(sizeof(hashmap_map));
-   if(!m) goto err;
+void hashmap_init( HASHMAP* m ) {
+   //HASHMAP* m = (hashmap_map*) malloc(sizeof(hashmap_map));
+   //if(!m) goto err;   scaffold_check_null( m );
 
-   m->data = (hashmap_element*) calloc(INITIAL_SIZE, sizeof(hashmap_element));
-   if(!m->data) goto err;
+   m->data = (HASHMAP_ELEMENT*)calloc( INITIAL_SIZE, sizeof( HASHMAP_ELEMENT ) );
+   scaffold_check_null( m->data );
 
    m->table_size = INITIAL_SIZE;
    m->size = 0;
 
-   return m;
-err:
+cleanup:   return;/*err:
    if (m)
       hashmap_free(m);
    return NULL;
-}
+*/}
 
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the
@@ -167,7 +151,7 @@ cleanup:
 /*
  * Hashing function for a string
  */
-uint32_t hashmap_hash_int( hashmap_map* m, bstring keystring ) {
+uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
 
 
    uint32_t key = hashmap_crc32( keystring );
@@ -192,10 +176,9 @@ uint32_t hashmap_hash_int( hashmap_map* m, bstring keystring ) {
  * Return the integer of the location in data
  * to store the point to the item, or MAP_FULL.
  */
-int hashmap_hash( map_t in, bstring key ) {
+int hashmap_hash( HASHMAP* m, bstring key ) {
    int curr;
    int i;
-   hashmap_map* m = (hashmap_map*)in;
 
    /* If full, return immediately */
    if( m->size >= (m->table_size / 2) ) {
@@ -224,16 +207,15 @@ int hashmap_hash( map_t in, bstring key ) {
 /*
  * Doubles the size of the hashmap, and rehashes all the elements
  */
-int hashmap_rehash( map_t in ) {
+int hashmap_rehash( HASHMAP* m ) {
    int i;
    int old_size;
-   hashmap_element* curr;
+   HASHMAP_ELEMENT* curr;
 
    /* Setup the new elements */
-   hashmap_map* m = (hashmap_map*) in;
-   hashmap_element* temp = (hashmap_element*)
-                           calloc(2 * m->table_size, sizeof(hashmap_element));
-   if(!temp) return MAP_OMEM;
+   HASHMAP_ELEMENT* temp = (HASHMAP_ELEMENT*)
+                           calloc(2 * m->table_size, sizeof(HASHMAP_ELEMENT));
+   scaffold_check_null( temp );
 
    /* Update the array */
    curr = m->data;
@@ -245,39 +227,29 @@ int hashmap_rehash( map_t in ) {
    m->size = 0;
 
    /* Rehash the elements */
-   for(i = 0; i < old_size; i++) {
-      int status;
+   for( i = 0; i < old_size; i++ ) {
+      if( 0 == curr[i].in_use ) {
+         continue;      }
 
-      if (curr[i].in_use == 0)
-         continue;
-
-      status = hashmap_put(m, curr[i].key, curr[i].data);
-      if (status != MAP_OK)
-         return status;
+      hashmap_put( m, curr[i].key, curr[i].data );      scaffold_check_nonzero( scaffold_error );
    }
 
-   free(curr);
+   free( curr );
 
-   return MAP_OK;
+cleanup:   return;
 }
 
 /*
  * Add a pointer to the hashmap with some key
  */
-int hashmap_put( map_t in, bstring key, any_t value ) {
+void hashmap_put( HASHMAP* m, bstring key, void* value ) {
    int index;
-   hashmap_map* m;
-
-   /* Cast the hashmap */
-   m = (hashmap_map*) in;
 
    /* Find a place to put our value */
-   index = hashmap_hash(in, key);
-   while(index == MAP_FULL) {
-      if (hashmap_rehash(in) == MAP_OMEM) {
-         return MAP_OMEM;
-      }
-      index = hashmap_hash(in, key);
+   index = hashmap_hash( m, key );
+   while( MAP_FULL == index ) {
+      hashmap_rehash( m );      scaffold_check_nonzero( scaffold_error );
+      index = hashmap_hash( m, key );
    }
 
    /* Set the data */
@@ -286,20 +258,16 @@ int hashmap_put( map_t in, bstring key, any_t value ) {
    m->data[index].in_use = 1;
    m->size++;
 
-   return MAP_OK;
+cleanup:   return;
 }
 
 /*
  * Get your pointer out of the hashmap with a key
  */
-int hashmap_get( map_t in, bstring key, any_t* arg ) {
+void* hashmap_get( HASHMAP* m, bstring key ) {
    int curr;
    int i;
-   hashmap_map* m;
-   int in_use;
-
-   /* Cast the hashmap */
-   m = (hashmap_map*) in;
+   int in_use;   void* element_out = NULL;
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -307,29 +275,27 @@ int hashmap_get( map_t in, bstring key, any_t* arg ) {
    /* Linear probing, if necessary */
    for( i = 0 ; MAX_CHAIN_LENGTH > i ; i++ ) {
       in_use = m->data[curr].in_use;
-      if (in_use == 1) {
+      if( 1 == in_use ) {
          //scaffold_print_debug( "Hash check: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
-            *arg = (m->data[curr].data);
-            return MAP_OK;
+            element_out = (m->data[curr].data);
+            goto cleanup;
          }
       }
 
       curr = (curr + 1) % m->table_size;
    }
 
-   *arg = NULL;
-
-   /* Not found */
-   return MAP_MISSING;
+cleanup:
+   return element_out;
 }
-
+#if 0
 /*
  * Iterate the function parameter over each element in the hashmap.  The
  * additional any_t argument is passed to the function as its first
  * argument and the hashmap element is the second.
  */
-int hashmap_iterate(map_t in, PFany f, any_t item) {
+int hashmap_iterate(HASHMAP* in, PFany f, any_t item) {
    int i;
 
    /* Cast the hashmap */
@@ -351,27 +317,23 @@ int hashmap_iterate(map_t in, PFany f, any_t item) {
 
    return MAP_OK;
 }
-
+#endif // 0
 /*
  * Remove an element with that key from the map
  */
-int hashmap_remove(map_t in, bstring key) {
+void hashmap_remove( HASHMAP* m, bstring key ) {
    int i;
-   int curr;
-   hashmap_map* m;
-
-   /* Cast the hashmap */
-   m = (hashmap_map*) in;
+   int curr;   int in_use;
 
    /* Find key */
    curr = hashmap_hash_int(m, key);
 
    /* Linear probing, if necessary */
-   for(i = 0; i<MAX_CHAIN_LENGTH; i++) {
+   for( i = 0 ; i < MAX_CHAIN_LENGTH ; i++) {
 
-      int in_use = m->data[curr].in_use;
-      if (in_use == 1) {
-         if (bstrcmp(m->data[curr].key,key)==0) {
+      in_use = m->data[curr].in_use;
+      if( 1 == in_use ) {
+         if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             /* Blank out the fields */
             m->data[curr].in_use = 0;
             m->data[curr].data = NULL;
@@ -379,48 +341,39 @@ int hashmap_remove(map_t in, bstring key) {
             m->data[curr].key = NULL;
 
             /* Reduce the size */
-            m->size--;
-            return MAP_OK;
+            m->size--;            goto cleanup;
          }
       }
       curr = (curr + 1) % m->table_size;
    }
-
-   /* Data not found */
-   return MAP_MISSING;
+cleanup:
+   return;
 }
 
 /* Deallocate the hashmap */
-void hashmap_free(map_t in) {
-   hashmap_map* m = (hashmap_map*) in;
-   free(m->data);
-   free(m);
+void hashmap_cleanup( HASHMAP* m ) {
+   free( m->data );
 }
 
 /* Return the length of the hashmap */
-int hashmap_length(map_t in) {
-   hashmap_map* m = (hashmap_map*) in;
-   if(m != NULL) return m->size;
-   else return 0;
-}
+int hashmap_length( HASHMAP* m ) {
+   if( NULL != m ) {      return m->size;   } else {      return 0;
+   }}
 
-int hashmap_active_length(map_t in) {
+int hashmap_active_length( HASHMAP* m ) {
    int i;
    int count = 0;
 
-   /* Cast the hashmap */
-   hashmap_map* m = (hashmap_map*) in;
-
    /* On empty hashmap, return immediately */
-   if (hashmap_length(m) <= 0)
-      return 0;
+   if( 0 >= hashmap_length( m ) ) {
+      goto cleanup;   }
 
    /* Linear probing */
-   for(i = 0; i< m->table_size; i++) {
-      if(m->data[i].in_use != 0) {
+   for( i = 0; i < m->table_size ; i++ ) {
+      if( 0 != m->data[i].in_use ) {
          count++;
       }
    }
 
-   return count;
+cleanup:   return count;
 }
