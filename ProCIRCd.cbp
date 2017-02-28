@@ -102,8 +102,8 @@
 			</Target>
 			<Target title="Check (Linux)">
 				<Option platforms="Unix;" />
-				<Option output="ProCIRCdCheck" prefix_auto="1" extension_auto="1" />
-				<Option object_output="test/objs" />
+				<Option output="bin/Test/ProCIRCdCheck" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Test" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -132,6 +132,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/channel.h" />
+		<Unit filename="src/chunker.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/chunker.h" />
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -266,7 +270,22 @@
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
 		</Unit>
+		<Unit filename="test/check_chunker.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
 		<Unit filename="test/check_client.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_data.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_data.h">
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_hashmap.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
 		</Unit>
@@ -282,7 +301,7 @@
 			<code_completion />
 			<debugger />
 			<envvars />
-			<editor_config active="1" use_tabs="0" tab_indents="1" tab_width="3" indent="3" eol_mode="1" />
+			<editor_config active="1" use_tabs="0" tab_indents="1" tab_width="3" indent="3" eol_mode="2" />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

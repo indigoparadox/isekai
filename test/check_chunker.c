@@ -1,8 +1,9 @@
-
 #include <stdlib.h>
-#include <check.h>#include <stdio.h>
+#include <check.h>
+#include <stdio.h>
 
-#include "../src/chunker.h"#include "check_data.h"
+#include "../src/chunker.h"
+#include "check_data.h"
 
 START_TEST( test_chunker_create ) {
    CHUNKER* h = NULL;
@@ -35,12 +36,13 @@ START_TEST( test_chunker_file ) {
    //void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg );
 
    //chunker_chunk( h, 1, filename, NULL, 0 );
-   /*
+   /*
    while( h->progress < h->src_len ) {
       progress_prev = h->progress;
       chunker_chew( h );
       ck_assert_int_ne( progress_prev, h->progress );
-   }      */
+   }
+      */
 
 cleanup:
    bdestroy( filename );
