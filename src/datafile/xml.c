@@ -52,6 +52,10 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
    set = (TILEMAP_TILESET*)vector_get( &(t->tilesets), vector_count( &(t->tilesets) ) - 1 );
    scaffold_check_null( set );
 
+   if( !vector_ready( &(set->images) ) ) {
+      vector_init( &(set->images) );
+   }
+
    image_buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( image_buffer );
    buffer = bfromcstralloc( 1024, "" );
@@ -167,21 +171,19 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
 
    vector_add( &(t->tilesets), set );
 
-   // XXX
-   //tilemap_tileset_lock_images( set, TRUE );
    while( NULL != xml_image ) {
       datafile_tilemap_parse_tileset_image( t, xml_image );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
-   //tilemap_tileset_lock_images( set, FALSE );
+
+   if( !vector_ready( &(set->terrain) ) ) {
+      vector_init( &(set->terrain) );
+   }
 
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
-
-   // XXX
-   //tilemap_tileset_lock_terrain( set, TRUE );
    while( NULL != xml_terrain ) {
       terrain_info = (TILEMAP_TERRAIN_DATA*)calloc( 1, sizeof( TILEMAP_TERRAIN_DATA ) );
       scaffold_check_null( terrain_info );
@@ -203,10 +205,12 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
 
       xml_terrain = ezxml_next( xml_terrain );
    }
-   //tilemap_tileset_lock_terrain( set, FALSE );
 
-   // XXX
-   //tilemap_tileset_lock_tiles( set, TRUE );
+
+   if( !vector_ready( &(set->tiles) ) ) {
+      vector_init( &(set->tiles) );
+   }
+
    xml_tile = ezxml_child( xml_tileset, "tile" );
    scaffold_check_null( xml_tile );
    while( NULL != xml_tile ) {

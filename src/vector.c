@@ -9,17 +9,26 @@ void vector_init( VECTOR* v ) {
    v->size = 0;
    v->count = 0;
    v->scalar_data = NULL;
+   v->sentinal = VECTOR_SENTINAL;
 }
 
 void vector_free( VECTOR* v ) {
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+
    if( FALSE != v->scalar ) {
       free( v->scalar_data );
    } else {
       free( v->data );
    }
+
+cleanup:
+   return;
 }
 
 void vector_add( VECTOR* v, void* data ) {
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
 
    assert( FALSE == v->scalar );
 
@@ -50,11 +59,16 @@ cleanup:
 
 void vector_add_scalar( VECTOR* v, int32_t value ) {
    size_t i;
+   BOOL ok = FALSE;
+
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+
+   vector_lock( v, TRUE );
+   ok = TRUE;
 
    /* Die if we have non-scalar data already. */
    assert( NULL == v->data );
-
-   vector_lock( v, TRUE );
 
    v->scalar = TRUE;
 
@@ -85,11 +99,15 @@ void vector_add_scalar( VECTOR* v, int32_t value ) {
    v->count++;
 
 cleanup:
-
-   vector_lock( v, FALSE );
+   if( TRUE == ok ) {
+      vector_lock( v, FALSE );
+   }
+   return;
 }
 
 void vector_set( VECTOR* v, size_t index, void* data ) {
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
    vector_lock( v, TRUE );
    scaffold_check_bounds( index, v->count );
@@ -102,6 +120,8 @@ cleanup:
 void* vector_get( VECTOR* v, size_t index ) {
    void* retptr = NULL;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
 
    if( v->count <= index ) {
@@ -119,6 +139,8 @@ int32_t vector_get_scalar( VECTOR* v, size_t value ) {
    int32_t retval = -1;
    int i;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( TRUE == v->scalar );
 
    if( v->count <= 0 ) {
@@ -145,6 +167,8 @@ size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL do
    void* found_item = NULL;
    size_t backshift = 0;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -172,12 +196,15 @@ size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL do
 
    vector_lock( v, FALSE );
 
+cleanup:
    return backshift;
 }
 
 void vector_delete( VECTOR* v, size_t index ) {
    size_t i;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -199,6 +226,8 @@ size_t vector_delete_scalar( VECTOR* v, int32_t value ) {
    size_t i;
    size_t difference = 0;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    assert( TRUE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -213,11 +242,20 @@ size_t vector_delete_scalar( VECTOR* v, int32_t value ) {
    v->count -= difference;
 
    vector_lock( v, FALSE );
+
+cleanup:
    return difference;
 }
 
 inline size_t vector_count( VECTOR* v ) {
+   scaffold_check_null( v );
+   if( VECTOR_SENTINAL != v->sentinal ) {
+      scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
+      goto cleanup;
+   }
    return v->count;
+cleanup:
+   return 0;
 }
 
 inline void vector_lock( VECTOR* v, BOOL lock ) {
@@ -239,6 +277,8 @@ void* vector_iterate( VECTOR* v, vector_callback callback, void* arg ) {
    void* current_iter = NULL;
    size_t i;
 
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
    /* TODO: This can work for scalars too, can't it? */
    assert( FALSE == v->scalar );
 
@@ -252,5 +292,6 @@ void* vector_iterate( VECTOR* v, vector_callback callback, void* arg ) {
    }
    vector_lock( v, FALSE );
 
+cleanup:
    return cb_return;
 }
