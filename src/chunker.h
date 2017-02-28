@@ -28,13 +28,13 @@ typedef enum _CHUNKER_STATUS {
 } CHUNKER_STATUS;
 
 typedef struct _CHUNKER {
-   size_t alloc;
    size_t progress;
    size_t chunk_size_src;
    size_t chunk_size_line;
-   BYTE* src_buffer;
-   size_t src_len;
-   bstring dest_buffer;
+   BYTE* raw_buffer;
+   size_t raw_len;
+   bstring compressed_buffer;
+   size_t compressed_len;
    bstring filename;
    CHUNKER_CALLBACK callback;
    void* cb_arg;
