@@ -23,9 +23,10 @@ void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out ) {
 
 void chunker_cleanup( CHUNKER* h ) {
    bdestroy( h->dest_buffer );
+   h->dest_buffer = NULL;
    bdestroy( h->filename );
+   h->filename = NULL;
 }
-
 
 void chunker_set_cb( CHUNKER* h, CHUNKER_CALLBACK cb, MAILBOX* m, void* arg ) {
    h->callback = cb;
@@ -53,6 +54,7 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
    if( CHUNKER_STATUS_DELETE == h->status ) {
       chunker_cleanup( h );
       free( h );
+      //e->cb_arg = NULL;
    }
 
    if(
@@ -121,7 +123,8 @@ void chunker_chew( CHUNKER* h ) {
    scaffold_check_zero( zip_result );
    zip_result = mz_zip_writer_add_mem(
       &buffer_archive,
-      bdata( h->filename ),
+      //bdata( h->filename ),
+      bstr2cstr( h->filename, '\0' ),
       &(h->src_buffer[h->progress]),
       increment,
       MZ_BEST_SPEED
@@ -134,10 +137,15 @@ void chunker_chew( CHUNKER* h ) {
    scaffold_check_zero( zip_result );
    zip_result = mz_zip_writer_end( &buffer_archive );
    scaffold_check_zero( zip_result );
+
+   //scaffold_debug_file( dbgzip, "testbefore.zip", zip_buffer, zip_buffer_size );
+
    b64_encode(
       zip_buffer, zip_buffer_size, h->dest_buffer,
       h->chunk_size_line
    );
+
+   //scaffold_debug_file( dbg64, "testbefore.zip.b64", bdata( h->dest_buffer ), blength( h->dest_buffer ) );
 
 #ifdef DEBUG
    bstr_result = bstrchr( h->dest_buffer, '\n' );
@@ -155,10 +163,58 @@ cleanup:
    return;
 }
 
-void chunker_unchunk( CHUNKER* h, bstring buffer ) {
+void chunker_unchunk( CHUNKER* h, bstring filename, bstring buffer, size_t offset ) {
+   mz_zip_archive buffer_archive = { 0 };
+   mz_bool zip_result = 0;
+   void* zip_buffer = NULL;
+   size_t zip_buffer_size = 0;
 
+   if( NULL == h->src_buffer ) {
+      h->src_buffer = calloc( 1, h->src_len );
+      scaffold_check_null( h->src_buffer );
+   }
+
+   if( NULL != h->filename ) {
+      bassign( h->filename, filename );
+      scaffold_check_null( h->filename );
+   }
+
+   //scaffold_debug_file( dgb64, "testafter.zip.b64", bdata( buffer ), blength( buffer ) );
+
+   /* TODO: Error on duplicate. */
+
+   //zip_buffer = b64_decode( &zip_buffer_size, buffer );
+   zip_buffer = calloc( 2048, sizeof( char ) );
+   zip_buffer_size = 2048;
+   //b64_decode( bdata( buffer ), blength( buffer ), zip_buffer, &zip_buffer_size );
+   b64_decode( buffer, zip_buffer, &zip_buffer_size );
+
+   assert( 0 < zip_buffer_size );
+   assert( NULL != zip_buffer );
+
+   //scaffold_debug_file( dbgzip, "testafter.zip", zip_buffer, zip_buffer_size );
+
+   zip_result = mz_zip_reader_init_mem( &buffer_archive, zip_buffer, zip_buffer_size, 0 );
+   scaffold_check_zero( zip_result );
+   zip_result = mz_zip_reader_extract_file_to_mem(
+      &buffer_archive,
+      bdata( h->filename ),
+      &(h->src_buffer[offset]),
+      h->chunk_size_src,
+      0
+   );
+   scaffold_check_zero( zip_result );
+
+cleanup:
+   mz_zip_reader_end( &buffer_archive );
+   btrunc( buffer, 0 );
+   /* if( NULL != zip_buffer ) {
+      free( zip_buffer );
+   } */
+   return;
 }
 
-void chunker_unchew( CHUNKER* h, bstring buffer ) {
-
+BOOL chunker_incoming_full( CHUNKER* h ) {
+   // TODO
+   return FALSE;
 }

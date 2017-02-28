@@ -57,9 +57,9 @@ void scaffold_printf_debug( const char* message, ... ) {
    scaffold_snprintf( buffer, message, varg );
    va_end( varg );
 
-   if( 0 == scaffold_error ) {
-      scaffold_printf_debug( "%s", bdata( buffer ) );
-   }
+   //if( 0 == scaffold_error ) {
+   //   scaffold_printf_debug( "%s", bdata( buffer ) );
+   //}
 
 cleanup:
    bdestroy( buffer );

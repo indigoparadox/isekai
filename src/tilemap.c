@@ -17,6 +17,9 @@ void tilemap_init( TILEMAP* t ) {
    vector_init( &(t->layers) );
    vector_init( &(t->positions) );
    vector_init( &(t->tilesets) );
+
+   t->serialize_buffer = NULL;
+   t->serialize_filename = bfromcstralloc( 30, "" );
 }
 
 void tilemap_cleanup( TILEMAP* t ) {
@@ -34,6 +37,7 @@ void tilemap_cleanup( TILEMAP* t ) {
    }
    vector_free( &(t->tilesets) );
    bdestroy( t->serialize_buffer );
+   bdestroy( t->serialize_filename );
 }
 
 void tilemap_layer_init( TILEMAP_LAYER* layer ) {

@@ -309,10 +309,12 @@ static void parser_tmap_chunk_cb( CHUNKER* h, ssize_t socket ) {
 
 // XXX
    server_client_printf(
-      trio->s, trio->c, ":%b GDB %b %b TILEMAP %d %d :%b",
-      trio->s->self.remote, trio->c->nick, trio->l->name, h->progress, h->src_len,
-      h->dest_buffer
+      trio->s, trio->c, ":%b GDB %b %b TILEMAP %b %d %d : %b",
+      trio->s->self.remote, trio->c->nick, trio->l->name, h->filename,
+      h->progress, h->src_len, h->dest_buffer
    );
+
+   btrunc( h->dest_buffer, 0 );
 
    if( CHUNKER_STATUS_FINISHED == h->status || CHUNKER_STATUS_ERROR == h->status ) {
       free( trio );
@@ -413,7 +415,7 @@ static void parser_server_join( void* local, void* remote,
    chunker_chunk(
       h,
       c->jobs_socket,
-      namehunt,
+      l->gamedata.tmap.serialize_filename,
       (BYTE*)bdata( l->gamedata.tmap.serialize_buffer ),
       blength( l->gamedata.tmap.serialize_buffer )
    );
@@ -628,10 +630,51 @@ static void parser_client_error( void* local, void* gamedata,
 
 static void parser_client_gdb( void* local, void* gamedata,
                                 struct bstrList* args ) {
-   CLIENT* c = (CLIENT*)local;
    GAMEDATA* d = (GAMEDATA*)gamedata;
+   CHUNKER* h = NULL;
+   int hash_ret;
 
+   assert( 10 == args->qty );
 
+   size_t progress = 0;
+   size_t total = 0;
+   bstring data = args->entry[9];
+   bstring filename = args->entry[5];
+
+   progress = atoi( bdata( args->entry[6] ) );
+   total = atoi( bdata( args->entry[7] ) );
+
+   if( progress > total ) {
+      scaffold_print_error( "Invalid progress for %s.\n", bdata( filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   hashmap_get( d->incoming_chunkers, filename, (void**)(&h) );
+   if( NULL == h ) {
+      chunker_new( h, total, (total - progress) );
+      hash_ret = hashmap_put( d->incoming_chunkers, filename, h );
+      scaffold_check_nonzero( hash_ret );
+   }
+
+   chunker_unchunk( h, filename, data, progress );
+   scaffold_print_debug( "%d out of %d\n", progress, total );
+
+   if( TRUE == chunker_incoming_full( h ) ) {
+      // XXX: Parse the map.
+   }
+
+#if 0
+   if( progress < total ) {
+
+   } else {
+      /* Download complete, so deserialize. */
+   }
+#endif
+
+   //scaffold_print_debug( "INCOMING DATA %s OF %s: %s\n", bdata( progress ), bdata( total ), bdata( data ) );
+cleanup:
+   return;
 }
 
 const parser_entry parser_table_server[] = {

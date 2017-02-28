@@ -235,6 +235,20 @@ static const char cb64[]=
 static const char cd64[]=
    "|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
+static const unsigned char d[] = {
+    66,66,66,66,66,66,66,66,66,66,64,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,62,66,66,66,63,52,53,
+    54,55,56,57,58,59,60,61,66,66,66,65,66,66,66, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,66,66,66,66,66,66,26,27,28,
+    29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
+    66,66,66,66,66,66
+};
+
 #define b64_beof( i, l ) (i < l)
 
 /*
@@ -303,85 +317,143 @@ cleanup:
    return;
 }
 
-/*
-** decodeblock
-**
-** decode 4 '6-bit' characters into 3 8-bit binary bytes
-*/
-static void decodeblock( BYTE* in, BYTE* out ) {
-   out[ 0 ] = (BYTE)(in[0] << 2 | in[1] >> 4);
-   out[ 1 ] = (BYTE)(in[1] << 4 | in[2] >> 2);
-   out[ 2 ] = (BYTE)(((in[2] << 6) & 0xc0) | in[3]);
-}
+#define WHITESPACE 64
+#define EQUALS     65
+#define INVALID    66
+
+#if 0
 
 /*
 ** decode
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-BYTE* b64_decode( size_t* outdata_len, bstring instring ) {
-   BYTE in[4];
-   BYTE out[3];
-   int v;
-   int i, len;
-   size_t instring_place = 0;
-   size_t outdata_place = 0;
-   BYTE* outdata;
+void* b64_decode( size_t* outdata_len, bstring instring ) {
+   char iter = 0;
+   uint32_t buf = 0;
+   size_t indata_index = 0;
+   size_t outdata_index = 0;
+   uint8_t* outdata = NULL;
 
-   *outdata_len = 1;
-   outdata = (BYTE*)calloc( *outdata_len, sizeof( BYTE ) );
+   scaffold_error = SCAFFOLD_ERROR_NONE;
+
+   *outdata_len = blength( instring );
+
+   outdata = calloc( *outdata_len, sizeof( uint8_t ) );
    scaffold_check_null( outdata );
 
-#ifdef DEBUG_B64
-   scaffold_print_debug( "B64: Decoding: %s\n", bdata( instring ) );
-#endif /* DEBUG_B64 */
+   while( blength( instring ) > indata_index ) {
+      //unsigned char c = d[(int8_t)bchar( instring, indata_index++ )];
+      unsigned char c = d[bdata( instring )[indata_index++]];
 
-   *in = (BYTE) 0;
-   *out = (BYTE) 0;
-   while( blength( instring ) > instring_place ) {
-      for( len = 0, i = 0; i < 4 && blength( instring ) > instring_place; i++ ) {
-         v = 0;
-         while( blength( instring ) > instring_place && v == 0 ) {
-            v = bchar( instring, instring_place );
-            instring_place += 1;
-#ifdef DEBUG_B64
-            scaffold_print_debug( "B64: In Place: %ld, Got Char: %c\n", instring_place, (char)v );
-#endif /* DEBUG_B64 */
-            if( blength( instring ) > instring_place ) {
-               v = ((v < 43 || v > 122) ? 0 : (int) cd64[ v - 43 ]);
-               if( v != 0 ) {
-                  v = ((v == (int)'$') ? 0 : v - 61);
+      switch( c ) {
+         case WHITESPACE: continue;   /* skip whitespace */
+
+         case INVALID:
+            scaffold_print_error( "Invalid input at position %d. Aborting.\n", indata_index );
+            scaffold_error = SCAFFOLD_ERROR_MISC;
+            goto cleanup;   /* invalid input, return error */
+
+         case EQUALS:                 /* pad character, end of data */
+            indata_index = blength( instring );
+            continue;
+
+         default:
+            buf = buf << 6 | c;
+            iter++; // increment the number of iteration
+            /* If the buffer is full, split it into bytes */
+            if( 4 == iter) {
+               if( (outdata_index += 3) > *outdata_len ) {
+                  //return 1; /* buffer overflow */
+                  *outdata_len *= 2;
+                  outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+                  scaffold_check_null( outdata );
                }
+               outdata[outdata_index++] = (buf >> 16) & 255;
+               outdata[outdata_index++] = (buf >> 8) & 255;
+               outdata[outdata_index++] = buf & 255;
+               buf = 0;
+               iter = 0;
             }
-         }
-         if( blength( instring ) > instring_place ) {
-            len++;
-            if( v != 0 ) {
-               in[i] = (BYTE)(v - 1);
-            }
-         } else {
-            in[i] = (BYTE)0;
-         }
-      }
-      if( len > 0 ) {
-         decodeblock( in, out );
-         for( i = 0; i < len - 1; i++ ) {
-            if( *outdata_len <= outdata_place ) {
-               *outdata_len *= 2;
-               outdata = (BYTE*)realloc( outdata, *outdata_len * sizeof( BYTE ) );
-               scaffold_check_null( outdata );
-            }
-            outdata[outdata_place++] = out[i];
-         }
       }
    }
 
-cleanup:
-   if( NULL != outdata ) {
-      *outdata_len = outdata_place;
-      outdata = (BYTE*)realloc( outdata, outdata_place * sizeof( BYTE ) );
-      /* This loop is OK since the condition above won't be triggered. */
-      scaffold_check_null( outdata );
+   if( 3 == iter ) {
+      if( (outdata_index += 2) > *outdata_len ) {
+         //return 1; /* buffer overflow */
+         *outdata_len *= 2;
+         outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+         scaffold_check_null( outdata );
+      }
+      outdata[outdata_index++] = (buf >> 10) & 255;
+      outdata[outdata_index++] = (buf >> 2) & 255;
+   } else if( 2 == iter ) {
+      if( ++outdata_index > *outdata_len ) {
+         // return 1; /* buffer overflow */
+         *outdata_len *= 2;
+         outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+         scaffold_check_null( outdata );
+
+      }
+      outdata[outdata_index++] = (buf >> 4) & 255;
    }
+
+   /* Reality check for size. */
+   *outdata_len = outdata_index + 1;
+   outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+   scaffold_check_null( outdata );
+cleanup:
    return outdata;
+}
+
+#endif
+
+int b64_decode( bstring indata, unsigned char *out, size_t *outLen ) {
+    //char *end = in + inLen;
+    char iter = 0;
+    uint32_t buf = 0;
+    size_t len = 0;
+    size_t indata_index = 0;
+
+    //while (in < end) {
+    //while( indata_index < inLen ) {
+    while( indata_index < blength( indata ) ) {
+        //unsigned char c = d[*in++];
+        //unsigned char c = d[in[indata_index++]];
+        unsigned char c = d[bdata( indata )[indata_index++]];
+
+        switch (c) {
+        case WHITESPACE: continue;   /* skip whitespace */
+        case INVALID:    return 1;   /* invalid input, return error */
+        case EQUALS:                 /* pad character, end of data */
+            //in = end;
+            indata_index = blength( indata );
+            continue;
+        default:
+            buf = buf << 6 | c;
+            iter++; // increment the number of iteration
+            /* If the buffer is full, split it into bytes */
+            if (iter == 4) {
+                if ((len += 3) > *outLen) return 1; /* buffer overflow */
+                *(out++) = (buf >> 16) & 255;
+                *(out++) = (buf >> 8) & 255;
+                *(out++) = buf & 255;
+                buf = 0; iter = 0;
+
+            }
+        }
+    }
+
+    if (iter == 3) {
+        if ((len += 2) > *outLen) return 1; /* buffer overflow */
+        *(out++) = (buf >> 10) & 255;
+        *(out++) = (buf >> 2) & 255;
+    }
+    else if (iter == 2) {
+        if (++len > *outLen) return 1; /* buffer overflow */
+        *(out++) = (buf >> 4) & 255;
+    }
+
+    *outLen = len; /* modify to reflect the actual output size */
+    return 0;
 }

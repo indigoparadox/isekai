@@ -10,6 +10,7 @@
 #define __HASHMAP_H__
 
 #include "bstrlib/bstrlib.h"
+#include "scaffold.h"
 
 #define MAP_MISSING -3  /* No such element */
 #define MAP_FULL -2 	/* Hashmap is full */
@@ -39,6 +40,7 @@ typedef any_t map_t;
  * Return an empty hashmap. Returns NULL if empty.
 */
 extern map_t hashmap_new();
+//void hashmap_init( map_t m );
 
 /*
  * Iteratively call f with argument (item, data) for
