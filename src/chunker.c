@@ -9,10 +9,11 @@
 
 void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out ) {
    h->status = CHUNKER_STATUS_NONE;
-   h->alloc = 0;
-   h->src_buffer = NULL;
-   h->src_len = 0;
-   h->dest_buffer = bfromcstralloc( CHUNKER_DEFAULT_ALLOC_B64, "" );
+   //h->alloc = 0;
+   h->raw_buffer = NULL;
+   h->raw_len = 0;
+   h->compressed_buffer = bfromcstralloc( CHUNKER_DEFAULT_ALLOC_B64, "" );
+   h->compressed_len = 0;
    h->filename = bfromcstralloc( 15, "" );
    h->progress = 0;
    h->chunk_size_src = 0 < chunk_size_src ? chunk_size_src : CHUNKER_DEFAULT_INGEST_CHUNK;
@@ -22,8 +23,8 @@ void chunker_init( CHUNKER* h, ssize_t chunk_size_src, ssize_t line_len_out ) {
 }
 
 void chunker_cleanup( CHUNKER* h ) {
-   bdestroy( h->dest_buffer );
-   h->dest_buffer = NULL;
+   bdestroy( h->compressed_buffer );
+   h->compressed_buffer = NULL;
    bdestroy( h->filename );
    h->filename = NULL;
 }
@@ -44,7 +45,7 @@ static void chunker_mailbox_cb( MAILBOX* m, MAILBOX_ENVELOPE* e ) {
    }
 
 #ifdef DEBUG
-   h->percent = h->progress * 100 / h->src_len;
+   h->percent = h->progress * 100 / h->compressed_len;
    if( 0 == (h->percent % 10) && h->percent != h->last_percent ) {
       scaffold_print_debug( "Chunker: %d%% complete...\n", h->percent )
       h->last_percent = h->percent;
@@ -70,12 +71,16 @@ void chunker_chunk( CHUNKER* h, ssize_t socket, bstring filename, BYTE* data, si
    scaffold_check_null( h );
    scaffold_check_null( data );
    scaffold_check_null( h->filename );
-   scaffold_check_null( h->dest_buffer );
+   scaffold_check_null( h->compressed_buffer );
 
-   h->alloc = len;
-   h->src_len = len;
-   h->src_buffer = data;
-   btrunc( h->dest_buffer, 0 );
+   //h->alloc = len;
+   h->raw_len = len;
+   h->raw_buffer = calloc( len, sizeof( uint8_t ) );
+   memcpy( h->raw_buffer, data, len * sizeof( uint8_t ) );
+   scaffold_check_null( h->raw_buffer );
+   btrunc( h->compressed_buffer, 0 );
+   scaffold_check_null( h->compressed_buffer );
+
    bassign( h->filename, filename );
    h->status = CHUNKER_STATUS_WORKING;
 
@@ -98,8 +103,8 @@ void chunker_chew( CHUNKER* h ) {
    scaffold_error = 0;
 
    scaffold_check_null( h );
-   scaffold_check_null( h->dest_buffer );
-   scaffold_check_null( h->src_buffer );
+   scaffold_check_null( h->compressed_buffer );
+   scaffold_check_null( h->raw_buffer );
    scaffold_check_null( h->filename );
 
    memset( &buffer_archive, '\0', sizeof( mz_zip_archive ) );
@@ -168,6 +173,8 @@ void chunker_unchunk( CHUNKER* h, bstring filename, bstring buffer, size_t offse
    mz_bool zip_result = 0;
    void* zip_buffer = NULL;
    size_t zip_buffer_size = 0;
+   const char* filename_c = NULL;
+   void* unzip_temp = NULL;
 
    if( NULL == h->src_buffer ) {
       h->src_buffer = calloc( 1, h->src_len );
@@ -177,7 +184,14 @@ void chunker_unchunk( CHUNKER* h, bstring filename, bstring buffer, size_t offse
    if( NULL != h->filename ) {
       bassign( h->filename, filename );
       scaffold_check_null( h->filename );
+      assert( filename != h->filename );
    }
+
+   unzip_temp = calloc( h->chunk_size_src, sizeof( uint8_t ) );
+
+   filename_c = bstr2cstr( h->filename, '-' );
+   assert( filename_c != bdata( h->filename ) );
+   scaffold_check_null( filename_c );
 
    //scaffold_debug_file( dgb64, "testafter.zip.b64", bdata( buffer ), blength( buffer ) );
 
@@ -198,19 +212,25 @@ void chunker_unchunk( CHUNKER* h, bstring filename, bstring buffer, size_t offse
    scaffold_check_zero( zip_result );
    zip_result = mz_zip_reader_extract_file_to_mem(
       &buffer_archive,
-      bdata( h->filename ),
-      &(h->src_buffer[offset]),
+      filename_c,
+      unzip_temp,
       h->chunk_size_src,
       0
    );
    scaffold_check_zero( zip_result );
+
+   memcpy( &(h->src_buffer[offset]), unzip_temp, h->chunk_size_src );
 
 cleanup:
    mz_zip_reader_end( &buffer_archive );
    btrunc( buffer, 0 );
    /* if( NULL != zip_buffer ) {
       free( zip_buffer );
-   } */
+   }
+   if( NULL != filename_c ) {
+      free( filename_c );
+   }
+   */
    return;
 }
 
