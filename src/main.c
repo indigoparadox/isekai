@@ -32,11 +32,6 @@ int main( int argc, char** argv ) {
    INPUT p = { 0 };
    GAMEDATA d;
    UI ui = { 0 };
-#ifdef DEBUG_B64
-   bstring b64_test = NULL;
-   size_t b64_test_len = 0;
-   char* b64_test_decode = NULL;
-#endif /* DEBUG_B64 */
 
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
    graphics_screen_init( &g, 640, 480 );
@@ -45,22 +40,9 @@ int main( int argc, char** argv ) {
    input_init( &p );
    ui_init( &ui, &g );
 
-#ifdef DEBUG_B64
-   scaffold_print_debug( "Testing Base64:\n" );
-   b64_test = bfromcstralloc( 100, "" );
-   b64_encode( (BYTE*)"abcdefghijk", 11, b64_test, 20 );
-   scaffold_print_debug( "Base64 Encoded: %s\n", bdata( b64_test ) );
-   assert( 0 == strncmp( "YWJjZGVmZ2hpams=", bdata( b64_test ), 16 ) );
-   b64_test_decode = b64_decode( &b64_test_len, b64_test );
-   scaffold_print_debug(
-      "Base64 Decoding Got: %s, Length: %d\n", b64_test_decode, b64_test_len
-   );
-   assert( 0 == strncmp( "abcdefghijk", b64_test_decode, 11 ) );
-   free( b64_test_decode );
-#endif /* DEBUG_B64 */
-
    srand( (unsigned)time( &tm ) );
 
+   graphics_set_color_ex( &g, 255, 255, 255, 255 );
    graphics_draw_text( &g, 20, 20, &str_loading );
    graphics_flip_screen( &g );
 
@@ -94,43 +76,6 @@ int main( int argc, char** argv ) {
       usleep( 1000000 );
    } while( 0 != scaffold_error );
 
-#ifdef DEBUG_TEST_CHANNELS
-   server_service_clients( server );
-   assert( 1 == vector_count( &(server->clients) ) );
-   CLIENT* client_b = NULL;
-   client_new( client_b );
-   bdestroy( client_b->nick );
-   client_b->nick = bfromcstr( "TestUnit" );
-   bdestroy( client_b->realname );
-   client_b->realname = bfromcstr( "Unit Tester" );
-   bdestroy( client_b->username );
-   client_b->username = bfromcstr( "TestUnit" );
-   do {
-      client_connect( client_b, localhost, 33080 );
-      usleep( 1000000 );
-   } while( 0 != scaffold_error );
-   server_service_clients( server );
-   assert( 0 == vector_count( &(server->self.channels) ) );
-   CHANNEL* l = server_add_channel( server, channel, client );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( 1 == vector_count( &(l->clients) ) );
-   assert( 2 == vector_count( &(server->clients) ) );
-   CHANNEL* l_b = server_add_channel( server, channel, client_b );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( l == l_b );
-   assert( 2 == vector_count( &(l->clients) ) );
-   assert( 2 == vector_count( &(l_b->clients) ) );
-   assert( 2 == vector_count( &(server->clients) ) );
-   server_drop_client( server, client_b->nick );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( l == l_b );
-   //assert( 1 == vector_count( &(l->clients) ) );
-   //assert( 1 == vector_count( &(l_b->clients) ) );
-   assert( 1 == vector_count( &(server->clients) ) );
-#endif /* DEBUG */
-
-   graphics_set_color_ex( &g, 255, 255, 255, 255 );
-
    client_join_channel( client, channel );
 
    while( TRUE ) {
@@ -141,9 +86,7 @@ int main( int argc, char** argv ) {
       server_service_clients( server );
 
       if( 'q' == input_get_char( &p ) ) {
-         //server_stop( server );
          scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
-         //client_leave_channel( client, channel );
          client_stop( client );
       }
 

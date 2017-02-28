@@ -3,14 +3,20 @@
 #include <check.h>
 
 #include "../src/client.h"
+#include "../src/server.h"
 
 START_TEST( test_client_lifecycle ) {
    CLIENT* c;
 
-   client_new( c, NULL );
+   //client_new( c, NULL );
 
-cleanup:
-   client_cleanup( c );
+//cleanup:
+//   client_cleanup( c );
+}
+END_TEST
+
+START_TEST( test_client_server_channel ) {
+
 }
 END_TEST
 
