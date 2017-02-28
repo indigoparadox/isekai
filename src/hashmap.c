@@ -296,7 +296,7 @@ int hashmap_iterate(HASHMAP* in, PFany f, any_t item) {
    hashmap_map* m = (hashmap_map*) in;
 
    /* On empty hashmap, return immediately */
-   if (hashmap_length(m) <= 0)
+   if (hashmap_count(m) <= 0)
       return MAP_MISSING;
 
    /* Linear probing */
@@ -350,7 +350,7 @@ void hashmap_cleanup( HASHMAP* m ) {   scaffold_check_null( m );   assert( HAS
 cleanup:   return;}
 
 /* Return the length of the hashmap */
-int hashmap_length( HASHMAP* m ) {   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
+int hashmap_count( HASHMAP* m ) {   scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
    return m->size;cleanup:   return 0;}
 
 int hashmap_active_length( HASHMAP* m ) {
@@ -358,7 +358,7 @@ int hashmap_active_length( HASHMAP* m ) {
    int count = 0;
    scaffold_check_null( m );   assert( HASHMAP_SENTINAL == m->sentinal );
    /* On empty hashmap, return immediately */
-   if( 0 >= hashmap_length( m ) ) {
+   if( 0 >= hashmap_count( m ) ) {
       goto cleanup;   }
 
    /* Linear probing */

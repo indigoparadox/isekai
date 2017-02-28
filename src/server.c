@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "parser.h"
-#include "heatshrink/heatshrink_encoder.h"
+#include "heatshrink/heatshrink_encoder.h"#include "b64/b64.h"
 
 typedef struct {
    SERVER* s;
@@ -362,7 +362,7 @@ static void* server_prn_chunk( VECTOR* v, size_t idx, void* iter, void* arg ) {
 	}
 // FIXME
    //do {
-   /* hsp_res = heatshrink_encoder_poll(
+   hsp_res = heatshrink_encoder_poll(
       h, outbuffer, PARSER_FILE_XMIT_BUFFER, &exhumed
    ); */
    //assert( HSER_SINK_OK == hsp_res );
@@ -382,7 +382,7 @@ static void* server_prn_chunk( VECTOR* v, size_t idx, void* iter, void* arg ) {
    scaffold_print_debug( "%d out of %d\n", c->chunker.pos, blength( c->chunker.foreign_buffer ) );
 
 cleanup:
-   return;
+   return NULL;
 }
 
 void server_service_clients( SERVER* s ) {
