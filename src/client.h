@@ -8,6 +8,7 @@
 #include "gamedata.h"
 #include "channel.h"
 #include "mailbox.h"
+#include "hashmap.h"
 
 typedef struct _CHANNEL CHANNEL;
 
@@ -38,7 +39,7 @@ typedef struct _CLIENT {
    VECTOR channels; /* All channels in now; all channels avail on server. */
    /*MAILBOX* jobs;
    ssize_t jobs_socket;*/
-   CLIENT_CHUNKER chunker;
+   HASHMAP chunkers;
    int sentinal;
 } CLIENT;
 

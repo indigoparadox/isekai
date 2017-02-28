@@ -29,7 +29,8 @@ void client_init( CLIENT* c ) {
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
-   memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
+   hashmap_init( &(c->chunkers) );
+   //memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
    /* if( NULL != m ) {
       c->jobs = m;
       c->jobs_socket = -1;
@@ -39,6 +40,8 @@ void client_init( CLIENT* c ) {
 
 void client_cleanup( CLIENT* c ) {
    vector_free( &(c->channels) );
+   /* TODO: Free chunkers? */
+   hashmap_cleanup( &(c->chunkers) );
    connection_cleanup( &(c->link) );
    bdestroy( c->buffer );
    bdestroy( c->nick );
