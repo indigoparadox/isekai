@@ -369,44 +369,7 @@ static void parser_server_join( void* local, void* remote,
       s->self.remote, c->nick, l->name
    );
 
-   scaffold_check_null( l->gamedata.tmap.serialize_buffer );
-
-   if( NULL != c->chunker.encoder ) {
-      /* TODO: What if the client has a chunker already? */
-   }
-   h = heatshrink_encoder_alloc(
-      PARSER_HS_WINDOW_SIZE,
-      PARSER_HS_LOOKAHEAD_SIZE
-   );
-   scaffold_check_null( h );
-   c->chunker.encoder = h;
-   c->chunker.pos = 0;
-   c->chunker.foreign_buffer = l->gamedata.tmap.serialize_buffer;
-   c->chunker.filename = l->gamedata.tmap.serialize_filename;
-
-   // FIXME: Encode before transmission.
-	const char* foreign_buffer_c = bdata( c->chunker.foreign_buffer );
-
-   /* Sink the map data into the encoder. */
-   /* TODO: Finish this accross multiple requests. */
-   while( blength( c->chunker.foreign_buffer ) > c->chunker.pos ) {
-      hse_res = heatshrink_encoder_sink(
-         h,
-         (uint8_t*)&(foreign_buffer_c[c->chunker.pos]),
-         (size_t)blength( c->chunker.foreign_buffer ) - c->chunker.pos,
-         &consumed
-      );
-      assert( HSER_SINK_OK == hse_res );
-      c->chunker.pos += consumed;
-   }
-   if( c->chunker.pos == blength( c->chunker.foreign_buffer ) ) {
-      heatshrink_encoder_finish( h );
-   }
-   assert( c->chunker.pos == blength( c->chunker.foreign_buffer ) );
-
-   c->chunker.pos = 0;
-
-   server_xmit_chunk( s );
+   /* FIXME: Begin transmitting tilemap. */
 
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );
