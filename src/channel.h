@@ -11,6 +11,7 @@ typedef struct _CHANNEL {
    bstring name;
    bstring topic;
    VECTOR clients;
+   REF refcount;
 } CHANNEL;
 
 #define channel_new( l, name ) \
@@ -19,10 +20,11 @@ typedef struct _CHANNEL {
     scaffold_check_null( l ); \
     channel_init( l, name );
 
-void* channel_cmp_name( VECTOR* v, size_t idx, void* iter, void* arg );
+void* cb_channel_get_name( VECTOR* v, size_t idx, void* iter, void* arg );
+BOOL cb_channel_del_clients( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void channel_init( CHANNEL* l, const bstring name );
-void channel_cleanup( CHANNEL* l );
+void channel_free( CHANNEL* l );
 CLIENT* channel_client_present( CHANNEL* l, CLIENT* c );
 void channel_add_client( CHANNEL* l, CLIENT* c );
 void channel_remove_client( CHANNEL* l, CLIENT* c );

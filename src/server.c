@@ -6,65 +6,20 @@
 #include "heatshrink/heatshrink_encoder.h"
 #include "b64/b64.h"
 
-typedef struct {
-   SERVER* s;
-   bstring buffer;
-   CLIENT* c_sender;
-} SERVER_PBUFFER;
-
-typedef struct {
-   SERVER* s;
-   bstring nick;
-} SERVER_DUO;
-
-/* This callback doesn't cleanup the channel, since it's just removing it     *
- * from a client's list.                                                      */
-static void* server_client_del_chan(
-   VECTOR* v, size_t idx, void* iter, void* arg
-) {
-   CHANNEL* l = (CHANNEL*)iter;
-   CLIENT* c = (CLIENT*)arg;
-
-   /* Remove the channel from the client's list, but don't free it. It might  *
-    * still be in use!                                                        */
-   channel_remove_client( l, c );
-
-   return c;
-}
-
-static void* server_del_all_clients(
-   VECTOR* v, size_t idx, void* iter, void* arg
-) {
+static void* cb_server_del_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
-   vector_delete_cb( &(c->channels), server_client_del_chan, c, TRUE );
-   client_cleanup( c );
-   return c;
-}
+   bstring nick = (bstring)arg;
 
-static void* server_del_chan( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   CHANNEL* l = (CHANNEL*)iter;
-   if( 0 >= vector_count( &(l->clients ) ) ) {
-      /* No clients left in this channel, so remove it from the server. */
-      channel_cleanup( l );
-      return l;
-   }
-   return NULL;
-}
-
-static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
-   SERVER_DUO* duo = (SERVER_DUO*)arg;
-   if( 0 == bstrcmp( c->nick, duo->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
       /* Locks shouldn't conflict, since it's two different vectors. */
-      vector_delete_cb( &(c->channels), server_client_del_chan, c, FALSE );
+      vector_delete_cb( &(c->channels), cb_client_del_channels, NULL );
 
       /* Make sure clients have been cleaned up before deleting. */
-      //mailbox_close( duo->s->self.jobs, c->jobs_socket );
-      client_cleanup( c );
-      assert( 0 == c->sentinal );
-      return c;
+      client_free( c );
+      return TRUE;
    }
-   return NULL;
+
+   return FALSE;
 }
 
 void server_init( SERVER* s, const bstring myhost ) {
@@ -94,25 +49,24 @@ inline void server_stop( SERVER* s ) {
 void server_cleanup( SERVER* s ) {
    size_t deleted = 0;
 
-   bdestroy( s->version );
-   bdestroy( s->servername );
+   if( TRUE == client_free( &(s->self) ) ) {
+      bdestroy( s->version );
+      bdestroy( s->servername );
 
-   /* Remove clients. */
-   deleted = vector_delete_cb( &(s->clients), server_del_all_clients, NULL, TRUE );
-   scaffold_print_debug(
-      "Removed %d clients from server. %d remaining.\n",
-      deleted, vector_count( &(s->clients) )
-   );
-   vector_free( &(s->clients) );
+      /* Remove clients. */
+      deleted = vector_delete_cb( &(s->clients), cb_server_del_clients, NULL );
+      scaffold_print_debug(
+         "Removed %d clients from server. %d remaining.\n",
+         deleted, vector_count( &(s->clients) )
+      );
+      vector_free( &(s->clients) );
 
-   deleted = vector_delete_cb( &(s->self.channels), server_del_chan, NULL, TRUE );
-   scaffold_print_debug(
-      "Removed %d channels from server. %d remaining.\n",
-      deleted, vector_count( &(s->self.channels) )
-   );
-   /* Channels vector is freed in client_cleanup() below. */
-
-   client_cleanup( &(s->self) );
+      deleted = vector_delete_cb( &(s->self.channels), cb_client_del_channels, NULL );
+      scaffold_print_debug(
+         "Removed %d channels from server. %d remaining.\n",
+         deleted, vector_count( &(s->self.channels) )
+      );
+   }
 }
 
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
@@ -153,16 +107,8 @@ cleanup:
    return;
 }
 
-static void* server_prn_channel( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   SERVER_PBUFFER* pbuffer = (SERVER_PBUFFER*)arg;
-   CLIENT* c_iter = (CLIENT*)iter;
-   if( 0 == bstrcmp( pbuffer->c_sender->nick, c_iter->nick ) ) {
-      return NULL;
-   }
-   server_client_send( pbuffer->s, c_iter, pbuffer->buffer );
-   return NULL;
-}
-
+/*
+FIXME
 void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
    SERVER_PBUFFER pbuffer;
 
@@ -174,6 +120,7 @@ void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer 
 
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
 }
+*/
 
 void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
    bstring buffer = NULL;
@@ -199,12 +146,14 @@ cleanup:
 
 void server_add_client( SERVER* s, CLIENT* c ) {
    vector_add( &(s->clients), c );
+   ref_inc( &(c->refcount) );
    //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
 
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    CHANNEL* l = NULL;
    bstring map_serial = NULL;
+   BOOL just_created = FALSE;
 
    map_serial = bfromcstralloc( 1024, "" );
    scaffold_check_null( map_serial );
@@ -219,6 +168,7 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
       scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
    } else {
       scaffold_print_info( "Channel found on server: %s\n", bdata( l->name ) );
+      just_created = TRUE;
    }
 
    /* Make sure the user is not already in the channel. If they are, then  *
@@ -231,6 +181,8 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
       l = NULL;
       goto cleanup;
    }
+
+   ref_inc( &(l->refcount) );
 
    channel_add_client( l, c_first );
    client_add_channel( c_first, l );
@@ -249,38 +201,37 @@ CLIENT* server_get_client( SERVER* s, int index ) {
 }
 
 CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick ) {
-   return vector_iterate( &(s->clients), client_cmp_nick, (bstring)nick );
+   return vector_iterate( &(s->clients), cb_client_get_nick, (bstring)nick );
 }
 
+/*
 CLIENT* server_get_client_by_ptr( SERVER* s, CLIENT* c ) {
    return vector_iterate( &(s->clients), client_cmp_ptr, c );
 }
+*/
 
-CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick ) {
-   return client_get_channel_by_name( &(s->self), nick );
+CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
+   return client_get_channel_by_name( &(s->self), (bstring)nick );
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
    size_t deleted;
-   SERVER_DUO duo = { 0 };
 #ifdef DEBUG
    size_t old_count = 0, new_count = 0;
 #endif /* DEBUG */
-
-   duo.s = s;
-   duo.nick = nick;
 
 #ifdef DEBUG
    old_count = vector_count( &(s->clients) );
 #endif /* DEBUG */
 
    /* TODO: Should this actually be TRUE? */
-   deleted = vector_delete_cb( &(s->clients), server_del_client, &duo, FALSE );
+   deleted = vector_delete_cb( &(s->clients), cb_server_del_clients, nick );
    scaffold_print_debug(
       "Removed %d clients from server. %d remaining.\n",
       deleted, vector_count( &(s->clients) )
    );
 
+#if 0
 #ifdef DEBUG
    new_count = vector_count( &(s->clients) );
    assert( new_count == old_count - deleted );
@@ -288,7 +239,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
    old_count = vector_count( &(s->self.channels) );
 #endif /* DEBUG */
 
-   deleted = vector_delete_cb( &(s->self.channels), server_del_chan, NULL, TRUE );
+   deleted = vector_delete_cb( &(s->self.channels), cb_client_del_channels, NULL );
    scaffold_print_debug(
       "Removed %d channels from server. %d remaining.\n",
       deleted, vector_count( &(s->self.channels) )
@@ -298,6 +249,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
    new_count = vector_count( &(s->self.channels) );
    assert( new_count == old_count - deleted );
 #endif /* DEBUG */
+#endif
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -339,7 +291,7 @@ void server_service_clients( SERVER* s ) {
       //vector_lock( &(s->clients), TRUE );
       c = vector_get( &(s->clients), i );
       assert( vector_count( &(s->clients) ) > i );
-      assert( NULL != server_get_client_by_ptr( s, c ) );
+      //assert( NULL != server_get_client_by_ptr( s, c ) );
       //vector_lock( &(s->clients), FALSE );
 
       btrunc( s->self.buffer, 0 );

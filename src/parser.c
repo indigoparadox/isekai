@@ -254,7 +254,7 @@ static void* parser_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
    size_t i;
 
    for( i = 0 ; ison->args->qty > i ; i++ ) {
-      c = client_cmp_nick( v, idx, iter, ison->args->entry[i] );
+      c = cb_client_get_nick( v, idx, iter, ison->args->entry[i] );
       if( NULL != c ) {
          bconcat( ison->clients, c->nick );
          bconchar( ison->clients, ' ' );

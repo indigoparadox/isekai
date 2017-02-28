@@ -17,7 +17,7 @@ typedef struct _VECTOR {
 
 #define VECTOR_SENTINAL 12121
 
-typedef void* (*vector_callback)( VECTOR* v, size_t idx, void* iter, void* arg );
+typedef BOOL (*vector_callback)( VECTOR* v, size_t idx, void* iter, void* arg );
 
 #define vector_ready( v ) \
    (VECTOR_SENTINAL == (v)->sentinal)
@@ -34,7 +34,7 @@ void vector_add_scalar( VECTOR* v, int32_t value );
 void vector_set( VECTOR* v, size_t index, void* data );
 void* vector_get( VECTOR* v, size_t index );
 int32_t vector_get_scalar( VECTOR* v, size_t value );
-size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL free );
+size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg );
 void vector_delete( VECTOR* v, size_t index );
 size_t vector_delete_scalar( VECTOR* v, int32_t value );
 inline size_t vector_count( VECTOR* v );
