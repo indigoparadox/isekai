@@ -19,6 +19,10 @@ void tilemap_init( TILEMAP* t ) {
    t->serialize_filename = bfromcstralloc( 30, "" );
 }
 
+static void* tilemap_tileset_free_cb( VECTOR* v, size_t idx, void* iter, void* arg ) {
+
+}
+
 void tilemap_cleanup( TILEMAP* t ) {
    int i;
    for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
@@ -30,7 +34,7 @@ void tilemap_cleanup( TILEMAP* t ) {
    }
    vector_free( &(t->positions) );
    for( i = 0 ; vector_count( &(t->tilesets) ) > i ; i++ ) {
-      // TODO: tilemap_tileset_free( vector_get( &(t->positions), i ) );
+      tilemap_tileset_free( vector_get( &(t->tilesets), i ) );
    }
    vector_free( &(t->tilesets) );
    bdestroy( t->serialize_buffer );
@@ -49,6 +53,15 @@ void tilemap_layer_cleanup( TILEMAP_LAYER* layer ) {
 
 void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
 
+}
+
+static BOOL tilemap_tileset_free_i_cb( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   graphics_surface_free( (GRAPHICS*)iter );
+   return TRUE;
+}
+
+void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
+   vector_delete_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
 }
 
 void tilemap_iterate_screen_row(

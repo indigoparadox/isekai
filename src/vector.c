@@ -162,10 +162,11 @@ cleanup:
 /* Use a callback to delete items. The callback returns a pointer to the   *
  * item to free, and this function frees it. It is assumed that the        *
  * callback prepares the item to be freed.                                 */
-size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL do_free ) {
+size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg ) {
    size_t i;
-   void* found_item = NULL;
    size_t backshift = 0;
+
+   /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -178,12 +179,8 @@ size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg, BOOL do
    for( i = 0; v->count > i ; i++ ) {
 
       /* Run the callback until we find a match. */
-      found_item = callback( v, i, v->data[i], arg );
-      if( NULL != found_item ) {
+      if( FALSE != callback( v, i, v->data[i], arg ) ) {
          backshift++;
-         if( TRUE == do_free ) {
-            free( found_item );
-         }
       }
 
       if( v->count - 1 > i && 0 < backshift ) {
@@ -202,6 +199,8 @@ cleanup:
 
 void vector_delete( VECTOR* v, size_t index ) {
    size_t i;
+
+   /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -225,6 +224,8 @@ cleanup:
 size_t vector_delete_scalar( VECTOR* v, int32_t value ) {
    size_t i;
    size_t difference = 0;
+
+   /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );

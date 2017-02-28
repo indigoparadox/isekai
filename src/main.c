@@ -113,7 +113,7 @@ cleanup:
    bdestroy( localhost );
    bdestroy( buffer );
    bdestroy( channel );
-   client_cleanup( client );
+   client_free( client );
    assert( 0 == vector_count( &(server->self.channels) ) );
    server_cleanup( server );
    free( server );

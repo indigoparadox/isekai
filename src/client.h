@@ -40,6 +40,7 @@ typedef struct _CLIENT {
    /*MAILBOX* jobs;
    ssize_t jobs_socket;*/
    HASHMAP chunkers;
+   REF refcount;
    int sentinal;
 } CLIENT;
 
@@ -60,11 +61,12 @@ typedef struct _CLIENT {
 
 typedef struct _GAMEDATA GAMEDATA;
 
-void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg );
-void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
+BOOL cb_client_del_channels( VECTOR* v, size_t idx, void* iter, void* arg );
+void* cb_client_get_nick( VECTOR* v, size_t idx, void* iter, void* arg );
+//void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void client_init( CLIENT* c );
-void client_cleanup( CLIENT* c );
+//void client_cleanup( CLIENT* c );
 void client_add_channel( CLIENT* c, CHANNEL* l );
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );
 void client_connect( CLIENT* c, bstring server, int port );

@@ -13,10 +13,12 @@ static inline void ref_inc( const struct _REF *ref ) {
     ((struct _REF*)ref)->count++;
 }
 
-static inline void ref_dec(const struct _REF *ref ) {
+static inline BOOL ref_dec(const struct _REF *ref ) {
     if( 0 == --((struct _REF*)ref)->count ) {
         ref->free( ref );
+        return TRUE;
     }
+    return FALSE;
 }
 
 #endif /* USE_THREADS */

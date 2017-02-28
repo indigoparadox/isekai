@@ -3,16 +3,8 @@
 #include "parser.h"
 #include "server.h"
 
-void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
-   bstring nick = (bstring)arg;
-   if( 0 == bstrcmp( c->nick, nick ) ) {
-      return c;
-   }
-   return NULL;
-}
-
-void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
+/*
+void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    CLIENT* c_ptr = (CLIENT*)arg;
    if( c == c_ptr ) {
@@ -20,25 +12,9 @@ void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
    }
    return NULL;
 }
+*/
 
-void client_init( CLIENT* c ) {
-   vector_init( &(c->channels) );
-   c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
-   c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   c->sentinal = CLIENT_SENTINAL;
-   hashmap_init( &(c->chunkers) );
-   //memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
-   /* if( NULL != m ) {
-      c->jobs = m;
-      c->jobs_socket = -1;
-   } */
-   c->running = TRUE;
-}
-
-void client_cleanup( CLIENT* c ) {
+static void client_cleanup( CLIENT* c ) {
    vector_free( &(c->channels) );
    /* TODO: Free chunkers? */
    hashmap_cleanup( &(c->chunkers) );
@@ -51,8 +27,30 @@ void client_cleanup( CLIENT* c ) {
    c->sentinal = 0;
 }
 
+void client_init( CLIENT* c ) {
+   vector_init( &(c->channels) );
+   c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
+   c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->refcount = (struct _REF){client_cleanup, 1};
+   c->sentinal = CLIENT_SENTINAL;
+   hashmap_init( &(c->chunkers) );
+   //memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
+   /* if( NULL != m ) {
+      c->jobs = m;
+      c->jobs_socket = -1;
+   } */
+   c->running = TRUE;
+}
+
+void client_free( CLIENT* c ) {
+   ref_dec( &(c->refcount) );
+}
+
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
-   return vector_iterate( &(c->channels), channel_cmp_name, name );
+   return vector_iterate( &(c->channels), cb_channel_get_name, name );
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {
@@ -150,7 +148,7 @@ void client_leave_channel( CLIENT* c, bstring lname ) {
 
    /* TODO: Add callback from parser and only delete channel on confirm. */
    /* TODO: Cleanup channel. */
-   vector_delete_cb( &(c->channels), channel_cmp_name, lname, TRUE );
+   vector_delete_cb( &(c->channels), cb_client_del_channels, lname );
 }
 
 void client_send( CLIENT* c, bstring buffer ) {

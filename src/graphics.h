@@ -5,6 +5,7 @@
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
+#include "ref.h"
 
 typedef uint32_t gu;
 
@@ -29,6 +30,7 @@ typedef struct _GRAPHICS {
    void* surface;
    void* font;
    GRAPHICS_COLOR color;
+   REF refcount;
 } GRAPHICS;
 
 typedef struct {

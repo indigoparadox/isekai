@@ -115,12 +115,20 @@ typedef struct {
     tilemap_position_cleanup( position ); \
     free( position );
 
+/*
+#define tilemap_tileset_free( tileset ) \
+    tilemap_tileset_cleanup( tileset ); \
+    free( tileset );
+*/
+
 void tilemap_init( TILEMAP* t );
 void tilemap_cleanup( TILEMAP* t );
 void tilemap_layer_init( TILEMAP_LAYER* layer );
 void tilemap_layer_cleanup( TILEMAP_LAYER* layer );
 void tilemap_position_init( TILEMAP_POSITION* position );
 void tilemap_position_cleanup( TILEMAP_POSITION* position );
+void tilemap_tileset_cleanup( TILEMAP_TILESET* tileset );
+void tilemap_tileset_free( TILEMAP_TILESET* tileset );
 void tilemap_iterate_screen_row(
    TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )

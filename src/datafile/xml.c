@@ -244,6 +244,9 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    //tilemap_tileset_lock_tiles( set, FALSE );
 
 cleanup:
+   if( NULL != set ) {
+      vector_add( &(t->tilesets), set );
+   }
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */
    bdestroy( buffer );
    if( NULL != tile_info ) {

@@ -173,6 +173,15 @@ cleanup:
    return;
 }
 
+static void graphics_surface_actually_free( GRAPHICS* g ) {
+   graphics_surface_cleanup( g );
+   free( g );
+}
+
+void graphics_surface_free( GRAPHICS* g ) {
+   ref_dec( &(g->refcount) );
+}
+
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    if( 0 < w && 0 < h) {
       g->surface = create_bitmap( w, h );
@@ -188,6 +197,7 @@ void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    g->color.g = 0;
    g->color.b = 0;
    g->color.a = 255;
+   g->refcount = (struct _REF){ graphics_surface_actually_free, 1 };
    return;
 }
 
