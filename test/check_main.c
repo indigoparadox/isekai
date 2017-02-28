@@ -1,36 +1,20 @@
 
 #include <check.h>
 
+#define main_add_test( suite_name ) \
+   Suite* s_ ## suite_name = suite_name ## _suite(); \
+   SRunner* sr_ ## suite_name = srunner_create( s_ ## suite_name ); \
+   srunner_run_all( sr_ ## suite_name, CK_NORMAL ); \
+   number_failed += srunner_ntests_failed( sr_ ## suite_name ); \
+   srunner_free( sr_ ## suite_name );
+
 int main( void ) {
    int number_failed = 0;
-   Suite* sv,
-      * sc,
-      * sh,
-      * sb;
-   SRunner* svr,
-      * scr,
-      * shr,
-      * sbr;
 
-   sv = vector_suite();
-   svr = srunner_create( sv );
-   srunner_run_all( svr, CK_NORMAL );
-   number_failed += srunner_ntests_failed( svr );
-   srunner_free( svr );
-
-   sc = client_suite();
-   scr = srunner_create( sc );
-   srunner_run_all( scr, CK_NORMAL );
-   number_failed += srunner_ntests_failed( scr );
-   srunner_free( scr );
-
-#if 0
-   sh = chunker_suite();
-   shr = srunner_create( sh );
-   srunner_run_all( shr, CK_NORMAL );
-   number_failed += srunner_ntests_failed( shr );
-   srunner_free( shr );
-#endif
+   main_add_test( vector );
+   //main_add_test( client );
+   main_add_test( b64 );
+   //main_add_test( channel );
 
    return( number_failed == 0 ) ? 0 : 1;
 }
