@@ -14,6 +14,8 @@ typedef struct _GAMEDATA {
    TILEMAP tmap;
    UI* ui;
    map_t incoming_chunkers;
+   uint8_t* incoming_buffer;
+   size_t incoming_buffer_len;
 } GAMEDATA;
 
 #define gamedata_new_server( d ) \

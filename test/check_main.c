@@ -24,11 +24,13 @@ int main( void ) {
    number_failed += srunner_ntests_failed( scr );
    srunner_free( scr );
 
+#if 0
    sh = chunker_suite();
    shr = srunner_create( sh );
    srunner_run_all( shr, CK_NORMAL );
    number_failed += srunner_ntests_failed( shr );
    srunner_free( shr );
+#endif
 
    return( number_failed == 0 ) ? 0 : 1;
 }

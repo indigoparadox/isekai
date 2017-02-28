@@ -21,7 +21,7 @@ void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-void client_init( CLIENT* c, MAILBOX* m ) {
+void client_init( CLIENT* c ) {
    vector_init( &(c->channels) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -29,10 +29,11 @@ void client_init( CLIENT* c, MAILBOX* m ) {
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
-   if( NULL != m ) {
+   memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
+   /* if( NULL != m ) {
       c->jobs = m;
       c->jobs_socket = -1;
-   }
+   } */
    c->running = TRUE;
 }
 

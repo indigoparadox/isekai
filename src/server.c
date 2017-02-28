@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "parser.h"
+#include "heatshrink/heatshrink_encoder.h"
 
 typedef struct {
    SERVER* s;
@@ -57,7 +58,7 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
       vector_delete_cb( &(c->channels), server_client_del_chan, c, FALSE );
 
       /* Make sure clients have been cleaned up before deleting. */
-      mailbox_close( duo->s->self.jobs, c->jobs_socket );
+      //mailbox_close( duo->s->self.jobs, c->jobs_socket );
       client_cleanup( c );
       assert( 0 == c->sentinal );
       return c;
@@ -67,17 +68,17 @@ static void* server_del_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
 
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
-   client_init( &(s->self), NULL );
+   client_init( &(s->self) );
    vector_init( &(s->clients) );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
 
    /* Setup the jobs mailbox. */
-   s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
-   vector_init( &(s->self.jobs->envelopes) );
-   vector_init( &(s->self.jobs->sockets_assigned) );
-   s->self.jobs->last_socket = 0;
-   s->self.jobs_socket = mailbox_listen( s->self.jobs );
+   //s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
+   //vector_init( &(s->self.jobs->envelopes) );
+   //vector_init( &(s->self.jobs->sockets_assigned) );
+   //s->self.jobs->last_socket = 0;
+   //s->self.jobs_socket = mailbox_listen( s->self.jobs );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
    scaffold_check_nonzero( bstr_result );
@@ -116,7 +117,7 @@ void server_cleanup( SERVER* s ) {
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
-   assert( NULL != server_get_client_by_ptr( s, c ) );
+   //assert( NULL != server_get_client_by_ptr( s, c ) );
    assert( 0 != c->sentinal );
 
    bconchar( buffer, '\r' );
@@ -197,7 +198,7 @@ cleanup:
 
 void server_add_client( SERVER* s, CLIENT* c ) {
    vector_add( &(s->clients), c );
-   c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
+   //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
 
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
@@ -269,8 +270,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
    size_t deleted;
    SERVER_DUO duo = { 0 };
 #ifdef DEBUG
-   size_t old_count = 0;
-   size_t new_count = 0;
+   size_t old_count = 0, new_count = 0;
 #endif /* DEBUG */
 
    duo.s = s;
@@ -314,6 +314,56 @@ void server_listen( SERVER* s, int port ) {
    }
 }
 
+static void* server_prn_chunk( VECTOR* v, size_t idx, void* iter, void* arg ) {
+   SERVER* s = (SERVER*)arg;
+   CLIENT* c = (CLIENT*)iter;
+   heatshrink_encoder* h = (heatshrink_encoder*)c->chunker.encoder;
+   HSE_sink_res hse_res;
+   HSE_poll_res hsp_res;
+   size_t consumed, exhumed;
+   uint8_t* outbuffer = NULL;
+   bstring outbuffer64 = NULL;
+
+   if( NULL == c->chunker.encoder ) {
+      goto cleanup;
+   }
+
+   outbuffer = (uint8_t*)calloc( PARSER_FILE_XMIT_BUFFER, sizeof( uint8_t ) );
+   scaffold_check_null( outbuffer );
+   outbuffer64 = bfromcstralloc( (4 * PARSER_FILE_XMIT_BUFFER), "" );
+   scaffold_check_null( outbuffer64 );
+
+   //if(  )
+   hse_res = heatshrink_encoder_sink(
+      h,
+      (uint8_t*)bdata( c->chunker.foreign_buffer ),
+      (size_t)blength( c->chunker.foreign_buffer ),
+      &consumed
+   );
+   assert( HSER_SINK_ERROR_NULL != hse_res );
+
+   if( HSER_POLL_MORE == (hsp_res = heatshrink_encoder_poll(
+      h, outbuffer, PARSER_FILE_XMIT_BUFFER, &exhumed
+   )) ) {
+      b64_encode( outbuffer, exhumed, outbuffer64, 100 );
+
+      server_client_printf(
+         s, c, ":%b GDB %b TILEMAP %b %d %d : %b",
+         s->self.remote, c->nick, c->chunker.filename, c->chunker.pos,
+         blength( c->chunker.foreign_buffer ), outbuffer64
+      );
+      c->chunker.pos += consumed;
+   }
+   //chunker_unchunk( h, filename, data, progress );
+   scaffold_print_debug( "%d out of %d\n", c->chunker.pos, blength( c->chunker.foreign_buffer ) );
+
+cleanup:
+   if( NULL != outbuffer ) {
+      free( outbuffer );
+   }
+   bdestroy( outbuffer64 );
+}
+
 void server_service_clients( SERVER* s ) {
    ssize_t last_read_count = 0;
    CLIENT* c = NULL;
@@ -327,13 +377,13 @@ void server_service_clients( SERVER* s ) {
    /* Check for new clients. */
    n_client = connection_register_incoming( &(s->self.link) );
    if( NULL != n_client ) {
-      client_new( c, s->self.jobs );
+      client_new( c );
       memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
       free( n_client ); /* Don't clean up, because data is still valid. */
 
       /* Add some details to c before stowing it. */
       connection_assign_remote_name( &(c->link), c->remote );
-      c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
+      //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
       server_add_client( s, c );
 
@@ -365,11 +415,12 @@ void server_service_clients( SERVER* s ) {
       parser_dispatch( s, c, s->self.buffer );
    }
 
+   vector_iterate( &(s->clients), server_prn_chunk, s );
+
    /* Handle outstanding jobs. */
-   mailbox_accept( s->self.jobs, s->self.jobs_socket );
+   //mailbox_accept( s->self.jobs, s->self.jobs_socket );
 
 cleanup:
-
    return;
 }
 

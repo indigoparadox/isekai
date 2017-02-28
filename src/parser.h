@@ -2,7 +2,6 @@
 #define PARSER_H
 
 #include "bstrlib/bstrlib.h"
-#include "chunker.h"
 
 typedef struct {
    struct tagbstring command;
@@ -13,6 +12,10 @@ typedef struct {
 #define ERR_NICKNAMEINUSE 433
 
 #define PARSER_CMD_SEARCH_RANGE 2
+
+#define PARSER_FILE_XMIT_BUFFER 19
+#define PARSER_HS_WINDOW_SIZE 14
+#define PARSER_HS_LOOKAHEAD_SIZE 8
 
 /* "caller" can be a SERVER or a CLIENT. as they should start with the same *
  * layout.                                                                  */

@@ -72,7 +72,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 
       //image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
       image_ezxml_import = calloc( 2048, sizeof( uint8_t ) );
-      b64_decode( buffer, image_ezxml_import, &image_len );
+      b64_decode( buffer, (uint8_t*)image_ezxml_import, &image_len );
       scaffold_check_nonzero( scaffold_error );
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );

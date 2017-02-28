@@ -2594,15 +2594,10 @@ struct bstrList * sl =
  *  bstrListCreate.
  */
 int bstrListDestroy (struct bstrList * sl) {
-   bstring sle_test_b;
-   const char* sle_test_c;
-
 int i;
 	if (sl == NULL || sl->qty < 0) return BSTR_ERR;
 	for (i=0; i < sl->qty; i++) {
 		if (sl->entry[i]) {
-		   sle_test_b = sl->entry[i];
-		   sle_test_c = bdata( sle_test_b );
 			bdestroy (sl->entry[i]);
 			sl->entry[i] = NULL;
 		}
