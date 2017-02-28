@@ -648,7 +648,7 @@ static void parser_client_gdb( void* local, void* gamedata,
       goto cleanup;
    }
 
-   hashmap_get( d->incoming_chunkers, filename, (void**)(&h) );
+   h = hashmap_get( &(d->incoming_chunkers), filename );
    if( NULL == h ) {
       //chunker_new( h, total, (total - progress) );
       h = heatshrink_decoder_alloc(
@@ -656,8 +656,8 @@ static void parser_client_gdb( void* local, void* gamedata,
          PARSER_HS_WINDOW_SIZE,
          PARSER_HS_LOOKAHEAD_SIZE
       );
-      hash_ret = hashmap_put( d->incoming_chunkers, filename, h );
-      scaffold_check_nonzero( hash_ret );
+      hashmap_put( &(d->incoming_chunkers), filename, h );
+      scaffold_check_nonzero( scaffold_error );
       d->incoming_buffer_len = total;
    }
 
