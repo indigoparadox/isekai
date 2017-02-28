@@ -3,9 +3,6 @@
 #include "ezxml/ezxml.h"
 #include "b64/b64.h"
 
-#define MINIZ_HEADER_FILE_ONLY
-#include "miniz.c"
-
 #include <memory.h>
 #include <string.h>
 

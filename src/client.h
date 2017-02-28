@@ -11,6 +11,13 @@
 
 typedef struct _CHANNEL CHANNEL;
 
+typedef struct _CLIENT_CHUNKER {
+   void* encoder;
+   size_t pos;
+   bstring foreign_buffer;
+   bstring filename;
+} CLIENT_CHUNKER;
+
 typedef struct _CLIENT {
    /* "Parent class" */
    CONNECTION link;
@@ -28,8 +35,9 @@ typedef struct _CLIENT {
    int x; /* Tile X */
    int y; /* Tile Y */
    VECTOR channels; /* All channels in now; all channels avail on server. */
-   MAILBOX* jobs;
-   ssize_t jobs_socket;
+   /*MAILBOX* jobs;
+   ssize_t jobs_socket;*/
+   CLIENT_CHUNKER chunker;
    int sentinal;
 } CLIENT;
 
@@ -43,17 +51,17 @@ typedef struct _CLIENT {
 #define CLIENT_NAME_ALLOC 32
 #define CLIENT_BUFFER_ALLOC 256
 
-#define client_new( c, mailbox ) \
+#define client_new( c ) \
     c = (CLIENT*)calloc( 1, sizeof( CLIENT ) ); \
     scaffold_check_null( c ); \
-    client_init( c, mailbox );
+    client_init( c );
 
 typedef struct _GAMEDATA GAMEDATA;
 
 void* client_cmp_nick( VECTOR* v, size_t idx, void* iter, void* arg );
 void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
 
-void client_init( CLIENT* c, MAILBOX* m );
+void client_init( CLIENT* c );
 void client_cleanup( CLIENT* c );
 void client_add_channel( CLIENT* c, CHANNEL* l );
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );

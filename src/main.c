@@ -69,7 +69,7 @@ int main( int argc, char** argv ) {
    buffer = bfromcstr( "" );
 
    server_new( server, localhost );
-   client_new( client, server->self.jobs );
+   client_new( client );
 
    p.client = client;
 

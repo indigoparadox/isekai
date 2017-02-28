@@ -1,6 +1,8 @@
 #include "parser.h"
 
 #include "server.h"
+#include "heatshrink/heatshrink_decoder.h"
+#include "heatshrink/heatshrink_encoder.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -293,6 +295,7 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+#if 0
 static void parser_tmap_chunk_cb( CHUNKER* h, ssize_t socket ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)h->cb_arg;
 
@@ -325,6 +328,7 @@ static void parser_tmap_chunk_cb( CHUNKER* h, ssize_t socket ) {
 cleanup:
    return;
 }
+#endif
 
 static void parser_server_join( void* local, void* remote,
                                 struct bstrList* args ) {
@@ -337,7 +341,10 @@ static void parser_server_join( void* local, void* remote,
    //bstring map_serial = NULL;
    //struct bstrList* map_serial_list = NULL;
    PARSER_TRIO* chunker_trio = NULL;
-   CHUNKER* h = NULL;
+   //CHUNKER* h = NULL;
+   heatshrink_encoder* h = NULL;
+   HSE_sink_res hse_res;
+   HSE_poll_res hsp_res;
 
    if( 2 > args->qty ) {
       server_client_printf(
@@ -408,8 +415,9 @@ static void parser_server_join( void* local, void* remote,
 
    assert( NULL != l->gamedata.tmap.serialize_buffer );
    assert( 0 < blength( l->gamedata.tmap.serialize_buffer ) );
-   assert( 0 < c->jobs_socket );
+   //assert( 0 < c->jobs_socket );
 
+#if 0
    chunker_new( h, -1, -1 );
    chunker_set_cb( h, parser_tmap_chunk_cb, s->self.jobs, chunker_trio );
    chunker_chunk(
@@ -419,6 +427,21 @@ static void parser_server_join( void* local, void* remote,
       (BYTE*)bdata( l->gamedata.tmap.serialize_buffer ),
       blength( l->gamedata.tmap.serialize_buffer )
    );
+
+#endif
+
+   if( NULL != c->chunker.encoder ) {
+      /* TODO: What if the client has a chunker already? */
+   }
+   h = heatshrink_encoder_alloc(
+      PARSER_HS_WINDOW_SIZE,
+      PARSER_HS_LOOKAHEAD_SIZE
+   );
+   scaffold_check_null( h );
+   c->chunker.encoder = h;
+   c->chunker.pos = 0;
+   c->chunker.foreign_buffer = l->gamedata.tmap.serialize_buffer;
+   c->chunker.filename = l->gamedata.tmap.serialize_filename;
 
    assert( vector_count( &(c->channels) ) > 0 );
    assert( vector_count( &(s->self.channels) ) > 0 );
@@ -631,18 +654,24 @@ static void parser_client_error( void* local, void* gamedata,
 static void parser_client_gdb( void* local, void* gamedata,
                                 struct bstrList* args ) {
    GAMEDATA* d = (GAMEDATA*)gamedata;
-   CHUNKER* h = NULL;
+   //CHUNKER* h = NULL;
+   heatshrink_decoder* h = NULL;
    int hash_ret;
-
-   assert( 10 == args->qty );
-
    size_t progress = 0;
    size_t total = 0;
-   bstring data = args->entry[9];
-   bstring filename = args->entry[5];
+   size_t consumed = 0;
+   HSD_sink_res hsd_res;
+   HSD_poll_res hsp_res;
+   bstring data = NULL;
+   bstring filename = NULL;
+   uint8_t outbuffer[PARSER_FILE_XMIT_BUFFER] = { 0 };
 
-   progress = atoi( bdata( args->entry[6] ) );
-   total = atoi( bdata( args->entry[7] ) );
+   assert( 9 == args->qty );
+
+   filename = args->entry[4];
+   progress = atoi( bdata( args->entry[5] ) );
+   total = atoi( bdata( args->entry[6] ) );
+   data = args->entry[8];
 
    if( progress > total ) {
       scaffold_print_error( "Invalid progress for %s.\n", bdata( filename ) );
@@ -650,19 +679,39 @@ static void parser_client_gdb( void* local, void* gamedata,
       goto cleanup;
    }
 
+   if( 0 < d->incoming_buffer_len && d->incoming_buffer_len != total ) {
+      scaffold_print_error( "Invalid total for %s.\n", bdata( filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
    hashmap_get( d->incoming_chunkers, filename, (void**)(&h) );
    if( NULL == h ) {
-      chunker_new( h, total, (total - progress) );
+      //chunker_new( h, total, (total - progress) );
+      h = heatshrink_decoder_alloc(
+         PARSER_FILE_XMIT_BUFFER,
+         PARSER_HS_WINDOW_SIZE,
+         PARSER_HS_LOOKAHEAD_SIZE
+      );
       hash_ret = hashmap_put( d->incoming_chunkers, filename, h );
       scaffold_check_nonzero( hash_ret );
+      d->incoming_buffer_len = total;
    }
 
-   chunker_unchunk( h, filename, data, progress );
+   hsd_res = heatshrink_decoder_sink(
+      h, (uint8_t*)bdata( data ), (size_t)blength( data ), &consumed
+   );
+   assert( HSDR_SINK_ERROR_NULL != hsd_res );
+
+   while( HSDR_POLL_MORE == (hsp_res = heatshrink_decoder_poll(
+      h, outbuffer, PARSER_FILE_XMIT_BUFFER, &consumed
+   )) ) {
+      memcpy( &(d->incoming_buffer[progress]), outbuffer, consumed );
+      progress += consumed;
+   }
+   //chunker_unchunk( h, filename, data, progress );
    scaffold_print_debug( "%d out of %d\n", progress, total );
 
-   if( TRUE == chunker_incoming_full( h ) ) {
-      // XXX: Parse the map.
-   }
 
 #if 0
    if( progress < total ) {

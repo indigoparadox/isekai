@@ -75,7 +75,7 @@ heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
         (lookahead_sz2 >= window_sz2)) {
         return NULL;
     }
-    
+
     /* Note: 2 * the window size is used because the buffer needs to fit
      * (1 << window_sz2) bytes for the current input, and an additional
      * (1 << window_sz2) bytes for the previous buffer of input, which
@@ -280,11 +280,11 @@ static HSE_state st_step_search(heatshrink_encoder *hse) {
     if (hse->input_size - msi < lookahead_sz) {
         max_possible = hse->input_size - msi;
     }
-    
+
     uint16_t match_length = 0;
     uint16_t match_pos = find_longest_match(hse,
         start, end, max_possible, &match_length);
-    
+
     if (match_pos == MATCH_NOT_FOUND) {
         LOG("ss Match not found\n");
         hse->match_scan_index++;
@@ -403,7 +403,7 @@ static void do_indexing(heatshrink_encoder *hse) {
 #if HEATSHRINK_USE_INDEX
     /* Build an index array I that contains flattened linked lists
      * for the previous instances of every byte in the buffer.
-     * 
+     *
      * For example, if buf[200] == 'x', then index[200] will either
      * be an offset i such that buf[i] == 'x', or a negative offset
      * to indicate end-of-list. This significantly speeds up matching,
@@ -412,13 +412,14 @@ static void do_indexing(heatshrink_encoder *hse) {
      * Future optimization options:
      * 1. Since any negative value represents end-of-list, the other
      *    15 bits could be used to improve the index dynamically.
-     *    
+     *
      * 2. Likewise, the last lookahead_sz bytes of the index will
      *    not be usable, so temporary data could be stored there to
      *    dynamically improve the index.
      * */
     struct hs_index *hsi = HEATSHRINK_ENCODER_INDEX(hse);
     int16_t last[256];
+    uint16_t i;
     memset(last, 0xFF, sizeof(last));
 
     uint8_t * const data = hse->buffer;
@@ -427,7 +428,7 @@ static void do_indexing(heatshrink_encoder *hse) {
     const uint16_t input_offset = get_input_offset(hse);
     const uint16_t end = input_offset + hse->input_size;
 
-    for (uint16_t i=0; i<end; i++) {
+    for (i=0; i<end; i++) {
         uint8_t v = data[i];
         int16_t lv = last[v];
         index[i] = lv;
@@ -486,7 +487,7 @@ static uint16_t find_longest_match(heatshrink_encoder *hse, uint16_t start,
         }
         pos = hsi->index[pos];
     }
-#else    
+#else
     for (int16_t pos=end - 1; pos - (int16_t)start >= 0; pos--) {
         uint8_t * const pospoint = &buf[pos];
         if ((pospoint[match_maxlen] == needlepoint[match_maxlen])
@@ -506,7 +507,7 @@ static uint16_t find_longest_match(heatshrink_encoder *hse, uint16_t start,
         }
     }
 #endif
-    
+
     const size_t break_even_point =
       (1 + HEATSHRINK_ENCODER_WINDOW_BITS(hse) +
           HEATSHRINK_ENCODER_LOOKAHEAD_BITS(hse));
@@ -548,6 +549,7 @@ static uint8_t push_outgoing_bits(heatshrink_encoder *hse, output_info *oi) {
  * Bytes are set from the lowest bits, up. */
 static void push_bits(heatshrink_encoder *hse, uint8_t count, uint8_t bits,
         output_info *oi) {
+    int i;
     ASSERT(count <= 8);
     LOG("++ push_bits: %d bits, input of 0x%02x\n", count, bits);
 
@@ -556,7 +558,7 @@ static void push_bits(heatshrink_encoder *hse, uint8_t count, uint8_t bits,
     if (count == 8 && hse->bit_index == 0x80) {
         oi->buf[(*oi->output_size)++] = bits;
     } else {
-        for (int i=count - 1; i>=0; i--) {
+        for (i=count - 1; i>=0; i--) {
             bool bit = bits & (1 << i);
             if (bit) { hse->current_byte |= hse->bit_index; }
             if (0) {
@@ -585,9 +587,9 @@ static void push_literal_byte(heatshrink_encoder *hse, output_info *oi) {
 
 static void save_backlog(heatshrink_encoder *hse) {
     size_t input_buf_sz = get_input_buffer_size(hse);
-    
+
     uint16_t msi = hse->match_scan_index;
-    
+
     /* Copy processed data to beginning of buffer, so it can be
      * used for future matches. Don't bother checking whether the
      * input is less than the maximum size, because if it isn't,
@@ -598,7 +600,7 @@ static void save_backlog(heatshrink_encoder *hse) {
     memmove(&hse->buffer[0],
         &hse->buffer[input_buf_sz - rem],
         shift_sz);
-        
+
     hse->match_scan_index = 0;
     hse->input_size -= input_buf_sz - rem;
 }
