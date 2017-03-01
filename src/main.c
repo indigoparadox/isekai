@@ -116,7 +116,7 @@ cleanup:
    bdestroy( channel );
    client_free( client );
    assert( 0 == hashmap_count( &(server->self.channels) ) );
-   server_cleanup( server );
+   server_free( server );
    free( server );
    graphics_shutdown( &g );
 #ifdef USE_ALLEGRO

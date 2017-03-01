@@ -655,6 +655,20 @@ IRC_COMMAND_TABLE_END() };
 
 //IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {
 
+static void irc_command_cleanup( const struct _REF* ref ) {
+   IRC_COMMAND* cmd = scaffold_container_of( ref, IRC_COMMAND, refcount );
+
+   /* Don't try to free the string or callback. */
+   client_free( cmd->client );
+   cmd->client = NULL;
+   server_free( cmd->server );
+   cmd->server = NULL;
+}
+
+void irc_command_free( IRC_COMMAND* cmd ) {
+   ref_dec( &(cmd->refcount) );
+}
+
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, CLIENT* c, const_bstring line
 ) {
@@ -681,16 +695,25 @@ IRC_COMMAND* irc_dispatch(
          ) ) {
 #ifdef DEBUG
             if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
-               scaffold_print_debug( "Parse: %s\n", bdata( line ) );
+               if( table == irc_table_server ) {
+                  scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
+               } else {
+                  scaffold_print_debug( "Client Parse: %s\n", bdata( line ) );
+               }
             }
 #endif /* DEBUG */
 
             out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
             scaffold_check_null( out );
-            memcpy( out, cmd_test, sizeof( IRC_COMMAND ) );
+            memcpy( out, command, sizeof( IRC_COMMAND ) );
             out->server = s;
+            ref_inc( &(s->self.link.refcount) );
             out->client = c;
+            ref_inc( &(c->link.refcount) );
             out->args = args;
+            ref_init( &(out->refcount), irc_command_cleanup );
+
+            assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
 
             /* Found a command, so short-circuit. */
             goto cleanup;
