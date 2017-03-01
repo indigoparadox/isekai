@@ -33,7 +33,6 @@ bstring scaffold_list_pop_string( struct bstrList* list ) {
 }
 
 void scaffold_list_remove_string( struct bstrList* list, bstring str ) {
-   bstring popped = list->entry[0];
    int i;
    int offset = 0;
 
