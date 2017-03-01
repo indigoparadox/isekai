@@ -389,7 +389,9 @@ VECTOR* hashmap_iterate_v( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
 
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero( hashmap_count( m ) );
+   if( 0 == hashmap_count( m ) ) {
+      goto cleanup;
+   }
 
    hashmap_lock( m, TRUE );
    ok = TRUE;

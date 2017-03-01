@@ -3,9 +3,8 @@
 #include "irc.h"
 
 #include "server.h"
-#include "heatshrink/heatshrink_decoder.h"
-#include "heatshrink/heatshrink_encoder.h"
 #include "callbacks.h"
+#include "chunker.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -259,6 +258,7 @@ static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    int8_t bstr_result = 0;
    bstring names = NULL;
    struct bstrList* cat_names = NULL;
+   CHUNKER* h = NULL;
 
    if( 2 > args->qty ) {
       server_client_printf(
@@ -322,6 +322,14 @@ static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    );
 
    /* FIXME: Begin transmitting tilemap. */
+   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   scaffold_check_null( h );
+   chunker_chunk_start(
+      h,
+      bdata( l->gamedata.tmap.serialize_buffer ),
+      blength( l->gamedata.tmap.serialize_buffer )
+   );
+   hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
 
    assert( hashmap_count( &(c->channels) ) > 0 );
    assert( hashmap_count( &(s->self.channels) ) > 0 );
@@ -487,6 +495,8 @@ static void irc_client_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
 static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
 
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+
    scaffold_check_bounds( 1, args->qty );
 
    /* Get the channel, or create it if it does not exist. */
@@ -530,7 +540,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    HSD_poll_res hsp_res;
    bstring data = NULL;
    bstring filename = NULL;
-   uint8_t outbuffer[PARSER_FILE_XMIT_BUFFER] = { 0 };
+   uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };
 
    // FIXME: Get the channel name from the args.
    l = client_get_channel_by_name( c, bfromcstr("test") );
@@ -561,9 +571,9 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    if( NULL == h ) {
       //chunker_new( h, total, (total - progress) );
       h = heatshrink_decoder_alloc(
-         PARSER_FILE_XMIT_BUFFER,
-         PARSER_HS_WINDOW_SIZE,
-         PARSER_HS_LOOKAHEAD_SIZE
+         CHUNKER_XMIT_BUFFER_SIZE,
+         CHUNKER_WINDOW_SIZE,
+         CHUNKER_LOOKAHEAD_SIZE
       );
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
@@ -576,7 +586,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    assert( HSDR_SINK_ERROR_NULL != hsd_res );
 
    while( HSDR_POLL_MORE == (hsp_res = heatshrink_decoder_poll(
-      h, outbuffer, PARSER_FILE_XMIT_BUFFER, &consumed
+      h, outbuffer, CHUNKER_XMIT_BUFFER_SIZE, &consumed
    )) ) {
       memcpy( &(d->incoming_buffer[progress]), outbuffer, consumed );
       progress += consumed;
@@ -655,6 +665,12 @@ IRC_COMMAND* irc_dispatch(
    args = bsplit( line, ' ' );
    scaffold_check_null( args );
 
+   if( table == irc_table_server ) {
+      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+   } else if( table == irc_table_client ) {
+      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   }
+
    for( i = 0 ; args->qty > i ; i++ ) {
       bwriteprotect( *(args->entry[i]) );
    }
@@ -666,6 +682,8 @@ IRC_COMMAND* irc_dispatch(
          NULL != command->callback;
          command++
       ) {
+         scaffold_print_debug( "%s\n", bdata( &(command->command) ) );
+
          if( 0 == bstrncmp(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
