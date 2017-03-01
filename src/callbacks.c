@@ -4,6 +4,7 @@
 #include "client.h"
 #include "server.h"
 
+/*
 typedef struct {
    SERVER* s;
    bstring buffer;
@@ -14,8 +15,47 @@ typedef struct {
    SERVER* s;
    bstring nick;
 } SERVER_DUO;
+*/
 
-void* callback_search_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
+void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
+   size_t last_read_count = 0;
+   MAILBOX* jobs = (MAILBOX*)arg;
+   static bstring buffer = NULL;
+   CLIENT* c = (CLIENT*)iter;
+
+   if( NULL == buffer ) {
+      buffer = bfromcstralloc( CONNECTION_BUFFER_LEN, "" );
+   } else {
+      btrunc( buffer, 0 );
+   }
+
+   //hashmap_lock( &(s->clients), TRUE );
+   //assert( hashmap_count( &(s->clients) ) > i );
+   //assert( NULL != server_get_client_by_ptr( s, c ) );
+   //hashmap_lock( &(s->clients), FALSE );
+
+   /* TODO: Do we need the buffer to be part of the client anymore? */
+
+   last_read_count = connection_read_line( &(c->link), buffer, FALSE );
+   btrimws( buffer );
+
+   if( 0 >= last_read_count ) {
+      /* TODO: Handle error reading. */
+      goto cleanup;
+   }
+
+   scaffold_print_debug(
+      "Server: Line received from %d: %s\n",
+      c->link.socket, bdata( buffer )
+   );
+
+   // FIXME: Replace w mailbox: parser_dispatch( s, c, s->self.buffer );
+
+cleanup:
+   return NULL;
+}
+
+void* callback_search_clients( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( 0 == bstrcmp( nick, c->nick ) ) {
@@ -24,7 +64,7 @@ void* callback_search_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_search_channels( VECTOR* v, size_t idx, void* iter, void* arg ) {
+void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    CHANNEL* l = (CHANNEL*)iter;
    bstring name = (bstring)arg;
    if( 0 == bstrcmp( l->name, name ) ) {
@@ -33,7 +73,7 @@ void* callback_search_channels( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-BOOL callback_free_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
+BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( 0 == bstrcmp( nick, c->nick ) ) {
@@ -43,7 +83,7 @@ BOOL callback_free_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_channels( VECTOR* v, size_t idx, void* iter, void* arg ) {
+BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
    CHANNEL* l = (CHANNEL*)iter;
    bstring name = (bstring)arg;
 

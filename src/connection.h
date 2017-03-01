@@ -3,12 +3,16 @@
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
+#include "ref.h"
 
 #ifdef USE_NETWORK
 #include <netinet/in.h>
 #endif /* USE_NETWORK */
 
+#define CONNECTION_BUFFER_LEN 80
+
 typedef struct _connection {
+   REF refcount;
    int socket;
    BOOL listening;
    void* (*callback)( void* client );

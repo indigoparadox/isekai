@@ -61,7 +61,7 @@ static BOOL tilemap_tileset_free_i_cb( VECTOR* v, size_t idx, void* iter, void* 
 }
 
 void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
-   vector_delete_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
+   vector_remove_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
 }
 
 void tilemap_iterate_screen_row(

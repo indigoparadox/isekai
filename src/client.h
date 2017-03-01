@@ -21,6 +21,8 @@ typedef struct _CLIENT_CHUNKER {
 } CLIENT_CHUNKER;
 
 typedef struct _CLIENT {
+   /* "Root" class is REF*/
+
    /* "Parent class" */
    CONNECTION link;
 
@@ -36,7 +38,7 @@ typedef struct _CLIENT {
    uint8_t flags;
    int x; /* Tile X */
    int y; /* Tile Y */
-   VECTOR channels; /* All channels in now; all channels avail on server. */
+   HASHMAP channels; /* All channels in now; all channels avail on server. */
    /*MAILBOX* jobs;
    ssize_t jobs_socket;*/
    HASHMAP chunkers;
@@ -66,7 +68,7 @@ void* cb_client_get_nick( VECTOR* v, size_t idx, void* iter, void* arg );
 //void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void client_init( CLIENT* c );
-//void client_cleanup( CLIENT* c );
+BOOL client_free( CLIENT* c );
 void client_add_channel( CLIENT* c, CHANNEL* l );
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );
 void client_connect( CLIENT* c, bstring server, int port );

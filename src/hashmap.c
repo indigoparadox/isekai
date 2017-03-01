@@ -25,6 +25,7 @@ void hashmap_init( HASHMAP* m ) {
    m->table_size = INITIAL_SIZE;
    m->size = 0;
    m->sentinal = HASHMAP_SENTINAL;
+   m->lock_count = 0;
 
 cleanup:
    return;
@@ -325,43 +326,95 @@ void* hashmap_get( HASHMAP* m, bstring key ) {
 cleanup:
    return element_out;
 }
-#if 0
+
 /*
  * Iterate the function parameter over each element in the hashmap.  The
  * additional any_t argument is passed to the function as its first
  * argument and the hashmap element is the second.
  */
-int hashmap_iterate(HASHMAP* in, PFany f, any_t item) {
-   int i;
+void* hashmap_iterate( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
+   size_t i;
+   void* found = NULL;
+   void* data = NULL;
+   void* test = NULL;
+   BOOL ok = FALSE;
 
-   /* Cast the hashmap */
-   hashmap_map* m = (hashmap_map*) in;
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero( hashmap_count( m ) );
 
-   /* On empty hashmap, return immediately */
-   if (hashmap_count(m) <= 0)
-      return MAP_MISSING;
+   hashmap_lock( m, TRUE );
+   ok = TRUE;
 
    /* Linear probing */
-   for(i = 0; i< m->table_size; i++)
-      if(m->data[i].in_use != 0) {
-         any_t data = (any_t) (m->data[i].data);
-         int status = f(item, data);
-         if (status != MAP_OK) {
-            return status;
+   for( i = 0; m->table_size > i ; i++ ) {
+      if( 0 != m->data[i].in_use ) {
+         data = (void*)(m->data[i].data);
+         test = callback( m->data[i].key, data, arg );
+         if( NULL != test ) {
+            found = test;
+            goto cleanup;
          }
       }
+   }
 
-   return MAP_OK;
+cleanup:
+   if( TRUE == ok ) {
+      hashmap_lock( m, TRUE );
+   }
+   return found;
 }
-#endif // 0
+
+/* Use a callback to delete items. The callback frees the item or decreases   *
+ * its refcount as applicable.                                                */
+size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
+   size_t i;
+   size_t removed = 0;
+   void* data;
+
+   /* FIXME: Delete dynamic arrays and reset when empty. */
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
+   hashmap_lock( m, TRUE );
+
+   scaffold_check_zero( hashmap_count( m ) );
+
+   /* Linear probing */
+   for( i = 0 ; m->table_size > i ; i++ ) {
+      if( 0 != m->data[i].in_use ) {
+         data = (void*)(m->data[i].data);
+         if( FALSE != callback( m->data[i].key, data, arg ) ) {
+            /* Blank out the fields */
+            m->data[i].in_use = 0;
+            m->data[i].data = NULL;
+            bdestroy( m->data[i].key );
+            m->data[i].key = NULL;
+
+            /* Reduce the size */
+            m->size--;
+
+            removed++;
+         }
+      }
+   }
+
+   hashmap_lock( m, FALSE );
+
+cleanup:
+   return removed;
+}
 
 /*
  * Remove an element with that key from the map
  */
-void hashmap_remove( HASHMAP* m, bstring key ) {
+BOOL hashmap_remove( HASHMAP* m, bstring key ) {
    int i;
    int curr;
    int in_use;
+   BOOL removed = FALSE;
+
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
 
@@ -382,13 +435,14 @@ void hashmap_remove( HASHMAP* m, bstring key ) {
 
             /* Reduce the size */
             m->size--;
+            removed = TRUE;
             goto cleanup;
          }
       }
       curr = (curr + 1) % m->table_size;
    }
 cleanup:
-   return;
+   return removed;
 }
 
 /* Deallocate the hashmap */
@@ -430,4 +484,18 @@ int hashmap_active_length( HASHMAP* m ) {
 
 cleanup:
    return count;
+}
+
+void hashmap_lock( HASHMAP* m, BOOL lock ) {
+   #ifdef USE_THREADS
+   #error Locking mechanism undefined!
+   #elif defined( DEBUG )
+   if( TRUE == lock ) {
+      assert( 0 == m->lock_count );
+      m->lock_count++;
+   } else {
+      assert( 1 == m->lock_count );
+      m->lock_count--;
+   }
+   #endif /* USE_THREADS */
 }

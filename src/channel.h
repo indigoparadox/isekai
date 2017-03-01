@@ -7,11 +7,11 @@
 #include "gamedata.h"
 
 typedef struct _CHANNEL {
+   REF refcount;
    GAMEDATA gamedata;
    bstring name;
    bstring topic;
-   VECTOR clients;
-   REF refcount;
+   HASHMAP clients;
 } CHANNEL;
 
 #define channel_new( l, name ) \
@@ -19,9 +19,6 @@ typedef struct _CHANNEL {
     l = (CHANNEL*)calloc( 1, sizeof( CHANNEL ) ); \
     scaffold_check_null( l ); \
     channel_init( l, name );
-
-void* cb_channel_get_name( VECTOR* v, size_t idx, void* iter, void* arg );
-BOOL cb_channel_del_clients( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void channel_init( CHANNEL* l, const bstring name );
 void channel_free( CHANNEL* l );

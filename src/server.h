@@ -7,11 +7,13 @@
 #include "channel.h"
 
 typedef struct {
+   /* "Root" class is REF*/
+
    /* "Parent class" */
    CLIENT self;
 
    /* Items after this line are server-specific. */
-   VECTOR clients;
+   HASHMAP clients;
    bstring servername;
    bstring version;
 } SERVER;
@@ -33,8 +35,8 @@ void server_add_client( SERVER* s, CLIENT* n );
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first );
 void server_add_connection( SERVER* s, CLIENT* n );
 CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick );
-CLIENT* server_get_client( SERVER* s, int index );
-CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick );
+//CLIENT* server_get_client( SERVER* s, int index );
+CLIENT* server_get_client( SERVER* s, const bstring nick );
 CLIENT* server_get_client_by_ptr( SERVER* s, CLIENT* c );
 void server_cleanup_client_channels( SERVER* s, CLIENT* c );
 void server_drop_client( SERVER* s, bstring nick );
