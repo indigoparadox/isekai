@@ -34,6 +34,7 @@ typedef enum {
    SCAFFOLD_ERROR_NEGATIVE,
    SCAFFOLD_ERROR_NONZERO,
    SCAFFOLD_ERROR_ZERO,
+   SCAFFOLD_ERROR_NOT_NULLPO,
 } SCAFFOLD_ERROR;
 
 typedef enum {
@@ -71,6 +72,15 @@ typedef enum {
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         scaffold_print_error( "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
+#define scaffold_check_not_null( pointer ) \
+    if( NULL != pointer ) { \
+        scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \
+        scaffold_print_error( "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \

@@ -2,11 +2,14 @@
 
 #include <stdlib.h>
 
-#include "parser.h"
+//#include "parser.h"
 #include "heatshrink/heatshrink_encoder.h"
 #include "b64/b64.h"
 #include "callbacks.h"
 #include "hashmap.h"
+
+static char nick_random_chars[] =
+   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
@@ -131,7 +134,17 @@ cleanup:
 }
 
 void server_add_client( SERVER* s, CLIENT* c ) {
+   size_t i;
    assert( NULL == hashmap_get( &(s->clients), c->nick ) );
+   if( 0 == strcmp( "", bdata( c->nick ) ) ) {
+      /* Generate a temporary random nick not already existing. */
+      do {
+         btrunc( c->nick, 0 );
+         for( i = 0; SERVER_RANDOM_NICK_LEN > i ; i++ ) {
+            bconchar( c->nick, rand() % (int)(sizeof( nick_random_chars )-1) );
+         }
+      } while( NULL != hashmap_get( &(s->clients), c->nick ) );
+   }
    hashmap_put( &(s->clients), c->nick, c );
    //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
@@ -246,31 +259,50 @@ void server_listen( SERVER* s, int port ) {
    }
 }
 
+void server_poll_new_clients( SERVER* s ) {
+   static CLIENT* c = NULL;
+   CONNECTION* n_client = NULL;
+#ifdef DEBUG
+   size_t old_client_count = 0;
+
+   old_client_count = hashmap_count( &(s->clients) );
+   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
+#endif /* DEBUG */
+
+   /* Get a new standby client ready. */
+   if( NULL == c ) {
+      client_new( c );
+   }
+
+   /* Check for new clients. */
+   connection_register_incoming( &(s->self.link), &(c->link) );
+   if( 0 >= c->link.socket ) {
+      goto cleanup;
+   }
+
+   /* Add some details to c before stowing it. */
+   connection_assign_remote_name( &(c->link), c->remote );
+   //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
+
+   server_add_client( s, c );
+   assert( old_client_count < hashmap_count( &(s->clients) ) );
+
+   /* Ditch this client for now. */
+   ref_dec( &(c->refcount) );
+   c = NULL;
+
+cleanup:
+   return;
+}
+
 void server_service_clients( SERVER* s ) {
    ssize_t last_read_count = 0;
-   CLIENT* c = NULL;
-   CONNECTION* n_client = NULL;
    int i = 0;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
 #endif /* DEBUG */
 
-   /* Check for new clients. */
-   n_client = connection_register_incoming( &(s->self.link) );
-   if( NULL != n_client ) {
-      client_new( c );
-      memcpy( &(c->link), n_client, sizeof( CONNECTION ) );
-      free( n_client ); /* Don't clean up, because data is still valid. */
-
-      /* Add some details to c before stowing it. */
-      connection_assign_remote_name( &(c->link), c->remote );
-      //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
-
-      server_add_client( s, c );
-
-      assert( NULL != c );
-   }
 
    /* Check for commands from existing clients. */
    //for( i = 0 ; hashmap_count( &(s->clients) ) > i ; i++ ) {
@@ -291,25 +323,24 @@ cleanup:
    return;
 }
 
-/* Returns 0 if successful or IRC numeric error otherwise. */
-int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
-   int retval = 0;
+/* Scaffold errors if unsuccessful:
+ *
+ * NULLPO = No nick given.
+ * NOT_NULLPO = Nick already taken.
+ * NONZERO = Allocation error.
+ */
+void server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
    int bstr_result = 0;
+   CLIENT* c_test = NULL;
 
-   if( NULL == nick ) {
-      retval = ERR_NONICKNAMEGIVEN;
-      goto cleanup;
-   }
+   scaffold_check_null( nick );
 
-   if( NULL != server_get_client( s, nick ) ) {
-      retval = ERR_NICKNAMEINUSE;
-      goto cleanup;
-   }
+   c_test = server_get_client( s, nick );
+   scaffold_check_not_null( c_test );
 
    bstr_result = bassign( c->nick, nick );
    scaffold_check_nonzero( bstr_result );
 
 cleanup:
-
-   return retval;
+   return;
 }

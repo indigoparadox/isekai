@@ -6,7 +6,9 @@
 #include "client.h"
 #include "channel.h"
 
-typedef struct {
+typedef struct _CLIENT CLIENT;
+
+typedef struct _SERVER {
    /* "Root" class is REF*/
 
    /* "Parent class" */
@@ -19,6 +21,8 @@ typedef struct {
 } SERVER;
 
 #define SERVER_SENTINAL 164641
+
+#define SERVER_RANDOM_NICK_LEN 10
 
 #define server_new( s, myhost ) \
     s = (SERVER*)calloc( 1, sizeof( SERVER ) ); \
@@ -42,6 +46,6 @@ void server_cleanup_client_channels( SERVER* s, CLIENT* c );
 void server_drop_client( SERVER* s, bstring nick );
 void server_listen( SERVER* s, int port );
 void server_service_clients( SERVER* s );
-int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick );
+void server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick );
 
 #endif /* SERVER_H */

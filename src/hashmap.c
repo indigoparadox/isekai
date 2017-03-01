@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "ref.h"
+
 #define INITIAL_SIZE (256)
 #define MAX_CHAIN_LENGTH (8)
 
@@ -226,6 +228,35 @@ cleanup:
    return out;
 }
 
+void hashmap_rehash( HASHMAP* m );
+
+/*
+ * Add a pointer to the hashmap without touching its refcount.
+ */
+static void hashmap_put_internal( HASHMAP* m, bstring key, void* value ) {
+   int index;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
+   /* Find a place to put our value */
+   index = hashmap_hash( m, key );
+   while( HASHMAP_FULL == index ) {
+      hashmap_rehash( m );
+      scaffold_check_nonzero( scaffold_error );
+      index = hashmap_hash( m, key );
+   }
+
+   /* Set the data */
+   m->data[index].data = value;
+   m->data[index].key = bstrcpy( key );
+   m->data[index].in_use = 1;
+   m->size++;
+
+cleanup:
+   return;
+}
+
 /*
  * Doubles the size of the hashmap, and rehashes all the elements
  */
@@ -257,7 +288,7 @@ void hashmap_rehash( HASHMAP* m ) {
          continue;
       }
 
-      hashmap_put( m, curr[i].key, curr[i].data );
+      hashmap_put_internal( m, curr[i].key, curr[i].data );
       scaffold_check_nonzero( scaffold_error );
    }
 
@@ -271,27 +302,8 @@ cleanup:
  * Add a pointer to the hashmap with some key
  */
 void hashmap_put( HASHMAP* m, bstring key, void* value ) {
-   int index;
-
-   scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
-
-   /* Find a place to put our value */
-   index = hashmap_hash( m, key );
-   while( HASHMAP_FULL == index ) {
-      hashmap_rehash( m );
-      scaffold_check_nonzero( scaffold_error );
-      index = hashmap_hash( m, key );
-   }
-
-   /* Set the data */
-   m->data[index].data = value;
-   m->data[index].key = bstrcpy( key );
-   m->data[index].in_use = 1;
-   m->size++;
-
-cleanup:
-   return;
+   hashmap_put_internal( m, key, value );
+   ref_test_inc( value );
 }
 
 /*
@@ -315,6 +327,7 @@ void* hashmap_get( HASHMAP* m, bstring key ) {
       if( 1 == in_use ) {
          //scaffold_print_debug( "Hash check: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
+            scaffold_print_debug( "%s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
             element_out = (m->data[curr].data);
             goto cleanup;
          }
@@ -427,6 +440,8 @@ BOOL hashmap_remove( HASHMAP* m, bstring key ) {
       in_use = m->data[curr].in_use;
       if( 1 == in_use ) {
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
+            ref_test_dec( m->data[curr].data );
+
             /* Blank out the fields */
             m->data[curr].in_use = 0;
             m->data[curr].data = NULL;

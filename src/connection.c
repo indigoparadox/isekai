@@ -28,62 +28,51 @@ static void connection_cleanup_socket( CONNECTION* n ) {
    n->socket = 0;
 }
 
-CONNECTION* connection_register_incoming( CONNECTION* n_server ) {
-   static CONNECTION* new_client = NULL;
-   CONNECTION* return_client = NULL;
+void connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
+   //static CONNECTION* new_client = NULL;
+   //CONNECTION* return_client = NULL;
 #ifdef USE_NETWORK
    unsigned int address_length;
    struct sockaddr_in address;
 #endif /* USE_NETWORK */
 
-   /* This is a special case; don't init because we'll be using accept()   *
-    * We will only init this if it's NULL so that we're not constantly     *
-    * allocing and deallocing memory.                                      */
-   if( NULL == new_client ) {
-      new_client = (CONNECTION*)calloc( 1, sizeof( CONNECTION ) );
-   }
-
 #ifdef USE_NETWORK
    /* Accept and verify the client. */
    address_length = sizeof( address );
-   new_client->socket = accept(
-                           n_server->socket, (struct sockaddr*)&address,
-                           &address_length
-                        );
+   n->socket = accept(
+      n_server->socket, (struct sockaddr*)&address,
+      &address_length
+   );
 
    /* No connection incoming, this time! */
-   if( 0 > new_client->socket && (EWOULDBLOCK == errno || EAGAIN == errno) ) {
+   if( 0 > n->socket && (EWOULDBLOCK == errno || EAGAIN == errno) ) {
       goto cleanup;
    }
 
-   fcntl( new_client->socket, F_SETFL, O_NONBLOCK );
+   fcntl( n->socket, F_SETFL, O_NONBLOCK );
 
-   if( 0 > new_client->socket ) {
-      scaffold_print_error( "Error while connecting on %d: %d\n", new_client->socket,
+   if( 0 > n->socket ) {
+      scaffold_print_error( "Error while connecting on %d: %d\n", n->socket,
                             errno );
-      connection_cleanup( new_client );
-      free( new_client );
+      connection_cleanup( n );
       goto cleanup;
    }
 #else
-   new_client->socket = mailbox_accept( &fake_network, n_server->socket );
+   n->socket = mailbox_accept( &fake_network, n_server->socket );
 
    /* No connection incoming, this time! */
-   if( 0 > new_client->socket ) {
+   if( 0 > n->socket ) {
       goto cleanup;
    }
 #endif /* USE_NETWORK */
 
    /* The client seems OK. */
-   scaffold_print_info( "New client: %d\n", new_client->socket );
-   return_client = new_client;
-   new_client = NULL;
+   scaffold_print_info( "New client: %d\n", n->socket );
 
    /* TODO: Grab the remote hostname. */
 
 cleanup:
-
-   return return_client;
+   return;
 }
 
 void connection_listen( CONNECTION* n, uint16_t port ) {
@@ -107,7 +96,7 @@ void connection_listen( CONNECTION* n, uint16_t port ) {
    scaffold_check_negative( result );
 
    /* If we could bind the port, then launch the serving connection. */
-   scaffold_print_info( "Now listening for connections..." );
+   scaffold_print_info( "Now listening for connections...\n" );
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
 #else
