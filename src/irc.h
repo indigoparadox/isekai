@@ -30,8 +30,10 @@ typedef struct _IRC_COMMAND {
 #define IRC_COMMAND_TABLE_END() \
    {REF_DISABLED, bsStatic( "" ), NULL, NULL, NULL, NULL}
 
-IRC_COMMAND_TABLE_START( server );
-IRC_COMMAND_TABLE_START( client );
+#ifndef IRC_C
+extern IRC_COMMAND_TABLE_START( server );
+extern IRC_COMMAND_TABLE_START( client );
+#endif /* IRC_C */
 
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 

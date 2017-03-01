@@ -11,6 +11,7 @@
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
+#include "vector.h"
 
 typedef void* (*hashmap_search_cb)( const bstring key, void* iter, void* arg );
 typedef BOOL (*hashmap_delete_cb)( const bstring key, void* iter, void* arg );
@@ -72,6 +73,8 @@ void hashmap_init( HASHMAP* m );
  * not reenter any hashmap functions, or deadlock may arise.
  */
 void* hashmap_iterate( HASHMAP* m, hashmap_search_cb callback, void* arg );
+
+VECTOR* hashmap_iterate_v( HASHMAP* m, hashmap_search_cb callback, void* arg );
 
 size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg );
 

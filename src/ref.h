@@ -23,12 +23,15 @@ static inline void ref_init( struct _REF* ref, void (*free)( const struct _REF* 
 
 static inline void ref_inc( const struct _REF* ref ) {
    assert( REF_SENTINAL == ref->sentinal );
+   scaffold_printf_debug( "Reference count increased: %d\n", ref->count );
    ((struct _REF*)ref)->count++;
 }
 
 static inline BOOL ref_dec( const struct _REF* ref ) {
    assert( REF_SENTINAL == ref->sentinal );
+   scaffold_printf_debug( "Reference count decreased: %d\n", ref->count );
    if( 0 == --((struct _REF*)ref)->count ) {
+      scaffold_printf_debug( "Object freed.\n", ref->count );
       ref->free( ref );
       return TRUE;
    }

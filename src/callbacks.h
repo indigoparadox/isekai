@@ -6,7 +6,11 @@
 #include "hashmap.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg );
+void* callback_concat_clients( const bstring key, void* iter, void* arg );
 void* callback_search_clients( const bstring key, void* iter, void* arg );
+void* callback_search_clients_r( const bstring key, void* iter, void* arg );
+void* callback_search_clients_l( const bstring key, void* iter, void* arg );
+void* callback_send_clients( const bstring key, void* iter, void* arg );
 void* callback_search_channels( const bstring key, void* iter, void* arg );
 BOOL callback_free_clients( const bstring key, void* iter, void* arg );
 BOOL callback_free_channels( const bstring key, void* iter, void* arg );

@@ -37,6 +37,9 @@ static void server_cleanup( const struct _REF* ref ) {
 }
 
 BOOL server_free( SERVER* s ) {
+   if( NULL == s ) {
+      return FALSE;
+   }
    return ref_dec( &(s->self.link.refcount) );
 }
 
@@ -49,11 +52,6 @@ void server_init( SERVER* s, const bstring myhost ) {
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
 
    /* Setup the jobs mailbox. */
-   //s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
-   //vector_init( &(s->self.jobs->envelopes) );
-   //vector_init( &(s->self.jobs->sockets_assigned) );
-   //s->self.jobs->last_socket = 0;
-   //s->self.jobs_socket = mailbox_listen( s->self.jobs );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
    scaffold_check_nonzero( bstr_result );
@@ -65,10 +63,9 @@ inline void server_stop( SERVER* s ) {
    s->self.running = FALSE;
 }
 
-void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
+void server_client_send( CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
-   //assert( NULL != server_get_client_by_ptr( s, c ) );
    assert( 0 != c->sentinal );
 
    bconchar( buffer, '\r' );
@@ -93,7 +90,7 @@ void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... ) {
    va_end( varg );
 
    if( 0 == scaffold_error ) {
-      server_client_send( s, c, buffer );
+      server_client_send( c, buffer );
    }
 
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
@@ -103,20 +100,23 @@ cleanup:
    return;
 }
 
-/*
-FIXME
 void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
-   SERVER_PBUFFER pbuffer;
+   VECTOR* l_clients = NULL;
 
-   pbuffer.s = s;
-   pbuffer.buffer = buffer;
-   pbuffer.c_sender = c_skip;
+   l_clients =
+      hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip );
+   scaffold_check_null( l_clients );
 
-   vector_iterate( &(l->clients), server_prn_channel, &pbuffer );
+   vector_iterate( l_clients, callback_send_clients, buffer );
 
+cleanup:
+   if( NULL != l_clients ) {
+      vector_remove_cb( l_clients, callback_free_clients, NULL );
+      vector_free( l_clients );
+      free( l_clients );
+   }
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
 }
-*/
 
 void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
    bstring buffer = NULL;
@@ -142,8 +142,7 @@ cleanup:
 
 void server_add_client( SERVER* s, CLIENT* c ) {
    size_t i;
-   assert( NULL == hashmap_get( &(s->clients), c->nick ) );
-   if( 0 == strcmp( "", bdata( c->nick ) ) ) {
+   if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
          btrunc( c->nick, 0 );
@@ -152,6 +151,7 @@ void server_add_client( SERVER* s, CLIENT* c ) {
          }
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
+   assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    hashmap_put( &(s->clients), c->nick, c );
    scaffold_print_debug( "Client added to server with nick: %s\n", bdata( c->nick ) );
    //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
@@ -161,6 +161,9 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    CHANNEL* l = NULL;
    bstring map_serial = NULL;
    BOOL just_created = FALSE;
+#ifdef DEBUG
+   size_t old_count;
+#endif /* DEBUG */
 
    map_serial = bfromcstralloc( 1024, "" );
    scaffold_check_null( map_serial );
@@ -189,8 +192,15 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
       goto cleanup;
    }
 
+   assert( 0 < c_first->link.refcount.count );
+   assert( 0 < l->refcount.count );
+
+   old_count = c_first->link.refcount.count;
    channel_add_client( l, c_first );
+   assert( c_first->link.refcount.count > old_count );
+   old_count = l->refcount.count;
    client_add_channel( c_first, l );
+   assert( l->refcount.count > old_count );
 
 cleanup:
    bdestroy( map_serial );
@@ -269,7 +279,6 @@ void server_listen( SERVER* s, int port ) {
 
 void server_poll_new_clients( SERVER* s ) {
    static CLIENT* c = NULL;
-   CONNECTION* n_client = NULL;
 #ifdef DEBUG
    size_t old_client_count = 0;
 
@@ -304,8 +313,6 @@ cleanup:
 }
 
 void server_service_clients( SERVER* s ) {
-   ssize_t last_read_count = 0;
-   int i = 0;
    IRC_COMMAND* cmd = NULL;
 
 #ifdef DEBUG
@@ -330,7 +337,7 @@ void server_service_clients( SERVER* s ) {
       irc_command_free( cmd );
    }
 
-cleanup:
+/* cleanup: */
    return;
 }
 
