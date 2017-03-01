@@ -18,6 +18,9 @@ START_TEST( test_hashmap_add_get ) {
    //ck_assert_ptr_ne( NULL, test_blob );
    ck_assert_int_eq( test_blob->sentinal_start, 12121 );
 
+   ref_dec( &(test_blob->refcount) );
+   hashmap_remove( &h, &str_key_hit );
+
    /* cleanup: */
    //free_blob( blob );
    hashmap_cleanup( &h );
@@ -51,6 +54,9 @@ START_TEST( test_hashmap_delete ) {
 
    //ck_assert_ptr_ne( NULL, test_blob );
    ck_assert_int_eq( test_blob->sentinal_start, 12121 );
+
+   ref_dec( &(test_blob->refcount) );
+   hashmap_remove( &h, &str_key_hit );
 
    /* cleanup: */
    //free_blob( blob );
