@@ -167,6 +167,7 @@ uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
    uint32_t key = 0;
 
    scaffold_check_null( m );
+   scaffold_check_null( keystring );
    assert( HASHMAP_SENTINAL == m->sentinal );
 
    key = hashmap_crc32( keystring );
@@ -200,6 +201,7 @@ int hashmap_hash( HASHMAP* m, bstring key ) {
 
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
+   assert( NULL != key );
 
    /* If full, return immediately */
    if( m->size >= (m->table_size / 2) ) {
@@ -367,6 +369,41 @@ void* hashmap_iterate( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
          if( NULL != test ) {
             found = test;
             goto cleanup;
+         }
+      }
+   }
+
+cleanup:
+   if( TRUE == ok ) {
+      hashmap_lock( m, FALSE );
+   }
+   return found;
+}
+
+VECTOR* hashmap_iterate_v( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
+   VECTOR* found = NULL;
+   void* data = NULL;
+   void* test = NULL;
+   BOOL ok = FALSE;
+   int i;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero( hashmap_count( m ) );
+
+   hashmap_lock( m, TRUE );
+   ok = TRUE;
+
+   /* Linear probing */
+   for( i = 0; m->table_size > i ; i++ ) {
+      if( 0 != m->data[i].in_use ) {
+         data = (void*)(m->data[i].data);
+         test = callback( m->data[i].key, data, arg );
+         if( NULL != test ) {
+            if( NULL == found ) {
+               vector_new( found );
+            }
+            vector_add( found, test );
          }
       }
    }

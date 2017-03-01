@@ -1,5 +1,7 @@
 #include "scaffold.h"
 
+#include <stdlib.h>
+
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 
@@ -17,7 +19,7 @@ BOOL scaffold_is_numeric( bstring line ) {
    return is_numeric;
 }
 
-bstring scaffold_pop_string( struct bstrList* list ) {
+bstring scaffold_list_pop_string( struct bstrList* list ) {
    bstring popped = list->entry[0];
    int i;
 
@@ -28,6 +30,42 @@ bstring scaffold_pop_string( struct bstrList* list ) {
    list->qty--;
 
    return popped;
+}
+
+void scaffold_list_remove_string( struct bstrList* list, bstring str ) {
+   bstring popped = list->entry[0];
+   int i;
+   int offset = 0;
+
+   for( i = 0 ; list->qty - offset > i ; i++ ) {
+      if( 0 == bstrcmp( list->entry[i], str ) ) {
+         offset++;
+      }
+      if( 0 < offset ) {
+         list->entry[i] = list->entry[i + offset];
+      }
+   }
+
+   list->qty -= offset;
+
+   return;
+}
+
+void scaffold_list_append_string_cpy( struct bstrList* list, bstring str ) {
+
+   assert( NULL != list );
+   scaffold_check_null( list->entry );
+
+   if( list->qty + 1 >= list->mlen ) {
+      list->mlen *= 2;
+      list->entry = (bstring*)realloc( list->entry, list->mlen );
+      scaffold_check_null( list->entry );
+   }
+
+   list->entry[list->qty++] = bstrcpy( str );
+
+cleanup:
+   return;
 }
 
 BOOL scaffold_string_is_printable( bstring str ) {

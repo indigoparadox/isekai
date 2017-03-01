@@ -189,7 +189,7 @@ size_t vector_remove_cb( VECTOR* v, vector_delete_cb callback, void* arg ) {
       /* The delete callback should call the object-specific free() function, *
        * which decreases its refcount naturally. So there's no need to do it  *
        * manually here.                                                       */
-      if( FALSE != callback( v, i, v->data[i], arg ) ) {
+      if( FALSE != callback( NULL, v->data[i], arg ) ) {
          backshift++;
       }
 
@@ -298,7 +298,7 @@ void* vector_iterate( VECTOR* v, vector_search_cb callback, void* arg ) {
    vector_lock( v, TRUE );
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
       current_iter = vector_get( v, i );
-      cb_return = callback( v, i, current_iter, arg );
+      cb_return = callback( NULL, current_iter, arg );
       if( NULL != cb_return ) {
          break;
       }

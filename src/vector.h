@@ -17,8 +17,8 @@ typedef struct _VECTOR {
 
 #define VECTOR_SENTINAL 12121
 
-typedef void* (*vector_search_cb)( VECTOR* v, size_t idx, void* iter, void* arg );
-typedef BOOL (*vector_delete_cb)( VECTOR* v, size_t idx, void* iter, void* arg );
+typedef void* (*vector_search_cb)( bstring res, void* iter, void* arg );
+typedef BOOL (*vector_delete_cb)( bstring res, void* iter, void* arg );
 
 #define vector_ready( v ) \
    (VECTOR_SENTINAL == (v)->sentinal)

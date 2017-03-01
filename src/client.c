@@ -3,6 +3,7 @@
 //#include "parser.h"
 #include "server.h"
 #include "callbacks.h"
+#include "irc.h"
 
 /*
 void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
@@ -90,6 +91,7 @@ cleanup:
 /* TODO: Process multiple lines? */
 void client_update( CLIENT* c, GAMEDATA* d ) {
    ssize_t last_read_count = 0;
+   IRC_COMMAND* cmd = NULL;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
@@ -114,6 +116,24 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
 #endif /* DEBUG */
 
       //irc_dispatch( c, d, c->buffer );
+   }
+
+   /* Check for commands from the server. */
+   cmd = callback_ingest_commands( NULL, c, NULL );
+   if( NULL != cmd ) {
+      vector_add( &(c->command_queue), cmd );
+   }
+
+   /* Execute one command per cycle if available. */
+   if( 1 <= vector_count( &(c->command_queue) ) ) {
+      cmd = vector_get( &(c->command_queue), 0 );
+      vector_remove( &(c->command_queue), 0 );
+      if( NULL != cmd->callback ) {
+         cmd->callback( cmd->client, cmd->server, cmd->args );
+      } else {
+         scaffold_print_error( "Invalid command: %s\n", bdata( &(cmd->command) ) );
+      }
+      irc_command_free( cmd );
    }
 
    gamedata_update_client( d, c );

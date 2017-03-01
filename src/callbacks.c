@@ -14,7 +14,8 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    const IRC_COMMAND* table = NULL;
 
    /* Figure out if we're being called from a client or server. */
-   if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+   //if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+   if( NULL != arg ) {
       s = (SERVER*)arg;
       table = irc_table_server;
    } else {
@@ -51,12 +52,51 @@ cleanup:
    return cmd;
 }
 
+/* Append all clients to the bstrlist arg. */
+void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   struct bstrList* list = (struct bstrList*)arg;
+   scaffold_list_append_string_cpy( list, c->nick );
+   return NULL;
+}
+
+/* Return only the client arg if present. */
 void* callback_search_clients( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( 0 == bstrcmp( nick, c->nick ) ) {
       return c;
    }
+   return NULL;
+}
+
+/* Return all clients EXCEPT the client arg. */
+void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   bstring nick = (bstring)arg;
+   if( 0 != bstrcmp( nick, c->nick ) ) {
+      return c;
+   }
+   return NULL;
+}
+
+/* Return any client that is in the bstrlist arg. */
+void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
+   struct bstrList* list = (struct bstrList*)arg;
+   CLIENT* c = (CLIENT*)iter;
+   int i;
+
+   for( i = 0 ; list->qty > i ; i++ ) {
+      if( 0 == bstrcmp( c->nick, list->entry[i] ) ) {
+         return c;
+      }
+   }
+}
+
+void* callback_send_clients( const bstring key, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   bstring buffer = (bstring)arg;
+   server_client_send( c, buffer );
    return NULL;
 }
 
@@ -72,7 +112,7 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring nick = (bstring)arg;
-   if( 0 == bstrcmp( nick, c->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
       client_free( c );
       return TRUE;
    }
