@@ -692,8 +692,6 @@ IRC_COMMAND* irc_dispatch(
          NULL != command->callback;
          command++
       ) {
-         scaffold_print_debug( "%s\n", bdata( &(command->command) ) );
-
          if( 0 == bstrncmp(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
@@ -727,7 +725,14 @@ IRC_COMMAND* irc_dispatch(
       }
    }
 
-   scaffold_print_error( "Parser unable to interpret: %s\n", bdata( line ) );
+   if( table == irc_table_server ) {
+      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+      scaffold_print_error( "Server: Parser unable to interpret: %s\n", bdata( line ) );
+   } else if( table == irc_table_client ) {
+      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+      scaffold_print_error( "Client: Parser unable to interpret: %s\n", bdata( line ) );
+   }
+
 
 cleanup:
    if( NULL == out ) {
