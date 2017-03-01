@@ -14,21 +14,29 @@ static char nick_random_chars[] =
 
 static void server_cleanup( const struct _REF* ref ) {
    SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
+#ifdef DEBUG
    size_t deleted = 0;
+#endif /* DEBUG */
 
    if( TRUE == client_free( &(s->self) ) ) {
       bdestroy( s->version );
       bdestroy( s->servername );
 
       /* Remove clients. */
-      deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
+#ifdef DEBUG
+      deleted =
+#endif /* DEBUG */
+         hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
       scaffold_print_debug(
          "Removed %d clients from server. %d remaining.\n",
          deleted, hashmap_count( &(s->clients) )
       );
       hashmap_cleanup( &(s->clients) );
 
-      deleted = hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
+#ifdef DEBUG
+      deleted =
+#endif /* DEBUG */
+         hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
       scaffold_print_debug(
          "Removed %d channels from server. %d remaining.\n",
          deleted, hashmap_count( &(s->self.channels) )
@@ -193,12 +201,14 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    assert( 0 < c_first->link.refcount.count );
    assert( 0 < l->refcount.count );
 
+#ifdef DEBUG
    old_count = c_first->link.refcount.count;
    channel_add_client( l, c_first );
    assert( c_first->link.refcount.count > old_count );
    old_count = l->refcount.count;
    client_add_channel( c_first, l );
    assert( l->refcount.count > old_count );
+#endif /* DEBUG */
 
 cleanup:
    bdestroy( map_serial );
@@ -231,16 +241,17 @@ CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
-   size_t deleted;
 #ifdef DEBUG
+   size_t deleted;
    size_t old_count = 0, new_count = 0;
 #endif /* DEBUG */
 
 #ifdef DEBUG
    old_count = hashmap_count( &(s->clients) );
-#endif /* DEBUG */
 
-   deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
    scaffold_print_debug(
       "Server: Removed %d clients. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
@@ -300,7 +311,10 @@ void server_poll_new_clients( SERVER* s ) {
    //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
    server_add_client( s, c );
+
+#ifdef DEBUG
    assert( old_client_count < hashmap_count( &(s->clients) ) );
+#endif /* DEBUG */
 
    /* Ditch this client for now. */
    ref_dec( &(c->link.refcount) );
