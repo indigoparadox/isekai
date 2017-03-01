@@ -116,7 +116,7 @@ void vector_set( VECTOR* v, size_t index, void* data ) {
    vector_lock( v, TRUE );
 
    scaffold_check_bounds( index, v->count );
-   ref_test_dec( &(v->data[index] ) );
+   ref_test_dec( v->data[index] );
    v->data[index] = data;
    ref_test_inc( data );
 
@@ -219,7 +219,7 @@ void vector_delete( VECTOR* v, size_t index ) {
 
    scaffold_check_bounds( index, v->count );
 
-   ref_test_dec( &(v->data[index] ) );
+   ref_test_dec( v->data[index] );
 
    for( i = index; v->count - 1 > i ; i++ ) {
       v->data[i] = v->data[i + 1];
