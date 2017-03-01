@@ -104,7 +104,7 @@ int main( int argc, char** argv ) {
          server_stop( server );
       }
 
-      if( !server->self.running ) {
+      if( !server->self.running || 0 >= hashmap_count( &(server->clients) ) ) {
          break;
       }
    }
