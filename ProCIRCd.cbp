@@ -74,7 +74,7 @@
 					<Add option="-DEZXML_CSTR" />
 					<Add option="-DMINIZ_NO_STDIO" />
 					<Add option="-DUSE_ALLEGRO_PNG" />
-					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DUSE_NETWORK" />
 					<Add option="-DEZXML_EMBEDDED_IMAGES" />
 				</Compiler>
 				<Linker>
@@ -144,6 +144,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
+		<Unit filename="src/command.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/command.h" />
 		<Unit filename="src/connection.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -246,6 +250,7 @@
 		<Unit filename="src/proto/irc.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/ref.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
 		</Unit>

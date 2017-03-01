@@ -43,14 +43,14 @@ void server_cleanup( SERVER* s ) {
       deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
       scaffold_print_debug(
          "Removed %d clients from server. %d remaining.\n",
-         deleted, vector_count( &(s->clients) )
+         deleted, hashmap_count( &(s->clients) )
       );
       hashmap_cleanup( &(s->clients) );
 
       deleted = hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
       scaffold_print_debug(
          "Removed %d channels from server. %d remaining.\n",
-         deleted, vector_count( &(s->self.channels) )
+         deleted, hashmap_count( &(s->self.channels) )
       );
    }
 }
@@ -277,7 +277,7 @@ void server_service_clients( SERVER* s ) {
    //}
 
    /* FIXME: Pass the mailbox. */
-   hashmap_iterate( &(s->clients), callback_ingest_commands, NULL );
+   hashmap_iterate( &(s->clients), callback_ingest_commands, s );
 
    /* TODO: Put the ingested commands into a mailbox so that we can lock it
     *       while cycling. */
