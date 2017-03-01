@@ -337,6 +337,9 @@ void server_service_clients( SERVER* s ) {
       irc_command_free( cmd );
    }
 
+   /* Send files in progress. */
+   hashmap_iterate( &(s->clients), callback_process_chunkers, s );
+
 /* cleanup: */
    return;
 }

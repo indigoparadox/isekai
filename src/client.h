@@ -12,14 +12,6 @@
 
 typedef struct _CHANNEL CHANNEL;
 
-typedef struct _CLIENT_CHUNKER {
-   void* encoder;
-   size_t pos;
-   bstring foreign_buffer;
-   bstring filename;
-   int hsp_last_res;
-} CLIENT_CHUNKER;
-
 typedef struct _CLIENT {
    /* "Root" class is REF*/
 

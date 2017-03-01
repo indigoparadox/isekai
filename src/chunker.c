@@ -1,54 +1,89 @@
+
 #include "chunker.h"
 
-#if 0
-/* The chunker should NOT free or modify any buffers passed to it. */
-void chunker_chunk_start( CHUNKER* h, bstring src_buffer ) {
-   scaffold_check_null( buffer );
+#include "scaffold.h"
 
-   if( NULL != c->chunker.encoder ) {
+static void chunker_cleanup( const struct _REF* ref ) {
+
+}
+
+/* The chunker should NOT free or modify any buffers passed to it. */
+void chunker_chunk_start( CHUNKER* h, void* src_buffer, size_t src_length ) {
+   scaffold_check_null( src_buffer );
+   assert( NULL != h );
+
+   ref_init( &(h->refcount), chunker_cleanup );
+
+   if( NULL != h->encoder ) {
       /* TODO: What if the client has a chunker already? */
+   } else {
+      h->encoder = heatshrink_encoder_alloc(
+         CHUNKER_WINDOW_SIZE,
+         CHUNKER_LOOKAHEAD_SIZE
+      );
    }
-   h = heatshrink_encoder_alloc(
-      PARSER_HS_WINDOW_SIZE,
-      PARSER_HS_LOOKAHEAD_SIZE
-   );
-   scaffold_check_null( h );
-   c->chunker.encoder = h;
-   c->chunker.pos = 0;
-   c->chunker.foreign_buffer = l->gamedata.tmap.serialize_buffer;
-   c->chunker.filename = l->gamedata.tmap.serialize_filename;
+
+   h->finished = FALSE;
+   h->raw_position = 0;
+   h->raw_length = src_length;
+   h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
+   memcpy( h->raw_ptr, h->raw_length, src_length );
+
+cleanup:
+   return;
+}
+
+void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
+   size_t consumed,
+      exhumed,
+      xmit_buffer_pos = 0;
+   uint8_t binary_compression_buffer[CHUNKER_XMIT_BINARY_SIZE] = { 0 };
+   int i;
+   HSE_poll_res poll_res;
+   HSE_sink_res sink_res;
 
    // FIXME: Encode before transmission.
-	const char* foreign_buffer_c = bdata( c->chunker.foreign_buffer );
+//	const char* foreign_buffer_c = bdata( c->chunker.foreign_buffer );
 
    /* Sink the map data into the encoder. */
    /* TODO: Finish this accross multiple requests. */
-   while( blength( c->chunker.foreign_buffer ) > c->chunker.pos ) {
-      hse_res = heatshrink_encoder_sink(
-         h,
-         (uint8_t*)&(foreign_buffer_c[c->chunker.pos]),
-         (size_t)blength( c->chunker.foreign_buffer ) - c->chunker.pos,
-         &consumed
+   //while( h->raw_length < h->raw_position ) {
+   while( CHUNKER_XMIT_BINARY_SIZE > xmit_buffer_pos ) {
+      if( h->raw_position < h->raw_length ) {
+         sink_res = heatshrink_encoder_sink(
+            h->encoder,
+            (uint8_t*)&(h->raw_ptr[h->raw_position]),
+            (size_t)(h->raw_length - h->raw_position),
+            &consumed
+         );
+         assert( HSER_SINK_OK == sink_res );
+         h->raw_position += consumed;
+      } else if( TRUE != h->finished ) {
+         heatshrink_encoder_finish( h->encoder );
+         h->finished = TRUE;
+      }
+
+      poll_res = heatshrink_encoder_poll(
+         h->encoder,
+         &binary_compression_buffer,
+         CHUNKER_XMIT_BINARY_SIZE,
+         &exhumed
       );
-      assert( HSER_SINK_OK == hse_res );
-      c->chunker.pos += consumed;
+      xmit_buffer_pos += exhumed;
+
+      if( HSER_POLL_MORE != poll_res ) {
+         break;
+      }
    }
-   if( c->chunker.pos == blength( c->chunker.foreign_buffer ) ) {
-      heatshrink_encoder_finish( h );
-   }
-   assert( c->chunker.pos == blength( c->chunker.foreign_buffer ) );
 
-   c->chunker.pos = 0;
-
-   server_xmit_chunk( s );
-
+   b64_encode(
+      &binary_compression_buffer, CHUNKER_XMIT_BINARY_SIZE, xmit_buffer, 76
+   );
+cleanup:
+   return;
 }
 
-void chunker_chunk_pass( CHUNKER* h ) {
-
-}
-
-
+#if 0
 void server_xmit_chunk( SERVER* s, CLIENT* c ) {
    heatshrink_encoder* h = (heatshrink_encoder*)c->chunker.encoder;
    size_t consumed, exhumed;
@@ -126,7 +161,6 @@ static void* server_prn_chunk( VECTOR* v, size_t idx, void* iter, void* arg ) {
 cleanup:
    return NULL;
 }
-
 #endif // 0
 
 /*

@@ -37,10 +37,6 @@ extern IRC_COMMAND_TABLE_START( client );
 
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
-#define PARSER_FILE_XMIT_BUFFER 19
-#define PARSER_HS_WINDOW_SIZE 14
-#define PARSER_HS_LOOKAHEAD_SIZE 8
-
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, CLIENT* c, const_bstring line

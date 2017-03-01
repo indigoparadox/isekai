@@ -4,6 +4,7 @@
 #include "client.h"
 #include "server.h"
 #include "irc.h"
+#include "chunker.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    size_t last_read_count = 0;
@@ -107,6 +108,60 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
       return l;
    }
    return NULL;
+}
+
+void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
+   bstring xmit_buffer_template = (bstring)arg;
+   CHUNKER* h = (CHUNKER*)iter;
+   bstring xmit_buffer_out = NULL;
+
+   xmit_buffer_out = bstrcpy( xmit_buffer_template );
+   scaffold_check_null( xmit_buffer_out );
+
+   /* Note the starting point and progress for the client. */
+   bformata( xmit_buffer_out, "%s %d %d : ", bdata( key ), h->raw_position, h->raw_length );
+
+   chunker_chunk_pass( h, xmit_buffer_out );
+
+cleanup:
+   return xmit_buffer_out;
+}
+
+void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)iter;
+   SERVER* s = (SERVER*)arg;
+   bstring xmit_buffer_template = NULL;
+   VECTOR* chunks = NULL;
+
+   xmit_buffer_template = bformat(
+      ":%b GDB %b TILEMAP ", s->self.remote, c->nick
+   );
+   scaffold_check_null( xmit_buffer_template );
+
+   chunks = hashmap_iterate_v(
+      &(c->chunkers), callback_send_chunkers_l, xmit_buffer_template
+   );
+   if( NULL == chunks ) {
+      goto cleanup; /* Silently. */
+   }
+
+   vector_remove_cb( chunks, callback_send_list_to_client, c );
+
+cleanup:
+   if( NULL != chunks ) {
+      vector_free( chunks );
+   }
+}
+
+void* callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
+   CLIENT* c = (CLIENT*)arg;
+   bstring xmit_buffer = (bstring)iter;
+
+   server_client_send( c, xmit_buffer );
+
+   bdestroy( xmit_buffer );
+
+   return xmit_buffer;
 }
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {

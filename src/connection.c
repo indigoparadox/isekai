@@ -182,8 +182,10 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #else
    if( TRUE == client ) {
+      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
       mailbox_send( &fake_network, dest_socket, fake_server_socket, buffer );
    } else {
+      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
       mailbox_send( &fake_network, fake_server_socket, dest_socket, buffer );
    }
 #endif /* USE_NETWORK */
