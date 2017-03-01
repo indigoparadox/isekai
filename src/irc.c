@@ -532,7 +532,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    GAMEDATA* d = NULL;
    //CHUNKER* h = NULL;
    heatshrink_decoder* h = NULL;
-   int hash_ret;
+   //int hash_ret;
    size_t progress = 0;
    size_t total = 0;
    size_t consumed = 0;
@@ -541,6 +541,8 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    bstring data = NULL;
    bstring filename = NULL;
    uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };
+   const char* progress_c,
+      * total_c;
 
    // FIXME: Get the channel name from the args.
    l = client_get_channel_by_name( c, bfromcstr("test") );
@@ -549,11 +551,19 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    scaffold_check_null( d );
 
    assert( 9 == args->qty );
+   scaffold_check_null( args->entry[5] );
+   progress_c = bdata( args->entry[5] );
+   scaffold_check_null( progress_c );
+   scaffold_check_null( args->entry[6] );
+   total_c = bdata( args->entry[6] );
+   scaffold_check_null( total_c );
 
    filename = args->entry[4];
-   progress = atoi( bdata( args->entry[5] ) );
-   total = atoi( bdata( args->entry[6] ) );
+   scaffold_check_null( filename );
+   progress = atoi( progress_c );
+   total = atoi( total_c );
    data = args->entry[8];
+   scaffold_check_null( data );
 
    if( progress > total ) {
       scaffold_print_error( "Invalid progress for %s.\n", bdata( filename ) );

@@ -151,6 +151,7 @@ cleanup:
 #else
    n->socket =
       mailbox_connect( &fake_network, MAILBOX_SOCKET_NONE, fake_server_socket );
+   assert( 1 < n->socket );
 #endif /* USE_NETWORK */
 
    return;

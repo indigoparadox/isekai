@@ -196,7 +196,7 @@ void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    g->color.g = 0;
    g->color.b = 0;
    g->color.a = 255;
-   g->refcount = (struct _REF){ graphics_surface_cleanup, 1 };
+   ref_init( &(g->refcount), graphics_surface_cleanup );
    return;
 }
 

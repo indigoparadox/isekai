@@ -125,6 +125,6 @@ cleanup:
 
    return 0;
 }
-#ifdef USE_ALLEGRO
+#if defined( USE_ALLEGRO ) && defined( END_OF_MAIN )
 END_OF_MAIN();
 #endif /* USE_ALLEGRO */
