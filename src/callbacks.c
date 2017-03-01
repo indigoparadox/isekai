@@ -19,7 +19,7 @@ typedef struct {
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    size_t last_read_count = 0;
-   MAILBOX* jobs = (MAILBOX*)arg;
+   SERVER* s = (SERVER*)arg;
    static bstring buffer = NULL;
    CLIENT* c = (CLIENT*)iter;
 
@@ -49,7 +49,8 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       c->link.socket, bdata( buffer )
    );
 
-   // FIXME: Replace w mailbox: parser_dispatch( s, c, s->self.buffer );
+   // FIXME: Replace w mailbox:
+   parser_dispatch( s, c, buffer );
 
 cleanup:
    return NULL;

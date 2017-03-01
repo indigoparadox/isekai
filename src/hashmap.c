@@ -360,7 +360,7 @@ void* hashmap_iterate( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
 
 cleanup:
    if( TRUE == ok ) {
-      hashmap_lock( m, TRUE );
+      hashmap_lock( m, FALSE );
    }
    return found;
 }

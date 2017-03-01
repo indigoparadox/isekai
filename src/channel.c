@@ -12,13 +12,11 @@ static void channel_cleanup( const struct _REF *ref ) {
 }
 
 void channel_free( CHANNEL* l ) {
-   // FIXME
    ref_dec( &(l->refcount) );
 }
 
 void channel_init( CHANNEL* l, const bstring name ) {
    ref_init( &(l->refcount), channel_cleanup );
-   //vector_init( &(l->clients) );
    hashmap_init( &(l->clients) );
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
@@ -35,7 +33,6 @@ void channel_add_client( CHANNEL* l, CLIENT* c ) {
       goto cleanup;
    }
 
-   //vector_add( &(l->clients), c );
    hashmap_put( &(l->clients), c->nick, c );
 
 cleanup:
