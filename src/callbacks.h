@@ -3,10 +3,12 @@
 #define CALLBACKS_H
 
 #include "vector.h"
+#include "hashmap.h"
 
-void* callback_search_clients( VECTOR* v, size_t idx, void* iter, void* arg );
-void* callback_search_channels( VECTOR* v, size_t idx, void* iter, void* arg );
-BOOL callback_free_clients( VECTOR* v, size_t idx, void* iter, void* arg );
-BOOL callback_free_channels( VECTOR* v, size_t idx, void* iter, void* arg );
+void* callback_ingest_commands( const bstring key, void* iter, void* arg );
+void* callback_search_clients( const bstring key, void* iter, void* arg );
+void* callback_search_channels( const bstring key, void* iter, void* arg );
+BOOL callback_free_clients( const bstring key, void* iter, void* arg );
+BOOL callback_free_channels( const bstring key, void* iter, void* arg );
 
 #endif /* CALLBACKS_H */

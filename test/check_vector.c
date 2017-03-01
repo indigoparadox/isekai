@@ -3,10 +3,7 @@
 #include <check.h>
 
 #include "../src/vector.h"
-
-typedef struct _BLOB {
-   int sentinal;
-} BLOB;
+#include "check_data.h"
 
 START_TEST( test_vector_create ) {
    VECTOR* v;
@@ -32,16 +29,28 @@ START_TEST( test_vector_add ) {
    ck_assert_int_eq( vector_count( v ), 0 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-      blob->sentinal = 10101;
+      blob = create_blob( 1212, 16, 3, 4545 );
+      //printf( "Blob ref before: %d\n", blob->refcount.count );
+      ck_assert_int_eq( 1, blob->refcount.count );
+
       vector_add( v, blob );
+      //printf( "Blob ref after: %d\n", blob->refcount.count );
+      ck_assert_int_eq( 2, blob->refcount.count );
    }
 
    ck_assert_int_eq( vector_count( v ), 3 );
 
-   for( i = 0 ; 3 > i ; i++ ) {
+   for( i = 0 ; 2 > i ; i++ ) {
       blob = (BLOB*)vector_get( v, i );
-      free( blob );
+      ck_assert_int_eq( 2, blob->refcount.count );
+
+      printf( "Blob ref before: %d\n", blob->refcount.count );
+      vector_delete( v, i );
+      printf( "Blob ref after: %d\n", blob->refcount.count );
+      ck_assert_int_eq( 1, blob->refcount.count );
+
+      /* Delete the blob. */
+      ref_dec( &(blob->refcount) );
    }
 
 cleanup:
@@ -58,20 +67,18 @@ START_TEST( test_vector_get ) {
 
    ck_assert_int_eq( vector_count( v ), 0 );
 
-   blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-   blob->sentinal = 12345;
+   blob = create_blob( 12345, 12, 12, 3456 );
    vector_add( v, blob );
 
    ck_assert_int_eq( vector_count( v ), 1 );
 
-   blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-   blob->sentinal = 4567;
+   blob = create_blob( 4567, 12, 12, 3456 );
    vector_add( v, blob );
    ck_assert_int_eq( vector_count( v ), 2 );
 
 
-   ck_assert_int_eq( ((BLOB*)vector_get( v, 0 ))->sentinal, 12345 );
-   ck_assert_int_eq( ((BLOB*)vector_get( v, 1 ))->sentinal, 4567 );
+   ck_assert_int_eq( ((BLOB*)vector_get( v, 0 ))->sentinal_start, 12345 );
+   ck_assert_int_eq( ((BLOB*)vector_get( v, 1 ))->sentinal_start, 4567 );
 
 cleanup:
 
@@ -91,8 +98,7 @@ START_TEST( test_vector_delete ) {
    ck_assert_int_eq( vector_count( v ), 0 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-      blob->sentinal = 10101 * i;
+      blob = create_blob( 10101 * i, 12, 12, 1010 );
       vector_add( v, blob );
    }
 
@@ -101,15 +107,14 @@ START_TEST( test_vector_delete ) {
    for( i = 2 ; 0 <= i ; i-- ) {
       blob = (BLOB*)vector_get( v, i );
       vector_delete( v, i );
-      ck_assert_int_eq( blob->sentinal, 10101 * i );
-      free( blob );
+      ck_assert_int_eq( blob->sentinal_start, 10101 * i );
+      ref_dec( &(blob->refcount) );
    }
 
    ck_assert_int_eq( vector_count( v ), 0 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-      blob->sentinal = 10101 * i;
+      blob = create_blob( 10101 * i, 12, 12, 1010 );
       vector_add( v, blob );
    }
 
@@ -118,8 +123,8 @@ START_TEST( test_vector_delete ) {
    for( i = 0 ; 3 > i ; i++ ) {
       blob = (BLOB*)vector_get( v, 0 );
       vector_delete( v, 0 );
-      ck_assert_int_eq( blob->sentinal, 10101 * i );
-      free( blob );
+      ck_assert_int_eq( blob->sentinal_start, 10101 * i );
+      ref_dec( &(blob->refcount) );
    }
 
    ck_assert_int_eq( vector_count( v ), 0 );

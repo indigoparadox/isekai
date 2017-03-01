@@ -2,6 +2,7 @@
 
 #include "parser.h"
 #include "server.h"
+#include "callbacks.h"
 
 /*
 void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
@@ -14,8 +15,9 @@ void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
 }
 */
 
-static void client_cleanup( CLIENT* c ) {
-   vector_free( &(c->channels) );
+static void client_cleanup( const struct _REF *ref ) {
+   CLIENT* c = scaffold_container_of( ref, struct _CLIENT, refcount );
+   hashmap_cleanup( &(c->channels) );
    /* TODO: Free chunkers? */
    hashmap_cleanup( &(c->chunkers) );
    connection_cleanup( &(c->link) );
@@ -25,16 +27,19 @@ static void client_cleanup( CLIENT* c ) {
    bdestroy( c->remote );
    bdestroy( c->username );
    c->sentinal = 0;
+   /* TODO: Ensure entire struct is freed. */
+   //free( c );
 }
 
 void client_init( CLIENT* c ) {
-   vector_init( &(c->channels) );
+   ref_init( &(c->refcount), client_cleanup );
+   c->refcount.sentinal = REF_SENTINAL;
+   hashmap_init( &(c->channels) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   c->refcount = (struct _REF){client_cleanup, 1};
    c->sentinal = CLIENT_SENTINAL;
    hashmap_init( &(c->chunkers) );
    //memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
@@ -45,12 +50,13 @@ void client_init( CLIENT* c ) {
    c->running = TRUE;
 }
 
-void client_free( CLIENT* c ) {
-   ref_dec( &(c->refcount) );
+BOOL client_free( CLIENT* c ) {
+   return ref_dec( &(c->refcount) );
 }
 
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
-   return vector_iterate( &(c->channels), cb_channel_get_name, name );
+   //return vector_iterate( &(c->channels), callback_search_channels, name );
+   return hashmap_get( &(c->channels), name );
 }
 
 void client_connect( CLIENT* c, bstring server, int port ) {
@@ -123,7 +129,8 @@ void client_stop( CLIENT* c ) {
 }
 
 void client_add_channel( CLIENT* c, CHANNEL* l ) {
-   vector_add( &(c->channels), l );
+   //vector_add( &(c->channels), l );
+   hashmap_put( &(c->channels), l->name, l );
 }
 
 void client_join_channel( CLIENT* c, bstring name ) {
@@ -148,7 +155,8 @@ void client_leave_channel( CLIENT* c, bstring lname ) {
 
    /* TODO: Add callback from parser and only delete channel on confirm. */
    /* TODO: Cleanup channel. */
-   vector_delete_cb( &(c->channels), cb_client_del_channels, lname );
+   //vector_delete_cb( &(c->channels), callback_free_channels, lname );
+   hashmap_remove( &(c->channels), lname );
 }
 
 void client_send( CLIENT* c, bstring buffer ) {

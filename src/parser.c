@@ -3,6 +3,7 @@
 #include "server.h"
 #include "heatshrink/heatshrink_decoder.h"
 #include "heatshrink/heatshrink_encoder.h"
+#include "callbacks.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ static void parser_server_reply_welcome( void* local, void* remote ) {
 
    server_client_printf(
       s, c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
-      s->self.remote, c->nick, vector_count( &(s->clients) )
+      s->self.remote, c->nick, hashmap_count( &(s->clients) )
    );
 
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
@@ -254,7 +255,7 @@ static void* parser_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
    size_t i;
 
    for( i = 0 ; ison->args->qty > i ; i++ ) {
-      c = cb_client_get_nick( v, idx, iter, ison->args->entry[i] );
+      c = callback_search_clients( NULL, iter, ison->args->entry[i] );
       if( NULL != c ) {
          bconcat( ison->clients, c->nick );
          bconchar( ison->clients, ' ' );
@@ -270,6 +271,8 @@ static void parser_server_ison( void* local, void* remote,
    CLIENT* c = (CLIENT*)remote;
    PARSER_ISON ison = { 0 };
 
+// FIXME
+#if 0
    ison.clients = bfromcstralloc( 128, "" );
    ison.args = args;
    scaffold_check_null( ison.clients );
@@ -281,6 +284,7 @@ static void parser_server_ison( void* local, void* remote,
 cleanup:
 
    bdestroy( ison.clients );
+#endif
 
    return;
 }
@@ -350,9 +354,10 @@ static void parser_server_join( void* local, void* remote,
       c->nick, c->username, c->remote, l->name
    );
 
+   // FIXME
    names = bfromcstr( "" );
    scaffold_check_null( names );
-   vector_iterate( &(l->clients), parser_cat_names, names );
+   //vector_iterate( &(l->clients), parser_cat_names, names );
 
    server_client_printf(
       s, c, ":%b 332 %b %b :%b",
@@ -371,8 +376,8 @@ static void parser_server_join( void* local, void* remote,
 
    /* FIXME: Begin transmitting tilemap. */
 
-   assert( vector_count( &(c->channels) ) > 0 );
-   assert( vector_count( &(s->self.channels) ) > 0 );
+   assert( hashmap_count( &(c->channels) ) > 0 );
+   assert( hashmap_count( &(s->self.channels) ) > 0 );
 
 cleanup:
    bdestroy( names );
@@ -395,7 +400,7 @@ static void parser_server_privmsg( void* local, void* remote,
    //bdestroy( scaffold_pop_string( args ) );
    msg = bjoin( args, &scaffold_space_string );
 
-   c_dest = server_get_client_by_nick( s, args->entry[1] );
+   c_dest = server_get_client( s, args->entry[1] );
    if( NULL != c_dest ) {
       server_client_printf(
          s, c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
@@ -436,6 +441,8 @@ static void parser_server_who( void* local, void* remote,
    CHANNEL* l = NULL;
    PARSER_TRIO trio = { 0 };
 
+#if 0
+   // FIXME
    l = client_get_channel_by_name( &(s->self), args->entry[1] );
    scaffold_check_null( l );
 
@@ -444,6 +451,7 @@ static void parser_server_who( void* local, void* remote,
    trio.s = s;
 
    vector_iterate( &(l->clients), parser_prn_who, &trio );
+#endif
 
 cleanup:
    return;
@@ -557,7 +565,7 @@ static void parser_client_join( void* local, void* gamedata,
 
    scaffold_print_info( "Client joined channel: %s\n", bdata( args->entry[2] ) );
 
-   assert( vector_count( &(c->channels) ) > 0 );
+   assert( hashmap_count( &(c->channels) ) > 0 );
 
 cleanup:
    return;

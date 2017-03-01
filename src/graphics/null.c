@@ -7,7 +7,7 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
 }
 
-void graphics_surface_cleanup( GRAPHICS* g ) {
+void graphics_surface_free( GRAPHICS* g ) {
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {

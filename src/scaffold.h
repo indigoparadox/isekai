@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stddef.h>
 
 #include "bstrlib/bstrlib.h"
 
@@ -113,6 +114,9 @@ typedef enum {
 
 #define scaffold_char_is_printable( c ) \
     (0x7f > (c) && 0x20 < (c))
+
+#define scaffold_container_of( ptr, type, member ) \
+    ((type *)((char *)(ptr) - offsetof( type, member )))
 
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );

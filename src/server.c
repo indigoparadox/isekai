@@ -5,27 +5,13 @@
 #include "parser.h"
 #include "heatshrink/heatshrink_encoder.h"
 #include "b64/b64.h"
-
-static void* cb_server_del_clients( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
-   bstring nick = (bstring)arg;
-
-   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
-      /* Locks shouldn't conflict, since it's two different vectors. */
-      vector_delete_cb( &(c->channels), cb_client_del_channels, NULL );
-
-      /* Make sure clients have been cleaned up before deleting. */
-      client_free( c );
-      return TRUE;
-   }
-
-   return FALSE;
-}
+#include "callbacks.h"
+#include "hashmap.h"
 
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
    client_init( &(s->self) );
-   vector_init( &(s->clients) );
+   hashmap_init( &(s->clients) );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
 
@@ -54,14 +40,14 @@ void server_cleanup( SERVER* s ) {
       bdestroy( s->servername );
 
       /* Remove clients. */
-      deleted = vector_delete_cb( &(s->clients), cb_server_del_clients, NULL );
+      deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
       scaffold_print_debug(
          "Removed %d clients from server. %d remaining.\n",
          deleted, vector_count( &(s->clients) )
       );
-      vector_free( &(s->clients) );
+      hashmap_cleanup( &(s->clients) );
 
-      deleted = vector_delete_cb( &(s->self.channels), cb_client_del_channels, NULL );
+      deleted = hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
       scaffold_print_debug(
          "Removed %d channels from server. %d remaining.\n",
          deleted, vector_count( &(s->self.channels) )
@@ -134,7 +120,7 @@ void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* m
    va_end( varg );
 
    if( 0 == scaffold_error ) {
-      server_channel_send( s, l, c_skip, buffer );
+      // FIXME: server_channel_send( s, l, c_skip, buffer );
    }
 
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
@@ -145,8 +131,8 @@ cleanup:
 }
 
 void server_add_client( SERVER* s, CLIENT* c ) {
-   vector_add( &(s->clients), c );
-   ref_inc( &(c->refcount) );
+   assert( NULL == hashmap_get( &(s->clients), c->nick ) );
+   hashmap_put( &(s->clients), c->nick, c );
    //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
 
@@ -182,26 +168,27 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
       goto cleanup;
    }
 
-   ref_inc( &(l->refcount) );
-
    channel_add_client( l, c_first );
    client_add_channel( c_first, l );
 
 cleanup:
    bdestroy( map_serial );
    if( NULL != l ) {
-      assert( 0 < vector_count( &(l->clients) ) );
-      assert( 0 < vector_count( &(c_first->channels) ) );
+      assert( 0 < hashmap_count( &(l->clients) ) );
+      assert( 0 < hashmap_count( &(c_first->channels) ) );
    }
    return l;
 }
 
+/*
 CLIENT* server_get_client( SERVER* s, int index ) {
    return (CLIENT*)vector_get( &(s->clients), index );
 }
+*/
 
-CLIENT* server_get_client_by_nick( SERVER* s, const bstring nick ) {
-   return vector_iterate( &(s->clients), cb_client_get_nick, (bstring)nick );
+CLIENT* server_get_client( SERVER* s, const bstring nick ) {
+   //return vector_iterate( &(s->clients), callback_search_clients, (bstring)nick );
+   return hashmap_get( &(s->clients), nick );
 }
 
 /*
@@ -221,35 +208,34 @@ void server_drop_client( SERVER* s, bstring nick ) {
 #endif /* DEBUG */
 
 #ifdef DEBUG
-   old_count = vector_count( &(s->clients) );
+   old_count = hashmap_count( &(s->clients) );
 #endif /* DEBUG */
 
-   /* TODO: Should this actually be TRUE? */
-   deleted = vector_delete_cb( &(s->clients), cb_server_del_clients, nick );
+   deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
    scaffold_print_debug(
       "Removed %d clients from server. %d remaining.\n",
-      deleted, vector_count( &(s->clients) )
+      deleted, hashmap_count( &(s->clients) )
    );
 
-#if 0
 #ifdef DEBUG
-   new_count = vector_count( &(s->clients) );
+   new_count = hashmap_count( &(s->clients) );
    assert( new_count == old_count - deleted );
 
-   old_count = vector_count( &(s->self.channels) );
+   old_count = hashmap_count( &(s->self.channels) );
 #endif /* DEBUG */
 
-   deleted = vector_delete_cb( &(s->self.channels), cb_client_del_channels, NULL );
+/*
+   deleted = hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
    scaffold_print_debug(
       "Removed %d channels from server. %d remaining.\n",
-      deleted, vector_count( &(s->self.channels) )
+      deleted, hashmap_count( &(s->self.channels) )
    );
+*/
 
 #ifdef DEBUG
-   new_count = vector_count( &(s->self.channels) );
-   assert( new_count == old_count - deleted );
+   //new_count = hashmap_count( &(s->self.channels) );
+   //assert( new_count == old_count - deleted );
 #endif /* DEBUG */
-#endif
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -287,31 +273,16 @@ void server_service_clients( SERVER* s ) {
    }
 
    /* Check for commands from existing clients. */
-   for( i = 0 ; vector_count( &(s->clients) ) > i ; i++ ) {
-      //vector_lock( &(s->clients), TRUE );
-      c = vector_get( &(s->clients), i );
-      assert( vector_count( &(s->clients) ) > i );
-      //assert( NULL != server_get_client_by_ptr( s, c ) );
-      //vector_lock( &(s->clients), FALSE );
+   //for( i = 0 ; hashmap_count( &(s->clients) ) > i ; i++ ) {
+   //}
 
-      btrunc( s->self.buffer, 0 );
-      last_read_count = connection_read_line( &(c->link), s->self.buffer, FALSE );
-      btrimws( s->self.buffer );
+   /* FIXME: Pass the mailbox. */
+   hashmap_iterate( &(s->clients), callback_ingest_commands, NULL );
 
-      if( 0 >= last_read_count ) {
-         /* TODO: Handle error reading. */
-         continue;
-      }
+   /* TODO: Put the ingested commands into a mailbox so that we can lock it
+    *       while cycling. */
 
-      scaffold_print_debug(
-         "Server: Line received from %d: %s\n",
-         c->link.socket, bdata( s->self.buffer )
-      );
-
-      parser_dispatch( s, c, s->self.buffer );
-   }
-
-   //vector_iterate( &(s->clients), server_prn_chunk, s );
+   //hashmap_iterate( &(s->clients), server_prn_chunk, s );
 
    /* Handle outstanding jobs. */
    //mailbox_accept( s->self.jobs, s->self.jobs_socket );
@@ -330,7 +301,7 @@ int server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
       goto cleanup;
    }
 
-   if( NULL != server_get_client_by_nick( s, nick ) ) {
+   if( NULL != server_get_client( s, nick ) ) {
       retval = ERR_NICKNAMEINUSE;
       goto cleanup;
    }

@@ -6,3 +6,5 @@ glob:*.depend
 glob:images
 glob:testchannel.*
 glob:*.swp
+glob:*.tmp
+glob:testdata

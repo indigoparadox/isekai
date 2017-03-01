@@ -90,11 +90,11 @@ int main( int argc, char** argv ) {
          client_stop( client );
       }
 
-      if( 0 < vector_count( &(client->channels) ) ) {
-         graphics_draw_text( &g, 20, 20, ((CHANNEL*)(vector_get( &(client->channels),
+      if( 0 < hashmap_count( &(client->channels) ) ) {
+         /*graphics_draw_text( &g, 20, 20, ((CHANNEL*)(vector_get( &(client->channels),
                                           0 )))->name );
          graphics_draw_text( &g, 20, 40, ((CHANNEL*)(vector_get( &(client->channels),
-                                          0 )))->topic );
+                                          0 )))->topic );*/
       }
 
       graphics_flip_screen( &g );
@@ -114,7 +114,7 @@ cleanup:
    bdestroy( buffer );
    bdestroy( channel );
    client_free( client );
-   assert( 0 == vector_count( &(server->self.channels) ) );
+   assert( 0 == hashmap_count( &(server->self.channels) ) );
    server_cleanup( server );
    free( server );
    graphics_shutdown( &g );

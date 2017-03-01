@@ -59,6 +59,7 @@ typedef struct {
 } TILEMAP_LAYER;
 
 typedef struct {
+   REF refcount;
    size_t width;
    size_t height;
    VECTOR layers;

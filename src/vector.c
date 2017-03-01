@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "vector.h"
+#include "ref.h"
 
 void vector_init( VECTOR* v ) {
    v->data = NULL;
@@ -49,6 +50,7 @@ void vector_add( VECTOR* v, void* data ) {
 
    v->data[v->count] = data;
    v->count++;
+   ref_test_inc( data );
 
 cleanup:
 
@@ -107,11 +109,17 @@ cleanup:
 
 void vector_set( VECTOR* v, size_t index, void* data ) {
    scaffold_check_null( v );
+
    assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
+
    vector_lock( v, TRUE );
+
    scaffold_check_bounds( index, v->count );
+   ref_test_dec( &(v->data[index] ) );
    v->data[index] = data;
+   ref_test_inc( data );
+
 cleanup:
    vector_lock( v, FALSE );
    return;
@@ -159,10 +167,9 @@ cleanup:
    return retval;
 }
 
-/* Use a callback to delete items. The callback returns a pointer to the   *
- * item to free, and this function frees it. It is assumed that the        *
- * callback prepares the item to be freed.                                 */
-size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg ) {
+/* Use a callback to delete items. The callback frees the item or decreases   *
+ * its refcount as applicable.                                                */
+size_t vector_remove_cb( VECTOR* v, vector_delete_cb callback, void* arg ) {
    size_t i;
    size_t backshift = 0;
 
@@ -178,7 +185,9 @@ size_t vector_delete_cb( VECTOR* v, vector_callback callback, void* arg ) {
 
    for( i = 0; v->count > i ; i++ ) {
 
-      /* Run the callback until we find a match. */
+      /* The delete callback should call the object-specific free() function, *
+       * which decreases its refcount naturally. So there's no need to do it  *
+       * manually here.                                                       */
       if( FALSE != callback( v, i, v->data[i], arg ) ) {
          backshift++;
       }
@@ -209,6 +218,8 @@ void vector_delete( VECTOR* v, size_t index ) {
    vector_lock( v, TRUE );
 
    scaffold_check_bounds( index, v->count );
+
+   ref_test_dec( &(v->data[index] ) );
 
    for( i = index; v->count - 1 > i ; i++ ) {
       v->data[i] = v->data[i + 1];
@@ -273,7 +284,7 @@ inline void vector_lock( VECTOR* v, BOOL lock ) {
    #endif /* USE_THREADS */
 }
 
-void* vector_iterate( VECTOR* v, vector_callback callback, void* arg ) {
+void* vector_iterate( VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
    void* current_iter = NULL;
    size_t i;
