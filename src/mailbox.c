@@ -49,7 +49,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
          vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
          bdestroy( top_envelope->contents );
          free( top_envelope );
-         vector_delete( &(mailbox->envelopes), i );
+         vector_remove( &(mailbox->envelopes), i );
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
 #endif /* DEBUG */
@@ -69,7 +69,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
       top_envelope->callback( mailbox, top_envelope );
       if( MAILBOX_ENVELOPE_SPECIAL_DELETE == top_envelope->special ) {
          free( top_envelope );
-         vector_delete( &(mailbox->envelopes), 0 );
+         vector_remove( &(mailbox->envelopes), 0 );
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
 #endif /* DEBUG */
@@ -184,7 +184,7 @@ size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer ) {
       length_out = blength( buffer );
       bdestroy( top_envelope->contents );
       free( top_envelope );
-      vector_delete( &(mailbox->envelopes), 0 );
+      vector_remove( &(mailbox->envelopes), 0 );
    } else {
       bassigncstr( buffer, "" );
    }

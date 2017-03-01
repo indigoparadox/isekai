@@ -464,6 +464,7 @@ cleanup:
 void hashmap_cleanup( HASHMAP* m ) {
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
+   assert( 0 >= hashmap_count( m ) );
    free( m->data );
    m->sentinal = 0;
 cleanup:

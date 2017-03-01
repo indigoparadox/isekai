@@ -16,10 +16,12 @@ void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
 */
 
 static void client_cleanup( const struct _REF *ref ) {
-   CLIENT* c = scaffold_container_of( ref, struct _CLIENT, refcount );
+   CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount );
+   CLIENT* c = scaffold_container_of( c, struct _CLIENT, link );
    hashmap_cleanup( &(c->channels) );
    /* TODO: Free chunkers? */
    hashmap_cleanup( &(c->chunkers) );
+   vector_free( &(c->command_queue) );
    connection_cleanup( &(c->link) );
    bdestroy( c->buffer );
    bdestroy( c->nick );
@@ -32,9 +34,9 @@ static void client_cleanup( const struct _REF *ref ) {
 }
 
 void client_init( CLIENT* c ) {
-   ref_init( &(c->refcount), client_cleanup );
-   c->refcount.sentinal = REF_SENTINAL;
+   ref_init( &(c->link.refcount), client_cleanup );
    hashmap_init( &(c->channels) );
+   vector_init( &(c->command_queue ) );
    c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -51,7 +53,7 @@ void client_init( CLIENT* c ) {
 }
 
 BOOL client_free( CLIENT* c ) {
-   return ref_dec( &(c->refcount) );
+   return ref_dec( &(c->link.refcount) );
 }
 
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {

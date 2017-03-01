@@ -7,35 +7,13 @@
 #include "b64/b64.h"
 #include "callbacks.h"
 #include "hashmap.h"
+#include "irc.h"
 
 static char nick_random_chars[] =
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-void server_init( SERVER* s, const bstring myhost ) {
-   int bstr_result;
-   client_init( &(s->self) );
-   hashmap_init( &(s->clients) );
-   s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
-   s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
-
-   /* Setup the jobs mailbox. */
-   //s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
-   //vector_init( &(s->self.jobs->envelopes) );
-   //vector_init( &(s->self.jobs->sockets_assigned) );
-   //s->self.jobs->last_socket = 0;
-   //s->self.jobs_socket = mailbox_listen( s->self.jobs );
-   s->self.sentinal = SERVER_SENTINAL;
-   bstr_result = bassign( s->self.remote, myhost );
-   scaffold_check_nonzero( bstr_result );
-cleanup:
-   return;
-}
-
-inline void server_stop( SERVER* s ) {
-   s->self.running = FALSE;
-}
-
-void server_cleanup( SERVER* s ) {
+static void server_cleanup( const struct _REF* ref ) {
+   SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
    size_t deleted = 0;
 
    if( TRUE == client_free( &(s->self) ) ) {
@@ -56,6 +34,35 @@ void server_cleanup( SERVER* s ) {
          deleted, hashmap_count( &(s->self.channels) )
       );
    }
+}
+
+BOOL server_free( SERVER* s ) {
+   return ref_dec( &(s->self.link.refcount) );
+}
+
+void server_init( SERVER* s, const bstring myhost ) {
+   int bstr_result;
+   client_init( &(s->self) );
+   s->self.link.refcount.free = server_cleanup;
+   hashmap_init( &(s->clients) );
+   s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
+   s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
+
+   /* Setup the jobs mailbox. */
+   //s->self.jobs = (MAILBOX*)calloc( 1, sizeof( MAILBOX ) );
+   //vector_init( &(s->self.jobs->envelopes) );
+   //vector_init( &(s->self.jobs->sockets_assigned) );
+   //s->self.jobs->last_socket = 0;
+   //s->self.jobs_socket = mailbox_listen( s->self.jobs );
+   s->self.sentinal = SERVER_SENTINAL;
+   bstr_result = bassign( s->self.remote, myhost );
+   scaffold_check_nonzero( bstr_result );
+cleanup:
+   return;
+}
+
+inline void server_stop( SERVER* s ) {
+   s->self.running = FALSE;
 }
 
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer ) {
@@ -141,11 +148,12 @@ void server_add_client( SERVER* s, CLIENT* c ) {
       do {
          btrunc( c->nick, 0 );
          for( i = 0; SERVER_RANDOM_NICK_LEN > i ; i++ ) {
-            bconchar( c->nick, rand() % (int)(sizeof( nick_random_chars )-1) );
+            bconchar( c->nick, nick_random_chars[rand() % (int)(sizeof( nick_random_chars )-1)] );
          }
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
    hashmap_put( &(s->clients), c->nick, c );
+   scaffold_print_debug( "Client added to server with nick: %s\n", bdata( c->nick ) );
    //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
 }
 
@@ -288,7 +296,7 @@ void server_poll_new_clients( SERVER* s ) {
    assert( old_client_count < hashmap_count( &(s->clients) ) );
 
    /* Ditch this client for now. */
-   ref_dec( &(c->refcount) );
+   ref_dec( &(c->link.refcount) );
    c = NULL;
 
 cleanup:
@@ -298,26 +306,29 @@ cleanup:
 void server_service_clients( SERVER* s ) {
    ssize_t last_read_count = 0;
    int i = 0;
+   IRC_COMMAND* cmd = NULL;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
 #endif /* DEBUG */
 
-
    /* Check for commands from existing clients. */
-   //for( i = 0 ; hashmap_count( &(s->clients) ) > i ; i++ ) {
-   //}
+   cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
+   if( NULL != cmd ) {
+      vector_add( &(s->self.command_queue), cmd );
+   }
 
-   /* FIXME: Pass the mailbox. */
-   hashmap_iterate( &(s->clients), callback_ingest_commands, s );
-
-   /* TODO: Put the ingested commands into a mailbox so that we can lock it
-    *       while cycling. */
-
-   //hashmap_iterate( &(s->clients), server_prn_chunk, s );
-
-   /* Handle outstanding jobs. */
-   //mailbox_accept( s->self.jobs, s->self.jobs_socket );
+   /* Execute one command per cycle if available. */
+   if( 1 <= vector_count( &(s->self.command_queue) ) ) {
+      cmd = vector_get( &(s->self.command_queue), 0 );
+      vector_remove( &(s->self.command_queue), 0 );
+      if( NULL != cmd->callback ) {
+         cmd->callback( cmd->client, cmd->server, cmd->args );
+      } else {
+         scaffold_print_error( "Invalid command: %s\n", bdata( &(cmd->command) ) );
+      }
+      irc_command_free( cmd );
+   }
 
 cleanup:
    return;

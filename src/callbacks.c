@@ -3,16 +3,29 @@
 
 #include "client.h"
 #include "server.h"
+#include "irc.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    size_t last_read_count = 0;
-   SERVER* s = (SERVER*)arg;
+   SERVER* s = NULL;
    static bstring buffer = NULL;
    CLIENT* c = (CLIENT*)iter;
+   IRC_COMMAND* cmd = NULL;
+   const IRC_COMMAND* table = NULL;
 
+   /* Figure out if we're being called from a client or server. */
+   if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+      s = (SERVER*)arg;
+      table = irc_table_server;
+   } else {
+      table = irc_table_client;
+   }
+
+   /* Make sure a buffer is present. */
    if( NULL == buffer ) {
       buffer = bfromcstralloc( CONNECTION_BUFFER_LEN, "" );
    } else {
+      bwriteallow( (*buffer) ); /* Unprotect the buffer. */
       btrunc( buffer, 0 );
    }
 
@@ -20,6 +33,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 
    last_read_count = connection_read_line( &(c->link), buffer, FALSE );
    btrimws( buffer );
+   bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
    if( 0 >= last_read_count ) {
       /* TODO: Handle error reading. */
@@ -31,8 +45,10 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       c->link.socket, bdata( buffer )
    );
 
+   cmd = irc_dispatch( table, s, c, buffer );
+
 cleanup:
-   return NULL;
+   return cmd;
 }
 
 void* callback_search_clients( const bstring key, void* iter, void* arg ) {

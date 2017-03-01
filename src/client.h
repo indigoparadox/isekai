@@ -42,7 +42,7 @@ typedef struct _CLIENT {
    /*MAILBOX* jobs;
    ssize_t jobs_socket;*/
    HASHMAP chunkers;
-   REF refcount;
+   VECTOR command_queue;
    int sentinal;
 } CLIENT;
 

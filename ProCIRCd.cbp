@@ -242,7 +242,6 @@
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NoUI)" />
 		</Unit>
-		<Unit filename="src/proto.h" />
 		<Unit filename="src/ref.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />

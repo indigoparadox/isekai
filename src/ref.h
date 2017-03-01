@@ -5,6 +5,7 @@
 #include "scaffold.h"
 
 #define REF_SENTINAL 170
+#define REF_DISABLED {0, NULL, 0}
 
 #ifndef USE_THREADS
 

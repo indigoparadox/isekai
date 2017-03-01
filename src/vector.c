@@ -16,6 +16,7 @@ void vector_init( VECTOR* v ) {
 void vector_free( VECTOR* v ) {
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
+   assert( 0 >= vector_count( v ) );
 
    if( FALSE != v->scalar ) {
       free( v->scalar_data );
@@ -206,7 +207,7 @@ cleanup:
    return backshift;
 }
 
-void vector_delete( VECTOR* v, size_t index ) {
+void vector_remove( VECTOR* v, size_t index ) {
    size_t i;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */

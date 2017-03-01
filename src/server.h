@@ -30,7 +30,7 @@ typedef struct _SERVER {
 
 void server_init( SERVER* s, const bstring myhost );
 inline void server_stop( SERVER* s );
-void server_cleanup( SERVER* s );
+BOOL server_free( SERVER* s );
 void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... );
 void server_client_send( SERVER* s, CLIENT* c, bstring buffer );
 void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... );
