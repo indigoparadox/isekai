@@ -44,9 +44,7 @@ START_TEST( test_vector_add ) {
       blob = (BLOB*)vector_get( v, i );
       ck_assert_int_eq( 2, blob->refcount.count );
 
-      printf( "Blob ref before: %d\n", blob->refcount.count );
       vector_delete( v, i );
-      printf( "Blob ref after: %d\n", blob->refcount.count );
       ck_assert_int_eq( 1, blob->refcount.count );
 
       /* Delete the blob. */
