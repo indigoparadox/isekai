@@ -9,6 +9,7 @@ static void channel_cleanup( const struct _REF *ref ) {
    bdestroy( l->name );
    bdestroy( l->topic );
    gamedata_cleanup( &(l->gamedata) );
+   // FIXME: Free channel.
 }
 
 void channel_free( CHANNEL* l ) {

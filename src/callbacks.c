@@ -4,19 +4,6 @@
 #include "client.h"
 #include "server.h"
 
-/*
-typedef struct {
-   SERVER* s;
-   bstring buffer;
-   CLIENT* c_sender;
-} SERVER_PBUFFER;
-
-typedef struct {
-   SERVER* s;
-   bstring nick;
-} SERVER_DUO;
-*/
-
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    size_t last_read_count = 0;
    SERVER* s = (SERVER*)arg;
@@ -28,11 +15,6 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    } else {
       btrunc( buffer, 0 );
    }
-
-   //hashmap_lock( &(s->clients), TRUE );
-   //assert( hashmap_count( &(s->clients) ) > i );
-   //assert( NULL != server_get_client_by_ptr( s, c ) );
-   //hashmap_lock( &(s->clients), FALSE );
 
    /* TODO: Do we need the buffer to be part of the client anymore? */
 
@@ -48,9 +30,6 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       "Server: Line received from %d: %s\n",
       c->link.socket, bdata( buffer )
    );
-
-   // FIXME: Replace w mailbox:
-   parser_dispatch( s, c, buffer );
 
 cleanup:
    return NULL;

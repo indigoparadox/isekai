@@ -1,6 +1,6 @@
 #include "client.h"
 
-#include "parser.h"
+//#include "parser.h"
 #include "server.h"
 #include "callbacks.h"
 
@@ -111,7 +111,7 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
       assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 #endif /* DEBUG */
 
-      parser_dispatch( c, d, c->buffer );
+      //irc_dispatch( c, d, c->buffer );
    }
 
    gamedata_update_client( d, c );

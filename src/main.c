@@ -82,6 +82,7 @@ int main( int argc, char** argv ) {
 
       graphics_sleep( 50 );
 
+      server_poll_new_clients( server );
       client_update( client, &d );
       server_service_clients( server );
 

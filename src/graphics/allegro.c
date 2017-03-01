@@ -173,13 +173,12 @@ cleanup:
    return;
 }
 
-static void graphics_surface_actually_free( GRAPHICS* g ) {
-   graphics_surface_cleanup( g );
-   free( g );
-}
-
-void graphics_surface_free( GRAPHICS* g ) {
-   ref_dec( &(g->refcount) );
+static void graphics_surface_cleanup( const struct _REF *ref ) {
+   GRAPHICS* g = scaffold_container_of( ref, struct _GRAPHICS, refcount );
+   if( NULL != g->surface ) {
+      destroy_bitmap( g->surface );
+   }
+   // FIXME: Free surface.
 }
 
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
@@ -197,14 +196,12 @@ void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    g->color.g = 0;
    g->color.b = 0;
    g->color.a = 255;
-   g->refcount = (struct _REF){ graphics_surface_actually_free, 1 };
+   g->refcount = (struct _REF){ graphics_surface_cleanup, 1 };
    return;
 }
 
-void graphics_surface_cleanup( GRAPHICS* g ) {
-   if( NULL != g->surface ) {
-      destroy_bitmap( g->surface );
-   }
+void graphics_surface_free( GRAPHICS* g ) {
+   ref_dec( &(g->refcount) );
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
@@ -212,7 +209,7 @@ void graphics_flip_screen( GRAPHICS* g ) {
 }
 
 void graphics_shutdown( GRAPHICS* g ) {
-   graphics_surface_cleanup( g );
+   graphics_surface_free( g );
 }
 
 void graphics_set_font( GRAPHICS* g, const bstring name ) {

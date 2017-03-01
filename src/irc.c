@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "irc.h"
 
 #include "server.h"
 #include "heatshrink/heatshrink_decoder.h"
@@ -18,7 +18,7 @@ typedef struct {
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
-static void parser_server_reply_welcome( void* local, void* remote ) {
+static void irc_server_reply_welcome( void* local, void* remote ) {
    CLIENT* c = (CLIENT*)remote;
    SERVER* s = (SERVER*)local;
 
@@ -50,7 +50,7 @@ static void parser_server_reply_welcome( void* local, void* remote ) {
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
 }
 
-static void parser_server_reply_nick( void* local, void* remote,
+static void irc_server_reply_nick( void* local, void* remote,
                                       bstring oldnick ) {
    CLIENT* c = (CLIENT*)remote;
    SERVER* s = (SERVER*)local;
@@ -72,7 +72,7 @@ cleanup:
    return;
 }
 
-void parser_server_reply_motd( void* local, void* remote ) {
+void irc_server_reply_motd( void* local, void* remote ) {
    CLIENT* c = (CLIENT*)remote;
    SERVER* s = (SERVER*)local;
 
@@ -95,10 +95,7 @@ cleanup:
    return;
 }
 
-static void parser_server_user( void* local, void* remote,
-                                struct bstrList* args ) {
-   CLIENT* c = (CLIENT*)remote;
-   SERVER* s = (SERVER*)local;
+static void irc_server_user( CLIENT* c, SERVER* s, struct bstrList* args ) {
    int i,
        consumed = 0;
    char* c_mode = NULL;
@@ -140,6 +137,8 @@ static void parser_server_user( void* local, void* remote,
       consumed++;
    }
 
+#if 0
+// FIXME
    /* Try to set the nick. */
    if(
       0 == bstrcmp( &scaffold_empty_string, c->nick ) &&
@@ -150,22 +149,22 @@ static void parser_server_user( void* local, void* remote,
          s->self.remote, c->username
       );
    }
-
+#endif
    //scaffold_print_debug( "User: %s, Real: %s, Remote: %s\n", bdata( c->username ), bdata( c->realname ), bdata( c->remote ) );
 
    c->flags |= CLIENT_FLAGS_HAVE_USER;
 
    if( ( c->flags & CLIENT_FLAGS_HAVE_NICK ) ) {
-      parser_server_reply_welcome( local, remote );
+      // FIXME: irc_server_reply_welcome( local, remote );
    }
-   //parser_server_reply_nick( local, remote, NULL );
 
 cleanup:
    return;
 }
 
-static void parser_server_nick( void* local, void* remote,
-                                struct bstrList* args ) {
+#if 0
+// FIXME
+static void irc_server_nick( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CLIENT* c = (CLIENT*)remote;
    SERVER* s = (SERVER*)local;
    bstring oldnick = NULL;
@@ -210,10 +209,10 @@ static void parser_server_nick( void* local, void* remote,
    }
 
    if( !(c->flags & CLIENT_FLAGS_HAVE_WELCOME) ) {
-      parser_server_reply_welcome( local, remote );
+      irc_server_reply_welcome( local, remote );
    }
 
-   parser_server_reply_nick( local, remote, oldnick );
+   irc_server_reply_nick( local, remote, oldnick );
 
 cleanup:
 
@@ -221,11 +220,9 @@ cleanup:
 
    return;
 }
+#endif
 
-static void parser_server_quit( void* local, void* remote,
-                                struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_quit( CLIENT* c, SERVER* s, struct bstrList* args ) {
    bstring message;
    bstring space;
 
@@ -249,7 +246,7 @@ typedef struct {
    struct bstrList* args;
 } PARSER_ISON;
 
-static void* parser_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
+static void* irc_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
    CLIENT* c;
    PARSER_ISON* ison = (PARSER_ISON*)arg;
    size_t i;
@@ -265,10 +262,7 @@ static void* parser_cmp_ison( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-static void parser_server_ison( void* local, void* remote,
-                                struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_ison( CLIENT* c, SERVER* s, struct bstrList* args ) {
    PARSER_ISON ison = { 0 };
 
 // FIXME
@@ -278,7 +272,7 @@ static void parser_server_ison( void* local, void* remote,
    scaffold_check_null( ison.clients );
    scaffold_check_null( ison.args );
 
-   vector_iterate( &(s->clients), parser_cmp_ison, &ison );
+   vector_iterate( &(s->clients), irc_cmp_ison, &ison );
    server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, ison.clients );
 
 cleanup:
@@ -289,7 +283,7 @@ cleanup:
    return;
 }
 
-static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
+static void* irc_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring names = (bstring)arg;
    bconcat( names, c->nick );
@@ -299,10 +293,7 @@ static void* parser_cat_names( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-static void parser_server_join( void* local, void* remote,
-                                struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    bstring namehunt = NULL;
    int8_t bstr_result = 0;
@@ -357,7 +348,7 @@ static void parser_server_join( void* local, void* remote,
    // FIXME
    names = bfromcstr( "" );
    scaffold_check_null( names );
-   //vector_iterate( &(l->clients), parser_cat_names, names );
+   //vector_iterate( &(l->clients), irc_cat_names, names );
 
    server_client_printf(
       s, c, ":%b 332 %b %b :%b",
@@ -385,14 +376,10 @@ cleanup:
    return;
 }
 
-static void parser_server_part( void* local, void* remote,
-                                struct bstrList* args ) {
+static void irc_server_part( CLIENT* c, SERVER* s, struct bstrList* args ) {
 }
 
-static void parser_server_privmsg( void* local, void* remote,
-                                   struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_privmsg( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CLIENT* c_dest = NULL;
    CHANNEL* l_dest = NULL;
    bstring msg = NULL;
@@ -424,7 +411,7 @@ cleanup:
    return;
 }
 
-static void* parser_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
+static void* irc_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
    PARSER_TRIO* trio = (PARSER_TRIO*)arg;
    CLIENT* c_iter = (CLIENT*)iter;
    server_client_printf(
@@ -434,10 +421,7 @@ static void* parser_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
-static void parser_server_who( void* local, void* remote,
-                               struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_who( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    PARSER_TRIO trio = { 0 };
 
@@ -450,17 +434,14 @@ static void parser_server_who( void* local, void* remote,
    trio.l = l;
    trio.s = s;
 
-   vector_iterate( &(l->clients), parser_prn_who, &trio );
+   vector_iterate( &(l->clients), irc_prn_who, &trio );
 #endif
 
 cleanup:
    return;
 }
 
-static void parser_server_ping( void* local, void* remote,
-                               struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_ping( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    if( 2 > args->qty ) {
       goto cleanup;
@@ -475,10 +456,7 @@ cleanup:
 }
 
 /* GU #channel px+1y+2z+3 */
-static void parser_server_gu( void* local, void* remote,
-                              struct bstrList* args ) {
-   SERVER* s = (SERVER*)local;
-   CLIENT* c = (CLIENT*)remote;
+static void irc_server_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    bstring reply_c = NULL;
    bstring reply_l = NULL;
@@ -515,10 +493,7 @@ cleanup:
    return;
 }
 
-static void parser_client_gu( void* local, void* gamedata,
-                              struct bstrList* args ) {
-   CLIENT* c = (CLIENT*)local;
-   GAMEDATA* d = (GAMEDATA*)gamedata;
+static void irc_client_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
    bstring reply = NULL;
    struct bstrList gu_args;
 
@@ -537,7 +512,7 @@ static void parser_client_gu( void* local, void* gamedata,
 #endif
 
    /* TODO: Modify gamedata based on new information. */
-   gamedata_react_client( d, c, &gu_args, &reply );
+//   gamedata_react_client( d, c, &gu_args, &reply );
 
    if( NULL != reply ) {
       client_printf( c, "%b", reply );
@@ -547,9 +522,7 @@ static void parser_client_gu( void* local, void* gamedata,
    return;
 }
 
-static void parser_client_join( void* local, void* gamedata,
-                                struct bstrList* args ) {
-   CLIENT* c = (CLIENT*)local;
+static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
 
    scaffold_check_bounds( 3, args->mlen );
@@ -573,10 +546,7 @@ cleanup:
 
 static const struct tagbstring str_closing = bsStatic( ":Closing" );
 
-static void parser_client_error( void* local, void* gamedata,
-                                struct bstrList* args ) {
-   CLIENT* c = (CLIENT*)local;
-
+static void irc_client_error( CLIENT* c, SERVER* s, struct bstrList* args ) {
    if(
       2 <= args->qty &&
       0 == bstrcmp( &str_closing, args->entry[1] )
@@ -585,9 +555,8 @@ static void parser_client_error( void* local, void* gamedata,
    }
 }
 
-static void parser_client_gdb( void* local, void* gamedata,
-                                struct bstrList* args ) {
-   GAMEDATA* d = (GAMEDATA*)gamedata;
+static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
+   GAMEDATA* d = NULL;
    //CHUNKER* h = NULL;
    heatshrink_decoder* h = NULL;
    int hash_ret;
@@ -599,6 +568,10 @@ static void parser_client_gdb( void* local, void* gamedata,
    bstring data = NULL;
    bstring filename = NULL;
    uint8_t outbuffer[PARSER_FILE_XMIT_BUFFER] = { 0 };
+
+   // FIXME: Get the channel name from the args.
+   d = client_get_channel_by_name( c, bfromcstr("test") );
+   scaffold_check_null( d );
 
    assert( 9 == args->qty );
 
@@ -660,52 +633,46 @@ cleanup:
    return;
 }
 
-const parser_entry parser_table_server[] = {
-   {bsStatic( "USER" ), parser_server_user},
-   {bsStatic( "NICK" ), parser_server_nick},
-   {bsStatic( "QUIT" ), parser_server_quit},
-   {bsStatic( "ISON" ), parser_server_ison},
-   {bsStatic( "JOIN" ), parser_server_join},
-   {bsStatic( "PART" ), parser_server_part},
-   {bsStatic( "PRIVMSG" ), parser_server_privmsg},
-   {bsStatic( "WHO" ), parser_server_who},
-   {bsStatic( "PING" ), parser_server_ping},
-   {bsStatic( "GU" ), parser_server_gu },
-   {bsStatic( "" ), NULL}
-};
+IRC_COMMAND_TABLE_START( server ) = {
+IRC_COMMAND_ROW( "USER", irc_server_user ),
+//IRC_COMMAND_ROW( NICK, irc_server_nick ),
+IRC_COMMAND_ROW( "QUIT", irc_server_quit ),
+IRC_COMMAND_ROW( "ISON", irc_server_ison ),
+IRC_COMMAND_ROW( "JOIN", irc_server_join ),
+IRC_COMMAND_ROW( "PART", irc_server_part ),
+IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
+IRC_COMMAND_ROW( "WHO", irc_server_who ),
+IRC_COMMAND_ROW( "PING", irc_server_ping ),
+IRC_COMMAND_ROW( "GU", irc_server_gu ),
+IRC_COMMAND_TABLE_END() };
 
-const parser_entry parser_table_client[] = {
-   {bsStatic( "GU" ), parser_client_gu },
-   {bsStatic( "JOIN" ), parser_client_join },
-   {bsStatic( "ERROR" ), parser_client_error },
-   {bsStatic( "GDB" ), parser_client_gdb },
-   {bsStatic( "" ), NULL}
-};
+IRC_COMMAND_TABLE_START( client ) = {
+IRC_COMMAND_ROW( "GU", irc_client_gu  ),
+IRC_COMMAND_ROW( "JOIN", irc_client_join ),
+IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
+IRC_COMMAND_ROW( "GDB", irc_client_gdb  ),
+IRC_COMMAND_TABLE_END() };
 
-void parser_dispatch( void* local, void* arg2, const_bstring line ) {
-   SERVER* s_local = (SERVER*)local;
-   const parser_entry* parser_table = NULL;
+//IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {
+
+IRC_COMMAND* irc_dispatch(
+   const IRC_COMMAND* table, SERVER* s, CLIENT* c, const_bstring line
+) {
    struct bstrList* args = NULL;
-   const parser_entry* command = NULL;
+   const IRC_COMMAND* command = NULL;
    size_t i;
    bstring cmd_test = NULL; /* Don't free this. */
+   IRC_COMMAND* out = NULL;
 
-   if( SERVER_SENTINAL == s_local->self.sentinal ) {
-      parser_table = parser_table_server;
-      //arg_command_index = 0;
-   } else {
-      parser_table = parser_table_client;
-      //arg_command_index = 1; /* First index is just the server name. */
-   }
+   //irc_cmd_cb* foo = irc_client_gdb;
 
    args = bsplit( line, ' ' );
    scaffold_check_null( args );
-   //scaffold_check_bounds( (arg_command_index + 1), args->mlen );
 
-   for( i = 0 ; i < args->qty && PARSER_CMD_SEARCH_RANGE > i ; i++ ) {
+   for( i = 0 ; i < args->qty && IRC_LINE_CMD_SEARCH_RANGE > i ; i++ ) {
       cmd_test = args->entry[i];
       for(
-         command = &(parser_table[0]);
+         command = &(table[0]);
          NULL != command->callback;
          command++
       ) {
@@ -713,11 +680,17 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            if( 0 != bstrncmp( cmd_test, &(parser_table_client[3].command), 3 ) ) {
+            if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
                scaffold_print_debug( "Parse: %s\n", bdata( line ) );
             }
 #endif /* DEBUG */
-            command->callback( local, arg2, args );
+
+            out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
+            scaffold_check_null( out );
+            memcpy( out, cmd_test, sizeof( IRC_COMMAND ) );
+            out->server = s;
+            out->client = c;
+            out->args = args;
 
             /* Found a command, so short-circuit. */
             goto cleanup;
@@ -728,6 +701,8 @@ void parser_dispatch( void* local, void* arg2, const_bstring line ) {
    scaffold_print_error( "Parser unable to interpret: %s\n", bdata( line ) );
 
 cleanup:
-
-   bstrListDestroy( args );
+   if( NULL == out ) {
+      bstrListDestroy( args );
+   }
+   return out;
 }

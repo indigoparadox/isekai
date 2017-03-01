@@ -19,7 +19,7 @@ typedef struct _connection {
    void* arg;
 } CONNECTION;
 
-CONNECTION* connection_register_incoming( CONNECTION* n_server );
+void connection_register_incoming( CONNECTION* n_server, CONNECTION* n );
 void connection_listen( CONNECTION* n, uint16_t port );
 void connection_connect( CONNECTION* c, bstring server, uint16_t port );
 void connection_write_line( CONNECTION* n, bstring buffer, BOOL client );

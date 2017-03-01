@@ -131,7 +131,7 @@ cleanup:
       free( image_export );
    }
    if( NULL != image_info ) {
-      graphics_surface_cleanup( image_info->image );
+      graphics_surface_free( image_info->image );
       free( image_info );
    }
    return;
