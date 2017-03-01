@@ -23,6 +23,55 @@ void* mailbox_envelope_cmp( VECTOR* v, void* iter, void* arg ) {
    return NULL;
 }
 
+static void mailbox_envelope_cleanup( const struct _REF* ref ) {
+   MAILBOX_ENVELOPE* e = (MAILBOX_ENVELOPE*)scaffold_container_of( ref, MAILBOX_ENVELOPE, refcount );
+   bdestroy( e->contents );
+   e->callback = NULL;
+   e->socket_src = -1;
+   e->socket_dest = -1;
+   e->cb_arg = NULL;
+   e->special = MAILBOX_ENVELOPE_SPECIAL_DELETE;
+}
+
+MAILBOX_ENVELOPE* mailbox_envelope_new(
+   bstring contents,
+   MAILBOX_CALLBACK callback,
+   void* cb_arg,
+   size_t src,
+   size_t dest,
+   MAILBOX_ENVELOPE_SPECIAL special
+) {
+   MAILBOX_ENVELOPE* outgoing;
+
+   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   scaffold_check_null( outgoing );
+
+#ifdef DEBUG
+   if( NULL != contents ) {
+      assert( MAILBOX_ENVELOPE_SPECIAL_NONE == special );
+      assert( NULL == callback );
+   }
+#endif /* DEBUG */
+
+   ref_init( &(outgoing->refcount), mailbox_envelope_cleanup );
+
+   outgoing->contents = NULL != contents ? bstrcpy( contents ) : NULL;
+   outgoing->callback = callback;
+   outgoing->socket_src = src;
+   outgoing->socket_dest = dest;
+   outgoing->cb_arg = cb_arg;
+   outgoing->special = special;
+
+cleanup:
+   return outgoing;
+}
+
+void mailbox_envelope_free( MAILBOX_ENVELOPE* e ) {
+   if( ref_dec( &(e->refcount) ) ) {
+      free( e );
+   }
+}
+
 size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
    MAILBOX_ENVELOPE* top_envelope = NULL;
    size_t socket_out = -1;
@@ -47,8 +96,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
       ) {
          socket_out = top_envelope->socket_src;
          vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
-         bdestroy( top_envelope->contents );
-         free( top_envelope );
+         mailbox_envelope_free( top_envelope );
          vector_remove( &(mailbox->envelopes), i );
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
@@ -68,7 +116,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
    if( NULL != top_envelope && NULL != top_envelope->callback ) {
       top_envelope->callback( mailbox, top_envelope );
       if( MAILBOX_ENVELOPE_SPECIAL_DELETE == top_envelope->special ) {
-         free( top_envelope );
+         mailbox_envelope_free( top_envelope );
          vector_remove( &(mailbox->envelopes), 0 );
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
@@ -89,14 +137,10 @@ void mailbox_call( MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callba
    MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
-   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = mailbox_envelope_new(
+      NULL, callback, arg, socket_src, 0, MAILBOX_ENVELOPE_SPECIAL_NONE
+   );
    scaffold_check_null( outgoing );
-   outgoing->contents = NULL;
-   outgoing->callback = callback;
-   outgoing->socket_src = socket_src;
-   outgoing->socket_dest = 0;
-   outgoing->cb_arg = arg;
-   outgoing->special = MAILBOX_ENVELOPE_SPECIAL_NONE;
 
    ok = TRUE;
    vector_add( &(mailbox->envelopes), outgoing );
@@ -108,7 +152,7 @@ void mailbox_call( MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callba
 
 cleanup:
    if( TRUE != ok ) {
-      free( outgoing );
+      mailbox_envelope_free( outgoing );
    }
    return;
 
@@ -122,14 +166,15 @@ void mailbox_send(
 
    scaffold_check_null( message );
 
-   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = mailbox_envelope_new(
+      message,
+      NULL,
+      NULL,
+      socket_src,
+      socket_dest,
+      MAILBOX_ENVELOPE_SPECIAL_NONE
+   );
    scaffold_check_null( outgoing );
-   outgoing->contents = bstrcpy( message );
-   scaffold_check_null( outgoing->contents );
-   outgoing->socket_src = socket_src;
-   outgoing->socket_dest = socket_dest;
-   outgoing->callback = NULL;
-   outgoing->special = MAILBOX_ENVELOPE_SPECIAL_NONE;
 
    ok = TRUE;
    vector_add( &(mailbox->envelopes), outgoing );
@@ -151,8 +196,11 @@ size_t mailbox_connect(
       mailbox->last_socket = 0;
    }
 
-   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = mailbox_envelope_new(
+      NULL, NULL, NULL, -1, socket_dest, MAILBOX_ENVELOPE_SPECIAL_CONNECT
+   );
    scaffold_check_null( outgoing );
+
    if( 0 > socket_src ) {
       socket_out = mailbox->last_socket++;
    } else {
@@ -160,9 +208,7 @@ size_t mailbox_connect(
    }
    vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
    outgoing->socket_src = socket_out;
-   outgoing->socket_dest = socket_dest;
-   outgoing->special = MAILBOX_ENVELOPE_SPECIAL_CONNECT;
-   outgoing->callback = NULL;
+
    vector_add( &(mailbox->envelopes), outgoing );
 
 cleanup:
@@ -183,8 +229,8 @@ size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer ) {
       bassign( buffer, top_envelope->contents );
       length_out = blength( buffer );
       bdestroy( top_envelope->contents );
-      free( top_envelope );
       vector_remove( &(mailbox->envelopes), 0 );
+      mailbox_envelope_free( top_envelope );
    } else {
       bassigncstr( buffer, "" );
    }

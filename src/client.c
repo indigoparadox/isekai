@@ -17,7 +17,7 @@ void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
 */
 
 static void client_cleanup( const struct _REF *ref ) {
-   CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount );
+   /* CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount ); */
    CLIENT* c = scaffold_container_of( c, struct _CLIENT, link );
    hashmap_cleanup( &(c->channels) );
    /* TODO: Free chunkers? */
@@ -131,7 +131,7 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args );
       } else {
-         scaffold_print_error( "Invalid command: %s\n", bdata( &(cmd->command) ) );
+         scaffold_print_error( "Client: Invalid command: %s\n", bdata( &(cmd->command) ) );
       }
       irc_command_free( cmd );
    }

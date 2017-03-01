@@ -37,7 +37,7 @@ cleanup:
 }
 
 void gamedata_cleanup( GAMEDATA* d ) {
-   tilemap_cleanup( &(d->tmap) );
+   tilemap_free( &(d->tmap) );
 
    /* Don't cleanup UI since other things probably use that. */
 }
@@ -47,6 +47,9 @@ void gamedata_init_client( GAMEDATA* d, UI* ui, const bstring name ) {
    memset( d, '\0', sizeof( GAMEDATA ) );
 #endif /* INIT_ZEROES */
    d->ui = ui;
+   d->incoming_buffer_len = 0;
+   d->incoming_buffer = NULL;
+   tilemap_init( &(d->tmap) );
    //vector_init( &(d->incoming_chunkers ) );
    hashmap_init( &(d->incoming_chunkers) );
 }
@@ -55,7 +58,7 @@ void gamedata_update_server(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args,
    bstring* reply_c, bstring* reply_l
 ) {
-   CHANNEL* l = gamedata_get_channel( d );
+   /* CHANNEL* l = gamedata_get_channel( d ); */
 
 
 }

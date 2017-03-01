@@ -92,6 +92,8 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
          return c;
       }
    }
+
+   return NULL;
 }
 
 void* callback_send_clients( const bstring key, void* iter, void* arg ) {
@@ -151,9 +153,11 @@ cleanup:
    if( NULL != chunks ) {
       vector_free( chunks );
    }
+   bdestroy( xmit_buffer_template );
+   return NULL;
 }
 
-void* callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
+BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;
 
@@ -161,7 +165,7 @@ void* callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
 
    bdestroy( xmit_buffer );
 
-   return xmit_buffer;
+   return TRUE;
 }
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {

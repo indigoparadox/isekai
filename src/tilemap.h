@@ -104,10 +104,6 @@ typedef struct {
     scaffold_check_null( t ); \
     tilemap_position_init( t );
 
-#define tilemap_free( t ) \
-    tilemap_cleanup( t ); \
-    free( t );
-
 #define tilemap_layer_free( layer ) \
     tilemap_layer_cleanup( layer ); \
     free( layer );
@@ -123,7 +119,7 @@ typedef struct {
 */
 
 void tilemap_init( TILEMAP* t );
-void tilemap_cleanup( TILEMAP* t );
+void tilemap_free( TILEMAP* t );
 void tilemap_layer_init( TILEMAP_LAYER* layer );
 void tilemap_layer_cleanup( TILEMAP_LAYER* layer );
 void tilemap_position_init( TILEMAP_POSITION* position );

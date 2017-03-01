@@ -3,6 +3,7 @@
 #define MAILBOX_H
 
 #include "vector.h"
+#include "ref.h"
 
 #define MAILBOX_SOCKET_NONE -1
 
@@ -18,12 +19,13 @@ typedef enum _MAILBOX_ENVELOPE_SPECIAL {
 } MAILBOX_ENVELOPE_SPECIAL;
 
 typedef struct _MAILBOX_ENVELOPE {
-    size_t socket_src;
-    size_t socket_dest;
-    bstring contents;
-    MAILBOX_ENVELOPE_SPECIAL special;
-    MAILBOX_CALLBACK callback;
-    void* cb_arg;
+   REF refcount;
+   size_t socket_src;
+   size_t socket_dest;
+   bstring contents;
+   MAILBOX_ENVELOPE_SPECIAL special;
+   MAILBOX_CALLBACK callback;
+   void* cb_arg;
 } MAILBOX_ENVELOPE;
 
 typedef struct _MAILBOX {

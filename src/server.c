@@ -160,7 +160,6 @@ void server_add_client( SERVER* s, CLIENT* c ) {
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
    CHANNEL* l = NULL;
    bstring map_serial = NULL;
-   BOOL just_created = FALSE;
 #ifdef DEBUG
    size_t old_count;
 #endif /* DEBUG */
@@ -175,17 +174,16 @@ CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
       channel_new( l, l_name );
       gamedata_init_server( &(l->gamedata), l_name );
       client_add_channel( &(s->self), l );
-      scaffold_print_info( "Channel created: %s\n", bdata( l->name ) );
+      scaffold_print_info( "Server: Channel created: %s\n", bdata( l->name ) );
    } else {
-      scaffold_print_info( "Channel found on server: %s\n", bdata( l->name ) );
-      just_created = TRUE;
+      scaffold_print_info( "Server: Channel found on server: %s\n", bdata( l->name ) );
    }
 
    /* Make sure the user is not already in the channel. If they are, then  *
     * just shut up and explode.                                            */
    if( NULL != channel_get_client_by_name( l, c_first->nick ) ) {
       scaffold_print_debug(
-         "%s already in channel %s; ignoring.\n",
+         "Server: %s already in channel %s; ignoring.\n",
          bdata( c_first->nick ), bdata( l->name )
       );
       l = NULL;
@@ -244,7 +242,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
 
    deleted = hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
    scaffold_print_debug(
-      "Removed %d clients from server. %d remaining.\n",
+      "Server: Removed %d clients. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
    );
 
@@ -273,7 +271,7 @@ void server_listen( SERVER* s, int port ) {
    s->self.link.arg = s;
    connection_listen( &(s->self.link), port );
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
-      scaffold_print_error( "Unable to bind to specified port. Exiting.\n" );
+      scaffold_print_error( "Server: Unable to bind to specified port. Exiting.\n" );
    }
 }
 
@@ -319,6 +317,8 @@ void server_service_clients( SERVER* s ) {
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
 #endif /* DEBUG */
 
+   scaffold_check_null( s );
+
    /* Check for commands from existing clients. */
    cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
    if( NULL != cmd ) {
@@ -332,7 +332,7 @@ void server_service_clients( SERVER* s ) {
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args );
       } else {
-         scaffold_print_error( "Invalid command: %s\n", bdata( &(cmd->command) ) );
+         scaffold_print_error( "Server: Invalid command: %s\n", bdata( &(cmd->command) ) );
       }
       irc_command_free( cmd );
    }
@@ -340,7 +340,7 @@ void server_service_clients( SERVER* s ) {
    /* Send files in progress. */
    hashmap_iterate( &(s->clients), callback_process_chunkers, s );
 
-/* cleanup: */
+cleanup:
    return;
 }
 

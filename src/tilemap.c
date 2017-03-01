@@ -6,21 +6,12 @@
 #include <memory.h>
 #include <string.h>
 
-void tilemap_init( TILEMAP* t ) {
-#ifdef INIT_ZEROES
-   memset( t, '\0', sizeof( TILEMAP ) );
-#endif /* INIT_ZEROES */
-
-   vector_init( &(t->layers) );
-   vector_init( &(t->positions) );
-   vector_init( &(t->tilesets) );
-
-   t->serialize_buffer = NULL;
-   t->serialize_filename = bfromcstralloc( 30, "" );
-}
-
-void tilemap_cleanup( TILEMAP* t ) {
+static void tilemap_cleanup( const struct _REF* ref ) {
    int i;
+   TILEMAP* t;
+
+   t = scaffold_container_of( ref, TILEMAP, refcount );
+
    for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
       tilemap_layer_free( vector_get( &(t->layers), i ) );
    }
@@ -35,6 +26,25 @@ void tilemap_cleanup( TILEMAP* t ) {
    vector_free( &(t->tilesets) );
    bdestroy( t->serialize_buffer );
    bdestroy( t->serialize_filename );
+
+   /* TODO: Free tilemap. */
+}
+
+void tilemap_init( TILEMAP* t ) {
+   ref_init( &(t->refcount), tilemap_cleanup );
+
+   vector_init( &(t->layers) );
+   vector_init( &(t->positions) );
+   vector_init( &(t->tilesets) );
+
+   t->orientation = TILEMAP_ORIENTATION_ORTHO;
+
+   t->serialize_buffer = NULL;
+   t->serialize_filename = bfromcstralloc( 30, "" );
+}
+
+void tilemap_free( TILEMAP* t ) {
+   ref_dec( &(t->refcount) );
 }
 
 void tilemap_layer_init( TILEMAP_LAYER* layer ) {

@@ -420,7 +420,7 @@ int b64_decode( bstring indata, unsigned char *out, size_t *outLen ) {
     while( indata_index < blength( indata ) ) {
         //unsigned char c = d[*in++];
         //unsigned char c = d[in[indata_index++]];
-        unsigned char c = d[bdata( indata )[indata_index++]];
+        unsigned char c = d[(int)(bdata( indata )[indata_index++])];
 
         switch (c) {
         case WHITESPACE: continue;   /* skip whitespace */

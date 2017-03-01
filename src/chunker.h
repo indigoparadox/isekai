@@ -19,7 +19,7 @@ typedef struct _CHUNKER {
    heatshrink_decoder* decoder;
    size_t raw_position;
    size_t raw_length;
-   void* raw_ptr;
+   uint8_t* raw_ptr;
    BOOL finished;
 } CHUNKER;
 

@@ -41,12 +41,8 @@ cleanup:
 }
 
 void channel_remove_client( CHANNEL* l, CLIENT* c ) {
-   size_t deleted = 0;
    CLIENT* c_test = NULL;
-   //deleted = vector_delete_cb( &(l->clients), callback_free_clients, c->nick );
-
    c_test = hashmap_get( &(l->clients), c->nick );
-
    if( NULL != c_test && TRUE == hashmap_remove( &(l->clients), c->nick ) ) {
       scaffold_print_debug(
          "Removed 1 clients from channel %s. %d remaining.\n",

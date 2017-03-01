@@ -183,7 +183,7 @@ uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
    key ^= (key >> 12);
 
    /* Knuth's Multiplicative Method */
-   key = (key >> 3) * (uint32_t)2654435761;
+   key = (key >> 3) * 2654435761u;
    key %= m->table_size;
 
 cleanup:

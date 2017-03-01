@@ -1,7 +1,10 @@
 
 #include "chunker.h"
 
+#include <stdlib.h>
+
 #include "scaffold.h"
+#include "b64/b64.h"
 
 static void chunker_cleanup( const struct _REF* ref ) {
 
@@ -27,7 +30,7 @@ void chunker_chunk_start( CHUNKER* h, void* src_buffer, size_t src_length ) {
    h->raw_position = 0;
    h->raw_length = src_length;
    h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
-   memcpy( h->raw_ptr, h->raw_length, src_length );
+   memcpy( h->raw_ptr, src_buffer, src_length );
 
 cleanup:
    return;
@@ -38,7 +41,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
       exhumed,
       xmit_buffer_pos = 0;
    uint8_t binary_compression_buffer[CHUNKER_XMIT_BINARY_SIZE] = { 0 };
-   int i;
+   //int i;
    HSE_poll_res poll_res;
    HSE_sink_res sink_res;
 
@@ -50,6 +53,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
    //while( h->raw_length < h->raw_position ) {
    while( CHUNKER_XMIT_BINARY_SIZE > xmit_buffer_pos ) {
       if( h->raw_position < h->raw_length ) {
+         assert( TRUE != h->finished );
          sink_res = heatshrink_encoder_sink(
             h->encoder,
             (uint8_t*)&(h->raw_ptr[h->raw_position]),
@@ -65,7 +69,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
 
       poll_res = heatshrink_encoder_poll(
          h->encoder,
-         &binary_compression_buffer,
+         binary_compression_buffer,
          CHUNKER_XMIT_BINARY_SIZE,
          &exhumed
       );
@@ -79,7 +83,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
    b64_encode(
       &binary_compression_buffer, CHUNKER_XMIT_BINARY_SIZE, xmit_buffer, 76
    );
-cleanup:
+/* cleanup: */
    return;
 }
 
