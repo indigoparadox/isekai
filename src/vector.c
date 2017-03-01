@@ -233,7 +233,7 @@ cleanup:
    return;
 }
 
-size_t vector_delete_scalar( VECTOR* v, int32_t value ) {
+size_t vector_remove_scalar( VECTOR* v, int32_t value ) {
    size_t i;
    size_t difference = 0;
 
