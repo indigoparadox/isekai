@@ -54,87 +54,57 @@ cleanup:
 }
 
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
-#ifdef USE_HEATSHRINK
-   size_t consumed,
-      exhumed,
-      tx_buffer_start = h->raw_position,
-      mid_buffer_pos = 0,
-      raw_chunk_length,
-      mid_buffer_length = h->tx_chunk_length / 4, // 60 / 4 = 15
-      tx_buffer_length = h->tx_chunk_length / 4;
-      //tx_buffer_pos = 0;
-   uint8_t* mid_buffer;
-   static HSE_poll_res poll_res = HSER_POLL_EMPTY;
    HSE_sink_res sink_res;
+   HSE_poll_res poll_res;
+   size_t consumed = 0,
+      hs_buffer_len = h->tx_chunk_length * 2,
+      hs_buffer_pos = 0,
+      raw_buffer_len = h->tx_chunk_length;
+   uint8_t* hs_buffer = NULL;
 
-   assert( NULL == h->decoder );
-   assert( NULL != h->encoder );
+   hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
+   heatshrink_encoder_reset( h->encoder );
 
-   /* 4x character count for base64 encoding. */
-   //mid_buffer_length = blength( tx_buffer ) / 4;
-   //mid_buffer_length = h->tx_chunk_length / 4; // 60 / 4 = 15
-   //tx_buffer_length = h->tx_chunk_length / 4;
-   mid_buffer = (uint8_t*)calloc( mid_buffer_length, sizeof( uint8_t ) );
-   scaffold_check_null( mid_buffer );
-
-   /* Sink enough data to fill an outgoing buffer and wait for it to process. */
-   while( mid_buffer_length > mid_buffer_pos ) {
-
-      if( HSER_POLL_MORE != poll_res && TRUE != h->finished && h->raw_position < h->raw_length ) {
-         assert( TRUE != h->finished );
-         //raw_chunk_length = tx_buffer_length - (h->raw_position - tx_buffer_start);
+   do {
+      if( raw_buffer_len > 0 ) {
          sink_res = heatshrink_encoder_sink(
             h->encoder,
-            &(h->raw_ptr[h->raw_position]), // tx_buffer_start + tx_buffer_pos
-            //raw_chunk_length,
-            h->raw_length - h->raw_position,
+            &(h->raw_ptr[h->raw_position]),
+            //(h->raw_length - h->raw_position),
+            raw_buffer_len,
             &consumed
          );
-         assert( HSER_SINK_OK == sink_res );
+         if( HSER_SINK_OK != sink_res ) {
+            break;
+         }
          h->raw_position += consumed;
-         //tx_buffer_pos -= consumed;
-      }
-
-      if( TRUE != h->finished && h->raw_position >= h->raw_length ) {
-         heatshrink_encoder_finish( h->encoder );
-         h->finished = TRUE;
-         break;
+         raw_buffer_len -= consumed;
+         if( 0 == raw_buffer_len ) {
+            heatshrink_encoder_finish( h->encoder );
+         }
       }
 
       do {
          poll_res = heatshrink_encoder_poll(
             h->encoder,
-            &(mid_buffer[mid_buffer_pos]),
-            mid_buffer_length - mid_buffer_pos,
-            &exhumed
+            &(hs_buffer[hs_buffer_pos]),
+            (hs_buffer_len - hs_buffer_pos),
+            &consumed
          );
-         mid_buffer_pos += exhumed;
+         if( HSER_POLL_MORE != poll_res && HSER_POLL_EMPTY != poll_res ) {
+            break;
+         }
+         hs_buffer_pos += consumed;
+      } while( HSER_POLL_MORE == poll_res );
+   } while( 0 != raw_buffer_len );
 
-      } while( HSER_POLL_MORE == poll_res && mid_buffer_pos < mid_buffer_length );
-      assert( HSER_POLL_EMPTY == poll_res || HSER_POLL_MORE == poll_res );
-   }
+   b64_encode( hs_buffer, hs_buffer_len, tx_buffer, 10000 );
 
-   b64_encode( mid_buffer, mid_buffer_length, tx_buffer, 76 );
-#else
-   if( h->raw_position + xmit_chunk_length > h->raw_length ) {
-      xmit_chunk_length = h->raw_length % xmit_chunk_length;
-   }
-
-   b64_encode( &(h->raw_ptr[h->raw_position]), xmit_chunk_length, xmit_buffer, 76 );
-   h->raw_position += xmit_chunk_length;
-
-   if( h->raw_position >= h->raw_length ) {
-      h->finished = TRUE;
-   }
-#endif /* USE_HEATSHRINK */
-
-cleanup:
-#ifdef USE_HEATSHRINK
-   if( NULL != mid_buffer ) {
-      free( mid_buffer );
-   }
-#endif /* USE_HEATSHRINK */
    return;
+}
+
+BOOL chunker_chunk_finished( CHUNKER* h ) {
+   return (h->raw_position >= h->raw_length) ? TRUE : FALSE;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
