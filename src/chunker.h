@@ -23,6 +23,7 @@ typedef struct _CHUNKER {
    BOOL finished;
 } CHUNKER;
 
+void chunker_free( CHUNKER* h );
 void chunker_chunk_start( CHUNKER* h, void* src_buffer, size_t src_length );
 void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer );
 

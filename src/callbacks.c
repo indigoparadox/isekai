@@ -13,14 +13,20 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = NULL;
+   /* TODO: Factor this out. */
+   BOOL is_client;
 
    /* Figure out if we're being called from a client or server. */
    //if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
-   if( NULL != arg ) {
+   if( NULL == arg || CLIENT_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+      table = irc_table_client;
+      is_client = TRUE;
+   } else if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
       s = (SERVER*)arg;
       table = irc_table_server;
+      is_client = FALSE;
    } else {
-      table = irc_table_client;
+      assert( NULL == arg ); /* Just die. */
    }
 
    /* Make sure a buffer is present. */
@@ -33,7 +39,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 
    /* TODO: Do we need the buffer to be part of the client anymore? */
 
-   last_read_count = connection_read_line( &(c->link), buffer, FALSE );
+   last_read_count = connection_read_line( &(c->link), buffer, is_client );
    btrimws( buffer );
    bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
@@ -117,6 +123,10 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    CHUNKER* h = (CHUNKER*)iter;
    bstring xmit_buffer_out = NULL;
 
+   if( TRUE == h->finished ) {
+      goto cleanup;
+   }
+
    xmit_buffer_out = bstrcpy( xmit_buffer_template );
    scaffold_check_null( xmit_buffer_out );
 
@@ -136,17 +146,25 @@ void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
    VECTOR* chunks = NULL;
 
    xmit_buffer_template = bformat(
-      ":%b GDB %b TILEMAP ", s->self.remote, c->nick
+      ":%s GDB %s TILEMAP ", bdata( s->self.remote ), bdata( c->nick )
    );
    scaffold_check_null( xmit_buffer_template );
 
+   /* Process some compression chunks. */
    chunks = hashmap_iterate_v(
       &(c->chunkers), callback_send_chunkers_l, xmit_buffer_template
    );
+
+   /* Removed any finished chunkers. */
+   hashmap_remove_cb(
+      &(c->chunkers), callback_free_finished_chunkers, NULL
+   );
+
    if( NULL == chunks ) {
       goto cleanup; /* Silently. */
    }
 
+   /* Send the processed chunks to the client. */
    vector_remove_cb( chunks, callback_send_list_to_client, c );
 
 cleanup:
@@ -187,6 +205,16 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
       return TRUE;
    }
 
+   return FALSE;
+}
+
+BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
+   CHUNKER* h = (CHUNKER*)iter;
+   if( TRUE == h->finished ) {
+      scaffold_print_debug( "Chunker for %s has finished. Removing...\n", bdata( key ) );
+      chunker_free( h );
+      return TRUE;
+   }
    return FALSE;
 }
 

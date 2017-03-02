@@ -7,7 +7,15 @@
 #include "b64/b64.h"
 
 static void chunker_cleanup( const struct _REF* ref ) {
+   CHUNKER* h = (CHUNKER*)scaffold_container_of( ref, CHUNKER, refcount );
+   if( NULL != h->raw_ptr ) {
+      free( h->raw_ptr );
+   }
+   free( h );
+}
 
+void chunker_free( CHUNKER* h ) {
+   ref_dec( &(h->refcount) );
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -52,6 +60,9 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
    /* TODO: Finish this accross multiple requests. */
    //while( h->raw_length < h->raw_position ) {
    while( CHUNKER_XMIT_BINARY_SIZE > xmit_buffer_pos ) {
+
+      assert( TRUE != h->finished );
+
       if( h->raw_position < h->raw_length ) {
          assert( TRUE != h->finished );
          sink_res = heatshrink_encoder_sink(
@@ -65,19 +76,20 @@ void chunker_chunk_pass( CHUNKER* h, bstring xmit_buffer ) {
       } else if( TRUE != h->finished ) {
          heatshrink_encoder_finish( h->encoder );
          h->finished = TRUE;
-      }
-
-      poll_res = heatshrink_encoder_poll(
-         h->encoder,
-         binary_compression_buffer,
-         CHUNKER_XMIT_BINARY_SIZE,
-         &exhumed
-      );
-      xmit_buffer_pos += exhumed;
-
-      if( HSER_POLL_MORE != poll_res ) {
          break;
       }
+
+      do {
+         poll_res = heatshrink_encoder_poll(
+            h->encoder,
+            binary_compression_buffer,
+            CHUNKER_XMIT_BINARY_SIZE,
+            &exhumed
+         );
+         xmit_buffer_pos += exhumed;
+
+      } while( HSER_POLL_MORE == poll_res );
+      assert( HSER_POLL_EMPTY == poll_res );
    }
 
    b64_encode(

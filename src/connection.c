@@ -158,16 +158,18 @@ cleanup:
 }
 
 void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
-   size_t dest_socket;
    const char* buffer_chars;
 #ifdef USE_NETWORK
+   size_t dest_socket;
    size_t buffer_len;
+#else
+   size_t client_socket;
 #endif /* USE_NETWORK */
 
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
-   dest_socket = n->socket;
+   client_socket = n->socket;
    buffer_chars = bdata( buffer );
 #ifdef USE_NETWORK
    buffer_len = blength( buffer );
@@ -175,20 +177,38 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
 
    assert( NULL != buffer_chars );
 
+#ifdef USE_NETWORK
    assert( 0 != dest_socket );
+#else
+   assert( 0 != client_socket && client_socket != fake_server_socket );
+#endif /* USE_NETWORK */
 
    //scaffold_print_debug( "SEND: %s\n", buffer_chars );
 
 #ifdef USE_NETWORK
    send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #else
-   if( TRUE == client ) {
+   if(FALSE != client ) {
       assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
-      mailbox_send( &fake_network, dest_socket, fake_server_socket, buffer );
+      mailbox_send( &fake_network, client_socket, fake_server_socket, buffer );
    } else {
       assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
-      mailbox_send( &fake_network, fake_server_socket, dest_socket, buffer );
+      mailbox_send( &fake_network, fake_server_socket, client_socket, buffer );
    }
+
+#ifdef DEBUG_NETWORK
+   if( FALSE != client ) {
+      scaffold_print_debug(
+         "Mailbox: Client ( %d ): Sent to Server ( %d ): %s\n",
+         client_socket, fake_server_socket, bdata( buffer )
+      );
+   } else {
+      scaffold_print_debug(
+         "Mailbox: Server ( %d ): Sent to Client ( %d ): %s\n",
+         fake_server_socket, client_socket, bdata( buffer )
+      );
+   }
+#endif /* DEBUG_NETWORK */
 #endif /* USE_NETWORK */
 cleanup:
    //scaffold_print_debug( "SEND OK: %s\n", buffer_chars );
@@ -218,12 +238,29 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
       bconchar( buffer, read_char );
    }
 #else
-   if( client ) {
+   if( FALSE != client ) {
       total_read_count = mailbox_read( &fake_network, n->socket, buffer );
    } else {
       total_read_count =
          mailbox_read( &fake_network, fake_server_socket, buffer );
    }
+
+#ifdef DEBUG_NETWORK
+   if( 0 < total_read_count ) {
+      if( FALSE != client ) {
+         scaffold_print_debug(
+            "Mailbox: Client ( %d ): Read from Server ( %d ): %s\n",
+            n->socket, fake_server_socket, bdata( buffer )
+         );
+      } else {
+         scaffold_print_debug(
+            "Mailbox: Server ( %d ): Read from Client ( %d ): %s\n",
+            fake_server_socket, n->socket, bdata( buffer )
+         );
+      }
+   }
+#endif /* DEBUG_NETWORK */
+
 #endif /* USE_NETWORK */
 cleanup:
    return total_read_count;
