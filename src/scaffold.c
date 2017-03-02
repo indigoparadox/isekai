@@ -51,14 +51,18 @@ void scaffold_list_remove_string( struct bstrList* list, bstring str ) {
 }
 
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str ) {
+   int bstr_result;
 
    assert( NULL != list );
    scaffold_check_null( list->entry );
 
+
    if( list->qty + 1 >= list->mlen ) {
-      list->mlen *= 2;
+      bstr_result = bstrListAlloc( list, list->mlen * 2 );
+      scaffold_check_nonzero( bstr_result );
+      /*list->mlen *= 2;
       list->entry = (bstring*)realloc( list->entry, list->mlen );
-      scaffold_check_null( list->entry );
+      scaffold_check_null( list->entry );*/
    }
 
    list->entry[list->qty++] = bstrcpy( str );

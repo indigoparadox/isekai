@@ -8,6 +8,7 @@ main_add_test_proto( client );
 main_add_test_proto( b64 );
 main_add_test_proto( channel );
 main_add_test_proto( hashmap );
+main_add_test_proto( chunker );
 
 #define main_add_test( suite_name ) \
    Suite* s_ ## suite_name = suite_name ## _suite(); \
@@ -24,6 +25,7 @@ int main( void ) {
    main_add_test( b64 );
    //main_add_test( channel );
    main_add_test( hashmap );
+   main_add_test( chunker );
 
    return( number_failed == 0 ) ? 0 : 1;
 }

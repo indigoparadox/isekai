@@ -92,7 +92,8 @@ static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
       l->name,
       CHUNKER_DATA_TYPE_TILEMAP,
       bdata( l->gamedata.tmap.serialize_buffer ),
-      blength( l->gamedata.tmap.serialize_buffer )
+      blength( l->gamedata.tmap.serialize_buffer ),
+      240
    );
    hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
 
@@ -605,7 +606,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    HSD_poll_res hsp_res;
    bstring data = NULL;
    bstring filename = NULL;
-   uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };
+   //uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };
    const char* progress_c,
       * total_c;
 
@@ -649,7 +650,9 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    h = hashmap_get( &(d->incoming_chunkers), filename );
    if( NULL == h ) {
+      // FIXME: New chunker.
       //chunker_new( h, total, (total - progress) );
+#if 0
       h = heatshrink_decoder_alloc(
          CHUNKER_XMIT_BUFFER_SIZE,
          CHUNKER_WINDOW_SIZE,
@@ -658,6 +661,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
       d->incoming_buffer_len = total;
+#endif
    }
 
 /*
