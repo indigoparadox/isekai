@@ -423,6 +423,7 @@ size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
    size_t i;
    size_t removed = 0;
    void* data;
+   BOOL locked = FALSE;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -430,8 +431,11 @@ size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
    assert( HASHMAP_SENTINAL == m->sentinal );
 
    hashmap_lock( m, TRUE );
+   locked = TRUE;
 
-   scaffold_check_zero( hashmap_count( m ) );
+   if( 0 >= hashmap_count( m ) ) {
+      goto cleanup; /* Quietly. */
+   }
 
    /* Linear probing */
    for( i = 0 ; m->table_size > i ; i++ ) {
@@ -452,9 +456,10 @@ size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
       }
    }
 
-   hashmap_lock( m, FALSE );
-
 cleanup:
+   if( TRUE == locked ) {
+      hashmap_lock( m, FALSE );
+   }
    return removed;
 }
 

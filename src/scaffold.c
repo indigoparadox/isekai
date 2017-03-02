@@ -82,6 +82,7 @@ BOOL scaffold_string_is_printable( bstring str ) {
    return is_printable;
 }
 
+#if 0
 #ifdef DEBUG
 void scaffold_printf_debug( const char* message, ... ) {
    bstring buffer = NULL;
@@ -103,6 +104,7 @@ cleanup:
    return;
 }
 #endif /* DEBUG */
+#endif
 
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
    const char* chariter;

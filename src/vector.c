@@ -76,6 +76,7 @@ void vector_add_scalar( VECTOR* v, int32_t value ) {
    v->scalar = TRUE;
 
    for( i = 0 ; NULL != v->scalar_data && v->count > i ; i++ ) {
+      assert( v->scalar_data[i] != value );
       if( v->scalar_data[i] == value ) {
          /* TODO: Proper scaffold error. */
          scaffold_error = 99;
