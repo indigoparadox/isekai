@@ -144,6 +144,7 @@ void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
    SERVER* s = (SERVER*)arg;
    bstring xmit_buffer_template = NULL;
    VECTOR* chunks = NULL;
+   bstring chunk_iter = NULL;
 
    xmit_buffer_template = bformat(
       ":%s GDB %s TILEMAP ", bdata( s->self.remote ), bdata( c->nick )
@@ -168,6 +169,12 @@ void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
    vector_remove_cb( chunks, callback_send_list_to_client, c );
 
 cleanup:
+   chunk_iter = vector_get( chunks, 0 );
+   while( NULL != chunk_iter ) {
+      bdestroy( chunk_iter );
+      vector_remove( chunks, 0 );
+      vector_get( chunks, 0 );
+   }
    if( NULL != chunks ) {
       vector_free( chunks );
    }
@@ -216,6 +223,12 @@ BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg )
       return TRUE;
    }
    return FALSE;
+}
+
+BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
+   IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
+   irc_command_free( cmd );
+   return TRUE;
 }
 
 /*
