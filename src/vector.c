@@ -130,7 +130,9 @@ cleanup:
 void* vector_get( VECTOR* v, size_t index ) {
    void* retptr = NULL;
 
-   scaffold_check_null( v );
+   if( NULL == v ) {
+      goto cleanup; /* Quietly. */
+   }
    assert( VECTOR_SENTINAL == v->sentinal );
    assert( FALSE == v->scalar );
 

@@ -22,6 +22,7 @@ static void client_cleanup( const struct _REF *ref ) {
    hashmap_cleanup( &(c->channels) );
    /* TODO: Free chunkers? */
    hashmap_cleanup( &(c->chunkers) );
+   vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
    vector_free( &(c->command_queue) );
    connection_cleanup( &(c->link) );
    bdestroy( c->buffer );

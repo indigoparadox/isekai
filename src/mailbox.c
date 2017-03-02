@@ -96,6 +96,7 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
       ) {
          socket_out = top_envelope->socket_src;
          //vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
+         //FIXME: Deallocate this envelope!
          //mailbox_envelope_free( top_envelope );
          vector_remove( &(mailbox->envelopes), i );
 #ifdef DEBUG

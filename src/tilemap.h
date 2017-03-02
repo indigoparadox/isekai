@@ -70,6 +70,10 @@ typedef struct {
    TILEMAP_ORIENTATION orientation;
    bstring serialize_buffer;
    bstring serialize_filename;
+
+   /* Miscellaneous catch-all for generic memory blocks that must be freed on *
+    * cleanup. Useful for datafile parsers.                                   */
+   VECTOR freeable_chunks;
 } TILEMAP;
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)

@@ -34,6 +34,7 @@ cleanup:
 static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
    TILEMAP_TILESET_IMAGE* image_info = NULL;
    bstring image_buffer = NULL;
+   char* image_buffer_c = NULL;
    const char* xml_attr;
    char* image_ezxml_import = NULL;
    int bstr_result;
@@ -111,8 +112,10 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
          blength( image_buffer )
       );
 
-      ezxml_set_txt_b( xml_image, image_buffer );
+      image_buffer_c = bstr2cstr( image_buffer, '\n' );
+      ezxml_set_txt( xml_image, image_buffer_c );
       ezxml_set_attr( xml_image, "source", "inline" );
+      vector_add( &(t->freeable_chunks), image_buffer_c );
 #endif /* EZXML_EMBEDDED_IMAGES */
    }
 

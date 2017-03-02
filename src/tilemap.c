@@ -12,6 +12,10 @@ static void tilemap_cleanup( const struct _REF* ref ) {
 
    t = scaffold_container_of( ref, TILEMAP, refcount );
 
+   for( i = 0 ; vector_count( &(t->freeable_chunks) ) > i ; i++ ) {
+      free( vector_get( &(t->freeable_chunks), i ) );
+   }
+   vector_free( &(t->freeable_chunks) );
    for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
       tilemap_layer_free( vector_get( &(t->layers), i ) );
    }
@@ -36,6 +40,7 @@ void tilemap_init( TILEMAP* t ) {
    vector_init( &(t->layers) );
    vector_init( &(t->positions) );
    vector_init( &(t->tilesets) );
+   vector_init( &(t->freeable_chunks ) );
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
 
