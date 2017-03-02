@@ -12,7 +12,7 @@ typedef struct {
 
 typedef struct _GAMEDATA {
    TILEMAP tmap;
-   UI* ui;
+   //UI* ui;
    HASHMAP incoming_chunkers;
    uint8_t* incoming_buffer;
    size_t incoming_buffer_len;
@@ -29,7 +29,7 @@ typedef struct _GAMEDATA {
     gamedata_init_client( d );
 
 void gamedata_init_server( GAMEDATA* g, const bstring name );
-void gamedata_init_client( GAMEDATA* g, UI* ui, const bstring name );
+void gamedata_init_client( GAMEDATA* g );
 void gamedata_cleanup( GAMEDATA* d );
 void gamedata_update_server(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args,

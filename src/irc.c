@@ -81,6 +81,25 @@ cleanup:
    return;
 }
 
+static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
+   CHUNKER* h = NULL;
+
+   /* Begin transmitting tilemap. */
+   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   scaffold_check_null( h );
+   chunker_chunk_start(
+      h,
+      l->name,
+      CHUNKER_DATA_TYPE_TILEMAP,
+      bdata( l->gamedata.tmap.serialize_buffer ),
+      blength( l->gamedata.tmap.serialize_buffer )
+   );
+   hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
+
+cleanup:
+   return;
+}
+
 static void irc_server_user( CLIENT* c, SERVER* s, struct bstrList* args ) {
    int i,
        consumed = 0;
@@ -231,6 +250,7 @@ static void irc_server_ison( CLIENT* c, SERVER* s, struct bstrList* args ) {
    /* TODO: Root the command stuff out of args. */
    ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, args );
    scaffold_check_null( ison );
+   vector_lock( ison, TRUE );
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
       c_iter = (CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
@@ -238,6 +258,7 @@ static void irc_server_ison( CLIENT* c, SERVER* s, struct bstrList* args ) {
       bconcat( response, c_iter->nick );
       bconchar( response, ' ' );
    }
+   vector_lock( ison, FALSE );
    scaffold_check_null( response );
 
    server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
@@ -258,7 +279,6 @@ static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    int8_t bstr_result = 0;
    bstring names = NULL;
    struct bstrList* cat_names = NULL;
-   CHUNKER* h = NULL;
 
    if( 2 > args->qty ) {
       server_client_printf(
@@ -321,16 +341,6 @@ static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
       s->self.remote, c->nick, l->name
    );
 
-   /* FIXME: Begin transmitting tilemap. */
-   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
-   scaffold_check_null( h );
-   chunker_chunk_start(
-      h,
-      bdata( l->gamedata.tmap.serialize_buffer ),
-      blength( l->gamedata.tmap.serialize_buffer )
-   );
-   hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
-
    assert( hashmap_count( &(c->channels) ) > 0 );
    assert( hashmap_count( &(s->self.channels) ) > 0 );
 
@@ -391,22 +401,72 @@ static void* irc_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
 */
 
 static void irc_server_who( CLIENT* c, SERVER* s, struct bstrList* args ) {
-#if 0
    CHANNEL* l = NULL;
-   PARSER_TRIO trio = { 0 };
+   struct bstrList* search_targets = NULL;
+   VECTOR* ison = NULL;
+   CLIENT* c_iter = NULL;
+   size_t i;
+   bstring response = NULL;
 
-   // FIXME
+   if( 2 > args->qty ) {
+      scaffold_print_error( "Server: Malformed WHO expression received.\n" );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   /* TODO: Handle non-channels. */
+   if( '#' != args->entry[1]->data[0] ) {
+      scaffold_print_error( "Non-channel WHO not yet implemented.\n" );
+      goto cleanup;
+   }
+
    l = client_get_channel_by_name( &(s->self), args->entry[1] );
    scaffold_check_null( l );
 
-   trio.c = c;
-   trio.l = l;
-   trio.s = s;
+   response = bfromcstralloc( 80, "" );
+   scaffold_check_null( response );
 
-   vector_iterate( &(l->clients), irc_prn_who, &trio );
-#endif
+   search_targets = bstrListCreate();
+   scaffold_check_null( search_targets );
 
-//cleanup:
+   ison = hashmap_iterate_v( &(l->clients), callback_search_clients, NULL );
+   scaffold_check_null( ison );
+   vector_lock( ison, TRUE );
+   for( i = 0 ; vector_count( ison ) > i ; i++ ) {
+      c_iter = (CLIENT*)vector_get( ison, i );
+      /* 1 for the main list + 1 for the vector. */
+      assert( 2 <= c_iter->link.refcount.count );
+      //bconcat( response, c_iter->nick );
+      //bconchar( response, ' ' );
+
+      server_client_printf(
+         s, c, ":%b RPL_WHOREPLY %b %b",
+         s->self.remote, c->nick, l->name
+      );
+   }
+   vector_lock( ison, FALSE );
+   scaffold_check_null( response );
+
+   //vector_iterate( &(l->clients), irc_prn_who, &trio );
+   //server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
+
+
+   /* Also send the tilemap data if we haven't yet, since we know the client  *
+    * is ready, now.                                                          */
+   /* TODO: Detect if client doesn't support our extensions. */
+   if( !(c->flags & CLIENT_FLAGS_HAVE_TILEMAP) ) {
+      irc_server_reply_gdb_tilemap( c, s, l );
+      c->flags |= CLIENT_FLAGS_HAVE_TILEMAP;
+   }
+
+cleanup:
+   if( NULL != ison ) {
+      vector_remove_cb( ison, callback_free_clients, NULL );
+      vector_free( ison );
+      free( ison );
+   }
+   bdestroy( response );
+   bstrListDestroy( search_targets );
    return;
 }
 
@@ -494,23 +554,28 @@ static void irc_client_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
 static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
+   bstring l_name = NULL;
 
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 
-   scaffold_check_bounds( 1, args->qty );
+   scaffold_check_bounds( 3, args->qty );
+   l_name = args->entry[3];
 
    /* Get the channel, or create it if it does not exist. */
-   l = client_get_channel_by_name( c, args->entry[1] );
+   l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
-      channel_new( l, args->entry[1] );
+      channel_new( l, l_name );
+      gamedata_init_client( &(l->gamedata) );
       client_add_channel( c, l );
       scaffold_print_info( "Client created local channel mirror: %s\n",
-                           bdata( args->entry[1] ) );
+                           bdata( l_name ) );
    }
 
-   scaffold_print_info( "Client joined channel: %s\n", bdata( args->entry[1] ) );
+   scaffold_print_info( "Client joined channel: %s\n", bdata( l_name ) );
 
    assert( hashmap_count( &(c->channels) ) > 0 );
+
+   client_printf( c, "WHO %b", l->name );
 
 cleanup:
    return;
@@ -544,25 +609,30 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    const char* progress_c,
       * total_c;
 
+   if( 10 != args->qty ) {
+      scaffold_print_error( "Server: Malformed GDB expression received.\n" );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
    // FIXME: Get the channel name from the args.
-   l = client_get_channel_by_name( c, bfromcstr("test") );
+   l = client_get_channel_by_name( c, args->entry[3] );
    scaffold_check_null( l );
    d = &(l->gamedata);
    scaffold_check_null( d );
 
-   assert( 9 == args->qty );
-   scaffold_check_null( args->entry[5] );
-   progress_c = bdata( args->entry[5] );
-   scaffold_check_null( progress_c );
    scaffold_check_null( args->entry[6] );
-   total_c = bdata( args->entry[6] );
+   progress_c = bdata( args->entry[6] );
+   scaffold_check_null( progress_c );
+   scaffold_check_null( args->entry[7] );
+   total_c = bdata( args->entry[7] );
    scaffold_check_null( total_c );
 
-   filename = args->entry[4];
+   filename = args->entry[5];
    scaffold_check_null( filename );
    progress = atoi( progress_c );
    total = atoi( total_c );
-   data = args->entry[8];
+   data = args->entry[9];
    scaffold_check_null( data );
 
    if( progress > total ) {
@@ -590,6 +660,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
       d->incoming_buffer_len = total;
    }
 
+/*
    hsd_res = heatshrink_decoder_sink(
       h, (uint8_t*)bdata( data ), (size_t)blength( data ), &consumed
    );
@@ -603,7 +674,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    }
    //chunker_unchunk( h, filename, data, progress );
    scaffold_print_debug( "%d out of %d\n", progress, total );
-
+*/
 
 #if 0
    if( progress < total ) {
@@ -633,7 +704,7 @@ IRC_COMMAND_TABLE_END() };
 
 IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
-IRC_COMMAND_ROW( "JOIN", irc_client_join ),
+IRC_COMMAND_ROW( "366", irc_client_join ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
 IRC_COMMAND_ROW( "GDB", irc_client_gdb  ),
 IRC_COMMAND_TABLE_END() };

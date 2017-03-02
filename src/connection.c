@@ -169,10 +169,12 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
-   client_socket = n->socket;
    buffer_chars = bdata( buffer );
 #ifdef USE_NETWORK
+   dest_socket = n->socket;
    buffer_len = blength( buffer );
+#else
+   client_socket = n->socket;
 #endif /* USE_NETWORK */
 
    assert( NULL != buffer_chars );

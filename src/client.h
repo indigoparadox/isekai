@@ -42,6 +42,7 @@ typedef struct _CLIENT {
 #define CLIENT_FLAGS_HAVE_WELCOME 0x02
 #define CLIENT_FLAGS_HAVE_MOTD 0x04
 #define CLIENT_FLAGS_HAVE_NICK 0x08
+#define CLIENT_FLAGS_HAVE_TILEMAP 0x16
 
 #define CLIENT_SENTINAL 254542
 
@@ -64,7 +65,7 @@ BOOL client_free( CLIENT* c );
 void client_add_channel( CLIENT* c, CHANNEL* l );
 CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name );
 void client_connect( CLIENT* c, bstring server, int port );
-void client_update( CLIENT* c, GAMEDATA* d );
+void client_update( CLIENT* c );
 void client_join_channel( CLIENT* c, bstring name );
 void client_send( CLIENT* c, bstring buffer );
 void client_printf( CLIENT* c, const char* message, ... );
