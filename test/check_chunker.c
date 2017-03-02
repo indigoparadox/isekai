@@ -70,16 +70,14 @@ void check_chunker_setup_checked() {
       CHUNKER_DATA_TYPE_TILEMAP,
       chunker_mapdata,
       chunker_mapsize,
-      240
+      480
    );
-   while( TRUE != h->finished ) {
+   while( TRUE != chunker_chunk_finished( h ) ) {
       chunker_chunk_pass( h, chunk_buffer );
-      if( TRUE != h->finished ) {
-         /*
+      if( TRUE != chunker_chunk_finished( h ) ) {
          if( previous_pos == h->raw_position ) {
             ck_abort_msg( "Chunker position not incrementing." );
          }
-         */
          previous_pos = h->raw_position;
       }
       scaffold_list_append_string_cpy( chunker_mapchunks, chunk_buffer );
