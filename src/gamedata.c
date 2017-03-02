@@ -42,11 +42,8 @@ void gamedata_cleanup( GAMEDATA* d ) {
    /* Don't cleanup UI since other things probably use that. */
 }
 
-void gamedata_init_client( GAMEDATA* d, UI* ui, const bstring name ) {
-#ifdef INIT_ZEROES
-   memset( d, '\0', sizeof( GAMEDATA ) );
-#endif /* INIT_ZEROES */
-   d->ui = ui;
+void gamedata_init_client( GAMEDATA* d ) {
+   //d->ui = ui;
    d->incoming_buffer_len = 0;
    d->incoming_buffer = NULL;
    tilemap_init( &(d->tmap) );
@@ -69,8 +66,9 @@ void gamedata_react_client(
 }
 
 void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
-   UI* ui = d->ui;
-   GRAPHICS* g = ui->screen;
+   //UI* ui = d->ui;
+   //GRAPHICS* g = ui->screen;
+/*
    TILEMAP_TILESET* set = NULL;
    TILEMAP_TILESET_IMAGE* image = NULL;
 
@@ -87,4 +85,5 @@ void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
       graphics_blit( g, 0, 0, 32, 32, image->image );
       graphics_flip_screen( g );
    }
+*/
 }

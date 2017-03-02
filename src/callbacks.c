@@ -48,10 +48,12 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       goto cleanup;
    }
 
+#ifdef DEBUG_NETWORK
    scaffold_print_debug(
       "Server: Line received from %d: %s\n",
       c->link.socket, bdata( buffer )
    );
+#endif /* DEBUG_NETWORK */
 
    cmd = irc_dispatch( table, s, c, buffer );
 
@@ -71,7 +73,7 @@ void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
 void* callback_search_clients( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    bstring nick = (bstring)arg;
-   if( 0 == bstrcmp( nick, c->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
       return c;
    }
    return NULL;
@@ -131,7 +133,10 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    scaffold_check_null( xmit_buffer_out );
 
    /* Note the starting point and progress for the client. */
-   bformata( xmit_buffer_out, "%s %d %d : ", bdata( key ), h->raw_position, h->raw_length );
+   bformata(
+      xmit_buffer_out, "%s TILEMAP %s %d %d : ",
+      bdata( h->channel ), bdata( key ), h->raw_position, h->raw_length
+   );
 
    chunker_chunk_pass( h, xmit_buffer_out );
 
@@ -147,7 +152,7 @@ void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
    bstring chunk_iter = NULL;
 
    xmit_buffer_template = bformat(
-      ":%s GDB %s TILEMAP ", bdata( s->self.remote ), bdata( c->nick )
+      ":%s GDB %s ", bdata( s->self.remote ), bdata( c->nick )
    );
    scaffold_check_null( xmit_buffer_template );
 
@@ -218,7 +223,9 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
    CHUNKER* h = (CHUNKER*)iter;
    if( TRUE == h->finished ) {
-      scaffold_print_debug( "Chunker for %s has finished. Removing...\n", bdata( key ) );
+      scaffold_print_debug(
+         "Chunker for %s has finished. Removing...\n", bdata( key )
+      );
       chunker_free( h );
       return TRUE;
    }

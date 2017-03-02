@@ -35,6 +35,13 @@ extern IRC_COMMAND_TABLE_START( server );
 extern IRC_COMMAND_TABLE_START( client );
 #endif /* IRC_C */
 
+#ifdef DEBUG
+#define irc_print_args() \
+   for( i = 0 ; args->qty > i ; i++ ) { \
+      scaffold_print_debug( "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
+   }
+#endif
+
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
 void irc_command_free( IRC_COMMAND* cmd );

@@ -90,7 +90,7 @@ cleanup:
 
 /* This runs on the local client. */
 /* TODO: Process multiple lines? */
-void client_update( CLIENT* c, GAMEDATA* d ) {
+void client_update( CLIENT* c ) {
    ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
 
@@ -137,7 +137,8 @@ void client_update( CLIENT* c, GAMEDATA* d ) {
       irc_command_free( cmd );
    }
 
-   gamedata_update_client( d, c );
+   // FIXME
+   //gamedata_update_client( d, c );
 
    return;
 }

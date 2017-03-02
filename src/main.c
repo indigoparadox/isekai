@@ -30,7 +30,7 @@ int main( int argc, char** argv ) {
    time_t tm = 0;
    GRAPHICS g = { 0 };
    INPUT p = { 0 };
-   GAMEDATA d;
+   //GAMEDATA d;
    UI ui = { 0 };
 
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
 
    signal( SIGINT, handle_interrupt );
 
-   gamedata_init_client( &d, &ui, channel );
+   //gamedata_init_client( &d, &ui, channel );
 
    bdestroy( client->nick );
    client->nick = bfromcstr( "TestNick" );
@@ -83,7 +83,7 @@ int main( int argc, char** argv ) {
       graphics_sleep( 50 );
 
       server_poll_new_clients( server );
-      client_update( client, &d );
+      client_update( client );
       server_service_clients( server );
 
       if( 'q' == input_get_char( &p ) ) {
