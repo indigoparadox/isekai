@@ -76,6 +76,8 @@
 					<Add option="-DUSE_ALLEGRO_PNG" />
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DEZXML_EMBEDDED_IMAGES" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_HEATSHRINK" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -108,6 +110,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-DUSE_HEATSHRINK" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
