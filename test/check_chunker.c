@@ -76,6 +76,10 @@ void check_chunker_setup_checked() {
    );
 
    while( TRUE != chunker_chunk_finished( h ) ) {
+      current_pos = (size_t*)calloc( 1, sizeof( size_t ) );
+      *current_pos = h->raw_position;
+      ck_assert( *current_pos <= h->raw_length );
+      vector_add( chunker_mapchunk_starts, current_pos );
       chunker_chunk_pass( h, chunk_buffer );
       if( TRUE != chunker_chunk_finished( h ) ) {
          if( previous_pos == h->raw_position ) {
@@ -85,10 +89,6 @@ void check_chunker_setup_checked() {
       }
       scaffold_list_append_string_cpy( chunker_mapchunks, chunk_buffer );
       btrunc( chunk_buffer, 0 );
-      current_pos = (size_t*)calloc( 1, sizeof( size_t ) );
-      *current_pos = h->raw_position - h->tx_chunk_length;
-      ck_assert( *current_pos <= h->raw_length );
-      vector_add( chunker_mapchunk_starts, current_pos );
    }
 
    /* Verify sanity. */
@@ -174,6 +174,7 @@ START_TEST( test_chunker_unchunk ) {
    check_chunk_out = fopen( "testdata/check_chunk_out.tmx.b64","w" );
    for( i = 0 ; chunker_mapchunks->qty > i ; i++ ) {
       fwrite( bdata( chunker_mapchunks->entry[i] ), sizeof( char ), blength( chunker_mapchunks->entry[i] ), check_chunk_out );
+      fputc( '\n', check_chunk_out );
    }
    fclose( check_chunk_out );
 

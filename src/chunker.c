@@ -60,11 +60,13 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
    HSE_sink_res sink_res;
    HSE_poll_res poll_res;
    size_t consumed = 0,
+      exhumed = 0,
       hs_buffer_len = h->tx_chunk_length * 4,
       hs_buffer_pos = 0,
       raw_buffer_len = h->tx_chunk_length;
    uint8_t* hs_buffer = NULL;
 
+   btrunc( tx_buffer, 0 );
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
    heatshrink_encoder_reset( h->encoder );
 
@@ -99,15 +101,15 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
             h->encoder,
             &(hs_buffer[hs_buffer_pos]),
             (hs_buffer_len - hs_buffer_pos),
-            &consumed
+            &exhumed
          );
-         hs_buffer_pos += consumed;
+         hs_buffer_pos += exhumed;
          assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
       assert( HSER_POLL_EMPTY == poll_res );
    } while( 0 < raw_buffer_len );
 
-   b64_encode( hs_buffer, hs_buffer_len, tx_buffer, 10000 );
+   b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
 
    return;
 }
