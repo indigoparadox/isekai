@@ -8,7 +8,7 @@
 
 const struct tagbstring chunker_test_filename = bsStatic( "testchannel.tmx" );
 struct bstrList* chunker_mapchunks = NULL;
-VECTOR chunker_mapchunk_starts;
+VECTOR* chunker_mapchunk_starts;
 //bstring mapdata_original = NULL;
 char* chunker_mapdata;
 size_t chunker_mapsize;
@@ -41,8 +41,9 @@ void check_chunker_setup_unchecked() {
 
    /* Prepare the chunk list. */
    chunker_mapchunks = bstrListCreate();
-   vector_init( &(chunker_mapchunk_starts ) );
-   if( NULL == chunker_mapchunks ) {
+   chunker_mapchunk_starts = (VECTOR*)calloc( 1, sizeof( VECTOR ) );
+   vector_init( chunker_mapchunk_starts );
+   if( NULL == chunker_mapchunks || NULL == chunker_mapchunk_starts ) {
       ck_abort_msg( "Unable to create testing map chunks list." );
    }
 }
@@ -82,8 +83,9 @@ void check_chunker_setup_checked() {
       }
       scaffold_list_append_string_cpy( chunker_mapchunks, chunk_buffer );
       current_pos = (size_t*)calloc( 1, sizeof( size_t ) );
-      *current_pos = h->raw_position;
-      vector_add( &(chunker_mapchunk_starts), &current_pos );
+      *current_pos = h->raw_position - h->tx_chunk_length;
+      ck_assert( *current_pos <= h->raw_length );
+      vector_add( chunker_mapchunk_starts, current_pos );
    }
 
    /* Verify sanity. */
@@ -124,8 +126,8 @@ START_TEST( test_chunker_unchunk ) {
    size_t previous_pos = 0;
    bstring unchunk_buffer = NULL;
    size_t chunk_index = 0;
-   size_t* unchunk_buffer_pos = NULL;
-   size_t* next_start;
+   size_t* curr_start = NULL;
+   size_t* next_start = NULL;
    size_t current_chunk_len;
 
    ck_assert( NULL != chunker_mapchunks );
@@ -139,18 +141,29 @@ START_TEST( test_chunker_unchunk ) {
       chunker_mapsize
    );
 
+   ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );
+   if( chunker_mapchunks->qty != vector_count( chunker_mapchunk_starts ) ) {
+      ck_abort_msg( "Vector and string list size mismatch." );
+   }
+
    while( chunker_mapchunks->qty > chunk_index ) {
       //ck_assert( chunker_mapchunks->qty > chunk_index );
       unchunk_buffer = chunker_mapchunks->entry[chunk_index];
-      unchunk_buffer_pos = (size_t*)vector_get( &(chunker_mapchunk_starts), chunk_index );
+      //size_t* z = (size_t*)(chunker_mapchunk_starts.data);
+      curr_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index );
       if( NULL == unchunk_buffer ) break;
-      next_start = vector_get( &chunker_mapchunk_starts, chunk_index + 1 );
+      next_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
       if( NULL != next_start ) {
-         current_chunk_len = *next_start - *unchunk_buffer_pos;
+         current_chunk_len = *next_start - *curr_start;
+         ck_assert_int_ne( *next_start, *curr_start );
+         ck_assert( *next_start <= chunker_mapsize );
       } else {
-         current_chunk_len = chunker_mapsize - *unchunk_buffer_pos;
+         current_chunk_len = chunker_mapsize - *curr_start;
       }
-      chunker_unchunk_pass( h, unchunk_buffer, *unchunk_buffer_pos, current_chunk_len );
+      if( *curr_start >= chunker_mapsize ) {
+         break;
+      }
+      chunker_unchunk_pass( h, unchunk_buffer, *curr_start, current_chunk_len );
       /*if( TRUE != h->finished ) {
          if( previous_pos == h->raw_position ) {
             ck_abort_msg( "Chunker position not incrementing." );

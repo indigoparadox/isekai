@@ -601,9 +601,9 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    //int hash_ret;
    size_t progress = 0;
    size_t total = 0;
-   size_t consumed = 0;
-   HSD_sink_res hsd_res;
-   HSD_poll_res hsp_res;
+   //size_t consumed = 0;
+   //HSD_sink_res hsd_res;
+   //HSD_poll_res hsp_res;
    bstring data = NULL;
    bstring filename = NULL;
    //uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };

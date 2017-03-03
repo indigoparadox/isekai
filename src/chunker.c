@@ -67,6 +67,11 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
 
    do {
       if( raw_buffer_len > 0 ) {
+         /* Make sure we don't go past the end of the buffer! */
+         if( h->raw_position + raw_buffer_len > h->raw_length ) {
+            raw_buffer_len = h->raw_length - h->raw_position;
+         }
+
          sink_res = heatshrink_encoder_sink(
             h->encoder,
             &(h->raw_ptr[h->raw_position]),
@@ -79,7 +84,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
          }
          h->raw_position += consumed;
          raw_buffer_len -= consumed;
-         if( 0 == raw_buffer_len ) {
+         if( 0 >= raw_buffer_len ) {
             heatshrink_encoder_finish( h->encoder );
          }
       }
@@ -95,6 +100,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
             break;
          }
          hs_buffer_pos += consumed;
+         assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
    } while( 0 != raw_buffer_len );
 
@@ -135,71 +141,74 @@ void chunker_unchunk_start(
    h->channel = bstrcpy( channel );
    h->type = type;
 
-cleanup:
+/* cleanup: */
    return;
 }
 
 void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len ) {
-#ifdef USE_HEATSHRINK
    size_t consumed,
       exhumed;
    size_t mid_buffer_length = blength( rx_buffer ),
-      mid_buffer_pos = 0;
+      mid_buffer_pos = 0,
+      decode_length = src_chunk_len;
    uint8_t* mid_buffer = NULL;
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
-#endif /* USE_HEATSHRINK */
-   size_t working_raw_start;
 
-#ifdef USE_HEATSHRINK
    assert( NULL != h->decoder );
    assert( NULL == h->encoder );
 
    mid_buffer = (uint8_t*)calloc( mid_buffer_length, sizeof( uint8_t ) );
    scaffold_check_null( mid_buffer );
-#endif /* USE_HEATSHRINK */
 
    h->raw_position = src_chunk_start;
 
-#ifdef USE_HEATSHRINK
    b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
+
+   heatshrink_decoder_reset( h->decoder );
 
    /* Sink enough data to fill an outgoing buffer and wait for it to process. */
    while( (src_chunk_start + src_chunk_len) > h->raw_position ) {
       if( mid_buffer_pos < mid_buffer_length ) {
+         /* Make sure we don't go past the end of the buffer! */
+         /*
+         if( h->raw_position + mid_buffer_length > h->raw_length ) {
+            mid_buffer_length = h->raw_length - h->raw_position;
+         }
+         */
+
          sink_res = heatshrink_decoder_sink(
             h->decoder,
             mid_buffer,
-            mid_buffer_length,
+            mid_buffer_length - mid_buffer_pos,
             &consumed
          );
          assert( HSDR_SINK_OK == sink_res );
          mid_buffer_pos += consumed;
-      } else if( TRUE != h->finished ) {
-         break;
+      } else {
+         heatshrink_decoder_finish( h->decoder );
       }
 
       do {
+         //if( (h->raw_position + src_chunk_len) > h->raw_length ) {
+         //   decode_length = h->raw_length - h->raw_position;
+         //}
+
          poll_res = heatshrink_decoder_poll(
             h->decoder,
             (uint8_t*)&(h->raw_ptr[h->raw_position]),
-            src_chunk_len,
+            (h->raw_length - h->raw_position),
             &exhumed
          );
          h->raw_position += exhumed;
+         assert( h->raw_position <= h->raw_length );
 
       } while( HSDR_POLL_MORE == poll_res && 0 != exhumed );
-      assert( HSDR_POLL_EMPTY == poll_res );
+      //assert( HSDR_POLL_EMPTY == poll_res );
    }
-#else
-   b64_decode( rx_buffer, &(h->raw_ptr[h->raw_position]), &rx_chunk_len );
-#endif /* USE_HEATSHRINK */
+
+   assert( h->raw_position <= h->raw_length );
 
 cleanup:
-#ifdef USE_HEATSHRINK
-   if( NULL != mid_buffer ) {
-      free( mid_buffer );
-   }
-#endif /* USE_HEATSHRINK */
    return;
 }
