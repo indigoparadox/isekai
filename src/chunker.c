@@ -104,6 +104,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
          hs_buffer_pos += consumed;
          assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
+      assert( HSER_POLL_EMPTY == poll_res );
    } while( 0 < raw_buffer_len );
 
    b64_encode( hs_buffer, hs_buffer_len, tx_buffer, 10000 );
@@ -154,8 +155,11 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
    size_t consumed,
       exhumed;
    size_t mid_buffer_length = blength( rx_buffer ) * 2,
-      mid_buffer_pos = 0;
-   uint8_t* mid_buffer = NULL;
+      mid_buffer_pos = 0,
+      tail_output_alloc = 0,
+      tail_output_pos = 0;
+   uint8_t* mid_buffer = NULL,
+      * tail_output_buffer = NULL;
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
    int b64_res;
@@ -203,14 +207,47 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
             &exhumed
          );
          h->raw_position += exhumed;
-         //assert( h->raw_position < h->raw_length );
+         assert( h->raw_position <= h->raw_length );
 
       } while( HSDR_POLL_MORE == poll_res && 0 != exhumed );
-      //assert( HSDR_POLL_EMPTY == poll_res );
    } while( 0 < mid_buffer_length );
 
    assert( h->raw_position <= h->raw_length );
 
+   if( HSDR_POLL_MORE == poll_res ) {
+      tail_output_alloc = 1;
+      tail_output_buffer = (uint8_t*)calloc( tail_output_alloc, sizeof( uint8_t ) );
+   }
+
+   while( HSDR_POLL_MORE == poll_res ) {
+      poll_res = heatshrink_decoder_poll(
+         h->decoder,
+         &(tail_output_buffer[tail_output_pos]),
+         tail_output_alloc - tail_output_pos,
+         &exhumed
+      );
+      tail_output_pos += exhumed;
+      assert( tail_output_pos <= tail_output_alloc );
+      if( tail_output_pos == tail_output_alloc ) {
+         tail_output_alloc *= 2;
+         tail_output_buffer = (uint8_t*)realloc( tail_output_buffer, tail_output_alloc * sizeof( uint8_t ) );
+      }
+   }
+
+   assert( h->raw_position <= h->raw_length );
+   assert( HSDR_POLL_EMPTY == poll_res );
+
+   if( 0 < tail_output_pos ) {
+      h->raw_position -= tail_output_pos;
+      memcpy( &(h->raw_ptr[h->raw_position]), tail_output_buffer, tail_output_pos );
+   }
+
 cleanup:
+   if( NULL != mid_buffer ) {
+      free( mid_buffer );
+   }
+   if( NULL != tail_output_buffer ) {
+      free( tail_output_buffer );
+   }
    return;
 }
