@@ -76,7 +76,6 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
       raw_buffer_len = h->tx_chunk_length;
    uint8_t* hs_buffer = NULL;
 
-   btrunc( tx_buffer, 0 );
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
    heatshrink_encoder_reset( h->encoder );
 
