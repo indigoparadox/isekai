@@ -124,19 +124,23 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    bstring xmit_buffer_template = (bstring)arg;
    CHUNKER* h = (CHUNKER*)iter;
    bstring xmit_buffer_out = NULL;
+   int bstr_result;
 
    if( TRUE == h->finished ) {
       goto cleanup;
    }
 
+   assert( 0 < blength( xmit_buffer_template ) );
    xmit_buffer_out = bstrcpy( xmit_buffer_template );
    scaffold_check_null( xmit_buffer_out );
+   assert( 0 < blength( xmit_buffer_out ) );
 
    /* Note the starting point and progress for the client. */
-   bformata(
-      xmit_buffer_out, "%s TILEMAP %s %d %d : ",
-      bdata( h->channel ), bdata( key ), h->raw_position, h->raw_length
+   bstr_result = bformata(
+      xmit_buffer_out, "%s TILEMAP %s %d %d %d : ",
+      bdata( h->channel ), bdata( key ), h->raw_position, h->tx_chunk_length, h->raw_length
    );
+   assert( BSTR_OK == bstr_result );
 
    chunker_chunk_pass( h, xmit_buffer_out );
 
@@ -222,7 +226,7 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
 
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
    CHUNKER* h = (CHUNKER*)iter;
-   if( TRUE == h->finished ) {
+   if( chunker_chunk_finished( h ) ) {
       scaffold_print_debug(
          "Chunker for %s has finished. Removing...\n", bdata( key )
       );

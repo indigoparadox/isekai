@@ -93,7 +93,7 @@ static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
       CHUNKER_DATA_TYPE_TILEMAP,
       bdata( l->gamedata.tmap.serialize_buffer ),
       blength( l->gamedata.tmap.serialize_buffer ),
-      240
+      64
    );
    hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
 
@@ -596,44 +596,48 @@ static void irc_client_error( CLIENT* c, SERVER* s, struct bstrList* args ) {
 static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    GAMEDATA* d = NULL;
-   //CHUNKER* h = NULL;
-   heatshrink_decoder* h = NULL;
-   //int hash_ret;
+   CHUNKER* h = NULL;
    size_t progress = 0;
    size_t total = 0;
-   //size_t consumed = 0;
-   //HSD_sink_res hsd_res;
-   //HSD_poll_res hsp_res;
+   size_t length = 0;
    bstring data = NULL;
    bstring filename = NULL;
-   //uint8_t outbuffer[CHUNKER_XMIT_BUFFER_SIZE] = { 0 };
    const char* progress_c,
-      * total_c;
+      * total_c,
+      * length_c;
 
-   if( 10 != args->qty ) {
+   if( 11 != args->qty ) {
       scaffold_print_error( "Server: Malformed GDB expression received.\n" );
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
 
-   // FIXME: Get the channel name from the args.
    l = client_get_channel_by_name( c, args->entry[3] );
    scaffold_check_null( l );
+
    d = &(l->gamedata);
    scaffold_check_null( d );
 
    scaffold_check_null( args->entry[6] );
    progress_c = bdata( args->entry[6] );
    scaffold_check_null( progress_c );
+
    scaffold_check_null( args->entry[7] );
-   total_c = bdata( args->entry[7] );
+   length_c = bdata( args->entry[7] );
+   scaffold_check_null( length_c );
+
+   scaffold_check_null( args->entry[8] );
+   total_c = bdata( args->entry[8] );
    scaffold_check_null( total_c );
 
    filename = args->entry[5];
    scaffold_check_null( filename );
+
    progress = atoi( progress_c );
+   length = atoi( length_c );
    total = atoi( total_c );
-   data = args->entry[9];
+
+   data = args->entry[10];
    scaffold_check_null( data );
 
    if( progress > total ) {
@@ -650,45 +654,19 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    h = hashmap_get( &(d->incoming_chunkers), filename );
    if( NULL == h ) {
-      // FIXME: New chunker.
-      //chunker_new( h, total, (total - progress) );
-#if 0
-      h = heatshrink_decoder_alloc(
-         CHUNKER_XMIT_BUFFER_SIZE,
-         CHUNKER_WINDOW_SIZE,
-         CHUNKER_LOOKAHEAD_SIZE
-      );
+      h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+      chunker_unchunk_start( h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total );
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
-      d->incoming_buffer_len = total;
-#endif
    }
 
-/*
-   hsd_res = heatshrink_decoder_sink(
-      h, (uint8_t*)bdata( data ), (size_t)blength( data ), &consumed
-   );
-   assert( HSDR_SINK_ERROR_NULL != hsd_res );
+   chunker_unchunk_pass( h, data, progress, length );
 
-   while( HSDR_POLL_MORE == (hsp_res = heatshrink_decoder_poll(
-      h, outbuffer, CHUNKER_XMIT_BUFFER_SIZE, &consumed
-   )) ) {
-      memcpy( &(d->incoming_buffer[progress]), outbuffer, consumed );
-      progress += consumed;
+   if( chunker_unchunk_finished( h ) ) {
+      datafile_parse_tilemap( &(d->tmap), filename, h->raw_ptr, h->raw_length );
+      scaffold_print_info( "Tilemap for %s successfully loaded into cache.\n", bdata( l->name ) );
    }
-   //chunker_unchunk( h, filename, data, progress );
-   scaffold_print_debug( "%d out of %d\n", progress, total );
-*/
 
-#if 0
-   if( progress < total ) {
-
-   } else {
-      /* Download complete, so deserialize. */
-   }
-#endif
-
-   //scaffold_print_debug( "INCOMING DATA %s OF %s: %s\n", bdata( progress ), bdata( total ), bdata( data ) );
 cleanup:
    return;
 }
@@ -771,13 +749,13 @@ IRC_COMMAND* irc_dispatch(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
+            //if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
                if( table == irc_table_server ) {
                   scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
                } else {
                   scaffold_print_debug( "Client Parse: %s\n", bdata( line ) );
                }
-            }
+            //}
 #endif /* DEBUG */
 
             out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
