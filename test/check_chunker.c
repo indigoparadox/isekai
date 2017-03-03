@@ -18,10 +18,11 @@ CHUNKER* h;
 void check_chunker_setup_unchecked() {
 
    /* Read the test data into memory for all tests. */
-   chunker_mapfile = fopen( bdata( &chunker_test_filename ), "rb" );
+   chunker_mapfile = fopen( (const char*)(chunker_test_filename.data), "rb" );
    ck_assert( NULL != chunker_mapfile );
    if( NULL == chunker_mapfile ) {
       ck_abort_msg( "Unable to open testing map file." );
+      return;
    }
 
    /* Allocate enough space to hold the map. */
@@ -30,7 +31,7 @@ void check_chunker_setup_unchecked() {
    if( 0 == chunker_mapsize ) {
       ck_abort_msg( "Testing map file has 0 length." );
    }
-   chunker_mapdata = (BYTE*)calloc( chunker_mapsize, sizeof( BYTE ) + 1 ); /* +1 for term. */
+   chunker_mapdata = (char*)calloc( chunker_mapsize, sizeof( char ) + 1 ); /* +1 for term. */
    if( NULL == chunker_mapfile ) {
       ck_abort_msg( "Unable to allocate map data buffer." );
    }
@@ -82,6 +83,7 @@ void check_chunker_setup_checked() {
          previous_pos = h->raw_position;
       }
       scaffold_list_append_string_cpy( chunker_mapchunks, chunk_buffer );
+      btrunc( chunk_buffer, 0 );
       current_pos = (size_t*)calloc( 1, sizeof( size_t ) );
       *current_pos = h->raw_position - h->tx_chunk_length;
       ck_assert( *current_pos <= h->raw_length );
@@ -123,7 +125,6 @@ void check_chunker_teardown_unchecked() {
 }
 
 START_TEST( test_chunker_unchunk ) {
-   size_t previous_pos = 0;
    bstring unchunk_buffer = NULL;
    size_t chunk_index = 0;
    size_t* curr_start = NULL;
