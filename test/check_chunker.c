@@ -129,6 +129,7 @@ START_TEST( test_chunker_unchunk ) {
    size_t* curr_start = NULL;
    size_t* next_start = NULL;
    size_t current_chunk_len;
+   size_t prev_start = 0;
 
    ck_assert( NULL != chunker_mapchunks );
    ck_assert_int_ne( 0, chunker_mapchunks->qty );
@@ -160,6 +161,7 @@ START_TEST( test_chunker_unchunk ) {
       } else {
          current_chunk_len = chunker_mapsize - *curr_start;
       }
+      ck_assert( *curr_start > prev_start || *curr_start == 0 );
       if( *curr_start >= chunker_mapsize ) {
          break;
       }
@@ -180,7 +182,10 @@ START_TEST( test_chunker_unchunk ) {
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
-      ck_assert_str_eq( chunker_mapdata, (char*)h->raw_ptr );
+      //ck_assert_str_eq( chunker_mapdata, (char*)h->raw_ptr );
+      ck_assert_int_eq( h->raw_length, chunker_mapsize );
+      ck_assert_int_eq( h->raw_length, strlen( (const char*)h->raw_ptr ) );
+      ck_assert_int_eq( 0, strcmp( (const char*)h->raw_ptr, (const char*)chunker_mapdata ) );
    }
 }
 END_TEST
