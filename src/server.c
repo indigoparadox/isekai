@@ -73,7 +73,7 @@ inline void server_stop( SERVER* s ) {
 
 void server_client_send( CLIENT* c, bstring buffer ) {
 
-   /* TODO: Make sure we're still connected. */
+   /* TODO: Make sure we're still connected? */
    assert( 0 != c->sentinal );
 
    bconchar( buffer, '\r' );

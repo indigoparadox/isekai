@@ -33,21 +33,21 @@ cleanup:
 
 static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
    TILEMAP_TILESET_IMAGE* image_info = NULL;
+   const char* xml_attr;
+#ifdef EZXML_EMBEDDED_IMAGES
    bstring image_buffer = NULL;
    char* image_buffer_c = NULL;
-   const char* xml_attr;
    char* image_ezxml_import = NULL;
    int bstr_result;
    size_t image_len = 0;
-#ifdef EZXML_EMBEDDED_IMAGES
    BYTE* image_export = NULL;
-#endif /* EZXML_EMBEDDED_IMAGES */
-   bstring buffer = NULL;
-   TILEMAP_TILESET* set = NULL;
+   int decode_res;
 #ifdef EZXML_CSTR
    char* image_ezxml_export = NULL;
 #endif /* EZXML_CSTR */
-   int decode_res;
+#endif /* EZXML_EMBEDDED_IMAGES */
+   bstring buffer = NULL;
+   TILEMAP_TILESET* set = NULL;
 
    scaffold_error = 0;
 
@@ -58,17 +58,20 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       vector_init( &(set->images) );
    }
 
+#ifdef EZXML_EMBEDDED_IMAGES
    image_buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( image_buffer );
    buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( buffer );
+#endif /* EZXML_EMBEDDED_IMAGES */
 
    image_info = (TILEMAP_TILESET_IMAGE*)calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
    scaffold_check_null( image_info );
 
-   /* TODO: Decode serialized image data if present. */
    xml_attr = ezxml_attr( xml_image, "source" );
+#ifdef EZXML_EMBEDDED_IMAGES
    if( NULL != xml_attr && 0 == strncmp( "inline", xml_attr, 6 ) ) {
+      /* Decode serialized image data if present. */
       image_ezxml_import = ezxml_txt( xml_image );
       scaffold_debug_file( maptest, "fmaptest.xml", image_ezxml_import, strlen( image_ezxml_import ) );
       scaffold_check_null( image_ezxml_import );
@@ -92,8 +95,9 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 
    } else if( NULL != xml_attr ) {
       /* See if this image has an external image file. */
-      bassigncstr( buffer, xml_attr );
       image_len = 1024;
+#endif /* EZXML_EMBEDDED_IMAGES */
+      bassigncstr( buffer, xml_attr );
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );
       graphics_set_image_path( image_info->image, buffer );
@@ -120,8 +124,8 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
       ezxml_set_txt( xml_image, image_buffer_c );
       ezxml_set_attr( xml_image, "source", "inline" );
       vector_add( &(t->freeable_chunks), image_buffer_c );
-#endif /* EZXML_EMBEDDED_IMAGES */
    }
+#endif /* EZXML_EMBEDDED_IMAGES */
 
    scaffold_check_null( image_info->image );
 
@@ -129,14 +133,16 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
    image_info = NULL;
 
 cleanup:
-   bdestroy( image_buffer );
    bdestroy( buffer );
+#ifdef EZXML_EMBEDDED_IMAGES
+   bdestroy( image_buffer );
    if( NULL != image_ezxml_export ) {
       free( image_ezxml_export );
    }
    if( NULL != image_export ) {
       free( image_export );
    }
+#endif /* EZXML_EMBEDDED_IMAGES */
    if( NULL != image_info ) {
       graphics_surface_free( image_info->image );
       free( image_info );
