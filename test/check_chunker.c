@@ -72,8 +72,9 @@ void check_chunker_setup_checked() {
       CHUNKER_DATA_TYPE_TILEMAP,
       chunker_mapdata,
       chunker_mapsize,
-      480
+      64
    );
+
    while( TRUE != chunker_chunk_finished( h ) ) {
       chunker_chunk_pass( h, chunk_buffer );
       if( TRUE != chunker_chunk_finished( h ) ) {
@@ -131,6 +132,8 @@ START_TEST( test_chunker_unchunk ) {
    size_t* next_start = NULL;
    size_t current_chunk_len;
    size_t prev_start = 0;
+   FILE* check_chunk_out = NULL;
+   size_t i;
 
    ck_assert( NULL != chunker_mapchunks );
    ck_assert_int_ne( 0, chunker_mapchunks->qty );
@@ -149,9 +152,7 @@ START_TEST( test_chunker_unchunk ) {
    }
 
    while( chunker_mapchunks->qty > chunk_index ) {
-      //ck_assert( chunker_mapchunks->qty > chunk_index );
       unchunk_buffer = chunker_mapchunks->entry[chunk_index];
-      //size_t* z = (size_t*)(chunker_mapchunk_starts.data);
       curr_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index );
       if( NULL == unchunk_buffer ) break;
       next_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
@@ -167,23 +168,21 @@ START_TEST( test_chunker_unchunk ) {
          break;
       }
       chunker_unchunk_pass( h, unchunk_buffer, *curr_start, current_chunk_len );
-      /*if( TRUE != h->finished ) {
-         if( previous_pos == h->raw_position ) {
-            ck_abort_msg( "Chunker position not incrementing." );
-         }
-         previous_pos = h->raw_position;
-         chunk_index++;
-      }*/
       chunk_index++;
    }
 
-   FILE* foo = fopen ("testdata/foo.tmx","wb");
-   fwrite(h->raw_ptr, sizeof( char ), h->raw_length, foo);
-   fclose( foo);
+   check_chunk_out = fopen( "testdata/check_chunk_out.tmx.b64","w" );
+   for( i = 0 ; chunker_mapchunks->qty > i ; i++ ) {
+      fwrite( bdata( chunker_mapchunks->entry[i] ), sizeof( char ), blength( chunker_mapchunks->entry[i] ), check_chunk_out );
+   }
+   fclose( check_chunk_out );
+
+   check_chunk_out = fopen( "testdata/check_chunk_out.tmx","wb" );
+   fwrite( h->raw_ptr, sizeof( char ), h->raw_length, check_chunk_out );
+   fclose( check_chunk_out );
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
-      //ck_assert_str_eq( chunker_mapdata, (char*)h->raw_ptr );
       ck_assert_int_eq( h->raw_length, chunker_mapsize );
       ck_assert_int_eq( h->raw_length, strlen( (const char*)h->raw_ptr ) );
       ck_assert_int_eq( 0, strcmp( (const char*)h->raw_ptr, (const char*)chunker_mapdata ) );
