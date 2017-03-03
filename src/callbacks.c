@@ -238,6 +238,20 @@ BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
    return TRUE;
 }
 
+BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
+   free( iter );
+   return TRUE;
+}
+
+VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {
+   CHUNKER_TRACK* cta = (CHUNKER_TRACK*)a;
+   CHUNKER_TRACK* ctb = (CHUNKER_TRACK*)b;
+   if( cta->start == ctb->start ) {
+      return VECTOR_SORT_A_B_EQUAL;
+   }
+   return (cta->start > ctb->start) ? VECTOR_SORT_A_HEAVIER : VECTOR_SORT_A_LIGHTER;
+}
+
 /*
 static void* server_prn_channel( VECTOR* v, size_t idx, void* iter, void* arg ) {
    SERVER_PBUFFER* pbuffer = (SERVER_PBUFFER*)arg;
