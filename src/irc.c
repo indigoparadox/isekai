@@ -664,7 +664,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    chunker_unchunk_pass( h, data, progress, length );
 
    if( chunker_unchunk_finished( h ) ) {
-      datafile_parse_tilemap( &(d->tmap), filename, h->raw_ptr, h->raw_length );
+      datafile_parse_tilemap( &(d->tmap), filename, (BYTE*)h->raw_ptr, h->raw_length );
       scaffold_print_info( "Tilemap for %s successfully loaded into cache.\n", bdata( l->name ) );
    }
 
