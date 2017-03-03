@@ -98,7 +98,9 @@ int main( int argc, char** argv ) {
                                           0 )))->topic );*/
       }
 
-      graphics_flip_screen( &g );
+      gamedata_update_client( client, &g, &ui );
+
+      //graphics_flip_screen( &g );
 
       if( !client->running ) {
          server_stop( server );

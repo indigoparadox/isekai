@@ -80,9 +80,9 @@ void server_client_send( CLIENT* c, bstring buffer ) {
    bconchar( buffer, '\n' );
    connection_write_line( &(c->link), buffer, FALSE );
 
-#ifdef DEBUG_RAW_LINES
+#ifdef DEBUG_NETWORK
    scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
-#endif /* DEBUG_RAW_LINES */
+#endif /* DEBUG_NETWORK */
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
 }
 

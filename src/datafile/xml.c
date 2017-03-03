@@ -47,6 +47,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 #ifdef EZXML_CSTR
    char* image_ezxml_export = NULL;
 #endif /* EZXML_CSTR */
+   int decode_res;
 
    scaffold_error = 0;
 
@@ -69,15 +70,18 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
    xml_attr = ezxml_attr( xml_image, "source" );
    if( NULL != xml_attr && 0 == strncmp( "inline", xml_attr, 6 ) ) {
       image_ezxml_import = ezxml_txt( xml_image );
+      scaffold_debug_file( maptest, "fmaptest.xml", image_ezxml_import, strlen( image_ezxml_import ) );
       scaffold_check_null( image_ezxml_import );
 
       bstr_result = bassigncstr( image_buffer, image_ezxml_import );
-      free( image_ezxml_import );
+      //free( image_ezxml_import );
       scaffold_check_nonzero( bstr_result );
 
       //image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
-      image_ezxml_import = calloc( 2048, sizeof( uint8_t ) );
-      b64_decode( buffer, (uint8_t*)image_ezxml_import, &image_len );
+      image_len = blength( image_buffer );
+      image_ezxml_import = calloc( image_len, sizeof( uint8_t ) );
+      decode_res = b64_decode( image_buffer, (uint8_t*)image_ezxml_import, &image_len );
+      scaffold_check_nonzero( decode_res );
       scaffold_check_nonzero( scaffold_error );
 
       graphics_surface_new( image_info->image, 0, 0, 0, 0 );

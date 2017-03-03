@@ -65,15 +65,23 @@ void gamedata_react_client(
 ) {
 }
 
-void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
-   //UI* ui = d->ui;
-   //GRAPHICS* g = ui->screen;
-/*
+void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
    TILEMAP_TILESET* set = NULL;
    TILEMAP_TILESET_IMAGE* image = NULL;
+   GAMEDATA* d = NULL;
+   CHANNEL* l = NULL;
+
+   l = hashmap_get_first( &(c->channels) );
+   if( NULL == l ) {
+      /* TODO: What to display when no channel is up? */
+      goto cleanup;
+   }
+
+   d = &(l->gamedata);
 
    if( 0 >= vector_count( &(d->tmap.tilesets) ) ) {
-      return;
+      /* TODO: Handle lack of tilesets. */
+      goto cleanup;
    }
 
    set = vector_get( &(d->tmap.tilesets), 0 );
@@ -85,5 +93,7 @@ void gamedata_update_client( GAMEDATA* d, CLIENT* c ) {
       graphics_blit( g, 0, 0, 32, 32, image->image );
       graphics_flip_screen( g );
    }
-*/
+
+cleanup:
+   return;
 }

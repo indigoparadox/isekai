@@ -31,8 +31,6 @@ typedef struct _CLIENT {
    int x; /* Tile X */
    int y; /* Tile Y */
    HASHMAP channels; /* All channels in now; all channels avail on server. */
-   /*MAILBOX* jobs;
-   ssize_t jobs_socket;*/
    HASHMAP chunkers;
    VECTOR command_queue;
    int sentinal;

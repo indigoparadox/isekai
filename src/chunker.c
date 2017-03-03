@@ -120,6 +120,8 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
 
    b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
 
+   free( hs_buffer );
+
    return;
 }
 
