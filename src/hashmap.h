@@ -88,6 +88,8 @@ void hashmap_put( HASHMAP* m, bstring key, void* value );
  */
 void* hashmap_get( HASHMAP* m, bstring key );
 
+void* hashmap_get_first( HASHMAP* m );
+
 /*
  * Remove an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */

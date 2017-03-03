@@ -329,7 +329,6 @@ void* hashmap_get( HASHMAP* m, bstring key ) {
       if( 1 == in_use ) {
          //scaffold_print_debug( "Hash check: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
-            scaffold_print_debug( "%s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
             element_out = (m->data[curr].data);
             goto cleanup;
          }
@@ -340,6 +339,37 @@ void* hashmap_get( HASHMAP* m, bstring key ) {
 
 cleanup:
    return element_out;
+}
+
+void* hashmap_get_first( HASHMAP* m ) {
+   size_t i;
+   void* found = NULL;
+   void* data = NULL;
+   BOOL ok = FALSE;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero( hashmap_count( m ) );
+
+   hashmap_lock( m, TRUE );
+   ok = TRUE;
+
+   /* Linear probing */
+   for( i = 0; m->table_size > i ; i++ ) {
+      if( 0 != m->data[i].in_use ) {
+         data = (void*)(m->data[i].data);
+         if( NULL != data ) {
+            found = data;
+            goto cleanup;
+         }
+      }
+   }
+
+cleanup:
+   if( ok ) {
+      hashmap_lock( m, FALSE );
+   }
+   return found;
 }
 
 /*

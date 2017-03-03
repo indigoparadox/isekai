@@ -1,20 +1,8 @@
 #include "client.h"
 
-//#include "parser.h"
 #include "server.h"
 #include "callbacks.h"
 #include "irc.h"
-
-/*
-void* cb_client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
-   CLIENT* c_ptr = (CLIENT*)arg;
-   if( c == c_ptr ) {
-      return c;
-   }
-   return NULL;
-}
-*/
 
 static void client_cleanup( const struct _REF *ref ) {
    /* CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount ); */
@@ -32,7 +20,7 @@ static void client_cleanup( const struct _REF *ref ) {
    bdestroy( c->username );
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
-   //free( c );
+   /* free( c ); */
 }
 
 void client_init( CLIENT* c ) {
@@ -46,11 +34,6 @@ void client_init( CLIENT* c ) {
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
    hashmap_init( &(c->chunkers) );
-   //memset( &(c->chunker), '\0', sizeof( CLIENT_CHUNKER ) );
-   /* if( NULL != m ) {
-      c->jobs = m;
-      c->jobs_socket = -1;
-   } */
    c->running = TRUE;
 }
 
@@ -91,33 +74,34 @@ cleanup:
 /* This runs on the local client. */
 /* TODO: Process multiple lines? */
 void client_update( CLIENT* c ) {
-   ssize_t last_read_count = 0;
+   //ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
 #endif /* DEBUG */
 
+/*
    btrunc( c->buffer, 0 );
    last_read_count = connection_read_line( &(c->link), c->buffer, TRUE );
    btrimws( c->buffer );
-
-   if( 0 < last_read_count ) {
+*/
+   //if( 0 < last_read_count ) {
       /* TODO: Handle error reading. */
 
 #ifdef DEBUG
       /* TODO: If for trace path? */
-#ifdef DEBUG_RAW_LINES
+#ifdef DEBUG_NETWORK
       scaffold_print_debug(
          "Client %d: Line received from server: %s\n",
          c->link.socket, bdata( c->buffer )
       );
-#endif /* DEBUG_RAW_LINES */
-      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+#endif /* DEBUG_NETWORK */
+      //assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 #endif /* DEBUG */
 
       //irc_dispatch( c, d, c->buffer );
-   }
+   //}
 
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
@@ -191,9 +175,9 @@ void client_send( CLIENT* c, bstring buffer ) {
    bconchar( buffer, '\n' );
    connection_write_line( &(c->link), buffer, TRUE );
 
-#ifdef DEBUG_RAW_LINES
+#ifdef DEBUG_NETWORK
    scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
-#endif /* DEBUG_RAW_LINES */
+#endif /* DEBUG_NETWORK */
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
 }
 

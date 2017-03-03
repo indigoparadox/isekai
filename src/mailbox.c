@@ -229,7 +229,7 @@ size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer ) {
       scaffold_check_null( top_envelope->contents );
       bassign( buffer, top_envelope->contents );
       length_out = blength( buffer );
-      bdestroy( top_envelope->contents );
+      //bdestroy( top_envelope->contents );
       vector_remove( &(mailbox->envelopes), 0 );
       mailbox_envelope_free( top_envelope );
    } else {

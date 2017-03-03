@@ -5,6 +5,7 @@
 #include "server.h"
 #include "callbacks.h"
 #include "chunker.h"
+#include "datafile.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -749,13 +750,13 @@ IRC_COMMAND* irc_dispatch(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            //if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
+            if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
                if( table == irc_table_server ) {
                   scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
                } else {
                   scaffold_print_debug( "Client Parse: %s\n", bdata( line ) );
                }
-            //}
+            }
 #endif /* DEBUG */
 
             out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
