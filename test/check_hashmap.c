@@ -4,6 +4,10 @@
 #include "../src/hashmap.h"
 #include "check_data.h"
 
+extern struct tagbstring str_key_hit;
+extern struct tagbstring str_key_also1;
+extern struct tagbstring str_key_also2;
+
 START_TEST( test_hashmap_add_get ) {
    HASHMAP h;
    BLOB* blob = NULL;

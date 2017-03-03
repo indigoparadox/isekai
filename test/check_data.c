@@ -1,6 +1,12 @@
 
 #include "check_data.h"
 
+struct tagbstring str_key_hit = bsStatic( "This key should be a hit." );
+struct tagbstring str_key_miss = bsStatic( "This key should be a miss." );
+struct tagbstring str_key_also1 = bsStatic( "This key isn't relevant." );
+struct tagbstring str_key_also2 = bsStatic( "This key is not relevant." );
+struct tagbstring str_key_also3 = bsStatic( "This key ain't relevant." );
+
 #include <stdlib.h>
 
 static void free_blob( const struct _REF *ref ) {
