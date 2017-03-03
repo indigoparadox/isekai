@@ -6,7 +6,7 @@
 #include "../src/server.h"
 
 START_TEST( test_client_lifecycle ) {
-   CLIENT* c;
+   //CLIENT* c;
 
    //client_new( c, NULL );
 
