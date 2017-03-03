@@ -3,6 +3,12 @@
 
 #include "scaffold.h"
 
+typedef enum _VECTOR_SORT_ORDER {
+   VECTOR_SORT_A_LIGHTER = -1,
+   VECTOR_SORT_A_B_EQUAL = 0,
+   VECTOR_SORT_A_HEAVIER = 1,
+} VECTOR_SORT_ORDER;
+
 typedef struct _VECTOR {
    uint16_t sentinal;
    void** data;
@@ -19,6 +25,7 @@ typedef struct _VECTOR {
 
 typedef void* (*vector_search_cb)( const bstring res, void* iter, void* arg );
 typedef BOOL (*vector_delete_cb)( const bstring res, void* iter, void* arg );
+typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
 
 #define vector_ready( v ) \
    (VECTOR_SENTINAL == (v)->sentinal)
@@ -41,5 +48,6 @@ size_t vector_remove_scalar( VECTOR* v, int32_t value );
 inline size_t vector_count( VECTOR* v );
 inline void vector_lock( VECTOR* v, BOOL lock );
 void* vector_iterate( VECTOR* v, vector_search_cb callback, void* arg );
+void vector_sort_cb( VECTOR* v, vector_sorter_cb );
 
 #endif /* VECTOR_H */

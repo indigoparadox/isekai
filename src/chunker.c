@@ -5,9 +5,15 @@
 
 #include "scaffold.h"
 #include "b64/b64.h"
+#include "callbacks.h"
 
 static void chunker_cleanup( const struct _REF* ref ) {
    CHUNKER* h = (CHUNKER*)scaffold_container_of( ref, CHUNKER, refcount );
+
+   /* Cleanup tracks. */
+   vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
+   vector_free( &(h->tracks) );
+
    if( NULL != h->raw_ptr ) {
       free( h->raw_ptr );
    }
@@ -41,6 +47,10 @@ void chunker_chunk_start(
       CHUNKER_WINDOW_SIZE,
       CHUNKER_LOOKAHEAD_SIZE
    );
+
+   if( VECTOR_SENTINAL != h->tracks.sentinal ) {
+      vector_init( &(h->tracks) );
+   }
 
    h->finished = FALSE;
    h->raw_position = 0;
@@ -136,6 +146,10 @@ void chunker_unchunk_start(
       heatshrink_encoder_free( h->encoder );
    }
 
+   if( VECTOR_SENTINAL != h->tracks.sentinal ) {
+      vector_init( &(h->tracks) );
+   }
+
    h->decoder = heatshrink_decoder_alloc(
       src_length, /* TODO */
       CHUNKER_WINDOW_SIZE,
@@ -165,6 +179,7 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
    int b64_res;
+   CHUNKER_TRACK* track = NULL;
 
    assert( NULL != h->decoder );
    assert( NULL == h->encoder );
@@ -178,6 +193,12 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
    assert( 0 == b64_res );
 
    heatshrink_decoder_reset( h->decoder );
+
+   /* Add a tracker to the list. */
+   track = (CHUNKER_TRACK*)calloc( 1, sizeof( CHUNKER_TRACK ) );
+   track->start = src_chunk_start;
+   track->length = src_chunk_len;
+   vector_add( &(h->tracks), track );
 
    /* Sink enough data to fill an outgoing buffer and wait for it to process. */
    do {
@@ -252,4 +273,38 @@ cleanup:
       free( tail_output_buffer );
    }
    return;
+}
+
+BOOL chunker_unchunk_finished( CHUNKER* h ) {
+   CHUNKER_TRACK* prev_track = NULL,
+      * iter_track = NULL;
+   size_t i,
+      tracks_count;
+   BOOL finished = TRUE;
+
+   vector_sort_cb( &(h->tracks), callback_sort_chunker_tracks );
+   vector_lock( &(h->tracks), TRUE );
+   tracks_count = vector_count( &(h->tracks) );
+   if( 0  == tracks_count ) {
+      return FALSE;
+   }
+   for( i = 0 ; tracks_count > i ; i++ ) {
+      prev_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
+      iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i + 1 );
+      /*if( i == 314 ) {
+         printf( "%d\n", i );
+      } else {
+         printf( "%d\n", i );
+      }*/
+      if(
+         (NULL != iter_track && NULL != prev_track &&
+            (prev_track->start + prev_track->length) < iter_track->start) ||
+         (NULL == iter_track && NULL != prev_track &&
+            (prev_track->start + prev_track->length) < h->raw_length)
+      ) {
+         finished = FALSE;
+      }
+   }
+   vector_lock( &(h->tracks), FALSE );
+   return finished;
 }

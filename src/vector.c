@@ -311,3 +311,45 @@ void* vector_iterate( VECTOR* v, vector_search_cb callback, void* arg ) {
 cleanup:
    return cb_return;
 }
+
+void vector_sort_cb( VECTOR* v, vector_sorter_cb callback ) {
+   void* previous_iter = NULL;
+   void* current_iter = NULL;
+   size_t i;
+   VECTOR_SORT_ORDER o;
+
+
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+
+   if( 2 > vector_count( v ) ) {
+      /* Not enough to sort! */
+      goto cleanup;
+   }
+
+   /* TODO: This can work for scalars too, can't it? */
+   assert( FALSE == v->scalar );
+
+   vector_lock( v, TRUE );
+   for( i = 1 ; vector_count( v ) > i ; i++ ) {
+      current_iter = vector_get( v, i );
+      previous_iter = vector_get( v, (i - 1) );
+      o = callback( previous_iter, current_iter );
+      switch( o ) {
+      case VECTOR_SORT_A_B_EQUAL:
+         break;
+
+      case VECTOR_SORT_A_LIGHTER:
+         break;
+
+      case VECTOR_SORT_A_HEAVIER:
+         v->data[i] = previous_iter;
+         v->data[i - 1] = current_iter;
+         break;
+      }
+   }
+   vector_lock( v, FALSE );
+
+cleanup:
+   return;
+}
