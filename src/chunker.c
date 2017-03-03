@@ -96,9 +96,9 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
             (hs_buffer_len - hs_buffer_pos),
             &consumed
          );
-         if( HSER_POLL_MORE != poll_res && HSER_POLL_EMPTY != poll_res ) {
+         /*if( HSER_POLL_MORE != poll_res && HSER_POLL_EMPTY != poll_res ) {
             break;
-         }
+         }*/
          hs_buffer_pos += consumed;
          assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
@@ -170,30 +170,21 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
    /* Sink enough data to fill an outgoing buffer and wait for it to process. */
    while( (src_chunk_start + src_chunk_len) > h->raw_position ) {
       if( mid_buffer_pos < mid_buffer_length ) {
-         /* Make sure we don't go past the end of the buffer! */
-         /*
-         if( h->raw_position + mid_buffer_length > h->raw_length ) {
-            mid_buffer_length = h->raw_length - h->raw_position;
-         }
-         */
-
          sink_res = heatshrink_decoder_sink(
             h->decoder,
-            mid_buffer,
+            &(mid_buffer[mid_buffer_pos]),
             mid_buffer_length - mid_buffer_pos,
             &consumed
          );
          assert( HSDR_SINK_OK == sink_res );
          mid_buffer_pos += consumed;
-      } else {
+      }
+
+      if( mid_buffer_pos >= mid_buffer_length ) {
          heatshrink_decoder_finish( h->decoder );
       }
 
       do {
-         //if( (h->raw_position + src_chunk_len) > h->raw_length ) {
-         //   decode_length = h->raw_length - h->raw_position;
-         //}
-
          poll_res = heatshrink_decoder_poll(
             h->decoder,
             (uint8_t*)&(h->raw_ptr[h->raw_position]),
@@ -201,7 +192,7 @@ void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start
             &exhumed
          );
          h->raw_position += exhumed;
-         assert( h->raw_position <= h->raw_length );
+         //assert( h->raw_position < h->raw_length );
 
       } while( HSDR_POLL_MORE == poll_res && 0 != exhumed );
       //assert( HSDR_POLL_EMPTY == poll_res );
