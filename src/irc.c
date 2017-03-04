@@ -109,21 +109,6 @@ static void irc_server_user( CLIENT* c, SERVER* s, struct bstrList* args ) {
       consumed++;
    }
 
-#if 0
-// FIXME
-   /* Try to set the nick. */
-   if(
-      0 == bstrcmp( &scaffold_empty_string, c->nick ) &&
-      0 != server_set_client_nick( s, c, c->username )
-   ) {
-      server_client_printf(
-         s, c, ":%b 433 %b :Nickname is already in use",
-         s->self.remote, c->username
-      );
-   }
-#endif
-   //scaffold_print_debug( "User: %s, Real: %s, Remote: %s\n", bdata( c->username ), bdata( c->realname ), bdata( c->remote ) );
-
    c->flags |= CLIENT_FLAGS_HAVE_USER;
 
    if( ( c->flags & CLIENT_FLAGS_HAVE_NICK ) ) {
@@ -371,18 +356,6 @@ cleanup:
    bdestroy( msg );
    return;
 }
-
-/*
-static void* irc_prn_who( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   PARSER_TRIO* trio = (PARSER_TRIO*)arg;
-   CLIENT* c_iter = (CLIENT*)iter;
-   server_client_printf(
-      trio->s, trio->c, ":%b RPL_WHOREPLY %b %b",
-      trio->s->self.remote, c_iter->nick, trio->l->name
-   );
-   return NULL;
-}
-*/
 
 static void irc_server_who( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;

@@ -182,7 +182,7 @@ static void graphics_surface_cleanup( const struct _REF *ref ) {
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
-   // FIXME: Free surface.
+   /* TODO: Free surface. */
 }
 
 void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
@@ -218,7 +218,7 @@ void graphics_shutdown( GRAPHICS* g ) {
 }
 
 void graphics_set_font( GRAPHICS* g, const bstring name ) {
-   /* TODO */
+   /* TODO: Support fonts. */
 }
 
 void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color ) {
