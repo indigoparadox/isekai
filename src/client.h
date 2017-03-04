@@ -69,5 +69,6 @@ void client_send( CLIENT* c, bstring buffer );
 void client_printf( CLIENT* c, const char* message, ... );
 void client_lock_channels( CLIENT* c, BOOL lock );
 void client_stop( CLIENT* c );
+void client_send_file( CLIENT* c, bstring channel, bstring filepath );
 
 #endif /* CLIENT_H */

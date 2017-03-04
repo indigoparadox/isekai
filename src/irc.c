@@ -83,20 +83,10 @@ cleanup:
 }
 
 static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
-   CHUNKER* h = NULL;
-
-   /* Begin transmitting tilemap. */
-   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
-   scaffold_check_null( h );
-   chunker_chunk_start(
-      h,
-      l->name,
-      CHUNKER_DATA_TYPE_TILEMAP,
-      bdata( l->gamedata.tmap.serialize_buffer ),
-      blength( l->gamedata.tmap.serialize_buffer ),
-      64
-   );
-   hashmap_put( &(c->chunkers), l->gamedata.tmap.serialize_filename, h );
+   client_send_file( c, l->name, l->gamedata.tmap.serialize_filename );
+   /* tilesets > tileset > image */
+   //vector_lock( )
+   //client_send_file( c, l->gamedata.tmap.tilesets );
 
 cleanup:
    return;

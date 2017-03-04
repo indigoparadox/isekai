@@ -12,22 +12,26 @@ static void tilemap_cleanup( const struct _REF* ref ) {
 
    t = scaffold_container_of( ref, TILEMAP, refcount );
 
+#ifdef EZXML_EMBEDDED_IMAGES
    for( i = 0 ; vector_count( &(t->freeable_chunks) ) > i ; i++ ) {
       free( vector_get( &(t->freeable_chunks), i ) );
    }
    vector_free( &(t->freeable_chunks) );
-   for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
+#endif /* EZXML_EMBEDDED_IMAGES */
+   /* TODO: Free these. */
+   /* for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
       tilemap_layer_free( vector_get( &(t->layers), i ) );
    }
-   vector_free( &(t->layers) );
+   vector_free( &(t->layers) ); */
    for( i = 0 ; vector_count( &(t->positions) ) > i ; i++ ) {
       tilemap_position_free( vector_get( &(t->positions), i ) );
    }
    vector_free( &(t->positions) );
-   for( i = 0 ; vector_count( &(t->tilesets) ) > i ; i++ ) {
+   /* TODO: Free these. */
+   /* for( i = 0 ; vector_count( &(t->tilesets) ) > i ; i++ ) {
       tilemap_tileset_free( vector_get( &(t->tilesets), i ) );
    }
-   vector_free( &(t->tilesets) );
+   vector_free( &(t->tilesets) ); */
    bdestroy( t->serialize_buffer );
    bdestroy( t->serialize_filename );
 
@@ -37,10 +41,10 @@ static void tilemap_cleanup( const struct _REF* ref ) {
 void tilemap_init( TILEMAP* t ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
-   vector_init( &(t->layers) );
+   hashmap_init( &(t->layers) );
    vector_init( &(t->positions) );
-   vector_init( &(t->tilesets) );
-   vector_init( &(t->freeable_chunks ) );
+   hashmap_init( &(t->tilesets) );
+   //vector_init( &(t->freeable_chunks ) );
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
 
@@ -72,7 +76,8 @@ static BOOL tilemap_tileset_free_i_cb( bstring res, void* iter, void* arg ) {
 }
 
 void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
-   vector_remove_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
+   /* TODO: Free these. */
+   //vector_remove_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
 }
 
 void tilemap_iterate_screen_row(

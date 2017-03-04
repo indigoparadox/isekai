@@ -163,11 +163,15 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
 
    scaffold_error = 0;
 
-   screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0);
+   screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0 );
    scaffold_check_nonzero( screen_return );
 
    g->surface = create_bitmap( w, h );
+   g->w = w;
+   g->h = h;
    scaffold_check_null( g->surface );
+
+   clear_bitmap( g->surface );
 
 cleanup:
    return;
@@ -205,7 +209,8 @@ void graphics_surface_free( GRAPHICS* g ) {
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
-   blit( screen, g->surface, 0, 0, 0, 0, g->w, g->h );
+   blit( g->surface, screen, 0, 0, 0, 0, g->w, g->h );
+   clear_bitmap( g->surface );
 }
 
 void graphics_shutdown( GRAPHICS* g ) {
@@ -228,6 +233,7 @@ void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8
 }
 
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
+   scaffold_check_null( path );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
@@ -235,6 +241,9 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    if( NULL == g->surface ) {
       scaffold_print_error( "Image load error: %s: %s\n", bdata( path ), allegro_error );
    }
+   g->w = ((BITMAP*)g->surface)->w;
+   g->h = ((BITMAP*)g->surface)->h;
+cleanup:
    return;
 }
 
@@ -261,6 +270,8 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    g->surface = load_bmp_pf( fmem, NULL );
    //texture_out = load_memory_png( image_data, entry->unpacked_size, pal );
    scaffold_check_null( g->surface );
+   g->w = ((BITMAP*)g->surface)->w;
+   g->h = ((BITMAP*)g->surface)->h;
 
 cleanup:
    if( NULL != fmem ) {
@@ -330,7 +341,7 @@ void graphics_scale( GRAPHICS* g, gu w, gu h ) {
 
 void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
                     const GRAPHICS* src ) {
-   masked_blit( g->surface, src->surface, 0, 0, 0, 0, src->w, src->h );
+   masked_blit( src->surface, g->surface, 0, 0, 0, 0, src->w, src->h );
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
