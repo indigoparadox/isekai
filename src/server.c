@@ -112,7 +112,7 @@ void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer 
    VECTOR* l_clients = NULL;
 
    l_clients =
-      hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip );
+      hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip->nick );
    scaffold_check_null( l_clients );
 
    vector_iterate( l_clients, callback_send_clients, buffer );
@@ -138,7 +138,7 @@ void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* m
    va_end( varg );
 
    if( 0 == scaffold_error ) {
-      // FIXME: server_channel_send( s, l, c_skip, buffer );
+      server_channel_send( s, l, c_skip, buffer );
    }
 
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
