@@ -28,6 +28,43 @@ cleanup:
    return;
 }
 
+inline static void vector_reset( VECTOR* v ) {
+   free( v->scalar_data );
+   free( v->data );
+   v->scalar_data = NULL;
+   v->scalar = FALSE;
+   v->count = 0;
+}
+
+inline static void vector_grow( VECTOR* v, size_t new_size ) {
+   size_t old_size = v->size,
+      i;
+
+   v->size = new_size;
+   v->data = (void**)realloc( v->data, sizeof(void*) * v->size );
+   scaffold_check_null( v->data );
+   for( i = old_size ; i < v->size ; i++ ) {
+      v->data[i] = NULL;
+   }
+cleanup:
+   return;
+}
+
+inline static void vector_grow_scalar( VECTOR* v, size_t new_size ) {
+   size_t old_size = v->size,
+      i;
+
+   v->size = new_size;
+   v->scalar_data =
+      (int32_t*)realloc( v->scalar_data, sizeof( int32_t ) * v->size );
+   scaffold_check_null( v->scalar_data );
+   for( i = old_size ; i < v->size ; i++ ) {
+      v->scalar_data[i] = 0;
+   }
+cleanup:
+   return;
+}
+
 void vector_add( VECTOR* v, void* data ) {
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -43,10 +80,8 @@ void vector_add( VECTOR* v, void* data ) {
    }
 
    if( v->size == v->count ) {
-      v->size *= 2;
-      v->data = (void**)realloc( v->data, sizeof(void*) * v->size );
-      scaffold_check_null( v->data );
-      /* TODO: Clear new vector elements? */
+      vector_grow( v, v->size * 2 );
+      scaffold_check_nonzero( scaffold_error );
    }
 
    v->data[v->count] = data;
@@ -77,11 +112,11 @@ void vector_add_scalar( VECTOR* v, int32_t value, BOOL allow_dupe ) {
 
    if( FALSE == allow_dupe ) {
       for( i = 0 ; NULL != v->scalar_data && v->count > i ; i++ ) {
-         assert( v->scalar_data[i] != value );
          if( v->scalar_data[i] == value ) {
             scaffold_error = SCAFFOLD_ERROR_DUPLICATE;
             scaffold_print_error(
-               "Attempting to add duplicate %d to scalar vector.\n", value
+               "Warning: Attempted to add duplicate %d to scalar vector.\n",
+               value
             );
             goto cleanup;
          }
@@ -95,11 +130,8 @@ void vector_add_scalar( VECTOR* v, int32_t value, BOOL allow_dupe ) {
    }
 
    if( v->size == v->count ) {
-      v->size *= 2;
-      v->scalar_data =
-         (int32_t*)realloc( v->scalar_data, sizeof( int32_t ) * v->size );
-      scaffold_check_null( v->scalar_data );
-      /* TODO: Clear new vector elements? */
+      vector_grow_scalar( v, v->size * 2 );
+      scaffold_check_nonzero( scaffold_error );
    }
 
    v->scalar_data[v->count] = value;
@@ -131,9 +163,7 @@ cleanup:
 }
 
 void vector_set_scalar( VECTOR* v, size_t index, int32_t value ) {
-   size_t i;
    BOOL ok = FALSE;
-   size_t old_size;
 
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -153,15 +183,8 @@ void vector_set_scalar( VECTOR* v, size_t index, int32_t value ) {
    }
 
    if( index >= v->size ) {
-      old_size = v->size;
-      v->size = index + 1;
-      v->scalar_data =
-         (int32_t*)realloc( v->scalar_data, sizeof( int32_t ) * v->size );
-      scaffold_check_null( v->scalar_data );
-      /* TODO: Clear new vector elements? */
-      for( i = old_size ; i < v->size ; i++ ) {
-         v->scalar_data[i] = 0;
-      }
+      vector_grow_scalar( v, index + 1 );
+      scaffold_check_nonzero( scaffold_error );
    }
 
    v->scalar_data[index] = value;
@@ -193,7 +216,23 @@ cleanup:
    return retptr;
 }
 
-int32_t vector_get_scalar( VECTOR* v, size_t value ) {
+int32_t vector_get_scalar( VECTOR* v, size_t index ) {
+   int32_t retval = -1;
+
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+   assert( TRUE == v->scalar );
+
+   scaffold_check_bounds( index, v->count );
+
+   retval = v->scalar_data[index];
+
+cleanup:
+
+   return retval;
+}
+
+int32_t vector_get_scalar_value( VECTOR* v, size_t value ) {
    int32_t retval = -1;
    int i;
 
@@ -282,11 +321,8 @@ cleanup:
    return;
 }
 
-size_t vector_remove_scalar( VECTOR* v, int32_t value ) {
+void vector_remove_scalar( VECTOR* v, size_t index ) {
    size_t i;
-   size_t difference = 0;
-
-   /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -294,14 +330,45 @@ size_t vector_remove_scalar( VECTOR* v, int32_t value ) {
 
    vector_lock( v, TRUE );
 
-   for( i = 0; v->count - difference > i ; i++ ) {
-      if( v->scalar_data[i] == value ) {
-         difference++;
+   if( 1 >= v->count ) {
+      /* Delete dynamic arrays and reset if now empty. */
+      vector_reset( v );
+   } else {
+      for( i = index; v->count - 1 > i ; i++ ) {
+         v->scalar_data[i] = v->scalar_data[i + 1];
       }
-      v->scalar_data[i] = v->scalar_data[i + difference];
+      v->count -= 1;
    }
 
-   v->count -= difference;
+   vector_lock( v, FALSE );
+
+cleanup:
+   return;
+}
+
+size_t vector_remove_scalar_value( VECTOR* v, int32_t value ) {
+   size_t i;
+   size_t difference = 0;
+
+
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+   assert( TRUE == v->scalar );
+
+   vector_lock( v, TRUE );
+
+   if( 1 >= v->count ) {
+      /* Delete dynamic arrays and reset if now empty. */
+      vector_reset( v );
+   } else {
+      for( i = 0; v->count - difference > i ; i++ ) {
+         if( v->scalar_data[i] == value ) {
+            difference++;
+         }
+         v->scalar_data[i] = v->scalar_data[i + difference];
+      }
+      v->count -= difference;
+   }
 
    vector_lock( v, FALSE );
 

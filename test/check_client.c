@@ -15,10 +15,12 @@ START_TEST( test_client_lifecycle ) {
 }
 END_TEST
 
+/*
 START_TEST( test_client_server_channel ) {
 
 }
 END_TEST
+*/
 
 Suite* client_suite( void ) {
    Suite* s;
