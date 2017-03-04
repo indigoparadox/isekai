@@ -38,6 +38,7 @@ void gamedata_update_server(
 void gamedata_react_client(
    GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
 );
+void gamedata_poll_input( GAMEDATA* d, CLIENT* c );
 void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui );
 
 #endif /* GAMEDATA_H */
