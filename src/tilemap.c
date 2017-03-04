@@ -100,8 +100,10 @@ inline void tilemap_get_tile_tileset_pos( TILEMAP_TILESET* set, size_t gid, size
    GRAPHICS* g = NULL;
    size_t tiles_wide = 0;
    size_t tiles_high = 0;
+#ifdef USE_MATH
    float fx;
    float fy;
+#endif /* USE_PATH */
 
    /* TODO: Support multiple images. */
    g = (GRAPHICS*)hashmap_get_first( &(set->images) );
@@ -109,11 +111,16 @@ inline void tilemap_get_tile_tileset_pos( TILEMAP_TILESET* set, size_t gid, size
    tiles_high = g->h / set->tileheight;
 
    gid -= set->firstgid - 1;
+
+#ifdef USE_MATH
    fx = ((gid - 1) % tiles_wide);
    fy = ((gid - 1) / tiles_wide);
-
    *y = floor( fy ) * set->tileheight;
    *x = floor( fx ) * set->tilewidth;
+#else
+   *y = ((gid - 1) / tiles_wide) * set->tileheight;
+   *x = ((gid - 1) % tiles_wide) * set->tilewidth;
+#endif /* USE_MATH */
 
    assert( *y < (set->tileheight * tiles_high) );
    assert( *x < (set->tilewidth * tiles_wide) );
@@ -135,6 +142,9 @@ void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    size_t x, y, max_x, max_y, tileset_x, tileset_y, pix_x, pix_y;
    uint32_t tile;
    VECTOR* tiles = NULL;
+#ifdef DEBUG_TILES
+   bstring bnum = NULL;
+#endif /* DEBUG_TILES */
 
    max_x = window->x + window->width;
    max_y = window->y + window->height;
@@ -173,11 +183,13 @@ void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
             g_tileset
          );
 
-         bstring bnum = bformat( "%d,", tileset_x );
+#ifdef DEBUG_TILES
+         bnum = bformat( "%d,", tileset_x );
          graphics_draw_text( window->g, pix_x + 16, pix_y + 10, bnum );
          bassignformat( bnum, "%d", tileset_y );
          graphics_draw_text( window->g, pix_x + 16, pix_y + 22, bnum );
          bdestroy( bnum );
+#endif /* DEBUG_TILES */
       }
    }
 
