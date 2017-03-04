@@ -24,12 +24,10 @@ void chunker_free( CHUNKER* h ) {
    ref_dec( &(h->refcount) );
 }
 
-/* The chunker should NOT free or modify any buffers passed to it. */
-void chunker_chunk_start(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
-   size_t src_length, size_t tx_chunk_length
+static void chunker_chunk_setup_internal(
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t tx_chunk_length
 ) {
-   scaffold_check_null( src_buffer );
+
    assert( NULL != h );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
@@ -54,16 +52,55 @@ void chunker_chunk_start(
 
    h->finished = FALSE;
    h->raw_position = 0;
+   h->tx_chunk_length = tx_chunk_length;
+   h->channel = bstrcpy( channel );
+   h->type = type;
+}
+
+/* The chunker should NOT free or modify any buffers passed to it. */
+void chunker_chunk_start(
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
+   size_t src_length, size_t tx_chunk_length
+) {
+   scaffold_check_null( src_buffer );
+
+   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+
    h->raw_length = src_length;
    h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
    memcpy( h->raw_ptr, src_buffer, src_length );
-   h->channel = bstrcpy( channel );
-   h->type = type;
-   // FIXME: Remove this?
-   h->tx_chunk_length = tx_chunk_length;
 
 cleanup:
    return;
+}
+
+void chunker_chunk_start_file(
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath,
+   size_t tx_chunk_length
+) {
+   FILE* sendfile = NULL;
+
+   sendfile = fopen( bdata( filepath ), "rb" );
+   scaffold_check_null( sendfile );
+
+   /* Allocate enough space to hold the file. */
+   fseek( sendfile, 0, SEEK_END );
+   h->raw_length = ftell( sendfile );
+   h->raw_ptr = (BYTE*)calloc( h->raw_length, sizeof( BYTE ) + 1 ); /* +1 for term. */
+   scaffold_check_null( h->raw_ptr );
+   fseek( sendfile, 0, SEEK_SET );
+
+   /* Read and close the map. */
+   fread( h->raw_ptr, sizeof( BYTE ), h->raw_length, sendfile );
+   fclose( sendfile );
+   sendfile = NULL;
+
+   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+
+cleanup:
+   if( NULL != sendfile ) {
+      fclose( sendfile );
+   }
 }
 
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {

@@ -2,6 +2,7 @@
 #include "../datafile.h"
 
 #include "../b64/b64.h"
+#include "../hashmap.h"
 
 static void datafile_tilemap_parse_properties( TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
@@ -31,8 +32,8 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image ) {
-   TILEMAP_TILESET_IMAGE* image_info = NULL;
+static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t xml_image ) {
+   GRAPHICS* g_image = NULL;
    const char* xml_attr;
 #ifdef EZXML_EMBEDDED_IMAGES
    bstring image_buffer = NULL;
@@ -47,26 +48,26 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 #endif /* EZXML_CSTR */
 #endif /* EZXML_EMBEDDED_IMAGES */
    bstring buffer = NULL;
-   TILEMAP_TILESET* set = NULL;
+   //TILEMAP_TILESET* set = NULL;
 
    scaffold_error = 0;
 
-   set = (TILEMAP_TILESET*)vector_get( &(t->tilesets), vector_count( &(t->tilesets) ) - 1 );
+   //set = (TILEMAP_TILESET*)hashmap_get( &(t->tilesets), vector_count( &(t->tilesets) ) - 1 );
    scaffold_check_null( set );
 
-   if( !vector_ready( &(set->images) ) ) {
-      vector_init( &(set->images) );
+   if( !hashmap_ready( &(set->images) ) ) {
+      hashmap_init( &(set->images) );
    }
 
 #ifdef EZXML_EMBEDDED_IMAGES
    image_buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( image_buffer );
+#endif /* EZXML_EMBEDDED_IMAGES */
    buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( buffer );
-#endif /* EZXML_EMBEDDED_IMAGES */
 
-   image_info = (TILEMAP_TILESET_IMAGE*)calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
-   scaffold_check_null( image_info );
+   //g_image = (TILEMAP_TILESET_IMAGE*)calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
+   //scaffold_check_null( image_info );
 
    xml_attr = ezxml_attr( xml_image, "source" );
 #ifdef EZXML_EMBEDDED_IMAGES
@@ -99,9 +100,11 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
 #endif /* EZXML_EMBEDDED_IMAGES */
       bassigncstr( buffer, xml_attr );
 
-      graphics_surface_new( image_info->image, 0, 0, 0, 0 );
-      graphics_set_image_path( image_info->image, buffer );
-      scaffold_check_null( image_info->image->surface );
+      scaffold_print_debug( "Loading tileset image: %s\n", bdata( buffer ) );
+      graphics_surface_new( g_image, 0, 0, 0, 0 );
+      graphics_set_image_path( g_image, buffer );
+      scaffold_check_null( g_image->surface );
+      scaffold_print_debug( "Image loaded successfully.\n", bdata( buffer ) );
 
 #ifdef EZXML_EMBEDDED_IMAGES
       bassigncstr( image_buffer, "" );
@@ -127,10 +130,10 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP* t, ezxml_t xml_image 
    }
 #endif /* EZXML_EMBEDDED_IMAGES */
 
-   scaffold_check_null( image_info->image );
+   //scaffold_check_null( image_info->image );
 
-   vector_add( &(set->images), image_info );
-   image_info = NULL;
+   hashmap_put( &(set->images), buffer, g_image );
+   g_image = NULL;
 
 cleanup:
    bdestroy( buffer );
@@ -143,9 +146,8 @@ cleanup:
       free( image_export );
    }
 #endif /* EZXML_EMBEDDED_IMAGES */
-   if( NULL != image_info ) {
-      graphics_surface_free( image_info->image );
-      free( image_info );
+   if( NULL != g_image ) {
+      graphics_surface_free( g_image );
    }
    return;
 }
@@ -182,16 +184,17 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    vector_init( &(set->tiles) );
    vector_init( &(set->terrain) ); */
 
-   vector_add( &(t->tilesets), set );
+   bassigncstr( buffer, ezxml_attr( xml_tileset, "name" ) );
+   hashmap_put( &(t->tilesets), buffer, set );
 
    while( NULL != xml_image ) {
-      datafile_tilemap_parse_tileset_image( t, xml_image );
+      datafile_tilemap_parse_tileset_image( set, xml_image );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
 
-   if( !vector_ready( &(set->terrain) ) ) {
-      vector_init( &(set->terrain) );
+   if( !hashmap_ready( &(set->terrain) ) ) {
+      hashmap_init( &(set->terrain) );
    }
 
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
@@ -213,7 +216,7 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
       scaffold_check_null( xml_attr );
       terrain_info->tile = atoi( xml_attr );
 
-      vector_add( &(set->terrain), terrain_info );
+      hashmap_put( &(set->terrain), buffer, terrain_info );
       terrain_info = NULL;
 
       xml_terrain = ezxml_next( xml_terrain );
@@ -257,9 +260,6 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    //tilemap_tileset_lock_tiles( set, FALSE );
 
 cleanup:
-   if( NULL != set ) {
-      vector_add( &(t->tilesets), set );
-   }
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */
    bdestroy( buffer );
    if( NULL != tile_info ) {
@@ -309,7 +309,8 @@ static void datafile_tilemap_parse_layer( TILEMAP* t, ezxml_t xml_layer ) {
    }
    //tilemap_layer_lock_tiles( layer, FALSE );
 
-   vector_add( &(t->layers), layer );
+   bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
+   hashmap_put( &(t->layers), buffer, layer );
 
 cleanup:
    if( SCAFFOLD_ERROR_NONE != scaffold_error ) {

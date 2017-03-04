@@ -3,6 +3,7 @@
 #include "server.h"
 #include "callbacks.h"
 #include "irc.h"
+#include "chunker.h"
 
 static void client_cleanup( const struct _REF *ref ) {
    /* CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount ); */
@@ -200,5 +201,30 @@ void client_printf( CLIENT* c, const char* message, ... ) {
 
 cleanup:
    bdestroy( buffer );
+   return;
+}
+
+void client_send_file( CLIENT* c, bstring channel, bstring filepath ) {
+   CHUNKER* h = NULL;
+
+   /* Begin transmitting tilemap. */
+   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   scaffold_check_null( h );
+
+   chunker_chunk_start_file(
+      h,
+      channel,
+      CHUNKER_DATA_TYPE_TILEMAP,
+      filepath,
+      64
+   );
+   scaffold_check_nonzero( scaffold_error );
+
+   hashmap_put( &(c->chunkers), filepath, h );
+
+cleanup:
+   if( NULL != h ) {
+      chunker_free( h );
+   }
    return;
 }

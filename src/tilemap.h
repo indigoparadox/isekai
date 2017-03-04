@@ -4,6 +4,7 @@
 #include "bstrlib/bstrlib.h"
 #include "ezxml/ezxml.h"
 #include "vector.h"
+#include "hashmap.h"
 #include "graphics.h"
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
@@ -14,10 +15,6 @@ typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
    TILEMAP_ORIENTATION_ISO,
 } TILEMAP_ORIENTATION;
-
-typedef struct {
-   GRAPHICS* image;
-} TILEMAP_TILESET_IMAGE;
 
 typedef struct {
    bstring name;
@@ -33,8 +30,8 @@ typedef struct {
    size_t firstgid;
    size_t tileheight;
    size_t tilewidth;
-   VECTOR images;
-   VECTOR terrain;
+   HASHMAP images;
+   HASHMAP terrain;
    VECTOR tiles;
 } TILEMAP_TILESET;
 
@@ -62,18 +59,20 @@ typedef struct {
    REF refcount;
    size_t width;
    size_t height;
-   VECTOR layers;
+   HASHMAP layers;
    VECTOR positions;
-   VECTOR tilesets;
+   HASHMAP tilesets;
    size_t starting_x;
    size_t starting_y;
    TILEMAP_ORIENTATION orientation;
    bstring serialize_buffer;
    bstring serialize_filename;
 
+#ifdef EZXML_EMBEDDED_IMAGES
    /* Miscellaneous catch-all for generic memory blocks that must be freed on *
     * cleanup. Useful for datafile parsers.                                   */
    VECTOR freeable_chunks;
+#endif /* EZXML_EMBEDDED_IMAGES */
 } TILEMAP;
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)

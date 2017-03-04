@@ -67,7 +67,8 @@ void gamedata_react_client(
 
 void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
    TILEMAP_TILESET* set = NULL;
-   TILEMAP_TILESET_IMAGE* image = NULL;
+   //TILEMAP_TILESET_IMAGE* image = NULL;
+   GRAPHICS* image = NULL;
    GAMEDATA* d = NULL;
    CHANNEL* l = NULL;
 
@@ -79,18 +80,18 @@ void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
 
    d = &(l->gamedata);
 
-   if( 0 >= vector_count( &(d->tmap.tilesets) ) ) {
+   if( 0 >= hashmap_count( &(d->tmap.tilesets) ) ) {
       /* TODO: Handle lack of tilesets. */
       goto cleanup;
    }
 
-   set = vector_get( &(d->tmap.tilesets), 0 );
+   set = hashmap_get_first( &(d->tmap.tilesets) );
    if( NULL != set ) {
-      image = vector_get( &(set->images), 0 );
+      image = hashmap_get_first( &(set->images) );
    }
 
    if( NULL != image ) {
-      graphics_blit( g, 0, 0, 32, 32, image->image );
+      graphics_blit( g, 0, 0, 32, 32, image );
       graphics_flip_screen( g );
    }
 
