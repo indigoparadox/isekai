@@ -692,30 +692,24 @@ void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
    int bstr_ret;
    int i;
 
-   //for (e = s + len; s != e; s++) {
    for( i = 0 ; blength( txt_in ) > i ; i++ ) {
-      //while (*dlen + 10 > *max) *dst = realloc(*dst, *max += EZXML_BUFSIZE);
 
       switch (bchar(txt_in, i)) {
       case '\0':
          goto cleanup;
       case '&':
-         //*dlen += sprintf(*dst + *dlen, "&amp;");
          bstr_ret = bcatcstr( txt_out, "&amp;" );
          scaffold_check_nonzero( bstr_ret );
          break;
       case '<':
-         //*dlen += sprintf(*dst + *dlen, "&lt;");
          bstr_ret = bcatcstr( txt_out, "&lt;" );
          scaffold_check_nonzero( bstr_ret );
          break;
       case '>':
-         //*dlen += sprintf(*dst + *dlen, "&gt;");
          bstr_ret = bcatcstr( txt_out, "&gt;" );
          scaffold_check_nonzero( bstr_ret );
          break;
       case '"':
-         //*dlen += sprintf(*dst + *dlen, (a) ? "&quot;" : "\"");
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&quot;" );
             scaffold_check_nonzero( bstr_ret );
@@ -725,7 +719,6 @@ void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
          }
          break;
       case '\n':
-         //*dlen += sprintf(*dst + *dlen, (a) ? "&#xA;" : "\n");
 #ifdef EZXML_NEWLINES
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&#xA;" );
@@ -737,7 +730,6 @@ void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
 #endif /* EZXML_NEWLINES */
          break;
       case '\t':
-         //*dlen += sprintf(*dst + *dlen, (a) ? "&#x9;" : "\t");
 #ifdef EZXML_NEWLINES
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&#x9;" );
@@ -749,18 +741,15 @@ void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
 #endif /* EZXML_NEWLINES */
          break;
       case '\r':
-         //*dlen += sprintf(*dst + *dlen, "&#xD;");
 #ifdef EZXML_NEWLINES
          bstr_ret = bcatcstr( txt_out, "&#xD;" );
          scaffold_check_nonzero( bstr_ret );
 #endif /* EZXML_NEWLINES */
          break;
       default:
-         //(*dst)[(*dlen)++] = *s;
          bconchar( txt_out, bchar( txt_in, i ) );
       }
    }
-   //return *dst;
 cleanup:
    return;
 }
@@ -768,18 +757,12 @@ cleanup:
 // Recursively converts each tag to xml appending it to *s. Reallocates *s if
 // its length excedes max. start is the location of the previous tag in the
 // parent tag's character content. Returns *s.
-/*
-char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
-               size_t start, char ***attr) {
-*/
 void ezxml_toxml_r(ezxml_t xml, bstring xml_out, size_t start, char ***attr) {
    int i, j;
-   //char *txt = NULL;
    size_t off = 0;
    int bstr_ret;
    bstring txt_b = NULL;
 
-   //(xml->parent) ? xml->parent->txt : "";
    if( NULL != xml->parent ) {
       txt_b = bfromcstr( xml->parent->txt );
    } else {
@@ -787,32 +770,16 @@ void ezxml_toxml_r(ezxml_t xml, bstring xml_out, size_t start, char ***attr) {
    }
 
    // parent character content up to this tag
-   //*s = ezxml_ampencode(txt + start, xml->off - start, s, len, max, 0);
    ezxml_ampencode_b( txt_b, xml_out, 0 );
 
-
-   /*
-   while (*len + strlen(xml->name) + 4 > *max) // reallocate s
-      *s = realloc(*s, *max += EZXML_BUFSIZE);
-   */
-
-   //*len += sprintf(*s + *len, "<%s", xml->name); // open tag
    bformata( xml_out, "<%s", xml->name );
    for (i = 0; xml->attr[i]; i += 2) { // tag attributes
       if (ezxml_attr(xml, xml->attr[i]) != xml->attr[i + 1]) continue;
-      /*
-      while (*len + strlen(xml->attr[i]) + 7 > *max) // reallocate s
-         *s = realloc(*s, *max += EZXML_BUFSIZE);
-      */
-
-      //*len += sprintf(*s + *len, " %s=\"", xml->attr[i]);
       bstr_ret = bformata( xml_out, " %s=\"", xml->attr[i] );
       scaffold_check_nonzero( bstr_ret );
-      //ezxml_ampencode(xml->attr[i + 1], -1, s, len, max, 1);
       bstr_ret = bassigncstr( txt_b, xml->attr[i + 1] );
       scaffold_check_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 1);
-      //*len += sprintf(*s + *len, "\"");
       bstr_ret = bconchar( xml_out, '"' );
       scaffold_check_nonzero( bstr_ret );
    }
@@ -821,30 +788,17 @@ void ezxml_toxml_r(ezxml_t xml, bstring xml_out, size_t start, char ***attr) {
    for (j = 1; attr[i] && attr[i][j]; j += 3) { // default attributes
       if (! attr[i][j + 1] || ezxml_attr(xml, attr[i][j]) != attr[i][j + 1])
          continue; // skip duplicates and non-values
-      /*
-      while (*len + strlen(attr[i][j]) + 7 > *max) // reallocate s
-         *s = realloc(*s, *max += EZXML_BUFSIZE);
-      */
-
-      //*len += sprintf(*s + *len, " %s=\"", attr[i][j]);
       bstr_ret = bformata( xml_out, " %s=\"", attr[i][j] );
       scaffold_check_nonzero( bstr_ret );
-      //ezxml_ampencode(attr[i][j + 1], -1, s, len, max, 1);
       bstr_ret = bassigncstr( txt_b, attr[i][j + 1] );
       scaffold_check_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 1 );
-      //*len += sprintf(*s + *len, "\"");
       bstr_ret = bconchar( xml_out, '"' );
       scaffold_check_nonzero( bstr_ret );
    }
-   //*len += sprintf(*s + *len, ">");
    bstr_ret = bconchar( xml_out, '>' );
    scaffold_check_nonzero( bstr_ret );
 
-   /*
-   *s = (xml->child) ? ezxml_toxml_r(xml->child, s, len, max, 0, attr) //child
-       : ezxml_ampencode(xml->txt, -1, s, len, max, 0);  //data
-   */
    if( NULL != xml->child ) {
       ezxml_toxml_r( xml->child, xml_out, 0, attr );
    } else {
@@ -854,28 +808,16 @@ void ezxml_toxml_r(ezxml_t xml, bstring xml_out, size_t start, char ***attr) {
       ezxml_ampencode_b( txt_b, xml_out, 0 );  //data
    }
 
-   /*
-   while (*len + strlen(xml->name) + 4 > *max) // reallocate s
-      *s = realloc(*s, *max += EZXML_BUFSIZE);
-   */
-
-   //*len += sprintf(*s + *len, "</%s>", xml->name); // close tag
    bstr_ret = bformata( xml_out, "</%s>", xml->name );
    scaffold_check_nonzero( bstr_ret );
 
-   //while (txt[off] && off < xml->off) off++; // make sure off is within bounds
    while( NULL != xml->parent && xml->parent->txt[off] && off < xml->off ) {
       off++; // make sure off is within bounds
    }
 
-   /*
-   return (xml->ordered) ? ezxml_toxml_r(xml->ordered, s, len, max, off, attr)
-         : ezxml_ampencode(txt + off, -1, s, len, max, 0);
-   */
    if( xml->ordered ) {
       ezxml_toxml_r( xml->ordered, xml_out, off, attr );
    } else if( NULL != xml->parent ) {
-      //ezxml_ampencode(txt + off, -1, s, len, max, 0);
       bstr_ret = bassigncstr( txt_b, xml->parent->txt + off );
       scaffold_check_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 0);

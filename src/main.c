@@ -117,7 +117,7 @@ cleanup:
    bdestroy( buffer );
    bdestroy( channel );
    //client_free( client );
-   assert( 0 == hashmap_count( &(server->self.channels) ) );
+   //assert( 0 == hashmap_count( &(server->self.channels) ) );
    server_free( server );
    free( server );
    graphics_shutdown( &g );

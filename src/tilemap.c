@@ -124,8 +124,6 @@ inline void tilemap_get_tile_tileset_pos( TILEMAP_TILESET* set, size_t gid, size
 
    assert( *y < (set->tileheight * tiles_high) );
    assert( *x < (set->tilewidth * tiles_wide) );
-
-   //*x = *x < 0 ? 0 : *x;
 }
 
 inline uint32_t tilemap_get_tile( TILEMAP_LAYER* layer, size_t x, size_t y ) {
