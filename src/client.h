@@ -55,7 +55,6 @@ typedef struct _GAMEDATA GAMEDATA;
 
 BOOL cb_client_del_channels( VECTOR* v, size_t idx, void* iter, void* arg );
 void* cb_client_get_nick( VECTOR* v, size_t idx, void* iter, void* arg );
-//void* client_cmp_ptr( VECTOR* v, size_t idx, void* iter, void* arg );
 
 void client_init( CLIENT* c );
 BOOL client_free( CLIENT* c );

@@ -6,8 +6,6 @@
 #include "server.h"
 #include "ref.h"
 
-//typedef void (*irc_cmd_cb)( CLIENT* c, SERVER* s, struct bstrList* args );
-
 typedef enum _IRC_REPLY {
    ERR_NONICKNAMEGIVEN = 431,
    ERR_NICKNAMEINUSE = 433,
