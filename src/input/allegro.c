@@ -1,57 +1,34 @@
 #include "../input.h"
 
+#include "../client.h"
+
 #include <allegro.h>
+
+extern CLIENT* main_client;
 
 typedef struct {
    int keysym;
    void (*callback)( CLIENT* c, void* arg );
 } INPUT_ENTRY;
 
-static void input_key_quit( CLIENT* c, void* arg ) {
-
+static void input_close_allegro_window() {
+   client_stop( main_client );
 }
-
-static const INPUT_ENTRY input_vtable[] = {
-   {KEY_Q, input_key_quit},
-   {-1, NULL}
-};
 
 void input_init( INPUT* p ) {
-#ifdef INIT_ZEROES
-   memset( p, '\0', sizeof( INPUT ) );
-#endif /* INIT_ZEROES */
-
    install_keyboard();
+
+   set_close_button_callback( input_close_allegro_window );
 }
 
-int input_execute( INPUT* input ) {
-   const INPUT_ENTRY* input_vtable_iter = input_vtable;
-
-   poll_keyboard();
-
-   while( NULL != input_vtable_iter ) {
-      if( key[input_vtable_iter->keysym] ) {
-         input_vtable_iter->callback( input->client, NULL );
-      }
-
-      input_vtable_iter++;
-   }
-
-   return FALSE;
-}
-
-int16_t input_get_char( INPUT* input ) {
-   int16_t key_out = -1;
-
+void input_get_event( INPUT* input ) {
    poll_keyboard();
 
    if( keypressed() ) {
-      key_out = readkey();
-   }
-
-   if( 0 <= key_out ) {
-      return key_out & 0xff;
+      input->type = INPUT_TYPE_KEY;
+      input->character = readkey() & 0xff;
    } else {
-      return 0;
+      input->type = INPUT_TYPE_NONE;
+      input->character = 0;
    }
 }

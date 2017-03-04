@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "ui.h"
 #include "datafile.h"
+#include "input.h"
 
 static inline CHANNEL* gamedata_get_channel( GAMEDATA* d ) {
    return (CHANNEL*)d;
@@ -65,10 +66,22 @@ void gamedata_react_client(
 ) {
 }
 
+void gamedata_poll_input( GAMEDATA* d, CLIENT* c ) {
+   INPUT input;
+
+   input_get_event( &input );
+
+   if( INPUT_TYPE_KEY == input.type ) {
+      switch( input.character ) {
+      case 'q':
+         scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+         client_stop( c );
+         break;
+      }
+   }
+}
+
 void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
-   //TILEMAP_TILESET* set = NULL;
-   //TILEMAP_TILESET_IMAGE* image = NULL;
-   //GRAPHICS* image = NULL;
    GAMEDATA* d = NULL;
    CHANNEL* l = NULL;
    TILEMAP_WINDOW twindow = { 0 };
@@ -81,13 +94,15 @@ void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
 
    d = &(l->gamedata);
 
-   twindow.width = 640/32;
-   twindow.height = 480/32;
+   twindow.width = 640 / 32;
+   twindow.height = 480 / 32;
 
    if( TILEMAP_SENTINAL == d->tmap.sentinal ) {
       tilemap_draw_ortho( &(d->tmap), g, &twindow );
       graphics_flip_screen( g );
    }
+
+   gamedata_poll_input( d, c );
 
 cleanup:
    return;
