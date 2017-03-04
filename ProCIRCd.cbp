@@ -117,7 +117,7 @@
 			<Add option="-Wall" />
 			<Add option="-DUSE_HEATSHRINK" />
 			<Add option="-DEZXML_CSTR" />
-			<Add option="-DEZXML_EMBEDDED_IMAGES" />
+			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
 		</Compiler>
 		<Unit filename="src/b64/b64.c">
 			<Option compilerVar="CC" />

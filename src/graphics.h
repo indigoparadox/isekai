@@ -64,6 +64,9 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
 void graphics_scale( GRAPHICS* g, gu w, gu h );
 void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
                     const GRAPHICS* src );
+void graphics_blit_partial(
+   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+);
 void graphics_sleep( uint16_t milliseconds );
 
 #endif /* GRAPHICS_H */

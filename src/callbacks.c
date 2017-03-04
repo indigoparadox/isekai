@@ -189,6 +189,17 @@ cleanup:
    return NULL;
 }
 
+void* callback_search_tilesets( const bstring res, void* iter, void* arg ) {
+   size_t gid = (*(size_t*)arg);
+   TILEMAP_TILESET* tileset = (TILEMAP_TILESET*)iter;
+
+   if( tileset->firstgid <= gid ) {
+      return tileset;
+   }
+
+   return NULL;
+}
+
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;

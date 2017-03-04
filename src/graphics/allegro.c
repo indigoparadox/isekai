@@ -341,7 +341,13 @@ void graphics_scale( GRAPHICS* g, gu w, gu h ) {
 
 void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
                     const GRAPHICS* src ) {
-   masked_blit( src->surface, g->surface, 0, 0, 0, 0, src->w, src->h );
+   masked_blit( src->surface, g->surface, 0, 0, x, y, src->w, src->h );
+}
+
+void graphics_blit_partial(
+   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+) {
+   masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
