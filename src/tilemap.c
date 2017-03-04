@@ -6,6 +6,22 @@
 #include <memory.h>
 #include <string.h>
 
+static BOOL tilemap_tileset_free_i_cb( bstring res, void* iter, void* arg ) {
+   graphics_surface_free( (GRAPHICS*)iter );
+   return TRUE;
+}
+
+static BOOL tilemap_layer_free_cb( bstring res, void* iter, void* arg ) {
+   tilemap_layer_free( (TILEMAP_LAYER*)iter );
+   return TRUE;
+}
+
+static BOOL tilemap_tileset_free_cb( bstring res, void* iter, void* arg ) {
+   tilemap_tileset_free( (TILEMAP_TILESET*)iter );
+   return TRUE;
+}
+
+
 static void tilemap_cleanup( const struct _REF* ref ) {
    int i;
    TILEMAP* t;
@@ -18,20 +34,14 @@ static void tilemap_cleanup( const struct _REF* ref ) {
    }
    vector_free( &(t->freeable_chunks) );
 #endif /* EZXML_EMBEDDED_IMAGES */
-   /* TODO: Free these. */
-   /* for( i = 0 ; vector_count( &(t->layers) ) > i ; i++ ) {
-      tilemap_layer_free( vector_get( &(t->layers), i ) );
-   }
-   vector_free( &(t->layers) ); */
+   hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
+   hashmap_cleanup( &(t->layers) );
    for( i = 0 ; vector_count( &(t->positions) ) > i ; i++ ) {
       tilemap_position_free( vector_get( &(t->positions), i ) );
    }
    vector_free( &(t->positions) );
-   /* TODO: Free these. */
-   /* for( i = 0 ; vector_count( &(t->tilesets) ) > i ; i++ ) {
-      tilemap_tileset_free( vector_get( &(t->tilesets), i ) );
-   }
-   vector_free( &(t->tilesets) ); */
+   hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
+   hashmap_cleanup( &(t->tilesets) );
    bdestroy( t->serialize_buffer );
    bdestroy( t->serialize_filename );
 
@@ -70,14 +80,8 @@ void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
 
 }
 
-static BOOL tilemap_tileset_free_i_cb( bstring res, void* iter, void* arg ) {
-   graphics_surface_free( (GRAPHICS*)iter );
-   return TRUE;
-}
-
 void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
-   /* TODO: Free these. */
-   //vector_remove_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
+   hashmap_remove_cb( &(tileset->images), tilemap_tileset_free_i_cb, NULL );
 }
 
 void tilemap_iterate_screen_row(

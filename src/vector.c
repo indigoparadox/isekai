@@ -60,7 +60,7 @@ cleanup:
    return;
 }
 
-void vector_add_scalar( VECTOR* v, int32_t value ) {
+void vector_add_scalar( VECTOR* v, int32_t value, BOOL allow_dupe ) {
    size_t i;
    BOOL ok = FALSE;
 
@@ -75,13 +75,16 @@ void vector_add_scalar( VECTOR* v, int32_t value ) {
 
    v->scalar = TRUE;
 
-   for( i = 0 ; NULL != v->scalar_data && v->count > i ; i++ ) {
-      assert( v->scalar_data[i] != value );
-      if( v->scalar_data[i] == value ) {
-         /* TODO: Proper scaffold error. */
-         scaffold_error = 99;
-         scaffold_print_error( "Attempting to add duplicate %d to scalar vector.\n", value );
-         goto cleanup;
+   if( FALSE == allow_dupe ) {
+      for( i = 0 ; NULL != v->scalar_data && v->count > i ; i++ ) {
+         assert( v->scalar_data[i] != value );
+         if( v->scalar_data[i] == value ) {
+            scaffold_error = SCAFFOLD_ERROR_DUPLICATE;
+            scaffold_print_error(
+               "Attempting to add duplicate %d to scalar vector.\n", value
+            );
+            goto cleanup;
+         }
       }
    }
 
@@ -124,6 +127,49 @@ void vector_set( VECTOR* v, size_t index, void* data ) {
 
 cleanup:
    vector_lock( v, FALSE );
+   return;
+}
+
+void vector_set_scalar( VECTOR* v, size_t index, int32_t value ) {
+   size_t i;
+   BOOL ok = FALSE;
+   size_t old_size;
+
+   scaffold_check_null( v );
+   assert( VECTOR_SENTINAL == v->sentinal );
+
+   vector_lock( v, TRUE );
+   ok = TRUE;
+
+   /* Die if we have non-scalar data already. */
+   assert( NULL == v->data );
+
+   v->scalar = TRUE;
+
+   if( 0 == v->size ) {
+      v->size = index + 1;
+      v->scalar_data = (int32_t*)calloc( v->size, sizeof( int32_t ) );
+      scaffold_check_null( v->scalar_data );
+   }
+
+   if( index >= v->size ) {
+      old_size = v->size;
+      v->size = index + 1;
+      v->scalar_data =
+         (int32_t*)realloc( v->scalar_data, sizeof( int32_t ) * v->size );
+      scaffold_check_null( v->scalar_data );
+      /* TODO: Clear new vector elements? */
+      for( i = old_size ; i < v->size ; i++ ) {
+         v->scalar_data[i] = 0;
+      }
+   }
+
+   v->scalar_data[index] = value;
+
+cleanup:
+   if( TRUE == ok ) {
+      vector_lock( v, FALSE );
+   }
    return;
 }
 

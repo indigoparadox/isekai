@@ -44,24 +44,6 @@ static void irc_server_reply_welcome( CLIENT* c, SERVER* s ) {
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
 }
 
-static void irc_server_reply_nick( CLIENT* c, SERVER* s, bstring oldnick ) {
-   if( !(c->flags & CLIENT_FLAGS_HAVE_WELCOME) ) {
-      goto cleanup;
-   }
-
-   if( NULL == oldnick ) {
-      oldnick = c->username;
-   }
-
-   server_client_printf(
-      s, c, ":%b %b :%b!%b@%b NICK %b",
-      s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
-   );
-
-cleanup:
-   return;
-}
-
 void irc_server_reply_motd( CLIENT* c, SERVER* s ) {
    if( 1 > blength( c->nick ) ) {
       goto cleanup;
@@ -84,12 +66,7 @@ cleanup:
 
 static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
    client_send_file( c, l->name, l->gamedata.tmap.serialize_filename );
-   /* tilesets > tileset > image */
-   //vector_lock( )
-   //client_send_file( c, l->gamedata.tmap.tilesets );
-
-cleanup:
-   return;
+   /* FIXME: Send tilemap image files, too. */
 }
 
 static void irc_server_user( CLIENT* c, SERVER* s, struct bstrList* args ) {
@@ -186,6 +163,9 @@ static void irc_server_nick( CLIENT* c, SERVER* s, struct bstrList* args ) {
    if( 0 < blength( c->nick ) ) {
       oldnick = bstrcpy( c->nick );
       scaffold_check_null( oldnick );
+   } else {
+      oldnick = bstrcpy( c->username );
+      scaffold_check_null( oldnick );
    }
 
    bstr_result = bassign( c->nick, newnick );
@@ -195,6 +175,10 @@ static void irc_server_nick( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    /* Don't reply yet if there's been no USER statement yet. */
    if( !(c->flags & CLIENT_FLAGS_HAVE_USER) ) {
+      scaffold_print_debug(
+         "Client %d quietly changed nick from: %s To: %s\n",
+         c->link.socket, bdata( oldnick ), bdata( c->nick )
+      );
       goto cleanup;
    }
 
@@ -202,7 +186,15 @@ static void irc_server_nick( CLIENT* c, SERVER* s, struct bstrList* args ) {
       irc_server_reply_welcome( c, s );
    }
 
-   irc_server_reply_nick( c, s, oldnick );
+   server_client_printf(
+      s, c, ":%b %b :%b!%b@%b NICK %b",
+      s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
+   );
+
+   scaffold_print_debug(
+      "Client %d changed nick from: %s To: %s\n",
+      c->link.socket, bdata( oldnick ), bdata( c->nick )
+   );
 
 cleanup:
 
