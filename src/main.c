@@ -116,7 +116,7 @@ cleanup:
    bdestroy( localhost );
    bdestroy( buffer );
    bdestroy( channel );
-   client_free( client );
+   //client_free( client );
    assert( 0 == hashmap_count( &(server->self.channels) ) );
    server_free( server );
    free( server );

@@ -7,10 +7,6 @@
 #include "ref.h"
 #include "vector.h"
 
-/* b64 = ~4 * uint8_t size */
-
-//#define CHUNKER_XMIT_BUFFER_SIZE 60
-//#define CHUNKER_XMIT_BINARY_SIZE (CHUNKER_XMIT_BUFFER_SIZE * 4)
 #define CHUNKER_WINDOW_SIZE 14
 #define CHUNKER_LOOKAHEAD_SIZE 8
 
@@ -29,7 +25,6 @@ typedef struct _CHUNKER {
    heatshrink_decoder* decoder;
    size_t raw_position;
    size_t raw_length;
-   //size_t raw_chunk_length;
    uint8_t* raw_ptr;
    size_t tx_chunk_length;
    BOOL finished;

@@ -29,14 +29,10 @@ static void connection_cleanup_socket( CONNECTION* n ) {
 }
 
 void connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
-   //static CONNECTION* new_client = NULL;
-   //CONNECTION* return_client = NULL;
 #ifdef USE_NETWORK
    unsigned int address_length;
    struct sockaddr_in address;
-#endif /* USE_NETWORK */
 
-#ifdef USE_NETWORK
    /* Accept and verify the client. */
    address_length = sizeof( address );
    n->socket = accept(
@@ -170,26 +166,18 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    scaffold_check_null( n );
 
    buffer_chars = bdata( buffer );
-#ifdef USE_NETWORK
-   dest_socket = n->socket;
-   buffer_len = blength( buffer );
-#else
-   client_socket = n->socket;
-#endif /* USE_NETWORK */
-
    assert( NULL != buffer_chars );
 
 #ifdef USE_NETWORK
+   dest_socket = n->socket;
+   buffer_len = blength( buffer );
    assert( 0 != dest_socket );
-#else
-   assert( 0 != client_socket && client_socket != fake_server_socket );
-#endif /* USE_NETWORK */
 
-   //scaffold_print_debug( "SEND: %s\n", buffer_chars );
-
-#ifdef USE_NETWORK
    send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #else
+   client_socket = n->socket;
+   assert( 0 != client_socket && client_socket != fake_server_socket );
+
    if(FALSE != client ) {
       assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
       mailbox_send( &fake_network, client_socket, fake_server_socket, buffer );
@@ -213,7 +201,6 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
 #endif /* DEBUG_NETWORK */
 #endif /* USE_NETWORK */
 cleanup:
-   //scaffold_print_debug( "SEND OK: %s\n", buffer_chars );
    return;
 }
 

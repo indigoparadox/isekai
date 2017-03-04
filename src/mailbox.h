@@ -32,7 +32,6 @@ typedef struct _MAILBOX {
    VECTOR envelopes;
    ssize_t last_socket;
    VECTOR sockets_assigned;
-   //size_t server_socket;
 } MAILBOX;
 
 size_t mailbox_listen( MAILBOX* mailbox );
