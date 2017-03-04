@@ -43,6 +43,10 @@ void chunker_chunk_start(
    CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
    size_t src_length, size_t tx_chunk_length
 );
+void chunker_chunk_start_file(
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath,
+   size_t tx_chunk_length
+);
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer );
 BOOL chunker_chunk_finished( CHUNKER* h );
 void chunker_unchunk_start(

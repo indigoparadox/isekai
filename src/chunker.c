@@ -86,12 +86,12 @@ void chunker_chunk_start_file(
    /* Allocate enough space to hold the file. */
    fseek( sendfile, 0, SEEK_END );
    h->raw_length = ftell( sendfile );
-   h->raw_ptr = (BYTE*)calloc( h->raw_length, sizeof( BYTE ) + 1 ); /* +1 for term. */
+   h->raw_ptr = (uint8_t*)calloc( h->raw_length, sizeof( uint8_t ) + 1 ); /* +1 for term. */
    scaffold_check_null( h->raw_ptr );
    fseek( sendfile, 0, SEEK_SET );
 
    /* Read and close the map. */
-   fread( h->raw_ptr, sizeof( BYTE ), h->raw_length, sendfile );
+   fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, sendfile );
    fclose( sendfile );
    sendfile = NULL;
 

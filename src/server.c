@@ -155,14 +155,19 @@ void server_add_client( SERVER* s, CLIENT* c ) {
       do {
          btrunc( c->nick, 0 );
          for( i = 0; SERVER_RANDOM_NICK_LEN > i ; i++ ) {
-            bconchar( c->nick, nick_random_chars[rand() % (int)(sizeof( nick_random_chars )-1)] );
+            bconchar(
+               c->nick,
+               nick_random_chars[rand() % (int)(sizeof( nick_random_chars )-1)]
+            );
          }
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
    assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    hashmap_put( &(s->clients), c->nick, c );
-   scaffold_print_debug( "Client added to server with nick: %s\n", bdata( c->nick ) );
-   //c->jobs_socket = mailbox_accept( s->self.jobs, -1 );
+   scaffold_print_debug(
+      "Client %d added to server with nick: %s\n",
+      c->link.socket, bdata( c->nick )
+   );
 }
 
 CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {

@@ -14,7 +14,6 @@ static void client_cleanup( const struct _REF *ref ) {
    vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
    vector_free( &(c->command_queue) );
    connection_cleanup( &(c->link) );
-   bdestroy( c->buffer );
    bdestroy( c->nick );
    bdestroy( c->realname );
    bdestroy( c->remote );
@@ -28,7 +27,6 @@ void client_init( CLIENT* c ) {
    ref_init( &(c->link.refcount), client_cleanup );
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
-   c->buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -73,7 +71,6 @@ cleanup:
 }
 
 /* This runs on the local client. */
-/* TODO: Process multiple lines? */
 void client_update( CLIENT* c ) {
    //ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
@@ -81,28 +78,6 @@ void client_update( CLIENT* c ) {
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
 #endif /* DEBUG */
-
-/*
-   btrunc( c->buffer, 0 );
-   last_read_count = connection_read_line( &(c->link), c->buffer, TRUE );
-   btrimws( c->buffer );
-*/
-   //if( 0 < last_read_count ) {
-      /* TODO: Handle error reading. */
-
-#ifdef DEBUG
-      /* TODO: If for trace path? */
-#ifdef DEBUG_NETWORK
-      scaffold_print_debug(
-         "Client %d: Line received from server: %s\n",
-         c->link.socket, bdata( c->buffer )
-      );
-#endif /* DEBUG_NETWORK */
-      //assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
-#endif /* DEBUG */
-
-      //irc_dispatch( c, d, c->buffer );
-   //}
 
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
@@ -122,9 +97,6 @@ void client_update( CLIENT* c ) {
       irc_command_free( cmd );
    }
 
-   // FIXME
-   //gamedata_update_client( d, c );
-
    return;
 }
 
@@ -138,7 +110,6 @@ void client_stop( CLIENT* c ) {
 }
 
 void client_add_channel( CLIENT* c, CHANNEL* l ) {
-   //vector_add( &(c->channels), l );
    hashmap_put( &(c->channels), l->name, l );
 }
 
@@ -156,15 +127,12 @@ void client_leave_channel( CLIENT* c, bstring lname ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
    assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
-   //scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
    buffer = bfromcstr( "PART " );
    bconcat( buffer, lname );
    client_send( c, buffer );
    bdestroy( buffer );
 
    /* TODO: Add callback from parser and only delete channel on confirm. */
-   /* TODO: Cleanup channel. */
-   //vector_delete_cb( &(c->channels), callback_free_channels, lname );
    hashmap_remove( &(c->channels), lname );
 }
 
@@ -206,6 +174,11 @@ cleanup:
 
 void client_send_file( CLIENT* c, bstring channel, bstring filepath ) {
    CHUNKER* h = NULL;
+
+   scaffold_print_debug(
+      "Sending file to client %d: %s\n",
+      c->link.socket, bdata( filepath )
+   );
 
    /* Begin transmitting tilemap. */
    h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );

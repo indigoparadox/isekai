@@ -207,7 +207,7 @@ size_t mailbox_connect(
    } else {
       socket_out = socket_src;
    }
-   vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
+   vector_add_scalar( &(mailbox->sockets_assigned), socket_out, FALSE );
    outgoing->socket_src = socket_out;
 
    vector_add( &(mailbox->envelopes), outgoing );

@@ -37,14 +37,12 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       btrunc( buffer, 0 );
    }
 
-   /* TODO: Do we need the buffer to be part of the client anymore? */
-
+   /* Get the next line and clean it up. */
    last_read_count = connection_read_line( &(c->link), buffer, is_client );
    btrimws( buffer );
    bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
    if( 0 >= last_read_count ) {
-      /* TODO: Handle error reading. */
       goto cleanup;
    }
 

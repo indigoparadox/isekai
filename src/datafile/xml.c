@@ -104,7 +104,7 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t 
       graphics_surface_new( g_image, 0, 0, 0, 0 );
       graphics_set_image_path( g_image, buffer );
       scaffold_check_null( g_image->surface );
-      scaffold_print_debug( "Image loaded successfully.\n", bdata( buffer ) );
+      scaffold_print_debug( "Image loaded successfully.\n" );
 
 #ifdef EZXML_EMBEDDED_IMAGES
       bassigncstr( image_buffer, "" );
