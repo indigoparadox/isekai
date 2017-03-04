@@ -241,11 +241,11 @@ cleanup:
 }
 
 void mailbox_close( MAILBOX* mailbox, ssize_t socket ) {
-   vector_remove_scalar( &(mailbox->sockets_assigned), socket );
+   vector_remove_scalar_value( &(mailbox->sockets_assigned), socket );
 }
 
 BOOL mailbox_is_alive( MAILBOX* mailbox, ssize_t socket ) {
-   if( 0 > vector_get_scalar( &(mailbox->sockets_assigned), socket ) ) {
+   if( 0 > vector_get_scalar_value( &(mailbox->sockets_assigned), socket ) ) {
       return FALSE;
    } else {
       return TRUE;

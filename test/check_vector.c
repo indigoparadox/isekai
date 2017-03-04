@@ -61,6 +61,44 @@ cleanup:
 }
 END_TEST
 
+START_TEST( test_vector_add_scalar ) {
+   VECTOR* v;
+   int i;
+
+   vector_new( v );
+
+   ck_assert_int_eq( vector_count( v ), 0 );
+
+   for( i = 0 ; 3 > i ; i++ ) {
+      vector_add_scalar( v, 3, TRUE );
+   }
+
+   ck_assert_int_eq( vector_count( v ), 3 );
+
+   for( i = 0 ; 3 > i ; i++ ) {
+      vector_add_scalar( v, 3 * i, FALSE );
+   }
+
+   ck_assert_int_eq( vector_count( v ), 5 );
+
+   for( i = 0 ; 3 > i ; i++ ) {
+      vector_add_scalar( v, 2 * i, TRUE );
+   }
+
+   ck_assert_int_eq( vector_count( v ), 8 );
+
+   for( i = 0 ; 8 > i ; i++ ) {
+      vector_remove_scalar( v, 0 );
+   }
+
+   ck_assert_int_eq( vector_count( v ), 0 );
+
+cleanup:
+
+   vector_free( v );
+}
+END_TEST
+
 START_TEST( test_vector_get ) {
    VECTOR* v;
    BLOB* blob = NULL;
@@ -151,6 +189,7 @@ Suite* vector_suite( void ) {
 
    tcase_add_test( tc_core, test_vector_create );
    tcase_add_test( tc_core, test_vector_add );
+   tcase_add_test( tc_core, test_vector_add_scalar );
    tcase_add_test( tc_core, test_vector_get );
    tcase_add_test( tc_core, test_vector_delete );
    suite_add_tcase( s, tc_core );
