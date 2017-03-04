@@ -155,10 +155,10 @@ cleanup:
 static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    TILEMAP_TILESET* set = NULL;
    ezxml_t
-   xml_image,
-   xml_tile,
-   xml_terraintypes,
-   xml_terrain;
+      xml_image,
+      xml_tile,
+      xml_terraintypes,
+      xml_terrain;
    const char* xml_attr;
    bstring buffer = NULL;
    TILEMAP_TILE_DATA* tile_info = NULL;
@@ -183,6 +183,18 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    /* vector_init( &(set->images) );
    vector_init( &(set->tiles) );
    vector_init( &(set->terrain) ); */
+
+   xml_attr = ezxml_attr( xml_tileset, "firstgid" );
+   scaffold_check_null( xml_attr );
+   set->firstgid = atoi( xml_attr );
+
+   xml_attr = ezxml_attr( xml_tileset, "tilewidth" );
+   scaffold_check_null( xml_attr );
+   set->tilewidth = atoi( xml_attr );
+
+   xml_attr = ezxml_attr( xml_tileset, "tileheight" );
+   scaffold_check_null( xml_attr );
+   set->tileheight = atoi( xml_attr );
 
    bassigncstr( buffer, ezxml_attr( xml_tileset, "name" ) );
    hashmap_put( &(t->tilesets), buffer, set );
@@ -291,23 +303,20 @@ static void datafile_tilemap_parse_layer( TILEMAP* t, ezxml_t xml_layer ) {
    xml_layer_data = ezxml_child( xml_layer, "data" );
    scaffold_check_null( xml_layer_data );
 
+   /* Split the tiles list CSV into an array of uint16. */
    buffer = bfromcstr( ezxml_txt( xml_layer_data ) );
    scaffold_check_null( buffer );
    tiles_list = bsplit( buffer, ',' );
    scaffold_check_null( tiles_list );
-   layer->tiles_alloc = tiles_list->qty;
-   layer->tiles = (uint16_t*)calloc( layer->tiles_alloc, sizeof( uint16_t ) );
-   scaffold_check_null( layer->tiles );
 
-   // XXX
-   //tilemap_layer_lock_tiles( layer, TRUE );
+   /* Convert each tile terrain ID string into an int16 and stow in array. */
+
+   /* TODO: Lock the list while adding, somehow. */
    for( i = 0 ; tiles_list->qty > i ; i++ ) {
       xml_attr = bdata( tiles_list->entry[i] );
       scaffold_check_null( xml_attr );
-      layer->tiles[i] = atoi( xml_attr );
-      layer->tiles_count++;
+      vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
-   //tilemap_layer_lock_tiles( layer, FALSE );
 
    bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
    hashmap_put( &(t->layers), buffer, layer );
@@ -359,6 +368,7 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
    t->serialize_buffer = ezxml_toxml( xml_data );
    scaffold_check_null( t->serialize_buffer );
 
+   t->sentinal = TILEMAP_SENTINAL;
 
 cleanup:
    if( NULL != xml_data ) {

@@ -10,6 +10,7 @@
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
 
 typedef struct _CLIENT CLIENT;
+typedef struct _TILEMAP TILEMAP;
 
 typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
@@ -17,16 +18,25 @@ typedef enum {
 } TILEMAP_ORIENTATION;
 
 typedef struct {
+   GRAPHICS* g;
+   TILEMAP* t;
+   size_t x; /* In tiles. */
+   size_t y;
+   size_t width;
+   size_t height;
+} TILEMAP_WINDOW;
+
+typedef struct _TILEMAP_TERRAIN_DATA {
    bstring name;
    size_t tile;
 } TILEMAP_TERRAIN_DATA;
 
-typedef struct {
+typedef struct _TILEMAP_TILE_DATA {
    size_t id;
    size_t terrain[4];
 } TILEMAP_TILE_DATA;
 
-typedef struct {
+typedef struct _TILEMAP_TILESET {
    size_t firstgid;
    size_t tileheight;
    size_t tilewidth;
@@ -35,7 +45,7 @@ typedef struct {
    VECTOR tiles;
 } TILEMAP_TILESET;
 
-typedef struct {
+typedef struct _TILEMAP_POSITION {
    size_t x_previous;
    size_t y_previous;
    size_t z_previous;
@@ -45,17 +55,15 @@ typedef struct {
    CLIENT* entity;
 } TILEMAP_POSITION;
 
-typedef struct {
+typedef struct _TILEMAP_LAYER {
    size_t x;
    size_t y;
    size_t width;
    size_t height;
-   uint16_t* tiles;
-   size_t tiles_count;
-   size_t tiles_alloc;
+   VECTOR tiles;
 } TILEMAP_LAYER;
 
-typedef struct {
+typedef struct _TILEMAP {
    REF refcount;
    size_t width;
    size_t height;
@@ -67,6 +75,9 @@ typedef struct {
    TILEMAP_ORIENTATION orientation;
    bstring serialize_buffer;
    bstring serialize_filename;
+   size_t window_step_width; /* For dungeons. */
+   size_t window_step_height;
+   uint16_t sentinal;
 
 #ifdef EZXML_EMBEDDED_IMAGES
    /* Miscellaneous catch-all for generic memory blocks that must be freed on *
@@ -78,19 +89,14 @@ typedef struct {
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
 #define TILEMAP_SERIALIZE_CHUNKSIZE 80
 
+#define TILEMAP_SENTINAL 1234
+
 /* y xxxxx
  * y xxxxx
  * y xxxxx
  *   xxx
  * (y * x) + x
  */
-
-#define tilemap_get_tile( t, l, x, y ) \
-    ((TILEMAP_TILE*)vector_get( \
-        (TILEMAP_LAYER*)vector_get( t->layers, l )->tiles, \
-        (y * (TILEMAP_LAYER*)vector_get( t->layers, l )->width) + (y % x), \
-    ) \
-)
 
 #define tilemap_new( t ) \
     t = (TILEMAP*)calloc( 1, sizeof( TILEMAP ) ); \
@@ -133,7 +139,8 @@ void tilemap_iterate_screen_row(
    TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
-void tilemap_load_data( TILEMAP* t, const BYTE* tmdata, int datasize );
-void tilemap_load_file( TILEMAP* t, bstring filename );
+TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid );
+inline void tilemap_get_tile_tileset_pos( TILEMAP_TILESET* set, size_t gid, size_t* x, size_t* y );
+void tilemap_draw_ortho( TILEMAP* t, GRAPHICS* g, TILEMAP_WINDOW* window );
 
 #endif /* TILEMAP_H */
