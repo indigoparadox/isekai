@@ -25,7 +25,7 @@ typedef struct _CHUNKER {
    heatshrink_decoder* decoder;
    size_t raw_position;
    size_t raw_length;
-   uint8_t* raw_ptr;
+   BYTE* raw_ptr;
    size_t tx_chunk_length;
    BOOL force_finish;
    bstring channel;

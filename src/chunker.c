@@ -75,7 +75,7 @@ void chunker_chunk_start(
    chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
 
    h->raw_length = src_length;
-   h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
+   h->raw_ptr = (BYTE*)calloc( src_length, sizeof( BYTE ) );
    memcpy( h->raw_ptr, src_buffer, src_length );
 
 cleanup:
@@ -86,29 +86,9 @@ void chunker_chunk_start_file(
    CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath,
    size_t tx_chunk_length
 ) {
-   FILE* sendfile = NULL;
-
-   sendfile = fopen( bdata( filepath ), "rb" );
-   scaffold_check_null( sendfile );
-
-   /* Allocate enough space to hold the file. */
-   fseek( sendfile, 0, SEEK_END );
-   h->raw_length = ftell( sendfile );
-   h->raw_ptr = (uint8_t*)calloc( h->raw_length, sizeof( uint8_t ) + 1 ); /* +1 for term. */
-   scaffold_check_null( h->raw_ptr );
-   fseek( sendfile, 0, SEEK_SET );
-
-   /* Read and close the map. */
-   fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, sendfile );
-   fclose( sendfile );
-   sendfile = NULL;
+   scaffold_read_file_contents( filepath, &h->raw_ptr, &h->raw_length );
 
    chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
-
-cleanup:
-   if( NULL != sendfile ) {
-      fclose( sendfile );
-   }
 }
 
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
@@ -133,7 +113,7 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
 
          sink_res = heatshrink_encoder_sink(
             h->encoder,
-            &(h->raw_ptr[h->raw_position]),
+            (uint8_t*)&(h->raw_ptr[h->raw_position]),
             raw_buffer_len,
             &consumed
          );
@@ -207,7 +187,7 @@ void chunker_unchunk_start(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->raw_length = src_length;
-   h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
+   h->raw_ptr = (BYTE*)calloc( src_length, sizeof( BYTE ) );
    h->channel = bstrcpy( channel );
    h->type = type;
    h->filename = bstrcpy( filename );
@@ -338,7 +318,6 @@ cleanup:
 #ifdef USE_FILE_CACHE
 
 void chunker_unchunk_save_cache( CHUNKER* h ) {
-   FILE* cached_copy;
    bstring cache_filename = NULL;
 
    cache_filename = bstrcpy( h->filecache_path );
@@ -350,10 +329,7 @@ void chunker_unchunk_save_cache( CHUNKER* h ) {
    }
    bconcat( cache_filename, h->filename );
 
-   cached_copy = fopen( bdata( cache_filename ),"wb" );
-   scaffold_check_null( cached_copy );
-   fwrite( h->raw_ptr, sizeof( char ), h->raw_length, cached_copy );
-   fclose( cached_copy );
+   scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
 
 cleanup:
    scaffold_check_unsilence();
@@ -401,7 +377,7 @@ void chunker_unchunk_check_cache( CHUNKER* h, bstring filecache_path ) {
    /* Allocate enough space to hold the file. */
    fseek( cached_copy_f, 0, SEEK_END );
    h->raw_length = ftell( cached_copy_f );
-   h->raw_ptr = (uint8_t*)calloc( h->raw_length, sizeof( uint8_t ) + 1 ); /* +1 for term. */
+   h->raw_ptr = (BYTE*)calloc( h->raw_length, sizeof( BYTE ) + 1 ); /* +1 for term. */
    scaffold_check_null( h->raw_ptr );
    fseek( cached_copy_f, 0, SEEK_SET );
 
