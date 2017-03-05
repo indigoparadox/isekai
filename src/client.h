@@ -9,8 +9,10 @@
 #include "channel.h"
 #include "mailbox.h"
 #include "hashmap.h"
+#include "mobile.h"
 
 typedef struct _CHANNEL CHANNEL;
+typedef struct _MOBILE MOBILE;
 
 typedef struct _CLIENT {
    /* "Root" class is REF*/
@@ -32,6 +34,7 @@ typedef struct _CLIENT {
    HASHMAP channels; /* All channels in now; all channels avail on server. */
    HASHMAP chunkers;
    VECTOR command_queue;
+   MOBILE* puppet;
    int sentinal;
 } CLIENT;
 
@@ -68,5 +71,7 @@ void client_printf( CLIENT* c, const char* message, ... );
 void client_lock_channels( CLIENT* c, BOOL lock );
 void client_stop( CLIENT* c );
 void client_send_file( CLIENT* c, bstring channel, bstring filepath );
+void client_add_puppet( CLIENT* c, MOBILE* o );
+void client_clear_puppet( CLIENT* c );
 
 #endif /* CLIENT_H */

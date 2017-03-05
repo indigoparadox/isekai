@@ -201,3 +201,22 @@ cleanup:
    }
    return;
 }
+
+void client_add_puppet( CLIENT* c, MOBILE* o ) {
+   if( NULL != c->puppet ) { /* Take care of existing mob before anything. */
+      mobile_free( c->puppet );
+      c->puppet = NULL;
+   }
+   ref_inc(  &(o->refcount) ); /* Add first, to avoid deletion. */
+   if( NULL != o ) {
+      if( NULL != o->owner ) {
+         client_clear_puppet( o->owner );
+      }
+      o->owner = c;
+   }
+   c->puppet = o; /* Assign to client last, to activate. */
+}
+
+void client_clear_puppet( CLIENT* c ) {
+   client_add_puppet( c, NULL );
+}

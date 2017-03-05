@@ -18,6 +18,7 @@ typedef struct _SERVER {
    HASHMAP clients;
    bstring servername;
    bstring version;
+   HASHMAP mobiles;
 } SERVER;
 
 #define SERVER_SENTINAL 164641
@@ -47,5 +48,7 @@ void server_listen( SERVER* s, int port );
 void server_poll_new_clients( SERVER* s );
 void server_service_clients( SERVER* s );
 void server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick );
+void server_add_mobile( SERVER* s, MOBILE* o );
+void server_remove_mobile( SERVER* s, bstring serial );
 
 #endif /* SERVER_H */
