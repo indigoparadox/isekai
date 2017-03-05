@@ -3,6 +3,7 @@
 
 #include "../b64/b64.h"
 #include "../hashmap.h"
+#include "../gamedata.h"
 
 static void datafile_tilemap_parse_properties( TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
@@ -32,112 +33,28 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images ) {
+static void datafile_tilemap_parse_tileset_image(
+   TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
+) {
    GRAPHICS* g_image = NULL;
    const char* xml_attr;
-#ifdef EZXML_EMBEDDED_IMAGES
-   bstring image_buffer = NULL;
-   char* image_buffer_c = NULL;
-   char* image_ezxml_import = NULL;
-   int bstr_result;
-   size_t image_len = 0;
-   BYTE* image_export = NULL;
-   int decode_res;
-#ifdef EZXML_CSTR
-   char* image_ezxml_export = NULL;
-#endif /* EZXML_CSTR */
-#endif /* EZXML_EMBEDDED_IMAGES */
    bstring buffer = NULL;
-   //TILEMAP_TILESET* set = NULL;
 
    scaffold_error = 0;
 
-   //set = (TILEMAP_TILESET*)hashmap_get( &(t->tilesets), vector_count( &(t->tilesets) ) - 1 );
    scaffold_check_null( set );
 
-   if( !hashmap_ready( &(set->images) ) ) {
-      hashmap_init( &(set->images) );
+   if( !vector_ready( &(set->images) ) ) {
+      vector_init( &(set->images) );
    }
 
-#ifdef EZXML_EMBEDDED_IMAGES
-   image_buffer = bfromcstralloc( 1024, "" );
-   scaffold_check_null( image_buffer );
-#endif /* EZXML_EMBEDDED_IMAGES */
    buffer = bfromcstralloc( 1024, "" );
    scaffold_check_null( buffer );
 
-   //g_image = (TILEMAP_TILESET_IMAGE*)calloc( 1, sizeof( TILEMAP_TILESET_IMAGE ) );
-   //scaffold_check_null( image_info );
-
    xml_attr = ezxml_attr( xml_image, "source" );
-#ifdef EZXML_EMBEDDED_IMAGES
-   if( NULL != xml_attr && 0 == strncmp( "inline", xml_attr, 6 ) ) {
-      /* Decode serialized image data if present. */
-      image_ezxml_import = ezxml_txt( xml_image );
-      scaffold_debug_file( maptest, "fmaptest.xml", image_ezxml_import, strlen( image_ezxml_import ) );
-      scaffold_check_null( image_ezxml_import );
+   bassigncstr( buffer, xml_attr );
 
-      bstr_result = bassigncstr( image_buffer, image_ezxml_import );
-      //free( image_ezxml_import );
-      scaffold_check_nonzero( bstr_result );
-
-      //image_ezxml_import = (char*)b64_decode( &image_len, image_buffer );
-      image_len = blength( image_buffer );
-      image_ezxml_import = calloc( image_len, sizeof( uint8_t ) );
-      decode_res = b64_decode( image_buffer, (uint8_t*)image_ezxml_import, &image_len );
-      scaffold_check_nonzero( decode_res );
-      scaffold_check_nonzero( scaffold_error );
-
-      graphics_surface_new( image_info->image, 0, 0, 0, 0 );
-      scaffold_check_nonzero( scaffold_error );
-      graphics_set_image_data( image_info->image, (BYTE*)image_ezxml_import, image_len );
-      free( image_ezxml_import );
-      scaffold_check_nonzero( scaffold_error );
-
-   } else if( NULL != xml_attr ) {
-      /* See if this image has an external image file. */
-      image_len = 1024;
-#endif /* EZXML_EMBEDDED_IMAGES */
-      bassigncstr( buffer, xml_attr );
-
-      if( TRUE == local_images ) {
-         scaffold_print_debug( "Loading tileset image: %s\n", bdata( buffer ) );
-         graphics_surface_new( g_image, 0, 0, 0, 0 );
-         graphics_set_image_path( g_image, buffer );
-         scaffold_check_null( g_image->surface );
-         scaffold_print_debug( "Image loaded successfully.\n" );
-
-#ifdef EZXML_EMBEDDED_IMAGES
-         bassigncstr( image_buffer, "" );
-         scaffold_check_null( image_buffer );
-
-         /* Save the image to the XML to share later. */
-         image_export = graphics_export_image_data( image_info->image, &image_len );
-         scaffold_check_null( image_export );
-         scaffold_check_zero( strlen( (char*)image_export ) );
-
-         b64_encode( image_export, image_len, image_buffer, 40 );
-         scaffold_check_nonzero( scaffold_error );
-
-         scaffold_print_debug(
-            "Loaded tileset image: %d bytes. Appending to tilemap XML...\n",
-            blength( image_buffer )
-         );
-
-         image_buffer_c = bstr2cstr( image_buffer, '\n' );
-         ezxml_set_txt( xml_image, image_buffer_c );
-         ezxml_set_attr( xml_image, "source", "inline" );
-         vector_add( &(t->freeable_chunks), image_buffer_c );
-      }
-#endif /* EZXML_EMBEDDED_IMAGES */
-
-      //scaffold_check_null( image_info->image );
-
-      hashmap_put( &(set->images), buffer, g_image );
-      g_image = NULL;
-   } else {
-      /* TODO: Be graceful. */
-   }
+   vector_add( &(set->images), bstrcpy( buffer ) );
 
 cleanup:
    bdestroy( buffer );

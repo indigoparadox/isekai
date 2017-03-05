@@ -22,6 +22,7 @@ void gamedata_init_server( GAMEDATA* d, const bstring name ) {
 
    tilemap_init( &(d->tmap), TRUE );
 
+   hashmap_init( &(d->cached_gfx) );
    scaffold_print_info( "Loading data for channel: %s\n", bdata( name ) );
    mapdata_filename = bstrcpy( name );
    scaffold_check_null( mapdata_filename );
@@ -44,11 +45,10 @@ void gamedata_cleanup( GAMEDATA* d ) {
 }
 
 void gamedata_init_client( GAMEDATA* d ) {
-   //d->ui = ui;
+   hashmap_init( &(d->cached_gfx) );
    d->incoming_buffer_len = 0;
    d->incoming_buffer = NULL;
    tilemap_init( &(d->tmap), FALSE );
-   //vector_init( &(d->incoming_chunkers ) );
    hashmap_init( &(d->incoming_chunkers) );
 }
 
@@ -94,6 +94,7 @@ void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
 
    d = &(l->gamedata);
 
+   twindow.cached_gfx = &(d->cached_gfx);
    twindow.width = 640 / 32;
    twindow.height = 480 / 32;
 
