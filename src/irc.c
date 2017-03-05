@@ -514,7 +514,7 @@ static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    bstring l_name = NULL;
 
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   scaffold_assert_client();
 
    scaffold_check_bounds( 3, args->qty );
    l_name = args->entry[3];
@@ -612,7 +612,7 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    h = hashmap_get( &(d->incoming_chunkers), filename );
    if( NULL == h ) {
       h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
-      chunker_unchunk_start( h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total );
+      chunker_unchunk_start( h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total, NULL );
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
    }
@@ -686,9 +686,9 @@ IRC_COMMAND* irc_dispatch(
    scaffold_check_null( args );
 
    if( table == irc_table_server ) {
-      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+      scaffold_assert_server();
    } else if( table == irc_table_client ) {
-      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+      scaffold_assert_client();
    }
 
    for( i = 0 ; args->qty > i ; i++ ) {
@@ -736,10 +736,10 @@ IRC_COMMAND* irc_dispatch(
    }
 
    if( table == irc_table_server ) {
-      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+      scaffold_assert_server();
       scaffold_print_error( "Server: Parser unable to interpret: %s\n", bdata( line ) );
    } else if( table == irc_table_client ) {
-      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+      scaffold_assert_client();
       scaffold_print_error( "Client: Parser unable to interpret: %s\n", bdata( line ) );
    }
 

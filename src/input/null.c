@@ -5,6 +5,6 @@ void input_init( INPUT* p ) {
 
 }
 
-int16_t input_get_char( INPUT* input ) {
-   return 0;
+void input_get_event( INPUT* input ) {
+   return;
 }

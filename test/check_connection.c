@@ -35,12 +35,16 @@ void check_connection_teardown_fixed() {
 }
 
 void check_connection_write( CONNECTION* n, bstring message, BOOL client ) {
+#ifdef DEBUG
    scaffold_trace_path = client ? SCAFFOLD_TRACE_CLIENT : SCAFFOLD_TRACE_SERVER;
+#endif /* DEBUG */
    connection_write_line( n, message, client );
 }
 
 ssize_t check_connection_read( CONNECTION* n, bstring buffer, BOOL client ) {
+#ifdef DEBUG
    scaffold_trace_path = client ? SCAFFOLD_TRACE_CLIENT : SCAFFOLD_TRACE_SERVER;
+#endif /* DEBUG */
    return connection_read_line( n, buffer, client );
 }
 

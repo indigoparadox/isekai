@@ -12,7 +12,7 @@ typedef struct {
 } INPUT_ENTRY;
 
 static void input_close_allegro_window() {
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+   scaffold_set_client();
    client_stop( main_client );
 }
 

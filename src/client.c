@@ -88,9 +88,7 @@ CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
 void client_connect( CLIENT* c, bstring server, int port ) {
    bstring buffer;
 
-#ifdef DEBUG
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
-#endif /* DEBUG */
+   scaffold_set_client();
 
    connection_connect( &(c->link), server , port );
    scaffold_check_negative( scaffold_error );
@@ -115,9 +113,7 @@ void client_update( CLIENT* c ) {
    //ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
 
-#ifdef DEBUG
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
-#endif /* DEBUG */
+   scaffold_set_client();
 
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
@@ -143,7 +139,8 @@ void client_update( CLIENT* c ) {
 void client_stop( CLIENT* c ) {
    bstring buffer = NULL;
 
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   scaffold_assert_client();
+
    buffer = bfromcstr( "QUIT" );
    client_send( c, buffer );
    bdestroy( buffer );
@@ -156,7 +153,9 @@ void client_add_channel( CLIENT* c, CHANNEL* l ) {
 void client_join_channel( CLIENT* c, bstring name ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+
+   scaffold_set_client();
+
    buffer = bfromcstr( "JOIN " );
    bconcat( buffer, name );
    client_send( c, buffer );
@@ -166,7 +165,9 @@ void client_join_channel( CLIENT* c, bstring name ) {
 void client_leave_channel( CLIENT* c, bstring lname ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+
+   scaffold_assert_client();
+
    buffer = bfromcstr( "PART " );
    bconcat( buffer, lname );
    client_send( c, buffer );
@@ -187,14 +188,15 @@ void client_send( CLIENT* c, bstring buffer ) {
 #ifdef DEBUG_NETWORK
    scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
 #endif /* DEBUG_NETWORK */
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+
+   scaffold_assert_client();
 }
 
 void client_printf( CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+   scaffold_assert_client();
 
    buffer = bfromcstralloc( strlen( message ), "" );
    scaffold_check_null( buffer );

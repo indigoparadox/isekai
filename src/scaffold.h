@@ -38,11 +38,13 @@ typedef enum {
    SCAFFOLD_ERROR_DUPLICATE,
 } SCAFFOLD_ERROR;
 
+#ifdef DEBUG
 typedef enum {
    SCAFFOLD_TRACE_NONE,
    SCAFFOLD_TRACE_CLIENT,
    SCAFFOLD_TRACE_SERVER,
 } SCAFFOLD_TRACE;
+#endif /* DEBUG */
 
 //#ifndef GFX_CURSES
 #if 1
@@ -50,9 +52,28 @@ typedef enum {
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
 #ifdef DEBUG
+
 #define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
+
+#define scaffold_assert_client() \
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
+#define scaffold_assert_server() \
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
+
+#define scaffold_set_client() \
+   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
+#define scaffold_set_server() \
+   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
+
 #else
+
+#define scaffold_assert_client()
+#define scaffold_assert_server()
+#define scaffold_set_client()
+#define scaffold_set_server()
+
 #define scaffold_print_debug( ... )
+
 #endif /* DEBUG */
 
 #define scaffold_debug_file( handlename, filename, data_ptr, data_size ) \

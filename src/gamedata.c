@@ -74,7 +74,7 @@ void gamedata_poll_input( GAMEDATA* d, CLIENT* c ) {
    if( INPUT_TYPE_KEY == input.type ) {
       switch( input.character ) {
       case 'q':
-         scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+         scaffold_set_client();
          client_stop( c );
          break;
       }

@@ -55,5 +55,10 @@ void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
                     const GRAPHICS* src ) {
 }
 
+void graphics_blit_partial(
+   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+) {
+}
+
 void graphics_sleep( uint16_t milliseconds ) {
 }
