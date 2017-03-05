@@ -324,10 +324,7 @@ void chunker_unchunk_save_cache( CHUNKER* h ) {
    scaffold_check_silence(); /* Caching disabled is a non-event. */
    scaffold_check_null( cache_filename );
 
-   if( '/' != bchar( cache_filename, blength( cache_filename ) - 1 ) ) {
-      bconchar( cache_filename, '/' );
-   }
-   bconcat( cache_filename, h->filename );
+   scaffold_join_path( cache_filename, h->filename );
 
    scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
 
@@ -354,10 +351,8 @@ void chunker_unchunk_check_cache( CHUNKER* h, bstring filecache_path ) {
    scaffold_check_unsilence(); /* Hint */
    scaffold_check_null( cache_filename );
 
-   if( '/' != bchar( cache_filename, blength( cache_filename ) - 1 ) ) {
-      bconchar( cache_filename, '/' );
-   }
-   bconcat( cache_filename, h->filename );
+   scaffold_join_path( cache_filename, h->filename );
+   scaffold_check_null( cache_filename );
 
    /* TODO: Compared file hashes. */
    cached_copy_f = fopen( bdata( cache_filename ), "rb" );
