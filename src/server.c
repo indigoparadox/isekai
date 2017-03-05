@@ -9,9 +9,6 @@
 #include "hashmap.h"
 #include "irc.h"
 
-static char nick_random_chars[] =
-   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
 static void server_cleanup( const struct _REF* ref ) {
    SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
 #ifdef DEBUG
@@ -149,17 +146,10 @@ cleanup:
 }
 
 void server_add_client( SERVER* s, CLIENT* c ) {
-   size_t i;
    if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
-         btrunc( c->nick, 0 );
-         for( i = 0; SERVER_RANDOM_NICK_LEN > i ; i++ ) {
-            bconchar(
-               c->nick,
-               nick_random_chars[rand() % (int)(sizeof( nick_random_chars )-1)]
-            );
-         }
+         scaffold_random_string( c->nick, SERVER_RANDOM_NICK_LEN );
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
    assert( NULL == hashmap_get( &(s->clients), c->nick ) );
@@ -246,14 +236,24 @@ CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
+   CLIENT* c;
 #ifdef DEBUG
    size_t deleted;
    size_t old_count = 0, new_count = 0;
+
+   old_count = hashmap_count( &(s->clients) );
 #endif /* DEBUG */
 
-#ifdef DEBUG
-   old_count = hashmap_count( &(s->clients) );
+   c = hashmap_iterate( &(s->clients), callback_search_clients, nick );
+   if( NULL != c ) {
+      /* Break any associations, first. */
+      if( NULL != c->puppet ) {
+         server_remove_mobile( s, c->puppet->serial );
+      }
+   }
 
+   /* Perform the deletion. */
+#ifdef DEBUG
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
@@ -293,6 +293,7 @@ void server_listen( SERVER* s, int port ) {
 
 void server_poll_new_clients( SERVER* s ) {
    static CLIENT* c = NULL;
+   MOBILE* o = NULL;
 #ifdef DEBUG
    size_t old_client_count = 0;
 
@@ -309,21 +310,31 @@ void server_poll_new_clients( SERVER* s ) {
    connection_register_incoming( &(s->self.link), &(c->link) );
    if( 0 >= c->link.socket ) {
       goto cleanup;
-   }
+   } else {
 
-   /* Add some details to c before stowing it. */
-   connection_assign_remote_name( &(c->link), c->remote );
-   //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
+      /* Add some details to c before stowing it. */
+      connection_assign_remote_name( &(c->link), c->remote );
+      //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
-   server_add_client( s, c );
+      server_add_client( s, c );
+
+      /* Create a basic mobile for the new client. */
+      mobile_new( o );
+      do {
+         scaffold_random_string( o->serial, MOBILE_RANDOM_SERIAL_LEN );
+      } while( NULL != hashmap_get( &(s->mobiles), o->serial ) );
+      client_add_puppet( c, o );
+      server_add_mobile( s, o );
 
 #ifdef DEBUG
-   assert( old_client_count < hashmap_count( &(s->clients) ) );
+      assert( old_client_count < hashmap_count( &(s->clients) ) );
 #endif /* DEBUG */
 
-   /* Ditch this client for now. */
-   ref_dec( &(c->link.refcount) );
-   c = NULL;
+      /* The only association this client should start with is the server's   *
+       * client hashmap, so get rid of its initial ref.                       */
+      ref_dec( &(c->link.refcount) );
+      c = NULL;
+   }
 
 cleanup:
    return;

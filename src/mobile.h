@@ -11,7 +11,14 @@ typedef struct _MOBILE {
    CLIENT* owner;
 } MOBILE;
 
+#define MOBILE_RANDOM_SERIAL_LEN 6
+
+#define mobile_new( o ) \
+    o = (MOBILE*)calloc( 1, sizeof( MOBILE ) ); \
+    scaffold_check_null( o ); \
+    mobile_init( o );
+
 void mobile_free( MOBILE* o );
-void mobile_init( MOBILE* o, bstring serial );
+void mobile_init( MOBILE* o );
 
 #endif /* MOBILE_H */

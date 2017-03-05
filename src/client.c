@@ -18,6 +18,7 @@ static void client_cleanup( const struct _REF *ref ) {
    bdestroy( c->realname );
    bdestroy( c->remote );
    bdestroy( c->username );
+   client_clear_puppet( c );
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
    /* free( c ); */

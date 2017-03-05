@@ -1,9 +1,20 @@
+
+#define SCAFFOLD_C
 #include "scaffold.h"
 
 #include <stdlib.h>
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
+
+#ifdef DEBUG
+SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
+#endif /* DEBUG */
+
+uint8_t scaffold_error = SCAFFOLD_ERROR_NONE;
+
+static char scaffold_random_chars[] =
+   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 BOOL scaffold_is_numeric( bstring line ) {
    int i;
@@ -167,4 +178,16 @@ void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
 cleanup:
    bdestroy( insert );
    return;
+}
+
+void scaffold_random_string( bstring rand_str, size_t len ) {
+   size_t i;
+   btrunc( rand_str, 0 );
+   for( i = 0; len > i ; i++ ) {
+      bconchar(
+         rand_str,
+         scaffold_random_chars
+            [rand() % (int)(sizeof( scaffold_random_chars )-1)]
+      );
+   }
 }
