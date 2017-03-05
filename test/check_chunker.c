@@ -6,12 +6,11 @@
 #include "../src/vector.h"
 #include "check_data.h"
 
-const struct tagbstring chunker_test_filename = bsStatic( "testchannel.tmx" );
+const struct tagbstring chunker_test_filename = bsStatic( "testdata/server/testchannel.tmx" );
 const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
 struct bstrList* chunker_mapchunks = NULL;
 VECTOR* chunker_mapchunk_starts;
-//bstring mapdata_original = NULL;
 char* chunker_mapdata;
 size_t chunker_mapsize;
 FILE* chunker_mapfile = NULL;

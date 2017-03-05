@@ -7,5 +7,5 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
 void datafile_reserialize_tilemap( TILEMAP* t ) {
 }
 
-void datafile_load_file( void* targ_struct, bstring filename, datafile_cb cb ) {
+void datafile_load_file( void* targ_struct, bstring filename, BOOL local_images, datafile_cb cb ) {
 }

@@ -4,9 +4,11 @@
 
 #include <stdlib.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
+struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
@@ -193,8 +195,97 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
    }
 }
 
-void scaffold_read_file_contents( bstring path, void** buffer, size_t* len ) {
+void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
    /* TODO: Implement mmap() */
+   FILE* inputfile = NULL;
+
+   *buffer = NULL;
+   *len = 0;
+
+   inputfile = fopen( bdata( path ), "rb" );
+   scaffold_check_null( inputfile );
+
+   /* Allocate enough space to hold the file. */
+   fseek( inputfile, 0, SEEK_END );
+   *len = ftell( inputfile );
+   *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) + 1 ); /* +1 for term. */
+   scaffold_check_null( *buffer );
+   fseek( inputfile, 0, SEEK_SET );
+
+   /* Read and close the file. */
+   fread( *buffer, sizeof( BYTE ), *len, inputfile );
+
+cleanup:
+   if( NULL != inputfile ) {
+      fclose( inputfile );
+   }
+}
+
+void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) {
+   FILE* outputfile = NULL;
+   char* path_c = NULL;
+   bstring test_path = NULL;
+   struct bstrList* path_dirs = NULL;
+   size_t true_qty;
+   struct stat test_path_stat = { 0 };
+   int stat_res;
+
+   assert( NULL != data );
+   assert( 0 != len );
+
+   /* Make sure the parent directory exists. */
+   path_dirs = bsplit( path, '/' );
+   if( 2 > path_dirs->qty ) {
+      /* We don't need to create any directories. */
+      goto write_file;
+   }
+
+   true_qty = path_dirs->qty;
+
+   for( path_dirs->qty = 1 ; path_dirs->qty < true_qty ; path_dirs->qty++ ) {
+      test_path = bjoin( path_dirs, &scaffold_dirsep_string );
+      scaffold_check_null( test_path );
+
+      path_c = bdata( test_path );
+      scaffold_check_null( test_path );
+
+      stat_res = stat( path_c, &test_path_stat );
+      if( 0 == (test_path_stat.st_mode & S_IFDIR) ) {
+         scaffold_error = SCAFFOLD_ERROR_ZERO;
+         scaffold_print_error(
+            "Path %s is not a directory. Aborting.\n", path_c
+         );
+         goto cleanup;
+      }
+
+      if( 0 != stat_res  ) {
+         /* Directory does not exist, so create it. */
+         scaffold_print_info(
+            "Creating missing directory: %s\n", path_c
+         );
+         scaffold_check_nonzero( mkdir( path_c, 0 ) );
+      }
+
+      bdestroy( test_path );
+      test_path = NULL;
+   }
+
+write_file:
+
+   path_c = bdata( path );
+   scaffold_check_null( path_c );
+
+   outputfile = fopen( path_c,"wb" );
+   scaffold_check_null( outputfile );
+
+   fwrite( data, sizeof( BYTE ), len, outputfile );
+
+cleanup:
+   bdestroy( test_path );
+   bstrListDestroy( path_dirs );
+   if( NULL != outputfile ) {
+      fclose( outputfile );
+   }
 }
 
 void scaffold_list_dir(

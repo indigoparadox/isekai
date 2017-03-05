@@ -76,11 +76,6 @@ typedef enum {
 
 #endif /* DEBUG */
 
-#define scaffold_debug_file( handlename, filename, data_ptr, data_size ) \
-   FILE* handlename = fopen( filename, "w" ); \
-   fwrite( data_ptr, sizeof( uint8_t ), data_size, handlename ); \
-   fclose( handlename );
-
 #else
 #define scaffold_print_info( ... )
 #define scaffold_print_error( ... )
@@ -180,7 +175,8 @@ void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, size_t len );
-void scaffold_read_file_contents( bstring path, void** buffer, size_t* len );
+void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len );
+void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
 void scaffold_list_dir(
    bstring path, VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
 );

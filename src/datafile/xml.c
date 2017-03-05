@@ -384,29 +384,16 @@ cleanup:
 void datafile_reserialize_tilemap( TILEMAP* t ) {
 }
 
-void datafile_load_file( void* targ_struct, bstring filename, datafile_cb cb ) {
-   FILE* tmfile = NULL;
+void datafile_load_file(
+   void* targ_struct, bstring filename, BOOL local_images, datafile_cb cb
+) {
    BYTE* tmdata = NULL;
-   size_t datasize = 0;
+   size_t tmsize = 0;
 
-   tmfile = fopen( bdata( filename ), "rb" );
-   scaffold_check_null( tmfile );
+   scaffold_read_file_contents( filename, &tmdata, &tmsize );
 
-   /* Allocate enough space to hold the map. */
-   fseek( tmfile, 0, SEEK_END );
-   datasize = ftell( tmfile );
-   tmdata = (BYTE*)calloc( datasize, sizeof( BYTE ) + 1 ); /* +1 for term. */
-   scaffold_check_null( tmdata );
-   fseek( tmfile, 0, SEEK_SET );
+   cb( targ_struct, filename, tmdata, tmsize );
 
-   /* Read and close the map. */
-   fread( tmdata, sizeof( BYTE ), datasize, tmfile );
-   fclose( tmfile );
-   tmfile = NULL;
-
-   cb( targ_struct, filename, tmdata, datasize );
-
-cleanup:
    if( NULL != tmdata ) {
       free( tmdata );
    }
