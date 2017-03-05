@@ -11,6 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct tagbstring str_irc_cache_path =
+   bsStatic( "testdata/livecache" );
+
+#define IRC_CACHE_PATH &str_irc_cache_path
+
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -612,7 +617,9 @@ static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
    h = hashmap_get( &(d->incoming_chunkers), filename );
    if( NULL == h ) {
       h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
-      chunker_unchunk_start( h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total, NULL );
+      chunker_unchunk_start(
+         h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total, filename, IRC_CACHE_PATH
+      );
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
    }

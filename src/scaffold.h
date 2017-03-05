@@ -61,9 +61,9 @@ typedef enum {
    assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
 
 #define scaffold_set_client() \
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
+   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
 #define scaffold_set_server() \
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
+   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
 
 #else
 
@@ -90,10 +90,15 @@ typedef enum {
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
+#define scaffold_check_silence() scaffold_error_silent = TRUE;
+#define scaffold_check_unsilence() scaffold_error_silent = FALSE;
+
 #define scaffold_check_null( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        scaffold_print_error( "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -102,7 +107,9 @@ typedef enum {
 #define scaffold_check_not_null( pointer ) \
     if( NULL != pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \
-        scaffold_print_error( "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -111,7 +118,9 @@ typedef enum {
 #define scaffold_check_bounds( index, bound ) \
     if( index >= bound ) { \
         scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS; \
-        scaffold_print_error( "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -120,7 +129,9 @@ typedef enum {
 #define scaffold_check_negative( value ) \
     if( 0 > value ) { \
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
-        scaffold_print_error( "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -129,7 +140,9 @@ typedef enum {
 #define scaffold_check_nonzero( value ) \
     if( 0 != value ) { \
         scaffold_error = SCAFFOLD_ERROR_NONZERO; \
-        scaffold_print_error( "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -138,7 +151,9 @@ typedef enum {
 #define scaffold_check_zero( value ) \
     if( 0 == value ) { \
         scaffold_error = SCAFFOLD_ERROR_ZERO; \
-        scaffold_print_error( "Scaffold: Zero error on line: %d\n", __LINE__ ); \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Zero error on line: %d\n", __LINE__ ); \
+        } \
         goto cleanup; \
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
@@ -168,6 +183,7 @@ extern SCAFFOLD_TRACE scaffold_trace_path;
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;
 extern uint8_t scaffold_error;
+extern BOOL scaffold_error_silent;
 #endif /* SCAFFOLD_C */
 
 #endif /* SCAFFOLD_H */

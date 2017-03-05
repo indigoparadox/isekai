@@ -124,7 +124,7 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    bstring xmit_buffer_out = NULL;
    int bstr_result;
 
-   if( TRUE == h->finished ) {
+   if( chunker_chunk_finished( h ) ) {
       goto cleanup;
    }
 

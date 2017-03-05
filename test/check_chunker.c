@@ -7,6 +7,8 @@
 #include "check_data.h"
 
 const struct tagbstring chunker_test_filename = bsStatic( "testchannel.tmx" );
+const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
+
 struct bstrList* chunker_mapchunks = NULL;
 VECTOR* chunker_mapchunk_starts;
 //bstring mapdata_original = NULL;
@@ -146,7 +148,8 @@ START_TEST( test_chunker_unchunk ) {
       (const bstring)&chunker_test_filename,
       CHUNKER_DATA_TYPE_TILEMAP,
       chunker_mapsize,
-      NULL
+      (const bstring)&chunker_test_filename,
+      (const bstring)&chunker_test_cachepath
    );
 
    ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );
@@ -154,7 +157,10 @@ START_TEST( test_chunker_unchunk ) {
       ck_abort_msg( "Vector and string list size mismatch." );
    }
 
-   ck_assert_int_eq( FALSE, chunker_unchunk_finished( h ) );
+   if( TRUE == chunker_unchunk_finished( h ) ) {
+      /* Cache found. */
+      goto checkup;
+   }
 
    while( chunker_mapchunks->qty > chunk_index ) {
       unchunk_buffer = chunker_mapchunks->entry[chunk_index];
@@ -191,6 +197,8 @@ START_TEST( test_chunker_unchunk ) {
    fwrite( h->raw_ptr, sizeof( char ), h->raw_length, check_chunk_out );
    fclose( check_chunk_out );
 #endif /* CHECK_WRITE_FILES */
+
+checkup:
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
