@@ -14,8 +14,7 @@ void mobile_free( MOBILE* o ) {
    ref_dec( &(o->refcount) );
 }
 
-void mobile_init( MOBILE* o, bstring serial ) {
+void mobile_init( MOBILE* o ) {
    ref_init( &(o->refcount), mobile_cleanup );
-   o->serial = bstrcpy( serial );
+   o->serial = bfromcstralloc( MOBILE_RANDOM_SERIAL_LEN, "" );
 }
-

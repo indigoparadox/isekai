@@ -138,10 +138,15 @@ BOOL scaffold_string_is_printable( bstring str );
 void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
+void scaffold_random_string( bstring rand_str, size_t len );
 
-SCAFFOLD_TRACE scaffold_trace_path;
-struct tagbstring scaffold_empty_string;
-struct tagbstring scaffold_space_string;
-uint8_t scaffold_error;
+#ifndef SCAFFOLD_C
+#ifdef DEBUG
+extern SCAFFOLD_TRACE scaffold_trace_path;
+#endif /* DEBUG */
+extern struct tagbstring scaffold_empty_string;
+extern struct tagbstring scaffold_space_string;
+extern uint8_t scaffold_error;
+#endif /* SCAFFOLD_C */
 
 #endif /* SCAFFOLD_H */

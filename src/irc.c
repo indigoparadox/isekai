@@ -257,6 +257,7 @@ static void irc_server_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
       goto cleanup;
    }
 
+   /* Add the channel to the server if it does not exist. */
    namehunt = bstrcpy( args->entry[1] );
    bstr_result = btrimws( namehunt );
    scaffold_check_nonzero( bstr_result );
