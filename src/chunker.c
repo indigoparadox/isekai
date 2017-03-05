@@ -168,7 +168,8 @@ BOOL chunker_chunk_finished( CHUNKER* h ) {
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
+   bstring filecache_path
 ) {
    assert( NULL != h );
    assert( 0 != src_length );
