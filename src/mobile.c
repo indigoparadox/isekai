@@ -8,6 +8,7 @@ static void mobile_cleanup( const struct _REF* ref ) {
       o->owner = NULL;
    }
    bdestroy( o->serial );
+   free( o );
 }
 
 void mobile_free( MOBILE* o ) {
