@@ -214,7 +214,9 @@ cleanup:
    return;
 }
 
-void client_send_file( CLIENT* c, bstring channel, bstring filepath ) {
+void client_send_file(
+   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath
+) {
    CHUNKER* h = NULL;
 
    scaffold_print_debug(
@@ -229,7 +231,7 @@ void client_send_file( CLIENT* c, bstring channel, bstring filepath ) {
    chunker_chunk_start_file(
       h,
       channel,
-      CHUNKER_DATA_TYPE_TILEMAP,
+      type,
       filepath,
       64
    );

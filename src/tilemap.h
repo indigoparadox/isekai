@@ -20,6 +20,7 @@ typedef enum {
 typedef struct {
    GRAPHICS* g;
    TILEMAP* t;
+   HASHMAP* cached_gfx;
    size_t x; /* In tiles. */
    size_t y;
    size_t width;
@@ -40,7 +41,7 @@ typedef struct _TILEMAP_TILESET {
    size_t firstgid;
    size_t tileheight;
    size_t tilewidth;
-   HASHMAP images;
+   VECTOR images;
    HASHMAP terrain;
    VECTOR tiles;
 } TILEMAP_TILESET;
@@ -141,7 +142,9 @@ void tilemap_iterate_screen_row(
    void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
 );
 TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid );
-inline void tilemap_get_tile_tileset_pos( TILEMAP_TILESET* set, size_t gid, size_t* x, size_t* y );
+inline void tilemap_get_tile_tileset_pos(
+   TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
+);
 void tilemap_draw_ortho( TILEMAP* t, GRAPHICS* g, TILEMAP_WINDOW* window );
 
 #endif /* TILEMAP_H */

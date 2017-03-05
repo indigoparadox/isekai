@@ -16,6 +16,7 @@ typedef struct _GAMEDATA {
    HASHMAP incoming_chunkers;
    uint8_t* incoming_buffer;
    size_t incoming_buffer_len;
+   HASHMAP cached_gfx;
 } GAMEDATA;
 
 #define gamedata_new_server( d ) \

@@ -5,6 +5,7 @@
 #include "client.h"
 #include "server.h"
 #include "ref.h"
+#include "chunker.h"
 
 typedef enum _IRC_REPLY {
    ERR_NONICKNAMEGIVEN = 431,
@@ -41,6 +42,9 @@ extern IRC_COMMAND_TABLE_START( client );
 
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
+void irc_request_file(
+   CLIENT* c, CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
+);
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, CLIENT* c, const_bstring line

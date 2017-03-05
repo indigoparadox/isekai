@@ -244,11 +244,13 @@ BOOL callback_free_mobiles( const bstring key, void* iter, void* arg ) {
 }
 
 BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
-   /* Chunkers aren't generally addressable and if this is being called, it   *
-    * probably means something is being shut down.                            */
-   CHUNKER* h = (CHUNKER*)iter;
-   chunker_free( h );
-   return TRUE;
+   bstring filename = (bstring)arg;
+   if( NULL == filename || 0 == bstrcmp( key, filename ) ) {
+      CHUNKER* h = (CHUNKER*)iter;
+      chunker_free( h );
+      return TRUE;
+   }
+   return FALSE;
 }
 
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
@@ -272,6 +274,22 @@ BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
 BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
    free( iter );
    return TRUE;
+}
+
+BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
+   if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
+      bdestroy( (bstring)iter );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
+   if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
+      graphics_surface_free( (GRAPHICS*)iter );
+      return TRUE;
+   }
+   return FALSE;
 }
 
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {

@@ -21,6 +21,12 @@ static struct tagbstring str_irc_server_path =
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
+void irc_request_file(
+   CLIENT* c, CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
+) {
+   client_printf( c, "GRF %d %b %b.tmx", type, l->name, filename );
+}
+
 static void irc_server_reply_welcome( CLIENT* c, SERVER* s ) {
 
    server_client_printf(
@@ -438,19 +444,51 @@ cleanup:
 static void irc_server_gamerequestfile( CLIENT* c, SERVER* s, struct bstrList* args ) {
    VECTOR* files = NULL;
    size_t i;
+   bstring file_iter = NULL;
+   bstring file_iter_short = NULL;
+   char* type_c;
+   CHUNKER_DATA_TYPE type;
 
-   vector_new( files );
-   scaffold_list_dir( &str_irc_server_path, files, NULL, FALSE, FALSE );
-
-   for( i = 0 ; vector_count( files ) > i ; i++ ) {
-      scaffold_print_debug( "SRV: %s\n", ((bstring)vector_get( files, i ))->data );
+   if( 4 > args->qty ) {
+      scaffold_print_error( "Malformed GRF statement received.\n" );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
    }
 
-   /* TODO: Lock down file security. */
-   // FIXME
-   //client_send_file( c, l->name, l->gamedata.tmap.serialize_filename );
+   vector_new( files );
+
+   /* This list only exists inside of this function, so no need to lock it. */
+   scaffold_list_dir( &str_irc_server_path, files, NULL, FALSE, FALSE );
+
+   type_c = bdata( args->entry[1] );
+   scaffold_check_null( type_c );
+   type = atoi( type_c );
+
+   for( i = 0 ; vector_count( files ) > i ; i++ ) {
+      file_iter = (bstring)vector_get( files, i );
+      file_iter_short = bmidstr(
+         file_iter,
+         str_irc_server_path.slen + 1,
+         blength( file_iter ) - str_irc_server_path.slen - 1
+      );
+      scaffold_check_null( file_iter_short );
+
+      if( 0 == bstrncmp(
+         file_iter_short,
+         args->entry[3],
+         blength( file_iter_short ) )
+      ) {
+         scaffold_print_debug( "GRF: File Found: %s\n", bdata( file_iter ) );
+         client_send_file( c, args->entry[2], type, file_iter );
+      }
+   }
 
 cleanup:
+   if( NULL != files ) {
+      vector_remove_cb( files, callback_free_strings, NULL );
+   }
+   vector_free( files );
+   free( files );
    return;
 }
 
@@ -525,6 +563,7 @@ static void irc_client_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
 static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    bstring l_name = NULL;
+   bstring l_filename = NULL;
 
    scaffold_assert_client();
 
@@ -547,9 +586,15 @@ static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    client_printf( c, "WHO %b", l->name );
 
-   client_printf( c, "GRF %b.tmx", l->name );
+   /* Strip off the #. */
+   l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );
+   bcatcstr( l_filename, ".tmx" );
+   scaffold_check_null( l_filename );
+
+   irc_request_file( c, l, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
 
 cleanup:
+   bdestroy( l_filename );
    return;
 }
 
@@ -576,9 +621,12 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
    const char* progress_c,
       * total_c,
       * length_c;
+   TILEMAP_TILESET* set = NULL;
+   size_t i;
+   GRAPHICS* g = NULL;
 
    if( 11 != args->qty ) {
-      scaffold_print_error( "Server: Malformed GDB expression received.\n" );
+      scaffold_print_error( "Client: Malformed GDB expression received.\n" );
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
@@ -636,9 +684,67 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
    chunker_unchunk_pass( h, data, progress, length );
 
    if( chunker_unchunk_finished( h ) ) {
-      datafile_parse_tilemap( &(d->tmap), filename, (BYTE*)h->raw_ptr, h->raw_length );
-      scaffold_print_info( "Tilemap for %s successfully loaded into cache.\n", bdata( l->name ) );
+      /* Cached file found, so abort transfer. */
+      if( TRUE == h->force_finish ) {
+         scaffold_print_debug(
+            "Client: Aborting transfer of %s from server due to cached copy.\n",
+            bdata( filename )
+         );
+         client_printf( c, "GDA %b", filename );
+      }
+
+      switch( h->type ) {
+      case CHUNKER_DATA_TYPE_TILEMAP:
+         datafile_parse_tilemap( &(d->tmap), filename, (BYTE*)h->raw_ptr, h->raw_length );
+
+         /* TODO: Load more than one tileset. */
+         set = (TILEMAP_TILESET*)hashmap_get_first( &(d->tmap.tilesets) );
+         vector_lock( &(set->images), TRUE );
+         for( i = 0 ; vector_count( &(set->images) ) > i ; i++ ){
+            irc_request_file(
+               c, l,
+               CHUNKER_DATA_TYPE_TILESET_IMG,
+               (bstring)vector_get( &(set->images), i )
+            );
+         }
+         vector_lock( &(set->images), FALSE );
+
+         scaffold_print_info(
+            "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
+         );
+         break;
+
+      case CHUNKER_DATA_TYPE_TILESET_IMG:
+         graphics_surface_new( g, 0, 0, 0, 0 );
+         scaffold_check_null( g );
+         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+         scaffold_check_null( g );
+         hashmap_put( &(l->gamedata.cached_gfx), filename, g );
+
+         break;
+      }
    }
+
+cleanup:
+   return;
+}
+
+static void irc_server_gamedataabort(
+   CLIENT* c, SERVER* s, struct bstrList* args
+) {
+
+   if( 2 != args->qty ) {
+      scaffold_print_error( "Server: Malformed GDA expression received.\n" );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   scaffold_print_info(
+      "Server: Terminating transfer of %s at request of client: %d\n",
+      bdata( args->entry[1] ), c->link.socket
+   );
+
+   hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, args->entry[1] );
 
 cleanup:
    return;
@@ -656,13 +762,14 @@ IRC_COMMAND_ROW( "WHO", irc_server_who ),
 IRC_COMMAND_ROW( "PING", irc_server_ping ),
 IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
 IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
+IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
 IRC_COMMAND_TABLE_END() };
 
 IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
 IRC_COMMAND_ROW( "366", irc_client_join ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
-IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock  ),
+IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
 IRC_COMMAND_TABLE_END() };
 
 //IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {
