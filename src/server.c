@@ -384,3 +384,11 @@ void server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
 cleanup:
    return;
 }
+
+void server_add_mobile( SERVER* s, MOBILE* o ) {
+   hashmap_put( &(s->mobiles), o->serial, o );
+}
+
+void server_remove_mobile( SERVER* s, bstring serial ) {
+   hashmap_remove( &(s->mobiles), serial );
+}
