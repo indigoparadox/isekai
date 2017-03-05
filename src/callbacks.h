@@ -18,6 +18,8 @@ void* callback_process_chunkers( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets( const bstring res, void* iter, void* arg );
 BOOL callback_free_clients( const bstring key, void* iter, void* arg );
 BOOL callback_free_channels( const bstring key, void* iter, void* arg );
+BOOL callback_free_mobiles( const bstring key, void* iter, void* arg );
+BOOL callback_free_chunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_commands( const bstring res, void* iter, void* arg );
 BOOL callback_free_generic( const bstring res, void* iter, void* arg );

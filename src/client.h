@@ -35,6 +35,7 @@ typedef struct _CLIENT {
    HASHMAP chunkers;
    VECTOR command_queue;
    MOBILE* puppet;
+   HASHMAP mobiles;
    int sentinal;
 } CLIENT;
 

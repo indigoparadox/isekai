@@ -14,7 +14,7 @@ static SERVER* main_server = NULL;
 CLIENT* main_client = NULL;
 
 static struct tagbstring str_loading = bsStatic( "Loading..." );
-static struct tagbstring str_localhost = bsStatic( "Loading..." );
+static struct tagbstring str_localhost = bsStatic( "localhost" );
 static struct tagbstring str_default_channel = bsStatic( "#testchannel" );
 
 #ifdef USE_ALLEGRO
@@ -67,17 +67,17 @@ int main( int argc, char** argv ) {
 
       graphics_sleep( 50 );
 
-      server_poll_new_clients( main_server );
-      client_update( main_client );
-      server_service_clients( main_server );
-      gamedata_update_client( main_client, &g, &ui );
-
       if( !main_client->running ) {
          server_stop( main_server );
       }
 
-      if( !main_server->self.running || 0 >= hashmap_count( &(main_server->clients) ) ) {
+      if( !main_server->self.running ) {// || 0 >= hashmap_count( &(main_server->clients) ) ) {
          break;
+      } else {
+         server_poll_new_clients( main_server );
+         client_update( main_client );
+         server_service_clients( main_server );
+         gamedata_update_client( main_client, &g, &ui );
       }
    }
 

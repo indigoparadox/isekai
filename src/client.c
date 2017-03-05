@@ -6,19 +6,57 @@
 #include "chunker.h"
 
 static void client_cleanup( const struct _REF *ref ) {
-   /* CONNECTION* n = scaffold_container_of( ref, struct _CONNECTION, refcount ); */
+#ifdef DEBUG
+   size_t deleted;
+#endif /* DEBUG */
    CLIENT* c = scaffold_container_of( c, struct _CLIENT, link );
-   hashmap_cleanup( &(c->channels) );
-   /* TODO: Free chunkers? */
-   hashmap_cleanup( &(c->chunkers) );
-   vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
-   vector_free( &(c->command_queue) );
    connection_cleanup( &(c->link) );
    bdestroy( c->nick );
    bdestroy( c->realname );
    bdestroy( c->remote );
    bdestroy( c->username );
    client_clear_puppet( c );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+   scaffold_print_debug(
+      "Removed %d channels. %d remaining.\n",
+      deleted, hashmap_count( &(c->channels) )
+   );
+   hashmap_cleanup( &(c->channels) );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->mobiles), callback_free_mobiles, NULL );
+   scaffold_print_debug(
+      "Removed %d mobiles. %d remaining.\n",
+      deleted, hashmap_count( &(c->mobiles) )
+   );
+   hashmap_cleanup( &(c->mobiles) );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
+   scaffold_print_debug(
+      "Removed %d chunkers. %d remaining.\n",
+      deleted, hashmap_count( &(c->chunkers) )
+   );
+   hashmap_cleanup( &(c->chunkers) );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
+   scaffold_print_debug(
+      "Removed %d commands. %d remaining.\n",
+      deleted, vector_count( &(c->command_queue) )
+   );
+   vector_free( &(c->command_queue) );
+
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
    /* free( c ); */
@@ -34,6 +72,7 @@ void client_init( CLIENT* c ) {
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
    hashmap_init( &(c->chunkers) );
+   hashmap_init( &(c->mobiles ) );
    c->running = TRUE;
 }
 

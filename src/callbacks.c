@@ -233,6 +233,24 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
+BOOL callback_free_mobiles( const bstring key, void* iter, void* arg ) {
+   MOBILE* o = (MOBILE*)iter;
+   bstring serial = (bstring)arg;
+   if( NULL == arg || 0 == bstrcmp( serial, o->serial ) ) {
+      mobile_free( o );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
+   /* Chunkers aren't generally addressable and if this is being called, it   *
+    * probably means something is being shut down.                            */
+   CHUNKER* h = (CHUNKER*)iter;
+   chunker_free( h );
+   return TRUE;
+}
+
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
    CHUNKER* h = (CHUNKER*)iter;
    if( chunker_chunk_finished( h ) ) {

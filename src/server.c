@@ -29,15 +29,6 @@ static void server_cleanup( const struct _REF* ref ) {
          deleted, hashmap_count( &(s->clients) )
       );
       hashmap_cleanup( &(s->clients) );
-
-#ifdef DEBUG
-      deleted =
-#endif /* DEBUG */
-         hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
-      scaffold_print_debug(
-         "Removed %d channels from server. %d remaining.\n",
-         deleted, hashmap_count( &(s->self.channels) )
-      );
    }
 }
 
@@ -322,7 +313,7 @@ void server_poll_new_clients( SERVER* s ) {
       mobile_new( o );
       do {
          scaffold_random_string( o->serial, MOBILE_RANDOM_SERIAL_LEN );
-      } while( NULL != hashmap_get( &(s->mobiles), o->serial ) );
+      } while( NULL != hashmap_get( &(s->self.mobiles), o->serial ) );
       client_add_puppet( c, o );
       server_add_mobile( s, o );
 
@@ -397,9 +388,9 @@ cleanup:
 }
 
 void server_add_mobile( SERVER* s, MOBILE* o ) {
-   hashmap_put( &(s->mobiles), o->serial, o );
+   hashmap_put( &(s->self.mobiles), o->serial, o );
 }
 
 void server_remove_mobile( SERVER* s, bstring serial ) {
-   hashmap_remove( &(s->mobiles), serial );
+   hashmap_remove( &(s->self.mobiles), serial );
 }
