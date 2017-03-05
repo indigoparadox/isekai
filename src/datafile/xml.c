@@ -32,7 +32,7 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t xml_image ) {
+static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images ) {
    GRAPHICS* g_image = NULL;
    const char* xml_attr;
 #ifdef EZXML_EMBEDDED_IMAGES
@@ -100,40 +100,44 @@ static void datafile_tilemap_parse_tileset_image( TILEMAP_TILESET* set, ezxml_t 
 #endif /* EZXML_EMBEDDED_IMAGES */
       bassigncstr( buffer, xml_attr );
 
-      scaffold_print_debug( "Loading tileset image: %s\n", bdata( buffer ) );
-      graphics_surface_new( g_image, 0, 0, 0, 0 );
-      graphics_set_image_path( g_image, buffer );
-      scaffold_check_null( g_image->surface );
-      scaffold_print_debug( "Image loaded successfully.\n" );
+      if( TRUE == local_images ) {
+         scaffold_print_debug( "Loading tileset image: %s\n", bdata( buffer ) );
+         graphics_surface_new( g_image, 0, 0, 0, 0 );
+         graphics_set_image_path( g_image, buffer );
+         scaffold_check_null( g_image->surface );
+         scaffold_print_debug( "Image loaded successfully.\n" );
 
 #ifdef EZXML_EMBEDDED_IMAGES
-      bassigncstr( image_buffer, "" );
-      scaffold_check_null( image_buffer );
+         bassigncstr( image_buffer, "" );
+         scaffold_check_null( image_buffer );
 
-      /* Save the image to the XML to share later. */
-      image_export = graphics_export_image_data( image_info->image, &image_len );
-      scaffold_check_null( image_export );
-      scaffold_check_zero( strlen( (char*)image_export ) );
+         /* Save the image to the XML to share later. */
+         image_export = graphics_export_image_data( image_info->image, &image_len );
+         scaffold_check_null( image_export );
+         scaffold_check_zero( strlen( (char*)image_export ) );
 
-      b64_encode( image_export, image_len, image_buffer, 40 );
-      scaffold_check_nonzero( scaffold_error );
+         b64_encode( image_export, image_len, image_buffer, 40 );
+         scaffold_check_nonzero( scaffold_error );
 
-      scaffold_print_debug(
-         "Loaded tileset image: %d bytes. Appending to tilemap XML...\n",
-         blength( image_buffer )
-      );
+         scaffold_print_debug(
+            "Loaded tileset image: %d bytes. Appending to tilemap XML...\n",
+            blength( image_buffer )
+         );
 
-      image_buffer_c = bstr2cstr( image_buffer, '\n' );
-      ezxml_set_txt( xml_image, image_buffer_c );
-      ezxml_set_attr( xml_image, "source", "inline" );
-      vector_add( &(t->freeable_chunks), image_buffer_c );
-   }
+         image_buffer_c = bstr2cstr( image_buffer, '\n' );
+         ezxml_set_txt( xml_image, image_buffer_c );
+         ezxml_set_attr( xml_image, "source", "inline" );
+         vector_add( &(t->freeable_chunks), image_buffer_c );
+      }
 #endif /* EZXML_EMBEDDED_IMAGES */
 
-   //scaffold_check_null( image_info->image );
+      //scaffold_check_null( image_info->image );
 
-   hashmap_put( &(set->images), buffer, g_image );
-   g_image = NULL;
+      hashmap_put( &(set->images), buffer, g_image );
+      g_image = NULL;
+   } else {
+      /* TODO: Be graceful. */
+   }
 
 cleanup:
    bdestroy( buffer );
@@ -200,7 +204,7 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    hashmap_put( &(t->tilesets), buffer, set );
 
    while( NULL != xml_image ) {
-      datafile_tilemap_parse_tileset_image( set, xml_image );
+      datafile_tilemap_parse_tileset_image( set, xml_image, t->local_images );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }

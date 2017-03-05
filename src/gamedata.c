@@ -20,7 +20,7 @@ void gamedata_init_server( GAMEDATA* d, const bstring name ) {
    memset( d, '\0', sizeof( GAMEDATA ) );
 #endif /* INIT_ZEROES */
 
-   tilemap_init( &(d->tmap) );
+   tilemap_init( &(d->tmap), TRUE );
 
    scaffold_print_info( "Loading data for channel: %s\n", bdata( name ) );
    mapdata_filename = bstrcpy( name );
@@ -47,7 +47,7 @@ void gamedata_init_client( GAMEDATA* d ) {
    //d->ui = ui;
    d->incoming_buffer_len = 0;
    d->incoming_buffer = NULL;
-   tilemap_init( &(d->tmap) );
+   tilemap_init( &(d->tmap), FALSE );
    //vector_init( &(d->incoming_chunkers ) );
    hashmap_init( &(d->incoming_chunkers) );
 }
