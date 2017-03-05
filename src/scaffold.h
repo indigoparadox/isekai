@@ -165,6 +165,11 @@ typedef enum {
 #define scaffold_container_of( ptr, type, member ) \
     ((type *)((char *)(ptr) - offsetof( type, member )))
 
+typedef struct _VECTOR VECTOR;
+
+/* Vector needs some stuff above but is needed for stuff below. */
+#include "vector.h"
+
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );
@@ -175,6 +180,10 @@ void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, size_t len );
+void scaffold_read_file_contents( bstring path, void** buffer, size_t* len );
+void scaffold_list_dir(
+   bstring path, VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
+);
 
 #ifndef SCAFFOLD_C
 #ifdef DEBUG

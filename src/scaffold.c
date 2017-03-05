@@ -3,6 +3,7 @@
 #include "scaffold.h"
 
 #include <stdlib.h>
+#include <dirent.h>
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
@@ -190,4 +191,68 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
             [rand() % (int)(sizeof( scaffold_random_chars )-1)]
       );
    }
+}
+
+void scaffold_read_file_contents( bstring path, void** buffer, size_t* len ) {
+   /* TODO: Implement mmap() */
+}
+
+void scaffold_list_dir(
+   bstring path, VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
+) {
+   bstring child_path = NULL;
+   char* path_c = NULL;
+   DIR* dir = NULL;
+   struct dirent* entry = NULL;
+
+   path_c = bdata( path );
+   scaffold_check_null( path_c );
+
+   /* Try to open the directory as a directory. */
+   dir = opendir( path_c );
+   scaffold_check_silence();
+   scaffold_check_null( dir );
+
+   /* This is a valid directory that we can open. */
+   while( NULL != (entry = readdir( dir )) ) {
+      if( 0 == strcmp( ".", entry->d_name ) || 0 == strcmp( "..", entry->d_name ) ) {
+         /* Don't enumerate special directories. */
+         continue;
+      }
+
+      child_path = bstrcpy( path );
+      scaffold_check_unsilence(); /* Hint */
+      scaffold_check_null( child_path );
+
+      if( '/' != bchar( child_path, blength( child_path ) - 1 ) ) {
+         bconchar( child_path, '/' );
+      }
+      bcatcstr( child_path, entry->d_name );
+
+      if( DT_DIR != entry->d_type ) {
+         if(
+            FALSE == dir_only &&
+            (FALSE != show_hidden || '.' != entry->d_name[0])
+         ) {
+            /* We're tracking files, so add this, too. */
+            vector_add( list, child_path );
+         } else {
+            bdestroy( child_path );
+         }
+         continue;
+      } else {
+         /* Always add directories. */
+         vector_add( list, child_path );
+      }
+
+      /* If the child is a directory then go deeper. */
+      scaffold_list_dir( child_path, list, filter, dir_only, show_hidden );
+   }
+
+cleanup:
+   scaffold_check_unsilence();
+   if( NULL != dir ) {
+      closedir( dir );
+   }
+   return;
 }
