@@ -49,7 +49,7 @@ static void tilemap_cleanup( const struct _REF* ref ) {
    /* TODO: Free tilemap. */
 }
 
-void tilemap_init( TILEMAP* t ) {
+void tilemap_init( TILEMAP* t, BOOL local_images ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
    hashmap_init( &(t->layers) );
@@ -61,6 +61,8 @@ void tilemap_init( TILEMAP* t ) {
 
    t->serialize_buffer = NULL;
    t->serialize_filename = bfromcstralloc( 30, "" );
+
+   t->local_images = local_images;
 }
 
 void tilemap_free( TILEMAP* t ) {

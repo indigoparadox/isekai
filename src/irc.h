@@ -14,7 +14,6 @@ typedef enum _IRC_REPLY {
 typedef struct _IRC_COMMAND {
    REF refcount;
    struct tagbstring command;
-   //irc_cmd_cb* callback;
    void (*callback)( CLIENT* c, SERVER* s, struct bstrList* args );
    SERVER* server;
    CLIENT* client;

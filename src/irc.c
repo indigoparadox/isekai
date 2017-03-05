@@ -13,6 +13,8 @@
 
 static struct tagbstring str_irc_cache_path =
    bsStatic( "testdata/livecache" );
+static struct tagbstring str_irc_server_path =
+   bsStatic( "testdata/server" );
 
 #define IRC_CACHE_PATH &str_irc_cache_path
 
@@ -67,11 +69,6 @@ void irc_server_reply_motd( CLIENT* c, SERVER* s ) {
 
 cleanup:
    return;
-}
-
-static void irc_server_reply_gdb_tilemap( CLIENT* c, SERVER* s, CHANNEL* l ) {
-   client_send_file( c, l->name, l->gamedata.tmap.serialize_filename );
-   /* FIXME: Send tilemap image files, too. */
 }
 
 static void irc_server_user( CLIENT* c, SERVER* s, struct bstrList* args ) {
@@ -413,15 +410,6 @@ static void irc_server_who( CLIENT* c, SERVER* s, struct bstrList* args ) {
    //vector_iterate( &(l->clients), irc_prn_who, &trio );
    //server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
 
-
-   /* Also send the tilemap data if we haven't yet, since we know the client  *
-    * is ready, now.                                                          */
-   /* TODO: Detect if client doesn't support our extensions. */
-   if( !(c->flags & CLIENT_FLAGS_HAVE_TILEMAP) ) {
-      irc_server_reply_gdb_tilemap( c, s, l );
-      c->flags |= CLIENT_FLAGS_HAVE_TILEMAP;
-   }
-
 cleanup:
    if( NULL != ison ) {
       vector_remove_cb( ison, callback_free_clients, NULL );
@@ -447,8 +435,27 @@ cleanup:
    return;
 }
 
+static void irc_server_gamerequestfile( CLIENT* c, SERVER* s, struct bstrList* args ) {
+   VECTOR* files = NULL;
+   size_t i;
+
+   vector_new( files );
+   scaffold_list_dir( &str_irc_server_path, files, NULL, FALSE, FALSE );
+
+   for( i = 0 ; vector_count( files ) > i ; i++ ) {
+      scaffold_print_debug( "SRV: %s\n", ((bstring)vector_get( files, i ))->data );
+   }
+
+   /* TODO: Lock down file security. */
+   // FIXME
+   //client_send_file( c, l->name, l->gamedata.tmap.serialize_filename );
+
+cleanup:
+   return;
+}
+
 /* GU #channel px+1y+2z+3 */
-static void irc_server_gu( CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_gameupdate( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    bstring reply_c = NULL;
    bstring reply_l = NULL;
@@ -540,6 +547,8 @@ static void irc_client_join( CLIENT* c, SERVER* s, struct bstrList* args ) {
 
    client_printf( c, "WHO %b", l->name );
 
+   client_printf( c, "GRF %b.tmx", l->name );
+
 cleanup:
    return;
 }
@@ -555,7 +564,7 @@ static void irc_client_error( CLIENT* c, SERVER* s, struct bstrList* args ) {
    }
 }
 
-static void irc_client_gdb( CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* args ) {
    CHANNEL* l = NULL;
    GAMEDATA* d = NULL;
    CHUNKER* h = NULL;
@@ -645,14 +654,15 @@ IRC_COMMAND_ROW( "PART", irc_server_part ),
 IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
 IRC_COMMAND_ROW( "WHO", irc_server_who ),
 IRC_COMMAND_ROW( "PING", irc_server_ping ),
-IRC_COMMAND_ROW( "GU", irc_server_gu ),
+IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
+IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_TABLE_END() };
 
 IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
 IRC_COMMAND_ROW( "366", irc_client_join ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
-IRC_COMMAND_ROW( "GDB", irc_client_gdb  ),
+IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock  ),
 IRC_COMMAND_TABLE_END() };
 
 //IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {

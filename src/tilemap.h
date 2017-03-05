@@ -77,6 +77,7 @@ typedef struct _TILEMAP {
    bstring serialize_filename;
    size_t window_step_width; /* For dungeons. */
    size_t window_step_height;
+   BOOL local_images;
    uint16_t sentinal;
 
 #ifdef EZXML_EMBEDDED_IMAGES
@@ -98,10 +99,10 @@ typedef struct _TILEMAP {
  * (y * x) + x
  */
 
-#define tilemap_new( t ) \
+#define tilemap_new( t, local_images ) \
     t = (TILEMAP*)calloc( 1, sizeof( TILEMAP ) ); \
     scaffold_check_null( t ); \
-    tilemap_init( t );
+    tilemap_init( t, local_images );
 
 #define tilemap_layer_new( t ) \
     t = (TILEMAP_LAYER*)calloc( 1, sizeof( TILEMAP_LAYER ) ); \
@@ -127,7 +128,7 @@ typedef struct _TILEMAP {
     free( tileset );
 */
 
-void tilemap_init( TILEMAP* t );
+void tilemap_init( TILEMAP* t, BOOL local_images );
 void tilemap_free( TILEMAP* t );
 void tilemap_layer_init( TILEMAP_LAYER* layer );
 void tilemap_layer_cleanup( TILEMAP_LAYER* layer );
