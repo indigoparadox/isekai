@@ -2,6 +2,8 @@
 #include "chunker.h"
 
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "scaffold.h"
 #include "b64/b64.h"
@@ -17,6 +19,10 @@ static void chunker_cleanup( const struct _REF* ref ) {
    if( NULL != h->raw_ptr ) {
       free( h->raw_ptr );
    }
+
+   bdestroy( h->filecache_path );
+   bdestroy( h->filename );
+
    free( h );
 }
 
@@ -50,11 +56,13 @@ static void chunker_chunk_setup_internal(
       vector_init( &(h->tracks) );
    }
 
-   h->finished = FALSE;
+   h->force_finish = FALSE;
    h->raw_position = 0;
    h->tx_chunk_length = tx_chunk_length;
    h->channel = bstrcpy( channel );
    h->type = type;
+   h->filecache_path = NULL;
+   h->filename = NULL;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -169,10 +177,11 @@ BOOL chunker_chunk_finished( CHUNKER* h ) {
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
    CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
-   bstring filecache_path
+   const bstring filename, const bstring filecache_path
 ) {
    assert( NULL != h );
    assert( 0 != src_length );
+   assert( NULL != filename );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_cleanup );
@@ -195,12 +204,24 @@ void chunker_unchunk_start(
       CHUNKER_LOOKAHEAD_SIZE
    );
 
-   h->finished = FALSE;
+   h->force_finish = FALSE;
    h->raw_position = 0;
    h->raw_length = src_length;
    h->raw_ptr = (uint8_t*)calloc( src_length, sizeof( uint8_t ) );
    h->channel = bstrcpy( channel );
    h->type = type;
+   h->filename = bstrcpy( filename );
+
+   chunker_unchunk_check_cache( h, filecache_path );
+   if( SCAFFOLD_ERROR_NONE == scaffold_error ) {
+      scaffold_print_debug(
+         "Chunker: Activating cache: %s\n",
+         bdata( filecache_path )
+      );
+      h->filecache_path = bstrcpy( filecache_path );
+   } else {
+      h->filecache_path = NULL;
+   }
 
 /* cleanup: */
    return;
@@ -314,6 +335,110 @@ cleanup:
    return;
 }
 
+#ifdef USE_FILE_CACHE
+
+void chunker_unchunk_save_cache( CHUNKER* h ) {
+   FILE* cached_copy;
+   bstring cache_filename = NULL;
+
+   cache_filename = bstrcpy( h->filecache_path );
+   scaffold_check_silence(); /* Caching disabled is a non-event. */
+   scaffold_check_null( cache_filename );
+
+   if( '/' != bchar( cache_filename, blength( cache_filename ) - 1 ) ) {
+      bconchar( cache_filename, '/' );
+   }
+   bconcat( cache_filename, h->filename );
+
+   cached_copy = fopen( bdata( cache_filename ),"wb" );
+   scaffold_check_null( cached_copy );
+   fwrite( h->raw_ptr, sizeof( char ), h->raw_length, cached_copy );
+   fclose( cached_copy );
+
+cleanup:
+   scaffold_check_unsilence();
+   return;
+}
+
+void chunker_unchunk_check_cache( CHUNKER* h, bstring filecache_path ) {
+   FILE* cached_copy_f;
+   struct stat cachedir_info = { 0 };
+   char* filecache_path_c = NULL;
+   bstring cache_filename = NULL;
+
+   scaffold_error = 0;
+   scaffold_check_silence();
+
+   scaffold_check_null( filecache_path );
+   filecache_path_c = bdata( filecache_path );
+   scaffold_check_nonzero( stat( filecache_path_c, &cachedir_info ) );
+   scaffold_check_zero( (cachedir_info.st_mode & S_IFDIR) );
+
+   cache_filename = bstrcpy( filecache_path );
+   scaffold_check_unsilence(); /* Hint */
+   scaffold_check_null( cache_filename );
+
+   if( '/' != bchar( cache_filename, blength( cache_filename ) - 1 ) ) {
+      bconchar( cache_filename, '/' );
+   }
+   bconcat( cache_filename, h->filename );
+
+   /* TODO: Compared file hashes. */
+   cached_copy_f = fopen( bdata( cache_filename ), "rb" );
+   if( NULL == cached_copy_f ) {
+      /* No scaffold error, since this isn't a problem. */
+      scaffold_print_error(
+         "Chunker: Unable to open cache file for reading: %s\n",
+         bdata( cache_filename )
+      );
+      goto cleanup;
+   }
+   scaffold_print_info(
+      "Chunker: Cached copy found: %s\n",
+      bdata( cache_filename )
+   );
+
+   /* Allocate enough space to hold the file. */
+   fseek( cached_copy_f, 0, SEEK_END );
+   h->raw_length = ftell( cached_copy_f );
+   h->raw_ptr = (uint8_t*)calloc( h->raw_length, sizeof( uint8_t ) + 1 ); /* +1 for term. */
+   scaffold_check_null( h->raw_ptr );
+   fseek( cached_copy_f, 0, SEEK_SET );
+
+   /* Read and close the cache file. */
+   fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, cached_copy_f );
+   fclose( cached_copy_f );
+   cached_copy_f = NULL;
+   h->force_finish = TRUE;
+
+cleanup:
+   scaffold_check_unsilence();
+   switch( scaffold_error ) {
+   case SCAFFOLD_ERROR_NULLPO:
+      scaffold_print_info( "Chunker: Cache directory not set. Ignoring.\n" );
+      break;
+
+   case SCAFFOLD_ERROR_NONZERO:
+      scaffold_print_error(
+         "Chunker: Unable to open cache directory: %s\n",
+         bdata( filecache_path )
+      );
+      break;
+
+   case SCAFFOLD_ERROR_ZERO:
+      scaffold_print_error(
+         "Chunker: Cache directory is not a directory: %s\n",
+         bdata( filecache_path )
+      );
+      break;
+
+   default:
+      break;
+   }
+}
+
+#endif /* USE_FILE_CACHE */
+
 BOOL chunker_unchunk_finished( CHUNKER* h ) {
    CHUNKER_TRACK* prev_track = NULL,
       * iter_track = NULL;
@@ -321,20 +446,27 @@ BOOL chunker_unchunk_finished( CHUNKER* h ) {
       tracks_count;
    BOOL finished = TRUE;
 
+   if( TRUE == h->force_finish ) {
+      /* Force finish, probably due to cache. */
+      scaffold_print_info(
+         "Chunker: Assuming cached file finished: %s\n",
+         bdata( h->filename )
+      );
+      finished = TRUE;
+      goto cleanup;
+   }
+
+   /* Ensure chunks are contiguous and complete. */
    vector_sort_cb( &(h->tracks), callback_sort_chunker_tracks );
    vector_lock( &(h->tracks), TRUE );
    tracks_count = vector_count( &(h->tracks) );
    if( 0  == tracks_count ) {
-      return FALSE;
+      finished = FALSE;
+      goto cleanup;
    }
    for( i = 0 ; tracks_count > i ; i++ ) {
       prev_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
       iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i + 1 );
-      /*if( i == 314 ) {
-         printf( "%d\n", i );
-      } else {
-         printf( "%d\n", i );
-      }*/
       if(
          (NULL != iter_track && NULL != prev_track &&
             (prev_track->start + prev_track->length) < iter_track->start) ||
@@ -345,5 +477,17 @@ BOOL chunker_unchunk_finished( CHUNKER* h ) {
       }
    }
    vector_lock( &(h->tracks), FALSE );
+
+   /* If the file is complete and the cache is enabled, then do that. */
+   if( TRUE == finished ) {
+      scaffold_print_info(
+         "Chunker: Saving cached copy of finished file: %s\n",
+         bdata( h->filename )
+      );
+      chunker_unchunk_save_cache( h );
+   }
+
+cleanup:
+
    return finished;
 }

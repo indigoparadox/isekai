@@ -27,10 +27,12 @@ typedef struct _CHUNKER {
    size_t raw_length;
    uint8_t* raw_ptr;
    size_t tx_chunk_length;
-   BOOL finished;
+   BOOL force_finish;
    bstring channel;
    CHUNKER_DATA_TYPE type;
    VECTOR tracks;
+   bstring filecache_path;
+   bstring filename;
 } CHUNKER;
 
 void chunker_free( CHUNKER* h );
@@ -46,9 +48,11 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer );
 BOOL chunker_chunk_finished( CHUNKER* h );
 void chunker_unchunk_start(
    CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
-   bstring filecache_path
+   const bstring filename, const bstring filecache_path
 );
 void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len );
+void chunker_unchunk_save_cache( CHUNKER* h );
+void chunker_unchunk_check_cache( CHUNKER* h, const bstring filecache_path );
 BOOL chunker_unchunk_finished( CHUNKER* h );
 
 #endif /* CHUNKER_H */

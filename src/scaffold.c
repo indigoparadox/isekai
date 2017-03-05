@@ -12,6 +12,7 @@ SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */
 
 uint8_t scaffold_error = SCAFFOLD_ERROR_NONE;
+BOOL scaffold_error_silent = FALSE;
 
 static char scaffold_random_chars[] =
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -66,7 +67,6 @@ void scaffold_list_append_string_cpy( struct bstrList* list, bstring str ) {
 
    assert( NULL != list );
    scaffold_check_null( list->entry );
-
 
    if( list->qty + 1 >= list->mlen ) {
       bstr_result = bstrListAlloc( list, list->mlen * 2 );
