@@ -145,7 +145,8 @@ START_TEST( test_chunker_unchunk ) {
       h,
       (const bstring)&chunker_test_filename,
       CHUNKER_DATA_TYPE_TILEMAP,
-      chunker_mapsize
+      chunker_mapsize,
+      NULL
    );
 
    ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );

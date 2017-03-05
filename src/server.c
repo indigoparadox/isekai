@@ -71,7 +71,7 @@ void server_client_send( CLIENT* c, bstring buffer ) {
 #ifdef DEBUG_NETWORK
    scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
 #endif /* DEBUG_NETWORK */
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+   scaffold_assert_server();
 }
 
 void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... ) {
@@ -89,7 +89,7 @@ void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... ) {
       server_client_send( c, buffer );
    }
 
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+   scaffold_assert_server();
 
 cleanup:
    bdestroy( buffer );
@@ -111,7 +111,7 @@ cleanup:
       vector_free( l_clients );
       free( l_clients );
    }
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+   scaffold_assert_server();
 }
 
 void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
@@ -129,7 +129,7 @@ void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* m
       server_channel_send( s, l, c_skip, buffer );
    }
 
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+   scaffold_assert_server();
 
 cleanup:
    bdestroy( buffer );

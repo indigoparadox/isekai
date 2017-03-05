@@ -179,10 +179,10 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    assert( 0 != client_socket && client_socket != fake_server_socket );
 
    if(FALSE != client ) {
-      assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path );
+      scaffold_assert_client();
       mailbox_send( &fake_network, client_socket, fake_server_socket, buffer );
    } else {
-      assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path );
+      scaffold_assert_server();
       mailbox_send( &fake_network, fake_server_socket, client_socket, buffer );
    }
 
