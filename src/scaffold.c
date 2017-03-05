@@ -10,6 +10,8 @@ struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 
+#define SCAFFOLD_DIRSEP_CHAR scaffold_dirsep_string.data[0]
+
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */
@@ -345,5 +347,37 @@ cleanup:
    if( NULL != dir ) {
       closedir( dir );
    }
+   return;
+}
+
+bstring scaffold_basename( bstring path ) {
+   bstring basename_out = NULL;
+   struct bstrList* path_elements = NULL;
+
+   scaffold_check_null( path );
+
+   if( 1 == path_elements->qty ) {
+      basename_out = bstrcpy( path_elements->entry[0] );
+   }
+
+   path_elements = bsplit( path, SCAFFOLD_DIRSEP_CHAR );
+   scaffold_check_null( path_elements );
+
+   basename_out = path_elements->entry[path_elements->qty - 1];
+
+cleanup:
+   bstrListDestroy( path_elements );
+   return basename_out;
+}
+
+void scaffold_join_path( bstring path1, bstring path2 ) {
+   int bstr_res = 0;
+   if( SCAFFOLD_DIRSEP_CHAR != bchar( path1, blength( path1 ) - 1 ) ) {
+      bstr_res = bconchar( path1, SCAFFOLD_DIRSEP_CHAR );
+      scaffold_check_nonzero( bstr_res );
+   }
+   bstr_res = bconcat( path1, path2 );
+   scaffold_check_nonzero( bstr_res );
+cleanup:
    return;
 }

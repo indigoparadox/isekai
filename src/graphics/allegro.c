@@ -264,8 +264,6 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
    scaffold_check_null( fmem );
 
-   scaffold_debug_file( testbmp, "testbmp.bmp", data, length );
-
    /* TODO: Autodetect image type. */
    g->surface = load_bmp_pf( fmem, NULL );
    //texture_out = load_memory_png( image_data, entry->unpacked_size, pal );
@@ -297,15 +295,12 @@ BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
    scaffold_check_null( fmem );
 
-//#ifdef USE_ALLEGRO_PNG
-//   save_tga_pf( fmem, g->surface, NULL );
-//#else
+/*#ifdef USE_ALLEGRO_PNG
+   save_tga_pf( fmem, g->surface, NULL );
+#else*/
    save_bmp_pf( fmem, g->surface, NULL );
-   save_bmp( "algbmp.bmp", g->surface, NULL );
-//#endif /* USE_ALLEGRO_PNG */
+/*#endif / USE_ALLEGRO_PNG */
    *out_len = fmem_info.length;
-
-   scaffold_debug_file( fmb, "fmembmp.bmp", fmem_info.block, *out_len );
 
 cleanup:
    if( NULL != fmem ) {

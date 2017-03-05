@@ -180,6 +180,8 @@ void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
 void scaffold_list_dir(
    bstring path, VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
 );
+bstring scaffold_basename( bstring path );
+void scaffold_join_path( bstring path1, bstring path2 );
 
 #ifndef SCAFFOLD_C
 #ifdef DEBUG
