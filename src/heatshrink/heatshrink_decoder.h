@@ -9,20 +9,20 @@
 typedef enum {
     HSDR_SINK_OK,               /* data sunk, ready to poll */
     HSDR_SINK_FULL,             /* out of space in internal buffer */
-    HSDR_SINK_ERROR_NULL=-1,    /* NULL argument */
+    HSDR_SINK_ERROR_NULL=-1     /* NULL argument */
 } HSD_sink_res;
 
 typedef enum {
     HSDR_POLL_EMPTY,            /* input exhausted */
     HSDR_POLL_MORE,             /* more data remaining, call again w/ fresh output buffer */
     HSDR_POLL_ERROR_NULL=-1,    /* NULL arguments */
-    HSDR_POLL_ERROR_UNKNOWN=-2,
+    HSDR_POLL_ERROR_UNKNOWN=-2
 } HSD_poll_res;
 
 typedef enum {
     HSDR_FINISH_DONE,           /* output is done */
     HSDR_FINISH_MORE,           /* more output remains */
-    HSDR_FINISH_ERROR_NULL=-1,  /* NULL arguments */
+    HSDR_FINISH_ERROR_NULL=-1   /* NULL arguments */
 } HSD_finish_res;
 
 #if HEATSHRINK_DYNAMIC_ALLOC

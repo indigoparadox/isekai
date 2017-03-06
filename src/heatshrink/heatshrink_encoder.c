@@ -39,9 +39,9 @@ static const char *state_names[] = {
 #define ASSERT(X) /* no-op */
 #endif
 
-// Encoder flags
+/* Encoder flags */
 enum {
-    FLAG_IS_FINISHING = 0x01,
+    FLAG_IS_FINISHING = 0x01
 };
 
 typedef struct {
@@ -69,6 +69,10 @@ static void push_literal_byte(heatshrink_encoder *hse, output_info *oi);
 #if HEATSHRINK_DYNAMIC_ALLOC
 heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
         uint8_t lookahead_sz2) {
+    size_t buf_sz;
+#ifdef HEATSHRINK_USE_INDEX
+    size_t index_sz;
+#endif /* HEATSHRINK_USE_INDEX */
     if ((window_sz2 < HEATSHRINK_MIN_WINDOW_BITS) ||
         (window_sz2 > HEATSHRINK_MAX_WINDOW_BITS) ||
         (lookahead_sz2 < HEATSHRINK_MIN_LOOKAHEAD_BITS) ||
@@ -80,7 +84,7 @@ heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
      * (1 << window_sz2) bytes for the current input, and an additional
      * (1 << window_sz2) bytes for the previous buffer of input, which
      * will be scanned for useful backreferences. */
-    size_t buf_sz = (2 << window_sz2);
+    buf_sz = (2 << window_sz2);
 
     heatshrink_encoder *hse = HEATSHRINK_MALLOC(sizeof(*hse) + buf_sz);
     if (hse == NULL) { return NULL; }
@@ -89,7 +93,7 @@ heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
     heatshrink_encoder_reset(hse);
 
 #if HEATSHRINK_USE_INDEX
-    size_t index_sz = buf_sz*sizeof(uint16_t);
+    index_sz = buf_sz*sizeof(uint16_t);
     hse->search_index = HEATSHRINK_MALLOC(index_sz + sizeof(struct hs_index));
     if (hse->search_index == NULL) {
         HEATSHRINK_FREE(hse, sizeof(*hse) + buf_sz);
@@ -136,6 +140,10 @@ void heatshrink_encoder_reset(heatshrink_encoder *hse) {
 
 HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder *hse,
         uint8_t *in_buf, size_t size, size_t *input_size) {
+    uint16_t write_offset;
+    uint16_t ibs;
+    uint16_t rem;
+    uint16_t cp_sz;
     if ((hse == NULL) || (in_buf == NULL) || (input_size == NULL)) {
         return HSER_SINK_ERROR_NULL;
     }
@@ -146,10 +154,10 @@ HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder *hse,
     /* Sinking more content before processing is done */
     if (hse->state != HSES_NOT_FULL) { return HSER_SINK_ERROR_MISUSE; }
 
-    uint16_t write_offset = get_input_offset(hse) + hse->input_size;
-    uint16_t ibs = get_input_buffer_size(hse);
-    uint16_t rem = ibs - hse->input_size;
-    uint16_t cp_sz = rem < size ? rem : size;
+    write_offset = get_input_offset(hse) + hse->input_size;
+    ibs = get_input_buffer_size(hse);
+    rem = ibs - hse->input_size;
+    cp_sz = rem < size ? rem : size;
 
     memcpy(&hse->buffer[write_offset], in_buf, cp_sz);
     *input_size = cp_sz;
