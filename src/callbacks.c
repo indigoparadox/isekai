@@ -256,6 +256,15 @@ void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
    return NULL;
 }
 
+void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+
+   mobile_draw_ortho( o, twindow );
+
+   return NULL;
+}
+
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;
@@ -300,10 +309,10 @@ BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_mobiles( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
-   bstring serial = (bstring)arg;
-   if( NULL == arg || 0 == bstrcmp( serial, o->serial ) ) {
+   size_t* serial = (size_t*)arg;
+   if( NULL == arg || *serial == o->serial ) {
       mobile_free( o );
       return TRUE;
    }

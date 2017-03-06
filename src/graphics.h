@@ -40,6 +40,15 @@ typedef struct {
    gu h;
 } GRAPHICS_RECT;
 
+struct GRAPHICS_TILE_WINDOW {
+   GRAPHICS* g;
+   struct TILEMAP* t;
+   size_t x; /* In tiles. */
+   size_t y;
+   size_t width;
+   size_t height;
+};
+
 #define graphics_surface_new( g, x, y, w, h ) \
     g = (GRAPHICS*)calloc( 1, sizeof( GRAPHICS ) ); \
     scaffold_check_null( g ); \

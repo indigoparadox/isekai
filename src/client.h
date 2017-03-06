@@ -43,7 +43,6 @@ struct CLIENT {
    struct HASHMAP chunkers;
    struct VECTOR command_queue;
    struct MOBILE* puppet;
-   struct HASHMAP mobiles;
    int sentinal;
 };
 #define CLIENT_SENTINAL 254542

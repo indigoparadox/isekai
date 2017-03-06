@@ -20,22 +20,12 @@ static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
    scaffold_print_debug(
-      "Removed %d channels. %d remaining.\n",
-      deleted, hashmap_count( &(c->channels) )
+      "Removed %d commands. %d remaining.\n",
+      deleted, vector_count( &(c->command_queue) )
    );
-   hashmap_cleanup( &(c->channels) );
-
-#ifdef DEBUG
-   deleted =
-#endif /* DEBUG */
-      hashmap_remove_cb( &(c->mobiles), callback_free_mobiles, NULL );
-   scaffold_print_debug(
-      "Removed %d mobiles. %d remaining.\n",
-      deleted, hashmap_count( &(c->mobiles) )
-   );
-   hashmap_cleanup( &(c->mobiles) );
+   vector_free( &(c->command_queue) );
 
 #ifdef DEBUG
    deleted =
@@ -50,12 +40,12 @@ static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
-      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
+      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
    scaffold_print_debug(
-      "Removed %d commands. %d remaining.\n",
-      deleted, vector_count( &(c->command_queue) )
+      "Removed %d channels. %d remaining.\n",
+      deleted, hashmap_count( &(c->channels) )
    );
-   vector_free( &(c->command_queue) );
+   hashmap_cleanup( &(c->channels) );
 
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
@@ -72,7 +62,6 @@ void client_init( struct CLIENT* c ) {
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->sentinal = CLIENT_SENTINAL;
    hashmap_init( &(c->chunkers) );
-   hashmap_init( &(c->mobiles ) );
    c->running = TRUE;
 }
 
