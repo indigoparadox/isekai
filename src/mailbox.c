@@ -12,20 +12,12 @@ size_t mailbox_listen( struct MAILBOX* mailbox ) {
     return mailbox->last_socket++;
 }
 
-void* mailbox_envelope_cmp( struct VECTOR* v, void* iter, void* arg ) {
-   struct MAILBOX_ENVELOPE* envelope = (struct MAILBOX_ENVELOPE*)iter;
-   bstring str_search = (bstring)arg;
-
-   if( 0 == bstrcmp( str_search, envelope->contents ) ) {
-      return envelope;
-   }
-
-   return NULL;
-}
-
 static void mailbox_envelope_cleanup( const struct REF* ref ) {
    struct MAILBOX_ENVELOPE* e = (struct MAILBOX_ENVELOPE*)scaffold_container_of( ref, struct MAILBOX_ENVELOPE, refcount );
-   bdestroy( e->contents );
+   if( NULL != e->contents ) {
+      bwriteallow( (*e->contents) );
+      bdestroy( e->contents );
+   }
    e->callback = NULL;
    e->socket_src = -1;
    e->socket_dest = -1;
@@ -33,8 +25,8 @@ static void mailbox_envelope_cleanup( const struct REF* ref ) {
    e->special = MAILBOX_ENVELOPE_SPECIAL_DELETE;
 }
 
-struct MAILBOX_ENVELOPE* mailbox_envelope_new(
-   bstring contents,
+static struct MAILBOX_ENVELOPE* mailbox_envelope_new(
+   const bstring contents,
    MAILBOX_CALLBACK callback,
    void* cb_arg,
    size_t src,
@@ -54,8 +46,13 @@ struct MAILBOX_ENVELOPE* mailbox_envelope_new(
 #endif /* DEBUG */
 
    ref_init( &(outgoing->refcount), mailbox_envelope_cleanup );
-
-   outgoing->contents = NULL != contents ? bstrcpy( contents ) : NULL;
+   if( NULL != contents ) {
+      /* FIXME: This crashes when the source is client_send()... Why? */
+      outgoing->contents = bstrcpy( contents );
+      bwriteprotect( (*outgoing->contents) );
+   } else {
+      outgoing->contents = NULL;
+   }
    outgoing->callback = callback;
    outgoing->socket_src = src;
    outgoing->socket_dest = dest;
@@ -87,23 +84,26 @@ size_t mailbox_accept( struct MAILBOX* mailbox, size_t socket_dest ) {
    }
 
    /* Iterate through jobs and handle urgent things, like new clients. */
-   top_envelope = vector_get( &(mailbox->envelopes), i );
-   while( NULL!= top_envelope ) {
-      assert( NULL == top_envelope || NULL == top_envelope->callback || NULL == top_envelope->contents );
-      if(
-         MAILBOX_ENVELOPE_SPECIAL_CONNECT == top_envelope->special &&
-         socket_dest == top_envelope->socket_dest
-      ) {
-         socket_out = top_envelope->socket_src;
-         //vector_add_scalar( &(mailbox->sockets_assigned), socket_out );
-         //FIXME: Deallocate this envelope!
-         //mailbox_envelope_free( top_envelope );
-         vector_remove( &(mailbox->envelopes), i );
-#ifdef DEBUG
-         assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
-#endif /* DEBUG */
+   for( i = 0 ; vector_count( &(mailbox->envelopes) ) > i ; i++ ) {
+      top_envelope = vector_get( &(mailbox->envelopes), i );
+      if( NULL == top_envelope ) {
+         break;
       }
-      top_envelope = vector_get( &(mailbox->envelopes), ++i );
+      if(
+         MAILBOX_ENVELOPE_SPECIAL_CONNECT != top_envelope->special ||
+         socket_dest != top_envelope->socket_dest
+      ) {
+         continue;
+      }
+      assert( NULL != top_envelope );
+
+         socket_out = top_envelope->socket_src;
+         vector_add_scalar( &(mailbox->sockets_assigned), socket_out, TRUE );
+         mailbox_envelope_free( top_envelope );
+      vector_remove( &(mailbox->envelopes), i );
+#ifdef DEBUG
+      assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
+#endif /* DEBUG */
    }
 
    if( 0 >= vector_count( &(mailbox->envelopes) ) ) {
@@ -116,7 +116,6 @@ size_t mailbox_accept( struct MAILBOX* mailbox, size_t socket_dest ) {
    if( NULL != top_envelope && NULL != top_envelope->callback ) {
       top_envelope->callback( mailbox, top_envelope );
       if( MAILBOX_ENVELOPE_SPECIAL_DELETE == top_envelope->special ) {
-         mailbox_envelope_free( top_envelope );
          vector_remove( &(mailbox->envelopes), 0 );
 #ifdef DEBUG
          assert( starting_envelope_count > vector_count( &(mailbox->envelopes) ) );
@@ -219,16 +218,21 @@ size_t mailbox_read( struct MAILBOX* mailbox, size_t socket_dest, bstring buffer
    struct MAILBOX_ENVELOPE* top_envelope = NULL;
    int length_out = 0;
 
+   if( 0 >= vector_count( &(mailbox->envelopes) ) ) {
+      goto cleanup;
+   }
+
    top_envelope = vector_get( &(mailbox->envelopes), 0 );
    if(
       NULL != top_envelope &&
       MAILBOX_ENVELOPE_SPECIAL_NONE == top_envelope->special &&
       socket_dest == top_envelope->socket_dest
    ) {
-      scaffold_check_null( top_envelope->contents );
-      bassign( buffer, top_envelope->contents );
-      length_out = blength( buffer );
-      //bdestroy( top_envelope->contents );
+      if( NULL != top_envelope->contents ) {
+         bassignformat( buffer, "%s", bdata( top_envelope->contents ) );
+         scaffold_check_null( buffer );
+         length_out = blength( buffer );
+      }
       vector_remove( &(mailbox->envelopes), 0 );
       mailbox_envelope_free( top_envelope );
    } else {
