@@ -15,7 +15,7 @@ typedef void (*MAILBOX_CALLBACK)( struct MAILBOX* m, struct MAILBOX_ENVELOPE* e 
 typedef enum _MAILBOX_ENVELOPE_SPECIAL {
    MAILBOX_ENVELOPE_SPECIAL_NONE,
    MAILBOX_ENVELOPE_SPECIAL_CONNECT,
-   MAILBOX_ENVELOPE_SPECIAL_DELETE,
+   MAILBOX_ENVELOPE_SPECIAL_DELETE
 } MAILBOX_ENVELOPE_SPECIAL;
 
 struct MAILBOX_ENVELOPE {
@@ -36,10 +36,12 @@ struct MAILBOX {
 
 size_t mailbox_listen( struct MAILBOX* mailbox );
 void* mailbox_envelope_cmp( struct VECTOR* v, void* iter, void* arg );
+void mailbox_envelope_free( struct MAILBOX_ENVELOPE* e );
 size_t mailbox_accept( struct MAILBOX* mailbox, size_t socket_dest );
 void mailbox_call( struct MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callback, void* arg );
 void mailbox_send(
-   struct MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
+   struct MAILBOX* mailbox, size_t socket_src, size_t socket_dest,
+   const bstring message
 );
 size_t mailbox_connect(
    struct MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
