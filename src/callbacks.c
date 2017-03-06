@@ -289,6 +289,17 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
+BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+
+   if( 0 >= hashmap_count( &(l->clients) ) ) {
+      channel_free( l );
+      return TRUE;
+   }
+
+   return FALSE;
+}
+
 BOOL callback_free_mobiles( const bstring key, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    bstring serial = (bstring)arg;

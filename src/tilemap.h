@@ -80,12 +80,6 @@ struct TILEMAP {
    size_t window_step_height;
    BOOL local_images;
    uint16_t sentinal;
-
-#ifdef EZXML_EMBEDDED_IMAGES
-   /* Miscellaneous catch-all for generic memory blocks that must be freed on *
-    * cleanup. Useful for datafile parsers.                                   */
-   struct VECTOR freeable_chunks;
-#endif /* EZXML_EMBEDDED_IMAGES */
 };
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
@@ -122,12 +116,6 @@ struct TILEMAP {
 #define tilemap_position_free( position ) \
     tilemap_position_cleanup( position ); \
     free( position );
-
-/*
-#define tilemap_tileset_free( tileset ) \
-    tilemap_tileset_cleanup( tileset ); \
-    free( tileset );
-*/
 
 void tilemap_init( struct TILEMAP* t, BOOL local_images );
 void tilemap_free( struct TILEMAP* t );

@@ -49,7 +49,6 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    hashmap_init( &(t->layers) );
    vector_init( &(t->positions) );
    hashmap_init( &(t->tilesets) );
-   //vector_init( &(t->freeable_chunks ) );
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
 
