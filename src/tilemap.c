@@ -131,7 +131,7 @@ inline uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t 
 
 void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   struct TILEMAP_WINDOW* window = (struct TILEMAP_WINDOW*)arg;
+   struct GRAPHICS_TILE_WINDOW* window = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = window->t;
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
@@ -197,7 +197,7 @@ cleanup:
    return NULL;
 }
 
-void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct TILEMAP_WINDOW* window ) {
+void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* window ) {
 
    if( NULL == window->t ) {
       window->t = t;

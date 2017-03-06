@@ -6,8 +6,10 @@
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
    hashmap_cleanup( &(l->clients) );
+
    bdestroy( l->name );
    bdestroy( l->topic );
+
    gamedata_cleanup( &(l->gamedata) );
    // FIXME: Free channel.
 }
@@ -28,11 +30,21 @@ cleanup:
 }
 
 void channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
+   struct MOBILE* o = NULL;
+
    scaffold_check_null( c );
 
    if( NULL != channel_get_client_by_name( l, c->nick ) ) {
       goto cleanup;
    }
+
+   /* Create a basic mobile for the new client. */
+   mobile_new( o );
+   do {
+      o->serial = rand() * MOBILE_RANDOM_SERIAL_LEN;
+   } while( NULL != vector_get( &(l->gamedata.mobiles), o->serial ) );
+   client_add_puppet( c, o );
+   gamedata_add_mobile( &(l->gamedata), o );
 
    hashmap_put( &(l->clients), c->nick, c );
 
@@ -44,6 +56,10 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    struct CLIENT* c_test = NULL;
    c_test = hashmap_get( &(l->clients), c->nick );
    if( NULL != c_test && TRUE == hashmap_remove( &(l->clients), c->nick ) ) {
+      if( NULL != c->puppet ) {
+         gamedata_remove_mobile( &(l->gamedata), c->puppet->serial );
+      }
+
       scaffold_print_debug(
          "Removed 1 clients from channel %s. %d remaining.\n",
          bdata( l->name ), hashmap_count( &(l->clients) )

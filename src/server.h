@@ -47,7 +47,5 @@ void server_listen( SERVER* s, int port );
 void server_poll_new_clients( SERVER* s );
 void server_service_clients( SERVER* s );
 void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick );
-void server_add_mobile( SERVER* s, struct MOBILE* o );
-void server_remove_mobile( SERVER* s, bstring serial );
 
 #endif /* SERVER_H */

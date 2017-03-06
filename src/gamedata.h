@@ -5,6 +5,7 @@
 #include "hashmap.h"
 
 struct UI;
+struct MOBILE;
 
 struct GAMEDATA_UPDATE {
 
@@ -16,7 +17,10 @@ struct GAMEDATA {
    struct HASHMAP incoming_chunkers;
    uint8_t* incoming_buffer;
    size_t incoming_buffer_len;
+   struct VECTOR mobiles;
 };
+
+#include "mobile.h"
 
 #define gamedata_new_server( d ) \
     d = (struct GAMEDATA*)calloc( 1, sizeof( struct GAMEDATA ) ); \
@@ -40,5 +44,7 @@ void gamedata_react_client(
 );
 void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c );
 void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui );
+void gamedata_add_mobile( struct GAMEDATA* s, struct MOBILE* o );
+void gamedata_remove_mobile( struct GAMEDATA* s, size_t serial );
 
 #endif /* GAMEDATA_H */

@@ -227,21 +227,12 @@ struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
-   struct CLIENT* c;
 #ifdef DEBUG
    size_t deleted;
    size_t old_count = 0, new_count = 0;
 
    old_count = hashmap_count( &(s->clients) );
 #endif /* DEBUG */
-
-   c = hashmap_iterate( &(s->clients), callback_search_clients, nick );
-   if( NULL != c ) {
-      /* Break any associations, first. */
-      if( NULL != c->puppet ) {
-         server_remove_mobile( s, c->puppet->serial );
-      }
-   }
 
    /* Perform the deletion. */
    /* TODO: Remove the client from all of the other lists that have upped its *
@@ -284,7 +275,6 @@ void server_listen( SERVER* s, int port ) {
 
 void server_poll_new_clients( SERVER* s ) {
    static struct CLIENT* c = NULL;
-   struct MOBILE* o = NULL;
 #ifdef DEBUG
    size_t old_client_count = 0;
 
@@ -308,14 +298,6 @@ void server_poll_new_clients( SERVER* s ) {
       //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
       server_add_client( s, c );
-
-      /* Create a basic mobile for the new client. */
-      mobile_new( o );
-      do {
-         scaffold_random_string( o->serial, MOBILE_RANDOM_SERIAL_LEN );
-      } while( NULL != hashmap_get( &(s->self.mobiles), o->serial ) );
-      client_add_puppet( c, o );
-      server_add_mobile( s, o );
 
 #ifdef DEBUG
       assert( old_client_count < hashmap_count( &(s->clients) ) );
@@ -385,12 +367,4 @@ void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick ) {
 
 cleanup:
    return;
-}
-
-void server_add_mobile( SERVER* s, struct MOBILE* o ) {
-   hashmap_put( &(s->self.mobiles), o->serial, o );
-}
-
-void server_remove_mobile( SERVER* s, bstring serial ) {
-   hashmap_remove( &(s->self.mobiles), serial );
 }
