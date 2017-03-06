@@ -41,7 +41,7 @@ typedef struct _TILEMAP_TILESET {
    size_t firstgid;
    size_t tileheight;
    size_t tilewidth;
-   VECTOR images;
+   HASHMAP images;
    HASHMAP terrain;
    VECTOR tiles;
 } TILEMAP_TILESET;

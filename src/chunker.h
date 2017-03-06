@@ -34,6 +34,7 @@ typedef struct _CHUNKER {
    VECTOR tracks;
    bstring filecache_path;
    bstring filename;
+   bstring serverpath;
 } CHUNKER;
 
 void chunker_free( CHUNKER* h );
@@ -42,8 +43,8 @@ void chunker_chunk_start(
    size_t src_length, size_t tx_chunk_length
 );
 void chunker_chunk_start_file(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath,
-   size_t tx_chunk_length
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   bstring filepath, size_t tx_chunk_length
 );
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer );
 BOOL chunker_chunk_finished( CHUNKER* h );

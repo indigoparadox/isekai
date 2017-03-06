@@ -76,7 +76,7 @@ void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
 }
 
 void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
-   vector_remove_cb( &(tileset->images), callback_free_strings, NULL );
+   hashmap_remove_cb( &(tileset->images), callback_free_graphics, NULL );
 }
 
 void tilemap_iterate_screen_row(
@@ -87,7 +87,7 @@ void tilemap_iterate_screen_row(
 }
 
 TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid ) {
-   return hashmap_iterate( &(t->tilesets), callback_search_tilesets, &gid );
+   return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
 }
 
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
@@ -95,7 +95,6 @@ TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid ) {
 inline void tilemap_get_tile_tileset_pos(
    TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
 ) {
-   GRAPHICS* g = NULL;
    size_t tiles_wide = 0;
    size_t tiles_high = 0;
 #ifdef USE_MATH
@@ -105,8 +104,8 @@ inline void tilemap_get_tile_tileset_pos(
 
    scaffold_check_null( g_set );
 
-   tiles_wide = g->w / set->tilewidth;
-   tiles_high = g->h / set->tileheight;
+   tiles_wide = g_set->w / set->tilewidth;
+   tiles_high = g_set->h / set->tileheight;
 
    gid -= set->firstgid - 1;
 
@@ -138,7 +137,6 @@ void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
    size_t x, y, max_x, max_y, tileset_x, tileset_y, pix_x, pix_y;
-   bstring g_filename = NULL; /* Do not free! */
    uint32_t tile;
    VECTOR* tiles = NULL;
 #ifdef DEBUG_TILES
@@ -171,11 +169,7 @@ void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
 
          /* Figure out the graphical tile to draw from. */
          /* TODO: Support multiple images. */
-         g_filename = (bstring)vector_get( &(set->images), 0 );
-         g_tileset = (GRAPHICS*)hashmap_get(
-            window->cached_gfx,
-            g_filename
-         );
+         g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
          if( NULL == g_tileset ) {
             /* TODO: Use a built-in placeholder tileset. */
             goto cleanup;

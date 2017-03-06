@@ -359,7 +359,7 @@ void server_service_clients( SERVER* s ) {
    }
 
    /* Send files in progress. */
-   hashmap_iterate( &(s->clients), callback_process_chunkers, s );
+   hashmap_iterate( &(s->clients), callback_proc_chunkers, s );
 
 cleanup:
    return;

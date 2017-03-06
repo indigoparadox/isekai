@@ -45,7 +45,7 @@ static void datafile_tilemap_parse_tileset_image(
    scaffold_check_null( set );
 
    if( !vector_ready( &(set->images) ) ) {
-      vector_init( &(set->images) );
+      hashmap_init( &(set->images) );
    }
 
    buffer = bfromcstralloc( 1024, "" );
@@ -54,7 +54,8 @@ static void datafile_tilemap_parse_tileset_image(
    xml_attr = ezxml_attr( xml_image, "source" );
    bassigncstr( buffer, xml_attr );
 
-   vector_add( &(set->images), bstrcpy( buffer ) );
+   /* The key with NULL means we need to load this image. */
+   hashmap_put( &(set->images), bstrcpy( buffer ), NULL );
 
 cleanup:
    bdestroy( buffer );

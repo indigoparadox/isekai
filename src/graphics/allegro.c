@@ -265,8 +265,8 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    scaffold_check_null( fmem );
 
    /* TODO: Autodetect image type. */
-   g->surface = load_bmp_pf( fmem, NULL );
-   //texture_out = load_memory_png( image_data, entry->unpacked_size, pal );
+   //g->surface = load_bmp_pf( fmem, NULL );
+   g->surface = load_memory_png( data, length, NULL );
    scaffold_check_null( g->surface );
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;

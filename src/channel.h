@@ -14,6 +14,11 @@ typedef struct _CHANNEL {
    HASHMAP clients;
 } CHANNEL;
 
+typedef struct _CHANNEL_CLIENT {
+   CHANNEL* l;
+   CLIENT* c;
+} CHANNEL_CLIENT;
+
 #define channel_new( l, name ) \
     scaffold_check_null( name ); \
     l = (CHANNEL*)calloc( 1, sizeof( CHANNEL ) ); \
