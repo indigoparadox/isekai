@@ -14,7 +14,7 @@ START_TEST( test_channel_server_channel ) {
 
    server_service_clients( server );
    assert( 1 == vector_count( &(server->clients) ) );
-   CLIENT* client_b = NULL;
+   struct CLIENT* client_b = NULL;
    client_new( client_b );
    bdestroy( client_b->nick );
    client_b->nick = bfromcstr( "TestUnit" );
@@ -28,11 +28,11 @@ START_TEST( test_channel_server_channel ) {
    } while( 0 != scaffold_error );
    server_service_clients( server );
    assert( 0 == vector_count( &(server->self.channels) ) );
-   CHANNEL* l = server_add_channel( server, channel, client );
+   struct CHANNEL* l = server_add_channel( server, channel, client );
    assert( 1 == vector_count( &(server->self.channels) ) );
    assert( 1 == vector_count( &(l->clients) ) );
    assert( 2 == vector_count( &(server->clients) ) );
-   CHANNEL* l_b = server_add_channel( server, channel, client_b );
+   struct CHANNEL* l_b = server_add_channel( server, channel, client_b );
    assert( 1 == vector_count( &(server->self.channels) ) );
    assert( l == l_b );
    assert( 2 == vector_count( &(l->clients) ) );

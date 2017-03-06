@@ -21,7 +21,7 @@ typedef struct _CHUNKER_TRACK {
 } CHUNKER_TRACK;
 
 typedef struct _CHUNKER {
-   REF refcount;
+   struct REF refcount;
    heatshrink_encoder* encoder;
    heatshrink_decoder* decoder;
    size_t raw_position;
@@ -31,7 +31,7 @@ typedef struct _CHUNKER {
    BOOL force_finish;
    bstring channel;
    CHUNKER_DATA_TYPE type;
-   VECTOR tracks;
+   struct VECTOR tracks;
    bstring filecache_path;
    bstring filename;
    bstring serverpath;

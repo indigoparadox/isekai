@@ -6,31 +6,31 @@
 #include "client.h"
 #include "gamedata.h"
 
-typedef struct _CHANNEL {
-   REF refcount;
-   GAMEDATA gamedata;
+struct CHANNEL {
+   struct REF refcount;
+   struct GAMEDATA gamedata;
    bstring name;
    bstring topic;
-   HASHMAP clients;
-} CHANNEL;
+   struct HASHMAP clients;
+};
 
-typedef struct _CHANNEL_CLIENT {
-   CHANNEL* l;
-   CLIENT* c;
-} CHANNEL_CLIENT;
+struct CHANNEL_CLIENT {
+   struct CHANNEL* l;
+   struct CLIENT* c;
+};
 
 #define channel_new( l, name ) \
     scaffold_check_null( name ); \
-    l = (CHANNEL*)calloc( 1, sizeof( CHANNEL ) ); \
+    l = (struct CHANNEL*)calloc( 1, sizeof( struct CHANNEL ) ); \
     scaffold_check_null( l ); \
     channel_init( l, name );
 
-void channel_init( CHANNEL* l, const bstring name );
-void channel_free( CHANNEL* l );
-CLIENT* channel_client_present( CHANNEL* l, CLIENT* c );
-void channel_add_client( CHANNEL* l, CLIENT* c );
-void channel_remove_client( CHANNEL* l, CLIENT* c );
-CLIENT* channel_get_client_by_name( CHANNEL* l, bstring nick );
-struct bstrList* channel_list_clients( CHANNEL* l );
+void channel_init( struct CHANNEL* l, const bstring name );
+void channel_free( struct CHANNEL* l );
+struct CLIENT* channel_client_present( struct CHANNEL* l, struct CLIENT* c );
+void channel_add_client( struct CHANNEL* l, struct CLIENT* c );
+void channel_remove_client( struct CHANNEL* l, struct CLIENT* c );
+struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick );
+struct bstrList* channel_list_clients( struct CHANNEL* l );
 
 #endif /* CHANNEL_H */

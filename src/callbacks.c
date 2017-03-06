@@ -10,7 +10,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    size_t last_read_count = 0;
    SERVER* s = NULL;
    static bstring buffer = NULL;
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = NULL;
    /* TODO: Factor this out. */
@@ -18,10 +18,10 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 
    /* Figure out if we're being called from a client or server. */
    //if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
-   if( NULL == arg || CLIENT_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+   if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       table = irc_table_client;
       is_client = TRUE;
-   } else if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
+   } else if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       s = (SERVER*)arg;
       table = irc_table_server;
       is_client = FALSE;
@@ -61,7 +61,7 @@ cleanup:
 
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    struct bstrList* list = (struct bstrList*)arg;
    scaffold_list_append_string_cpy( list, c->nick );
    return NULL;
@@ -69,7 +69,7 @@ void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
 
 /* Return only the client arg if present. */
 void* callback_search_clients( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
       return c;
@@ -79,7 +79,7 @@ void* callback_search_clients( const bstring key, void* iter, void* arg ) {
 
 /* Return all clients EXCEPT the client arg. */
 void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( 0 != bstrcmp( nick, c->nick ) ) {
       return c;
@@ -90,7 +90,7 @@ void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
 /* Return any client that is in the bstrlist arg. */
 void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
    struct bstrList* list = (struct bstrList*)arg;
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    int i;
 
    for( i = 0 ; list->qty > i ; i++ ) {
@@ -103,14 +103,14 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
 }
 
 void* callback_send_clients( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
    server_client_send( c, buffer );
    return NULL;
 }
 
 void* callback_search_channels( const bstring key, void* iter, void* arg ) {
-   CHANNEL* l = (CHANNEL*)iter;
+   struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
    if( 0 == bstrcmp( l->name, name ) ) {
       return l;
@@ -120,7 +120,7 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
 
 /* Searches for a tileset containing the image named in bstring arg. */
 void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg ) {
-   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg ) ) {
       /* This is the tileset that contains this image. */
       return set;
@@ -129,7 +129,7 @@ void* callback_search_tilesets_img_name( const bstring key, void* iter, void* ar
 }
 
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) {
-   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    bstring name = (bstring)arg;
 
    if( 0 == bstrcmp( key, name ) ) {
@@ -184,10 +184,10 @@ cleanup:
 }
 
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    SERVER* s = (SERVER*)arg;
    bstring xmit_buffer_template = NULL;
-   VECTOR* chunks = NULL;
+   struct VECTOR* chunks = NULL;
    bstring chunk_iter = NULL;
 
    xmit_buffer_template = bformat(
@@ -227,7 +227,7 @@ cleanup:
 }
 
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
-   CHANNEL_CLIENT* lc = (CHANNEL_CLIENT*)arg;
+   struct CHANNEL_CLIENT* lc = (struct CHANNEL_CLIENT*)arg;
 
    irc_request_file(
       lc->c, lc->l,
@@ -239,15 +239,15 @@ void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
 }
 
 void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
-   CHANNEL_CLIENT* lc = (CHANNEL_CLIENT*)arg;
-   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+   struct CHANNEL_CLIENT* lc = (struct CHANNEL_CLIENT*)arg;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
    return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, lc );
 }
 
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
    size_t gid = (*(size_t*)arg);
-   TILEMAP_TILESET* tileset = (TILEMAP_TILESET*)iter;
+   struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
 
    if( tileset->firstgid <= gid ) {
       return tileset;
@@ -257,7 +257,7 @@ void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
 }
 
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)arg;
+   struct CLIENT* c = (struct CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;
 
    server_client_send( c, xmit_buffer );
@@ -268,7 +268,7 @@ BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
 }
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
       client_free( c );
@@ -278,7 +278,7 @@ BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
 }
 
 BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
-   CHANNEL* l = (CHANNEL*)iter;
+   struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
 
    if( NULL == arg || 0 == bstrcmp( l->name, name ) ) {
@@ -290,7 +290,7 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
 }
 
 BOOL callback_free_mobiles( const bstring key, void* iter, void* arg ) {
-   MOBILE* o = (MOBILE*)iter;
+   struct MOBILE* o = (struct MOBILE*)iter;
    bstring serial = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( serial, o->serial ) ) {
       mobile_free( o );
@@ -370,9 +370,9 @@ static void* server_prn_channel( VECTOR* v, size_t idx, void* iter, void* arg ) 
 */
 
 #if 0
-static void* channel_lst_client( VECTOR* v, size_t idx, void* iter, void* arg ) {
+static void* channel_lst_client( struct VECTOR* v, size_t idx, void* iter, void* arg ) {
    struct bstrList* list = (struct bstrList*)arg;
-   CLIENT* c = (CLIENT*)iter;
+   struct CLIENT* c = (struct CLIENT*)iter;
    int bstr_check;
    size_t client_count = vector_count( v );
 

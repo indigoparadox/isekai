@@ -12,7 +12,7 @@
 #define CONNECTION_BUFFER_LEN 80
 
 typedef struct _CONNECTION {
-   REF refcount;
+   struct REF refcount;
    int socket;
    BOOL listening;
    void* (*callback)( void* client );

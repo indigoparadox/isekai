@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-size_t mailbox_listen( MAILBOX* mailbox ) {
+size_t mailbox_listen( struct MAILBOX* mailbox ) {
     vector_init( &(mailbox->envelopes) );
     vector_init( &(mailbox->sockets_assigned ) );
     if( 0 >= mailbox->last_socket ) {
@@ -12,8 +12,8 @@ size_t mailbox_listen( MAILBOX* mailbox ) {
     return mailbox->last_socket++;
 }
 
-void* mailbox_envelope_cmp( VECTOR* v, void* iter, void* arg ) {
-   MAILBOX_ENVELOPE* envelope = (MAILBOX_ENVELOPE*)iter;
+void* mailbox_envelope_cmp( struct VECTOR* v, void* iter, void* arg ) {
+   struct MAILBOX_ENVELOPE* envelope = (struct MAILBOX_ENVELOPE*)iter;
    bstring str_search = (bstring)arg;
 
    if( 0 == bstrcmp( str_search, envelope->contents ) ) {
@@ -23,8 +23,8 @@ void* mailbox_envelope_cmp( VECTOR* v, void* iter, void* arg ) {
    return NULL;
 }
 
-static void mailbox_envelope_cleanup( const struct _REF* ref ) {
-   MAILBOX_ENVELOPE* e = (MAILBOX_ENVELOPE*)scaffold_container_of( ref, MAILBOX_ENVELOPE, refcount );
+static void mailbox_envelope_cleanup( const struct REF* ref ) {
+   struct MAILBOX_ENVELOPE* e = (struct MAILBOX_ENVELOPE*)scaffold_container_of( ref, struct MAILBOX_ENVELOPE, refcount );
    bdestroy( e->contents );
    e->callback = NULL;
    e->socket_src = -1;
@@ -33,7 +33,7 @@ static void mailbox_envelope_cleanup( const struct _REF* ref ) {
    e->special = MAILBOX_ENVELOPE_SPECIAL_DELETE;
 }
 
-MAILBOX_ENVELOPE* mailbox_envelope_new(
+struct MAILBOX_ENVELOPE* mailbox_envelope_new(
    bstring contents,
    MAILBOX_CALLBACK callback,
    void* cb_arg,
@@ -41,9 +41,9 @@ MAILBOX_ENVELOPE* mailbox_envelope_new(
    size_t dest,
    MAILBOX_ENVELOPE_SPECIAL special
 ) {
-   MAILBOX_ENVELOPE* outgoing;
+   struct MAILBOX_ENVELOPE* outgoing;
 
-   outgoing = (MAILBOX_ENVELOPE*)calloc( 1, sizeof( MAILBOX_ENVELOPE ) );
+   outgoing = (struct MAILBOX_ENVELOPE*)calloc( 1, sizeof( struct MAILBOX_ENVELOPE ) );
    scaffold_check_null( outgoing );
 
 #ifdef DEBUG
@@ -66,14 +66,14 @@ cleanup:
    return outgoing;
 }
 
-void mailbox_envelope_free( MAILBOX_ENVELOPE* e ) {
+void mailbox_envelope_free( struct MAILBOX_ENVELOPE* e ) {
    if( ref_dec( &(e->refcount) ) ) {
       free( e );
    }
 }
 
-size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
-   MAILBOX_ENVELOPE* top_envelope = NULL;
+size_t mailbox_accept( struct MAILBOX* mailbox, size_t socket_dest ) {
+   struct MAILBOX_ENVELOPE* top_envelope = NULL;
    size_t socket_out = -1;
    size_t i = 0;
 #ifdef DEBUG
@@ -111,7 +111,6 @@ size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest ) {
    }
 
    /* Do one callback job per cycle. */
-   //VECTOR* envelopes =  &(mailbox->envelopes);
    top_envelope = vector_get( &(mailbox->envelopes), 0 );
    assert( NULL == top_envelope || NULL == top_envelope->callback || NULL == top_envelope->contents );
    if( NULL != top_envelope && NULL != top_envelope->callback ) {
@@ -134,8 +133,8 @@ cleanup:
    return socket_out;
 }
 
-void mailbox_call( MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callback, void* arg ) {
-   MAILBOX_ENVELOPE* outgoing = NULL;
+void mailbox_call( struct MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callback, void* arg ) {
+   struct MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
    outgoing = mailbox_envelope_new(
@@ -160,9 +159,9 @@ cleanup:
 }
 
 void mailbox_send(
-   MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
+   struct MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
 ) {
-   MAILBOX_ENVELOPE* outgoing = NULL;
+   struct MAILBOX_ENVELOPE* outgoing = NULL;
    BOOL ok = FALSE;
 
    scaffold_check_null( message );
@@ -188,9 +187,9 @@ cleanup:
 }
 
 size_t mailbox_connect(
-   MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
+   struct MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
 ) {
-   MAILBOX_ENVELOPE* outgoing = NULL;
+   struct MAILBOX_ENVELOPE* outgoing = NULL;
    size_t socket_out = -1;
 
    if( 0 > mailbox->last_socket ) {
@@ -216,8 +215,8 @@ cleanup:
    return socket_out;
 }
 
-size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer ) {
-   MAILBOX_ENVELOPE* top_envelope = NULL;
+size_t mailbox_read( struct MAILBOX* mailbox, size_t socket_dest, bstring buffer ) {
+   struct MAILBOX_ENVELOPE* top_envelope = NULL;
    int length_out = 0;
 
    top_envelope = vector_get( &(mailbox->envelopes), 0 );
@@ -240,11 +239,11 @@ cleanup:
    return length_out;
 }
 
-void mailbox_close( MAILBOX* mailbox, ssize_t socket ) {
+void mailbox_close( struct MAILBOX* mailbox, ssize_t socket ) {
    vector_remove_scalar_value( &(mailbox->sockets_assigned), socket );
 }
 
-BOOL mailbox_is_alive( MAILBOX* mailbox, ssize_t socket ) {
+BOOL mailbox_is_alive( struct MAILBOX* mailbox, ssize_t socket ) {
    if( 0 > vector_get_scalar_value( &(mailbox->sockets_assigned), socket ) ) {
       return FALSE;
    } else {

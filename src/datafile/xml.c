@@ -5,7 +5,7 @@
 #include "../hashmap.h"
 #include "../gamedata.h"
 
-static void datafile_tilemap_parse_properties( TILEMAP* t, ezxml_t xml_props ) {
+static void datafile_tilemap_parse_properties( struct TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
 
    scaffold_check_null( xml_props );
@@ -34,7 +34,7 @@ cleanup:
 }
 
 static void datafile_tilemap_parse_tileset_image(
-   TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
+   struct TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
 ) {
    GRAPHICS* g_image = NULL;
    const char* xml_attr;
@@ -74,8 +74,8 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
-   TILEMAP_TILESET* set = NULL;
+static void datafile_tilemap_parse_tileset( struct TILEMAP* t, ezxml_t xml_tileset ) {
+   struct TILEMAP_TILESET* set = NULL;
    ezxml_t
       xml_image,
       xml_tile,
@@ -83,8 +83,8 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
       xml_terrain;
    const char* xml_attr;
    bstring buffer = NULL;
-   TILEMAP_TILE_DATA* tile_info = NULL;
-   TILEMAP_TERRAIN_DATA* terrain_info = NULL;
+   struct TILEMAP_TILE_DATA* tile_info = NULL;
+   struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    struct bstrList* terrain_list = NULL;
    int i;
 
@@ -99,7 +99,7 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    xml_image = ezxml_child( xml_tileset, "image" );
    scaffold_check_null( xml_image );
 
-   set = (TILEMAP_TILESET*)calloc( 1, sizeof( TILEMAP_TILESET ) );
+   set = (struct TILEMAP_TILESET*)calloc( 1, sizeof( struct TILEMAP_TILESET ) );
    scaffold_check_null( set );
 
    /* vector_init( &(set->images) );
@@ -135,7 +135,7 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
    while( NULL != xml_terrain ) {
-      terrain_info = (TILEMAP_TERRAIN_DATA*)calloc( 1, sizeof( TILEMAP_TERRAIN_DATA ) );
+      terrain_info = (struct TILEMAP_TERRAIN_DATA*)calloc( 1, sizeof( struct TILEMAP_TERRAIN_DATA ) );
       scaffold_check_null( terrain_info );
 
       xml_attr = ezxml_attr( xml_terrain, "name" );
@@ -164,7 +164,7 @@ static void datafile_tilemap_parse_tileset( TILEMAP* t, ezxml_t xml_tileset ) {
    xml_tile = ezxml_child( xml_tileset, "tile" );
    scaffold_check_null( xml_tile );
    while( NULL != xml_tile ) {
-      tile_info = (TILEMAP_TILE_DATA*)calloc( 1, sizeof( TILEMAP_TILE_DATA ) );
+      tile_info = (struct TILEMAP_TILE_DATA*)calloc( 1, sizeof( struct TILEMAP_TILE_DATA ) );
       scaffold_check_null( tile_info );
 
       xml_attr = ezxml_attr( xml_tile, "id" );
@@ -207,8 +207,8 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_layer( TILEMAP* t, ezxml_t xml_layer ) {
-   TILEMAP_LAYER* layer = NULL;
+static void datafile_tilemap_parse_layer( struct TILEMAP* t, ezxml_t xml_layer ) {
+   struct TILEMAP_LAYER* layer = NULL;
    ezxml_t xml_layer_data = NULL;
    bstring buffer = NULL;
    struct bstrList* tiles_list = NULL;
@@ -257,7 +257,7 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
       xml_props = NULL,
       xml_tileset = NULL,
       xml_data;
-   TILEMAP* t = (TILEMAP*)targ;
+   struct TILEMAP* t = (struct TILEMAP*)targ;
 
    bassign( t->serialize_filename, filename );
    scaffold_check_null( t->serialize_filename );
@@ -299,7 +299,7 @@ cleanup:
    return;
 }
 
-void datafile_reserialize_tilemap( TILEMAP* t ) {
+void datafile_reserialize_tilemap( struct TILEMAP* t ) {
 }
 
 void datafile_load_file(

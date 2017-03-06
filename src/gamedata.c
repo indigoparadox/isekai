@@ -8,21 +8,20 @@
 #include "datafile.h"
 #include "input.h"
 
-static inline CHANNEL* gamedata_get_channel( GAMEDATA* d ) {
-   return (CHANNEL*)d;
+static inline struct CHANNEL* gamedata_get_channel( struct GAMEDATA* d ) {
+   return (struct CHANNEL*)d;
 }
 
-void gamedata_init_server( GAMEDATA* d, const bstring name ) {
+void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    bstring mapdata_path = NULL;
    bstring mapdata_filename = NULL;
 
 #ifdef INIT_ZEROES
-   memset( d, '\0', sizeof( GAMEDATA ) );
+   memset( d, '\0', sizeof( struct GAMEDATA ) );
 #endif /* INIT_ZEROES */
 
    tilemap_init( &(d->tmap), TRUE );
 
-   hashmap_init( &(d->cached_gfx) );
    scaffold_print_info( "Loading data for channel: %s\n", bdata( name ) );
    mapdata_filename = bstrcpy( name );
    scaffold_check_null( mapdata_filename );
@@ -38,14 +37,13 @@ cleanup:
    return;
 }
 
-void gamedata_cleanup( GAMEDATA* d ) {
+void gamedata_cleanup( struct GAMEDATA* d ) {
    tilemap_free( &(d->tmap) );
 
    /* Don't cleanup UI since other things probably use that. */
 }
 
-void gamedata_init_client( GAMEDATA* d ) {
-   hashmap_init( &(d->cached_gfx) );
+void gamedata_init_client( struct GAMEDATA* d ) {
    d->incoming_buffer_len = 0;
    d->incoming_buffer = NULL;
    tilemap_init( &(d->tmap), FALSE );
@@ -53,20 +51,20 @@ void gamedata_init_client( GAMEDATA* d ) {
 }
 
 void gamedata_update_server(
-   GAMEDATA* d, CLIENT* c, const struct bstrList* args,
+   struct GAMEDATA* d, struct CLIENT* c, const struct bstrList* args,
    bstring* reply_c, bstring* reply_l
 ) {
-   /* CHANNEL* l = gamedata_get_channel( d ); */
+   /* struct CHANNEL* l = gamedata_get_channel( d ); */
 
 
 }
 
 void gamedata_react_client(
-   GAMEDATA* d, CLIENT* c, const struct bstrList* args, bstring* reply
+   struct GAMEDATA* d, struct CLIENT* c, const struct bstrList* args, bstring* reply
 ) {
 }
 
-void gamedata_poll_input( GAMEDATA* d, CLIENT* c ) {
+void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c ) {
    INPUT input;
 
    input_get_event( &input );
@@ -81,10 +79,10 @@ void gamedata_poll_input( GAMEDATA* d, CLIENT* c ) {
    }
 }
 
-void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
-   GAMEDATA* d = NULL;
-   CHANNEL* l = NULL;
-   TILEMAP_WINDOW twindow = { 0 };
+void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
+   struct GAMEDATA* d = NULL;
+   struct CHANNEL* l = NULL;
+   struct TILEMAP_WINDOW twindow = { 0 };
 
    l = hashmap_get_first( &(c->channels) );
    if( NULL == l ) {
@@ -94,7 +92,6 @@ void gamedata_update_client( CLIENT* c, GRAPHICS* g, UI* ui ) {
 
    d = &(l->gamedata);
 
-   twindow.cached_gfx = &(d->cached_gfx);
    twindow.width = 640 / 32;
    twindow.height = 480 / 32;
 

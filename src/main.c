@@ -11,7 +11,7 @@
 #include <assert.h>
 
 static SERVER* main_server = NULL;
-CLIENT* main_client = NULL;
+struct CLIENT* main_client = NULL;
 
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "localhost" );
@@ -27,7 +27,7 @@ int main( int argc, char** argv ) {
    time_t tm = 0;
    GRAPHICS g = { 0 };
    INPUT p = { 0 };
-   UI ui = { 0 };
+   struct UI ui = { 0 };
 
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
    graphics_screen_init( &g, 640, 480 );
