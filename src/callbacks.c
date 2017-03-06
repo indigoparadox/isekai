@@ -118,6 +118,42 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+/* Searches for a tileset containing the image named in bstring arg. */
+void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg ) {
+   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+   if( NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg ) ) {
+      /* This is the tileset that contains this image. */
+      return set;
+   }
+   return NULL;
+}
+
+void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) {
+   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+   bstring name = (bstring)arg;
+
+   if( 0 == bstrcmp( key, name ) ) {
+      return set;
+   }
+   return NULL;
+}
+
+void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
+   GRAPHICS* g = (GRAPHICS*)iter;
+   bstring s_key = (bstring)arg;
+
+   if( 0 == bstrcmp( key, s_key ) ) {
+      if( NULL == g ) {
+         /* This image hasn't been set yet, so return a blank.*/
+         /* graphics_surface_new( g, 0, 0, 0, 0 ); */
+         /* Just fudge this for now. */
+         g = (void*)1;
+      }
+      return g;
+   }
+   return NULL;
+}
+
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    bstring xmit_buffer_template = (bstring)arg;
    CHUNKER* h = (CHUNKER*)iter;
@@ -135,8 +171,9 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
 
    /* Note the starting point and progress for the client. */
    bstr_result = bformata(
-      xmit_buffer_out, "%s TILEMAP %s %d %d %d : ",
-      bdata( h->channel ), bdata( key ), h->raw_position, h->tx_chunk_length, h->raw_length
+      xmit_buffer_out, "%s TILEMAP %s %d %d %d %d : ",
+      bdata( h->channel ), bdata( key ), h->type, h->raw_position,
+      h->tx_chunk_length, h->raw_length
    );
    assert( BSTR_OK == bstr_result );
 
@@ -146,7 +183,7 @@ cleanup:
    return xmit_buffer_out;
 }
 
-void* callback_process_chunkers( const bstring key, void* iter, void* arg ) {
+void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    CLIENT* c = (CLIENT*)iter;
    SERVER* s = (SERVER*)arg;
    bstring xmit_buffer_template = NULL;
@@ -189,7 +226,26 @@ cleanup:
    return NULL;
 }
 
-void* callback_search_tilesets( const bstring res, void* iter, void* arg ) {
+void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
+   CHANNEL_CLIENT* lc = (CHANNEL_CLIENT*)arg;
+
+   irc_request_file(
+      lc->c, lc->l,
+      CHUNKER_DATA_TYPE_TILESET_IMG,
+      key
+   );
+
+   return NULL;
+}
+
+void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
+   CHANNEL_CLIENT* lc = (CHANNEL_CLIENT*)arg;
+   TILEMAP_TILESET* set = (TILEMAP_TILESET*)iter;
+
+   return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, lc );
+}
+
+void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
    size_t gid = (*(size_t*)arg);
    TILEMAP_TILESET* tileset = (TILEMAP_TILESET*)iter;
 

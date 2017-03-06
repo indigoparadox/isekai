@@ -305,7 +305,9 @@ cleanup:
  */
 void hashmap_put( HASHMAP* m, bstring key, void* value ) {
    hashmap_put_internal( m, key, value );
-   ref_test_inc( value );
+   if( NULL != value ) {
+      ref_test_inc( value );
+   }
 }
 
 /*

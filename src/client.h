@@ -72,7 +72,8 @@ void client_printf( CLIENT* c, const char* message, ... );
 void client_lock_channels( CLIENT* c, BOOL lock );
 void client_stop( CLIENT* c );
 void client_send_file(
-   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath
+   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   bstring filepath
 );
 void client_add_puppet( CLIENT* c, MOBILE* o );
 void client_clear_puppet( CLIENT* c );

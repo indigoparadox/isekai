@@ -215,7 +215,8 @@ cleanup:
 }
 
 void client_send_file(
-   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath
+   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   bstring filepath
 ) {
    CHUNKER* h = NULL;
 
@@ -232,6 +233,7 @@ void client_send_file(
       h,
       channel,
       type,
+      serverpath,
       filepath,
       64
    );

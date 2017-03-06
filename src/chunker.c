@@ -22,6 +22,7 @@ static void chunker_cleanup( const struct _REF* ref ) {
 
    bdestroy( h->filecache_path );
    bdestroy( h->filename );
+   bdestroy( h->serverpath );
 
    free( h );
 }
@@ -63,6 +64,7 @@ static void chunker_chunk_setup_internal(
    h->type = type;
    h->filecache_path = NULL;
    h->filename = NULL;
+   h->serverpath = NULL;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -83,12 +85,26 @@ cleanup:
 }
 
 void chunker_chunk_start_file(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring filepath,
-   size_t tx_chunk_length
+   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   bstring filepath, size_t tx_chunk_length
 ) {
-   scaffold_read_file_contents( filepath, &h->raw_ptr, &h->raw_length );
+   bstring full_file_path = NULL;
+
+   h->serverpath = bstrcpy( serverpath );
+   scaffold_check_null( h->serverpath );
+   h->filename = bstrcpy( filepath );
+   scaffold_check_null( h->filename );
+
+   full_file_path = bstrcpy( h->serverpath );
+   scaffold_check_null( full_file_path );
+   scaffold_join_path( full_file_path, h->filename );
+
+   scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
 
    chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+
+cleanup:
+   bdestroy( full_file_path );
 }
 
 void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
@@ -159,6 +175,8 @@ void chunker_unchunk_start(
    CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
    const bstring filename, const bstring filecache_path
 ) {
+   char* filename_c = NULL;
+
    assert( NULL != h );
    assert( 0 != src_length );
    assert( NULL != filename );
@@ -192,6 +210,9 @@ void chunker_unchunk_start(
    h->type = type;
    h->filename = bstrcpy( filename );
 
+   filename_c = bdata( filename );
+   scaffold_check_null( filename_c );
+
    chunker_unchunk_check_cache( h, filecache_path );
    if( SCAFFOLD_ERROR_NONE == scaffold_error ) {
       scaffold_print_debug(
@@ -203,7 +224,7 @@ void chunker_unchunk_start(
       h->filecache_path = NULL;
    }
 
-/* cleanup: */
+cleanup:
    return;
 }
 

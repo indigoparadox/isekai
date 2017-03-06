@@ -24,7 +24,7 @@ static struct tagbstring str_irc_server_path =
 void irc_request_file(
    CLIENT* c, CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
 ) {
-   client_printf( c, "GRF %d %b %b.tmx", type, l->name, filename );
+   client_printf( c, "GRF %d %b %b", type, l->name, filename );
 }
 
 static void irc_server_reply_welcome( CLIENT* c, SERVER* s ) {
@@ -473,13 +473,18 @@ static void irc_server_gamerequestfile( CLIENT* c, SERVER* s, struct bstrList* a
       );
       scaffold_check_null( file_iter_short );
 
-      if( 0 == bstrncmp(
+      if( 0 == bstrcmp(
          file_iter_short,
-         args->entry[3],
-         blength( file_iter_short ) )
+         args->entry[3] )
       ) {
+         /* FIXME: If the files request and one of the files present start    *
+          * with similar names (tilelist.png.tmx requested, tilelist.png      *
+          * exists, eg), then weird stuff happens.                            */
+         /* FIXME: Don't try to send directories. */
          scaffold_print_debug( "GRF: File Found: %s\n", bdata( file_iter ) );
-         client_send_file( c, args->entry[2], type, file_iter );
+         client_send_file(
+            c, args->entry[2], type, &str_irc_server_path, file_iter_short
+         );
       }
    }
 
@@ -616,16 +621,19 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
    size_t progress = 0;
    size_t total = 0;
    size_t length = 0;
+   CHUNKER_DATA_TYPE type;
    bstring data = NULL;
    bstring filename = NULL;
    const char* progress_c,
       * total_c,
-      * length_c;
+      * length_c,
+      * filename_c,
+      * type_c;
    TILEMAP_TILESET* set = NULL;
-   size_t i;
    GRAPHICS* g = NULL;
+   CHANNEL_CLIENT* lc = NULL;
 
-   if( 11 != args->qty ) {
+   if( 12 != args->qty ) {
       scaffold_print_error( "Client: Malformed GDB expression received.\n" );
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
@@ -638,25 +646,31 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
    scaffold_check_null( d );
 
    scaffold_check_null( args->entry[6] );
-   progress_c = bdata( args->entry[6] );
-   scaffold_check_null( progress_c );
+   type_c = bdata( args->entry[6] );
+   scaffold_check_null( type_c );
 
    scaffold_check_null( args->entry[7] );
-   length_c = bdata( args->entry[7] );
-   scaffold_check_null( length_c );
+   progress_c = bdata( args->entry[7] );
+   scaffold_check_null( progress_c );
 
    scaffold_check_null( args->entry[8] );
-   total_c = bdata( args->entry[8] );
+   length_c = bdata( args->entry[8] );
+   scaffold_check_null( length_c );
+
+   scaffold_check_null( args->entry[9] );
+   total_c = bdata( args->entry[9] );
    scaffold_check_null( total_c );
 
    filename = args->entry[5];
-   scaffold_check_null( filename );
+   filename_c = bdata( filename );
+   scaffold_check_null( filename_c );
 
    progress = atoi( progress_c );
    length = atoi( length_c );
    total = atoi( total_c );
+   type = (CHUNKER_DATA_TYPE)atoi( type_c );
 
-   data = args->entry[10];
+   data = args->entry[11];
    scaffold_check_null( data );
 
    if( progress > total ) {
@@ -675,7 +689,7 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
    if( NULL == h ) {
       h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
       chunker_unchunk_start(
-         h, l->name, CHUNKER_DATA_TYPE_TILEMAP, total, filename, IRC_CACHE_PATH
+         h, l->name, type, total, filename, IRC_CACHE_PATH
       );
       hashmap_put( &(d->incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
@@ -697,17 +711,12 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
       case CHUNKER_DATA_TYPE_TILEMAP:
          datafile_parse_tilemap( &(d->tmap), filename, (BYTE*)h->raw_ptr, h->raw_length );
 
-         /* TODO: Load more than one tileset. */
-         set = (TILEMAP_TILESET*)hashmap_get_first( &(d->tmap.tilesets) );
-         vector_lock( &(set->images), TRUE );
-         for( i = 0 ; vector_count( &(set->images) ) > i ; i++ ){
-            irc_request_file(
-               c, l,
-               CHUNKER_DATA_TYPE_TILESET_IMG,
-               (bstring)vector_get( &(set->images), i )
-            );
-         }
-         vector_lock( &(set->images), FALSE );
+         /* Go through the parsed tilemap and load graphics. */
+         lc = (CHANNEL_CLIENT*)calloc( 1, sizeof( CHANNEL_CLIENT ) );
+         lc->l = l;
+         lc->c = c;
+         hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );
+         free( lc );
 
          scaffold_print_info(
             "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
@@ -719,8 +728,13 @@ static void irc_client_gamedatablock( CLIENT* c, SERVER* s, struct bstrList* arg
          scaffold_check_null( g );
          graphics_set_image_data( g, h->raw_ptr, h->raw_length );
          scaffold_check_null( g );
-         hashmap_put( &(l->gamedata.cached_gfx), filename, g );
-
+         set = hashmap_iterate( &(l->gamedata.tmap.tilesets), callback_search_tilesets_img_name, filename );
+         scaffold_check_null( set )
+         hashmap_put( &(set->images), filename, g );
+         scaffold_print_info(
+            "Client: Tilemap image %s successfully loaded into cache.\n",
+            bdata( filename )
+         );
          break;
       }
    }
