@@ -112,12 +112,57 @@
 					<Add library="m" />
 				</Linker>
 			</Target>
+			<Target title="Strict (Linux-Allegro4)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pedantic" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="alleg" />
+					<Add library="loadpng" />
+				</Linker>
+			</Target>
+			<Target title="Debug (Linux-TCC)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug-TCC/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="tcc" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DUSE_ALLEGRO_PNG" />
+				</Compiler>
+				<Linker>
+					<Add library="alleg" />
+					<Add library="loadpng" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-DUSE_HEATSHRINK" />
 			<Add option="-DEZXML_CSTR" />
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
+			<Add option="-DUSE_FILE_CACHE" />
 		</Compiler>
 		<Unit filename="src/b64/b64.c">
 			<Option compilerVar="CC" />
@@ -160,6 +205,8 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
 		<Unit filename="src/ezxml/ezxml.c">
 			<Option compilerVar="CC" />
@@ -169,6 +216,8 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
 		<Unit filename="src/ezxml/ezxml.h">
 			<Option target="Debug" />
@@ -176,6 +225,8 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
 		<Unit filename="src/gamedata.c">
 			<Option compilerVar="CC" />
@@ -185,6 +236,8 @@
 		<Unit filename="src/graphics/allegro.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
 		<Unit filename="src/graphics/curses.c">
 			<Option compilerVar="CC" />
@@ -213,6 +266,8 @@
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
 		<Unit filename="src/input/curses.c">
 			<Option compilerVar="CC" />
@@ -240,7 +295,13 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
 		</Unit>
+		<Unit filename="src/mobile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/mobile.h" />
 		<Unit filename="src/ref.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />

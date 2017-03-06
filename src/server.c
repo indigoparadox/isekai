@@ -244,6 +244,8 @@ void server_drop_client( SERVER* s, bstring nick ) {
    }
 
    /* Perform the deletion. */
+   /* TODO: Remove the client from all of the other lists that have upped its *
+    *       ref count.                                                        */
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
@@ -260,13 +262,11 @@ void server_drop_client( SERVER* s, bstring nick ) {
    old_count = hashmap_count( &(s->self.channels) );
 #endif /* DEBUG */
 
-/*
-   deleted = hashmap_remove_cb( &(s->self.channels), callback_free_channels, NULL );
+   deleted = hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
    scaffold_print_debug(
       "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
-*/
 
 #ifdef DEBUG
    //new_count = hashmap_count( &(s->self.channels) );
