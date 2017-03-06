@@ -9,7 +9,7 @@
 #include "b64/b64.h"
 #include "callbacks.h"
 
-static void chunker_cleanup( const struct _REF* ref ) {
+static void chunker_cleanup( const struct REF* ref ) {
    CHUNKER* h = (CHUNKER*)scaffold_container_of( ref, CHUNKER, refcount );
 
    /* Cleanup tracks. */

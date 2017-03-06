@@ -9,7 +9,7 @@ struct tagbstring str_key_also3 = bsStatic( "This key ain't relevant." );
 
 #include <stdlib.h>
 
-static void free_blob( const struct _REF *ref ) {
+static void free_blob( const struct REF *ref ) {
     BLOB* blob = scaffold_container_of( ref, struct _BLOB, refcount );
     free( blob->data );
     free( blob );

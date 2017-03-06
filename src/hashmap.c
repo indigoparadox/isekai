@@ -15,13 +15,10 @@
 /*
  * Return an empty hashmap, or NULL on failure.
  */
-void hashmap_init( HASHMAP* m ) {
-   //HASHMAP* m = (hashmap_map*) malloc(sizeof(hashmap_map));
-   //if(!m) goto err;
-
+void hashmap_init( struct HASHMAP* m ) {
    scaffold_check_null( m );
 
-   m->data = (HASHMAP_ELEMENT*)calloc( INITIAL_SIZE, sizeof( HASHMAP_ELEMENT ) );
+   m->data = (struct HASHMAP_ELEMENT*)calloc( INITIAL_SIZE, sizeof( struct HASHMAP_ELEMENT ) );
    scaffold_check_null( m->data );
 
    m->table_size = INITIAL_SIZE;
@@ -31,12 +28,6 @@ void hashmap_init( HASHMAP* m ) {
 
 cleanup:
    return;
-   /*
-   err:
-      if (m)
-         hashmap_free(m);
-      return NULL;
-   */
 }
 
 /* The implementation here was originally done by Gary S. Brown.  I have
@@ -163,7 +154,7 @@ cleanup:
 /*
  * Hashing function for a string
  */
-uint32_t hashmap_hash_int( HASHMAP* m, bstring keystring ) {
+uint32_t hashmap_hash_int( struct HASHMAP* m, bstring keystring ) {
    uint32_t key = 0;
 
    scaffold_check_null( m );
@@ -194,7 +185,7 @@ cleanup:
  * Return the integer of the location in data
  * to store the point to the item, or MAP_FULL.
  */
-int hashmap_hash( HASHMAP* m, bstring key ) {
+int hashmap_hash( struct HASHMAP* m, bstring key ) {
    int curr;
    int i;
    int out = HASHMAP_FULL;
@@ -230,12 +221,12 @@ cleanup:
    return out;
 }
 
-void hashmap_rehash( HASHMAP* m );
+void hashmap_rehash( struct HASHMAP* m );
 
 /*
  * Add a pointer to the hashmap without touching its refcount.
  */
-static void hashmap_put_internal( HASHMAP* m, bstring key, void* value ) {
+static void hashmap_put_internal( struct HASHMAP* m, bstring key, void* value ) {
    int index;
 
    scaffold_check_null( m );
@@ -262,17 +253,17 @@ cleanup:
 /*
  * Doubles the size of the hashmap, and rehashes all the elements
  */
-void hashmap_rehash( HASHMAP* m ) {
+void hashmap_rehash( struct HASHMAP* m ) {
    int i;
    int old_size;
-   HASHMAP_ELEMENT* curr;
+   struct HASHMAP_ELEMENT* curr;
 
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Setup the new elements */
-   HASHMAP_ELEMENT* temp = (HASHMAP_ELEMENT*)
-                           calloc(2 * m->table_size, sizeof(HASHMAP_ELEMENT));
+   struct HASHMAP_ELEMENT* temp = (struct HASHMAP_ELEMENT*)
+                           calloc(2 * m->table_size, sizeof(struct HASHMAP_ELEMENT));
    scaffold_check_null( temp );
 
    /* Update the array */
@@ -303,7 +294,7 @@ cleanup:
 /*
  * Add a pointer to the hashmap with some key
  */
-void hashmap_put( HASHMAP* m, bstring key, void* value ) {
+void hashmap_put( struct HASHMAP* m, bstring key, void* value ) {
    hashmap_put_internal( m, key, value );
    if( NULL != value ) {
       ref_test_inc( value );
@@ -313,7 +304,7 @@ void hashmap_put( HASHMAP* m, bstring key, void* value ) {
 /*
  * Get your pointer out of the hashmap with a key
  */
-void* hashmap_get( HASHMAP* m, bstring key ) {
+void* hashmap_get( struct HASHMAP* m, bstring key ) {
    int curr;
    int i;
    int in_use;
@@ -343,7 +334,7 @@ cleanup:
    return element_out;
 }
 
-void* hashmap_get_first( HASHMAP* m ) {
+void* hashmap_get_first( struct HASHMAP* m ) {
    size_t i;
    void* found = NULL;
    void* data = NULL;
@@ -379,7 +370,7 @@ cleanup:
  * additional any_t argument is passed to the function as its first
  * argument and the hashmap element is the second.
  */
-void* hashmap_iterate( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
+void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
    size_t i;
    void* found = NULL;
    void* data = NULL;
@@ -412,8 +403,8 @@ cleanup:
    return found;
 }
 
-VECTOR* hashmap_iterate_v( HASHMAP* m, hashmap_search_cb callback, void* arg ) {
-   VECTOR* found = NULL;
+struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
+   struct VECTOR* found = NULL;
    void* data = NULL;
    void* test = NULL;
    BOOL ok = FALSE;
@@ -451,7 +442,7 @@ cleanup:
 
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
-size_t hashmap_remove_cb( HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
+size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
    size_t i;
    size_t removed = 0;
    void* data;
@@ -498,7 +489,7 @@ cleanup:
 /*
  * Remove an element with that key from the map
  */
-BOOL hashmap_remove( HASHMAP* m, bstring key ) {
+BOOL hashmap_remove( struct HASHMAP* m, bstring key ) {
    int i;
    int curr;
    int in_use;
@@ -537,7 +528,7 @@ cleanup:
 }
 
 /* Deallocate the hashmap */
-void hashmap_cleanup( HASHMAP* m ) {
+void hashmap_cleanup( struct HASHMAP* m ) {
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
    assert( 0 >= hashmap_count( m ) );
@@ -548,7 +539,7 @@ cleanup:
 }
 
 /* Return the length of the hashmap */
-int hashmap_count( HASHMAP* m ) {
+int hashmap_count( struct HASHMAP* m ) {
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
    return m->size;
@@ -556,7 +547,7 @@ cleanup:
    return 0;
 }
 
-int hashmap_active_length( HASHMAP* m ) {
+int hashmap_active_length( struct HASHMAP* m ) {
    int i;
    int count = 0;
    scaffold_check_null( m );
@@ -578,7 +569,7 @@ cleanup:
    return count;
 }
 
-void hashmap_lock( HASHMAP* m, BOOL lock ) {
+void hashmap_lock( struct HASHMAP* m, BOOL lock ) {
    #ifdef USE_THREADS
    #error Locking mechanism undefined!
    #elif defined( DEBUG )

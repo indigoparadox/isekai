@@ -4,11 +4,11 @@
 
 #include <allegro.h>
 
-extern CLIENT* main_client;
+extern struct CLIENT* main_client;
 
 typedef struct {
    int keysym;
-   void (*callback)( CLIENT* c, void* arg );
+   void (*callback)( struct CLIENT* c, void* arg );
 } INPUT_ENTRY;
 
 static void input_close_allegro_window() {

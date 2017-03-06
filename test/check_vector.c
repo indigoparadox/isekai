@@ -6,12 +6,11 @@
 #include "check_data.h"
 
 START_TEST( test_vector_create ) {
-   VECTOR* v;
+   struct VECTOR* v;
 
    vector_new( v );
 
    ck_assert_int_eq( vector_count( v ), 0 );
-   //ck_assert_str_eq( money_currency(m), "USD");
 
 cleanup:
 
@@ -20,7 +19,7 @@ cleanup:
 END_TEST
 
 START_TEST( test_vector_add ) {
-   VECTOR* v;
+   struct VECTOR* v;
    BLOB* blob = NULL;
    int i;
 
@@ -62,7 +61,7 @@ cleanup:
 END_TEST
 
 START_TEST( test_vector_add_scalar ) {
-   VECTOR* v;
+   struct VECTOR* v;
    int i;
 
    vector_new( v );
@@ -100,7 +99,7 @@ cleanup:
 END_TEST
 
 START_TEST( test_vector_get ) {
-   VECTOR* v;
+   struct VECTOR* v;
    BLOB* blob = NULL;
 
    vector_new( v );
@@ -131,7 +130,7 @@ cleanup:
 END_TEST
 
 START_TEST( test_vector_delete ) {
-   VECTOR* v;
+   struct VECTOR* v;
    BLOB* blob = NULL;
    int i;
 
@@ -170,7 +169,6 @@ START_TEST( test_vector_delete ) {
    }
 
    ck_assert_int_eq( vector_count( v ), 0 );
-   //ck_assert_str_eq( money_currency(m), "USD");
 
 cleanup:
 

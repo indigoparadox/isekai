@@ -7,10 +7,10 @@
 
 #define MAILBOX_SOCKET_NONE -1
 
-typedef struct _MAILBOX MAILBOX;
-typedef struct _MAILBOX_ENVELOPE MAILBOX_ENVELOPE;
+struct MAILBOX;
+struct MAILBOX_ENVELOPE;
 
-typedef void (*MAILBOX_CALLBACK)( MAILBOX* m, MAILBOX_ENVELOPE* e );
+typedef void (*MAILBOX_CALLBACK)( struct MAILBOX* m, struct MAILBOX_ENVELOPE* e );
 
 typedef enum _MAILBOX_ENVELOPE_SPECIAL {
    MAILBOX_ENVELOPE_SPECIAL_NONE,
@@ -18,34 +18,34 @@ typedef enum _MAILBOX_ENVELOPE_SPECIAL {
    MAILBOX_ENVELOPE_SPECIAL_DELETE,
 } MAILBOX_ENVELOPE_SPECIAL;
 
-typedef struct _MAILBOX_ENVELOPE {
-   REF refcount;
+struct MAILBOX_ENVELOPE {
+   struct REF refcount;
    size_t socket_src;
    size_t socket_dest;
    bstring contents;
    MAILBOX_ENVELOPE_SPECIAL special;
    MAILBOX_CALLBACK callback;
    void* cb_arg;
-} MAILBOX_ENVELOPE;
+};
 
-typedef struct _MAILBOX {
-   VECTOR envelopes;
+struct MAILBOX {
+   struct VECTOR envelopes;
    ssize_t last_socket;
-   VECTOR sockets_assigned;
-} MAILBOX;
+   struct VECTOR sockets_assigned;
+};
 
-size_t mailbox_listen( MAILBOX* mailbox );
-void* mailbox_envelope_cmp( VECTOR* v, void* iter, void* arg );
-size_t mailbox_accept( MAILBOX* mailbox, size_t socket_dest );
-void mailbox_call( MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callback, void* arg );
+size_t mailbox_listen( struct MAILBOX* mailbox );
+void* mailbox_envelope_cmp( struct VECTOR* v, void* iter, void* arg );
+size_t mailbox_accept( struct MAILBOX* mailbox, size_t socket_dest );
+void mailbox_call( struct MAILBOX* mailbox, ssize_t socket_src, MAILBOX_CALLBACK callback, void* arg );
 void mailbox_send(
-   MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
+   struct MAILBOX* mailbox, size_t socket_src, size_t socket_dest, bstring message
 );
 size_t mailbox_connect(
-   MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
+   struct MAILBOX* mailbox, ssize_t socket_src, size_t socket_dest
 );
-size_t mailbox_read( MAILBOX* mailbox, size_t socket_dest, bstring buffer );
-void mailbox_close( MAILBOX* mailbox, ssize_t socket );
-BOOL mailbox_is_alive( MAILBOX* mailbox, ssize_t socket );
+size_t mailbox_read( struct MAILBOX* mailbox, size_t socket_dest, bstring buffer );
+void mailbox_close( struct MAILBOX* mailbox, ssize_t socket );
+BOOL mailbox_is_alive( struct MAILBOX* mailbox, ssize_t socket );
 
 #endif /* MAILBOX_H */

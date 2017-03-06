@@ -9,7 +9,7 @@
 #include "hashmap.h"
 #include "irc.h"
 
-static void server_cleanup( const struct _REF* ref ) {
+static void server_cleanup( const struct REF* ref ) {
    SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
 #ifdef DEBUG
    size_t deleted = 0;
@@ -59,7 +59,7 @@ inline void server_stop( SERVER* s ) {
    s->self.running = FALSE;
 }
 
-void server_client_send( CLIENT* c, bstring buffer ) {
+void server_client_send( struct CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected? */
    assert( 0 != c->sentinal );
@@ -74,7 +74,7 @@ void server_client_send( CLIENT* c, bstring buffer ) {
    scaffold_assert_server();
 }
 
-void server_client_printf( SERVER* s, CLIENT* c, const char* message, ... ) {
+void server_client_printf( SERVER* s, struct CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
@@ -96,8 +96,8 @@ cleanup:
    return;
 }
 
-void server_channel_send( SERVER* s, CHANNEL* l, CLIENT* c_skip, bstring buffer ) {
-   VECTOR* l_clients = NULL;
+void server_channel_send( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
+   struct VECTOR* l_clients = NULL;
 
    l_clients =
       hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip->nick );
@@ -114,7 +114,7 @@ cleanup:
    scaffold_assert_server();
 }
 
-void server_channel_printf( SERVER* s, CHANNEL* l, CLIENT* c_skip, const char* message, ... ) {
+void server_channel_printf( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
@@ -136,7 +136,7 @@ cleanup:
    return;
 }
 
-void server_add_client( SERVER* s, CLIENT* c ) {
+void server_add_client( SERVER* s, struct CLIENT* c ) {
    if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
@@ -151,8 +151,8 @@ void server_add_client( SERVER* s, CLIENT* c ) {
    );
 }
 
-CHANNEL* server_add_channel( SERVER* s, bstring l_name, CLIENT* c_first ) {
-   CHANNEL* l = NULL;
+struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_first ) {
+   struct CHANNEL* l = NULL;
    bstring map_serial = NULL;
 #ifdef DEBUG
    size_t old_count;
@@ -206,28 +206,28 @@ cleanup:
 }
 
 /*
-CLIENT* server_get_client( SERVER* s, int index ) {
-   return (CLIENT*)vector_get( &(s->clients), index );
+struct CLIENT* server_get_client( SERVER* s, int index ) {
+   return (struct CLIENT*)vector_get( &(s->clients), index );
 }
 */
 
-CLIENT* server_get_client( SERVER* s, const bstring nick ) {
+struct CLIENT* server_get_client( SERVER* s, const bstring nick ) {
    //return vector_iterate( &(s->clients), callback_search_clients, (bstring)nick );
    return hashmap_get( &(s->clients), nick );
 }
 
 /*
-CLIENT* server_get_client_by_ptr( SERVER* s, CLIENT* c ) {
+struct CLIENT* server_get_client_by_ptr( SERVER* s, struct CLIENT* c ) {
    return vector_iterate( &(s->clients), client_cmp_ptr, c );
 }
 */
 
-CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
+struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
    return client_get_channel_by_name( &(s->self), (bstring)nick );
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
-   CLIENT* c;
+   struct CLIENT* c;
 #ifdef DEBUG
    size_t deleted;
    size_t old_count = 0, new_count = 0;
@@ -283,8 +283,8 @@ void server_listen( SERVER* s, int port ) {
 }
 
 void server_poll_new_clients( SERVER* s ) {
-   static CLIENT* c = NULL;
-   MOBILE* o = NULL;
+   static struct CLIENT* c = NULL;
+   struct MOBILE* o = NULL;
 #ifdef DEBUG
    size_t old_client_count = 0;
 
@@ -371,9 +371,9 @@ cleanup:
  * NOT_NULLPO = Nick already taken.
  * NONZERO = Allocation error.
  */
-void server_set_client_nick( SERVER* s, CLIENT* c, const bstring nick ) {
+void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick ) {
    int bstr_result = 0;
-   CLIENT* c_test = NULL;
+   struct CLIENT* c_test = NULL;
 
    scaffold_check_null( nick );
 
@@ -387,7 +387,7 @@ cleanup:
    return;
 }
 
-void server_add_mobile( SERVER* s, MOBILE* o ) {
+void server_add_mobile( SERVER* s, struct MOBILE* o ) {
    hashmap_put( &(s->self.mobiles), o->serial, o );
 }
 

@@ -5,11 +5,11 @@
 #include "irc.h"
 #include "chunker.h"
 
-static void client_cleanup( const struct _REF *ref ) {
+static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    size_t deleted;
 #endif /* DEBUG */
-   CLIENT* c = scaffold_container_of( c, struct _CLIENT, link );
+   struct CLIENT* c = scaffold_container_of( c, struct CLIENT, link );
    connection_cleanup( &(c->link) );
    bdestroy( c->nick );
    bdestroy( c->realname );
@@ -62,7 +62,7 @@ static void client_cleanup( const struct _REF *ref ) {
    /* free( c ); */
 }
 
-void client_init( CLIENT* c ) {
+void client_init( struct CLIENT* c ) {
    ref_init( &(c->link.refcount), client_cleanup );
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
@@ -76,16 +76,16 @@ void client_init( CLIENT* c ) {
    c->running = TRUE;
 }
 
-BOOL client_free( CLIENT* c ) {
+BOOL client_free( struct CLIENT* c ) {
    return ref_dec( &(c->link.refcount) );
 }
 
-CHANNEL* client_get_channel_by_name( CLIENT* c, const bstring name ) {
+struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
    //return vector_iterate( &(c->channels), callback_search_channels, name );
    return hashmap_get( &(c->channels), name );
 }
 
-void client_connect( CLIENT* c, bstring server, int port ) {
+void client_connect( struct CLIENT* c, bstring server, int port ) {
    bstring buffer;
 
    scaffold_set_client();
@@ -109,7 +109,7 @@ cleanup:
 }
 
 /* This runs on the local client. */
-void client_update( CLIENT* c ) {
+void client_update( struct CLIENT* c ) {
    //ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
 
@@ -136,7 +136,7 @@ void client_update( CLIENT* c ) {
    return;
 }
 
-void client_stop( CLIENT* c ) {
+void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
 
    scaffold_assert_client();
@@ -146,11 +146,11 @@ void client_stop( CLIENT* c ) {
    bdestroy( buffer );
 }
 
-void client_add_channel( CLIENT* c, CHANNEL* l ) {
+void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
    hashmap_put( &(c->channels), l->name, l );
 }
 
-void client_join_channel( CLIENT* c, bstring name ) {
+void client_join_channel( struct CLIENT* c, bstring name ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
 
@@ -162,7 +162,7 @@ void client_join_channel( CLIENT* c, bstring name ) {
    bdestroy( buffer );
 }
 
-void client_leave_channel( CLIENT* c, bstring lname ) {
+void client_leave_channel( struct CLIENT* c, bstring lname ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
 
@@ -177,7 +177,7 @@ void client_leave_channel( CLIENT* c, bstring lname ) {
    hashmap_remove( &(c->channels), lname );
 }
 
-void client_send( CLIENT* c, bstring buffer ) {
+void client_send( struct CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
 
@@ -192,7 +192,7 @@ void client_send( CLIENT* c, bstring buffer ) {
    scaffold_assert_client();
 }
 
-void client_printf( CLIENT* c, const char* message, ... ) {
+void client_printf( struct CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
@@ -215,7 +215,7 @@ cleanup:
 }
 
 void client_send_file(
-   CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   struct CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
    bstring filepath
 ) {
    CHUNKER* h = NULL;
@@ -248,7 +248,7 @@ cleanup:
    return;
 }
 
-void client_add_puppet( CLIENT* c, MOBILE* o ) {
+void client_add_puppet( struct CLIENT* c, struct MOBILE* o ) {
    if( NULL != c->puppet ) { /* Take care of existing mob before anything. */
       mobile_free( c->puppet );
       c->puppet = NULL;
@@ -263,6 +263,6 @@ void client_add_puppet( CLIENT* c, MOBILE* o ) {
    c->puppet = o; /* Assign to client last, to activate. */
 }
 
-void client_clear_puppet( CLIENT* c ) {
+void client_clear_puppet( struct CLIENT* c ) {
    client_add_puppet( c, NULL );
 }

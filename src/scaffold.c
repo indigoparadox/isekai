@@ -291,7 +291,7 @@ cleanup:
 }
 
 void scaffold_list_dir(
-   bstring path, VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
+   bstring path, struct VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
 ) {
    bstring child_path = NULL;
    char* path_c = NULL;

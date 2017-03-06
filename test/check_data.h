@@ -8,7 +8,7 @@
 #include "../src/ref.h"
 
 typedef struct _BLOB {
-   REF refcount;
+   struct REF refcount;
    uint32_t sentinal_start;
    size_t data_len;
    uint16_t* data;

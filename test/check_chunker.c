@@ -10,7 +10,7 @@ const struct tagbstring chunker_test_filename = bsStatic( "testdata/server/testc
 const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
 struct bstrList* chunker_mapchunks = NULL;
-VECTOR* chunker_mapchunk_starts;
+struct VECTOR* chunker_mapchunk_starts;
 char* chunker_mapdata;
 size_t chunker_mapsize;
 FILE* chunker_mapfile = NULL;
@@ -43,7 +43,7 @@ void check_chunker_setup_unchecked() {
 
    /* Prepare the chunk list. */
    chunker_mapchunks = bstrListCreate();
-   chunker_mapchunk_starts = (VECTOR*)calloc( 1, sizeof( VECTOR ) );
+   chunker_mapchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
    vector_init( chunker_mapchunk_starts );
    if( NULL == chunker_mapchunks || NULL == chunker_mapchunk_starts ) {
       ck_abort_msg( "Unable to create testing map chunks list." );

@@ -8,20 +8,20 @@
 #include <string.h>
 
 static BOOL tilemap_layer_free_cb( bstring res, void* iter, void* arg ) {
-   tilemap_layer_free( (TILEMAP_LAYER*)iter );
+   tilemap_layer_free( (struct TILEMAP_LAYER*)iter );
    return TRUE;
 }
 
 static BOOL tilemap_tileset_free_cb( bstring res, void* iter, void* arg ) {
-   tilemap_tileset_free( (TILEMAP_TILESET*)iter );
+   tilemap_tileset_free( (struct TILEMAP_TILESET*)iter );
    return TRUE;
 }
 
-static void tilemap_cleanup( const struct _REF* ref ) {
+static void tilemap_cleanup( const struct REF* ref ) {
    int i;
-   TILEMAP* t;
+   struct TILEMAP* t;
 
-   t = scaffold_container_of( ref, TILEMAP, refcount );
+   t = scaffold_container_of( ref, struct TILEMAP, refcount );
 
 #ifdef EZXML_EMBEDDED_IMAGES
    for( i = 0 ; vector_count( &(t->freeable_chunks) ) > i ; i++ ) {
@@ -43,7 +43,7 @@ static void tilemap_cleanup( const struct _REF* ref ) {
    /* TODO: Free tilemap. */
 }
 
-void tilemap_init( TILEMAP* t, BOOL local_images ) {
+void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
    hashmap_init( &(t->layers) );
@@ -59,41 +59,41 @@ void tilemap_init( TILEMAP* t, BOOL local_images ) {
    t->local_images = local_images;
 }
 
-void tilemap_free( TILEMAP* t ) {
+void tilemap_free( struct TILEMAP* t ) {
    ref_dec( &(t->refcount) );
 }
 
-void tilemap_layer_init( TILEMAP_LAYER* layer ) {
+void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
    vector_init( &(layer->tiles) );
 }
 
-void tilemap_layer_cleanup( TILEMAP_LAYER* layer ) {
+void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
    vector_free( &(layer->tiles ) );
 }
 
-void tilemap_position_cleanup( TILEMAP_POSITION* position ) {
+void tilemap_position_cleanup( struct TILEMAP_POSITION* position ) {
 
 }
 
-void tilemap_tileset_free( TILEMAP_TILESET* tileset ) {
+void tilemap_tileset_free( struct TILEMAP_TILESET* tileset ) {
    hashmap_remove_cb( &(tileset->images), callback_free_graphics, NULL );
 }
 
 void tilemap_iterate_screen_row(
-   TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-   void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
+   struct TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
+   void (*callback)( struct TILEMAP* t, uint32_t x, uint32_t y )
 ) {
 
 }
 
-TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid ) {
+struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid ) {
    return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
 }
 
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
 
 inline void tilemap_get_tile_tileset_pos(
-   TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
+   struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
 ) {
    size_t tiles_wide = 0;
    size_t tiles_high = 0;
@@ -125,20 +125,20 @@ cleanup:
    return;
 }
 
-inline uint32_t tilemap_get_tile( TILEMAP_LAYER* layer, size_t x, size_t y ) {
+inline uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y ) {
    size_t index = (y * layer->width) + x;
    return vector_get_scalar( &(layer->tiles), index );
 }
 
 void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
-   TILEMAP_LAYER* layer = (TILEMAP_LAYER*)iter;
-   TILEMAP_WINDOW* window = (TILEMAP_WINDOW*)arg;
-   TILEMAP* t = window->t;
-   TILEMAP_TILESET* set = NULL;
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
+   struct TILEMAP_WINDOW* window = (struct TILEMAP_WINDOW*)arg;
+   struct TILEMAP* t = window->t;
+   struct TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
    size_t x, y, max_x, max_y, tileset_x, tileset_y, pix_x, pix_y;
    uint32_t tile;
-   VECTOR* tiles = NULL;
+   struct VECTOR* tiles = NULL;
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
 #endif /* DEBUG_TILES */
@@ -198,7 +198,7 @@ cleanup:
    return NULL;
 }
 
-void tilemap_draw_ortho( TILEMAP* t, GRAPHICS* g, TILEMAP_WINDOW* window ) {
+void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct TILEMAP_WINDOW* window ) {
 
    if( NULL == window->t ) {
       window->t = t;

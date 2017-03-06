@@ -9,68 +9,68 @@
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
 
-typedef struct _CLIENT CLIENT;
-typedef struct _TILEMAP TILEMAP;
+struct CLIENT;
+struct TILEMAP;
 
 typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
    TILEMAP_ORIENTATION_ISO,
 } TILEMAP_ORIENTATION;
 
-typedef struct {
+struct TILEMAP_WINDOW {
    GRAPHICS* g;
-   TILEMAP* t;
-   HASHMAP* cached_gfx;
+   struct TILEMAP* t;
+   struct HASHMAP* cached_gfx;
    size_t x; /* In tiles. */
    size_t y;
    size_t width;
    size_t height;
-} TILEMAP_WINDOW;
+};
 
-typedef struct _TILEMAP_TERRAIN_DATA {
+struct TILEMAP_TERRAIN_DATA {
    bstring name;
    size_t tile;
-} TILEMAP_TERRAIN_DATA;
+};
 
-typedef struct _TILEMAP_TILE_DATA {
+struct TILEMAP_TILE_DATA {
    size_t id;
    size_t terrain[4];
-} TILEMAP_TILE_DATA;
+};
 
-typedef struct _TILEMAP_TILESET {
+struct TILEMAP_TILESET {
    size_t firstgid;
    size_t tileheight;
    size_t tilewidth;
-   HASHMAP images;
-   HASHMAP terrain;
-   VECTOR tiles;
-} TILEMAP_TILESET;
+   struct HASHMAP images;
+   struct HASHMAP terrain;
+   struct VECTOR tiles;
+};
 
-typedef struct _TILEMAP_POSITION {
+struct TILEMAP_POSITION {
    size_t x_previous;
    size_t y_previous;
    size_t z_previous;
    size_t x;
    size_t y;
    size_t z;
-   CLIENT* entity;
-} TILEMAP_POSITION;
+   struct CLIENT* entity;
+};
 
-typedef struct _TILEMAP_LAYER {
+struct TILEMAP_LAYER {
    size_t x;
    size_t y;
    size_t width;
    size_t height;
-   VECTOR tiles;
-} TILEMAP_LAYER;
+   struct VECTOR tiles;
+};
 
-typedef struct _TILEMAP {
-   REF refcount;
+struct TILEMAP {
+   struct REF refcount;
    size_t width;
    size_t height;
-   HASHMAP layers;
-   VECTOR positions;
-   HASHMAP tilesets;
+   struct HASHMAP layers;
+   struct VECTOR positions;
+   struct HASHMAP tilesets;
    size_t starting_x;
    size_t starting_y;
    TILEMAP_ORIENTATION orientation;
@@ -84,9 +84,9 @@ typedef struct _TILEMAP {
 #ifdef EZXML_EMBEDDED_IMAGES
    /* Miscellaneous catch-all for generic memory blocks that must be freed on *
     * cleanup. Useful for datafile parsers.                                   */
-   VECTOR freeable_chunks;
+   struct VECTOR freeable_chunks;
 #endif /* EZXML_EMBEDDED_IMAGES */
-} TILEMAP;
+};
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
 #define TILEMAP_SERIALIZE_CHUNKSIZE 80
@@ -101,17 +101,17 @@ typedef struct _TILEMAP {
  */
 
 #define tilemap_new( t, local_images ) \
-    t = (TILEMAP*)calloc( 1, sizeof( TILEMAP ) ); \
+    t = (struct TILEMAP*)calloc( 1, sizeof( struct TILEMAP ) ); \
     scaffold_check_null( t ); \
     tilemap_init( t, local_images );
 
 #define tilemap_layer_new( t ) \
-    t = (TILEMAP_LAYER*)calloc( 1, sizeof( TILEMAP_LAYER ) ); \
+    t = (struct TILEMAP_LAYER*)calloc( 1, sizeof( struct TILEMAP_LAYER ) ); \
     scaffold_check_null( t ); \
     tilemap_layer_init( t );
 
 #define tilemap_position_new( t ) \
-    t = (TILEMAP_POSITION*)calloc( 1, sizeof( TILEMAP_POSITION ) ); \
+    t = (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) ); \
     scaffold_check_null( t ); \
     tilemap_position_init( t );
 
@@ -129,22 +129,22 @@ typedef struct _TILEMAP {
     free( tileset );
 */
 
-void tilemap_init( TILEMAP* t, BOOL local_images );
-void tilemap_free( TILEMAP* t );
-void tilemap_layer_init( TILEMAP_LAYER* layer );
-void tilemap_layer_cleanup( TILEMAP_LAYER* layer );
-void tilemap_position_init( TILEMAP_POSITION* position );
-void tilemap_position_cleanup( TILEMAP_POSITION* position );
-void tilemap_tileset_cleanup( TILEMAP_TILESET* tileset );
-void tilemap_tileset_free( TILEMAP_TILESET* tileset );
+void tilemap_init( struct TILEMAP* t, BOOL local_images );
+void tilemap_free( struct TILEMAP* t );
+void tilemap_layer_init( struct TILEMAP_LAYER* layer );
+void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer );
+void tilemap_position_init( struct TILEMAP_POSITION* position );
+void tilemap_position_cleanup( struct TILEMAP_POSITION* position );
+void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
+void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
 void tilemap_iterate_screen_row(
-   TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-   void (*callback)( TILEMAP* t, uint32_t x, uint32_t y )
+   struct TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
+   void (*callback)( struct TILEMAP* t, uint32_t x, uint32_t y )
 );
-TILEMAP_TILESET* tilemap_get_tileset( TILEMAP* t, size_t gid );
+struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid );
 inline void tilemap_get_tile_tileset_pos(
-   TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
+   struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
 );
-void tilemap_draw_ortho( TILEMAP* t, GRAPHICS* g, TILEMAP_WINDOW* window );
+void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct TILEMAP_WINDOW* window );
 
 #endif /* TILEMAP_H */

@@ -5,20 +5,20 @@
 #include "ref.h"
 #include "client.h"
 
-typedef struct _MOBILE {
-   REF refcount;
+struct MOBILE {
+   struct REF refcount;
    bstring serial;
-   CLIENT* owner;
-} MOBILE;
+   struct CLIENT* owner;
+};
 
 #define MOBILE_RANDOM_SERIAL_LEN 6
 
 #define mobile_new( o ) \
-    o = (MOBILE*)calloc( 1, sizeof( MOBILE ) ); \
+    o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
     scaffold_check_null( o ); \
     mobile_init( o );
 
-void mobile_free( MOBILE* o );
-void mobile_init( MOBILE* o );
+void mobile_free( struct MOBILE* o );
+void mobile_init( struct MOBILE* o );
 
 #endif /* MOBILE_H */

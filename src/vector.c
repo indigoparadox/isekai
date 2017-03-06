@@ -5,7 +5,7 @@
 #include "vector.h"
 #include "ref.h"
 
-void vector_init( VECTOR* v ) {
+void vector_init( struct VECTOR* v ) {
    v->data = NULL;
    v->size = 0;
    v->count = 0;
@@ -13,7 +13,7 @@ void vector_init( VECTOR* v ) {
    v->sentinal = VECTOR_SENTINAL;
 }
 
-void vector_free( VECTOR* v ) {
+void vector_free( struct VECTOR* v ) {
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
    assert( 0 >= vector_count( v ) );
@@ -28,7 +28,7 @@ cleanup:
    return;
 }
 
-inline static void vector_reset( VECTOR* v ) {
+inline static void vector_reset( struct VECTOR* v ) {
    free( v->scalar_data );
    free( v->data );
    v->scalar_data = NULL;
@@ -36,7 +36,7 @@ inline static void vector_reset( VECTOR* v ) {
    v->count = 0;
 }
 
-inline static void vector_grow( VECTOR* v, size_t new_size ) {
+inline static void vector_grow( struct VECTOR* v, size_t new_size ) {
    size_t old_size = v->size,
       i;
 
@@ -50,7 +50,7 @@ cleanup:
    return;
 }
 
-inline static void vector_grow_scalar( VECTOR* v, size_t new_size ) {
+inline static void vector_grow_scalar( struct VECTOR* v, size_t new_size ) {
    size_t old_size = v->size,
       i;
 
@@ -65,7 +65,7 @@ cleanup:
    return;
 }
 
-void vector_add( VECTOR* v, void* data ) {
+void vector_add( struct VECTOR* v, void* data ) {
    scaffold_check_null( v );
    assert( VECTOR_SENTINAL == v->sentinal );
 
@@ -95,7 +95,7 @@ cleanup:
    return;
 }
 
-void vector_add_scalar( VECTOR* v, int32_t value, BOOL allow_dupe ) {
+void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
    size_t i;
    BOOL ok = FALSE;
 
@@ -144,7 +144,7 @@ cleanup:
    return;
 }
 
-void vector_set( VECTOR* v, size_t index, void* data ) {
+void vector_set( struct VECTOR* v, size_t index, void* data ) {
    scaffold_check_null( v );
 
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -162,7 +162,7 @@ cleanup:
    return;
 }
 
-void vector_set_scalar( VECTOR* v, size_t index, int32_t value ) {
+void vector_set_scalar( struct VECTOR* v, size_t index, int32_t value ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
@@ -196,7 +196,7 @@ cleanup:
    return;
 }
 
-void* vector_get( VECTOR* v, size_t index ) {
+void* vector_get( struct VECTOR* v, size_t index ) {
    void* retptr = NULL;
 
    if( NULL == v ) {
@@ -216,7 +216,7 @@ cleanup:
    return retptr;
 }
 
-int32_t vector_get_scalar( VECTOR* v, size_t index ) {
+int32_t vector_get_scalar( struct VECTOR* v, size_t index ) {
    int32_t retval = -1;
 
    scaffold_check_null( v );
@@ -232,7 +232,7 @@ cleanup:
    return retval;
 }
 
-int32_t vector_get_scalar_value( VECTOR* v, size_t value ) {
+int32_t vector_get_scalar_value( struct VECTOR* v, size_t value ) {
    int32_t retval = -1;
    int i;
 
@@ -258,7 +258,7 @@ cleanup:
 
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
-size_t vector_remove_cb( VECTOR* v, vector_delete_cb callback, void* arg ) {
+size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg ) {
    size_t i;
    size_t backshift = 0;
 
@@ -295,7 +295,7 @@ cleanup:
    return backshift;
 }
 
-void vector_remove( VECTOR* v, size_t index ) {
+void vector_remove( struct VECTOR* v, size_t index ) {
    size_t i;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
@@ -321,7 +321,7 @@ cleanup:
    return;
 }
 
-void vector_remove_scalar( VECTOR* v, size_t index ) {
+void vector_remove_scalar( struct VECTOR* v, size_t index ) {
    size_t i;
 
    scaffold_check_null( v );
@@ -346,7 +346,7 @@ cleanup:
    return;
 }
 
-size_t vector_remove_scalar_value( VECTOR* v, int32_t value ) {
+size_t vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
    size_t i;
    size_t difference = 0;
 
@@ -376,7 +376,7 @@ cleanup:
    return difference;
 }
 
-inline size_t vector_count( VECTOR* v ) {
+inline size_t vector_count( struct VECTOR* v ) {
    scaffold_check_null( v );
    if( VECTOR_SENTINAL != v->sentinal ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
@@ -387,7 +387,7 @@ cleanup:
    return 0;
 }
 
-inline void vector_lock( VECTOR* v, BOOL lock ) {
+inline void vector_lock( struct VECTOR* v, BOOL lock ) {
    #ifdef USE_THREADS
    #error Locking mechanism undefined!
    #elif defined( DEBUG )
@@ -401,7 +401,7 @@ inline void vector_lock( VECTOR* v, BOOL lock ) {
    #endif /* USE_THREADS */
 }
 
-void* vector_iterate( VECTOR* v, vector_search_cb callback, void* arg ) {
+void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
    void* current_iter = NULL;
    size_t i;
@@ -425,7 +425,7 @@ cleanup:
    return cb_return;
 }
 
-void vector_sort_cb( VECTOR* v, vector_sorter_cb callback ) {
+void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    void* previous_iter = NULL;
    void* current_iter = NULL;
    size_t i;

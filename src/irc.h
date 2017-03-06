@@ -9,15 +9,15 @@
 
 typedef enum _IRC_REPLY {
    ERR_NONICKNAMEGIVEN = 431,
-   ERR_NICKNAMEINUSE = 433,
+   ERR_NICKNAMEINUSE = 433
 } IRC_REPLY;
 
 typedef struct _IRC_COMMAND {
-   REF refcount;
+   struct REF refcount;
    struct tagbstring command;
-   void (*callback)( CLIENT* c, SERVER* s, struct bstrList* args );
+   void (*callback)( struct CLIENT* c, SERVER* s, struct bstrList* args );
    SERVER* server;
-   CLIENT* client;
+   struct CLIENT* client;
    struct bstrList* args;
 } IRC_COMMAND;
 
@@ -43,11 +43,11 @@ extern IRC_COMMAND_TABLE_START( client );
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
 void irc_request_file(
-   CLIENT* c, CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
+   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
 );
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
-   const IRC_COMMAND* table, SERVER* s, CLIENT* c, const_bstring line
+   const IRC_COMMAND* table, SERVER* s, struct CLIENT* c, const_bstring line
 );
 
 #endif /* PARSER_H */

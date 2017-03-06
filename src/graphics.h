@@ -30,7 +30,7 @@ typedef struct _GRAPHICS {
    void* surface;
    void* font;
    GRAPHICS_COLOR color;
-   REF refcount;
+   struct REF refcount;
 } GRAPHICS;
 
 typedef struct {

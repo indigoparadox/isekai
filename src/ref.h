@@ -9,32 +9,32 @@
 
 #ifndef USE_THREADS
 
-typedef struct _REF {
+typedef struct REF {
    uint8_t sentinal;
-   void (*free)( const struct _REF* );
+   void (*free)( const struct REF* );
    int count;
 } REF;
 
-static inline void ref_init( struct _REF* ref, void (*free)( const struct _REF* ) ) {
+static inline void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
    ref->count = 1;
    ref->free = free;
    ref->sentinal = REF_SENTINAL;
 }
 
-static inline void ref_inc( const struct _REF* ref ) {
+static inline void ref_inc( const struct REF* ref ) {
    assert( REF_SENTINAL == ref->sentinal );
 #ifdef DEBUG_REF
    scaffold_print_debug( "Reference count increased: %d\n", ref->count );
 #endif /* DEBUG_REF */
-   ((struct _REF*)ref)->count++;
+   ((struct REF*)ref)->count++;
 }
 
-static inline BOOL ref_dec( const struct _REF* ref ) {
+static inline BOOL ref_dec( const struct REF* ref ) {
    assert( REF_SENTINAL == ref->sentinal );
 #ifdef DEBUG_REF
    scaffold_print_debug( "Reference count decreased: %d\n", ref->count );
 #endif /* DEBUG_REF */
-   if( 0 == --((struct _REF*)ref)->count ) {
+   if( 0 == --((struct REF*)ref)->count ) {
 #ifdef DEBUG_REF
       scaffold_print_debug( "Object freed: %d\n", ref->count );
 #endif /* DEBUG_REF */
@@ -47,7 +47,7 @@ static inline BOOL ref_dec( const struct _REF* ref ) {
 static inline BOOL ref_test_inc( void* data ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
-      ref_inc( (REF*)data );
+      ref_inc( (struct REF*)data );
       return TRUE;
    }
    return FALSE;
@@ -56,7 +56,7 @@ static inline BOOL ref_test_inc( void* data ) {
 static inline BOOL ref_test_dec( void* data ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
-      return ref_dec( (REF*)data );
+      return ref_dec( (struct REF*)data );
    }
    return FALSE;
 }
