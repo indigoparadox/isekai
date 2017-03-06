@@ -9,20 +9,20 @@
 typedef enum {
     HSER_SINK_OK,               /* data sunk into input buffer */
     HSER_SINK_ERROR_NULL=-1,    /* NULL argument */
-    HSER_SINK_ERROR_MISUSE=-2,  /* API misuse */
+    HSER_SINK_ERROR_MISUSE=-2  /* API misuse */
 } HSE_sink_res;
 
 typedef enum {
     HSER_POLL_EMPTY,            /* input exhausted */
     HSER_POLL_MORE,             /* poll again for more output  */
     HSER_POLL_ERROR_NULL=-1,    /* NULL argument */
-    HSER_POLL_ERROR_MISUSE=-2,  /* API misuse */
+    HSER_POLL_ERROR_MISUSE=-2  /* API misuse */
 } HSE_poll_res;
 
 typedef enum {
     HSER_FINISH_DONE,           /* encoding is complete */
     HSER_FINISH_MORE,           /* more output remaining; use poll */
-    HSER_FINISH_ERROR_NULL=-1,  /* NULL argument */
+    HSER_FINISH_ERROR_NULL=-1  /* NULL argument */
 } HSE_finish_res;
 
 #if HEATSHRINK_DYNAMIC_ALLOC
