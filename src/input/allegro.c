@@ -19,13 +19,13 @@ static void input_close_allegro_window() {
    server_stop( main_server );
 }
 
-void input_init( INPUT* p ) {
+void input_init( struct INPUT* p ) {
    install_keyboard();
 
    set_close_button_callback( input_close_allegro_window );
 }
 
-void input_get_event( INPUT* input ) {
+void input_get_event( struct INPUT* input ) {
    poll_keyboard();
 
    if( keypressed() ) {
