@@ -16,7 +16,13 @@ uint8_t syncbuff_listen() {
    static uint8_t listening = 0;
    size_t i;
 
+#ifdef SYNCBUFF_STRICT
    assert( 0 == listening );
+#else
+   if( 0 != listening ) {
+      return 0;
+   }
+#endif /* SYNCBUFF_STRICT */
 
    for( i = 0 ; SYNCBUFF_MAX > i ; i++ ) {
       syncbuff_lines_to_client[i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );
@@ -68,7 +74,7 @@ ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    }
 
    if( SYNCBUFF_MAX <= *syncbuff_count ) {
-      return 0;
+      return -1;
    }
 
    for( i = *syncbuff_count ; 0 < i ; i-- ) {
@@ -100,7 +106,7 @@ ssize_t syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
    }
 
    if( SYNCBUFF_MAX <= *syncbuff_count ) {
-      return 0;
+      return -1;
    }
 
    if( 0 < *syncbuff_count ) {

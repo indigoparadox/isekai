@@ -342,7 +342,7 @@ static void irc_server_privmsg(
    struct CHANNEL* l_dest = NULL;
    bstring msg = NULL;
 
-   //bdestroy( scaffold_pop_string( args ) );
+   /* bdestroy( scaffold_pop_string( args ) ); */
    msg = bjoin( args, &scaffold_space_string );
 
    c_dest = server_get_client( s, args->entry[1] );

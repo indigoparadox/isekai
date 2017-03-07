@@ -30,6 +30,7 @@ BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg );
 BOOL callback_free_mobiles( const bstring key, void* iter, void* arg );
 BOOL callback_free_chunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg );
+BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_commands( const bstring res, void* iter, void* arg );
 BOOL callback_free_generic( const bstring res, void* iter, void* arg );
 BOOL callback_free_strings( const bstring res, void* iter, void* arg );

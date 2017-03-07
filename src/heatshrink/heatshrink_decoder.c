@@ -121,7 +121,7 @@ HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder *hsd,
 #define BACKREF_COUNT_BITS(HSD) (HEATSHRINK_DECODER_LOOKAHEAD_BITS(HSD))
 #define BACKREF_INDEX_BITS(HSD) (HEATSHRINK_DECODER_WINDOW_BITS(HSD))
 
-// States
+/* States */
 static HSD_state st_tag_bit(heatshrink_decoder *hsd);
 static HSD_state st_yield_literal(heatshrink_decoder *hsd,
     output_info *oi);

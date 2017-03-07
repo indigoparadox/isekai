@@ -114,9 +114,11 @@ void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
    scaffold_set_client();
 
    /* Removed any finished chunkers. */
+   /*
    hashmap_remove_cb(
-      &(c->chunkers), callback_free_finished_chunkers, NULL
+      &(c->chunkers), callback_free_finished_unchunkers, NULL
    );
+   */
 
    l = hashmap_get_first( &(c->channels) );
    if( NULL == l ) {

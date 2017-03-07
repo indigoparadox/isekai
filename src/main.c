@@ -71,7 +71,7 @@ int main( int argc, char** argv ) {
          server_stop( main_server );
       }
 
-      if( !main_server->self.running ) {// || 0 >= hashmap_count( &(main_server->clients) ) ) {
+      if( !main_server->self.running ) {
          break;
       } else {
          server_poll_new_clients( main_server );
