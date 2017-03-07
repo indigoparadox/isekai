@@ -271,7 +271,6 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
    scaffold_check_null( xml_tileset );
    while( NULL != xml_tileset ) {
       datafile_tilemap_parse_tileset( t, xml_tileset );
-      //scaffold_check_nonzero( scaffold_error );
       xml_tileset = ezxml_next( xml_tileset );
    }
 
@@ -282,7 +281,6 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
    scaffold_check_null( xml_layer );
    while( NULL != xml_layer ) {
       datafile_tilemap_parse_layer( t, xml_layer );
-      //scaffold_check_nonzero( scaffold_error );
       xml_layer = ezxml_next( xml_layer );
    }
 

@@ -607,7 +607,7 @@ static void save_backlog(heatshrink_encoder *hse) {
      * used for future matches. Don't bother checking whether the
      * input is less than the maximum size, because if it isn't,
      * we're done anyway. */
-    uint16_t rem = input_buf_sz - msi; // unprocessed bytes
+    uint16_t rem = input_buf_sz - msi; /* unprocessed bytes */
     uint16_t shift_sz = input_buf_sz + rem;
 
     memmove(&hse->buffer[0],

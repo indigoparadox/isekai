@@ -295,7 +295,7 @@ size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg 
          backshift++;
       }
 
-      if( v->count - 1 > i && 0 < backshift ) {
+      if( v->count - backshift > i && 0 < backshift ) {
          /* The callback found a match, so start deleting! */
          v->data[i] = v->data[i + backshift];
       }

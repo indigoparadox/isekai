@@ -184,7 +184,7 @@ HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder *hsd,
 }
 
 static HSD_state st_tag_bit(heatshrink_decoder *hsd) {
-    uint32_t bits = get_bits(hsd, 1);  // get tag bit
+    uint32_t bits = get_bits(hsd, 1);  /* get tag bit */
     if (bits == NO_BITS) {
         return HSDS_TAG_BIT;
     } else if (bits) {
