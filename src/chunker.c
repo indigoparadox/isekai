@@ -45,7 +45,7 @@ static void chunker_chunk_setup_internal(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t tx_chunk_length
 ) {
 
-   assert( NULL != h );
+   scaffold_assert( NULL != h );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_cleanup );
@@ -183,9 +183,9 @@ void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
             &exhumed
          );
          hs_buffer_pos += exhumed;
-         assert( h->raw_position + raw_buffer_len <= h->raw_length );
+         scaffold_assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
-      assert( HSER_POLL_EMPTY == poll_res );
+      scaffold_assert( HSER_POLL_EMPTY == poll_res );
    } while( 0 < raw_buffer_len );
 
    b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
@@ -206,9 +206,9 @@ void chunker_unchunk_start(
 ) {
    char* filename_c = NULL;
 
-   assert( NULL != h );
-   assert( 0 != src_length );
-   assert( NULL != filename );
+   scaffold_assert( NULL != h );
+   scaffold_assert( 0 != src_length );
+   scaffold_assert( NULL != filename );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_cleanup );
@@ -280,8 +280,8 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
    int b64_res;
    CHUNKER_TRACK* track = NULL;
 
-   assert( NULL != h->decoder );
-   assert( NULL == h->encoder );
+   scaffold_assert( NULL != h->decoder );
+   scaffold_assert( NULL == h->encoder );
 
    mid_buffer = (uint8_t*)calloc( mid_buffer_length, sizeof( uint8_t ) );
    scaffold_check_null( mid_buffer );
@@ -289,7 +289,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
    h->raw_position = src_chunk_start;
 
    b64_res = b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
-   assert( 0 == b64_res );
+   scaffold_assert( 0 == b64_res );
 
    heatshrink_decoder_reset( h->decoder );
 
@@ -329,12 +329,12 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
             &exhumed
          );
          h->raw_position += exhumed;
-         assert( h->raw_position <= h->raw_length );
+         scaffold_assert( h->raw_position <= h->raw_length );
 
       } while( HSDR_POLL_MORE == poll_res && 0 != exhumed );
    } while( 0 < mid_buffer_length );
 
-   assert( h->raw_position <= h->raw_length );
+   scaffold_assert( h->raw_position <= h->raw_length );
 
    if( HSDR_POLL_MORE == poll_res ) {
       tail_output_alloc = 1;
@@ -349,15 +349,15 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
          &exhumed
       );
       tail_output_pos += exhumed;
-      assert( tail_output_pos <= tail_output_alloc );
+      scaffold_assert( tail_output_pos <= tail_output_alloc );
       if( tail_output_pos == tail_output_alloc ) {
          tail_output_alloc *= 2;
          tail_output_buffer = (uint8_t*)realloc( tail_output_buffer, tail_output_alloc * sizeof( uint8_t ) );
       }
    }
 
-   assert( h->raw_position <= h->raw_length );
-   assert( HSDR_POLL_EMPTY == poll_res );
+   scaffold_assert( h->raw_position <= h->raw_length );
+   scaffold_assert( HSDR_POLL_EMPTY == poll_res );
 
    if( 0 < tail_output_pos ) {
       h->raw_position -= tail_output_pos;
@@ -442,7 +442,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
    /* Read and close the cache file. */
    read_bytes = fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, cached_copy_f );
    scaffold_check_zero( read_bytes );
-   assert( read_bytes == h->raw_length );
+   scaffold_assert( read_bytes == h->raw_length );
    h->force_finish = TRUE;
 
 cleanup:

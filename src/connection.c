@@ -179,19 +179,19 @@ ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client 
    scaffold_check_null( n );
 
    buffer_chars = bdata( buffer );
-   assert( NULL != buffer_chars );
+   scaffold_assert( NULL != buffer_chars );
 
 #ifdef USE_NETWORK
    dest_socket = n->socket;
    buffer_len = blength( buffer );
-   assert( 0 != dest_socket );
+   scaffold_assert( 0 != dest_socket );
 
    sent = send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #elif defined( USE_SYNCBUFF )
    syncbuff_previous_size =
       syncbuff_get_allocated( client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT );
    sent = syncbuff_write( buffer, client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT );
-   assert( 0 <= sent );
+   scaffold_assert( 0 <= sent );
    if( syncbuff_previous_size < syncbuff_get_allocated( client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT ) ) {
       scaffold_print_debug(
          "Syncbuff: Resized from %d to %d for: %s\n",
@@ -231,7 +231,7 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
    }
 #elif defined( USE_SYNCBUFF )
    total_read_count = syncbuff_read( buffer, client ? SYNCBUFF_DEST_CLIENT : SYNCBUFF_DEST_SERVER );
-   assert( 0 <= total_read_count );
+   scaffold_assert( 0 <= total_read_count );
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */

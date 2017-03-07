@@ -61,7 +61,7 @@ inline void server_stop( SERVER* s ) {
 void server_client_send( struct CLIENT* c, bstring buffer ) {
 
    /* TODO: Make sure we're still connected? */
-   assert( 0 != c->sentinal );
+   scaffold_assert( 0 != c->sentinal );
 
    bconchar( buffer, '\r' );
    bconchar( buffer, '\n' );
@@ -142,7 +142,7 @@ void server_add_client( SERVER* s, struct CLIENT* c ) {
          scaffold_random_string( c->nick, SERVER_RANDOM_NICK_LEN );
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
-   assert( NULL == hashmap_get( &(s->clients), c->nick ) );
+   scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    hashmap_put( &(s->clients), c->nick, c );
    scaffold_print_debug(
       "Client %d added to server with nick: %s\n",
@@ -183,23 +183,23 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
       goto cleanup;
    }
 
-   assert( 0 < c_first->link.refcount.count );
-   assert( 0 < l->refcount.count );
+   scaffold_assert( 0 < c_first->link.refcount.count );
+   scaffold_assert( 0 < l->refcount.count );
 
 #ifdef DEBUG
    old_count = c_first->link.refcount.count;
    server_channel_add_client( l, c_first );
-   assert( c_first->link.refcount.count > old_count );
+   scaffold_assert( c_first->link.refcount.count > old_count );
    old_count = l->refcount.count;
    client_add_channel( c_first, l );
-   assert( l->refcount.count > old_count );
+   scaffold_assert( l->refcount.count > old_count );
 #endif /* DEBUG */
 
 cleanup:
    bdestroy( map_serial );
    if( NULL != l ) {
-      assert( 0 < hashmap_count( &(l->clients) ) );
-      assert( 0 < hashmap_count( &(c_first->channels) ) );
+      scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
+      scaffold_assert( 0 < hashmap_count( &(c_first->channels) ) );
    }
    return l;
 }
@@ -250,7 +250,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
 
 #ifdef DEBUG
    new_count = hashmap_count( &(s->clients) );
-   assert( new_count == old_count - deleted );
+   scaffold_assert( new_count == old_count - deleted );
 
    old_count = hashmap_count( &(s->self.channels) );
 #endif /* DEBUG */
@@ -299,7 +299,7 @@ void server_poll_new_clients( SERVER* s ) {
       server_add_client( s, c );
 
 #ifdef DEBUG
-      assert( old_client_count < hashmap_count( &(s->clients) ) );
+      scaffold_assert( old_client_count < hashmap_count( &(s->clients) ) );
 #endif /* DEBUG */
 
       /* The only association this client should start with is the server's   *

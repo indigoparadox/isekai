@@ -22,7 +22,7 @@ static inline void ref_init( struct REF* ref, void (*free)( const struct REF* ) 
 }
 
 static inline void ref_inc( const struct REF* ref ) {
-   assert( REF_SENTINAL == ref->sentinal );
+   scaffold_assert( REF_SENTINAL == ref->sentinal );
 #ifdef DEBUG_REF
    scaffold_print_debug( "Reference count increased: %d\n", ref->count );
 #endif /* DEBUG_REF */
@@ -30,7 +30,7 @@ static inline void ref_inc( const struct REF* ref ) {
 }
 
 static inline BOOL ref_dec( const struct REF* ref ) {
-   assert( REF_SENTINAL == ref->sentinal );
+   scaffold_assert( REF_SENTINAL == ref->sentinal );
 #ifdef DEBUG_REF
    scaffold_print_debug( "Reference count decreased: %d\n", ref->count );
 #endif /* DEBUG_REF */

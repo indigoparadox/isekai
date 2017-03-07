@@ -168,8 +168,8 @@ void gamedata_process_data_block(
    struct CHANNEL* l = NULL;
    int8_t chunker_percent;
 
-   assert( 0 < blength( progress->data ) );
-   assert( 0 < blength( progress->filename ) );
+   scaffold_assert( 0 < blength( progress->data ) );
+   scaffold_assert( 0 < blength( progress->filename ) );
 
    l = scaffold_container_of( d, struct CHANNEL, gamedata );
    scaffold_check_null( l );

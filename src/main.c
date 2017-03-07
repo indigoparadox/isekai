@@ -1,13 +1,12 @@
 
 #include "server.h"
-
 #include "ui.h"
 #include "input.h"
 #include "b64/b64.h"
+#include "scaffold.h"
 
 #include <stdlib.h>
 #include <time.h>
-#include <assert.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -91,7 +90,7 @@ cleanup:
    bdestroy( buffer );
 #if 0
    client_free( main_client );
-   assert( 0 == hashmap_count( &(main_server->self.channels) ) );
+   scaffold_assert( 0 == hashmap_count( &(main_server->self.channels) ) );
 #endif
    server_free( main_server );
    free( main_server );

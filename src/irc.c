@@ -319,8 +319,8 @@ static void irc_server_join(
       s->self.remote, c->nick, l->name
    );
 
-   assert( hashmap_count( &(c->channels) ) > 0 );
-   assert( hashmap_count( &(s->self.channels) ) > 0 );
+   scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
+   scaffold_assert( hashmap_count( &(s->self.channels) ) > 0 );
 
 cleanup:
    if( NULL != cat_names ) {
@@ -407,7 +407,7 @@ static void irc_server_who(
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
-      assert( 2 <= c_iter->link.refcount.count );
+      scaffold_assert( 2 <= c_iter->link.refcount.count );
 
       server_client_printf(
          c, ":%b RPL_WHOREPLY %b %b",
@@ -610,7 +610,7 @@ static void irc_client_join(
 
    scaffold_print_info( "Client joined channel: %s\n", bdata( l_name ) );
 
-   assert( hashmap_count( &(c->channels) ) > 0 );
+   scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
 
    client_printf( c, "WHO %b", l->name );
 
@@ -766,13 +766,13 @@ static void irc_client_mob(
    scaffold_check_null( sprites_filename );
 
    bassign( o->sprites_filename, sprites_filename );
-   assert( NULL != o->sprites_filename );
+   scaffold_assert( NULL != o->sprites_filename );
 
    c_nick = args->entry[4];
    scaffold_check_null( c_nick );
 
    bassign( o->display_name, c_nick );
-   assert( NULL != o->display_name );
+   scaffold_assert( NULL != o->display_name );
 
    if( 0 == bstrcmp( c->nick, c_nick ) ) {
       client_set_puppet( c, o );
@@ -890,7 +890,7 @@ IRC_COMMAND* irc_dispatch(
             out->args = args;
             ref_init( &(out->refcount), irc_command_cleanup );
 
-            assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
+            scaffold_assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
 
             /* Found a command, so short-circuit. */
             goto cleanup;

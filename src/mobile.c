@@ -49,7 +49,7 @@ inline void mobile_get_spritesheet_pos_ortho(
    GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
    MOBILE_FRAME_ALT frame_alt, size_t* x, size_t* y
 ) {
-   assert( frame < 0 || frame_alt < 0 );
+   scaffold_assert( frame < 0 || frame_alt < 0 );
 
    scaffold_check_null( g_tileset );
 

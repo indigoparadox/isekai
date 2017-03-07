@@ -262,7 +262,7 @@ void b64_encode( void* indata, size_t indata_len, bstring outstring, ssize_t lin
    size_t padding = indata_len % 3;
    int bstr_ret;
 
-   assert( NULL != outstring );
+   scaffold_assert( NULL != outstring );
 
    /* increment over the length of the string, three characters at a time */
    for( i = 0; indata_len > i ; i += 3 ) {

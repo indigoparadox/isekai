@@ -159,7 +159,7 @@ static uint32_t hashmap_hash_int( struct HASHMAP* m, const bstring keystring ) {
 
    scaffold_check_null( m );
    scaffold_check_null( keystring );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    key = hashmap_crc32( keystring );
 
@@ -191,8 +191,8 @@ static int hashmap_hash( struct HASHMAP* m, const bstring key ) {
    int out = HASHMAP_FULL;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
-   assert( NULL != key );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( NULL != key );
 
    /* If full, return immediately */
    if( m->size >= (m->table_size / 2) ) {
@@ -230,7 +230,7 @@ static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* va
    int index;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Find a place to put our value */
    index = hashmap_hash( m, key );
@@ -264,7 +264,7 @@ void hashmap_rehash( struct HASHMAP* m ) {
    struct HASHMAP_ELEMENT* temp;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Setup the new elements */
    temp = (struct HASHMAP_ELEMENT*)
@@ -316,7 +316,7 @@ void* hashmap_get( struct HASHMAP* m, const bstring key ) {
    void* element_out = NULL;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -348,7 +348,7 @@ void* hashmap_get_first( struct HASHMAP* m ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    scaffold_check_zero( hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
@@ -378,7 +378,7 @@ BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
    int in_use;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -415,7 +415,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    BOOL ok = FALSE;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    scaffold_check_zero( hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
@@ -448,7 +448,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    int i;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    if( 0 == hashmap_count( m ) ) {
       goto cleanup;
    }
@@ -488,7 +488,7 @@ size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* a
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    hashmap_lock( m, TRUE );
    locked = TRUE;
@@ -534,7 +534,7 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
    BOOL removed = FALSE;
 
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Find key */
    curr = hashmap_hash_int(m, key);
@@ -569,8 +569,8 @@ cleanup:
 /* Deallocate the hashmap */
 void hashmap_cleanup( struct HASHMAP* m ) {
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
-   assert( 0 >= hashmap_count( m ) );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( 0 >= hashmap_count( m ) );
    free( m->data );
    m->sentinal = 0;
 cleanup:
@@ -580,7 +580,7 @@ cleanup:
 /* Return the length of the hashmap */
 int hashmap_count( struct HASHMAP* m ) {
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    return m->size;
 cleanup:
    return 0;
@@ -591,7 +591,7 @@ static int hashmap_active_length( struct HASHMAP* m ) {
    int i;
    int count = 0;
    scaffold_check_null( m );
-   assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* On empty hashmap, return immediately */
    if( 0 >= hashmap_count( m ) ) {
@@ -615,10 +615,10 @@ void hashmap_lock( struct HASHMAP* m, BOOL lock ) {
    #error Locking mechanism undefined!
    #elif defined( DEBUG )
    if( TRUE == lock ) {
-      assert( 0 == m->lock_count );
+      scaffold_assert( 0 == m->lock_count );
       m->lock_count++;
    } else {
-      assert( 1 == m->lock_count );
+      scaffold_assert( 1 == m->lock_count );
       m->lock_count--;
    }
    #endif /* USE_THREADS */

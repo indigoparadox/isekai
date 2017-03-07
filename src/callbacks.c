@@ -25,7 +25,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       table = irc_table_server;
       is_client = FALSE;
    } else {
-      assert( NULL == arg ); /* Just die. */
+      scaffold_assert( NULL == arg ); /* Just die. */
    }
 
    /* Make sure a buffer is present. */
@@ -163,10 +163,10 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
       goto cleanup;
    }
 
-   assert( 0 < blength( xmit_buffer_template ) );
+   scaffold_assert( 0 < blength( xmit_buffer_template ) );
    xmit_buffer_out = bstrcpy( xmit_buffer_template );
    scaffold_check_null( xmit_buffer_out );
-   assert( 0 < blength( xmit_buffer_out ) );
+   scaffold_assert( 0 < blength( xmit_buffer_out ) );
 
    /* Note the starting point and progress for the client. */
    bstr_result = bformata(
@@ -174,7 +174,7 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
       bdata( h->channel ), bdata( key ), h->type, h->raw_position,
       h->tx_chunk_length, h->raw_length
    );
-   assert( BSTR_OK == bstr_result );
+   scaffold_assert( BSTR_OK == bstr_result );
 
    chunker_chunk_pass( h, xmit_buffer_out );
 
