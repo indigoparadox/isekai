@@ -3,8 +3,13 @@
 #include "scaffold.h"
 
 #include <stdlib.h>
-#include <dirent.h>
 #include <sys/stat.h>
+
+#ifdef _WIN32
+#include "wdirent.h"
+#else
+#include <dirent.h>
+#endif /* _WIN32 */
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
@@ -318,7 +323,9 @@ void scaffold_list_dir(
       }
       bcatcstr( child_path, entry->d_name );
 
+#ifndef _WIN32
       if( DT_DIR != entry->d_type ) {
+#endif /* _WIN32 */
          if(
             FALSE == dir_only &&
             (FALSE != show_hidden || '.' != entry->d_name[0])
@@ -329,10 +336,12 @@ void scaffold_list_dir(
             bdestroy( child_path );
          }
          continue;
+#ifndef _WIN32
       } else {
          /* Always add directories. */
          vector_add( list, child_path );
       }
+#endif /* _WIN32 */}
 
       /* If the child is a directory then go deeper. */
       scaffold_list_dir( child_path, list, filter, dir_only, show_hidden );

@@ -4,12 +4,14 @@
 #include "tilemap.h"
 #include "hashmap.h"
 
+#include <stdlib.h>
+
 struct UI;
 struct MOBILE;
 struct CHUNKER_PROGRESS;
 
 struct GAMEDATA_UPDATE {
-
+   struct MOBILE* mobile;
 };
 
 struct GAMEDATA {

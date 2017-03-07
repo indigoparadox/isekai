@@ -8,3 +8,10 @@ glob:testchannel.*
 glob:*.swp
 glob:*.tmp
 glob:testdata
+syntax: glob
+Debug
+.vs
+ProCIRCd.opensdf
+ProCIRCd.sdf
+ProCIRCd.vcxproj.filters
+ProCIRCd.vcxproj.user

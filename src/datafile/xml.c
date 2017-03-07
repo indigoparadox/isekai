@@ -258,7 +258,7 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
       xml_tileset = NULL,
-      xml_data;
+      xml_data = NULL;
    struct TILEMAP* t = (struct TILEMAP*)targ;
 
    bassign( t->serialize_filename, filename );

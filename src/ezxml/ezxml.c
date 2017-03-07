@@ -22,12 +22,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif /* _WIN32 */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <sys/types.h>
 #ifndef EZXML_NOMMAP
 #include <sys/mman.h>
@@ -293,7 +296,11 @@ static void ezxml_proc_inst(ezxml_root_t root, char *s, size_t len) {
       root->pi[i] = calloc(1,sizeof(char *) * 3);
       root->pi[i][0] = target;
       root->pi[i][1] = (char *)(root->pi[i + 1] = NULL); /* terminate pi list */
+#ifdef _WIN32
+      root->pi[i][2] = _strdup( "" ); /* empty document position list */
+#else
       root->pi[i][2] = strdup(""); /* empty document position list */
+#endif /* _WIN32 */
    }
 
    while (root->pi[i][j]) j++; /* find end of instruction list for this target */
@@ -804,8 +811,8 @@ bstring ezxml_toxml(ezxml_t xml) {
       *n;
    */
    bstring xml_out = NULL;
-   char* tag_attribs,
-      * tag;
+   char* tag_attribs = NULL,
+      * tag = NULL;
    int i, j, k;
 
    xml_out = bfromcstralloc( EZXML_BUFSIZE, "" );
@@ -1021,7 +1028,11 @@ ezxml_t ezxml_set_attr(ezxml_t xml, const char *name, const char *value) {
       if (! value) return xml; /* nothing to do */
       if (xml->attr == EZXML_NIL) { /* first attribute */
          xml->attr = calloc(4, sizeof(char *));
-         xml->attr[1] = strdup(""); /* empty list of malloced names/vals */
+#ifdef _WIN32
+         xml->attr[1] = _strdup(""); /* empty list of malloced names/vals */
+#else
+         xml->attr[1] = strdup( "" ); /* empty list of malloced names/vals */
+#endif /* _WIN32 */
       } else xml->attr = realloc(xml->attr, (l + 4) * sizeof(char *));
 
       xml->attr[l] = (char *)name; /* set attribute name */
