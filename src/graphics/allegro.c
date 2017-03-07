@@ -37,6 +37,10 @@ static int graphics_fmem_getc( void* userdata ) {
    assert( info );
    assert( info->offset < info->length );
 
+   if( 0 >= info->alloc ) {
+      return EOF;
+   }
+
    if( info->offset >= info->length ) {
       return EOF;
    } else {
@@ -265,7 +269,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    fmem_info.block = (BYTE*)data;
    fmem_info.length = length;
    fmem_info.offset = 0;
-   fmem_info.alloc = 0;
+   fmem_info.alloc = length;
 
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
    scaffold_check_null( fmem );
@@ -282,7 +286,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
          fmem_info.block = (BYTE*)data;
          fmem_info.length = length;
          fmem_info.offset = 0;
-         fmem_info.alloc = 0;
+         fmem_info.alloc = length;
          fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
 
          g->surface = load_tga_pf( fmem, NULL );
