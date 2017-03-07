@@ -397,6 +397,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
    struct stat cachedir_info = { 0 };
    char* filecache_path_c = NULL;
    bstring cache_filename = NULL;
+   size_t read_bytes;
 
    scaffold_error = 0;
    scaffold_check_silence();
@@ -431,17 +432,25 @@ void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
    /* Allocate enough space to hold the file. */
    fseek( cached_copy_f, 0, SEEK_END );
    h->raw_length = ftell( cached_copy_f );
+   if( NULL != h->raw_ptr ) {
+      free( h->raw_ptr );
+   }
    h->raw_ptr = (BYTE*)calloc( h->raw_length, sizeof( BYTE ) + 1 ); /* +1 for term. */
    scaffold_check_null( h->raw_ptr );
    fseek( cached_copy_f, 0, SEEK_SET );
 
    /* Read and close the cache file. */
-   fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, cached_copy_f );
-   fclose( cached_copy_f );
-   cached_copy_f = NULL;
+   read_bytes = fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, cached_copy_f );
+   scaffold_check_zero( read_bytes );
+   assert( read_bytes == h->raw_length );
    h->force_finish = TRUE;
 
 cleanup:
+   if( NULL != cached_copy_f ) {
+      fclose( cached_copy_f );
+      cached_copy_f = NULL;
+   }
+
    scaffold_check_unsilence();
    switch( scaffold_error ) {
    case SCAFFOLD_ERROR_NULLPO:
