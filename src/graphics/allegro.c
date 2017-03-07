@@ -256,6 +256,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
                               size_t length ) {
    GRAPHICS_FMEM_INFO fmem_info;
    PACKFILE* fmem = NULL;
+   BOOL close_packfile = TRUE;
 
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
@@ -277,6 +278,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
       if( NULL == g->surface ) {
 #endif /* USE_ALLEGRO_PNG */
          g->surface = load_gif_pf( fmem, NULL );
+         close_packfile = FALSE;
 #ifdef USE_ALLEGRO_PNG
       }
 #endif /* USE_ALLEGRO_PNG */
@@ -286,7 +288,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    g->h = ((BITMAP*)g->surface)->h;
 
 cleanup:
-   if( NULL != fmem ) {
+   if( NULL != fmem && FALSE != close_packfile ) {
       pack_fclose( fmem );
    }
    return;
