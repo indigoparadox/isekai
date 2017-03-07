@@ -14,6 +14,8 @@ struct tagbstring str_gamedata_cache_path =
 struct tagbstring str_gamedata_server_path =
    bsStatic( "testdata/server" );
 
+static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
+
 static inline struct CHANNEL* gamedata_get_channel( struct GAMEDATA* d ) {
    return (struct CHANNEL*)d;
 }
@@ -108,7 +110,6 @@ void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c ) {
 void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
    struct GAMEDATA* d = NULL;
    struct CHANNEL* l = NULL;
-   static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 
    scaffold_set_client();
 
@@ -121,7 +122,7 @@ void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
    d = &(l->gamedata);
    if( NULL == twindow ) {
       /* TODO: Free this, somehow. */
-      twindow = calloc( 1, sizeof( twindow ) );
+      twindow = calloc( 1, sizeof( struct GRAPHICS_TILE_WINDOW ) );
    }
 
    twindow->width = 640 / 32;

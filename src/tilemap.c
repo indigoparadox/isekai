@@ -135,7 +135,7 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP* t = window->t;
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
-   size_t x, y, max_x, max_y, tileset_x, tileset_y, pix_x, pix_y;
+   size_t x, y, max_x, max_y, tileset_x = 0, tileset_y = 0, pix_x, pix_y;
    uint32_t tile;
    struct VECTOR* tiles = NULL;
 #ifdef DEBUG_TILES

@@ -91,8 +91,14 @@ void chunker_chunk_start_file(
 ) {
    bstring full_file_path = NULL;
 
+   if( NULL != h->serverpath ) {
+      bdestroy( h->serverpath );
+   }
    h->serverpath = bstrcpy( serverpath );
    scaffold_check_null( h->serverpath );
+   if( NULL != h->filename ) {
+      bdestroy( h->filename );
+   }
    h->filename = bstrcpy( filepath );
    scaffold_check_null( h->filename );
 
