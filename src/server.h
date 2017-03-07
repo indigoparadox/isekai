@@ -31,7 +31,7 @@ typedef struct _SERVER {
 void server_init( SERVER* s, const bstring myhost );
 inline void server_stop( SERVER* s );
 BOOL server_free( SERVER* s );
-void server_client_printf( SERVER* s, struct CLIENT* c, const char* message, ... );
+void server_client_printf( struct CLIENT* c, const char* message, ... );
 void server_client_send( struct CLIENT* c, bstring buffer );
 void server_channel_printf( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... );
 void server_channel_send( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer );
@@ -39,6 +39,7 @@ void server_add_client( SERVER* s, struct CLIENT* n );
 struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_first );
 void server_add_connection( SERVER* s, struct CLIENT* n );
 struct CHANNEL* server_get_channel_by_name( SERVER* s, bstring nick );
+void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c );
 struct CLIENT* server_get_client( SERVER* s, const bstring nick );
 struct CLIENT* server_get_client_by_ptr( SERVER* s, struct CLIENT* c );
 void server_cleanup_client_channels( SERVER* s, struct CLIENT* c );

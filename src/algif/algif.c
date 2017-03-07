@@ -103,6 +103,63 @@ load_gif (AL_CONST char *filename, RGB *pal)
     return bmp;
 }
 
+BITMAP *
+load_gif_pf (PACKFILE* pf, RGB *pal)
+{
+    int i;
+    BITMAP *bmp = NULL;
+    GIF_PALETTE gifpal;
+    PALETTE tmppal;
+    GIF_ANIMATION *gif = NULL;
+
+    if (pf)
+        gif = load_object (pf, 0);
+
+    if (!gif || gif->frames_count == 0)
+        return NULL;
+
+    /* Either use the global palette, or the palette of the first frame. */
+    gifpal = gif->palette;
+    if (gifpal.colors_count == 0)
+    {
+        gifpal = gif->frames[0].palette;
+    }
+
+    if (!pal)
+        pal = tmppal;
+
+    for (i = 0; i < gifpal.colors_count; i++)
+    {
+        pal[i].r = gifpal.colors[i].r / 4;
+        pal[i].g = gifpal.colors[i].g / 4;
+        pal[i].b = gifpal.colors[i].b / 4;
+    }
+
+    for ( ; i < PAL_SIZE; i++) {
+        pal[i].r = 0;
+        pal[i].g = 0;
+        pal[i].b = 0;
+    }
+
+    if (gif)
+    {
+        bmp = create_bitmap (gif->width, gif->height);
+
+        select_palette(pal);
+
+        for (i = 0; i < gif->frames_count; i++)
+        {
+            algif_render_frame (gif, bmp, i, 0, 0);
+        }
+
+        unselect_palette();
+
+        algif_destroy_raw_animation (gif);
+    }
+
+    return bmp;
+}
+
 /* Allegrified version. Saves only a single bitmap. */
 int
 save_gif (AL_CONST char *filename, BITMAP *bmp, AL_CONST PALETTE pal)
@@ -118,7 +175,7 @@ save_gif (AL_CONST char *filename, BITMAP *bmp, AL_CONST PALETTE pal)
     gif.background_index = 0;
     gif.loop = -1;
     gif.palette.colors_count = 0;
-    
+
     gif.frames = &frame;
     frame.bitmap_8_bit = create_bitmap_ex (8, bmp->w, bmp->h);
     frame.palette.colors_count = 0;

@@ -35,19 +35,19 @@ typedef enum {
    SCAFFOLD_ERROR_NONZERO,
    SCAFFOLD_ERROR_ZERO,
    SCAFFOLD_ERROR_NOT_NULLPO,
-   SCAFFOLD_ERROR_DUPLICATE,
+   SCAFFOLD_ERROR_DUPLICATE
 } SCAFFOLD_ERROR;
 
 #ifdef DEBUG
 typedef enum {
    SCAFFOLD_TRACE_NONE,
    SCAFFOLD_TRACE_CLIENT,
-   SCAFFOLD_TRACE_SERVER,
+   SCAFFOLD_TRACE_SERVER
 } SCAFFOLD_TRACE;
 #endif /* DEBUG */
 
-//#ifndef GFX_CURSES
-#if 1
+#ifndef USE_LOGFILE
+
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 #define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
 
@@ -67,20 +67,26 @@ typedef enum {
 
 #else
 
+/* Disable debug-level notifications. */
+
+#define scaffold_print_debug( ... )
+
 #define scaffold_assert_client()
 #define scaffold_assert_server()
 #define scaffold_set_client()
 #define scaffold_set_server()
 
-#define scaffold_print_debug( ... )
-
 #endif /* DEBUG */
 
 #else
+
+/* TODO: Setup a logfile. */
+
 #define scaffold_print_info( ... )
 #define scaffold_print_error( ... )
 #define scaffold_print_debug( ... )
-#endif /* GFX_CURSES */
+
+#endif /* USE_LOGFILE */
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
@@ -166,7 +172,7 @@ struct VECTOR;
 #include "vector.h"
 
 BOOL scaffold_is_numeric( bstring line );
-bstring scaffold_pop_string( struct bstrList* list );
+bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str );
 BOOL scaffold_string_is_printable( bstring str );

@@ -14,11 +14,11 @@ typedef enum _IRC_REPLY {
 
 typedef struct _IRC_COMMAND {
    struct REF refcount;
-   struct tagbstring command;
-   void (*callback)( struct CLIENT* c, SERVER* s, struct bstrList* args );
+   const struct tagbstring command;
+   void (*callback)( struct CLIENT* c, SERVER* s, const struct bstrList* args );
    SERVER* server;
    struct CLIENT* client;
-   struct bstrList* args;
+   const struct bstrList* args;
 } IRC_COMMAND;
 
 #define IRC_COMMAND_TABLE_START( name ) \
@@ -42,9 +42,6 @@ extern IRC_COMMAND_TABLE_START( client );
 
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
-void irc_request_file(
-   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
-);
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, struct CLIENT* c, const_bstring line

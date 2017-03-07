@@ -1,12 +1,29 @@
 
+#define MOBILE_C
 #include "mobile.h"
+
+#include "irc.h"
+#include "chunker.h"
+
+#define MOBILE_SPRITE_SIZE 32
+
+struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black.gif" );
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
+
+   if( NULL != o->sprites ) {
+      graphics_surface_free( o->sprites );
+   }
    if( NULL != o->owner ) {
       client_clear_puppet( o->owner );
       o->owner = NULL;
    }
+   if( NULL != o->channel ) {
+      channel_free( o->channel );
+      o->channel = NULL;
+   }
+   bdestroy( o->display_name );
    free( o );
 }
 
@@ -16,7 +33,12 @@ void mobile_free( struct MOBILE* o ) {
 
 void mobile_init( struct MOBILE* o ) {
    ref_init( &(o->refcount), mobile_cleanup );
+   o->sprites_filename = bstrcpy( &str_mobile_spritesheet_path_default );
    o->serial = 0;
+   o->channel = NULL;
+   o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   o->frame_alt = MOBILE_FRAME_ALT_NONE;
+   o->frame = MOBILE_FRAME_DEFAULT;
 }
 
 void mobile_animate( struct MOBILE* o ) {
@@ -44,14 +66,48 @@ cleanup:
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) {
    size_t max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
+   struct CLIENT* c = NULL;
+   struct CHANNEL* l = NULL;
+   struct GAMEDATA* d = NULL;
+
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
 #endif /* DEBUG_TILES */
+
+   scaffold_assert_client();
+
+   if( NULL == o ) {
+      return;
+   }
 
    max_x = window->x + window->width;
    max_y = window->y + window->height;
 
    if( o->x > max_x || o->y > max_y || o->x < window->x || o->y < window->y ) {
+      goto cleanup;
+   }
+
+   d = scaffold_container_of( window->t, struct GAMEDATA, tmap );
+   if( d == NULL ) {
+      goto cleanup;
+   }
+
+   /* If the current mobile spritesheet doesn't exist, then load it. */
+   if( NULL == o->sprites && NULL == hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
+      /* No sprites and no request yet, so make one! */
+
+      /* Make some assumptions to tie us to the downloading client. */
+      l = scaffold_container_of( d, struct CHANNEL, gamedata );
+      scaffold_check_null( l );
+      c = hashmap_get_first( &(l->clients) );
+      scaffold_check_null( c );
+      client_request_file( c, l, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
+      goto cleanup;
+   } else if( NULL == o->sprites && NULL != hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
+      o->sprites = (GRAPHICS*)hashmap_get( &(d->mob_sprites), o->sprites_filename );
+      ref_inc( &(o->sprites->refcount) );
+   } else if( NULL == o->sprites ) {
+      /* Sprites must not be ready yet. */
       goto cleanup;
    }
 
@@ -76,4 +132,14 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) 
 
 cleanup:
    return;
+}
+
+void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
+   if( NULL != o->channel ) {
+      channel_free( o->channel );
+   }
+   o->channel = l;
+   if( NULL != o->channel ) {
+      ref_inc( &(l->refcount) );
+   }
 }

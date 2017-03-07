@@ -180,7 +180,7 @@ deinterlace (BITMAP *bmp)
     destroy_bitmap (n);
 }
 
-static GIF_ANIMATION *
+GIF_ANIMATION *
 load_object (PACKFILE * file, long size)
 {
     int version;
@@ -188,7 +188,7 @@ load_object (PACKFILE * file, long size)
     int i, j;
     GIF_ANIMATION *gif = calloc (1, sizeof *gif);
     GIF_FRAME frame;
-    int have_global_palette = 0;
+    /* int have_global_palette = 0; */
 
     (void) size;
 
@@ -227,7 +227,7 @@ load_object (PACKFILE * file, long size)
     if (gif->palette.colors_count)
     {
         read_palette (file, &gif->palette);
-        have_global_palette = 1;
+        /* have_global_palette = 1; */
     }
 
     memset(&frame, 0, sizeof frame); /* For first frame. */
@@ -304,7 +304,7 @@ load_object (PACKFILE * file, long size)
                     }
                     else
                     {
-                        pack_fseek (file, 1); 
+                        pack_fseek (file, 1);
                         frame.transparent_index = -1;
                     }
                     i = pack_getc (file); /* Size. */
@@ -428,10 +428,6 @@ algif_render_frame (GIF_ANIMATION *gif, BITMAP *bitmap, int frame, int xpos,
     pal = &gif->frames[frame].palette;
     if (pal->colors_count == 0)
         pal = &gif->palette;
-
-    //int i;
-    //for (i = 0; i < pal->colors_count; i++)
-    //    printf("%d: %d %d %d\n", i, pal->colors[i].r, pal->colors[i].g, pal->colors[i].b);
 
     for (y = 0; y < h; y++)
     {

@@ -131,7 +131,7 @@ static unsigned long crc32_tab[] = {
 
 /* Return a 32-bit CRC of the contents of the buffer. */
 
-uint32_t hashmap_crc32( bstring string ) {
+static uint32_t hashmap_crc32( bstring string ) {
    unsigned int i;
    uint32_t crc32val;
    const unsigned char* s;
@@ -154,7 +154,7 @@ cleanup:
 /*
  * Hashing function for a string
  */
-uint32_t hashmap_hash_int( struct HASHMAP* m, bstring keystring ) {
+static uint32_t hashmap_hash_int( struct HASHMAP* m, const bstring keystring ) {
    uint32_t key = 0;
 
    scaffold_check_null( m );
@@ -185,7 +185,7 @@ cleanup:
  * Return the integer of the location in data
  * to store the point to the item, or MAP_FULL.
  */
-int hashmap_hash( struct HASHMAP* m, bstring key ) {
+static int hashmap_hash( struct HASHMAP* m, const bstring key ) {
    int curr;
    int i;
    int out = HASHMAP_FULL;
@@ -226,7 +226,7 @@ void hashmap_rehash( struct HASHMAP* m );
 /*
  * Add a pointer to the hashmap without touching its refcount.
  */
-static void hashmap_put_internal( struct HASHMAP* m, bstring key, void* value ) {
+static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* value ) {
    int index;
 
    scaffold_check_null( m );
@@ -242,7 +242,11 @@ static void hashmap_put_internal( struct HASHMAP* m, bstring key, void* value ) 
 
    /* Set the data */
    m->data[index].data = value;
+   if( NULL != m->data[index].key ) {
+      bdestroy( m->data[index].key );
+   }
    m->data[index].key = bstrcpy( key );
+   bwriteprotect( (*m->data[index].key) );
    m->data[index].in_use = 1;
    m->size++;
 
@@ -257,12 +261,13 @@ void hashmap_rehash( struct HASHMAP* m ) {
    int i;
    int old_size;
    struct HASHMAP_ELEMENT* curr;
+   struct HASHMAP_ELEMENT* temp;
 
    scaffold_check_null( m );
    assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Setup the new elements */
-   struct HASHMAP_ELEMENT* temp = (struct HASHMAP_ELEMENT*)
+   temp = (struct HASHMAP_ELEMENT*)
                            calloc(2 * m->table_size, sizeof(struct HASHMAP_ELEMENT));
    scaffold_check_null( temp );
 
@@ -294,7 +299,7 @@ cleanup:
 /*
  * Add a pointer to the hashmap with some key
  */
-void hashmap_put( struct HASHMAP* m, bstring key, void* value ) {
+void hashmap_put( struct HASHMAP* m, const bstring key, void* value ) {
    hashmap_put_internal( m, key, value );
    if( NULL != value ) {
       ref_test_inc( value );
@@ -304,7 +309,7 @@ void hashmap_put( struct HASHMAP* m, bstring key, void* value ) {
 /*
  * Get your pointer out of the hashmap with a key
  */
-void* hashmap_get( struct HASHMAP* m, bstring key ) {
+void* hashmap_get( struct HASHMAP* m, const bstring key ) {
    int curr;
    int i;
    int in_use;
@@ -320,7 +325,9 @@ void* hashmap_get( struct HASHMAP* m, bstring key ) {
    for( i = 0 ; MAX_CHAIN_LENGTH > i ; i++ ) {
       in_use = m->data[curr].in_use;
       if( 1 == in_use ) {
-         //scaffold_print_debug( "Hash check: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+#ifdef DEBUG_MATCHING
+         scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+#endif /* DEBUG_MATCHING */
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             element_out = (m->data[curr].data);
             goto cleanup;
@@ -363,6 +370,36 @@ cleanup:
       hashmap_lock( m, FALSE );
    }
    return found;
+}
+
+BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
+   int curr;
+   int i;
+   int in_use;
+
+   scaffold_check_null( m );
+   assert( HASHMAP_SENTINAL == m->sentinal );
+
+   /* Find data location */
+   curr = hashmap_hash_int( m, key );
+
+   /* Linear probing, if necessary */
+   for( i = 0 ; MAX_CHAIN_LENGTH > i ; i++ ) {
+      in_use = m->data[curr].in_use;
+      if( 1 == in_use ) {
+#ifdef DEBUG_MATCHING
+         scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+#endif /* DEBUG_MATCHING */
+         if( 0 == bstrcmp( m->data[curr].key, key ) ) {
+            return TRUE;
+         }
+      }
+
+      curr = (curr + 1) % m->table_size;
+   }
+
+cleanup:
+   return FALSE;
 }
 
 /*
@@ -468,6 +505,7 @@ size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* a
             /* Blank out the fields */
             m->data[i].in_use = 0;
             m->data[i].data = NULL;
+            bwriteallow( (*m->data[i].key) );
             bdestroy( m->data[i].key );
             m->data[i].key = NULL;
 
@@ -489,7 +527,7 @@ cleanup:
 /*
  * Remove an element with that key from the map
  */
-BOOL hashmap_remove( struct HASHMAP* m, bstring key ) {
+BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
    int i;
    int curr;
    int in_use;
@@ -512,6 +550,7 @@ BOOL hashmap_remove( struct HASHMAP* m, bstring key ) {
             /* Blank out the fields */
             m->data[curr].in_use = 0;
             m->data[curr].data = NULL;
+            bwriteallow( (*m->data[curr].key) );
             bdestroy( m->data[curr].key );
             m->data[curr].key = NULL;
 
@@ -547,7 +586,8 @@ cleanup:
    return 0;
 }
 
-int hashmap_active_length( struct HASHMAP* m ) {
+#if 0
+static int hashmap_active_length( struct HASHMAP* m ) {
    int i;
    int count = 0;
    scaffold_check_null( m );
@@ -568,6 +608,7 @@ int hashmap_active_length( struct HASHMAP* m ) {
 cleanup:
    return count;
 }
+#endif
 
 void hashmap_lock( struct HASHMAP* m, BOOL lock ) {
    #ifdef USE_THREADS

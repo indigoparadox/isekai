@@ -4,6 +4,8 @@
 
 #include <allegro.h>
 
+#include "../algif/algif.h"
+
 #ifdef USE_ALLEGRO_PNG
 #include <loadpng.h>
 #endif /* USE_ALLEGRO_PNG */
@@ -161,11 +163,14 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
    loadpng_init();
 #endif /* USE_ALLEGRO_PNG */
 
+   algif_init();
+
    scaffold_error = 0;
 
    screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0 );
    scaffold_check_nonzero( screen_return );
 
+   /* TODO: Free double buffer. */
    g->surface = create_bitmap( w, h );
    g->w = w;
    g->h = h;
@@ -265,8 +270,17 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    scaffold_check_null( fmem );
 
    /* TODO: Autodetect image type. */
-   //g->surface = load_bmp_pf( fmem, NULL );
-   g->surface = load_memory_png( data, length, NULL );
+   g->surface = load_bmp_pf( fmem, NULL );
+   if( NULL == g->surface ) {
+#ifdef USE_ALLEGRO_PNG
+      g->surface = load_memory_png( data, length, NULL );
+      if( NULL == g->surface ) {
+#endif /* USE_ALLEGRO_PNG */
+         g->surface = load_gif_pf( fmem, NULL );
+#ifdef USE_ALLEGRO_PNG
+      }
+#endif /* USE_ALLEGRO_PNG */
+   }
    scaffold_check_null( g->surface );
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;

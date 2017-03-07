@@ -10,7 +10,7 @@
 #include "callbacks.h"
 
 static void chunker_cleanup( const struct REF* ref ) {
-   CHUNKER* h = (CHUNKER*)scaffold_container_of( ref, CHUNKER, refcount );
+   struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
    /* Cleanup tracks. */
    vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
@@ -23,16 +23,17 @@ static void chunker_cleanup( const struct REF* ref ) {
    bdestroy( h->filecache_path );
    bdestroy( h->filename );
    bdestroy( h->serverpath );
+   bdestroy( h->channel );
 
    free( h );
 }
 
-void chunker_free( CHUNKER* h ) {
+void chunker_free( struct CHUNKER* h ) {
    ref_dec( &(h->refcount) );
 }
 
 static void chunker_chunk_setup_internal(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t tx_chunk_length
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t tx_chunk_length
 ) {
 
    assert( NULL != h );
@@ -69,7 +70,7 @@ static void chunker_chunk_setup_internal(
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_chunk_start(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
    size_t src_length, size_t tx_chunk_length
 ) {
    scaffold_check_null( src_buffer );
@@ -85,7 +86,7 @@ cleanup:
 }
 
 void chunker_chunk_start_file(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
    bstring filepath, size_t tx_chunk_length
 ) {
    bstring full_file_path = NULL;
@@ -107,7 +108,7 @@ cleanup:
    bdestroy( full_file_path );
 }
 
-void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
+void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
    HSE_sink_res sink_res;
    HSE_poll_res poll_res;
    size_t consumed = 0,
@@ -166,13 +167,13 @@ void chunker_chunk_pass( CHUNKER* h, bstring tx_buffer ) {
    return;
 }
 
-BOOL chunker_chunk_finished( CHUNKER* h ) {
+BOOL chunker_chunk_finished( struct CHUNKER* h ) {
    return (h->raw_position >= h->raw_length) ? TRUE : FALSE;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
-   CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
@@ -228,7 +229,7 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_pass( CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len ) {
+void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len ) {
    size_t consumed,
       exhumed;
    size_t mid_buffer_length = blength( rx_buffer ) * 2,
@@ -338,7 +339,7 @@ cleanup:
 
 #ifdef USE_FILE_CACHE
 
-void chunker_unchunk_save_cache( CHUNKER* h ) {
+void chunker_unchunk_save_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
 
    cache_filename = bstrcpy( h->filecache_path );
@@ -354,7 +355,7 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_check_cache( CHUNKER* h, bstring filecache_path ) {
+void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
    FILE* cached_copy_f;
    struct stat cachedir_info = { 0 };
    char* filecache_path_c = NULL;
@@ -431,7 +432,7 @@ cleanup:
 
 #endif /* USE_FILE_CACHE */
 
-BOOL chunker_unchunk_finished( CHUNKER* h ) {
+BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    CHUNKER_TRACK* prev_track = NULL,
       * iter_track = NULL;
    size_t i,

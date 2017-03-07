@@ -12,12 +12,9 @@
 #include <arpa/inet.h>
 #endif /* USE_NETWORK */
 
-#ifndef USE_NETWORK
-#include "mailbox.h"
-
-static struct MAILBOX fake_network = { { 0, 0, 0 }, 0 };
-static size_t fake_server_socket = 0;
-#endif /* USE_NETWORK */
+#ifdef USE_SYNCBUFF
+#include "ipc/syncbuff.h"
+#endif /* USE_SYNCBUFF */
 
 static void connection_cleanup_socket( CONNECTION* n ) {
 #ifdef USE_NETWORK
@@ -28,7 +25,8 @@ static void connection_cleanup_socket( CONNECTION* n ) {
    n->socket = 0;
 }
 
-void connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
+BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
+   BOOL connected = FALSE;
 #ifdef USE_NETWORK
    unsigned int address_length;
    struct sockaddr_in address;
@@ -53,25 +51,28 @@ void connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
       connection_cleanup( n );
       goto cleanup;
    }
-#else
-   n->socket = mailbox_accept( &fake_network, n_server->socket );
 
-   /* No connection incoming, this time! */
-   if( 0 > n->socket ) {
-      goto cleanup;
-   }
+   connected = TRUE;
+#elif defined( USE_SYNCBUFF )
+   connected = syncbuff_accept();
+   n->socket = 2;
+#else
+#error No IPC defined!
 #endif /* USE_NETWORK */
 
-   /* The client seems OK. */
-   scaffold_print_info( "New client: %d\n", n->socket );
+   if( TRUE == connected ) {
+      /* The client seems OK. */
+      scaffold_print_info( "New client: %d\n", n->socket );
+   }
 
    /* TODO: Grab the remote hostname. */
 
 cleanup:
-   return;
+   return connected;
 }
 
-void connection_listen( CONNECTION* n, uint16_t port ) {
+BOOL connection_listen( CONNECTION* n, uint16_t port ) {
+   BOOL listening = FALSE;
 #ifdef USE_NETWORK
    int result;
    struct sockaddr_in address;
@@ -95,10 +96,12 @@ void connection_listen( CONNECTION* n, uint16_t port ) {
    scaffold_print_info( "Now listening for connections...\n" );
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
+   listening = TRUE;
+#elif defined ( USE_SYNCBUFF )
+   listening = syncbuff_listen();
+   n->socket = 0;
 #else
-   n->socket = mailbox_listen( &fake_network );
-   scaffold_check_negative( n->socket );
-   fake_server_socket = n->socket;
+#error No IPC defined!
 #endif /* USE_NETWORK */
 
 cleanup:
@@ -109,10 +112,11 @@ cleanup:
       n->listening = TRUE;
    }
 
-   return;
+   return listening;
 }
 
-void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
+BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
+   BOOL connected = FALSE;
 #ifdef USE_NETWORK
    int connect_result;
    struct addrinfo hints,
@@ -135,7 +139,7 @@ void connection_connect( CONNECTION* n, bstring server, uint16_t port ) {
    scaffold_check_negative( connect_result );
 
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
-
+   connected = TRUE;
 cleanup:
 
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
@@ -144,22 +148,22 @@ cleanup:
 
    bdestroy( service );
    freeaddrinfo( result );
+#elif defined( USE_SYNCBUFF )
+   connected = syncbuff_connect();
+   n->socket = 1;
 #else
-   n->socket =
-      mailbox_connect( &fake_network, MAILBOX_SOCKET_NONE, fake_server_socket );
-   assert( 1 < n->socket );
+#error No IPC defined!
 #endif /* USE_NETWORK */
 
-   return;
+   return connected;
 }
 
-void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
+ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client ) {
    const char* buffer_chars;
+   ssize_t sent = -1;
 #ifdef USE_NETWORK
    size_t dest_socket;
    size_t buffer_len;
-#else
-   size_t client_socket;
 #endif /* USE_NETWORK */
 
    scaffold_check_null( buffer );
@@ -173,35 +177,14 @@ void connection_write_line( CONNECTION* n, bstring buffer, BOOL client ) {
    buffer_len = blength( buffer );
    assert( 0 != dest_socket );
 
-   send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
+   sent = send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
+#elif defined( USE_SYNCBUFF )
+   sent = syncbuff_write( buffer, client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT );
 #else
-   client_socket = n->socket;
-   assert( 0 != client_socket && client_socket != fake_server_socket );
-
-   if(FALSE != client ) {
-      scaffold_assert_client();
-      mailbox_send( &fake_network, client_socket, fake_server_socket, buffer );
-   } else {
-      scaffold_assert_server();
-      mailbox_send( &fake_network, fake_server_socket, client_socket, buffer );
-   }
-
-#ifdef DEBUG_NETWORK
-   if( FALSE != client ) {
-      scaffold_print_debug(
-         "Mailbox: Client ( %d ): Sent to Server ( %d ): %s\n",
-         client_socket, fake_server_socket, bdata( buffer )
-      );
-   } else {
-      scaffold_print_debug(
-         "Mailbox: Server ( %d ): Sent to Client ( %d ): %s\n",
-         fake_server_socket, client_socket, bdata( buffer )
-      );
-   }
-#endif /* DEBUG_NETWORK */
+#error No IPC defined!
 #endif /* USE_NETWORK */
 cleanup:
-   return;
+   return sent;
 }
 
 ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
@@ -226,30 +209,10 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
       total_read_count++;
       bconchar( buffer, read_char );
    }
+#elif defined( USE_SYNCBUFF )
+   total_read_count = syncbuff_read( buffer, client ? SYNCBUFF_DEST_CLIENT : SYNCBUFF_DEST_SERVER );
 #else
-   if( FALSE != client ) {
-      total_read_count = mailbox_read( &fake_network, n->socket, buffer );
-   } else {
-      total_read_count =
-         mailbox_read( &fake_network, fake_server_socket, buffer );
-   }
-
-#ifdef DEBUG_NETWORK
-   if( 0 < total_read_count ) {
-      if( FALSE != client ) {
-         scaffold_print_debug(
-            "Mailbox: Client ( %d ): Read from Server ( %d ): %s\n",
-            n->socket, fake_server_socket, bdata( buffer )
-         );
-      } else {
-         scaffold_print_debug(
-            "Mailbox: Server ( %d ): Read from Client ( %d ): %s\n",
-            fake_server_socket, n->socket, bdata( buffer )
-         );
-      }
-   }
-#endif /* DEBUG_NETWORK */
-
+#error No IPC defined!
 #endif /* USE_NETWORK */
 cleanup:
    return total_read_count;

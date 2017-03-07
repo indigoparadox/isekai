@@ -17,7 +17,7 @@ struct UI_WINDOW {
 typedef enum {
    UI_CONTROL_TYPE_NONE,
    UI_CONTROL_TYPE_TEXT,
-   UI_CONTROL_TYPE_BUTTON,
+   UI_CONTROL_TYPE_BUTTON
 } UI_CONTROL_TYPE;
 
 struct UI_CONTROL {
@@ -32,6 +32,7 @@ struct UI {
 };
 
 void ui_window_init( struct UI_WINDOW* win, struct UI* ui, gu x, gu y, gu width, gu height );
+void ui_window_transform( struct UI_WINDOW* win, gu x, gu y, gu width, gu height );
 void ui_init( struct UI* ui, GRAPHICS* screen );
 void ui_add_window( struct UI* ui, struct UI_WINDOW* win );
 void ui_lock_windows( struct UI* ui, BOOL lock );

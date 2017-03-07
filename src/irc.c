@@ -11,53 +11,42 @@
 #include <stdlib.h>
 #include <string.h>
 
-static struct tagbstring str_irc_cache_path =
-   bsStatic( "testdata/livecache" );
-static struct tagbstring str_irc_server_path =
-   bsStatic( "testdata/server" );
-
-#define IRC_CACHE_PATH &str_irc_cache_path
+extern struct tagbstring str_gamedata_server_path;
 
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
-void irc_request_file(
-   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type, bstring filename
-) {
-   client_printf( c, "GRF %d %b %b", type, l->name, filename );
-}
-
 static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
 
    server_client_printf(
-      s, c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
+      c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
       s->self.remote, c->nick, c->nick, c->username, c->remote
    );
 
    server_client_printf(
-      s, c, ":%b 002 %b :Your host is %b, running version %b",
+      c, ":%b 002 %b :Your host is %b, running version %b",
       s->self.remote, c->nick, s->servername, s->version
    );
 
    server_client_printf(
-      s, c, ":%b 003 %b :This server was created 01/01/1970",
+      c, ":%b 003 %b :This server was created 01/01/1970",
       s->self.remote, c->nick
    );
 
    server_client_printf(
-      s, c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
+      c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
       s->self.remote, c->nick, s->self.remote, s->servername, s->version
    );
 
    server_client_printf(
-      s, c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
+      c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
       s->self.remote, c->nick, hashmap_count( &(s->clients) )
    );
 
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
 }
 
-void irc_server_reply_motd( struct CLIENT* c, SERVER* s ) {
+static void irc_server_reply_motd( struct CLIENT* c, SERVER* s ) {
    if( 1 > blength( c->nick ) ) {
       goto cleanup;
    }
@@ -67,7 +56,7 @@ void irc_server_reply_motd( struct CLIENT* c, SERVER* s ) {
    }
 
    server_client_printf(
-      s, c, ":%b 433 %b :MOTD File is missing",
+      c, ":%b 433 %b :MOTD File is missing",
       s->self.remote, c->nick
    );
 
@@ -77,7 +66,9 @@ cleanup:
    return;
 }
 
-static void irc_server_user( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_user(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    int i,
        consumed = 0;
    char* c_mode = NULL;
@@ -127,7 +118,9 @@ cleanup:
    return;
 }
 
-static void irc_server_nick( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_nick(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    bstring oldnick = NULL;
    bstring newnick = NULL;
    int bstr_result = 0;
@@ -139,7 +132,7 @@ static void irc_server_nick( struct CLIENT* c, SERVER* s, struct bstrList* args 
    server_set_client_nick( s, c, newnick );
    if( SCAFFOLD_ERROR_NULLPO == scaffold_error ) {
       server_client_printf(
-         s, c, ":%b 431 %b :No nickname given",
+         c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
       );
       goto cleanup;
@@ -147,7 +140,7 @@ static void irc_server_nick( struct CLIENT* c, SERVER* s, struct bstrList* args 
 
    if( SCAFFOLD_ERROR_NOT_NULLPO == scaffold_error ) {
       server_client_printf(
-         s, c, ":%b 433 %b :Nickname is already in use",
+         c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->nick
       );
       goto cleanup;
@@ -180,7 +173,7 @@ static void irc_server_nick( struct CLIENT* c, SERVER* s, struct bstrList* args 
    }
 
    server_client_printf(
-      s, c, ":%b %b :%b!%b@%b NICK %b",
+      c, ":%b %b :%b!%b@%b NICK %b",
       s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
    );
 
@@ -196,7 +189,9 @@ cleanup:
    return;
 }
 
-static void irc_server_quit( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_quit(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    bstring message;
    bstring space;
 
@@ -205,7 +200,7 @@ static void irc_server_quit( struct CLIENT* c, SERVER* s, struct bstrList* args 
    message = bjoin( args, space );
 
    server_client_printf(
-      s, c, "ERROR :Closing Link: %b (Client Quit)",
+      c, "ERROR :Closing Link: %b (Client Quit)",
       c->nick
    );
 
@@ -215,7 +210,9 @@ static void irc_server_quit( struct CLIENT* c, SERVER* s, struct bstrList* args 
    bdestroy( space );
 }
 
-static void irc_server_ison( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_ison(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct VECTOR* ison = NULL;
    bstring response = NULL;
    struct CLIENT* c_iter = NULL;
@@ -225,7 +222,7 @@ static void irc_server_ison( struct CLIENT* c, SERVER* s, struct bstrList* args 
    scaffold_check_null( response );
 
    /* TODO: Root the command stuff out of args. */
-   ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, args );
+   ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, (void*)args );
    scaffold_check_null( ison );
    vector_lock( ison, TRUE );
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
@@ -238,7 +235,7 @@ static void irc_server_ison( struct CLIENT* c, SERVER* s, struct bstrList* args 
    vector_lock( ison, FALSE );
    scaffold_check_null( response );
 
-   server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
+   server_client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
 
 cleanup:
    if( NULL != ison ) {
@@ -250,7 +247,9 @@ cleanup:
    return;
 }
 
-static void irc_server_join( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_join(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CHANNEL* l = NULL;
    bstring namehunt = NULL;
    int8_t bstr_result = 0;
@@ -259,7 +258,7 @@ static void irc_server_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
 
    if( 2 > args->qty ) {
       server_client_printf(
-         s, c, ":%b 461 %b %b :Not enough parameters",
+         c, ":%b 461 %b %b :Not enough parameters",
          s->self.remote, c->username, args->entry[0]
       );
       goto cleanup;
@@ -272,7 +271,7 @@ static void irc_server_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
 
    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
       server_client_printf(
-         s, c, ":%b 403 %b %b :No such channel",
+         c, ":%b 403 %b %b :No such channel",
          s->self.remote, c->username, namehunt
       );
       goto cleanup;
@@ -295,7 +294,7 @@ static void irc_server_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
 
    /* Now tell the joining client. */
    server_client_printf(
-      s, c, ":%b!%b@%b JOIN %b",
+      c, ":%b!%b@%b JOIN %b",
       c->nick, c->username, c->remote, l->name
    );
 
@@ -305,17 +304,17 @@ static void irc_server_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
    names = bjoinblk( cat_names, " ", 1 );
 
    server_client_printf(
-      s, c, ":%b 332 %b %b :%b",
+      c, ":%b 332 %b %b :%b",
       s->self.remote, c->nick, l->name, l->topic
    );
 
    server_client_printf(
-      s, c, ":%b 353 %b = %b :%b",
+      c, ":%b 353 %b = %b :%b",
       s->self.remote, c->nick, l->name, names
    );
 
    server_client_printf(
-      s, c, ":%b 366 %b %b :End of NAMES list",
+      c, ":%b 366 %b %b :End of NAMES list",
       s->self.remote, c->nick, l->name
    );
 
@@ -331,10 +330,14 @@ cleanup:
    return;
 }
 
-static void irc_server_part( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_part(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
 }
 
-static void irc_server_privmsg( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_privmsg(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CLIENT* c_dest = NULL;
    struct CHANNEL* l_dest = NULL;
    bstring msg = NULL;
@@ -345,7 +348,7 @@ static void irc_server_privmsg( struct CLIENT* c, SERVER* s, struct bstrList* ar
    c_dest = server_get_client( s, args->entry[1] );
    if( NULL != c_dest ) {
       server_client_printf(
-         s, c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
       );
       goto cleanup;
    }
@@ -366,13 +369,17 @@ cleanup:
    return;
 }
 
-static void irc_server_who( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_who(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CHANNEL* l = NULL;
    struct bstrList* search_targets = NULL;
    struct VECTOR* ison = NULL;
    struct CLIENT* c_iter = NULL;
    size_t i;
    bstring response = NULL;
+
+   return; // FIXME
 
    if( 2 > args->qty ) {
       scaffold_print_error( "Server: Malformed WHO expression received.\n" );
@@ -402,19 +409,16 @@ static void irc_server_who( struct CLIENT* c, SERVER* s, struct bstrList* args )
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
       assert( 2 <= c_iter->link.refcount.count );
-      //bconcat( response, c_iter->nick );
-      //bconchar( response, ' ' );
 
       server_client_printf(
-         s, c, ":%b RPL_WHOREPLY %b %b",
+         c, ":%b RPL_WHOREPLY %b %b",
          s->self.remote, c->nick, l->name
       );
    }
    vector_lock( ison, FALSE );
    scaffold_check_null( response );
 
-   //vector_iterate( &(l->clients), irc_prn_who, &trio );
-   //server_client_printf( s, c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
+   hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
 
 cleanup:
    if( NULL != ison ) {
@@ -427,27 +431,32 @@ cleanup:
    return;
 }
 
-static void irc_server_ping( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_ping(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
 
    if( 2 > args->qty ) {
       goto cleanup;
    }
 
    server_client_printf(
-      s, c, ":%b PONG %b :%b", s->self.remote, s->self.remote, c->remote
+      c, ":%b PONG %b :%b", s->self.remote, s->self.remote, c->remote
    );
 
 cleanup:
    return;
 }
 
-static void irc_server_gamerequestfile( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_gamerequestfile(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct VECTOR* files = NULL;
    size_t i;
    bstring file_iter = NULL;
    bstring file_iter_short = NULL;
    char* type_c;
    CHUNKER_DATA_TYPE type;
+   int bstr_result;
 
    if( 4 > args->qty ) {
       scaffold_print_error( "Malformed GRF statement received.\n" );
@@ -457,8 +466,10 @@ static void irc_server_gamerequestfile( struct CLIENT* c, SERVER* s, struct bstr
 
    vector_new( files );
 
+   file_iter_short = bfromcstralloc( 80, "" );
+
    /* This list only exists inside of this function, so no need to lock it. */
-   scaffold_list_dir( &str_irc_server_path, files, NULL, FALSE, FALSE );
+   scaffold_list_dir( &str_gamedata_server_path, files, NULL, FALSE, FALSE );
 
    type_c = bdata( args->entry[1] );
    scaffold_check_null( type_c );
@@ -466,12 +477,13 @@ static void irc_server_gamerequestfile( struct CLIENT* c, SERVER* s, struct bstr
 
    for( i = 0 ; vector_count( files ) > i ; i++ ) {
       file_iter = (bstring)vector_get( files, i );
-      file_iter_short = bmidstr(
+      bstr_result = bassignmidstr(
+         file_iter_short,
          file_iter,
-         str_irc_server_path.slen + 1,
-         blength( file_iter ) - str_irc_server_path.slen - 1
+         str_gamedata_server_path.slen + 1,
+         blength( file_iter ) - str_gamedata_server_path.slen - 1
       );
-      scaffold_check_null( file_iter_short );
+      scaffold_check_nonzero( bstr_result );
 
       if( 0 == bstrcmp(
          file_iter_short,
@@ -483,7 +495,7 @@ static void irc_server_gamerequestfile( struct CLIENT* c, SERVER* s, struct bstr
          /* FIXME: Don't try to send directories. */
          scaffold_print_debug( "GRF: File Found: %s\n", bdata( file_iter ) );
          client_send_file(
-            c, args->entry[2], type, &str_irc_server_path, file_iter_short
+            c, args->entry[2], type, &str_gamedata_server_path, file_iter_short
          );
       }
    }
@@ -494,11 +506,14 @@ cleanup:
    }
    vector_free( files );
    free( files );
+   bdestroy( file_iter_short );
    return;
 }
 
 /* GU #channel px+1y+2z+3 */
-static void irc_server_gameupdate( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_server_gameupdate(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CHANNEL* l = NULL;
    bstring reply_c = NULL;
    bstring reply_l = NULL;
@@ -506,9 +521,11 @@ static void irc_server_gameupdate( struct CLIENT* c, SERVER* s, struct bstrList*
 
    /* Strip off the command "header". */
    memcpy( &gu_args, args, sizeof( struct bstrList ) );
-   // FIXME
-   //scaffold_pop_string( &gu_args ); /* Source */
-   //scaffold_pop_string( &gu_args ); /* Channel */
+#if 0
+   /* FIXME */
+   scaffold_pop_string( &gu_args ); /* Source */
+   scaffold_pop_string( &gu_args ); /* Channel */
+#endif
 
    /* Find out if this command affects a certain channel. */
    if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
@@ -523,7 +540,7 @@ static void irc_server_gameupdate( struct CLIENT* c, SERVER* s, struct bstrList*
    scaffold_check_null( c );
 
    if( NULL != reply_c ) {
-      server_client_printf( s, c, "%b", reply_c );
+      server_client_printf( c, "%b", reply_c );
    }
 
    if( NULL != reply_l ) {
@@ -536,7 +553,9 @@ cleanup:
    return;
 }
 
-static void irc_client_gu( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_client_gu(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    bstring reply = NULL;
    struct bstrList gu_args;
 
@@ -555,7 +574,6 @@ static void irc_client_gu( struct CLIENT* c, SERVER* s, struct bstrList* args ) 
 #endif
 
    /* TODO: Modify gamedata based on new information. */
-//   gamedata_react_client( d, c, &gu_args, &reply );
 
    if( NULL != reply ) {
       client_printf( c, "%b", reply );
@@ -565,7 +583,9 @@ static void irc_client_gu( struct CLIENT* c, SERVER* s, struct bstrList* args ) 
    return;
 }
 
-static void irc_client_join( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_client_join(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CHANNEL* l = NULL;
    bstring l_name = NULL;
    bstring l_filename = NULL;
@@ -581,6 +601,7 @@ static void irc_client_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
       channel_new( l, l_name );
       gamedata_init_client( &(l->gamedata) );
       client_add_channel( c, l );
+      channel_add_client( l, c );
       scaffold_print_info( "Client created local channel mirror: %s\n",
                            bdata( l_name ) );
    }
@@ -596,7 +617,7 @@ static void irc_client_join( struct CLIENT* c, SERVER* s, struct bstrList* args 
    bcatcstr( l_filename, ".tmx" );
    scaffold_check_null( l_filename );
 
-   irc_request_file( c, l, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
+   client_request_file( c, l, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
 
 cleanup:
    bdestroy( l_filename );
@@ -605,7 +626,9 @@ cleanup:
 
 static const struct tagbstring str_closing = bsStatic( ":Closing" );
 
-static void irc_client_error( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_client_error(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    if(
       2 <= args->qty &&
       0 == bstrcmp( &str_closing, args->entry[1] )
@@ -614,24 +637,17 @@ static void irc_client_error( struct CLIENT* c, SERVER* s, struct bstrList* args
    }
 }
 
-static void irc_client_gamedatablock( struct CLIENT* c, SERVER* s, struct bstrList* args ) {
+static void irc_client_gamedatablock(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
    struct CHANNEL* l = NULL;
-   struct GAMEDATA* d = NULL;
-   CHUNKER* h = NULL;
-   size_t progress = 0;
-   size_t total = 0;
-   size_t length = 0;
-   CHUNKER_DATA_TYPE type;
-   bstring data = NULL;
-   bstring filename = NULL;
+   /* struct GAMEDATA* d = NULL; */
    const char* progress_c,
       * total_c,
       * length_c,
       * filename_c,
       * type_c;
-   struct TILEMAP_TILESET* set = NULL;
-   GRAPHICS* g = NULL;
-   struct CHANNEL_CLIENT* lc = NULL;
+   struct CHUNKER_PROGRESS progress;
 
    if( 12 != args->qty ) {
       scaffold_print_error( "Client: Malformed GDB expression received.\n" );
@@ -641,9 +657,6 @@ static void irc_client_gamedatablock( struct CLIENT* c, SERVER* s, struct bstrLi
 
    l = client_get_channel_by_name( c, args->entry[3] );
    scaffold_check_null( l );
-
-   d = &(l->gamedata);
-   scaffold_check_null( d );
 
    scaffold_check_null( args->entry[6] );
    type_c = bdata( args->entry[6] );
@@ -661,90 +674,26 @@ static void irc_client_gamedatablock( struct CLIENT* c, SERVER* s, struct bstrLi
    total_c = bdata( args->entry[9] );
    scaffold_check_null( total_c );
 
-   filename = args->entry[5];
-   filename_c = bdata( filename );
+   progress.filename = args->entry[5];
+   filename_c = bdata( progress.filename );
    scaffold_check_null( filename_c );
 
-   progress = atoi( progress_c );
-   length = atoi( length_c );
-   total = atoi( total_c );
-   type = (CHUNKER_DATA_TYPE)atoi( type_c );
+   progress.current = atoi( progress_c );
+   progress.chunk_size = atoi( length_c );
+   progress.total = atoi( total_c );
+   progress.type = (CHUNKER_DATA_TYPE)atoi( type_c );
 
-   data = args->entry[11];
-   scaffold_check_null( data );
+   progress.data = args->entry[11];
+   scaffold_check_null( progress.data );
 
-   if( progress > total ) {
-      scaffold_print_error( "Invalid progress for %s.\n", bdata( filename ) );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
-
-   if( 0 < d->incoming_buffer_len && d->incoming_buffer_len != total ) {
-      scaffold_print_error( "Invalid total for %s.\n", bdata( filename ) );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
-
-   h = hashmap_get( &(d->incoming_chunkers), filename );
-   if( NULL == h ) {
-      h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
-      chunker_unchunk_start(
-         h, l->name, type, total, filename, IRC_CACHE_PATH
-      );
-      hashmap_put( &(d->incoming_chunkers), filename, h );
-      scaffold_check_nonzero( scaffold_error );
-   }
-
-   chunker_unchunk_pass( h, data, progress, length );
-
-   if( chunker_unchunk_finished( h ) ) {
-      /* Cached file found, so abort transfer. */
-      if( TRUE == h->force_finish ) {
-         scaffold_print_debug(
-            "Client: Aborting transfer of %s from server due to cached copy.\n",
-            bdata( filename )
-         );
-         client_printf( c, "GDA %b", filename );
-      }
-
-      switch( h->type ) {
-      case CHUNKER_DATA_TYPE_TILEMAP:
-         datafile_parse_tilemap( &(d->tmap), filename, (BYTE*)h->raw_ptr, h->raw_length );
-
-         /* Go through the parsed tilemap and load graphics. */
-         lc = (struct CHANNEL_CLIENT*)calloc( 1, sizeof( struct CHANNEL_CLIENT ) );
-         lc->l = l;
-         lc->c = c;
-         hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );
-         free( lc );
-
-         scaffold_print_info(
-            "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
-         );
-         break;
-
-      case CHUNKER_DATA_TYPE_TILESET_IMG:
-         graphics_surface_new( g, 0, 0, 0, 0 );
-         scaffold_check_null( g );
-         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
-         scaffold_check_null( g );
-         set = hashmap_iterate( &(l->gamedata.tmap.tilesets), callback_search_tilesets_img_name, filename );
-         scaffold_check_null( set )
-         hashmap_put( &(set->images), filename, g );
-         scaffold_print_info(
-            "Client: Tilemap image %s successfully loaded into cache.\n",
-            bdata( filename )
-         );
-         break;
-      }
-   }
+   gamedata_process_data_block( &(l->gamedata), c, &progress );
 
 cleanup:
    return;
 }
 
 static void irc_server_gamedataabort(
-   struct CLIENT* c, SERVER* s, struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
 
    if( 2 != args->qty ) {
@@ -764,6 +713,80 @@ cleanup:
    return;
 }
 
+static void irc_server_gamenewsprite(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+}
+
+static void irc_client_gamenewsprite(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+}
+
+static void irc_server_mob(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+   /* TODO: If the serial matches c's mob, update server. Otherwise send requested mob's details. */
+}
+
+static void irc_client_mob(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+   struct MOBILE* o = NULL;
+   char* serial_c;
+   uint8_t serial;
+   bstring sprites_filename,
+      c_nick;
+   struct CHANNEL* l = NULL;
+
+   if( 5 != args->qty ) {
+      scaffold_print_error( "Client: Malformed MOB expression received.\n" );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   l = client_get_channel_by_name( c, args->entry[1] );
+   scaffold_check_null( l );
+
+   scaffold_check_null( args->entry[2] );
+   serial_c = bdata( args->entry[2] );
+   scaffold_check_null( serial_c );
+
+   serial = atoi( serial_c );
+
+   o = vector_get( &(l->gamedata.mobiles), serial );
+   if( NULL == o ) {
+      mobile_new( o );
+      o->serial = serial;
+   }
+
+   sprites_filename = args->entry[3];
+   scaffold_check_null( sprites_filename );
+
+   bassign( o->sprites_filename, sprites_filename );
+   assert( NULL != o->sprites_filename );
+
+   c_nick = args->entry[4];
+   scaffold_check_null( c_nick );
+
+   bassign( o->display_name, c_nick );
+   assert( NULL != o->display_name );
+
+   if( 0 == bstrcmp( c->nick, c_nick ) ) {
+      client_set_puppet( c, o );
+   }
+
+   vector_set( &(l->gamedata.mobiles), o->serial, o, TRUE );
+
+   scaffold_print_debug(
+      "Client: Local instance of mobile updated: %s (%d)\n",
+      bdata( o->display_name ), o->serial
+   );
+
+cleanup:
+   return;
+}
+
 IRC_COMMAND_TABLE_START( server ) = {
 IRC_COMMAND_ROW( "USER", irc_server_user ),
 IRC_COMMAND_ROW( "NICK", irc_server_nick ),
@@ -777,6 +800,8 @@ IRC_COMMAND_ROW( "PING", irc_server_ping ),
 IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
 IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
+IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
+IRC_COMMAND_ROW( "NOB", irc_server_mob ),
 IRC_COMMAND_TABLE_END() };
 
 IRC_COMMAND_TABLE_START( client ) = {
@@ -784,6 +809,8 @@ IRC_COMMAND_ROW( "GU", irc_client_gu  ),
 IRC_COMMAND_ROW( "366", irc_client_join ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
 IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
+IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
+IRC_COMMAND_ROW( "MOB", irc_client_mob ),
 IRC_COMMAND_TABLE_END() };
 
 //IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {
@@ -801,7 +828,7 @@ static void irc_command_cleanup( const struct REF* ref ) {
    for( i = 0 ; cmd->args->qty > i ; i++ ) {
       bwriteallow( *(cmd->args->entry[i]) );
    }
-   bstrListDestroy( cmd->args );
+   bstrListDestroy( (struct bstrList*)cmd->args );
    cmd->args = NULL;
 }
 
@@ -817,8 +844,6 @@ IRC_COMMAND* irc_dispatch(
    size_t i;
    bstring cmd_test = NULL; /* Don't free this. */
    IRC_COMMAND* out = NULL;
-
-   //irc_cmd_cb* foo = irc_client_gdb;
 
    args = bsplit( line, ' ' );
    scaffold_check_null( args );

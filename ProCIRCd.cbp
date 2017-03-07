@@ -164,6 +164,33 @@
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
 			<Add option="-DUSE_FILE_CACHE" />
 		</Compiler>
+		<Unit filename="src/algif/algif.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
+		<Unit filename="src/algif/algif.h">
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
+		<Unit filename="src/algif/gif.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
+		<Unit filename="src/algif/gif.h">
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
+		<Unit filename="src/algif/lzw.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
+		<Unit filename="src/algif/lzw.h">
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Strict (Linux-Allegro4)" />
+		</Unit>
 		<Unit filename="src/b64/b64.c">
 			<Option compilerVar="CC" />
 		</Unit>

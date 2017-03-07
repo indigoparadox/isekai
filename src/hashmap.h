@@ -84,19 +84,21 @@ size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* a
 /*
  * Add an element to the hashmap. Return MAP_OK or MAP_OMEM.
  */
-void hashmap_put( struct HASHMAP* m, bstring key, void* value );
+void hashmap_put( struct HASHMAP* m, const bstring key, void* value );
 
 /*
  * Get an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
-void* hashmap_get( struct HASHMAP* m, bstring key );
+void* hashmap_get( struct HASHMAP* m, const bstring key );
 
 void* hashmap_get_first( struct HASHMAP* m );
+
+BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key );
 
 /*
  * Remove an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
-BOOL hashmap_remove( struct HASHMAP* m, bstring key );
+BOOL hashmap_remove( struct HASHMAP* m, const bstring key );
 
 /*
  * Get any element. Return MAP_OK or MAP_MISSING.

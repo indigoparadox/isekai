@@ -17,8 +17,6 @@ read_code (PACKFILE * file, char *buf, int *bit_pos, int bit_size)
 
             if (data_len == 0)
             {
-                //printf ("Fatal. Errorneous GIF stream.\n");
-                //abort ();
                 return -1;
             }
             pack_fread (buf + 256 - data_len, data_len, file);

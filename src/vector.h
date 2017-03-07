@@ -6,7 +6,7 @@
 typedef enum _VECTOR_SORT_ORDER {
    VECTOR_SORT_A_LIGHTER = -1,
    VECTOR_SORT_A_B_EQUAL = 0,
-   VECTOR_SORT_A_HEAVIER = 1,
+   VECTOR_SORT_A_HEAVIER = 1
 } VECTOR_SORT_ORDER;
 
 struct VECTOR {
@@ -39,7 +39,7 @@ void vector_init( struct VECTOR* v );
 void vector_free( struct VECTOR* v );
 void vector_add( struct VECTOR* v, void* data );
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe );
-void vector_set( struct VECTOR* v, size_t index, void* data );
+void vector_set( struct VECTOR* v, size_t index, void* data, BOOL force );
 void vector_set_scalar( struct VECTOR* v, size_t index, int32_t value );
 void* vector_get( struct VECTOR* v, size_t index );
 int32_t vector_get_scalar( struct VECTOR* v, size_t index );

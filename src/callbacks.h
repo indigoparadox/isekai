@@ -16,6 +16,8 @@ void* callback_search_tilesets_img_name( const bstring key, void* iter, void* ar
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
 void* callback_search_graphics( const bstring key, void* iter, void* arg );
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg );
+void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg );
+void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg );
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg );
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg );
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg );
