@@ -133,7 +133,9 @@
 					<Add option="-Winline" />
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
+					<Add option="-Weffc++" />
 					<Add option="-pedantic" />
+					<Add option="-Wextra" />
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-DUSE_ALLEGRO" />
