@@ -485,8 +485,6 @@ static void irc_server_gamerequestfile(
       );
       scaffold_check_nonzero( bstr_result );
 
-      scaffold_print_debug( "%s\n", bdata( file_iter_short ) );
-
       if( 0 == bstrcmp(
          file_iter_short,
          args->entry[3] )

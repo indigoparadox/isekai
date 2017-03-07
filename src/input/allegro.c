@@ -1,10 +1,12 @@
 #include "../input.h"
 
 #include "../client.h"
+#include "../server.h"
 
 #include <allegro.h>
 
 extern struct CLIENT* main_client;
+extern SERVER* main_server;
 
 typedef struct {
    int keysym;
@@ -14,6 +16,7 @@ typedef struct {
 static void input_close_allegro_window() {
    scaffold_set_client();
    client_stop( main_client );
+   server_stop( main_server );
 }
 
 void input_init( INPUT* p ) {

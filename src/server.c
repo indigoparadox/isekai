@@ -261,11 +261,6 @@ void server_drop_client( SERVER* s, bstring nick ) {
       "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
-
-#ifdef DEBUG
-   //new_count = hashmap_count( &(s->self.channels) );
-   //assert( new_count == old_count - deleted );
-#endif /* DEBUG */
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -298,7 +293,6 @@ void server_poll_new_clients( SERVER* s ) {
 
       /* Add some details to c before stowing it. */
       connection_assign_remote_name( &(c->link), c->remote );
-      //c->jobs_socket = mailbox_connect( c->jobs, -1, -1 );
 
       server_add_client( s, c );
 
@@ -326,7 +320,9 @@ void server_service_clients( SERVER* s ) {
    scaffold_check_null( s );
 
    /* Check for commands from existing clients. */
-   cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
+   if( 0 < hashmap_count( &(s->clients) ) ) {
+      cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
+   }
    if( NULL != cmd ) {
       vector_add( &(s->self.command_queue), cmd );
    }

@@ -58,7 +58,7 @@ static void datafile_tilemap_parse_tileset_image(
    bassigncstr( buffer, xml_attr );
 
    /* The key with NULL means we need to load this image. */
-   hashmap_put( &(set->images), bstrcpy( buffer ), NULL );
+   hashmap_put( &(set->images), buffer, NULL );
 
 cleanup:
    bdestroy( buffer );
