@@ -2384,6 +2384,7 @@ int i, c, v;
 	}
 
 	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+   assert( NULL != b );
 	if (len == 0) {
 		p = b->data = (unsigned char *) bstr__alloc (c);
 		if (p == NULL) {

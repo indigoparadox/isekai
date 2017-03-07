@@ -31,6 +31,10 @@ BOOL scaffold_is_numeric( bstring line ) {
    int i;
    BOOL is_numeric = TRUE;
 
+   if( NULL == line ) {
+      return FALSE;
+   }
+
    for( i = 0 ; blength( line ) > i ; i++ ) {
       if( !isdigit( bdata( line )[i] ) ) {
          is_numeric = FALSE;
@@ -96,6 +100,10 @@ BOOL scaffold_string_is_printable( bstring str ) {
    BOOL is_printable = TRUE;
    int i;
    const char* strdata = bdata( str );
+
+   if( NULL == strdata ) {
+      return FALSE;
+   }
 
    for( i = 0 ; blength( str ) > i ; i++ ) {
       if( !scaffold_char_is_printable( strdata[i] ) ) {
@@ -200,9 +208,10 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
 void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
    /* TODO: Implement mmap() */
    FILE* inputfile = NULL;
-
    *buffer = NULL;
    *len = 0;
+
+   scaffold_check_null( path );
 
    inputfile = fopen( bdata( path ), "rb" );
    scaffold_check_null( inputfile );
@@ -361,12 +370,12 @@ bstring scaffold_basename( bstring path ) {
 
    scaffold_check_null( path );
 
+   path_elements = bsplit( path, SCAFFOLD_DIRSEP_CHAR );
+   scaffold_check_null( path_elements );
+
    if( 1 == path_elements->qty ) {
       basename_out = bstrcpy( path_elements->entry[0] );
    }
-
-   path_elements = bsplit( path, SCAFFOLD_DIRSEP_CHAR );
-   scaffold_check_null( path_elements );
 
    basename_out = path_elements->entry[path_elements->qty - 1];
 

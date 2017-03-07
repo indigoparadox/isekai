@@ -11,13 +11,13 @@
 
 typedef struct REF {
    uint8_t sentinal;
-   void (*free)( const struct REF* );
+   void (*gc_free )( const struct REF* );
    int count;
 } REF;
 
 static inline void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
    ref->count = 1;
-   ref->free = free;
+   ref->gc_free = free;
    ref->sentinal = REF_SENTINAL;
 }
 
@@ -38,7 +38,7 @@ static inline BOOL ref_dec( const struct REF* ref ) {
 #ifdef DEBUG_REF
       scaffold_print_debug( "Object freed: %d\n", ref->count );
 #endif /* DEBUG_REF */
-      ref->free( ref );
+      ref->gc_free( ref );
       return TRUE;
    }
    return FALSE;
