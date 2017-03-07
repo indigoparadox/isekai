@@ -13,6 +13,8 @@ typedef enum _SYNCBUFF_DEST {
    SYNCBUFF_DEST_CLIENT
 } SYNCBUFF_DEST;
 
+size_t syncbuff_get_count( SYNCBUFF_DEST dest );
+size_t syncbuff_get_allocated( SYNCBUFF_DEST dest );
 uint8_t syncbuff_listen();
 uint8_t syncbuff_connect();
 uint8_t syncbuff_accept();
