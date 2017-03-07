@@ -6,6 +6,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include "../scaffold.h"
+#endif /* _WIN32 */
+
 #include "../bstrlib/bstrlib.h"
 
 typedef enum _SYNCBUFF_DEST {

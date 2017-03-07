@@ -6,9 +6,19 @@
 #include <assert.h>
 #include <stddef.h>
 
+#ifdef USE_WIN32
+#include <Windows.h>
+/* typedef uint16_t size_t; */
+/* typedef int16_t ssize_t; */
+#define ssize_t long
+#define size_t unsigned long
+#endif /* USE_WIN32 */
+
 #include "bstrlib/bstrlib.h"
 
 #define SENTINAL 19691
+
+#ifndef USE_WIN32
 
 #ifndef BYTE
 typedef int8_t BYTE;
@@ -25,6 +35,8 @@ typedef uint8_t BOOL;
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
+
+#endif /* USE_WIN32 */
 
 typedef enum {
    SCAFFOLD_ERROR_NONE,

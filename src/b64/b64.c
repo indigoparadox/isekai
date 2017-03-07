@@ -221,8 +221,6 @@ VERSION HISTORY:
 
 #include "b64.h"
 
-#include <stdlib.h>
-
 /*
 ** Translation Table as described in RFC1113
 */

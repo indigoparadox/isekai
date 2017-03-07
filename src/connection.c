@@ -2,7 +2,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif /* _WIN32 */
 
 #ifdef USE_NETWORK
 #include <sys/socket.h>

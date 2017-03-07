@@ -6,9 +6,12 @@
 #include "b64/b64.h"
 
 #include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
 #include <assert.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif /* _WIN32 */
 
 SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
@@ -49,7 +52,7 @@ int main( int argc, char** argv ) {
 
    do {
       server_listen( main_server, 33080 );
-      usleep( 1000000 );
+      graphics_sleep( 100 );
    } while( 0 != scaffold_error );
 
    bassigncstr( main_client->nick, "TestNick" );
@@ -58,7 +61,7 @@ int main( int argc, char** argv ) {
 
    do {
       client_connect( main_client, &str_localhost, 33080 );
-      usleep( 1000000 );
+      graphics_sleep( 100 );
    } while( 0 != scaffold_error );
 
    client_join_channel( main_client, &str_default_channel );
@@ -67,9 +70,11 @@ int main( int argc, char** argv ) {
 
       graphics_sleep( 50 );
 
+      /*
       if( !main_client->running ) {
          server_stop( main_server );
       }
+      */
 
       if( !main_server->self.running ) {
          break;

@@ -93,7 +93,7 @@ void gamedata_react_client(
 }
 
 void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c ) {
-   INPUT input;
+   struct INPUT input;
 
    input_get_event( &input );
 
