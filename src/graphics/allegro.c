@@ -19,13 +19,13 @@ typedef struct _GRAPHICS_FMEM_INFO {
 
 static int graphics_fmem_fclose( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   assert( info );
-   assert( info->offset < info->length );
+   scaffold_assert( info );
+   scaffold_assert( info->offset < info->length );
 
    /* Shorten the allocation back down to the stated length. */
    if( info->alloc > info->length ) {
       info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->length );
-      assert( NULL !=info->block );
+      scaffold_assert( NULL !=info->block );
       info->alloc = info->length;
    }
 
@@ -34,8 +34,8 @@ static int graphics_fmem_fclose( void* userdata ) {
 
 static int graphics_fmem_getc( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   assert( info );
-   assert( info->offset < info->length );
+   scaffold_assert( info );
+   scaffold_assert( info->offset < info->length );
 
    if( 0 >= info->alloc ) {
       return EOF;
@@ -62,23 +62,23 @@ static int graphics_fmem_ungetc( int c, void* userdata ) {
 static long graphics_fmem_fread( void* p, long n, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    size_t actual;
-   assert( info );
-   assert( info->offset <= info->length );
+   scaffold_assert( info );
+   scaffold_assert( info->offset <= info->length );
 
    actual = MIN( n, info->length - info->offset );
 
    memcpy( p, info->block + info->offset, actual );
    info->offset += actual;
 
-   assert( info->offset <= info->length );
+   scaffold_assert( info->offset <= info->length );
 
    return actual;
 }
 
 static int graphics_fmem_putc( int c, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   assert( info );
-   assert( info->offset <= info->length );
+   scaffold_assert( info );
+   scaffold_assert( info->offset <= info->length );
 
    if( NULL == info->block ) {
       info->block = (BYTE*)calloc( info->alloc, sizeof( BYTE ) );
@@ -89,7 +89,7 @@ static int graphics_fmem_putc( int c, void* userdata ) {
       if( info->alloc <= info->length ) {
          info->alloc *= 2;
          info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->alloc );
-         assert( NULL !=info->block );
+         scaffold_assert( NULL !=info->block );
       }
       info->length++;
    }
@@ -118,14 +118,14 @@ static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    size_t actual;
 
-   assert( info );
-   assert( info->offset < info->length );
+   scaffold_assert( info );
+   scaffold_assert( info->offset < info->length );
 
    actual = MIN( offset, info->length - info->offset );
 
    info->offset += actual;
 
-   assert( info->offset < info->length );
+   scaffold_assert( info->offset < info->length );
 
    if( offset == actual ) {
       return 0;

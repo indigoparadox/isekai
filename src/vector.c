@@ -15,8 +15,8 @@ void vector_init( struct VECTOR* v ) {
 
 void vector_free( struct VECTOR* v ) {
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( 0 >= vector_count( v ) );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( 0 >= vector_count( v ) );
 
    if( FALSE != v->scalar ) {
       free( v->scalar_data );
@@ -67,9 +67,9 @@ cleanup:
 
 void vector_add( struct VECTOR* v, void* data ) {
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
 
-   assert( FALSE == v->scalar );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
 
@@ -100,13 +100,13 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
 
    vector_lock( v, TRUE );
    ok = TRUE;
 
    /* Die if we have non-scalar data already. */
-   assert( NULL == v->data );
+   scaffold_assert( NULL == v->data );
 
    v->scalar = TRUE;
 
@@ -147,8 +147,8 @@ cleanup:
 void vector_set( struct VECTOR* v, size_t index, void* data, BOOL force ) {
    scaffold_check_null( v );
 
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( FALSE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
 
@@ -180,13 +180,13 @@ void vector_set_scalar( struct VECTOR* v, size_t index, int32_t value ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
 
    vector_lock( v, TRUE );
    ok = TRUE;
 
    /* Die if we have non-scalar data already. */
-   assert( NULL == v->data );
+   scaffold_assert( NULL == v->data );
 
    v->scalar = TRUE;
 
@@ -216,8 +216,8 @@ void* vector_get( struct VECTOR* v, size_t index ) {
    if( NULL == v ) {
       goto cleanup; /* Quietly. */
    }
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( FALSE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( FALSE == v->scalar );
 
    if( v->count <= index ) {
       goto cleanup;
@@ -234,8 +234,8 @@ int32_t vector_get_scalar( struct VECTOR* v, size_t index ) {
    int32_t retval = -1;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( TRUE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( TRUE == v->scalar );
 
    scaffold_check_bounds( index, v->count );
 
@@ -251,8 +251,8 @@ int32_t vector_get_scalar_value( struct VECTOR* v, size_t value ) {
    int i;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( TRUE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( TRUE == v->scalar );
 
    if( v->count <= 0 ) {
       goto cleanup;
@@ -279,12 +279,12 @@ size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( FALSE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
 
-   assert( 0 <= v->count );
+   scaffold_assert( 0 <= v->count );
 
    for( i = 0; v->count > i ; i++ ) {
 
@@ -315,12 +315,12 @@ void vector_remove( struct VECTOR* v, size_t index ) {
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( FALSE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
 
-   assert( v->count > index );
+   scaffold_assert( v->count > index );
    scaffold_check_bounds( index, v->count );
 
    ref_test_dec( v->data[index] );
@@ -340,8 +340,8 @@ void vector_remove_scalar( struct VECTOR* v, size_t index ) {
    size_t i;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( TRUE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( TRUE == v->scalar );
 
    vector_lock( v, TRUE );
 
@@ -367,8 +367,8 @@ size_t vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
 
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
-   assert( TRUE == v->scalar );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( TRUE == v->scalar );
 
    vector_lock( v, TRUE );
 
@@ -407,10 +407,10 @@ inline void vector_lock( struct VECTOR* v, BOOL lock ) {
    #error Locking mechanism undefined!
    #elif defined( DEBUG )
    if( TRUE == lock ) {
-      assert( 0 == v->lock_count );
+      scaffold_assert( 0 == v->lock_count );
       v->lock_count++;
    } else {
-      assert( 1 == v->lock_count );
+      scaffold_assert( 1 == v->lock_count );
       v->lock_count--;
    }
    #endif /* USE_THREADS */
@@ -422,9 +422,9 @@ void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    size_t i;
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
    /* TODO: This can work for scalars too, can't it? */
-   assert( FALSE == v->scalar );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
@@ -448,7 +448,7 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
 
 
    scaffold_check_null( v );
-   assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
 
    if( 2 > vector_count( v ) ) {
       /* Not enough to sort! */
@@ -456,7 +456,7 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    }
 
    /* TODO: This can work for scalars too, can't it? */
-   assert( FALSE == v->scalar );
+   scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
    for( i = 1 ; vector_count( v ) > i ; i++ ) {

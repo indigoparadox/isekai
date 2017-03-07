@@ -3,8 +3,11 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
 #include <stddef.h>
+
+#ifdef DEBUG
+#include <assert.h>
+#endif /* DEBUG */
 
 #ifdef USE_WIN32
 #define _CRTDBG_MAP_ALLOC
@@ -71,10 +74,12 @@ typedef enum {
 
 #define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
 
+#define scaffold_assert( arg ) assert( arg )
+
 #define scaffold_assert_client() \
-   assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
+   scaffold_assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
 #define scaffold_assert_server() \
-   assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
+   scaffold_assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
 
 #define scaffold_set_client() \
    scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;

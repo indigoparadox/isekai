@@ -7,11 +7,12 @@
 
 #define syncbuff_trace( ... ) \
    fprintf( stderr, __VA_ARGS__ )
+#define syncbuff_assert( expression ) assert( expression )
 
 #else
 
 #define syncbuff_trace( ... )
-#define assert( expression )
+#define syncbuff_assert( expression )
 
 #endif /* DEBUG_SYNCBUFF */
 
@@ -54,7 +55,7 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, size_t new_alloc ) {
    syncbuff_lines[dest] = (bstring*)realloc(
       syncbuff_lines[dest], syncbuff_size[dest] * sizeof( bstring )
    );
-   assert( NULL != syncbuff_lines[dest] );
+   syncbuff_assert( NULL != syncbuff_lines[dest] );
 
    for( i = syncbuff_count[dest] ; syncbuff_size[dest] > i ; i++ ) {
       syncbuff_lines[dest][i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );
@@ -65,7 +66,7 @@ uint8_t syncbuff_listen() {
    static uint8_t listening = 0;
 
 #ifdef SYNCBUFF_STRICT
-   assert( 0 == listening );
+   syncbuff_assert( 0 == listening );
 #else
    if( 0 != listening ) {
       return 0;
@@ -109,7 +110,7 @@ ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    ssize_t i;
    ssize_t size_out = -1;
 
-   assert( NULL != line );
+   syncbuff_assert( NULL != line );
 
    syncbuff_trace( "Write: %s\n", bdata( line ) );
 
@@ -125,7 +126,7 @@ ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
       );
       bstr_result =
          bassignformat( syncbuff_lines[dest][i + 1], "%s", bdata( syncbuff_lines[dest][i] ) );
-      assert( NULL != syncbuff_lines[dest][i + 1] );
+      syncbuff_assert( NULL != syncbuff_lines[dest][i + 1] );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
@@ -139,8 +140,8 @@ ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    );
    bstr_result =
       bassignformat( syncbuff_lines[dest][0], "%s", bdata( line ) );
-   assert( NULL != syncbuff_lines[dest][0] );
-   assert( blength( line ) == blength( syncbuff_lines[dest][0] ) );
+   syncbuff_assert( NULL != syncbuff_lines[dest][0] );
+   syncbuff_assert( blength( line ) == blength( syncbuff_lines[dest][0] ) );
    if( 0 != bstr_result ) {
       goto cleanup;
    }
@@ -150,7 +151,7 @@ ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
 
    (syncbuff_count[dest])++;
 
-   assert( bdata( line ) != bdata( syncbuff_lines[dest][0] ) );
+   syncbuff_assert( bdata( line ) != bdata( syncbuff_lines[dest][0] ) );
 
    size_out = blength( syncbuff_lines[dest][0] );
 
@@ -163,16 +164,16 @@ ssize_t syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
    int  bstr_result;
    ssize_t size_out = -1;
 
-   assert( NULL != buffer );
+   syncbuff_assert( NULL != buffer );
    btrunc( buffer, 0 );
-   assert( 0 == blength( buffer ) );
+   syncbuff_assert( 0 == blength( buffer ) );
 
    if( 0 < syncbuff_count[dest] ) {
       (syncbuff_count[dest])--;
-      assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
+      syncbuff_assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
       bstr_result =
          bassignformat( buffer, "%s", bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
-      assert( NULL != buffer );
+      syncbuff_assert( NULL != buffer );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
@@ -182,7 +183,7 @@ ssize_t syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
       }
    }
 
-   assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
+   syncbuff_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
 
    size_out = blength( buffer );
 

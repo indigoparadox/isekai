@@ -118,8 +118,8 @@ inline void tilemap_get_tile_tileset_pos(
    *x = ((gid - 1) % tiles_wide) * set->tilewidth;
 #endif /* USE_MATH */
 
-   assert( *y < (set->tileheight * tiles_high) );
-   assert( *x < (set->tilewidth * tiles_wide) );
+   scaffold_assert( *y < (set->tileheight * tiles_high) );
+   scaffold_assert( *x < (set->tilewidth * tiles_wide) );
 cleanup:
    return;
 }
