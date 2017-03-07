@@ -7,6 +7,10 @@
 #include <stddef.h>
 
 #ifdef USE_WIN32
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <Windows.h>
 /* typedef uint16_t size_t; */
 /* typedef int16_t ssize_t; */

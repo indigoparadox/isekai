@@ -110,6 +110,12 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
 
    v->scalar = TRUE;
 
+   if( 0 == v->size || NULL == v->scalar_data ) {
+      v->size = 10;
+      v->scalar_data = (int32_t*)calloc( v->size, sizeof( int32_t ) );
+      scaffold_check_null( v->scalar_data );
+   }
+
    if( FALSE == allow_dupe ) {
       for( i = 0 ; NULL != v->scalar_data && v->count > i ; i++ ) {
          if( v->scalar_data[i] == value ) {
@@ -121,12 +127,6 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
             goto cleanup;
          }
       }
-   }
-
-   if( 0 == v->size ) {
-      v->size = 10;
-      v->scalar_data = (int32_t*)calloc( v->size, sizeof( int32_t ) );
-      scaffold_check_null( v->scalar_data );
    }
 
    if( v->size == v->count ) {

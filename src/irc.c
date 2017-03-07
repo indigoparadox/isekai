@@ -83,6 +83,7 @@ static void irc_server_user(
       } else if( 1 == consumed && scaffold_is_numeric( args->entry[i] ) ) {
          /* Second arg: Mode */
          c_mode = bdata( args->entry[i] );
+         scaffold_check_null( c_mode );
          c->mode = atoi( c_mode );
       } else if( 1 == consumed || 2 == consumed ) {
          /* Second or Third arg: * */
@@ -529,6 +530,9 @@ static void irc_server_gameupdate(
    if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
       l = client_get_channel_by_name( &(s->self), args->entry[1] );
       scaffold_check_null( l );
+   } else {
+      scaffold_print_error( "Malformed GU statement supplied.\n" );
+      goto cleanup;
    }
 
    gamedata_update_server( &(l->gamedata), c, &gu_args, &reply_c, &reply_l );

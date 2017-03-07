@@ -29,7 +29,7 @@ int main( int argc, char** argv ) {
    bstring buffer = NULL;
    time_t tm = 0;
    GRAPHICS g = { 0 };
-   INPUT p = { 0 };
+   struct INPUT p = { 0 };
    struct UI ui = { 0 };
 
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))

@@ -458,7 +458,7 @@ static char *ezxml_str2utf8(char **s, size_t *len) {
 /* frees a tag attribute list */
 static void ezxml_free_attr(char **attr) {
    int i = 0;
-   char *m;
+   char *m = NULL;
 
    if (! attr || attr == EZXML_NIL) return; /* nothing to free */
    while (attr[i]) i += 2; /* find end of attribute list */

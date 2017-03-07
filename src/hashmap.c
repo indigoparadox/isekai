@@ -132,9 +132,9 @@ static unsigned long crc32_tab[] = {
 /* Return a 32-bit CRC of the contents of the buffer. */
 
 static uint32_t hashmap_crc32( bstring string ) {
-   unsigned int i;
-   uint32_t crc32val;
-   const unsigned char* s;
+   unsigned int i = 0;
+   uint32_t crc32val = 0;
+   const unsigned char* s = NULL;
 
    scaffold_check_null( string );
    s = (const unsigned char*)bdata( string );

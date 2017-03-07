@@ -11,6 +11,7 @@ static void client_cleanup( const struct REF *ref ) {
 #endif /* DEBUG */
    struct CLIENT* c = NULL;
    c = scaffold_container_of( c, struct CLIENT, link );
+   assert( NULL != c );
    connection_cleanup( &(c->link) );
    bdestroy( c->nick );
    bdestroy( c->realname );

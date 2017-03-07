@@ -41,7 +41,7 @@ BOOL server_free( SERVER* s ) {
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
    client_init( &(s->self) );
-   s->self.link.refcount.free = server_cleanup;
+   s->self.link.refcount.gc_free = server_cleanup;
    hashmap_init( &(s->clients) );
    s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
    s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
