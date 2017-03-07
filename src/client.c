@@ -71,7 +71,6 @@ BOOL client_free( struct CLIENT* c ) {
 }
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
-   //return vector_iterate( &(c->channels), callback_search_channels, name );
    return hashmap_get( &(c->channels), name );
 }
 

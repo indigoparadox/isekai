@@ -194,7 +194,6 @@ static void datafile_tilemap_parse_tileset( struct TILEMAP* t, ezxml_t xml_tiles
 
       xml_tile = ezxml_next( xml_tile );
    }
-   //tilemap_tileset_lock_tiles( set, FALSE );
 
 cleanup:
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */

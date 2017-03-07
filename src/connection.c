@@ -184,6 +184,7 @@ ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client 
    sent = send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #elif defined( USE_SYNCBUFF )
    sent = syncbuff_write( buffer, client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT );
+   assert( 0 <= sent );
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */
@@ -215,6 +216,7 @@ ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
    }
 #elif defined( USE_SYNCBUFF )
    total_read_count = syncbuff_read( buffer, client ? SYNCBUFF_DEST_CLIENT : SYNCBUFF_DEST_SERVER );
+   assert( 0 <= total_read_count );
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */

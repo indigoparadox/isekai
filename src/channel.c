@@ -69,6 +69,5 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
 }
 
 struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
-   //return vector_iterate( &(l->clients), callback_search_clients, nick );
    return hashmap_get( &(l->clients), nick );
 }

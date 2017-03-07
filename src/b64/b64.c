@@ -359,11 +359,11 @@ void* b64_decode( size_t* outdata_len, bstring instring ) {
 
          default:
             buf = buf << 6 | c;
-            iter++; // increment the number of iteration
+            iter++; /* increment the number of iteration */
             /* If the buffer is full, split it into bytes */
             if( 4 == iter) {
                if( (outdata_index += 3) > *outdata_len ) {
-                  //return 1; /* buffer overflow */
+                  /* return 1; / buffer overflow */
                   *outdata_len *= 2;
                   outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
                   scaffold_check_null( outdata );
@@ -379,7 +379,7 @@ void* b64_decode( size_t* outdata_len, bstring instring ) {
 
    if( 3 == iter ) {
       if( (outdata_index += 2) > *outdata_len ) {
-         //return 1; /* buffer overflow */
+         /* return 1; / buffer overflow */
          *outdata_len *= 2;
          outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
          scaffold_check_null( outdata );
@@ -388,7 +388,7 @@ void* b64_decode( size_t* outdata_len, bstring instring ) {
       outdata[outdata_index++] = (buf >> 2) & 255;
    } else if( 2 == iter ) {
       if( ++outdata_index > *outdata_len ) {
-         // return 1; /* buffer overflow */
+         /* return 1; / buffer overflow */
          *outdata_len *= 2;
          outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
          scaffold_check_null( outdata );

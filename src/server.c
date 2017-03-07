@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 
-//#include "parser.h"
 #include "heatshrink/heatshrink_encoder.h"
 #include "b64/b64.h"
 #include "callbacks.h"
@@ -256,7 +255,10 @@ void server_drop_client( SERVER* s, bstring nick ) {
    old_count = hashmap_count( &(s->self.channels) );
 #endif /* DEBUG */
 
-   deleted = hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
    scaffold_print_debug(
       "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )

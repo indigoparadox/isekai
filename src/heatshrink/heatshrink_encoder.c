@@ -428,13 +428,18 @@ static void do_indexing(heatshrink_encoder *hse) {
     struct hs_index *hsi = HEATSHRINK_ENCODER_INDEX(hse);
     int16_t last[256];
     uint16_t i;
+    uint8_t * data;
+    int16_t * index;
+    uint16_t input_offset;
+    uint16_t end;
+
     memset(last, 0xFF, sizeof(last));
 
-    uint8_t * const data = hse->buffer;
-    int16_t * const index = hsi->index;
+    data = hse->buffer;
+    index = hsi->index;
 
-    const uint16_t input_offset = get_input_offset(hse);
-    const uint16_t end = input_offset + hse->input_size;
+    input_offset = get_input_offset(hse);
+    end = input_offset + hse->input_size;
 
     for (i=0; i<end; i++) {
         uint8_t v = data[i];

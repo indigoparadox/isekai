@@ -365,6 +365,18 @@ BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg )
    return FALSE;
 }
 
+BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg ) {
+   struct CHUNKER* h = (struct CHUNKER*)iter;
+   if( chunker_unchunk_finished( h ) ) {
+      scaffold_print_debug(
+         "Unchunker for %s has finished. Removing...\n", bdata( key )
+      );
+      chunker_free( h );
+      return TRUE;
+   }
+   return FALSE;
+}
+
 BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
    IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
    irc_command_free( cmd );
