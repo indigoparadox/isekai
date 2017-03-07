@@ -81,6 +81,7 @@
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -111,6 +112,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-DUSE_SYNCBUFF" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -138,6 +140,8 @@
 					<Add option="-DUSE_ALLEGRO_PNG" />
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -157,6 +161,7 @@
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DUSE_ALLEGRO_PNG" />
+					<Add option="-DUSE_SYNCBUFF" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -373,10 +378,6 @@
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
 		</Unit>
-		<Unit filename="test/check_connection.c">
-			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
-		</Unit>
 		<Unit filename="test/check_data.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
@@ -389,6 +390,10 @@
 			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="test/check_main.c">
+			<Option compilerVar="CC" />
+			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="test/check_syncbuff.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
 		</Unit>
