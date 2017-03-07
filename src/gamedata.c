@@ -166,6 +166,10 @@ void gamedata_process_data_block(
    GRAPHICS* g = NULL;
    struct CHUNKER* h = NULL;
    struct CHANNEL* l = NULL;
+   int8_t chunker_percent;
+
+   assert( 0 < blength( progress->data ) );
+   assert( 0 < blength( progress->filename ) );
 
    l = scaffold_container_of( d, struct CHANNEL, gamedata );
    scaffold_check_null( l );
@@ -194,6 +198,11 @@ void gamedata_process_data_block(
    }
 
    chunker_unchunk_pass( h, progress->data, progress->current, progress->chunk_size );
+
+   chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
+   if( 0 < chunker_percent ) {
+      scaffold_print_debug( "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
+   }
 
    if( chunker_unchunk_finished( h ) ) {
       /* Cached file found, so abort transfer. */

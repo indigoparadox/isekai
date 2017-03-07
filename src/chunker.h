@@ -45,6 +45,7 @@ struct CHUNKER {
    bstring filecache_path;
    bstring filename;
    bstring serverpath;
+   size_t last_percent;
 };
 
 void chunker_free( struct CHUNKER* h );
@@ -66,5 +67,6 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
 void chunker_unchunk_save_cache( struct CHUNKER* h );
 void chunker_unchunk_check_cache( struct CHUNKER* h, const bstring filecache_path );
 BOOL chunker_unchunk_finished( struct CHUNKER* h );
+int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
 
 #endif /* CHUNKER_H */
