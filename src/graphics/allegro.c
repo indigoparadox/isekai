@@ -19,13 +19,13 @@ typedef struct _GRAPHICS_FMEM_INFO {
 
 static int graphics_fmem_fclose( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
+   assert( info );
+   assert( info->offset < info->length );
 
    /* Shorten the allocation back down to the stated length. */
    if( info->alloc > info->length ) {
       info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->length );
-      ASSERT( NULL !=info->block );
+      assert( NULL !=info->block );
       info->alloc = info->length;
    }
 
@@ -34,10 +34,10 @@ static int graphics_fmem_fclose( void* userdata ) {
 
 static int graphics_fmem_getc( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
+   assert( info );
+   assert( info->offset < info->length );
 
-   if( info->offset == info->length ) {
+   if( info->offset >= info->length ) {
       return EOF;
    } else {
       return info->block[info->offset++];
@@ -58,23 +58,23 @@ static int graphics_fmem_ungetc( int c, void* userdata ) {
 static long graphics_fmem_fread( void* p, long n, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    size_t actual;
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
+   assert( info );
+   assert( info->offset <= info->length );
 
    actual = MIN( n, info->length - info->offset );
 
    memcpy( p, info->block + info->offset, actual );
    info->offset += actual;
 
-   ASSERT( info->offset <= info->length );
+   assert( info->offset <= info->length );
 
    return actual;
 }
 
 static int graphics_fmem_putc( int c, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
+   assert( info );
+   assert( info->offset <= info->length );
 
    if( NULL == info->block ) {
       info->block = (BYTE*)calloc( info->alloc, sizeof( BYTE ) );
@@ -85,6 +85,7 @@ static int graphics_fmem_putc( int c, void* userdata ) {
       if( info->alloc <= info->length ) {
          info->alloc *= 2;
          info->block = (BYTE*)realloc( (BYTE*)info->block, sizeof( BYTE ) * info->alloc );
+         assert( NULL !=info->block );
       }
       info->length++;
    }
@@ -97,8 +98,6 @@ static int graphics_fmem_putc( int c, void* userdata ) {
 static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
    long i;
    BYTE* c = (BYTE*)p;
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
 
    for( i = 0 ; n > i ; i++ ) {
       if( *c != graphics_fmem_putc( *c, userdata ) ) {
@@ -115,14 +114,14 @@ static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    size_t actual;
 
-   ASSERT( info );
-   ASSERT( info->offset <= info->length );
+   assert( info );
+   assert( info->offset < info->length );
 
    actual = MIN( offset, info->length - info->offset );
 
    info->offset += actual;
 
-   ASSERT( info->offset <= info->length );
+   assert( info->offset < info->length );
 
    if( offset == actual ) {
       return 0;
@@ -260,6 +259,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
 
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
+      g->surface = NULL;
    }
 
    fmem_info.block = (BYTE*)data;
@@ -277,8 +277,29 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
       g->surface = load_memory_png( data, length, NULL );
       if( NULL == g->surface ) {
 #endif /* USE_ALLEGRO_PNG */
-         g->surface = load_gif_pf( fmem, NULL );
-         close_packfile = FALSE;
+
+         pack_fclose( fmem );
+         fmem_info.block = (BYTE*)data;
+         fmem_info.length = length;
+         fmem_info.offset = 0;
+         fmem_info.alloc = 0;
+         fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
+
+         g->surface = load_tga_pf( fmem, NULL );
+         if( NULL == g->surface ) {
+
+#ifdef USE_ALLEGRO_GIF
+            pack_fclose( fmem );
+            fmem_info.block = (BYTE*)data;
+            fmem_info.length = length;
+            fmem_info.offset = 0;
+            fmem_info.alloc = 0;
+            fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
+            g->surface = load_gif_pf( fmem, NULL );
+            close_packfile = FALSE;
+#endif /* USE_ALLEGRO_GIF */
+
+         }
 #ifdef USE_ALLEGRO_PNG
       }
 #endif /* USE_ALLEGRO_PNG */

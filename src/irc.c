@@ -379,8 +379,6 @@ static void irc_server_who(
    size_t i;
    bstring response = NULL;
 
-   return; // FIXME
-
    if( 2 > args->qty ) {
       scaffold_print_error( "Server: Malformed WHO expression received.\n" );
       scaffold_error = SCAFFOLD_ERROR_MISC;
@@ -812,8 +810,6 @@ IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
 IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_client_mob ),
 IRC_COMMAND_TABLE_END() };
-
-//IRC_COMMAND* irc_dispatch( void* local, void* arg2, const_bstring line ) {
 
 static void irc_command_cleanup( const struct REF* ref ) {
    IRC_COMMAND* cmd = scaffold_container_of( ref, IRC_COMMAND, refcount );

@@ -1029,7 +1029,9 @@ ezxml_t ezxml_set_attr(ezxml_t xml, const char *name, const char *value) {
       xml->attr[l + 3] = realloc(xml->attr[l + 1],
                            (c = strlen(xml->attr[l + 1])) + 2);
       strcpy(xml->attr[l + 3] + c, " "); /* set name/value as not malloced */
-      if (xml->flags & EZXML_DUP) xml->attr[l + 3][c] = EZXML_NAMEM;
+      if( xml->flags & EZXML_DUP ) {
+         xml->attr[l + 3][c] = EZXML_NAMEM;
+      }
    } else if (xml->flags & EZXML_DUP) free((char *)name); /* name was strduped */
 
    for (c = l; xml->attr[c]; c += 2); /* find end of attribute list */

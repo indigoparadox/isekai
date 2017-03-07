@@ -408,29 +408,29 @@ cleanup:
 #endif
 
 int b64_decode( bstring indata, unsigned char *out, size_t *outLen ) {
-    //char *end = in + inLen;
+    /* char *end = in + inLen; */
     char iter = 0;
     uint32_t buf = 0;
     size_t len = 0;
     size_t indata_index = 0;
 
-    //while (in < end) {
-    //while( indata_index < inLen ) {
+    /* while (in < end) { */
+    /* while( indata_index < inLen ) { */
     while( indata_index < blength( indata ) ) {
-        //unsigned char c = d[*in++];
-        //unsigned char c = d[in[indata_index++]];
+        /* unsigned char c = d[*in++]; */
+        /* unsigned char c = d[in[indata_index++]]; */
         unsigned char c = d[(int)(bdata( indata )[indata_index++])];
 
         switch (c) {
         case WHITESPACE: continue;   /* skip whitespace */
         case INVALID:    return 1;   /* invalid input, return error */
         case EQUALS:                 /* pad character, end of data */
-            //in = end;
+            /* in = end; */
             indata_index = blength( indata );
             continue;
         default:
             buf = buf << 6 | c;
-            iter++; // increment the number of iteration
+            iter++; /* increment the number of iteration */
             /* If the buffer is full, split it into bytes */
             if (iter == 4) {
                 if ((len += 3) > *outLen) return 1; /* buffer overflow */

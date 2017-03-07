@@ -184,7 +184,8 @@ void scaffold_random_string( bstring rand_str, size_t len );
 void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len );
 void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
 void scaffold_list_dir(
-   bstring path, struct VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
+   const bstring path, struct VECTOR* list, const bstring filter,
+   BOOL dir_only, BOOL show_hidden
 );
 bstring scaffold_basename( bstring path );
 void scaffold_join_path( bstring path1, bstring path2 );

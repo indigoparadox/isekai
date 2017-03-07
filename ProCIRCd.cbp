@@ -113,6 +113,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DDEBUG_SYNCBUFF" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />

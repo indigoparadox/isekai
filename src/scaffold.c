@@ -16,7 +16,7 @@ struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */
 
-uint8_t scaffold_error = SCAFFOLD_ERROR_NONE;
+int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;
 
 static char scaffold_random_chars[] =
@@ -286,7 +286,8 @@ cleanup:
 }
 
 void scaffold_list_dir(
-   bstring path, struct VECTOR* list, bstring filter, BOOL dir_only, BOOL show_hidden
+   const bstring path, struct VECTOR* list, const bstring filter,
+   BOOL dir_only, BOOL show_hidden
 ) {
    bstring child_path = NULL;
    char* path_c = NULL;

@@ -7,7 +7,7 @@
 
 #define MOBILE_SPRITE_SIZE 32
 
-struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black.gif" );
+struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black.tga" );
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
@@ -91,6 +91,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) 
    if( d == NULL ) {
       goto cleanup;
    }
+
+   char* c_f = bdata( o->sprites_filename );
 
    /* If the current mobile spritesheet doesn't exist, then load it. */
    if( NULL == o->sprites && NULL == hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
