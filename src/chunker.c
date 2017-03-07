@@ -90,6 +90,8 @@ static void chunker_chunk_setup_internal(
       free( h->raw_ptr );
    }
    h->raw_ptr = NULL;
+
+   h->last_percent = 0;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -518,4 +520,27 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 cleanup:
 
    return finished;
+}
+
+int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {
+   size_t new_percent = 0;
+   size_t current_bytes = 0;
+   CHUNKER_TRACK* iter_track;
+   size_t i;
+
+   for( i = 0 ; vector_count( &(h->tracks) ) > i ; i++ ) {
+      iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
+      current_bytes += iter_track->length;
+   }
+
+   if( 0 < h->raw_length ) {
+      new_percent = (current_bytes * 100) / h->raw_length;
+   }
+
+   if( new_percent > h->last_percent || TRUE == force ) {
+      h->last_percent = new_percent;
+      return new_percent;
+   } else {
+      return -1;
+   }
 }
