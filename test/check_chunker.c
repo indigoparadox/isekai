@@ -14,7 +14,7 @@ struct VECTOR* chunker_mapchunk_starts;
 char* chunker_mapdata;
 size_t chunker_mapsize;
 FILE* chunker_mapfile = NULL;
-CHUNKER* h;
+struct CHUNKER* h;
 
 void check_chunker_setup_unchecked() {
 
@@ -56,7 +56,7 @@ void check_chunker_setup_checked() {
       * current_pos = 0;
 
    /* Setup the chunker. */
-   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
    ck_assert( NULL != h );
 
    /* Setup the chunking buffer. */
@@ -105,7 +105,7 @@ void check_chunker_setup_checked() {
    if( NULL != h ) {
       chunker_free( h );
    }
-   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
    ck_assert( NULL != h );
 }
 

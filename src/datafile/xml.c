@@ -13,18 +13,21 @@ static void datafile_tilemap_parse_properties( struct TILEMAP* t, ezxml_t xml_pr
    xml_prop_iter = ezxml_child( xml_props, "property" );
 
    while( NULL != xml_prop_iter ) {
-      //if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "light_str" ) ) {
-      //    map_out->light_str = atoi( ezxml_attr( xml_prop_iter, "value" ) );
 
-      //if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "music_path" ) ) {
-      //    map_out->music_path = bfromcstr( ezxml_attr( xml_prop_iter, "value" ) );
+#if 0
+      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "light_str" ) ) {
+          map_out->light_str = atoi( ezxml_attr( xml_prop_iter, "value" ) );
 
-      //if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "time_moves" ) ) {
-      //    if( 0 == strcmp( ezxml_attr( xml_prop_iter, "value" ), "true" ) ) {
-      //       map_out->time_moves = TRUE;
-      //    } else {
-      //       map_out->time_moves = FALSE;
-      //    }
+      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "music_path" ) ) {
+          map_out->music_path = bfromcstr( ezxml_attr( xml_prop_iter, "value" ) );
+
+      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "time_moves" ) ) {
+          if( 0 == strcmp( ezxml_attr( xml_prop_iter, "value" ), "true" ) ) {
+             map_out->time_moves = TRUE;
+          } else {
+             map_out->time_moves = FALSE;
+          }
+#endif
 
       xml_prop_iter = xml_prop_iter->next;
    }

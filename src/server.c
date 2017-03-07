@@ -74,7 +74,7 @@ void server_client_send( struct CLIENT* c, bstring buffer ) {
    scaffold_assert_server();
 }
 
-void server_client_printf( SERVER* s, struct CLIENT* c, const char* message, ... ) {
+void server_client_printf( struct CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
@@ -189,7 +189,7 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
 
 #ifdef DEBUG
    old_count = c_first->link.refcount.count;
-   channel_add_client( l, c_first );
+   server_channel_add_client( l, c_first );
    assert( c_first->link.refcount.count > old_count );
    old_count = l->refcount.count;
    client_add_channel( c_first, l );
@@ -205,22 +205,25 @@ cleanup:
    return l;
 }
 
-/*
-struct CLIENT* server_get_client( SERVER* s, int index ) {
-   return (struct CLIENT*)vector_get( &(s->clients), index );
+void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
+
+   scaffold_check_null( c );
+
+   if( NULL != channel_get_client_by_name( l, c->nick ) ) {
+      goto cleanup;
+   }
+
+   channel_add_client( l, c );
+
+   hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
+
+cleanup:
+   return;
 }
-*/
 
 struct CLIENT* server_get_client( SERVER* s, const bstring nick ) {
-   //return vector_iterate( &(s->clients), callback_search_clients, (bstring)nick );
    return hashmap_get( &(s->clients), nick );
 }
-
-/*
-struct CLIENT* server_get_client_by_ptr( SERVER* s, struct CLIENT* c ) {
-   return vector_iterate( &(s->clients), client_cmp_ptr, c );
-}
-*/
 
 struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
    return client_get_channel_by_name( &(s->self), (bstring)nick );

@@ -6,6 +6,7 @@
 
 struct UI;
 struct MOBILE;
+struct CHUNKER_PROGRESS;
 
 struct GAMEDATA_UPDATE {
 
@@ -13,11 +14,11 @@ struct GAMEDATA_UPDATE {
 
 struct GAMEDATA {
    struct TILEMAP tmap;
-   //UI* ui;
    struct HASHMAP incoming_chunkers;
    uint8_t* incoming_buffer;
    size_t incoming_buffer_len;
    struct VECTOR mobiles;
+   struct HASHMAP mob_sprites;
 };
 
 #include "mobile.h"
@@ -46,5 +47,8 @@ void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c );
 void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui );
 void gamedata_add_mobile( struct GAMEDATA* s, struct MOBILE* o );
 void gamedata_remove_mobile( struct GAMEDATA* s, size_t serial );
+void gamedata_process_data_block(
+   struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER_PROGRESS* progress
+);
 
 #endif /* GAMEDATA_H */

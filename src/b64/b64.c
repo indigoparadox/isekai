@@ -343,7 +343,6 @@ void* b64_decode( size_t* outdata_len, bstring instring ) {
    scaffold_check_null( outdata );
 
    while( blength( instring ) > indata_index ) {
-      //unsigned char c = d[(int8_t)bchar( instring, indata_index++ )];
       unsigned char c = d[bdata( instring )[indata_index++]];
 
       switch( c ) {

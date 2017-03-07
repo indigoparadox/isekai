@@ -7,7 +7,6 @@
 #include "graphics.h"
 #include "gamedata.h"
 #include "channel.h"
-#include "mailbox.h"
 #include "hashmap.h"
 #include "mobile.h"
 #include "chunker.h"
@@ -35,6 +34,7 @@ struct CLIENT {
    bstring realname;
    bstring remote;
    bstring away;
+   bstring mobile_sprite;
    uint8_t mode;
    uint8_t flags;
    int x; /* Tile X */
@@ -64,18 +64,23 @@ void client_init( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
 void client_add_channel( struct CLIENT* c, struct CHANNEL* l );
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
-void client_connect( struct CLIENT* c, bstring server, int port );
+void client_connect( struct CLIENT* c, const bstring server, int port );
 void client_update( struct CLIENT* c );
-void client_join_channel( struct CLIENT* c, bstring name );
-void client_send( struct CLIENT* c, bstring buffer );
+void client_join_channel( struct CLIENT* c, const bstring name );
+void client_leave_channel( struct CLIENT* c, const bstring lname );
+void client_send( struct CLIENT* c, const bstring buffer );
 void client_printf( struct CLIENT* c, const char* message, ... );
 void client_lock_channels( struct CLIENT* c, BOOL lock );
 void client_stop( struct CLIENT* c );
 void client_send_file(
-   struct CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
-   bstring filepath
+   struct CLIENT* c, const bstring channel, CHUNKER_DATA_TYPE type,
+   const bstring serverpath, const bstring filepath
 );
-void client_add_puppet( struct CLIENT* c, struct MOBILE* o );
+void client_set_puppet( struct CLIENT* c, struct MOBILE* o );
 void client_clear_puppet( struct CLIENT* c );
+void client_request_file(
+   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type,
+   const bstring filename
+);
 
 #endif /* CLIENT_H */

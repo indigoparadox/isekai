@@ -9,7 +9,8 @@ static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    size_t deleted;
 #endif /* DEBUG */
-   struct CLIENT* c = scaffold_container_of( c, struct CLIENT, link );
+   struct CLIENT* c = NULL;
+   c = scaffold_container_of( c, struct CLIENT, link );
    connection_cleanup( &(c->link) );
    bdestroy( c->nick );
    bdestroy( c->realname );
@@ -74,23 +75,14 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
    return hashmap_get( &(c->channels), name );
 }
 
-void client_connect( struct CLIENT* c, bstring server, int port ) {
-   bstring buffer;
-
+void client_connect( struct CLIENT* c, const bstring server, int port ) {
    scaffold_set_client();
 
    connection_connect( &(c->link), server , port );
    scaffold_check_negative( scaffold_error );
 
-   buffer = bfromcstr( "NICK " );
-   bconcat( buffer, c->nick );
-   client_send( c, buffer );
-   bdestroy( buffer );
-
-   buffer = bfromcstr( "USER " );
-   bconcat( buffer, c->realname );
-   client_send( c, buffer );
-   bdestroy( buffer );
+   client_printf( c, "NICK %b", c->nick );
+   client_printf( c, "USER %b", c->realname );
 
 cleanup:
 
@@ -99,7 +91,6 @@ cleanup:
 
 /* This runs on the local client. */
 void client_update( struct CLIENT* c ) {
-   //ssize_t last_read_count = 0;
    IRC_COMMAND* cmd = NULL;
 
    scaffold_set_client();
@@ -139,7 +130,7 @@ void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
    hashmap_put( &(c->channels), l->name, l );
 }
 
-void client_join_channel( struct CLIENT* c, bstring name ) {
+void client_join_channel( struct CLIENT* c, const bstring name ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
 
@@ -151,7 +142,7 @@ void client_join_channel( struct CLIENT* c, bstring name ) {
    bdestroy( buffer );
 }
 
-void client_leave_channel( struct CLIENT* c, bstring lname ) {
+void client_leave_channel( struct CLIENT* c, const bstring lname ) {
    bstring buffer = NULL;
    /* We won't record the channel in our list until the server confirms it. */
 
@@ -166,7 +157,7 @@ void client_leave_channel( struct CLIENT* c, bstring lname ) {
    hashmap_remove( &(c->channels), lname );
 }
 
-void client_send( struct CLIENT* c, bstring buffer ) {
+void client_send( struct CLIENT* c, const bstring buffer ) {
 
    /* TODO: Make sure we're still connected. */
 
@@ -204,10 +195,10 @@ cleanup:
 }
 
 void client_send_file(
-   struct CLIENT* c, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
-   bstring filepath
+   struct CLIENT* c, const bstring channel, CHUNKER_DATA_TYPE type,
+   const bstring serverpath, const bstring filepath
 ) {
-   CHUNKER* h = NULL;
+   struct CHUNKER* h = NULL;
 
    scaffold_print_debug(
       "Sending file to client %d: %s\n",
@@ -215,7 +206,7 @@ void client_send_file(
    );
 
    /* Begin transmitting tilemap. */
-   h = (CHUNKER*)calloc( 1, sizeof( CHUNKER ) );
+   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
    scaffold_check_null( h );
 
    chunker_chunk_start_file(
@@ -237,7 +228,7 @@ cleanup:
    return;
 }
 
-void client_add_puppet( struct CLIENT* c, struct MOBILE* o ) {
+void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
    if( NULL != c->puppet ) { /* Take care of existing mob before anything. */
       mobile_free( c->puppet );
       c->puppet = NULL;
@@ -253,5 +244,20 @@ void client_add_puppet( struct CLIENT* c, struct MOBILE* o ) {
 }
 
 void client_clear_puppet( struct CLIENT* c ) {
-   client_add_puppet( c, NULL );
+   client_set_puppet( c, NULL );
+}
+
+void client_request_file(
+   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type,
+   const bstring filename
+) {
+   if( FALSE != hashmap_contains_key( &(l->gamedata.incoming_chunkers), filename ) ) {
+      /* File already requested, so just be patient. */
+      goto cleanup;
+   }
+
+   client_printf( c, "GRF %d %b %b", type, l->name, filename );
+
+cleanup:
+   return;
 }

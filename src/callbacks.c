@@ -17,7 +17,6 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    BOOL is_client;
 
    /* Figure out if we're being called from a client or server. */
-   //if( SERVER_SENTINAL == ((CLIENT*)arg)->sentinal ) {
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       table = irc_table_client;
       is_client = TRUE;
@@ -89,7 +88,7 @@ void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
 
 /* Return any client that is in the bstrlist arg. */
 void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
-   struct bstrList* list = (struct bstrList*)arg;
+   const struct bstrList* list = (const struct bstrList*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
    int i;
 
@@ -156,7 +155,7 @@ void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
 
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    bstring xmit_buffer_template = (bstring)arg;
-   CHUNKER* h = (CHUNKER*)iter;
+   struct CHUNKER* h = (struct CHUNKER*)iter;
    bstring xmit_buffer_out = NULL;
    int bstr_result;
 
@@ -229,7 +228,7 @@ cleanup:
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
    struct CHANNEL_CLIENT* lc = (struct CHANNEL_CLIENT*)arg;
 
-   irc_request_file(
+   client_request_file(
       lc->c, lc->l,
       CHUNKER_DATA_TYPE_TILESET_IMG,
       key
@@ -261,6 +260,31 @@ void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
 
    mobile_draw_ortho( o, twindow );
+
+   return NULL;
+}
+
+void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+   struct MOBILE* o = (struct MOBILE*)iter;
+
+   if( NULL == c || NULL == o ) {
+      return NULL;
+   }
+
+   server_client_printf(
+      c, "MOB %b %d %b %b",
+      o->channel->name, o->serial, o->sprites_filename, o->owner->nick
+   );
+
+   return NULL;
+}
+
+void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)arg;
+   struct CLIENT* c = (struct CLIENT*)iter;
+
+   vector_iterate( &(l->gamedata.mobiles), callback_send_mobs_to_client, c );
 
    return NULL;
 }
@@ -322,7 +346,7 @@ BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
 BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
    bstring filename = (bstring)arg;
    if( NULL == filename || 0 == bstrcmp( key, filename ) ) {
-      CHUNKER* h = (CHUNKER*)iter;
+      struct CHUNKER* h = (struct CHUNKER*)iter;
       chunker_free( h );
       return TRUE;
    }
@@ -330,7 +354,7 @@ BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
 }
 
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
-   CHUNKER* h = (CHUNKER*)iter;
+   struct CHUNKER* h = (struct CHUNKER*)iter;
    if( chunker_chunk_finished( h ) ) {
       scaffold_print_debug(
          "Chunker for %s has finished. Removing...\n", bdata( key )
@@ -376,36 +400,3 @@ VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {
    }
    return (cta->start > ctb->start) ? VECTOR_SORT_A_HEAVIER : VECTOR_SORT_A_LIGHTER;
 }
-
-/*
-static void* server_prn_channel( VECTOR* v, size_t idx, void* iter, void* arg ) {
-   SERVER_PBUFFER* pbuffer = (SERVER_PBUFFER*)arg;
-   CLIENT* c_iter = (CLIENT*)iter;
-   if( 0 == bstrcmp( pbuffer->c_sender->nick, c_iter->nick ) ) {
-      return NULL;
-   }
-   server_client_send( pbuffer->s, c_iter, pbuffer->buffer );
-   return NULL;
-}
-*/
-
-#if 0
-static void* channel_lst_client( struct VECTOR* v, size_t idx, void* iter, void* arg ) {
-   struct bstrList* list = (struct bstrList*)arg;
-   struct CLIENT* c = (struct CLIENT*)iter;
-   int bstr_check;
-   size_t client_count = vector_count( v );
-
-   /* Make sure we have enough space for all clients. */
-   if( list->mlen < client_count ) {
-      bstr_check = bstrListAlloc( list, client_count );
-      scaffold_check_nonzero( bstr_check );
-   }
-
-   list->entry[list->qty] = c->nick;
-   list->qty++;
-
-cleanup:
-   return NULL;
-}
-#endif

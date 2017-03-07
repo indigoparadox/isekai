@@ -9,6 +9,11 @@
 #include "input.h"
 #include "callbacks.h"
 
+struct tagbstring str_gamedata_cache_path =
+   bsStatic( "testdata/livecache" );
+struct tagbstring str_gamedata_server_path =
+   bsStatic( "testdata/server" );
+
 static inline struct CHANNEL* gamedata_get_channel( struct GAMEDATA* d ) {
    return (struct CHANNEL*)d;
 }
@@ -56,6 +61,9 @@ void gamedata_cleanup( struct GAMEDATA* d ) {
    );
    vector_free( &(d->mobiles) );
 
+   hashmap_remove_cb( &(d->mob_sprites), callback_free_graphics, NULL );
+   hashmap_init( &(d->mob_sprites ) );
+
    /* Don't cleanup UI since other things probably use that. */
 }
 
@@ -65,6 +73,7 @@ void gamedata_init_client( struct GAMEDATA* d ) {
    tilemap_init( &(d->tmap), FALSE );
    hashmap_init( &(d->incoming_chunkers) );
    vector_init( &(d->mobiles ) );
+   hashmap_init( &(d->mob_sprites) );
 }
 
 void gamedata_update_server(
@@ -99,7 +108,9 @@ void gamedata_poll_input( struct GAMEDATA* d, struct CLIENT* c ) {
 void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
    struct GAMEDATA* d = NULL;
    struct CHANNEL* l = NULL;
-   struct GRAPHICS_TILE_WINDOW twindow = { 0 };
+   static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
+
+   scaffold_set_client();
 
    l = hashmap_get_first( &(c->channels) );
    if( NULL == l ) {
@@ -108,27 +119,128 @@ void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
    }
 
    d = &(l->gamedata);
+   if( NULL == twindow ) {
+      /* TODO: Free this, somehow. */
+      twindow = calloc( 1, sizeof( twindow ) );
+   }
 
-   twindow.width = 640 / 32;
-   twindow.height = 480 / 32;
+   twindow->width = 640 / 32;
+   twindow->height = 480 / 32;
+   twindow->g = g;
+   twindow->t = &(d->tmap);
 
    if( TILEMAP_SENTINAL == d->tmap.sentinal ) {
-      tilemap_draw_ortho( &(d->tmap), g, &twindow );
+      tilemap_draw_ortho( &(d->tmap), g, twindow );
       graphics_flip_screen( g );
    }
 
    gamedata_poll_input( d, c );
 
-   vector_iterate( &(d->mobiles), callback_draw_mobiles, &twindow );
+   vector_iterate( &(d->mobiles), callback_draw_mobiles, twindow );
 
 cleanup:
    return;
 }
 
 void gamedata_add_mobile( struct GAMEDATA* d, struct MOBILE* o ) {
-   vector_set( &(d->mobiles), o->serial, o );
+   vector_set( &(d->mobiles), o->serial, o, TRUE );
 }
 
 void gamedata_remove_mobile( struct GAMEDATA* d, size_t serial ) {
    vector_remove( &(d->mobiles), serial );
+}
+
+void gamedata_process_data_block(
+   struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER_PROGRESS* progress
+) {
+   struct CHANNEL_CLIENT* lc = NULL;
+   struct TILEMAP_TILESET* set = NULL;
+   GRAPHICS* g = NULL;
+   struct CHUNKER* h = NULL;
+   struct CHANNEL* l = NULL;
+
+   l = scaffold_container_of( d, struct CHANNEL, gamedata );
+   scaffold_check_null( l );
+
+   if( progress->current > progress->total ) {
+      scaffold_print_error( "Invalid progress for %s.\n", bdata( progress->filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   if( 0 < d->incoming_buffer_len && d->incoming_buffer_len != progress->total ) {
+      scaffold_print_error( "Invalid total for %s.\n", bdata( progress->filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   h = hashmap_get( &(d->incoming_chunkers), progress->filename );
+   if( NULL == h ) {
+      h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
+      chunker_unchunk_start(
+         h, l->name, progress->type, progress->total, progress->filename,
+         &str_gamedata_cache_path
+      );
+      hashmap_put( &(d->incoming_chunkers), progress->filename, h );
+      scaffold_check_nonzero( scaffold_error );
+   }
+
+   chunker_unchunk_pass( h, progress->data, progress->current, progress->chunk_size );
+
+   if( chunker_unchunk_finished( h ) ) {
+      /* Cached file found, so abort transfer. */
+      if( TRUE == h->force_finish ) {
+         scaffold_print_debug(
+            "Client: Aborting transfer of %s from server due to cached copy.\n",
+            bdata( progress->filename )
+         );
+         client_printf( c, "GDA %b", progress->filename );
+      }
+
+      switch( h->type ) {
+      case CHUNKER_DATA_TYPE_TILEMAP:
+         datafile_parse_tilemap( &(d->tmap), progress->filename, (BYTE*)h->raw_ptr, h->raw_length );
+
+         /* Go through the parsed tilemap and load graphics. */
+         lc = (struct CHANNEL_CLIENT*)calloc( 1, sizeof( struct CHANNEL_CLIENT ) );
+         lc->l = l;
+         lc->c = c;
+         hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );
+         free( lc );
+
+         scaffold_print_info(
+            "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
+         );
+         break;
+
+      case CHUNKER_DATA_TYPE_TILESET_IMG:
+         graphics_surface_new( g, 0, 0, 0, 0 );
+         scaffold_check_null( g );
+         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+         scaffold_check_null( g->surface );
+         set = hashmap_iterate( &(l->gamedata.tmap.tilesets), callback_search_tilesets_img_name, progress->filename );
+         scaffold_check_null( set )
+         hashmap_put( &(set->images), progress->filename, g );
+         scaffold_print_info(
+            "Client: Tilemap image %s successfully loaded into cache.\n",
+            bdata( progress->filename )
+         );
+         break;
+
+      case CHUNKER_DATA_TYPE_MOBSPRITES:
+         graphics_surface_new( g, 0, 0, 0, 0 );
+         scaffold_check_null( g );
+         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+         scaffold_check_null( g->surface );
+         hashmap_put( &(d->mob_sprites), progress->filename, g );
+         scaffold_print_info(
+            "Client: Mobile spritesheet %s successfully loaded into cache.\n",
+            bdata( progress->filename )
+         );
+         break;
+      }
+   }
+
+cleanup:
+   return;
 }

@@ -129,7 +129,7 @@ inline uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t 
    return vector_get_scalar( &(layer->tiles), index );
 }
 
-void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
+static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* window = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = window->t;

@@ -8,7 +8,7 @@
 typedef enum _INPUT_TYPE {
    INPUT_TYPE_NONE,
    INPUT_TYPE_KEY,
-   INPUT_TYPE_MOUSE,
+   INPUT_TYPE_MOUSE
 } INPUT_TYPE;
 
 typedef struct _INPUT {

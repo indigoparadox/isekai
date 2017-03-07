@@ -11,7 +11,7 @@ static void channel_cleanup( const struct REF *ref ) {
    bdestroy( l->topic );
 
    gamedata_cleanup( &(l->gamedata) );
-   // FIXME: Free channel.
+   /* FIXME: Free channel. */
 }
 
 void channel_free( struct CHANNEL* l ) {
@@ -41,10 +41,11 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
    /* Create a basic mobile for the new client. */
    mobile_new( o );
    do {
-      o->serial = rand() * MOBILE_RANDOM_SERIAL_LEN;
+      o->serial = rand() * UCHAR_MAX;
    } while( NULL != vector_get( &(l->gamedata.mobiles), o->serial ) );
-   client_add_puppet( c, o );
+   client_set_puppet( c, o );
    gamedata_add_mobile( &(l->gamedata), o );
+   mobile_set_channel( o, l );
 
    hashmap_put( &(l->clients), c->nick, c );
 
@@ -71,17 +72,3 @@ struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
    //return vector_iterate( &(l->clients), callback_search_clients, nick );
    return hashmap_get( &(l->clients), nick );
 }
-
-/*
-struct bstrList* channel_list_clients( struct CHANNEL* l ) {
-   struct bstrList* list = NULL;
-
-   list = bstrListCreate();
-   scaffold_check_null( list );
-
-   vector_iterate( &(l->clients), channel_lst_client, list );
-
-cleanup:
-   return list;
-}
-*/

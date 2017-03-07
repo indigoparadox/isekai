@@ -144,7 +144,7 @@ cleanup:
    return;
 }
 
-void vector_set( struct VECTOR* v, size_t index, void* data ) {
+void vector_set( struct VECTOR* v, size_t index, void* data, BOOL force ) {
    scaffold_check_null( v );
 
    assert( VECTOR_SENTINAL == v->sentinal );
@@ -152,8 +152,22 @@ void vector_set( struct VECTOR* v, size_t index, void* data ) {
 
    vector_lock( v, TRUE );
 
-   scaffold_check_bounds( index, v->count );
-   ref_test_dec( v->data[index] );
+   if( 0 == v->size ) {
+      v->size = 10;
+      v->data = (void**)calloc( v->size, sizeof(void*) );
+      scaffold_check_null( v->data );
+   }
+
+   if( FALSE == force ) {
+      scaffold_check_bounds( index, v->count );
+   } else if( index > v->size ) {
+      vector_grow( v, index + 1 );
+      v->count = index + 1;
+   }
+
+   if( NULL != v->data[index] ) {
+      ref_test_dec( v->data[index] );
+   }
    v->data[index] = data;
    ref_test_inc( data );
 
@@ -306,6 +320,7 @@ void vector_remove( struct VECTOR* v, size_t index ) {
 
    vector_lock( v, TRUE );
 
+   assert( v->count > index );
    scaffold_check_bounds( index, v->count );
 
    ref_test_dec( v->data[index] );

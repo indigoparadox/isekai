@@ -14,7 +14,7 @@ struct TILEMAP;
 
 typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
-   TILEMAP_ORIENTATION_ISO,
+   TILEMAP_ORIENTATION_ISO
 } TILEMAP_ORIENTATION;
 
 struct TILEMAP_TERRAIN_DATA {
@@ -123,6 +123,7 @@ struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid );
 inline void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
 );
+inline uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y );
 void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* window );
 
 #endif /* TILEMAP_H */
