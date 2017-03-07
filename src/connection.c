@@ -55,7 +55,9 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
    connected = TRUE;
 #elif defined( USE_SYNCBUFF )
    connected = syncbuff_accept();
-   n->socket = 2;
+   if( TRUE == connected ) {
+      n->socket = 2;
+   }
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */
@@ -67,7 +69,9 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
 
    /* TODO: Grab the remote hostname. */
 
+#ifdef USE_NETWORK
 cleanup:
+#endif /* USE_NETWORK */
    return connected;
 }
 
@@ -97,14 +101,14 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
    listening = TRUE;
+
+cleanup:
 #elif defined ( USE_SYNCBUFF )
    listening = syncbuff_listen();
    n->socket = 0;
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */
-
-cleanup:
 
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
       connection_cleanup_socket( n );

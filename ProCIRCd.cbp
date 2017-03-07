@@ -67,6 +67,12 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-DUSE_ALLEGRO" />
@@ -74,6 +80,7 @@
 					<Add option="-DUSE_ALLEGRO_PNG" />
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_SYNCBUFF" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -306,14 +313,14 @@
 			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 		</Unit>
+		<Unit filename="src/ipc/syncbuff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/ipc/syncbuff.h" />
 		<Unit filename="src/irc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/irc.h" />
-		<Unit filename="src/mailbox.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/mailbox.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />

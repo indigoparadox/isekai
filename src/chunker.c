@@ -25,6 +25,15 @@ static void chunker_cleanup( const struct REF* ref ) {
    bdestroy( h->serverpath );
    bdestroy( h->channel );
 
+   if( NULL != h->encoder ) {
+      heatshrink_encoder_free( h->encoder );
+      h->decoder = NULL;
+   }
+   if( NULL != h->decoder ) {
+      heatshrink_decoder_free( h->decoder );
+      h->encoder = NULL;
+   }
+
    free( h );
 }
 
@@ -44,9 +53,11 @@ static void chunker_chunk_setup_internal(
 
    if( NULL != h->decoder ) {
       heatshrink_decoder_free( h->decoder );
+      h->decoder = NULL;
    }
    if( NULL != h->encoder ) {
       heatshrink_encoder_free( h->encoder );
+      h->encoder = NULL;
    }
 
    h->encoder = heatshrink_encoder_alloc(
@@ -61,11 +72,24 @@ static void chunker_chunk_setup_internal(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->tx_chunk_length = tx_chunk_length;
+   if( NULL != h->channel ) {
+      bdestroy( h->channel );
+   }
    h->channel = bstrcpy( channel );
    h->type = type;
    h->filecache_path = NULL;
+   if( NULL != h->filename ) {
+      bdestroy( h->filename );
+   }
    h->filename = NULL;
+   if( NULL != h->serverpath ) {
+      bdestroy( h->serverpath );
+   }
    h->serverpath = NULL;
+   if( NULL != h->raw_ptr ) {
+      free( h->raw_ptr );
+   }
+   h->raw_ptr = NULL;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -91,24 +115,20 @@ void chunker_chunk_start_file(
 ) {
    bstring full_file_path = NULL;
 
-   if( NULL != h->serverpath ) {
-      bdestroy( h->serverpath );
-   }
-   h->serverpath = bstrcpy( serverpath );
-   scaffold_check_null( h->serverpath );
-   if( NULL != h->filename ) {
-      bdestroy( h->filename );
-   }
+   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+
    h->filename = bstrcpy( filepath );
    scaffold_check_null( h->filename );
 
+   h->serverpath = bstrcpy( serverpath );
+   scaffold_check_null( h->serverpath );
+
    full_file_path = bstrcpy( h->serverpath );
-   scaffold_check_null( full_file_path );
+
    scaffold_join_path( full_file_path, h->filename );
+   scaffold_check_null( full_file_path );
 
    scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
-
-   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
 
 cleanup:
    bdestroy( full_file_path );
@@ -212,9 +232,18 @@ void chunker_unchunk_start(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->raw_length = src_length;
+   if( NULL != h->raw_ptr ) {
+      free( h->raw_ptr );
+   }
    h->raw_ptr = (BYTE*)calloc( src_length, sizeof( BYTE ) );
+   if( NULL != h->channel ) {
+      bdestroy( h->channel );
+   }
    h->channel = bstrcpy( channel );
    h->type = type;
+   if( NULL != h->filename ) {
+      bdestroy( h->filename );
+   }
    h->filename = bstrcpy( filename );
 
    filename_c = bdata( filename );

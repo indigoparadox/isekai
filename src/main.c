@@ -10,7 +10,7 @@
 #include <time.h>
 #include <assert.h>
 
-static SERVER* main_server = NULL;
+SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
 static struct tagbstring str_loading = bsStatic( "Loading..." );
@@ -84,8 +84,10 @@ int main( int argc, char** argv ) {
 cleanup:
 
    bdestroy( buffer );
-   /*client_free( main_client );
-   assert( 0 == hashmap_count( &(main_server->self.channels) ) );*/
+#if 0
+   client_free( main_client );
+   assert( 0 == hashmap_count( &(main_server->self.channels) ) );
+#endif
    server_free( main_server );
    free( main_server );
    /*graphics_shutdown( &g );*/
