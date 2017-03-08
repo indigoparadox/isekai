@@ -147,6 +147,7 @@
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_ALLEGRO_GIF" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -208,10 +209,10 @@
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
 		</Unit>
-		<Unit filename="src/b64/b64.c">
+		<Unit filename="src/b64.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/b64/b64.h" />
+		<Unit filename="src/b64.h" />
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -252,26 +253,10 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-TCC)" />
 		</Unit>
-		<Unit filename="src/ezxml/ezxml.c">
+		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
 		</Unit>
-		<Unit filename="src/ezxml/ezxml.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
-		</Unit>
+		<Unit filename="src/ezxml.h" />
 		<Unit filename="src/gamedata.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -327,10 +312,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.h" />
-		<Unit filename="src/irc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/irc.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
@@ -346,6 +327,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/mobile.h" />
+		<Unit filename="src/proto.h" />
+		<Unit filename="src/proto/irc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/ref.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
