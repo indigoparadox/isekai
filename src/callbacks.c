@@ -359,8 +359,8 @@ BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg )
       scaffold_print_debug(
          "Chunker for %s has finished. Removing...\n", bdata( key )
       );
-      //chunker_free( h );
-      //return TRUE;
+      chunker_free( h );
+      return TRUE;
    }
    return FALSE;
 }
