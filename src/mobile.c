@@ -7,7 +7,7 @@
 
 #define MOBILE_SPRITE_SIZE 32
 
-struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black.gif" );
+const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );

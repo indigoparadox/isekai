@@ -25,6 +25,7 @@ void hashmap_init( struct HASHMAP* m ) {
    m->size = 0;
    m->sentinal = HASHMAP_SENTINAL;
    m->lock_count = 0;
+   m->last_error = SCAFFOLD_ERROR_NONE;
 
 cleanup:
    return;
@@ -226,11 +227,17 @@ void hashmap_rehash( struct HASHMAP* m );
 /*
  * Add a pointer to the hashmap without touching its refcount.
  */
-static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* value ) {
+static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* value, BOOL lock ) {
    int index;
+   BOOL ok = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   ok = TRUE;
+
+   if( FALSE != lock ) {
+      hashmap_lock( m, TRUE );
+   }
 
    /* Find a place to put our value */
    index = hashmap_hash( m, key );
@@ -251,6 +258,10 @@ static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* va
    m->size++;
 
 cleanup:
+   if( FALSE != ok && FALSE != lock ) {
+      hashmap_lock( m, FALSE );
+   }
+
    return;
 }
 
@@ -286,7 +297,8 @@ void hashmap_rehash( struct HASHMAP* m ) {
          continue;
       }
 
-      hashmap_put_internal( m, curr[i].key, curr[i].data );
+      /* Never lock when calling recursively! */
+      hashmap_put_internal( m, curr[i].key, curr[i].data, FALSE );
       scaffold_check_nonzero( scaffold_error );
    }
 
@@ -300,23 +312,39 @@ cleanup:
  * Add a pointer to the hashmap with some key
  */
 void hashmap_put( struct HASHMAP* m, const bstring key, void* value ) {
-   hashmap_put_internal( m, key, value );
+   hashmap_put_internal( m, key, value, TRUE );
    if( NULL != value ) {
       ref_test_inc( value );
    }
+   m->last_error = SCAFFOLD_ERROR_NONE;
+}
+
+void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value ) {
+   hashmap_put_internal( m, key, value, FALSE );
+   if( NULL != value ) {
+      ref_test_inc( value );
+   }
+   m->last_error = SCAFFOLD_ERROR_NONE;
 }
 
 /*
  * Get your pointer out of the hashmap with a key
  */
-void* hashmap_get( struct HASHMAP* m, const bstring key ) {
+static void* hashmap_get_internal( struct HASHMAP* m, const bstring key, BOOL lock ) {
    int curr;
    int i;
    int in_use;
    void* element_out = NULL;
+   BOOL ok = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
+
+   if( FALSE != lock ) {
+      hashmap_lock( m, TRUE );
+   }
+   ok = TRUE;
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -338,7 +366,18 @@ void* hashmap_get( struct HASHMAP* m, const bstring key ) {
    }
 
 cleanup:
+   if( FALSE != lock && FALSE != ok ) {
+      hashmap_lock( m, FALSE );
+   }
    return element_out;
+}
+
+void* hashmap_get( struct HASHMAP* m, const bstring key ) {
+   return hashmap_get_internal( m, key, TRUE );
+}
+
+void* hashmap_get_nolock( struct HASHMAP* m, const bstring key ) {
+   return hashmap_get_internal( m, key, FALSE );
 }
 
 void* hashmap_get_first( struct HASHMAP* m ) {
@@ -349,7 +388,7 @@ void* hashmap_get_first( struct HASHMAP* m ) {
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero( hashmap_count( m ) );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
    ok = TRUE;
@@ -372,13 +411,20 @@ cleanup:
    return found;
 }
 
-BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
+static BOOL hashmap_contains_key_internal( struct HASHMAP* m, const bstring key, BOOL lock ) {
    int curr;
    int i;
    int in_use;
+   BOOL ok = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
+
+   if( FALSE != lock ) {
+      hashmap_lock( m, TRUE );
+   }
+   ok = TRUE;
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -399,7 +445,18 @@ BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
    }
 
 cleanup:
+   if( FALSE != lock && FALSE != ok ) {
+      hashmap_lock( m, FALSE );
+   }
    return FALSE;
+}
+
+BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
+   return hashmap_contains_key_internal( m, key, TRUE );
+}
+
+BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key ) {
+   return hashmap_contains_key_internal( m, key, FALSE );
 }
 
 /*
@@ -416,7 +473,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero( hashmap_count( m ) );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
    ok = TRUE;
@@ -449,9 +506,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   if( 0 == hashmap_count( m ) ) {
-      goto cleanup;
-   }
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
    ok = TRUE;
@@ -489,6 +544,7 @@ size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* a
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
 
    hashmap_lock( m, TRUE );
    locked = TRUE;
@@ -535,6 +591,7 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
 
    /* Find key */
    curr = hashmap_hash_int(m, key);

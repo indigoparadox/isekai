@@ -32,6 +32,7 @@ struct HASHMAP {
    int size;
    struct HASHMAP_ELEMENT* data;
    uint8_t lock_count;
+   SCAFFOLD_ERROR last_error;
 };
 
 #define HASHMAP_SENTINAL 12345
@@ -85,15 +86,18 @@ size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* a
  * Add an element to the hashmap. Return MAP_OK or MAP_OMEM.
  */
 void hashmap_put( struct HASHMAP* m, const bstring key, void* value );
+void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value );
 
 /*
  * Get an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
 void* hashmap_get( struct HASHMAP* m, const bstring key );
+void* hashmap_get_nolock( struct HASHMAP* m, const bstring key );
 
 void* hashmap_get_first( struct HASHMAP* m );
 
 BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key );
+BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key );
 
 /*
  * Remove an element from the hashmap. Return MAP_OK or MAP_MISSING.

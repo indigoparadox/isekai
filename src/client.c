@@ -255,12 +255,14 @@ void client_request_file(
 ) {
    struct CHUNKER* h = NULL;
 
-   if( FALSE != hashmap_contains_key( &(l->gamedata.incoming_chunkers), filename ) ) {
+   hashmap_lock( &(l->gamedata.incoming_chunkers), TRUE );
+
+   if( FALSE != hashmap_contains_key_nolock( &(l->gamedata.incoming_chunkers), filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
 
-   h = hashmap_get( &(l->gamedata.incoming_chunkers), filename );
+   h = hashmap_get_nolock( &(l->gamedata.incoming_chunkers), filename );
    if( NULL == h ) {
       /* Create a chunker and get it started, since one is not in progress. */
       /* TODO: Verify cached file hash from server. */
@@ -269,12 +271,13 @@ void client_request_file(
          h, l->name, type, filename,
          &str_gamedata_cache_path
       );
-      hashmap_put( &(l->gamedata.incoming_chunkers), filename, h );
+      hashmap_put_nolock( &(l->gamedata.incoming_chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
 
       client_printf( c, "GRF %d %b %b", type, l->name, filename );
    }
 
 cleanup:
+   hashmap_lock( &(l->gamedata.incoming_chunkers), FALSE );
    return;
 }
