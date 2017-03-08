@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 
 #include "scaffold.h"
-#include "b64/b64.h"
+#include "b64.h"
 #include "callbacks.h"
 
 static void chunker_cleanup( const struct REF* ref ) {

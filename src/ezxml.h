@@ -30,8 +30,8 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-#include "../bstrlib/bstrlib.h"
-#include "../scaffold.h"
+#include "bstrlib/bstrlib.h"
+#include "scaffold.h"
 
 #ifdef __cplusplus
 extern "C" {

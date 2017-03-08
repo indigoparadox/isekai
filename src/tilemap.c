@@ -1,7 +1,7 @@
 #include "tilemap.h"
 
-#include "ezxml/ezxml.h"
-#include "b64/b64.h"
+#include "ezxml.h"
+#include "b64.h"
 #include "callbacks.h"
 
 #include <memory.h>

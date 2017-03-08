@@ -2,8 +2,8 @@
 #ifndef B64_H
 #define B64_H
 
-#include "../bstrlib/bstrlib.h"
-#include "../scaffold.h"
+#include "bstrlib/bstrlib.h"
+#include "scaffold.h"
 
 #include <stdint.h>
 #include <stddef.h>

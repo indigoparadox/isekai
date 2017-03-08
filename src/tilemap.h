@@ -2,7 +2,7 @@
 #define TILEMAP_H
 
 #include "bstrlib/bstrlib.h"
-#include "ezxml/ezxml.h"
+#include "ezxml.h"
 #include "vector.h"
 #include "hashmap.h"
 #include "graphics.h"

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "heatshrink/heatshrink_encoder.h"
-#include "b64/b64.h"
+#include "b64.h"
 #include "callbacks.h"
 #include "hashmap.h"
 #include "irc.h"
