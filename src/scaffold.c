@@ -244,6 +244,7 @@ ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs )
    size_t true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
+   ssize_t sz_out = -1;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
@@ -293,7 +294,9 @@ write_file:
    outputfile = fopen( path_c,"wb" );
    scaffold_check_null( outputfile );
 
-   fwrite( data, sizeof( BYTE ), len, outputfile );
+   sz_out = fwrite( data, sizeof( BYTE ), len, outputfile );
+   scaffold_check_zero( sz_out );
+   scaffold_assert( sz_out == len );
 
 cleanup:
    bdestroy( test_path );
@@ -301,6 +304,7 @@ cleanup:
    if( NULL != outputfile ) {
       fclose( outputfile );
    }
+   return sz_out;
 }
 
 void scaffold_list_dir(
@@ -336,6 +340,7 @@ void scaffold_list_dir(
       }
       bcatcstr( child_path, entry->d_name );
 
+      /* FIXME: Detect directories under Windows. */
 #ifndef _WIN32
       if( DT_DIR != entry->d_type ) {
 #endif /* _WIN32 */
@@ -354,7 +359,7 @@ void scaffold_list_dir(
          /* Always add directories. */
          vector_add( list, child_path );
       }
-#endif /* _WIN32 */}
+#endif /* _WIN32 */
 
       /* If the child is a directory then go deeper. */
       scaffold_list_dir( child_path, list, filter, dir_only, show_hidden );

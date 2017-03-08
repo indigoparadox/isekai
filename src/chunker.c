@@ -281,7 +281,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
       h->raw_length = src_len;
       h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
       h->decoder = heatshrink_decoder_alloc(
-         src_chunk_len, /* TODO */
+         mid_buffer_length, /* TODO */
          CHUNKER_WINDOW_SIZE,
          CHUNKER_LOOKAHEAD_SIZE
       );
@@ -440,6 +440,7 @@ cleanup:
    default:
       break;
    }
+   bdestroy( cache_filename );
 }
 
 #endif /* USE_FILE_CACHE */

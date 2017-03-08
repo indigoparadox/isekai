@@ -161,9 +161,6 @@ void gamedata_remove_mobile( struct GAMEDATA* d, size_t serial ) {
 void gamedata_process_data_block(
    struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER_PROGRESS* progress
 ) {
-   struct CHANNEL_CLIENT* lc = NULL;
-   struct TILEMAP_TILESET* set = NULL;
-   GRAPHICS* g = NULL;
    struct CHUNKER* h = NULL;
    struct CHANNEL* l = NULL;
    int8_t chunker_percent;

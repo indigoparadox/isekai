@@ -42,6 +42,10 @@ static void datafile_tilemap_parse_tileset_image(
    GRAPHICS* g_image = NULL;
    const char* xml_attr;
    bstring buffer = NULL;
+   int bstr_res;
+#ifndef USE_REQUESTED_GRAPHICS_EXT
+   size_t dot_pos = 0;
+#endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    scaffold_error = 0;
 
@@ -55,22 +59,25 @@ static void datafile_tilemap_parse_tileset_image(
    scaffold_check_null( buffer );
 
    xml_attr = ezxml_attr( xml_image, "source" );
-   bassigncstr( buffer, xml_attr );
+   bstr_res = bassigncstr( buffer, xml_attr );
+   scaffold_check_nonzero( bstr_res );
+
+#ifndef USE_REQUESTED_GRAPHICS_EXT
+   dot_pos = bstrrchr( buffer, '.' );
+   bstr_res = btrunc( buffer, dot_pos );
+   scaffold_check_nonzero( bstr_res );
+   bstr_res = bcatcstr( buffer, GRAPHICS_RASTER_EXTENSION );
+   scaffold_check_nonzero( bstr_res );
+   scaffold_print_debug(
+      "Tilemap: Tileset filename adjusted to: %s\n", bdata( buffer )
+   );
+#endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    /* The key with NULL means we need to load this image. */
    hashmap_put( &(set->images), buffer, NULL );
 
 cleanup:
    bdestroy( buffer );
-#ifdef EZXML_EMBEDDED_IMAGES
-   bdestroy( image_buffer );
-   if( NULL != image_ezxml_export ) {
-      free( image_ezxml_export );
-   }
-   if( NULL != image_export ) {
-      free( image_export );
-   }
-#endif /* EZXML_EMBEDDED_IMAGES */
    if( NULL != g_image ) {
       graphics_surface_free( g_image );
    }
@@ -104,10 +111,6 @@ static void datafile_tilemap_parse_tileset( struct TILEMAP* t, ezxml_t xml_tiles
 
    set = (struct TILEMAP_TILESET*)calloc( 1, sizeof( struct TILEMAP_TILESET ) );
    scaffold_check_null( set );
-
-   /* vector_init( &(set->images) );
-   vector_init( &(set->tiles) );
-   vector_init( &(set->terrain) ); */
 
    xml_attr = ezxml_attr( xml_tileset, "firstgid" );
    scaffold_check_null( xml_attr );

@@ -3,6 +3,7 @@
 
 #include "tilemap.h"
 #include "hashmap.h"
+#include "chunker.h"
 
 #include <stdlib.h>
 

@@ -7,6 +7,8 @@
 #include "scaffold.h"
 #include "ref.h"
 
+#define GRAPHICS_RASTER_EXTENSION ".bmp"
+
 typedef uint32_t gu;
 
 typedef enum {

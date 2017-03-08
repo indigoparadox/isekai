@@ -170,16 +170,19 @@ typedef enum {
         scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
 
-#define scaffold_check_zero( value ) \
-    if( 0 == value ) { \
-        scaffold_error = SCAFFOLD_ERROR_ZERO; \
+#define scaffold_check_zero_against( last, value ) \
+    if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \
+        last = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( "Scaffold: Zero error on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
-    } else { \
-        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    } else if( SCAFFOLD_ERROR_ZERO != last ) { \
+        last = SCAFFOLD_ERROR_NONE; \
     }
+
+#define scaffold_check_zero( value ) \
+   scaffold_check_zero_against( scaffold_error, value )
 
 #define scaffold_char_is_printable( c ) \
     (0x7f > (c) && 0x20 < (c))
