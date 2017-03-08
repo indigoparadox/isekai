@@ -202,8 +202,8 @@ void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, size_t len );
-void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len );
-void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
+ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len );
+ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
 void scaffold_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden

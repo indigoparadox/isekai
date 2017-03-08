@@ -209,6 +209,7 @@ void chunker_unchunk_start(
    scaffold_assert( NULL != h );
    scaffold_assert( 0 != src_length );
    scaffold_assert( NULL != filename );
+   scaffold_assert( NULL == h->raw_ptr );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_cleanup );
@@ -267,8 +268,8 @@ cleanup:
 }
 
 void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len ) {
-   size_t consumed,
-      exhumed;
+   size_t consumed = 0,
+      exhumed = 0;
    size_t mid_buffer_length = blength( rx_buffer ) * 2,
       mid_buffer_pos = 0,
       tail_output_alloc = 0,
@@ -277,7 +278,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
       * tail_output_buffer = NULL;
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
-   int b64_res;
+   int b64_res = 0;
    CHUNKER_TRACK* track = NULL;
 
    scaffold_assert( NULL != h->decoder );
@@ -393,11 +394,10 @@ cleanup:
 }
 
 void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
-   FILE* cached_copy_f;
    struct stat cachedir_info = { 0 };
    char* filecache_path_c = NULL;
    bstring cache_filename = NULL;
-   size_t read_bytes;
+   ssize_t sz_read = -1;
 
    scaffold_error = 0;
    scaffold_check_silence();
@@ -415,41 +415,23 @@ void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
    scaffold_check_null( cache_filename );
 
    /* TODO: Compared file hashes. */
-   cached_copy_f = fopen( bdata( cache_filename ), "rb" );
-   if( NULL == cached_copy_f ) {
-      /* No scaffold error, since this isn't a problem. */
-      scaffold_print_error(
-         "Chunker: Unable to open cache file for reading: %s\n",
-         bdata( cache_filename )
-      );
+   sz_read = scaffold_read_file_contents(
+      cache_filename, &(h->raw_ptr), &(h->raw_length)
+   );
+   if( 0 != scaffold_error ) {
+      scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
+   scaffold_check_negative( sz_read );
+
    scaffold_print_info(
-      "Chunker: Cached copy found: %s\n",
+      "Chunker: Cached copy read: %s\n",
       bdata( cache_filename )
    );
 
-   /* Allocate enough space to hold the file. */
-   fseek( cached_copy_f, 0, SEEK_END );
-   h->raw_length = ftell( cached_copy_f );
-   if( NULL != h->raw_ptr ) {
-      free( h->raw_ptr );
-   }
-   h->raw_ptr = (BYTE*)calloc( h->raw_length, sizeof( BYTE ) + 1 ); /* +1 for term. */
-   scaffold_check_null( h->raw_ptr );
-   fseek( cached_copy_f, 0, SEEK_SET );
-
-   /* Read and close the cache file. */
-   read_bytes = fread( h->raw_ptr, sizeof( uint8_t ), h->raw_length, cached_copy_f );
-   scaffold_check_zero( read_bytes );
-   scaffold_assert( read_bytes == h->raw_length );
    h->force_finish = TRUE;
 
 cleanup:
-   if( NULL != cached_copy_f ) {
-      fclose( cached_copy_f );
-      cached_copy_f = NULL;
-   }
 
    scaffold_check_unsilence();
    switch( scaffold_error ) {
@@ -468,6 +450,14 @@ cleanup:
       scaffold_print_error(
          "Chunker: Cache directory is not a directory: %s\n",
          bdata( filecache_path )
+      );
+      break;
+
+   case SCAFFOLD_ERROR_NEGATIVE:
+   case SCAFFOLD_ERROR_OUTOFBOUNDS:
+      scaffold_print_error(
+         "Chunker: Cache file could not be opened: %s\n",
+         bdata( cache_filename )
       );
       break;
 
