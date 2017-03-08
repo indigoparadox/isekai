@@ -368,6 +368,37 @@ cleanup:
    return;
 }
 
+BOOL scaffold_check_directory( const bstring path ) {
+   struct stat dir_info = { 0 };
+   char* path_c = NULL;
+
+   scaffold_assert( NULL != path );
+
+   scaffold_error = 0;
+   scaffold_check_silence();
+
+   path_c = bdata( path );
+   scaffold_assert( NULL != path_c );
+   scaffold_check_nonzero( stat( path_c, &dir_info ) );
+   scaffold_check_zero( (dir_info.st_mode & S_IFDIR) );
+
+cleanup:
+
+   scaffold_check_unsilence();
+   switch( scaffold_error ) {
+   case SCAFFOLD_ERROR_NONZERO:
+      scaffold_print_error( "Unable to open directory: %s\n", bdata( path ) );
+      return FALSE;
+
+   case SCAFFOLD_ERROR_ZERO:
+      scaffold_print_error( "Not a directory: %s\n", bdata( path ) );
+      return FALSE;
+
+   default:
+      return TRUE;
+   }
+}
+
 bstring scaffold_basename( bstring path ) {
    bstring basename_out = NULL;
    struct bstrList* path_elements = NULL;

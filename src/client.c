@@ -5,6 +5,8 @@
 #include "irc.h"
 #include "chunker.h"
 
+extern struct tagbstring str_gamedata_cache_path;
+
 static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    size_t deleted;
@@ -251,12 +253,27 @@ void client_request_file(
    struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type,
    const bstring filename
 ) {
+   struct CHUNKER* h = NULL;
+
    if( FALSE != hashmap_contains_key( &(l->gamedata.incoming_chunkers), filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
 
-   client_printf( c, "GRF %d %b %b", type, l->name, filename );
+   h = hashmap_get( &(l->gamedata.incoming_chunkers), filename );
+   if( NULL == h ) {
+      /* Create a chunker and get it started, since one is not in progress. */
+      /* TODO: Verify cached file hash from server. */
+      h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
+      chunker_unchunk_start(
+         h, l->name, type, filename,
+         &str_gamedata_cache_path
+      );
+      hashmap_put( &(l->gamedata.incoming_chunkers), filename, h );
+      scaffold_check_nonzero( scaffold_error );
+
+      client_printf( c, "GRF %d %b %b", type, l->name, filename );
+   }
 
 cleanup:
    return;

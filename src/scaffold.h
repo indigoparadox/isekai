@@ -209,6 +209,7 @@ void scaffold_list_dir(
    BOOL dir_only, BOOL show_hidden
 );
 bstring scaffold_basename( bstring path );
+BOOL scaffold_check_directory( const bstring path );
 void scaffold_join_path( bstring path1, bstring path2 );
 
 #ifndef SCAFFOLD_C

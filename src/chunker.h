@@ -60,12 +60,12 @@ void chunker_chunk_start_file(
 void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer );
 BOOL chunker_chunk_finished( struct CHUNKER* h );
 void chunker_unchunk_start(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,
    const bstring filename, const bstring filecache_path
 );
-void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len );
+void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_len, size_t src_chunk_len );
 void chunker_unchunk_save_cache( struct CHUNKER* h );
-void chunker_unchunk_check_cache( struct CHUNKER* h, const bstring filecache_path );
+void chunker_unchunk_check_cache( struct CHUNKER* h );
 BOOL chunker_unchunk_finished( struct CHUNKER* h );
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
 
