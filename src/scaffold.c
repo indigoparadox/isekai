@@ -205,11 +205,12 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
    }
 }
 
-void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
+ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
    /* TODO: Implement mmap() */
    FILE* inputfile = NULL;
    *buffer = NULL;
    *len = 0;
+   ssize_t sz_out = -1;
 
    scaffold_check_null( path );
 
@@ -224,15 +225,18 @@ void scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
    fseek( inputfile, 0, SEEK_SET );
 
    /* Read and close the file. */
-   fread( *buffer, sizeof( BYTE ), *len, inputfile );
+   sz_out = fread( *buffer, sizeof( BYTE ), *len, inputfile );
+   scaffold_check_zero( sz_out );
+   scaffold_assert( sz_out == *len );
 
 cleanup:
    if( NULL != inputfile ) {
       fclose( inputfile );
    }
+   return sz_out;
 }
 
-void scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) {
+ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
