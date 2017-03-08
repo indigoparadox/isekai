@@ -13,7 +13,7 @@ typedef enum {
     HSES_YIELD_BR_LENGTH,       /* yielding backref length */
     HSES_SAVE_BACKLOG,          /* copying buffer to backlog */
     HSES_FLUSH_BITS,            /* flush bit buffer */
-    HSES_DONE,                  /* done */
+    HSES_DONE                   /* done */
 } HSE_state;
 
 #if HEATSHRINK_DEBUGGING_LOGS
@@ -100,6 +100,7 @@ heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
         return NULL;
     }
     hse->search_index->size = index_sz;
+    hse->search_index->index = calloc( index_sz, sizeof( int16_t ) );
 #endif
 
     LOG("-- allocated encoder with buffer size of %zu (%u byte input size)\n",
@@ -108,9 +109,12 @@ heatshrink_encoder *heatshrink_encoder_alloc(uint8_t window_sz2,
 }
 
 void heatshrink_encoder_free(heatshrink_encoder *hse) {
-    size_t buf_sz = (2 << HEATSHRINK_ENCODER_WINDOW_BITS(hse));
+    size_t index_sz;
+    size_t buf_sz;
+    buf_sz = (2 << HEATSHRINK_ENCODER_WINDOW_BITS(hse));
 #if HEATSHRINK_USE_INDEX
-    size_t index_sz = sizeof(struct hs_index) + hse->search_index->size;
+    free(hse->search_index->index);
+    index_sz = sizeof(struct hs_index) + hse->search_index->size;
     HEATSHRINK_FREE(hse->search_index, index_sz);
     (void)index_sz;
 #endif
@@ -121,7 +125,8 @@ void heatshrink_encoder_free(heatshrink_encoder *hse) {
 
 void heatshrink_encoder_reset(heatshrink_encoder *hse) {
     size_t buf_sz = (2 << HEATSHRINK_ENCODER_WINDOW_BITS(hse));
-    memset(hse->buffer, 0, buf_sz);
+    /* memset(hse->buffer, 0, buf_sz); */
+    hse->buffer = calloc( buf_sz, sizeof( uint8_t ) );
     hse->input_size = 0;
     hse->state = HSES_NOT_FULL;
     hse->match_scan_index = 0;

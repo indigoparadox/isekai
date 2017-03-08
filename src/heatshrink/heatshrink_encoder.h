@@ -34,7 +34,7 @@ typedef enum {
     ((HSE)->search_index)
 struct hs_index {
     uint16_t size;
-    int16_t index[];
+    int16_t* index;
 };
 #else
 #define HEATSHRINK_ENCODER_WINDOW_BITS(_) \
@@ -67,7 +67,7 @@ typedef struct {
     struct hs_index *search_index;
 #endif
     /* input buffer and / sliding window for expansion */
-    uint8_t buffer[];
+    uint8_t* buffer;
 #else
     #if HEATSHRINK_USE_INDEX
         struct hs_index search_index;
