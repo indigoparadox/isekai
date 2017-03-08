@@ -3,7 +3,7 @@
 
 #include "client.h"
 #include "server.h"
-#include "irc.h"
+#include "proto.h"
 #include "chunker.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
@@ -18,11 +18,11 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 
    /* Figure out if we're being called from a client or server. */
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
-      table = irc_table_client;
+      table = proto_table_client;
       is_client = TRUE;
    } else if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       s = (SERVER*)arg;
-      table = irc_table_server;
+      table = proto_table_server;
       is_client = FALSE;
    } else {
       scaffold_assert( NULL == arg ); /* Just die. */
