@@ -52,5 +52,8 @@ void gamedata_remove_mobile( struct GAMEDATA* s, size_t serial );
 void gamedata_process_data_block(
    struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER_PROGRESS* progress
 );
+void gamedata_process_finished_chunker(
+   struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER* h
+);
 
 #endif /* GAMEDATA_H */

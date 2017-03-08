@@ -10,17 +10,27 @@
 #include <loadpng.h>
 #endif /* USE_ALLEGRO_PNG */
 
+#define GRAPHICS_FMEM_SENTINAL 2121
+
 typedef struct _GRAPHICS_FMEM_INFO {
+#ifdef DEBUG
+   uint16_t sentinal_start;
+#endif /* DEBUG */
    BYTE* block;
    size_t length;
    size_t alloc;
    size_t offset;
+#ifdef DEBUG
+   uint16_t sentinal_end;
+#endif /* DEBUG */
 } GRAPHICS_FMEM_INFO;
 
 static int graphics_fmem_fclose( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    scaffold_assert( info );
    scaffold_assert( info->offset < info->length );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    /* Shorten the allocation back down to the stated length. */
    if( info->alloc > info->length ) {
@@ -36,6 +46,8 @@ static int graphics_fmem_getc( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    scaffold_assert( info );
    scaffold_assert( info->offset < info->length );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    if( 0 >= info->alloc ) {
       return EOF;
@@ -51,6 +63,8 @@ static int graphics_fmem_getc( void* userdata ) {
 static int graphics_fmem_ungetc( int c, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    unsigned char ch = c;
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    if( (0 < info->offset) && (info->block[info->offset - 1] == ch) ) {
       return ch;
@@ -64,6 +78,8 @@ static long graphics_fmem_fread( void* p, long n, void* userdata ) {
    size_t actual;
    scaffold_assert( info );
    scaffold_assert( info->offset <= info->length );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    actual = MIN( n, info->length - info->offset );
 
@@ -79,6 +95,8 @@ static int graphics_fmem_putc( int c, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    scaffold_assert( info );
    scaffold_assert( info->offset <= info->length );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    if( NULL == info->block ) {
       info->block = (BYTE*)calloc( info->alloc, sizeof( BYTE ) );
@@ -100,8 +118,11 @@ static int graphics_fmem_putc( int c, void* userdata ) {
 }
 
 static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
+   GRAPHICS_FMEM_INFO* info = userdata;
    long i;
    BYTE* c = (BYTE*)p;
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    for( i = 0 ; n > i ; i++ ) {
       if( *c != graphics_fmem_putc( *c, userdata ) ) {
@@ -117,6 +138,8 @@ static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
 static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    size_t actual;
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    scaffold_assert( info );
    scaffold_assert( info->offset < info->length );
@@ -136,6 +159,8 @@ static int graphics_fmem_fseek( void* userdata, int offset ) {
 
 static int graphics_fmem_feof( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
+   scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
    return info->offset >= info->length;
 }
@@ -266,6 +291,10 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
       g->surface = NULL;
    }
 
+#ifdef DEBUG
+   fmem_info.sentinal_start = GRAPHICS_FMEM_SENTINAL;
+   fmem_info.sentinal_end = GRAPHICS_FMEM_SENTINAL;
+#endif /* DEBUG */
    fmem_info.block = (BYTE*)data;
    fmem_info.length = length;
    fmem_info.offset = 0;
@@ -281,14 +310,6 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
       g->surface = load_memory_png( data, length, NULL );
       if( NULL == g->surface ) {
 #endif /* USE_ALLEGRO_PNG */
-
-         pack_fclose( fmem );
-         fmem_info.block = (BYTE*)data;
-         fmem_info.length = length;
-         fmem_info.offset = 0;
-         fmem_info.alloc = length;
-         fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
-
          g->surface = load_tga_pf( fmem, NULL );
          if( NULL == g->surface ) {
 

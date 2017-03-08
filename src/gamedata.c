@@ -188,16 +188,15 @@ void gamedata_process_data_block(
 
    h = hashmap_get( &(d->incoming_chunkers), progress->filename );
    if( NULL == h ) {
-      h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
-      chunker_unchunk_start(
-         h, l->name, progress->type, progress->total, progress->filename,
-         &str_gamedata_cache_path
-      );
-      hashmap_put( &(d->incoming_chunkers), progress->filename, h );
-      scaffold_check_nonzero( scaffold_error );
+      scaffold_print_error(
+         "Client: Invalid data block received (I didn't ask for this?): %s\n",
+         bdata( progress->filename )
+      )
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
    }
 
-   chunker_unchunk_pass( h, progress->data, progress->current, progress->chunk_size );
+   chunker_unchunk_pass( h, progress->data, progress->current, progress->total, progress->chunk_size );
 
    chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
    if( 0 < chunker_percent ) {
@@ -214,48 +213,68 @@ void gamedata_process_data_block(
          client_printf( c, "GDA %b", progress->filename );
       }
 
-      switch( h->type ) {
-      case CHUNKER_DATA_TYPE_TILEMAP:
-         datafile_parse_tilemap( &(d->tmap), progress->filename, (BYTE*)h->raw_ptr, h->raw_length );
+      gamedata_process_finished_chunker( d, c, h );
+   }
 
-         /* Go through the parsed tilemap and load graphics. */
-         lc = (struct CHANNEL_CLIENT*)calloc( 1, sizeof( struct CHANNEL_CLIENT ) );
-         lc->l = l;
-         lc->c = c;
-         hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );
-         free( lc );
+cleanup:
+   return;
+}
 
-         scaffold_print_info(
-            "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
-         );
-         break;
+void gamedata_process_finished_chunker(
+   struct GAMEDATA* d, struct CLIENT* c, struct CHUNKER* h
+) {
+   struct CHANNEL_CLIENT* lc = NULL;
+   struct CHANNEL* l = NULL;
+   GRAPHICS* g = NULL;
+   struct TILEMAP_TILESET* set = NULL;
 
-      case CHUNKER_DATA_TYPE_TILESET_IMG:
-         graphics_surface_new( g, 0, 0, 0, 0 );
-         scaffold_check_null( g );
-         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
-         scaffold_check_null( g->surface );
-         set = hashmap_iterate( &(l->gamedata.tmap.tilesets), callback_search_tilesets_img_name, progress->filename );
-         scaffold_check_null( set )
-         hashmap_put( &(set->images), progress->filename, g );
-         scaffold_print_info(
-            "Client: Tilemap image %s successfully loaded into cache.\n",
-            bdata( progress->filename )
-         );
-         break;
+   assert( TRUE == chunker_unchunk_finished( h ) );
 
-      case CHUNKER_DATA_TYPE_MOBSPRITES:
-         graphics_surface_new( g, 0, 0, 0, 0 );
-         scaffold_check_null( g );
-         graphics_set_image_data( g, h->raw_ptr, h->raw_length );
-         scaffold_check_null( g->surface );
-         hashmap_put( &(d->mob_sprites), progress->filename, g );
-         scaffold_print_info(
-            "Client: Mobile spritesheet %s successfully loaded into cache.\n",
-            bdata( progress->filename )
-         );
-         break;
-      }
+   l = scaffold_container_of( d, struct CHANNEL, gamedata );
+
+   switch( h->type ) {
+   case CHUNKER_DATA_TYPE_TILEMAP:
+      datafile_parse_tilemap(
+         &(d->tmap), h->filename, (BYTE*)h->raw_ptr, h->raw_length
+      );
+
+      /* Go through the parsed tilemap and load graphics. */
+      lc = (struct CHANNEL_CLIENT*)calloc( 1, sizeof( struct CHANNEL_CLIENT ) );
+      lc->l = l;
+      lc->c = c;
+      hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );
+      free( lc );
+
+      scaffold_print_info(
+         "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
+      );
+      break;
+
+   case CHUNKER_DATA_TYPE_TILESET_IMG:
+      graphics_surface_new( g, 0, 0, 0, 0 );
+      scaffold_check_null( g );
+      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      scaffold_check_null( g->surface );
+      set = hashmap_iterate( &(l->gamedata.tmap.tilesets), callback_search_tilesets_img_name, h->filename );
+      scaffold_check_null( set )
+      hashmap_put( &(set->images), h->filename, g );
+      scaffold_print_info(
+         "Client: Tilemap image %s successfully loaded into cache.\n",
+         bdata( h->filename )
+      );
+      break;
+
+   case CHUNKER_DATA_TYPE_MOBSPRITES:
+      graphics_surface_new( g, 0, 0, 0, 0 );
+      scaffold_check_null( g );
+      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      scaffold_check_null( g->surface );
+      hashmap_put( &(d->mob_sprites), h->filename, g );
+      scaffold_print_info(
+         "Client: Mobile spritesheet %s successfully loaded into cache.\n",
+         bdata( h->filename )
+      );
+      break;
    }
 
 cleanup:

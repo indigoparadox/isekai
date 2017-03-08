@@ -201,13 +201,12 @@ BOOL chunker_chunk_finished( struct CHUNKER* h ) {
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t src_length,
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
 
    scaffold_assert( NULL != h );
-   scaffold_assert( 0 != src_length );
    scaffold_assert( NULL != filename );
    scaffold_assert( NULL == h->raw_ptr );
 
@@ -226,19 +225,11 @@ void chunker_unchunk_start(
       vector_init( &(h->tracks) );
    }
 
-   h->decoder = heatshrink_decoder_alloc(
-      src_length, /* TODO */
-      CHUNKER_WINDOW_SIZE,
-      CHUNKER_LOOKAHEAD_SIZE
-   );
-
+   /* TODO: Shouldn't need to check for NULL here since chunker should be     *
+    *       destroyed after user.                                             */
    h->force_finish = FALSE;
    h->raw_position = 0;
-   h->raw_length = src_length;
-   if( NULL != h->raw_ptr ) {
-      free( h->raw_ptr );
-   }
-   h->raw_ptr = (BYTE*)calloc( src_length, sizeof( BYTE ) );
+   h->raw_length = 0;
    if( NULL != h->channel ) {
       bdestroy( h->channel );
    }
@@ -252,13 +243,13 @@ void chunker_unchunk_start(
    filename_c = bdata( filename );
    scaffold_check_null( filename_c );
 
-   chunker_unchunk_check_cache( h, filecache_path );
-   if( SCAFFOLD_ERROR_NONE == scaffold_error ) {
+   if( TRUE == scaffold_check_directory( filecache_path ) ) {
       scaffold_print_debug(
          "Chunker: Activating cache: %s\n",
          bdata( filecache_path )
       );
       h->filecache_path = bstrcpy( filecache_path );
+      chunker_unchunk_check_cache( h );
    } else {
       h->filecache_path = NULL;
    }
@@ -267,7 +258,7 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_chunk_len ) {
+void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_len, size_t src_chunk_len ) {
    size_t consumed = 0,
       exhumed = 0;
    size_t mid_buffer_length = blength( rx_buffer ) * 2,
@@ -281,8 +272,23 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
    int b64_res = 0;
    CHUNKER_TRACK* track = NULL;
 
-   scaffold_assert( NULL != h->decoder );
    scaffold_assert( NULL == h->encoder );
+
+   if( TRUE == h->force_finish ) {
+      goto cleanup;
+   } else if( NULL == h->raw_ptr && 0 == h->raw_length ) {
+      scaffold_assert( NULL == h->decoder );
+      h->raw_length = src_len;
+      h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
+      h->decoder = heatshrink_decoder_alloc(
+         src_chunk_len, /* TODO */
+         CHUNKER_WINDOW_SIZE,
+         CHUNKER_LOOKAHEAD_SIZE
+      );
+   } else {
+      scaffold_assert( NULL != h->decoder );
+      scaffold_assert( src_len == h->raw_length );
+   }
 
    mid_buffer = (uint8_t*)calloc( mid_buffer_length, sizeof( uint8_t ) );
    scaffold_check_null( mid_buffer );
@@ -393,28 +399,17 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
-   struct stat cachedir_info = { 0 };
-   char* filecache_path_c = NULL;
+void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
    ssize_t sz_read = -1;
 
-   scaffold_error = 0;
-   scaffold_check_silence();
-
-   scaffold_check_null( filecache_path );
-   filecache_path_c = bdata( filecache_path );
-   scaffold_check_nonzero( stat( filecache_path_c, &cachedir_info ) );
-   scaffold_check_zero( (cachedir_info.st_mode & S_IFDIR) );
-
-   cache_filename = bstrcpy( filecache_path );
-   scaffold_check_unsilence(); /* Hint */
+   cache_filename = bstrcpy( h->filecache_path );
    scaffold_check_null( cache_filename );
 
    scaffold_join_path( cache_filename, h->filename );
-   scaffold_check_null( cache_filename );
+   scaffold_check_nonzero( scaffold_error );
 
-   /* TODO: Compared file hashes. */
+   /* TODO: Compare file hashes. */
    sz_read = scaffold_read_file_contents(
       cache_filename, &(h->raw_ptr), &(h->raw_length)
    );
@@ -433,26 +428,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h, bstring filecache_path ) {
 
 cleanup:
 
-   scaffold_check_unsilence();
    switch( scaffold_error ) {
-   case SCAFFOLD_ERROR_NULLPO:
-      scaffold_print_info( "Chunker: Cache directory not set. Ignoring.\n" );
-      break;
-
-   case SCAFFOLD_ERROR_NONZERO:
-      scaffold_print_error(
-         "Chunker: Unable to open cache directory: %s\n",
-         bdata( filecache_path )
-      );
-      break;
-
-   case SCAFFOLD_ERROR_ZERO:
-      scaffold_print_error(
-         "Chunker: Cache directory is not a directory: %s\n",
-         bdata( filecache_path )
-      );
-      break;
-
    case SCAFFOLD_ERROR_NEGATIVE:
    case SCAFFOLD_ERROR_OUTOFBOUNDS:
       scaffold_print_error(
