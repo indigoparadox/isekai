@@ -7,11 +7,6 @@
 #include "ref.h"
 #include "chunker.h"
 
-typedef enum _IRC_REPLY {
-   ERR_NONICKNAMEGIVEN = 431,
-   ERR_NICKNAMEINUSE = 433
-} IRC_REPLY;
-
 typedef struct _IRC_COMMAND {
    struct REF refcount;
    const struct tagbstring command;
@@ -22,7 +17,7 @@ typedef struct _IRC_COMMAND {
 } IRC_COMMAND;
 
 #define IRC_COMMAND_TABLE_START( name ) \
-   const IRC_COMMAND irc_table_ ## name []
+   const IRC_COMMAND proto_table_ ## name []
 #define IRC_COMMAND_ROW( command, callback ) \
    {REF_DISABLED, bsStatic( command ), callback, NULL, NULL, NULL}
 #define IRC_COMMAND_TABLE_END() \

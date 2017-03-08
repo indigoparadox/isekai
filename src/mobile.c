@@ -2,7 +2,7 @@
 #define MOBILE_C
 #include "mobile.h"
 
-#include "irc.h"
+#include "proto.h"
 #include "chunker.h"
 
 #define MOBILE_SPRITE_SIZE 32

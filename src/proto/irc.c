@@ -1,15 +1,72 @@
 
-#define IRC_C
-#include "irc.h"
+#define PROTO_C
+#include "../proto.h"
 
-#include "server.h"
-#include "callbacks.h"
-#include "chunker.h"
-#include "datafile.h"
+#include "../server.h"
+#include "../callbacks.h"
+#include "../chunker.h"
+#include "../datafile.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef enum _IRC_ERROR {
+   ERR_NONICKNAMEGIVEN = 431,
+   ERR_NICKNAMEINUSE = 433,
+   ERR_NOMOTD = 422,
+} IRC_ERROR;
+
+const struct tagbstring irc_reply_error_text[35] = {
+   /*  1 */ bsStatic( "Nick :No such nick/channel" ),
+   bsStatic( "" ),
+   /*  3 */ bsStatic( "Channel :No such channel" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   /* 21 */ bsStatic( "Command :Unknown command" ),
+   /* 22 */ bsStatic( ":MOTD File is missing" ),
+   bsStatic( "" ),
+   /* 24 */ bsStatic( ":File error doing operation on file" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   /* 31 */ bsStatic( ":No nickname given" ),
+   bsStatic( "" ),
+   /* 33 */ bsStatic( "Nick :Nickname is already in use" ),
+};
+
+#define IRC_STANZA_ALLOC 80
+
+#define irc_error( enum_index ) \
+   server_client_printf( \
+      c, ":%b %d %b %b", \
+      s->self.remote, enum_index, c->nick, irc_reply_error_text[enum_index - 400] \
+   );
+
+#define irc_detect_malformed( args_qty, expression ) \
+   if( args_qty != args->qty ) { \
+      scaffold_print_error( "IRC: Malformed " expression " expression received.\n" ); \
+      scaffold_error = SCAFFOLD_ERROR_MISC; \
+      goto cleanup; \
+   }
 
 extern struct tagbstring str_gamedata_server_path;
 
@@ -46,6 +103,7 @@ static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
 }
 
+#if 0
 static void irc_server_reply_motd( struct CLIENT* c, SERVER* s ) {
    if( 1 > blength( c->nick ) ) {
       goto cleanup;
@@ -55,16 +113,14 @@ static void irc_server_reply_motd( struct CLIENT* c, SERVER* s ) {
       goto cleanup;
    }
 
-   server_client_printf(
-      c, ":%b 433 %b :MOTD File is missing",
-      s->self.remote, c->nick
-   );
+   irc_error( ERR_NOMOTD );
 
    c->flags |= CLIENT_FLAGS_HAVE_MOTD;
 
 cleanup:
    return;
 }
+#endif
 
 static void irc_server_user(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
@@ -219,7 +275,7 @@ static void irc_server_ison(
    struct CLIENT* c_iter = NULL;
    int i;
 
-   response = bfromcstralloc( 80, "" );
+   response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
    scaffold_check_null( response );
 
    /* TODO: Root the command stuff out of args. */
@@ -380,11 +436,7 @@ static void irc_server_who(
    size_t i;
    bstring response = NULL;
 
-   if( 2 > args->qty ) {
-      scaffold_print_error( "Server: Malformed WHO expression received.\n" );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
+   irc_detect_malformed( 2, "WHO" );
 
    /* TODO: Handle non-channels. */
    if( '#' != args->entry[1]->data[0] ) {
@@ -395,7 +447,7 @@ static void irc_server_who(
    l = client_get_channel_by_name( &(s->self), args->entry[1] );
    scaffold_check_null( l );
 
-   response = bfromcstralloc( 80, "" );
+   response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
    scaffold_check_null( response );
 
    search_targets = bstrListCreate();
@@ -457,15 +509,11 @@ static void irc_server_gamerequestfile(
    CHUNKER_DATA_TYPE type;
    int bstr_result;
 
-   if( 4 > args->qty ) {
-      scaffold_print_error( "Malformed GRF statement received.\n" );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
+   irc_detect_malformed( 4, "GRF" );
 
    vector_new( files );
 
-   file_iter_short = bfromcstralloc( 80, "" );
+   file_iter_short = bfromcstralloc( CHUNKER_FILENAME_ALLOC, "" );
 
    /* This list only exists inside of this function, so no need to lock it. */
    scaffold_list_dir( &str_gamedata_server_path, files, NULL, FALSE, FALSE );
@@ -651,11 +699,7 @@ static void irc_client_gamedatablock(
       * type_c;
    struct CHUNKER_PROGRESS progress;
 
-   if( 12 != args->qty ) {
-      scaffold_print_error( "Client: Malformed GDB expression received.\n" );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
+   irc_detect_malformed( 12, "GDB" );
 
    l = client_get_channel_by_name( c, args->entry[3] );
    scaffold_check_null( l );
@@ -697,12 +741,7 @@ cleanup:
 static void irc_server_gamedataabort(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-
-   if( 2 != args->qty ) {
-      scaffold_print_error( "Server: Malformed GDA expression received.\n" );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
+   irc_detect_malformed( 2, "GDA" );
 
    scaffold_print_info(
       "Server: Terminating transfer of %s at request of client: %d\n",
@@ -741,11 +780,7 @@ static void irc_client_mob(
       c_nick;
    struct CHANNEL* l = NULL;
 
-   if( 5 != args->qty ) {
-      scaffold_print_error( "Client: Malformed MOB expression received.\n" );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
+   irc_detect_malformed( 5, "MOB" );
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
@@ -848,9 +883,9 @@ IRC_COMMAND* irc_dispatch(
    args = bsplit( line, ' ' );
    scaffold_check_null( args );
 
-   if( table == irc_table_server ) {
+   if( table == proto_table_server ) {
       scaffold_assert_server();
-   } else if( table == irc_table_client ) {
+   } else if( table == proto_table_client ) {
       scaffold_assert_client();
    }
 
@@ -869,8 +904,8 @@ IRC_COMMAND* irc_dispatch(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            if( 0 != bstrncmp( cmd_test, &(irc_table_client[3].command), 3 ) ) {
-               if( table == irc_table_server ) {
+            if( 0 != bstrncmp( cmd_test, &(proto_table_client[3].command), 3 ) ) {
+               if( table == proto_table_server ) {
                   scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
                } else {
                   scaffold_print_debug( "Client Parse: %s\n", bdata( line ) );
@@ -898,10 +933,10 @@ IRC_COMMAND* irc_dispatch(
       }
    }
 
-   if( table == irc_table_server ) {
+   if( table == proto_table_server ) {
       scaffold_assert_server();
       scaffold_print_error( "Server: Parser unable to interpret: %s\n", bdata( line ) );
-   } else if( table == irc_table_client ) {
+   } else if( table == proto_table_client ) {
       scaffold_assert_client();
       scaffold_print_error( "Client: Parser unable to interpret: %s\n", bdata( line ) );
    }

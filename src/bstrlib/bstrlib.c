@@ -2914,11 +2914,13 @@ struct genBstrList g;
 #define START_VSNBUFF (256)
 #else
 
+#ifdef BSTRING_NEEDS_EXTRA_VSNPRINT
 #if defined(__GNUC__) && !defined(__APPLE__)
 /* Something is making gcc complain about this prototype not being here, so
    I've just gone ahead and put it in. */
 extern int vsnprintf (char *buf, size_t count, const char *format, va_list arg);
 #endif
+#endif /* BSTRING_NEEDS_EXTRA_VSNPRINT */
 
 #define exvsnprintf(r,b,n,f,a) {r = vsnprintf (b,n,f,a);}
 #endif

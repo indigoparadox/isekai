@@ -2,7 +2,7 @@
 
 #include "server.h"
 #include "callbacks.h"
-#include "irc.h"
+#include "proto.h"
 #include "chunker.h"
 
 extern struct tagbstring str_gamedata_cache_path;

@@ -6,7 +6,7 @@
 #include "b64.h"
 #include "callbacks.h"
 #include "hashmap.h"
-#include "irc.h"
+#include "proto.h"
 
 static void server_cleanup( const struct REF* ref ) {
    SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
