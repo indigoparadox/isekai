@@ -166,7 +166,9 @@ cleanup:
 }
 
 ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client ) {
+#ifdef DEBUG
    const char* buffer_chars;
+#endif /* DEBUG */
    ssize_t sent = -1;
 #ifdef USE_NETWORK
    size_t dest_socket;
@@ -178,7 +180,9 @@ ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client 
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
+#ifdef DEBUG
    buffer_chars = bdata( buffer );
+#endif /* DEBUG */
    scaffold_assert( NULL != buffer_chars );
 
 #ifdef USE_NETWORK

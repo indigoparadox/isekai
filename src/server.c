@@ -54,7 +54,7 @@ cleanup:
    return;
 }
 
-inline void server_stop( SERVER* s ) {
+void server_stop( SERVER* s ) {
    s->self.running = FALSE;
 }
 

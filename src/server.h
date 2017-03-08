@@ -29,7 +29,10 @@ typedef struct _SERVER {
     server_init( s, myhost );
 
 void server_init( SERVER* s, const bstring myhost );
-inline void server_stop( SERVER* s );
+#ifdef USE_INLINES
+inline
+#endif /* USE_INLINES */
+void server_stop( SERVER* s );
 BOOL server_free( SERVER* s );
 void server_client_printf( struct CLIENT* c, const char* message, ... );
 void server_client_send( struct CLIENT* c, bstring buffer );

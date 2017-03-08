@@ -65,6 +65,12 @@ typedef enum {
 } SCAFFOLD_TRACE;
 #endif /* DEBUG */
 
+#ifdef USE_INLINE
+#define SCAFFOLD_INLINE inline
+#else
+#define SCAFFOLD_INLINE
+#endif /* USE_INLINE */
+
 #ifndef USE_LOGFILE
 
 #define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
@@ -91,6 +97,8 @@ typedef enum {
 /* Disable debug-level notifications. */
 
 #define scaffold_print_debug( ... )
+
+#define scaffold_assert( expr )
 
 #define scaffold_assert_client()
 #define scaffold_assert_server()

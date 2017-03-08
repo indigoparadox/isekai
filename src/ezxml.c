@@ -1017,6 +1017,8 @@ cleanup:
    return;
 }
 
+#ifdef EZXML_SET_ATTR
+
 /* Sets the given tag attribute or adds a new attribute if not found. A value */
 /* of NULL will remove the specified attribute. Returns the tag given. */
 ezxml_t ezxml_set_attr(ezxml_t xml, const char *name, const char *value) {
@@ -1061,6 +1063,8 @@ ezxml_t ezxml_set_attr(ezxml_t xml, const char *name, const char *value) {
    xml->flags &= ~EZXML_DUP; /* clear strdup() flag */
    return xml;
 }
+
+#endif /* EZXML_SET_ATTR */
 
 /* sets a flag for the given tag and returns the tag */
 ezxml_t ezxml_set_flag(ezxml_t xml, short flag) {

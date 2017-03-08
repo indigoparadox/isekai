@@ -16,10 +16,6 @@ struct tagbstring str_gamedata_server_path =
 
 static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 
-static inline struct CHANNEL* gamedata_get_channel( struct GAMEDATA* d ) {
-   return (struct CHANNEL*)d;
-}
-
 void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    bstring mapdata_path = NULL;
    bstring mapdata_filename = NULL;
@@ -139,12 +135,12 @@ void gamedata_update_client( struct CLIENT* c, GRAPHICS* g, struct UI* ui ) {
 
    if( TILEMAP_SENTINAL == d->tmap.sentinal ) {
       tilemap_draw_ortho( &(d->tmap), g, twindow );
-      graphics_flip_screen( g );
    }
 
    gamedata_poll_input( d, c );
 
    vector_iterate( &(d->mobiles), callback_draw_mobiles, twindow );
+      graphics_flip_screen( g );
 
 cleanup:
    return;

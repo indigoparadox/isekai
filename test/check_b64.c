@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "../src/b64/b64.h"
+#include "../src/b64.h"
 
 static struct tagbstring b64t_testdata = bsStatic( "abcdefghijk" );
 static struct tagbstring b64t_result = bsStatic( "YWJjZGVmZ2hpams=" );

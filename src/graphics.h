@@ -30,6 +30,7 @@ typedef struct _GRAPHICS {
    gu w;
    gu h;
    void* surface;
+   void* palette;
    void* font;
    GRAPHICS_COLOR color;
    struct REF refcount;

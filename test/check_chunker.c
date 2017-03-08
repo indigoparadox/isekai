@@ -146,7 +146,6 @@ START_TEST( test_chunker_unchunk ) {
       h,
       (const bstring)&chunker_test_filename,
       CHUNKER_DATA_TYPE_TILEMAP,
-      chunker_mapsize,
       (const bstring)&chunker_test_filename,
       (const bstring)&chunker_test_cachepath
    );
@@ -178,7 +177,7 @@ START_TEST( test_chunker_unchunk ) {
          break;
       }
       ck_assert_int_eq( FALSE, chunker_unchunk_finished( h ) );
-      chunker_unchunk_pass( h, unchunk_buffer, *curr_start, current_chunk_len );
+      chunker_unchunk_pass( h, unchunk_buffer, *curr_start, chunker_mapsize, current_chunk_len );
       chunk_index++;
    }
 

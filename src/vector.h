@@ -48,8 +48,8 @@ size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg 
 void vector_remove( struct VECTOR* v, size_t index );
 void vector_remove_scalar( struct VECTOR* v, size_t index );
 size_t vector_remove_scalar_value( struct VECTOR* v, int32_t value );
-inline size_t vector_count( struct VECTOR* v );
-inline void vector_lock( struct VECTOR* v, BOOL lock );
+size_t vector_count( struct VECTOR* v );
+void vector_lock( struct VECTOR* v, BOOL lock );
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg );
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb );
 

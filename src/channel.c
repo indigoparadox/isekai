@@ -41,7 +41,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
    /* Create a basic mobile for the new client. */
    mobile_new( o );
    do {
-      o->serial = rand() * UCHAR_MAX;
+      o->serial = rand() % UCHAR_MAX;
    } while( NULL != vector_get( &(l->gamedata.mobiles), o->serial ) );
    client_set_puppet( c, o );
    gamedata_add_mobile( &(l->gamedata), o );

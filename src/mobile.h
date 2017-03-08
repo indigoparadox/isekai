@@ -54,7 +54,7 @@ struct MOBILE {
 void mobile_free( struct MOBILE* o );
 void mobile_init( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
-inline void mobile_get_spritesheet_pos_ortho(
+SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
    MOBILE_FRAME_ALT frame_alt, size_t* x, size_t* y
 );

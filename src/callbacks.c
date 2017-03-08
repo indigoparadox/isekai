@@ -14,7 +14,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = NULL;
    /* TODO: Factor this out. */
-   BOOL is_client;
+   BOOL is_client = FALSE;
 
    /* Figure out if we're being called from a client or server. */
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
@@ -157,7 +157,9 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    bstring xmit_buffer_template = (bstring)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
    bstring xmit_buffer_out = NULL;
+#ifdef DEBUG
    int bstr_result;
+#endif /* DEBUG */
 
    if( chunker_chunk_finished( h ) ) {
       goto cleanup;
@@ -169,7 +171,10 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    scaffold_assert( 0 < blength( xmit_buffer_out ) );
 
    /* Note the starting point and progress for the client. */
-   bstr_result = bformata(
+#ifdef DEBUG
+   bstr_result =
+#endif /* DEBUG */
+   bformata(
       xmit_buffer_out, "%s TILEMAP %s %d %d %d %d : ",
       bdata( h->channel ), bdata( key ), h->type, h->raw_position,
       h->tx_chunk_length, h->raw_length
