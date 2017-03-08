@@ -391,7 +391,7 @@ cleanup:
    return difference;
 }
 
-inline size_t vector_count( struct VECTOR* v ) {
+size_t vector_count( struct VECTOR* v ) {
    scaffold_check_null( v );
    if( VECTOR_SENTINAL != v->sentinal ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
@@ -402,7 +402,7 @@ cleanup:
    return 0;
 }
 
-inline void vector_lock( struct VECTOR* v, BOOL lock ) {
+void vector_lock( struct VECTOR* v, BOOL lock ) {
    #ifdef USE_THREADS
    #error Locking mechanism undefined!
    #elif defined( DEBUG )

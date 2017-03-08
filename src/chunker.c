@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "vector.h"
 #include "scaffold.h"
 #include "b64.h"
 #include "callbacks.h"
@@ -269,8 +270,10 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
       * tail_output_buffer = NULL;
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
-   int b64_res = 0;
    CHUNKER_TRACK* track = NULL;
+#ifdef DEBUG
+   int b64_res = 0;
+#endif /* DEBUG */
 
    scaffold_assert( NULL == h->encoder );
 
@@ -295,7 +298,10 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chun
 
    h->raw_position = src_chunk_start;
 
-   b64_res = b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
+#ifdef DEBUG
+   b64_res =
+#endif /* DEBUG */
+      b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
    scaffold_assert( 0 == b64_res );
 
    heatshrink_decoder_reset( h->decoder );

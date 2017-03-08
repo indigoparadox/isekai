@@ -206,11 +206,15 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
 }
 
 ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
-   /* TODO: Implement mmap() */
    FILE* inputfile = NULL;
+   ssize_t sz_out;
+
    *buffer = NULL;
    *len = 0;
-   ssize_t sz_out = -1;
+
+   /* TODO: Implement mmap() */
+
+   sz_out = -1;
 
    scaffold_check_null( path );
 

@@ -85,13 +85,13 @@ void tilemap_iterate_screen_row(
 
 }
 
-struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid ) {
+SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid ) {
    return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
 }
 
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
 
-inline void tilemap_get_tile_tileset_pos(
+SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
 ) {
    size_t tiles_wide = 0;
@@ -124,7 +124,7 @@ cleanup:
    return;
 }
 
-inline uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y ) {
+SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y ) {
    size_t index = (y * layer->width) + x;
    return vector_get_scalar( &(layer->tiles), index );
 }

@@ -1,3 +1,12 @@
+
+#ifdef S_SPLINT_S
+#define BYTE uint8_t
+#define scaffold_assert( expr )
+typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
+#define TRUE 1
+#define FALSE 0
+#else
+
 #include "../graphics.h"
 
 #include "../scaffold.h"
@@ -10,9 +19,14 @@
 #include <loadpng.h>
 #endif /* USE_ALLEGRO_PNG */
 
+#endif
+
 #define GRAPHICS_FMEM_SENTINAL 2121
+#define GRAPHICS_COLOR_DEPTH 16
 
 typedef struct _GRAPHICS_FMEM_INFO {
+   BYTE safety1;
+   BYTE safety2;
 #ifdef DEBUG
    uint16_t sentinal_start;
 #endif /* DEBUG */
@@ -28,7 +42,7 @@ typedef struct _GRAPHICS_FMEM_INFO {
 static int graphics_fmem_fclose( void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
    scaffold_assert( info );
-   scaffold_assert( info->offset < info->length );
+   scaffold_assert( info->offset <= info->length );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
@@ -43,26 +57,23 @@ static int graphics_fmem_fclose( void* userdata ) {
 }
 
 static int graphics_fmem_getc( void* userdata ) {
+   int char_out = EOF;
    GRAPHICS_FMEM_INFO* info = userdata;
    scaffold_assert( info );
    scaffold_assert( info->offset < info->length );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
-   if( 0 >= info->alloc ) {
-      return EOF;
+   if( 0 < info->alloc && info->offset < info->length ) {
+      char_out = info->block[info->offset++];
    }
 
-   if( info->offset >= info->length ) {
-      return EOF;
-   } else {
-      return info->block[info->offset++];
-   }
+   return char_out;
 }
 
 static int graphics_fmem_ungetc( int c, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   unsigned char ch = c;
+   unsigned char ch = (unsigned char)c;
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
@@ -118,7 +129,9 @@ static int graphics_fmem_putc( int c, void* userdata ) {
 }
 
 static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
+#ifdef DEBUG
    GRAPHICS_FMEM_INFO* info = userdata;
+#endif /* DEBUG */
    long i;
    BYTE* c = (BYTE*)p;
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
@@ -162,13 +175,25 @@ static int graphics_fmem_feof( void* userdata ) {
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
-   return info->offset >= info->length;
+   return info->offset >= info->length ? 1 : 0;
 }
 
 static int graphics_fmem_ferror( void* userdata ) {
    /* STUB */
    return FALSE;
 }
+
+/*
+AL_METHOD(int, pf_fclose, (void *userdata));
+AL_METHOD(int, pf_getc, (void *userdata));
+AL_METHOD(int, pf_ungetc, (int c, void *userdata));
+AL_METHOD(long, pf_fread, (void *p, long n, void *userdata));
+AL_METHOD(int, pf_putc, (int c, void *userdata));
+AL_METHOD(long, pf_fwrite, (AL_CONST void *p, long n, void *userdata));
+AL_METHOD(int, pf_fseek, (void *userdata, int offset));
+AL_METHOD(int, pf_feof, (void *userdata));
+AL_METHOD(int, pf_ferror, (void *userdata));
+*/
 
 const PACKFILE_VTABLE graphics_fmem_vtable = {
    graphics_fmem_fclose,
@@ -195,8 +220,11 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
    algif_init();
 #endif /* USE_ALLEGRO_GIF */
 
+   set_color_conversion( COLORCONV_NONE );
+
    scaffold_error = 0;
 
+   set_color_depth( GRAPHICS_COLOR_DEPTH );
    screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0 );
    scaffold_check_nonzero( screen_return );
 
@@ -216,6 +244,11 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
    GRAPHICS* g = scaffold_container_of( ref, struct _GRAPHICS, refcount );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
+      g->surface = NULL;
+   }
+   if( NULL == g->palette ) {
+      free( g->palette );
+      g->palette = NULL;
    }
    /* TODO: Free surface. */
 }
@@ -236,6 +269,7 @@ void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
    g->color.b = 0;
    g->color.a = 255;
    ref_init( &(g->refcount), graphics_surface_cleanup );
+   g->palette = NULL;
    return;
 }
 
@@ -272,7 +306,10 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
-   g->surface = load_bitmap( bdata( path ), NULL );
+   if( NULL == g->palette ) {
+      g->palette = (RGB*)calloc( 1, sizeof( RGB ) );
+   }
+   g->surface = load_bitmap( bdata( path ), (RGB*)(g->palette) );
    if( NULL == g->surface ) {
       scaffold_print_error( "Image load error: %s: %s\n", bdata( path ), allegro_error );
    }
@@ -282,37 +319,77 @@ cleanup:
    return;
 }
 
+#ifdef ALLEGRO_EXPORT_PALETTE
+static void graphics_export_palette() {
+   /* 3 * (3 digits + 1 tab) + 8 description + 1 newline */
+   /* const size_t pal_len = (256 * ((3 * (4)) + 9)) + 1;
+   char* palette */
+   bstring palette_out = NULL;
+   bstring palette_path = NULL;
+   PALETTE pal_out;
+   int i;
+
+   palette_out = bfromcstralloc( 1024, "GIMP Palette\nName: Allegro\nColumns: 16\n#\n" );
+   palette_path = bfromcstr( "allegro_palette.gpl" );
+
+   for( i = 0 ; GRAPHICS_COLOR_DEPTH > i ; i++ ) {
+      get_color( i, pal_out );
+      bformata( palette_out, "%d\t%d\t%d\tUntitled\n", pal_out->r, pal_out->g, pal_out->b );
+   }
+
+   scaffold_write_file( palette_path, (BYTE*)bdata( palette_out ), blength( palette_out ), FALSE );
+
+/* cleanup: */
+   bdestroy( palette_path );
+   bdestroy( palette_out );
+   return;
+}
+#endif /* ALLEGRO_EXPORT_PALETTE */
+
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
                               size_t length ) {
-   GRAPHICS_FMEM_INFO fmem_info;
+   GRAPHICS_FMEM_INFO* fmem_info = NULL;
    PACKFILE* fmem = NULL;
    BOOL close_packfile = TRUE;
+
+   fmem_info = (GRAPHICS_FMEM_INFO*)calloc( 1, sizeof( GRAPHICS_FMEM_INFO ) );
+   scaffold_check_null( fmem_info );
 
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;
    }
 
-#ifdef DEBUG
-   fmem_info.sentinal_start = GRAPHICS_FMEM_SENTINAL;
-   fmem_info.sentinal_end = GRAPHICS_FMEM_SENTINAL;
-#endif /* DEBUG */
-   fmem_info.block = (BYTE*)data;
-   fmem_info.length = length;
-   fmem_info.offset = 0;
-   fmem_info.alloc = length;
+   if( NULL == g->palette ) {
+      g->palette = (RGB*)calloc( 1, sizeof( RGB ) );
+   }
 
-   fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
+#ifdef DEBUG
+   fmem_info->sentinal_start = GRAPHICS_FMEM_SENTINAL;
+   fmem_info->sentinal_end = GRAPHICS_FMEM_SENTINAL;
+#endif /* DEBUG */
+   fmem_info->block = (BYTE*)data;
+   fmem_info->length = length;
+   fmem_info->offset = 0;
+   fmem_info->alloc = length;
+
+   fmem = pack_fopen_vtable( &graphics_fmem_vtable, fmem_info );
    scaffold_check_null( fmem );
 
-   /* TODO: Autodetect image type. */
-   g->surface = load_bmp_pf( fmem, NULL );
+   /* Autodetect image type. */
+   g->surface = load_bmp_pf( fmem, (RGB*)g->palette );
+   scaffold_assert( NULL != g->surface );
+
+#ifdef ALLEGRO_EXPORT_PALETTE
+   graphics_export_palette();
+#endif /* ALLEGRO_EXPORT_PALETTE */
+
    if( NULL == g->surface ) {
 #ifdef USE_ALLEGRO_PNG
-      g->surface = load_memory_png( data, length, NULL );
+      g->surface = load_memory_png( data, length, (RGB*)g->palette );
       if( NULL == g->surface ) {
 #endif /* USE_ALLEGRO_PNG */
-         g->surface = load_tga_pf( fmem, NULL );
+         g->surface = load_tga_pf( fmem, (RGB*)g->palette );
          if( NULL == g->surface ) {
 
 #ifdef USE_ALLEGRO_GIF
@@ -322,7 +399,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
             fmem_info.offset = 0;
             fmem_info.alloc = 0;
             fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
-            g->surface = load_gif_pf( fmem, NULL );
+            g->surface = load_gif_pf( fmem, (PALETTE*)g->palette );
             close_packfile = FALSE;
 #endif /* USE_ALLEGRO_GIF */
 
@@ -335,28 +412,35 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;
 
+#ifdef USE_BITMAP_PALETTE
+   set_pallete( g->palette );
+#endif /* USE_BITMAP_PALETTE */
+
 cleanup:
    if( NULL != fmem && FALSE != close_packfile ) {
       pack_fclose( fmem );
+   }
+   if( NULL != fmem_info ) {
+      free( fmem_info );
    }
    return;
 }
 
 BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
-   GRAPHICS_FMEM_INFO fmem_info;
+   GRAPHICS_FMEM_INFO* fmem_info = NULL;
    PACKFILE* fmem = NULL;
 
-   memset( &fmem_info, '\0', sizeof( GRAPHICS_FMEM_INFO ) );
+   fmem_info = (GRAPHICS_FMEM_INFO*)calloc( 1, sizeof( GRAPHICS_FMEM_INFO ) );
 
    scaffold_check_null( g );
    scaffold_check_null( g->surface );
    scaffold_check_null( out_len );
 
-   fmem_info.length = *out_len;
-   fmem_info.offset = 0;
-   fmem_info.alloc = *out_len;
+   fmem_info->length = *out_len;
+   fmem_info->offset = 0;
+   fmem_info->alloc = *out_len;
 
-   fmem = pack_fopen_vtable( &graphics_fmem_vtable, &fmem_info );
+   fmem = pack_fopen_vtable( &graphics_fmem_vtable, fmem_info );
    scaffold_check_null( fmem );
 
 /*#ifdef USE_ALLEGRO_PNG
@@ -364,13 +448,16 @@ BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
 #else*/
    save_bmp_pf( fmem, g->surface, NULL );
 /*#endif / USE_ALLEGRO_PNG */
-   *out_len = fmem_info.length;
+   *out_len = fmem_info->length;
 
 cleanup:
    if( NULL != fmem ) {
       pack_fclose( fmem );
    }
-   return fmem_info.block;
+   if( NULL != fmem_info ) {
+      free( fmem_info );
+   }
+   return fmem_info->block;
 }
 
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {

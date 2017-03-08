@@ -14,7 +14,7 @@
 typedef enum _IRC_ERROR {
    ERR_NONICKNAMEGIVEN = 431,
    ERR_NICKNAMEINUSE = 433,
-   ERR_NOMOTD = 422,
+   ERR_NOMOTD = 422
 } IRC_ERROR;
 
 const struct tagbstring irc_reply_error_text[35] = {
