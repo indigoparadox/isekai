@@ -8,7 +8,7 @@
 
 #if HEATSHRINK_DYNAMIC_ALLOC
     /* Optional replacement of malloc/free */
-    #define HEATSHRINK_MALLOC(SZ) malloc(SZ)
+    #define HEATSHRINK_MALLOC(SZ) calloc(1, SZ)
     #define HEATSHRINK_FREE(P, SZ) free(P)
 #else
     /* Required parameters for static configuration */
