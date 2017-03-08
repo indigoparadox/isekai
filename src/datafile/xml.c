@@ -1,7 +1,7 @@
 
 #include "../datafile.h"
 
-#include "../b64/b64.h"
+#include "../b64.h"
 #include "../hashmap.h"
 #include "../gamedata.h"
 

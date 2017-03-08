@@ -2,7 +2,7 @@
 #include "server.h"
 #include "ui.h"
 #include "input.h"
-#include "b64/b64.h"
+#include "b64.h"
 #include "scaffold.h"
 
 #include <stdlib.h>
