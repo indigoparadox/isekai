@@ -191,7 +191,9 @@ void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
    loadpng_init();
 #endif /* USE_ALLEGRO_PNG */
 
+#ifdef USE_ALLEGRO_GIF
    algif_init();
+#endif /* USE_ALLEGRO_GIF */
 
    scaffold_error = 0;
 
