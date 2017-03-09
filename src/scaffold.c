@@ -205,16 +205,28 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
    }
 }
 
+/** \brief Provide a block of memory that contains a given file's contents.
+ *         May be pulled from weird special storage/ROM or mmap'ed.
+ *
+ * \param path - The path to identify the file to open.
+ * \param buffer - A pointer to a pointer to NULL. Will return the buffer.
+ * \param len - A pointer to the size indicator for the buffer.
+ * \return The number of bytes read, or -1 on failure.
+ *
+ */
+
 ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
    FILE* inputfile = NULL;
-   ssize_t sz_out;
+   ssize_t sz_out = -1;
+
+   if( NULL != *buffer ) {
+      free( *buffer );
+   }
 
    *buffer = NULL;
    *len = 0;
 
    /* TODO: Implement mmap() */
-
-   sz_out = -1;
 
    scaffold_check_null( path );
 

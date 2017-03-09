@@ -5,7 +5,7 @@
 #include "../hashmap.h"
 #include "../gamedata.h"
 
-static void datafile_tilemap_parse_properties( struct TILEMAP* t, ezxml_t xml_props ) {
+static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
 
    scaffold_check_null( xml_props );
@@ -36,7 +36,7 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset_image(
+static void datafile_tilemap_parse_tileset_ezxml_image(
    struct TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
 ) {
    GRAPHICS* g_image = NULL;
@@ -84,7 +84,7 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_tileset( struct TILEMAP* t, ezxml_t xml_tileset ) {
+static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml_tileset, BOOL local_images ) {
    struct TILEMAP_TILESET* set = NULL;
    ezxml_t
       xml_image,
@@ -128,7 +128,7 @@ static void datafile_tilemap_parse_tileset( struct TILEMAP* t, ezxml_t xml_tiles
    hashmap_put( &(t->tilesets), buffer, set );
 
    while( NULL != xml_image ) {
-      datafile_tilemap_parse_tileset_image( set, xml_image, t->local_images );
+      datafile_tilemap_parse_tileset_ezxml_image( set, xml_image, local_images );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
@@ -212,7 +212,7 @@ cleanup:
    return;
 }
 
-static void datafile_tilemap_parse_layer( struct TILEMAP* t, ezxml_t xml_layer ) {
+static void datafile_tilemap_parse_layer_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
    struct TILEMAP_LAYER* layer = NULL;
    ezxml_t xml_layer_data = NULL;
    bstring buffer = NULL;
@@ -257,15 +257,11 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, size_t datasize ) {
+void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, size_t datasize, BOOL local_images ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
       xml_tileset = NULL,
       xml_data = NULL;
-   struct TILEMAP* t = (struct TILEMAP*)targ;
-
-   bassign( t->serialize_filename, filename );
-   scaffold_check_null( t->serialize_filename );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
@@ -273,25 +269,27 @@ void datafile_parse_tilemap( void* targ, bstring filename, const BYTE* tmdata, s
    xml_tileset = ezxml_child( xml_data, "tileset" );
    scaffold_check_null( xml_tileset );
    while( NULL != xml_tileset ) {
-      datafile_tilemap_parse_tileset( t, xml_tileset );
+      datafile_tilemap_parse_tileset_ezxml( t, xml_tileset, local_images );
       xml_tileset = ezxml_next( xml_tileset );
    }
 
    xml_props = ezxml_child( xml_data, "properties" );
-   datafile_tilemap_parse_properties( t, xml_props );
+   datafile_tilemap_parse_properties_ezxml( t, xml_props );
 
    xml_layer = ezxml_child( xml_data, "layer" );
    scaffold_check_null( xml_layer );
    while( NULL != xml_layer ) {
-      datafile_tilemap_parse_layer( t, xml_layer );
+      datafile_tilemap_parse_layer_ezxml( t, xml_layer );
       xml_layer = ezxml_next( xml_layer );
    }
 
+#if 0
    /* Shortcut to serialize for later. */
    scaffold_check_null( t );
    scaffold_print_debug( "Serializing map data to XML...\n" );
    t->serialize_buffer = ezxml_toxml( xml_data );
    scaffold_check_null( t->serialize_buffer );
+#endif
 
    t->sentinal = TILEMAP_SENTINAL;
 
@@ -303,20 +301,4 @@ cleanup:
 }
 
 void datafile_reserialize_tilemap( struct TILEMAP* t ) {
-}
-
-void datafile_load_file(
-   void* targ_struct, bstring filename, BOOL local_images, datafile_cb cb
-) {
-   BYTE* tmdata = NULL;
-   size_t tmsize = 0;
-
-   scaffold_read_file_contents( filename, &tmdata, &tmsize );
-
-   cb( targ_struct, filename, tmdata, tmsize );
-
-   if( NULL != tmdata ) {
-      free( tmdata );
-   }
-   return;
 }

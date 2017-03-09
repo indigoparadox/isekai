@@ -37,8 +37,6 @@ static void tilemap_cleanup( const struct REF* ref ) {
    vector_free( &(t->positions) );
    hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
    hashmap_cleanup( &(t->tilesets) );
-   bdestroy( t->serialize_buffer );
-   bdestroy( t->serialize_filename );
 
    /* TODO: Free tilemap. */
 }
@@ -51,11 +49,6 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    hashmap_init( &(t->tilesets) );
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
-
-   t->serialize_buffer = NULL;
-   t->serialize_filename = bfromcstralloc( 30, "" );
-
-   t->local_images = local_images;
 }
 
 void tilemap_free( struct TILEMAP* t ) {
