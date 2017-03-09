@@ -81,12 +81,12 @@ typedef int16_t SCAFFOLD_SIZE_SIGNED;
 
 #ifndef USE_LOGFILE
 
-#define scaffold_print_info( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
-#define scaffold_print_error( ... ) fprintf( stderr, __FILE__ ": " __VA_ARGS__ );
+#define scaffold_print_info( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle );
+#define scaffold_print_error( ... ) fprintf( scaffold_log_handle_err, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle_err );
 
 #ifdef DEBUG
 
-#define scaffold_print_debug( ... ) fprintf( stdout, __FILE__ ": " __VA_ARGS__ );
+#define scaffold_print_debug( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ );
 
 #define scaffold_assert( arg ) assert( arg )
 
@@ -223,29 +223,35 @@ void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
 ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
 #ifdef __GNUC__
-__attribute__ ((warn_unused_result));
+__attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
+;
 ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs )
 #ifdef __GNUC__
-__attribute__ ((warn_unused_result));
+__attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
+;
 void scaffold_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden
 );
 bstring scaffold_basename( bstring path )
 #ifdef __GNUC__
-__attribute__ ((warn_unused_result));
+__attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
+;
 BOOL scaffold_check_directory( const bstring path )
 #ifdef __GNUC__
-__attribute__ ((warn_unused_result));
+__attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
+;
 void scaffold_join_path( bstring path1, bstring path2 );
 
 #ifndef SCAFFOLD_C
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;
+extern FILE* scaffold_log_handle;
+extern FILE* scaffold_log_handle_err;
 #endif /* DEBUG */
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;

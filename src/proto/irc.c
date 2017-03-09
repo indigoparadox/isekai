@@ -70,6 +70,31 @@ const struct tagbstring irc_reply_error_text[35] = {
 
 extern struct tagbstring str_gamedata_server_path;
 
+void proto_send_chunk(
+   struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
+   const bstring filename, const bstring data
+) {
+#ifdef USE_HEATSHRINK
+   /* Note the starting point and progress for the client. */
+   server_client_printf(
+      c, ":server GDB %b %b TILEMAP %b %d %d %d %d : %b",
+      c->nick, h->channel, filename, h->type, start_pos,
+      h->tx_chunk_length, h->raw_length, data
+   );
+#endif // USE_HEATSHRINK
+
+cleanup:
+   return;
+}
+
+void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
+   scaffold_print_debug(
+      "Client: Aborting transfer of %s from server due to cached copy.\n",
+      bdata( h->filename )
+   );
+   client_printf( c, "GDA %b", h->filename );
+}
+
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -436,6 +461,7 @@ static void irc_server_who(
    SCAFFOLD_SIZE i;
    bstring response = NULL;
 
+   #if 0
    irc_detect_malformed( 2, "WHO" );
 
    /* TODO: Handle non-channels. */
@@ -479,6 +505,7 @@ cleanup:
    }
    bdestroy( response );
    bstrListDestroy( search_targets );
+#endif // 0
    return;
 }
 

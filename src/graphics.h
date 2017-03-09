@@ -68,7 +68,11 @@ void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
                               SCAFFOLD_SIZE length );
-BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len );
+BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len )
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
 void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );

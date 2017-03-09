@@ -37,6 +37,12 @@ extern IRC_COMMAND_TABLE_START( client );
 
 #define IRC_LINE_CMD_SEARCH_RANGE 2
 
+void proto_send_chunk(
+   struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
+   const bstring filename, const bstring data
+);
+void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h );
+
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, struct CLIENT* c, const_bstring line
