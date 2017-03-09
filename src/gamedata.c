@@ -21,6 +21,7 @@ void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    bstring mapdata_filename = NULL;
    BYTE* mapdata_buffer = NULL;
    SCAFFOLD_SIZE mapdata_size = 0;
+   SCAFFOLD_SIZE_SIGNED bytes_read = 0;
 
 #ifdef INIT_ZEROES
    memset( d, '\0', sizeof( struct GAMEDATA ) );
@@ -38,8 +39,9 @@ void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    mapdata_path = bformat( "./%s.tmx", bdata( mapdata_filename ) );
    scaffold_check_null( mapdata_path );
    scaffold_print_info( "Loading for XML data in: %s\n", bdata( mapdata_path ) );
-   scaffold_read_file_contents( mapdata_path, &mapdata_buffer, &mapdata_size );
+   bytes_read = scaffold_read_file_contents( mapdata_path, &mapdata_buffer, &mapdata_size );
    scaffold_check_null( mapdata_buffer );
+   scaffold_check_zero( bytes_read );
 
    datafile_parse_tilemap_ezxml( &(d->tmap), mapdata_buffer, mapdata_size, FALSE );
 #endif /* USE_EZXML */

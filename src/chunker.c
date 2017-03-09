@@ -148,6 +148,7 @@ void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
    uint8_t* hs_buffer = NULL;
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
+   scaffold_check_null( hs_buffer );
    heatshrink_encoder_reset( h->encoder );
 
    do {
@@ -191,7 +192,11 @@ void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 
    b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
 
-   free( hs_buffer );
+cleanup:
+
+   if( NULL != hs_buffer ) {
+      free( hs_buffer );
+   }
 
    return;
 }
