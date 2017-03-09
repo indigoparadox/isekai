@@ -209,6 +209,7 @@
 			<Add option="-DEZXML_CSTR" />
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
 			<Add option="-DUSE_FILE_CACHE" />
+			<Add option="-DUSE_EZXML" />
 		</Compiler>
 		<Unit filename="src/algif/algif.c">
 			<Option compilerVar="CC" />
@@ -267,11 +268,6 @@
 		</Unit>
 		<Unit filename="src/connection.h" />
 		<Unit filename="src/datafile.h" />
-		<Unit filename="src/datafile/null.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-NoUI)" />
-			<Option target="Check (Linux)" />
-		</Unit>
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
