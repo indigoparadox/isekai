@@ -19,6 +19,8 @@ static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    bstring mapdata_path = NULL;
    bstring mapdata_filename = NULL;
+   BYTE* mapdata_buffer = NULL;
+   size_t mapdata_size = 0;
 
 #ifdef INIT_ZEROES
    memset( d, '\0', sizeof( struct GAMEDATA ) );
@@ -30,15 +32,24 @@ void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    scaffold_print_info( "Loading data for channel: %s\n", bdata( name ) );
    mapdata_filename = bstrcpy( name );
    scaffold_check_null( mapdata_filename );
-   bdelete( mapdata_filename, 0, 1 );
+   bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
+
+#ifdef USE_EZXML
    mapdata_path = bformat( "./%s.tmx", bdata( mapdata_filename ) );
    scaffold_check_null( mapdata_path );
-   scaffold_print_info( "Loading for data in: %s\n", bdata( mapdata_path ) );
-   datafile_load_file( &(d->tmap), mapdata_path, TRUE, datafile_parse_tilemap );
+   scaffold_print_info( "Loading for XML data in: %s\n", bdata( mapdata_path ) );
+   scaffold_read_file_contents( mapdata_path, &mapdata_buffer, &mapdata_size );
+   scaffold_check_null( mapdata_buffer );
+
+   datafile_parse_tilemap_ezxml( &(d->tmap), &mapdata_buffer, &mapdata_size, FALSE );
+#endif /* USE_EZXML */
 
 cleanup:
    bdestroy( mapdata_path );
    bdestroy( mapdata_filename );
+   if( NULL != mapdata_buffer ) {
+      free( mapdata_buffer );
+   }
    return;
 }
 
@@ -227,12 +238,15 @@ void gamedata_process_finished_chunker(
 
    switch( h->type ) {
    case CHUNKER_DATA_TYPE_TILEMAP:
-      datafile_parse_tilemap(
-         &(d->tmap), h->filename, (BYTE*)h->raw_ptr, h->raw_length
+#ifdef USE_EZXML
+      datafile_parse_tilemap_ezxml(
+         &(d->tmap), (BYTE*)h->raw_ptr, h->raw_length, TRUE
       );
+#endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
       lc = (struct CHANNEL_CLIENT*)calloc( 1, sizeof( struct CHANNEL_CLIENT ) );
+      scaffold_check_null( lc );
       lc->l = l;
       lc->c = c;
       hashmap_iterate( &(d->tmap.tilesets), callback_proc_tileset_imgs, lc );

@@ -9,12 +9,12 @@ typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, size_t datasize
 );
 
-void datafile_parse_tilemap(
-   void* targ, bstring filename, const BYTE* tmdata, size_t datasize
+#ifdef USE_EZXML
+void datafile_parse_tilemap_ezxml(
+   struct TILEMAP* t, const BYTE* tmdata, size_t datasize, BOOL local_images
 );
+#endif /* USE_EZXML */
+
 void datafile_reserialize_tilemap( struct TILEMAP* t );
-void datafile_load_file(
-   void* targ_struct, bstring filename, BOOL local_images, datafile_cb cb
-);
 
 #endif /* DATAFILE_H */

@@ -64,11 +64,8 @@ struct TILEMAP {
    size_t starting_x;
    size_t starting_y;
    TILEMAP_ORIENTATION orientation;
-   bstring serialize_buffer;
-   bstring serialize_filename;
    size_t window_step_width; /* For dungeons. */
    size_t window_step_height;
-   BOOL local_images;
    uint16_t sentinal;
 };
 
