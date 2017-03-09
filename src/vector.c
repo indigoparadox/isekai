@@ -66,12 +66,15 @@ cleanup:
 }
 
 void vector_add( struct VECTOR* v, void* data ) {
+   BOOL ok = FALSE;
+
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
 
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
+   ok = TRUE;
 
    if( 0 == v->size ) {
       v->size = 10;
@@ -89,8 +92,10 @@ void vector_add( struct VECTOR* v, void* data ) {
    ref_test_inc( data );
 
 cleanup:
-
-   vector_lock( v, FALSE );
+   if( FALSE != ok ) {
+      vector_lock( v, FALSE );
+   }
+   scaffold_assert( 0 == v->lock_count );
 
    return;
 }
@@ -141,6 +146,7 @@ cleanup:
    if( TRUE == ok ) {
       vector_lock( v, FALSE );
    }
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
 
@@ -173,6 +179,7 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
 
 cleanup:
    vector_lock( v, FALSE );
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
 
@@ -207,6 +214,7 @@ cleanup:
    if( TRUE == ok ) {
       vector_lock( v, FALSE );
    }
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
 
@@ -306,11 +314,13 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
    vector_lock( v, FALSE );
 
 cleanup:
+   scaffold_assert( 0 == v->lock_count );
    return backshift;
 }
 
 void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    SCAFFOLD_SIZE i;
+   BOOL ok = FALSE;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -319,6 +329,7 @@ void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
+   ok = TRUE;
 
    scaffold_assert( v->count > index );
    scaffold_check_bounds( index, v->count );
@@ -332,7 +343,10 @@ void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    v->count--;
 
 cleanup:
-   vector_lock( v, FALSE );
+   if( FALSE != ok ) {
+      vector_lock( v, FALSE );
+   }
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
 
@@ -358,6 +372,7 @@ void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    vector_lock( v, FALSE );
 
 cleanup:
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
 
@@ -388,6 +403,7 @@ SCAFFOLD_SIZE vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
    vector_lock( v, FALSE );
 
 cleanup:
+   scaffold_assert( 0 == v->lock_count );
    return difference;
 }
 
@@ -445,7 +461,7 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    void* current_iter = NULL;
    SCAFFOLD_SIZE i;
    VECTOR_SORT_ORDER o;
-
+   BOOL ok = FALSE;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -459,6 +475,8 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
+   ok = TRUE;
+
    for( i = 1 ; vector_count( v ) > i ; i++ ) {
       current_iter = vector_get( v, i );
       previous_iter = vector_get( v, (i - 1) );
@@ -476,8 +494,11 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
          break;
       }
    }
-   vector_lock( v, FALSE );
 
 cleanup:
+   if( FALSE != ok ) {
+      vector_lock( v, FALSE );
+   }
+   scaffold_assert( 0 == v->lock_count );
    return;
 }
