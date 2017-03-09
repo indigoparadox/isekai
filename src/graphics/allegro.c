@@ -381,7 +381,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    scaffold_assert( NULL != g->surface );
 
 #ifdef ALLEGRO_EXPORT_PALETTE
-   graphics_export_palette();
+   graphics_export_palette();splitdebug
 #endif /* ALLEGRO_EXPORT_PALETTE */
 
    if( NULL == g->surface ) {
