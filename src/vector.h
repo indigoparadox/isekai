@@ -12,8 +12,8 @@ typedef enum _VECTOR_SORT_ORDER {
 struct VECTOR {
    uint16_t sentinal;
    void** data;
-   size_t size;
-   size_t count;
+   SCAFFOLD_SIZE size;
+   SCAFFOLD_SIZE count;
    BOOL scalar;
    int32_t* scalar_data;
 #if defined( DEBUG ) && !defined( USE_THREADS )
@@ -39,16 +39,16 @@ void vector_init( struct VECTOR* v );
 void vector_free( struct VECTOR* v );
 void vector_add( struct VECTOR* v, void* data );
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe );
-void vector_set( struct VECTOR* v, size_t index, void* data, BOOL force );
-void vector_set_scalar( struct VECTOR* v, size_t index, int32_t value );
-void* vector_get( struct VECTOR* v, size_t index );
-int32_t vector_get_scalar( struct VECTOR* v, size_t index );
-int32_t vector_get_scalar_value( struct VECTOR* v, size_t value );
-size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg );
-void vector_remove( struct VECTOR* v, size_t index );
-void vector_remove_scalar( struct VECTOR* v, size_t index );
-size_t vector_remove_scalar_value( struct VECTOR* v, int32_t value );
-size_t vector_count( struct VECTOR* v );
+void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force );
+void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value );
+void* vector_get( struct VECTOR* v, SCAFFOLD_SIZE index );
+int32_t vector_get_scalar( struct VECTOR* v, SCAFFOLD_SIZE index );
+int32_t vector_get_scalar_value( struct VECTOR* v, SCAFFOLD_SIZE value );
+SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg );
+void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index );
+void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index );
+SCAFFOLD_SIZE vector_remove_scalar_value( struct VECTOR* v, int32_t value );
+SCAFFOLD_SIZE vector_count( struct VECTOR* v );
 void vector_lock( struct VECTOR* v, BOOL lock );
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg );
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb );

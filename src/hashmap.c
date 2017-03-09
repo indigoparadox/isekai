@@ -381,7 +381,7 @@ void* hashmap_get_nolock( struct HASHMAP* m, const bstring key ) {
 }
 
 void* hashmap_get_first( struct HASHMAP* m ) {
-   size_t i;
+   SCAFFOLD_SIZE i;
    void* found = NULL;
    void* data = NULL;
    BOOL ok = FALSE;
@@ -465,7 +465,7 @@ BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key ) {
  * argument and the hashmap element is the second.
  */
 void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
-   size_t i;
+   SCAFFOLD_SIZE i;
    void* found = NULL;
    void* data = NULL;
    void* test = NULL;
@@ -534,9 +534,9 @@ cleanup:
 
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
-size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
-   size_t i;
-   size_t removed = 0;
+SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
+   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE removed = 0;
    void* data;
    BOOL locked = FALSE;
 

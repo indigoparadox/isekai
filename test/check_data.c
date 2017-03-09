@@ -15,8 +15,8 @@ static void free_blob( const struct REF *ref ) {
     free( blob );
 }
 
-BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, size_t c, uint32_t sent_e ) {
-   size_t i;
+BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, SCAFFOLD_SIZE c, uint32_t sent_e ) {
+   SCAFFOLD_SIZE i;
    BLOB* blob;
 
    blob = (BLOB*)calloc( 1, sizeof( BLOB ) );

@@ -31,9 +31,9 @@ typedef struct _GRAPHICS_FMEM_INFO {
    uint16_t sentinal_start;
 #endif /* DEBUG */
    BYTE* block;
-   size_t length;
-   size_t alloc;
-   size_t offset;
+   SCAFFOLD_SIZE length;
+   SCAFFOLD_SIZE alloc;
+   SCAFFOLD_SIZE offset;
 #ifdef DEBUG
    uint16_t sentinal_end;
 #endif /* DEBUG */
@@ -86,7 +86,7 @@ static int graphics_fmem_ungetc( int c, void* userdata ) {
 
 static long graphics_fmem_fread( void* p, long n, void* userdata ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   size_t actual;
+   SCAFFOLD_SIZE actual;
    scaffold_assert( info );
    scaffold_assert( info->offset <= info->length );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
@@ -150,7 +150,7 @@ static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
 
 static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   size_t actual;
+   SCAFFOLD_SIZE actual;
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 
@@ -322,7 +322,7 @@ cleanup:
 #ifdef ALLEGRO_EXPORT_PALETTE
 static void graphics_export_palette() {
    /* 3 * (3 digits + 1 tab) + 8 description + 1 newline */
-   /* const size_t pal_len = (256 * ((3 * (4)) + 9)) + 1;
+   /* const SCAFFOLD_SIZE pal_len = (256 * ((3 * (4)) + 9)) + 1;
    char* palette */
    bstring palette_out = NULL;
    bstring palette_path = NULL;
@@ -347,7 +347,7 @@ static void graphics_export_palette() {
 #endif /* ALLEGRO_EXPORT_PALETTE */
 
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
-                              size_t length ) {
+                              SCAFFOLD_SIZE length ) {
    GRAPHICS_FMEM_INFO* fmem_info = NULL;
    PACKFILE* fmem = NULL;
    BOOL close_packfile = TRUE;
@@ -426,7 +426,7 @@ cleanup:
    return;
 }
 
-BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
+BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
    GRAPHICS_FMEM_INFO* fmem_info = NULL;
    PACKFILE* fmem = NULL;
 

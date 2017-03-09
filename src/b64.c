@@ -254,12 +254,12 @@ static const unsigned char d[] = {
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
-void b64_encode( void* indata, size_t indata_len, bstring outstring, ssize_t linesz ) {
+void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, ssize_t linesz ) {
    const uint8_t* indata_bytes = (const uint8_t *)indata;
-   size_t i;
+   SCAFFOLD_SIZE i;
    uint32_t concat32bits = 0;
    uint8_t split6bits[4] = { 0 };
-   size_t padding = indata_len % 3;
+   SCAFFOLD_SIZE padding = indata_len % 3;
    int bstr_ret;
 
    scaffold_assert( NULL != outstring );
@@ -326,11 +326,11 @@ cleanup:
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-void* b64_decode( size_t* outdata_len, bstring instring ) {
+void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
    char iter = 0;
    uint32_t buf = 0;
-   size_t indata_index = 0;
-   size_t outdata_index = 0;
+   SCAFFOLD_SIZE indata_index = 0;
+   SCAFFOLD_SIZE outdata_index = 0;
    uint8_t* outdata = NULL;
 
    scaffold_error = SCAFFOLD_ERROR_NONE;
@@ -405,12 +405,12 @@ cleanup:
 
 #endif
 
-int b64_decode( bstring indata, unsigned char *out, size_t *outLen ) {
+int b64_decode( bstring indata, unsigned char *out, SCAFFOLD_SIZE *outLen ) {
     /* char *end = in + inLen; */
     char iter = 0;
     uint32_t buf = 0;
-    size_t len = 0;
-    size_t indata_index = 0;
+    SCAFFOLD_SIZE len = 0;
+    SCAFFOLD_SIZE indata_index = 0;
 
     /* while (in < end) { */
     /* while( indata_index < inLen ) { */

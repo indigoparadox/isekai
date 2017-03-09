@@ -15,10 +15,10 @@
 #include <crtdbg.h>
 
 #include <Windows.h>
-/* typedef uint16_t size_t; */
+/* typedef uint16_t SCAFFOLD_SIZE; */
 /* typedef int16_t ssize_t; */
 #define ssize_t long
-#define size_t unsigned long
+#define SCAFFOLD_SIZE unsigned long
 #endif /* USE_WIN32 */
 
 #include "bstrlib/bstrlib.h"
@@ -70,6 +70,14 @@ typedef enum {
 #else
 #define SCAFFOLD_INLINE
 #endif /* USE_INLINE */
+
+#ifdef USE_SIZET
+typedef size_t SCAFFOLD_SIZE;
+typedef ssize_t SCAFFOLD_SIZE_SIGNED;
+#else
+typedef uint16_t SCAFFOLD_SIZE;
+typedef int16_t SCAFFOLD_SIZE_SIGNED;
+#endif /* USE_SIZET */
 
 #ifndef USE_LOGFILE
 
@@ -212,9 +220,9 @@ BOOL scaffold_string_is_printable( bstring str );
 void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
-void scaffold_random_string( bstring rand_str, size_t len );
-ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) __attribute__ ((warn_unused_result));;
-ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) __attribute__ ((warn_unused_result));;
+void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
+ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) __attribute__ ((warn_unused_result));
+ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs ) __attribute__ ((warn_unused_result));
 void scaffold_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden

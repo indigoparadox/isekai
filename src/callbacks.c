@@ -7,7 +7,7 @@
 #include "chunker.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
-   size_t last_read_count = 0;
+   SCAFFOLD_SIZE last_read_count = 0;
    SERVER* s = NULL;
    static bstring buffer = NULL;
    struct CLIENT* c = (struct CLIENT*)iter;
@@ -250,7 +250,7 @@ void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
 }
 
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
-   size_t gid = (*(size_t*)arg);
+   SCAFFOLD_SIZE gid = (*(SCAFFOLD_SIZE*)arg);
    struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
 
    if( tileset->firstgid <= gid ) {
@@ -340,7 +340,7 @@ BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg ) {
 
 BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
-   size_t* serial = (size_t*)arg;
+   SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
    if( NULL == arg || *serial == o->serial ) {
       mobile_free( o );
       return TRUE;

@@ -35,8 +35,8 @@ static const char *state_names[] = {
 
 typedef struct {
     uint8_t *buf;               /* output buffer */
-    size_t buf_size;            /* buffer size */
-    size_t *output_size;        /* bytes pushed to buffer, so far */
+    SCAFFOLD_SIZE buf_size;            /* buffer size */
+    SCAFFOLD_SIZE *output_size;        /* bytes pushed to buffer, so far */
 } output_info;
 
 #define NO_BITS ((uint16_t)-1)
@@ -49,8 +49,8 @@ static void push_byte(heatshrink_decoder *hsd, output_info *oi, uint8_t byte);
 heatshrink_decoder *heatshrink_decoder_alloc(uint16_t input_buffer_size,
                                              uint8_t window_sz2,
                                              uint8_t lookahead_sz2) {
-    size_t buffers_sz;
-    size_t sz;
+    SCAFFOLD_SIZE buffers_sz;
+    SCAFFOLD_SIZE sz;
     if ((window_sz2 < HEATSHRINK_MIN_WINDOW_BITS) ||
         (window_sz2 > HEATSHRINK_MAX_WINDOW_BITS) ||
         (input_buffer_size == 0) ||
@@ -72,8 +72,8 @@ heatshrink_decoder *heatshrink_decoder_alloc(uint16_t input_buffer_size,
 }
 
 void heatshrink_decoder_free(heatshrink_decoder *hsd) {
-    size_t buffers_sz = (1 << hsd->window_sz2) + hsd->input_buffer_size;
-    size_t sz = sizeof(heatshrink_decoder) + buffers_sz;
+    SCAFFOLD_SIZE buffers_sz = (1 << hsd->window_sz2) + hsd->input_buffer_size;
+    SCAFFOLD_SIZE sz = sizeof(heatshrink_decoder) + buffers_sz;
     HEATSHRINK_FREE(hsd, sz);
     free( hsd->buffers );
     (void)sz;   /* may not be used by free */
@@ -81,8 +81,8 @@ void heatshrink_decoder_free(heatshrink_decoder *hsd) {
 #endif
 
 void heatshrink_decoder_reset(heatshrink_decoder *hsd) {
-    size_t buf_sz = 1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd);
-    size_t input_sz = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd);
+    SCAFFOLD_SIZE buf_sz = 1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd);
+    SCAFFOLD_SIZE input_sz = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd);
     if(NULL != hsd->buffers){
       free(hsd->buffers);
     }
@@ -99,12 +99,12 @@ void heatshrink_decoder_reset(heatshrink_decoder *hsd) {
 
 /* Copy SIZE bytes into the decoder's input buffer, if it will fit. */
 HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder *hsd,
-        uint8_t *in_buf, size_t size, size_t *input_size) {
+        uint8_t *in_buf, SCAFFOLD_SIZE size, SCAFFOLD_SIZE *input_size) {
     if ((hsd == NULL) || (in_buf == NULL) || (input_size == NULL)) {
         return HSDR_SINK_ERROR_NULL;
     }
 
-    size_t rem = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd) - hsd->input_size;
+    SCAFFOLD_SIZE rem = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd) - hsd->input_size;
     if (rem == 0) {
         *input_size = 0;
         return HSDR_SINK_FULL;
@@ -139,7 +139,7 @@ static HSD_state st_yield_backref(heatshrink_decoder *hsd,
     output_info *oi);
 
 HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder *hsd,
-        uint8_t *out_buf, size_t out_buf_size, size_t *output_size) {
+        uint8_t *out_buf, SCAFFOLD_SIZE out_buf_size, SCAFFOLD_SIZE *output_size) {
     if ((hsd == NULL) || (out_buf == NULL) || (output_size == NULL)) {
         return HSDR_POLL_ERROR_NULL;
     }
@@ -276,17 +276,17 @@ static HSD_state st_backref_count_lsb(heatshrink_decoder *hsd) {
 static HSD_state st_yield_backref(heatshrink_decoder *hsd,
         output_info *oi) {
     uint8_t * buf;
-    size_t count;
+    SCAFFOLD_SIZE count;
     count = oi->buf_size - *oi->output_size;
     if (count > 0) {
-        size_t i = 0;
+        SCAFFOLD_SIZE i = 0;
         if (hsd->output_count < count) count = hsd->output_count;
         buf = &hsd->buffers[HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd)];
         uint16_t mask = (1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd)) - 1;
         uint16_t neg_offset = hsd->output_index;
         LOG("-- emitting %zu bytes from -%u bytes back\n", count, neg_offset);
         ASSERT(neg_offset <= mask + 1);
-        ASSERT(count <= (size_t)(1 << BACKREF_COUNT_BITS(hsd)));
+        ASSERT(count <= (SCAFFOLD_SIZE)(1 << BACKREF_COUNT_BITS(hsd)));
 
         for (i=0; i<count; i++) {
             uint8_t c = buf[(hsd->head_index - neg_offset) & mask];

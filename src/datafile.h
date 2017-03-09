@@ -6,12 +6,12 @@
 #include "scaffold.h"
 
 typedef void (*datafile_cb)(
-   void* targ, bstring filename, const BYTE* tmdata, size_t datasize
+   void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize
 );
 
 #ifdef USE_EZXML
 void datafile_parse_tilemap_ezxml(
-   struct TILEMAP* t, const BYTE* tmdata, size_t datasize, BOOL local_images
+   struct TILEMAP* t, const BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
 );
 #endif /* USE_EZXML */
 

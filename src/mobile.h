@@ -30,11 +30,11 @@ struct MOBILE {
    struct REF refcount;
    uint8_t serial;
    struct CLIENT* owner;
-   size_t x;
-   size_t y;
-   size_t prev_x;
-   size_t prev_y;
-   size_t steps_remaining;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+   SCAFFOLD_SIZE prev_x;
+   SCAFFOLD_SIZE prev_y;
+   SCAFFOLD_SIZE steps_remaining;
    bstring sprites_filename;
    GRAPHICS* sprites;
    MOBILE_FRAME_ALT frame_alt;
@@ -56,7 +56,7 @@ void mobile_init( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
-   MOBILE_FRAME_ALT frame_alt, size_t* x, size_t* y
+   MOBILE_FRAME_ALT frame_alt, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );

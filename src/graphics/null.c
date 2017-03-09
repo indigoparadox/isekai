@@ -29,10 +29,10 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 }
 
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
-                              size_t length ) {
+                              SCAFFOLD_SIZE length ) {
 }
 
-BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
+BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
    return NULL;
 }
 

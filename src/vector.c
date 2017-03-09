@@ -36,8 +36,8 @@ inline static void vector_reset( struct VECTOR* v ) {
    v->count = 0;
 }
 
-inline static void vector_grow( struct VECTOR* v, size_t new_size ) {
-   size_t old_size = v->size,
+inline static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
+   SCAFFOLD_SIZE old_size = v->size,
       i;
 
    v->size = new_size;
@@ -50,8 +50,8 @@ cleanup:
    return;
 }
 
-inline static void vector_grow_scalar( struct VECTOR* v, size_t new_size ) {
-   size_t old_size = v->size,
+inline static void vector_grow_scalar( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
+   SCAFFOLD_SIZE old_size = v->size,
       i;
 
    v->size = new_size;
@@ -96,7 +96,7 @@ cleanup:
 }
 
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
-   size_t i;
+   SCAFFOLD_SIZE i;
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
@@ -144,7 +144,7 @@ cleanup:
    return;
 }
 
-void vector_set( struct VECTOR* v, size_t index, void* data, BOOL force ) {
+void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force ) {
    scaffold_check_null( v );
 
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -176,7 +176,7 @@ cleanup:
    return;
 }
 
-void vector_set_scalar( struct VECTOR* v, size_t index, int32_t value ) {
+void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
@@ -210,7 +210,7 @@ cleanup:
    return;
 }
 
-void* vector_get( struct VECTOR* v, size_t index ) {
+void* vector_get( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    void* retptr = NULL;
 
    if( NULL == v ) {
@@ -230,7 +230,7 @@ cleanup:
    return retptr;
 }
 
-int32_t vector_get_scalar( struct VECTOR* v, size_t index ) {
+int32_t vector_get_scalar( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    int32_t retval = -1;
 
    scaffold_check_null( v );
@@ -246,7 +246,7 @@ cleanup:
    return retval;
 }
 
-int32_t vector_get_scalar_value( struct VECTOR* v, size_t value ) {
+int32_t vector_get_scalar_value( struct VECTOR* v, SCAFFOLD_SIZE value ) {
    int32_t retval = -1;
    int i;
 
@@ -272,9 +272,9 @@ cleanup:
 
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
-size_t vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg ) {
-   size_t i;
-   size_t backshift = 0;
+SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg ) {
+   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE backshift = 0;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -309,8 +309,8 @@ cleanup:
    return backshift;
 }
 
-void vector_remove( struct VECTOR* v, size_t index ) {
-   size_t i;
+void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
+   SCAFFOLD_SIZE i;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -336,8 +336,8 @@ cleanup:
    return;
 }
 
-void vector_remove_scalar( struct VECTOR* v, size_t index ) {
-   size_t i;
+void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index ) {
+   SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -361,9 +361,9 @@ cleanup:
    return;
 }
 
-size_t vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
-   size_t i;
-   size_t difference = 0;
+SCAFFOLD_SIZE vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
+   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE difference = 0;
 
 
    scaffold_check_null( v );
@@ -391,7 +391,7 @@ cleanup:
    return difference;
 }
 
-size_t vector_count( struct VECTOR* v ) {
+SCAFFOLD_SIZE vector_count( struct VECTOR* v ) {
    scaffold_check_null( v );
    if( VECTOR_SENTINAL != v->sentinal ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
@@ -419,7 +419,7 @@ void vector_lock( struct VECTOR* v, BOOL lock ) {
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
    void* current_iter = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -443,7 +443,7 @@ cleanup:
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    void* previous_iter = NULL;
    void* current_iter = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
    VECTOR_SORT_ORDER o;
 
 
