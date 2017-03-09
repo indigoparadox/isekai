@@ -44,7 +44,7 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
    bstring buffer = NULL;
    int bstr_res;
 #ifndef USE_REQUESTED_GRAPHICS_EXT
-   size_t dot_pos = 0;
+   SCAFFOLD_SIZE dot_pos = 0;
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    scaffold_error = 0;
@@ -257,7 +257,7 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, size_t datasize, BOOL local_images ) {
+void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
       xml_tileset = NULL,

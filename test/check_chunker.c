@@ -12,7 +12,7 @@ const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 struct bstrList* chunker_mapchunks = NULL;
 struct VECTOR* chunker_mapchunk_starts;
 char* chunker_mapdata;
-size_t chunker_mapsize;
+SCAFFOLD_SIZE chunker_mapsize;
 FILE* chunker_mapfile = NULL;
 struct CHUNKER* h;
 
@@ -52,7 +52,7 @@ void check_chunker_setup_unchecked() {
 
 void check_chunker_setup_checked() {
    bstring chunk_buffer = NULL;
-   size_t previous_pos = 0,
+   SCAFFOLD_SIZE previous_pos = 0,
       * current_pos = 0;
 
    /* Setup the chunker. */
@@ -77,7 +77,7 @@ void check_chunker_setup_checked() {
    );
 
    while( TRUE != chunker_chunk_finished( h ) ) {
-      current_pos = (size_t*)calloc( 1, sizeof( size_t ) );
+      current_pos = (SCAFFOLD_SIZE*)calloc( 1, sizeof( SCAFFOLD_SIZE ) );
       *current_pos = h->raw_position;
       ck_assert( *current_pos <= h->raw_length );
       vector_add( chunker_mapchunk_starts, current_pos );
@@ -128,14 +128,14 @@ void check_chunker_teardown_unchecked() {
 
 START_TEST( test_chunker_unchunk ) {
    bstring unchunk_buffer = NULL;
-   size_t chunk_index = 0;
-   size_t* curr_start = NULL;
-   size_t* next_start = NULL;
-   size_t current_chunk_len;
-   size_t prev_start = 0;
+   SCAFFOLD_SIZE chunk_index = 0;
+   SCAFFOLD_SIZE* curr_start = NULL;
+   SCAFFOLD_SIZE* next_start = NULL;
+   SCAFFOLD_SIZE current_chunk_len;
+   SCAFFOLD_SIZE prev_start = 0;
 #ifdef CHECK_WRITE_FILES
    FILE* check_chunk_out = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
 #endif /* CHECK_WRITE_FILES */
 
    ck_assert( NULL != chunker_mapchunks );
@@ -162,9 +162,9 @@ START_TEST( test_chunker_unchunk ) {
 
    while( chunker_mapchunks->qty > chunk_index ) {
       unchunk_buffer = chunker_mapchunks->entry[chunk_index];
-      curr_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index );
+      curr_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index );
       if( NULL == unchunk_buffer ) break;
-      next_start = (size_t*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
+      next_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
       if( NULL != next_start ) {
          current_chunk_len = *next_start - *curr_start;
          ck_assert_int_ne( *next_start, *curr_start );

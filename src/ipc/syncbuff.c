@@ -19,20 +19,20 @@
 #define SYNCBUFF_LINE_DEFAULT 255
 #define SYNCBUFF_LINES_INITIAL 2
 
-static size_t syncbuff_size[2];
+static SCAFFOLD_SIZE syncbuff_size[2];
 static bstring* syncbuff_lines[2];
-static size_t syncbuff_count[2];
+static SCAFFOLD_SIZE syncbuff_count[2];
 
-size_t syncbuff_get_count( SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE syncbuff_get_count( SYNCBUFF_DEST dest ) {
    return syncbuff_count[dest];
 }
 
-size_t syncbuff_get_allocated( SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE syncbuff_get_allocated( SYNCBUFF_DEST dest ) {
    return syncbuff_size[dest];
 }
 
 static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
-   size_t i;
+   SCAFFOLD_SIZE i;
 
    syncbuff_size[dest] = SYNCBUFF_LINES_INITIAL;
    syncbuff_count[dest] = 0;
@@ -44,8 +44,8 @@ static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
    }
 }
 
-static void syncbuff_realloc( SYNCBUFF_DEST dest, size_t new_alloc ) {
-   size_t i;
+static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
+   SCAFFOLD_SIZE i;
 
    syncbuff_trace(
       "Realloc: %d: %d to %d\n", dest, syncbuff_size[dest], new_alloc

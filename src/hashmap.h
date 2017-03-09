@@ -80,7 +80,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
 
 struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg );
 
-size_t hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg );
+SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg );
 
 /*
  * Add an element to the hashmap. Return MAP_OK or MAP_OMEM.

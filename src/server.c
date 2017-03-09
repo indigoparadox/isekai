@@ -11,7 +11,7 @@
 static void server_cleanup( const struct REF* ref ) {
    SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
 #ifdef DEBUG
-   size_t deleted = 0;
+   SCAFFOLD_SIZE deleted = 0;
 #endif /* DEBUG */
 
    if( TRUE == client_free( &(s->self) ) ) {
@@ -154,7 +154,7 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
    struct CHANNEL* l = NULL;
    bstring map_serial = NULL;
 #ifdef DEBUG
-   size_t old_count;
+   SCAFFOLD_SIZE old_count;
 #endif /* DEBUG */
 
    map_serial = bfromcstralloc( 1024, "" );
@@ -230,8 +230,8 @@ struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 
 void server_drop_client( SERVER* s, bstring nick ) {
 #ifdef DEBUG
-   size_t deleted;
-   size_t old_count = 0, new_count = 0;
+   SCAFFOLD_SIZE deleted;
+   SCAFFOLD_SIZE old_count = 0, new_count = 0;
 
    old_count = hashmap_count( &(s->clients) );
 #endif /* DEBUG */
@@ -276,7 +276,7 @@ void server_listen( SERVER* s, int port ) {
 void server_poll_new_clients( SERVER* s ) {
    static struct CLIENT* c = NULL;
 #ifdef DEBUG
-   size_t old_client_count = 0;
+   SCAFFOLD_SIZE old_client_count = 0;
 
    old_client_count = hashmap_count( &(s->clients) );
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;

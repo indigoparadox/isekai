@@ -18,27 +18,27 @@ typedef enum _CHUNKER_DATA_TYPE {
 } CHUNKER_DATA_TYPE;
 
 struct CHUNKER_PROGRESS {
-   size_t current;
-   size_t total;
-   size_t chunk_size;
+   SCAFFOLD_SIZE current;
+   SCAFFOLD_SIZE total;
+   SCAFFOLD_SIZE chunk_size;
    bstring data;
    bstring filename;
    CHUNKER_DATA_TYPE type;
 };
 
 typedef struct _CHUNKER_TRACK {
-   size_t start;
-   size_t length;
+   SCAFFOLD_SIZE start;
+   SCAFFOLD_SIZE length;
 } CHUNKER_TRACK;
 
 struct CHUNKER {
    struct REF refcount;
    heatshrink_encoder* encoder;
    heatshrink_decoder* decoder;
-   size_t raw_position;
-   size_t raw_length;
+   SCAFFOLD_SIZE raw_position;
+   SCAFFOLD_SIZE raw_length;
    BYTE* raw_ptr;
-   size_t tx_chunk_length;
+   SCAFFOLD_SIZE tx_chunk_length;
    BOOL force_finish;
    bstring channel;
    CHUNKER_DATA_TYPE type;
@@ -46,17 +46,17 @@ struct CHUNKER {
    bstring filecache_path;
    bstring filename;
    bstring serverpath;
-   size_t last_percent;
+   SCAFFOLD_SIZE last_percent;
 };
 
 void chunker_free( struct CHUNKER* h );
 void chunker_chunk_start(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
-   size_t src_length, size_t tx_chunk_length
+   SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 );
 void chunker_chunk_start_file(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
-   bstring filepath, size_t tx_chunk_length
+   bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 );
 void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer );
 BOOL chunker_chunk_finished( struct CHUNKER* h );
@@ -64,7 +64,7 @@ void chunker_unchunk_start(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,
    const bstring filename, const bstring filecache_path
 );
-void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_len, size_t src_chunk_len );
+void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start, SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len );
 void chunker_unchunk_save_cache( struct CHUNKER* h );
 void chunker_unchunk_check_cache( struct CHUNKER* h );
 BOOL chunker_unchunk_finished( struct CHUNKER* h );

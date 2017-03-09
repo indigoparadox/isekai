@@ -46,7 +46,7 @@ struct ezxml_root {      /* additional data for the root tag */
    struct ezxml xml;    /* is a super-struct built on top of ezxml struct */
    ezxml_t cur;        /* current xml tree insertion point */
    char *m;           /* original xml string */
-   size_t len;         /* length of allocated memory for mmap, -1 for malloc */
+   SCAFFOLD_SIZE len;         /* length of allocated memory for mmap, -1 for malloc */
    char *u;           /* UTF-8 conversion of string if original was UTF-16 */
    char *s;           /* start of work area */
    char *e;           /* end of work area */
@@ -224,10 +224,10 @@ static void ezxml_open_tag(ezxml_root_t root, char *name, char **attr) {
 }
 
 /* called when parser finds character content between open and closing tag */
-static void ezxml_char_content(ezxml_root_t root, char *s, size_t len, char t) {
+static void ezxml_char_content(ezxml_root_t root, char *s, SCAFFOLD_SIZE len, char t) {
    ezxml_t xml = root->cur;
    char *m = s;
-   size_t l;
+   SCAFFOLD_SIZE l;
 
    if (! xml || ! xml->name || ! len) return; /* sanity check */
 
@@ -272,7 +272,7 @@ static int ezxml_ent_ok(char *name, char *s, char **ent) {
 #endif /* EZXML_ENTOK */
 
 /* called when the parser finds a processing instruction */
-static void ezxml_proc_inst(ezxml_root_t root, char *s, size_t len) {
+static void ezxml_proc_inst(ezxml_root_t root, char *s, SCAFFOLD_SIZE len) {
    int i = 0, j = 1;
    char *target = s;
 
@@ -315,7 +315,7 @@ static void ezxml_proc_inst(ezxml_root_t root, char *s, size_t len) {
 /* called when the parser finds an internal doctype subset */
 /* This function creates warnings for undefined behavior. We don't need it so *
  * just disable it for now.                                                   */
-short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len) {
+short ezxml_internal_dtd(ezxml_root_t root, char *s, SCAFFOLD_SIZE len) {
    char q, *c, *t, *n = NULL, *v, **ent, **pe;
    int i, j;
 
@@ -425,9 +425,9 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len) {
 
 /* Converts a UTF-16 string to UTF-8. Returns a new string that must be freed */
 /* or NULL if no conversion was needed. */
-static char *ezxml_str2utf8(char **s, size_t *len) {
+static char *ezxml_str2utf8(char **s, SCAFFOLD_SIZE *len) {
    char *u;
-   size_t l = 0, sl, max = *len;
+   SCAFFOLD_SIZE l = 0, sl, max = *len;
    long c, d;
    int b, be = (**s == '\xFE') ? 1 : (**s == '\xFF') ? 0 : -1;
 
@@ -472,7 +472,7 @@ static void ezxml_free_attr(char **attr) {
 }
 
 /* parse the given xml string and return an ezxml structure */
-ezxml_t ezxml_parse_str(char *s, size_t len) {
+ezxml_t ezxml_parse_str(char *s, SCAFFOLD_SIZE len) {
    ezxml_root_t root = (ezxml_root_t)ezxml_new(NULL);
    char q, e, *d, **attr, **a = NULL; /* initialize a to avoid compile warning */
    int l, i, j;
@@ -603,7 +603,7 @@ ezxml_t ezxml_parse_str(char *s, size_t len) {
 /* or ezxml_parse_fd() */
 ezxml_t ezxml_parse_fp(FILE *fp) {
    ezxml_root_t root;
-   size_t l, len = 0;
+   SCAFFOLD_SIZE l, len = 0;
    char *s;
 
    if (! (s = calloc(EZXML_BUFSIZE,sizeof(char)))) return NULL;
@@ -624,7 +624,7 @@ ezxml_t ezxml_parse_fp(FILE *fp) {
 ezxml_t ezxml_parse_fd(int fd) {
    ezxml_root_t root;
    struct stat st;
-   size_t l;
+   SCAFFOLD_SIZE l;
    void *m;
 
    if (fd < 0) return NULL;
@@ -726,9 +726,9 @@ cleanup:
 /* Recursively converts each tag to xml appending it to *s. Reallocates *s if */
 /* its length excedes max. start is the location of the previous tag in the */
 /* parent tag's character content. Returns *s. */
-static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, size_t start, char ***attr) {
+static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, SCAFFOLD_SIZE start, char ***attr) {
    int i, j;
-   size_t off = 0;
+   SCAFFOLD_SIZE off = 0;
    int bstr_ret;
    bstring txt_b = NULL;
 
@@ -804,7 +804,7 @@ bstring ezxml_toxml(ezxml_t xml) {
       ordered = (xml) ? xml->ordered : NULL;
    ezxml_root_t root = (ezxml_root_t)xml;
    int bstr_ret;
-   /*size_t len = 0, max = EZXML_BUFSIZE; */
+   /*SCAFFOLD_SIZE len = 0, max = EZXML_BUFSIZE; */
    /*
    char *s = strcpy(calloc(max, sizeof(char)), ""),
       *t,
@@ -944,7 +944,7 @@ ezxml_t ezxml_new(const char *name) {
 }
 
 /* inserts an existing tag into an ezxml structure */
-ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, size_t off) {
+ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, SCAFFOLD_SIZE off) {
    ezxml_t cur, prev, head;
 
    xml->next = xml->sibling = xml->ordered = NULL;
@@ -983,7 +983,7 @@ ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, size_t off) {
 
 /* Adds a child tag. off is the offset of the child tag relative to the start */
 /* of the parent tag's character content. Returns the child tag. */
-ezxml_t ezxml_add_child(ezxml_t xml, const char *name, size_t off) {
+ezxml_t ezxml_add_child(ezxml_t xml, const char *name, SCAFFOLD_SIZE off) {
    ezxml_t child;
 
    if (! xml) return NULL;

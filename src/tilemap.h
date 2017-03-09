@@ -19,53 +19,53 @@ typedef enum {
 
 struct TILEMAP_TERRAIN_DATA {
    bstring name;
-   size_t tile;
+   SCAFFOLD_SIZE tile;
 };
 
 struct TILEMAP_TILE_DATA {
-   size_t id;
-   size_t terrain[4];
+   SCAFFOLD_SIZE id;
+   SCAFFOLD_SIZE terrain[4];
 };
 
 struct TILEMAP_TILESET {
-   size_t firstgid;
-   size_t tileheight;
-   size_t tilewidth;
+   SCAFFOLD_SIZE firstgid;
+   SCAFFOLD_SIZE tileheight;
+   SCAFFOLD_SIZE tilewidth;
    struct HASHMAP images;
    struct HASHMAP terrain;
    struct VECTOR tiles;
 };
 
 struct TILEMAP_POSITION {
-   size_t x_previous;
-   size_t y_previous;
-   size_t z_previous;
-   size_t x;
-   size_t y;
-   size_t z;
+   SCAFFOLD_SIZE x_previous;
+   SCAFFOLD_SIZE y_previous;
+   SCAFFOLD_SIZE z_previous;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+   SCAFFOLD_SIZE z;
    struct CLIENT* entity;
 };
 
 struct TILEMAP_LAYER {
-   size_t x;
-   size_t y;
-   size_t width;
-   size_t height;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+   SCAFFOLD_SIZE width;
+   SCAFFOLD_SIZE height;
    struct VECTOR tiles;
 };
 
 struct TILEMAP {
    struct REF refcount;
-   size_t width;
-   size_t height;
+   SCAFFOLD_SIZE width;
+   SCAFFOLD_SIZE height;
    struct HASHMAP layers;
    struct VECTOR positions;
    struct HASHMAP tilesets;
-   size_t starting_x;
-   size_t starting_y;
+   SCAFFOLD_SIZE starting_x;
+   SCAFFOLD_SIZE starting_y;
    TILEMAP_ORIENTATION orientation;
-   size_t window_step_width; /* For dungeons. */
-   size_t window_step_height;
+   SCAFFOLD_SIZE window_step_width; /* For dungeons. */
+   SCAFFOLD_SIZE window_step_height;
    uint16_t sentinal;
 };
 
@@ -116,11 +116,11 @@ void tilemap_iterate_screen_row(
    struct TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
    void (*callback)( struct TILEMAP* t, uint32_t x, uint32_t y )
 );
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid );
+SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, SCAFFOLD_SIZE gid );
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
-   struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
+   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
-SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y );
+SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y );
 void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* window );
 
 #endif /* TILEMAP_H */

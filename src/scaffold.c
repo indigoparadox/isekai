@@ -193,8 +193,8 @@ cleanup:
    return;
 }
 
-void scaffold_random_string( bstring rand_str, size_t len ) {
-   size_t i;
+void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len ) {
+   SCAFFOLD_SIZE i;
    btrunc( rand_str, 0 );
    for( i = 0; len > i ; i++ ) {
       bconchar(
@@ -215,7 +215,7 @@ void scaffold_random_string( bstring rand_str, size_t len ) {
  *
  */
 
-ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) {
+ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
    FILE* inputfile = NULL;
    ssize_t sz_out = -1;
 
@@ -252,12 +252,12 @@ cleanup:
    return sz_out;
 }
 
-ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) {
+ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs ) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
    struct bstrList* path_dirs = NULL;
-   size_t true_qty;
+   SCAFFOLD_SIZE true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
    ssize_t sz_out = -1;

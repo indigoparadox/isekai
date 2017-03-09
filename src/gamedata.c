@@ -20,7 +20,7 @@ void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    bstring mapdata_path = NULL;
    bstring mapdata_filename = NULL;
    BYTE* mapdata_buffer = NULL;
-   size_t mapdata_size = 0;
+   SCAFFOLD_SIZE mapdata_size = 0;
 
 #ifdef INIT_ZEROES
    memset( d, '\0', sizeof( struct GAMEDATA ) );
@@ -41,7 +41,7 @@ void gamedata_init_server( struct GAMEDATA* d, const bstring name ) {
    scaffold_read_file_contents( mapdata_path, &mapdata_buffer, &mapdata_size );
    scaffold_check_null( mapdata_buffer );
 
-   datafile_parse_tilemap_ezxml( &(d->tmap), &mapdata_buffer, &mapdata_size, FALSE );
+   datafile_parse_tilemap_ezxml( &(d->tmap), mapdata_buffer, mapdata_size, FALSE );
 #endif /* USE_EZXML */
 
 cleanup:
@@ -55,7 +55,7 @@ cleanup:
 
 void gamedata_cleanup( struct GAMEDATA* d ) {
 #ifdef DEBUG
-   size_t deleted;
+   SCAFFOLD_SIZE deleted;
 #endif /* DEBUG */
 
    tilemap_free( &(d->tmap) );
@@ -161,7 +161,7 @@ void gamedata_add_mobile( struct GAMEDATA* d, struct MOBILE* o ) {
    vector_set( &(d->mobiles), o->serial, o, TRUE );
 }
 
-void gamedata_remove_mobile( struct GAMEDATA* d, size_t serial ) {
+void gamedata_remove_mobile( struct GAMEDATA* d, SCAFFOLD_SIZE serial ) {
    vector_remove( &(d->mobiles), serial );
 }
 

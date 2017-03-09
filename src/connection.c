@@ -171,10 +171,10 @@ ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client 
 #endif /* DEBUG */
    ssize_t sent = -1;
 #ifdef USE_NETWORK
-   size_t dest_socket;
-   size_t buffer_len;
+   SCAFFOLD_SIZE dest_socket;
+   SCAFFOLD_SIZE buffer_len;
 #elif defined( USE_SYNCBUFF )
-   size_t syncbuff_previous_size;
+   SCAFFOLD_SIZE syncbuff_previous_size;
 #endif /* USE_NETWORK */
 
    scaffold_check_null( buffer );

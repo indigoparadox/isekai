@@ -47,7 +47,7 @@ struct ezxml {
     char *name;      /* tag name */
     char **attr;     /* tag attributes { name, value, name, value, ... NULL } */
     char *txt;       /* tag character content, empty string if none */
-    size_t off;      /* tag offset from start of parent tag character content */
+    SCAFFOLD_SIZE off;      /* tag offset from start of parent tag character content */
     ezxml_t next;    /* next tag with same name in this section at this depth */
     ezxml_t sibling; /* next tag with different name in same section and depth */
     ezxml_t ordered; /* next tag, same section and depth, in original order */
@@ -60,7 +60,7 @@ struct ezxml {
 /* structure. For efficiency, modifies the data by adding null terminators */
 /* and decoding ampersand sequences. If you don't want this, copy the data and */
 /* pass in the copy. Returns NULL on failure. */
-ezxml_t ezxml_parse_str(char *s, size_t len);
+ezxml_t ezxml_parse_str(char *s, SCAFFOLD_SIZE len);
 
 /* A wrapper for ezxml_parse_str() that accepts a file descriptor. First */
 /* attempts to mem map the file. Failing that, reads the file into memory. */
@@ -126,7 +126,7 @@ ezxml_t ezxml_new(const char *name);
 
 /* Adds a child tag. off is the offset of the child tag relative to the start */
 /* of the parent tag's character content. Returns the child tag. */
-ezxml_t ezxml_add_child(ezxml_t xml, const char *name, size_t off);
+ezxml_t ezxml_add_child(ezxml_t xml, const char *name, SCAFFOLD_SIZE off);
 
 /* wrapper for ezxml_add_child() that strdup()s name */
 #define ezxml_add_child_d(xml, name, off) \
@@ -155,7 +155,7 @@ ezxml_t ezxml_set_flag(ezxml_t xml, short flag);
 ezxml_t ezxml_cut(ezxml_t xml);
 
 /* inserts an existing tag into an ezxml structure */
-ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, size_t off);
+ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, SCAFFOLD_SIZE off);
 
 /* Moves an existing tag to become a subtag of dest at the given offset from */
 /* the start of dest's character content. Returns the moved tag. */

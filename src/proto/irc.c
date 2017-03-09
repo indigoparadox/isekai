@@ -433,7 +433,7 @@ static void irc_server_who(
    struct bstrList* search_targets = NULL;
    struct VECTOR* ison = NULL;
    struct CLIENT* c_iter = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
    bstring response = NULL;
 
    irc_detect_malformed( 2, "WHO" );
@@ -502,7 +502,7 @@ static void irc_server_gamerequestfile(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
    struct VECTOR* files = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
    bstring file_iter = NULL;
    bstring file_iter_short = NULL;
    char* type_c;
@@ -876,7 +876,7 @@ IRC_COMMAND* irc_dispatch(
 ) {
    struct bstrList* args = NULL;
    const IRC_COMMAND* command = NULL;
-   size_t i;
+   SCAFFOLD_SIZE i;
    bstring cmd_test = NULL; /* Don't free this. */
    IRC_COMMAND* out = NULL;
 

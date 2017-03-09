@@ -43,7 +43,7 @@ void chunker_free( struct CHUNKER* h ) {
 }
 
 static void chunker_chunk_setup_internal(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, size_t tx_chunk_length
+   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, SCAFFOLD_SIZE tx_chunk_length
 ) {
 
    scaffold_assert( NULL != h );
@@ -98,7 +98,7 @@ static void chunker_chunk_setup_internal(
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_chunk_start(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
-   size_t src_length, size_t tx_chunk_length
+   SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 ) {
    scaffold_check_null( src_buffer );
 
@@ -114,7 +114,7 @@ cleanup:
 
 void chunker_chunk_start_file(
    struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
-   bstring filepath, size_t tx_chunk_length
+   bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 ) {
    bstring full_file_path = NULL;
 
@@ -140,7 +140,7 @@ cleanup:
 void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
    HSE_sink_res sink_res;
    HSE_poll_res poll_res;
-   size_t consumed = 0,
+   SCAFFOLD_SIZE consumed = 0,
       exhumed = 0,
       hs_buffer_len = h->tx_chunk_length * 4,
       hs_buffer_pos = 0,
@@ -259,10 +259,10 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, size_t src_chunk_start, size_t src_len, size_t src_chunk_len ) {
-   size_t consumed = 0,
+void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start, SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len ) {
+   SCAFFOLD_SIZE consumed = 0,
       exhumed = 0;
-   size_t mid_buffer_length = blength( rx_buffer ) * 2,
+   SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
       mid_buffer_pos = 0,
       tail_output_alloc = 0,
       tail_output_pos = 0;
@@ -454,7 +454,7 @@ cleanup:
 BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    CHUNKER_TRACK* prev_track = NULL,
       * iter_track = NULL;
-   size_t i,
+   SCAFFOLD_SIZE i,
       tracks_count;
    BOOL finished = TRUE;
 
@@ -505,10 +505,10 @@ cleanup:
 }
 
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {
-   size_t new_percent = 0;
-   size_t current_bytes = 0;
+   SCAFFOLD_SIZE new_percent = 0;
+   SCAFFOLD_SIZE current_bytes = 0;
    CHUNKER_TRACK* iter_track;
-   size_t i;
+   SCAFFOLD_SIZE i;
 
    for( i = 0 ; vector_count( &(h->tracks) ) > i ; i++ ) {
       iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );

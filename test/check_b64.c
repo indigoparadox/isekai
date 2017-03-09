@@ -9,7 +9,7 @@ static struct tagbstring b64t_result = bsStatic( "YWJjZGVmZ2hpams=" );
 
 START_TEST( test_b64_encode ) {
    bstring b64_test = NULL;
-   //size_t b64_test_len = 0;
+   //SCAFFOLD_SIZE b64_test_len = 0;
    //char* b64_test_decode = NULL;
 
    //scaffold_print_debug( "Testing Base64:\n" );
@@ -28,7 +28,7 @@ END_TEST
 START_TEST( test_b64_decode ) {
    bstring b64_test = NULL;
    unsigned char* outbuffer = calloc( 20, sizeof( char ) );
-   size_t outlen = 20;
+   SCAFFOLD_SIZE outlen = 20;
 
    b64_decode( &b64t_result, outbuffer, &outlen );
    /* scaffold_print_debug(

@@ -47,7 +47,7 @@ void mobile_animate( struct MOBILE* o ) {
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
-   MOBILE_FRAME_ALT frame_alt, size_t* x, size_t* y
+   MOBILE_FRAME_ALT frame_alt, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
    scaffold_assert( frame < 0 || frame_alt < 0 );
 
@@ -65,7 +65,7 @@ cleanup:
 }
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) {
-   size_t max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
+   SCAFFOLD_SIZE max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
    struct CLIENT* c = NULL;
    struct CHANNEL* l = NULL;
    struct GAMEDATA* d = NULL;

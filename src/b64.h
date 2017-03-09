@@ -8,8 +8,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void b64_encode( void* indata, size_t indata_len, bstring outstring, ssize_t linesz );
-/* void* b64_decode( size_t* outdata_len, bstring instring ); */
-int b64_decode( bstring indata, unsigned char *out, size_t *outLen ) __attribute__ ((warn_unused_result));
+void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, ssize_t linesz );
+/* void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ); */
+int b64_decode( bstring indata, unsigned char *out, SCAFFOLD_SIZE *outLen ) __attribute__ ((warn_unused_result));
 
 #endif /* B64_H */

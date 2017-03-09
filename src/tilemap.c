@@ -78,17 +78,17 @@ void tilemap_iterate_screen_row(
 
 }
 
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, size_t gid ) {
+SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, SCAFFOLD_SIZE gid ) {
    return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
 }
 
 #define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
 
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
-   struct TILEMAP_TILESET* set, GRAPHICS* g_set, size_t gid, size_t* x, size_t* y
+   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
-   size_t tiles_wide = 0;
-   size_t tiles_high = 0;
+   SCAFFOLD_SIZE tiles_wide = 0;
+   SCAFFOLD_SIZE tiles_high = 0;
 #ifdef USE_MATH
    float fx;
    float fy;
@@ -117,8 +117,8 @@ cleanup:
    return;
 }
 
-SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, size_t x, size_t y ) {
-   size_t index = (y * layer->width) + x;
+SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y ) {
+   SCAFFOLD_SIZE index = (y * layer->width) + x;
    return vector_get_scalar( &(layer->tiles), index );
 }
 
@@ -128,7 +128,7 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP* t = window->t;
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
-   size_t x, y, max_x, max_y, tileset_x = 0, tileset_y = 0, pix_x, pix_y;
+   SCAFFOLD_SIZE x, y, max_x, max_y, tileset_x = 0, tileset_y = 0, pix_x, pix_y;
    uint32_t tile;
    struct VECTOR* tiles = NULL;
 #ifdef DEBUG_TILES

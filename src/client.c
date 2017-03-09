@@ -9,7 +9,7 @@ extern struct tagbstring str_gamedata_cache_path;
 
 static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
-   size_t deleted;
+   SCAFFOLD_SIZE deleted;
 #endif /* DEBUG */
    struct CLIENT* c = NULL;
    c = scaffold_container_of( c, struct CLIENT, link );
