@@ -213,14 +213,14 @@ void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, size_t len );
-ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len );
-ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs );
+ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, size_t* len ) __attribute__ ((warn_unused_result));;
+ssize_t scaffold_write_file( bstring path, BYTE* data, size_t len, BOOL mkdirs ) __attribute__ ((warn_unused_result));;
 void scaffold_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden
 );
-bstring scaffold_basename( bstring path );
-BOOL scaffold_check_directory( const bstring path );
+bstring scaffold_basename( bstring path ) __attribute__ ((warn_unused_result));
+BOOL scaffold_check_directory( const bstring path ) __attribute__ ((warn_unused_result));
 void scaffold_join_path( bstring path1, bstring path2 );
 
 #ifndef SCAFFOLD_C
