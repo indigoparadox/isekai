@@ -19,6 +19,8 @@ struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
+FILE* scaffold_log_handle = NULL;
+FILE* scaffold_log_handle_err = NULL;
 #endif /* DEBUG */
 
 int8_t scaffold_error = SCAFFOLD_ERROR_NONE;

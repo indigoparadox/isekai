@@ -31,6 +31,9 @@ int main( int argc, char** argv ) {
    struct INPUT p = { 0 };
    struct UI ui = { 0 };
 
+   scaffold_log_handle = fopen( "stdout.log", "w" );
+   scaffold_log_handle_err = fopen( "stder.log", "w" );
+
 #if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
    graphics_screen_init( &g, 640, 480 );
    scaffold_check_nonzero( scaffold_error );
@@ -95,6 +98,8 @@ cleanup:
    server_free( main_server );
    free( main_server );
    /*graphics_shutdown( &g );*/
+   fclose( scaffold_log_handle );
+   fclose( scaffold_log_handle_err );
 #ifdef USE_ALLEGRO
    allegro_exit();
 #endif /* USE_ALLEGRO */

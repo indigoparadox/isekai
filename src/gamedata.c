@@ -211,12 +211,8 @@ void gamedata_process_data_block(
 
    if( chunker_unchunk_finished( h ) ) {
       /* Cached file found, so abort transfer. */
-      if( TRUE == h->force_finish ) {
-         scaffold_print_debug(
-            "Client: Aborting transfer of %s from server due to cached copy.\n",
-            bdata( progress->filename )
-         );
-         client_printf( c, "GDA %b", progress->filename );
+      if( chunker_unchunk_cached( h ) ) {
+         proto_abort_chunker( c, h );
       }
 
       gamedata_process_finished_chunker( d, c, h );

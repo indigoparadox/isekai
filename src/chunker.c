@@ -26,6 +26,7 @@ static void chunker_cleanup( const struct REF* ref ) {
    bdestroy( h->serverpath );
    bdestroy( h->channel );
 
+#ifdef USE_HEATSHRINK
    if( NULL != h->encoder ) {
       heatshrink_encoder_free( h->encoder );
       h->decoder = NULL;
@@ -34,6 +35,7 @@ static void chunker_cleanup( const struct REF* ref ) {
       heatshrink_decoder_free( h->decoder );
       h->encoder = NULL;
    }
+#endif // USE_HEATSHRINK
 
    free( h );
 }
@@ -52,6 +54,7 @@ static void chunker_chunk_setup_internal(
       ref_init( &(h->refcount), chunker_cleanup );
    }
 
+#ifdef USE_HEATSHRINK
    if( NULL != h->decoder ) {
       heatshrink_decoder_free( h->decoder );
       h->decoder = NULL;
@@ -73,6 +76,7 @@ static void chunker_chunk_setup_internal(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->tx_chunk_length = tx_chunk_length;
+#endif // USE_HEATSHRINK
    if( NULL != h->channel ) {
       bdestroy( h->channel );
    }
@@ -137,14 +141,16 @@ cleanup:
    bdestroy( full_file_path );
 }
 
-void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
+SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
+#ifdef USE_HEATSHRINK
    HSE_sink_res sink_res;
    HSE_poll_res poll_res;
    SCAFFOLD_SIZE consumed = 0,
       exhumed = 0,
       hs_buffer_len = h->tx_chunk_length * 4,
       hs_buffer_pos = 0,
-      raw_buffer_len = h->tx_chunk_length;
+      raw_buffer_len = h->tx_chunk_length,
+      start_pos = h->raw_position;
    uint8_t* hs_buffer = NULL;
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
@@ -190,19 +196,25 @@ void chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
       scaffold_assert( HSER_POLL_EMPTY == poll_res );
    } while( 0 < raw_buffer_len );
 
+#ifdef USE_B64
    b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
+#endif /* USE_SHM */
 
 cleanup:
 
    if( NULL != hs_buffer ) {
       free( hs_buffer );
    }
-
-   return;
+#endif /* USE_HEATSHRINK */
+   return start_pos;
 }
 
 BOOL chunker_chunk_finished( struct CHUNKER* h ) {
+#ifdef USE_HEATSHRINK
    return (h->raw_position >= h->raw_length) ? TRUE : FALSE;
+#else
+   return TRUE;
+#endif // USE_HEATSHRINK
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -220,6 +232,7 @@ void chunker_unchunk_start(
       ref_init( &(h->refcount), chunker_cleanup );
    }
 
+#ifdef USE_HEATSHRINK
    if( NULL != h->decoder ) {
       heatshrink_decoder_free( h->decoder );
    }
@@ -235,6 +248,7 @@ void chunker_unchunk_start(
     *       destroyed after user.                                             */
    h->force_finish = FALSE;
    h->raw_position = 0;
+#endif // USE_HEATSHRINK
    h->raw_length = 0;
    if( NULL != h->channel ) {
       bdestroy( h->channel );
@@ -249,7 +263,8 @@ void chunker_unchunk_start(
    filename_c = bdata( filename );
    scaffold_check_null( filename_c );
 
-   if( TRUE == scaffold_check_directory( filecache_path ) ) {
+#ifdef USE_FILE_CACHE
+   if( NULL != filecache_path && TRUE == scaffold_check_directory( filecache_path ) ) {
       scaffold_print_debug(
          "Chunker: Activating cache: %s\n",
          bdata( filecache_path )
@@ -259,32 +274,47 @@ void chunker_unchunk_start(
    } else {
       h->filecache_path = NULL;
    }
+#endif // USE_FILE_CACHE
 
 cleanup:
    return;
 }
 
 void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start, SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len ) {
+#ifdef USE_HEATSHRINK
    SCAFFOLD_SIZE consumed = 0,
-      exhumed = 0;
-   SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
-      mid_buffer_pos = 0,
+      exhumed = 0,
       tail_output_alloc = 0,
       tail_output_pos = 0;
-   uint8_t* mid_buffer = NULL,
-      * tail_output_buffer = NULL;
    HSD_poll_res poll_res;
    HSD_sink_res sink_res;
+   uint8_t* mid_buffer = NULL,
+      * tail_output_buffer = NULL;
+#endif // USE_HEATSHRINK
    CHUNKER_TRACK* track = NULL;
+#ifdef USE_B64
+   SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
+      mid_buffer_pos = 0;
 #ifdef DEBUG
    int b64_res = 0;
 #endif /* DEBUG */
+#endif /* USE_B64 */
 
+#ifdef USE_HEATSHRINK
    scaffold_assert( NULL == h->encoder );
 
+   if( 0 >= h->tx_chunk_length ) {
+      h->tx_chunk_length = src_chunk_len;
+   } else {
+      scaffold_assert( h->tx_chunk_length == src_chunk_len );
+   }
+
+#ifdef USE_FILE_CACHE
    if( TRUE == h->force_finish ) {
       goto cleanup;
-   } else if( NULL == h->raw_ptr && 0 == h->raw_length ) {
+   }
+#endif
+   else if( NULL == h->raw_ptr && 0 == h->raw_length ) {
       scaffold_assert( NULL == h->decoder );
       h->raw_length = src_len;
       h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
@@ -303,13 +333,17 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
 
    h->raw_position = src_chunk_start;
 
+#ifdef USE_B64
 #ifdef DEBUG
    b64_res =
 #endif /* DEBUG */
       b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
    scaffold_assert( 0 == b64_res );
+#endif /* USE_B64 */
 
+#ifdef USE_HEATSHRINK
    heatshrink_decoder_reset( h->decoder );
+#endif /* USE_HEATSHRINK */
 
    /* Add a tracker to the list. */
    track = (CHUNKER_TRACK*)calloc( 1, sizeof( CHUNKER_TRACK ) );
@@ -389,6 +423,7 @@ cleanup:
    if( NULL != tail_output_buffer ) {
       free( tail_output_buffer );
    }
+#endif // USE_HEATSHRINK
    return;
 }
 
@@ -457,12 +492,15 @@ cleanup:
 #endif /* USE_FILE_CACHE */
 
 BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
+   BOOL finished = TRUE;
+#ifdef USE_HEATSHRINK
    CHUNKER_TRACK* prev_track = NULL,
       * iter_track = NULL;
    SCAFFOLD_SIZE i,
       tracks_count;
-   BOOL finished = TRUE;
+   BOOL chunks_locked = FALSE;
 
+#ifdef USE_FILE_CACHE
    if( TRUE == h->force_finish ) {
       /* Force finish, probably due to cache. */
       scaffold_print_info(
@@ -472,11 +510,13 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
       finished = TRUE;
       goto cleanup;
    }
+#endif // USE_FILE_CACHE
 
    /* Ensure chunks are contiguous and complete. */
    vector_sort_cb( &(h->tracks), callback_sort_chunker_tracks );
    vector_lock( &(h->tracks), TRUE );
    tracks_count = vector_count( &(h->tracks) );
+   chunks_locked = TRUE;
    if( 0  == tracks_count ) {
       finished = FALSE;
       goto cleanup;
@@ -493,8 +533,8 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
          finished = FALSE;
       }
    }
-   vector_lock( &(h->tracks), FALSE );
 
+#ifdef USE_FILE_CACHE
    /* If the file is complete and the cache is enabled, then do that. */
    if( TRUE == finished ) {
       scaffold_print_info(
@@ -503,10 +543,22 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
       );
       chunker_unchunk_save_cache( h );
    }
-
+#endif // USE_FILE_CACHE
 cleanup:
+   if( FALSE != chunks_locked ){
+      vector_lock( &(h->tracks), FALSE );
+   }
 
+#endif // USE_HEATSHRINK
    return finished;
+}
+
+BOOL chunker_unchunk_cached(struct CHUNKER* h) {
+#ifdef USE_FILE_CACHE
+   return h->force_finish;
+#else
+   return FALSE;
+#endif // USE_FILE_CACHE
 }
 
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {

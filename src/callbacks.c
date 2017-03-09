@@ -154,9 +154,10 @@ void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
 }
 
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
-   bstring xmit_buffer_template = (bstring)arg;
+   struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
-   bstring xmit_buffer_out = NULL;
+   bstring chunk_out = NULL;
+   SCAFFOLD_SIZE start_pos = 0;
 #ifdef DEBUG
    int bstr_result;
 #endif /* DEBUG */
@@ -165,58 +166,40 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
       goto cleanup;
    }
 
-   scaffold_assert( 0 < blength( xmit_buffer_template ) );
-   xmit_buffer_out = bstrcpy( xmit_buffer_template );
-   scaffold_check_null( xmit_buffer_out );
-   scaffold_assert( 0 < blength( xmit_buffer_out ) );
+   chunk_out = bfromcstralloc( CHUNKER_DEFAULT_CHUNK_SIZE, "" );
+   start_pos = chunker_chunk_pass( h, chunk_out );
+   proto_send_chunk( c, h, start_pos, key, chunk_out );
 
-   /* Note the starting point and progress for the client. */
-#ifdef DEBUG
-   bstr_result =
-#endif /* DEBUG */
-   bformata(
-      xmit_buffer_out, "%s TILEMAP %s %d %d %d %d : ",
-      bdata( h->channel ), bdata( key ), h->type, h->raw_position,
-      h->tx_chunk_length, h->raw_length
-   );
-   scaffold_assert( BSTR_OK == bstr_result );
-
-   chunker_chunk_pass( h, xmit_buffer_out );
 
 cleanup:
-   return xmit_buffer_out;
+   return NULL;
 }
 
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
-   SERVER* s = (SERVER*)arg;
-   bstring xmit_buffer_template = NULL;
-   struct VECTOR* chunks = NULL;
-   bstring chunk_iter = NULL;
-
-   xmit_buffer_template = bformat(
-      ":%s GDB %s ", bdata( s->self.remote ), bdata( c->nick )
-   );
-   scaffold_check_null( xmit_buffer_template );
+   //bstring xmit_buffer_template = NULL;
+   //struct VECTOR* chunks = NULL;
+   //bstring chunk_iter = NULL;
 
    /* Process some compression chunks. */
-   chunks = hashmap_iterate_v(
-      &(c->chunkers), callback_send_chunkers_l, xmit_buffer_template
-   );
+   hashmap_iterate_v( &(c->chunkers), callback_send_chunkers_l, c );
 
    /* Removed any finished chunkers. */
    hashmap_remove_cb(
       &(c->chunkers), callback_free_finished_chunkers, NULL
    );
 
+   #if 0
    if( NULL == chunks ) {
       goto cleanup; /* Silently. */
    }
 
    /* Send the processed chunks to the client. */
    vector_remove_cb( chunks, callback_send_list_to_client, c );
+#endif // 0
 
 cleanup:
+   /*
    chunk_iter = vector_get( chunks, 0 );
    while( NULL != chunk_iter ) {
       bdestroy( chunk_iter );
@@ -227,6 +210,7 @@ cleanup:
       vector_free( chunks );
    }
    bdestroy( xmit_buffer_template );
+   */
    return NULL;
 }
 
@@ -294,6 +278,7 @@ void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) 
    return NULL;
 }
 
+#if 0
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;
@@ -304,6 +289,7 @@ BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
 
    return TRUE;
 }
+#endif // 0
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;

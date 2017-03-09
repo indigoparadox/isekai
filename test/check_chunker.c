@@ -73,7 +73,7 @@ void check_chunker_setup_checked() {
       CHUNKER_DATA_TYPE_TILEMAP,
       chunker_mapdata,
       chunker_mapsize,
-      64
+      CHUNKER_DEFAULT_CHUNK_SIZE
    );
 
    while( TRUE != chunker_chunk_finished( h ) ) {
@@ -131,12 +131,76 @@ START_TEST( test_chunker_unchunk ) {
    SCAFFOLD_SIZE chunk_index = 0;
    SCAFFOLD_SIZE* curr_start = NULL;
    SCAFFOLD_SIZE* next_start = NULL;
-   SCAFFOLD_SIZE current_chunk_len;
+   SCAFFOLD_SIZE current_chunk_len = CHUNKER_DEFAULT_CHUNK_SIZE;
    SCAFFOLD_SIZE prev_start = 0;
+   SCAFFOLD_SIZE chunks_count = 0;
 #ifdef CHECK_WRITE_FILES
    FILE* check_chunk_out = NULL;
    SCAFFOLD_SIZE i;
 #endif /* CHECK_WRITE_FILES */
+
+   ck_assert( NULL != chunker_mapchunks );
+   ck_assert_int_ne( 0, chunker_mapchunks->qty );
+   ck_assert_int_ne( 0, chunker_mapsize );
+
+   chunker_unchunk_start(
+      h,
+      (const bstring)&chunker_test_filename,
+      CHUNKER_DATA_TYPE_TILEMAP,
+      (const bstring)&chunker_test_filename,
+      NULL
+   );
+
+   ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );
+   if( chunker_mapchunks->qty != vector_count( chunker_mapchunk_starts ) ) {
+      ck_abort_msg( "Vector and string list size mismatch." );
+   }
+
+   while( chunker_mapchunks->qty > chunk_index ) {
+      unchunk_buffer = chunker_mapchunks->entry[chunk_index];
+      curr_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index );
+      if( NULL == unchunk_buffer ) { break; }
+      next_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
+      if( NULL != next_start ) {
+         ck_assert_int_ne( *next_start, *curr_start );
+         ck_assert( *next_start <= chunker_mapsize );
+      }
+      ck_assert( *curr_start > prev_start || *curr_start == 0 );
+      if( *curr_start >= chunker_mapsize ) {
+         break;
+      }
+      ck_assert_int_eq( FALSE, chunker_unchunk_finished( h ) );
+      chunker_unchunk_pass( h, unchunk_buffer, *curr_start, chunker_mapsize, current_chunk_len );
+      chunk_index++;
+   }
+
+   chunks_count = h->raw_length / h->tx_chunk_length;
+   ck_assert_int_eq( chunk_index, chunks_count + 1 );
+   printf( "%d of %d %d-byte chunks complete.\n", chunk_index, chunks_count, h->tx_chunk_length );
+   ck_assert_int_eq( TRUE, chunker_unchunk_finished( h ) );
+
+
+checkup:
+
+   ck_assert( NULL != h->raw_ptr );
+   if( NULL != h->raw_ptr ) {
+      ck_assert_int_eq( h->raw_length, chunker_mapsize );
+      ck_assert_int_eq( h->raw_length, strlen( (const char*)h->raw_ptr ) );
+      ck_assert_int_eq( 0, strcmp( (const char*)h->raw_ptr, (const char*)chunker_mapdata ) );
+   }
+}
+END_TEST
+
+
+START_TEST( test_chunker_unchunk_output ) {
+   bstring unchunk_buffer = NULL;
+   SCAFFOLD_SIZE chunk_index = 0;
+   SCAFFOLD_SIZE* curr_start = NULL;
+   SCAFFOLD_SIZE* next_start = NULL;
+   SCAFFOLD_SIZE current_chunk_len;
+   SCAFFOLD_SIZE prev_start = 0;
+   FILE* check_chunk_out = NULL;
+   SCAFFOLD_SIZE i;
 
    ck_assert( NULL != chunker_mapchunks );
    ck_assert_int_ne( 0, chunker_mapchunks->qty );
@@ -153,11 +217,6 @@ START_TEST( test_chunker_unchunk ) {
    ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );
    if( chunker_mapchunks->qty != vector_count( chunker_mapchunk_starts ) ) {
       ck_abort_msg( "Vector and string list size mismatch." );
-   }
-
-   if( TRUE == chunker_unchunk_finished( h ) ) {
-      /* Cache found. */
-      goto checkup;
    }
 
    while( chunker_mapchunks->qty > chunk_index ) {
@@ -181,9 +240,6 @@ START_TEST( test_chunker_unchunk ) {
       chunk_index++;
    }
 
-   ck_assert_int_eq( TRUE, chunker_unchunk_finished( h ) );
-
-#ifdef CHECK_WRITE_FILES
    check_chunk_out = fopen( "testdata/check_chunk_out.tmx.b64","w" );
    for( i = 0 ; chunker_mapchunks->qty > i ; i++ ) {
       fwrite( bdata( chunker_mapchunks->entry[i] ), sizeof( char ), blength( chunker_mapchunks->entry[i] ), check_chunk_out );
@@ -194,16 +250,6 @@ START_TEST( test_chunker_unchunk ) {
    check_chunk_out = fopen( "testdata/check_chunk_out.tmx","wb" );
    fwrite( h->raw_ptr, sizeof( char ), h->raw_length, check_chunk_out );
    fclose( check_chunk_out );
-#endif /* CHECK_WRITE_FILES */
-
-checkup:
-
-   ck_assert( NULL != h->raw_ptr );
-   if( NULL != h->raw_ptr ) {
-      ck_assert_int_eq( h->raw_length, chunker_mapsize );
-      ck_assert_int_eq( h->raw_length, strlen( (const char*)h->raw_ptr ) );
-      ck_assert_int_eq( 0, strcmp( (const char*)h->raw_ptr, (const char*)chunker_mapdata ) );
-   }
 }
 END_TEST
 

@@ -76,18 +76,20 @@
 					<Add option="-Wmissing-declarations" />
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-std=gnu99" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
-					<Add option="-DUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_ALLEGRO_PNG" />
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_HEATSHRINK" />
+					<Add option="-DUSE_B64" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
 					<Add library="alleg" />
-					<Add library="loadpng" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NoUI)">
@@ -113,8 +115,13 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add option="-std=gnu99" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DxDEBUG_SYNCBUFF" />
+					<Add option="-DUSE_HEATSHRINK" />
+					<Add option="-DUSE_B64" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_FILE_CACHE" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -149,6 +156,8 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DxUSE_ALLEGRO_GIF" />
+					<Add option="-DUSE_HEATSHRINK" />
+					<Add option="-DUSE_B64" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -167,12 +176,11 @@
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_ALLEGRO" />
-					<Add option="-DUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_ALLEGRO_PNG" />
 					<Add option="-DUSE_SYNCBUFF" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
-					<Add library="loadpng" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
@@ -196,19 +204,44 @@
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_HEATSHRINK" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
 					<Add library="loadpng" />
 				</Linker>
 			</Target>
+			<Target title="Debug (Linux-SHM-Allegro4)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_SHM" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="alleg" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-DUSE_HEATSHRINK" />
 			<Add option="-DEZXML_CSTR" />
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
-			<Add option="-DUSE_FILE_CACHE" />
 			<Add option="-DUSE_EZXML" />
 		</Compiler>
 		<Unit filename="src/algif/algif.c">
@@ -240,8 +273,29 @@
 		</Unit>
 		<Unit filename="src/b64.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
 		</Unit>
-		<Unit filename="src/b64.h" />
+		<Unit filename="src/b64.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 			<Option compiler="gcc" use="0" buildCommand="$compiler $includes -c $file -o $object" />
@@ -270,14 +324,6 @@
 		<Unit filename="src/datafile.h" />
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
 		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
@@ -294,6 +340,7 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics/curses.c">
 			<Option compilerVar="CC" />
@@ -309,15 +356,68 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/hashmap.h" />
-		<Unit filename="src/heatshrink/heatshrink_config.h" />
+		<Unit filename="src/heatshrink/heatshrink_config.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_decoder.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
 		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_decoder.h" />
+		<Unit filename="src/heatshrink/heatshrink_decoder.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_encoder.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
 		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_encoder.h" />
+		<Unit filename="src/heatshrink/heatshrink_encoder.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NoUI)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+		</Unit>
 		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
@@ -325,6 +425,7 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
 		</Unit>
 		<Unit filename="src/input/curses.c">
 			<Option compilerVar="CC" />
@@ -351,6 +452,7 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
