@@ -51,10 +51,26 @@ extern bstring blk2bstr (const void * blk, int len);
 extern char * bstr2cstr (const_bstring s, char z);
 extern int bcstrfree (char * s);
 extern bstring bstrcpy (const_bstring b1);
-extern int bassign (bstring a, const_bstring b);
-extern int bassignmidstr (bstring a, const_bstring b, int left, int len);
-extern int bassigncstr (bstring a, const char * str);
-extern int bassignblk (bstring a, const void * s, int len);
+extern int bassign (bstring a, const_bstring b)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bassignmidstr (bstring a, const_bstring b, int left, int len)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bassigncstr (bstring a, const char * str)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bassignblk (bstring a, const void * s, int len)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 
 /* Destroy function */
 extern int bdestroy (bstring b);
@@ -67,17 +83,57 @@ extern int ballocmin (bstring b, int len);
 extern bstring bmidstr (const_bstring b, int left, int len);
 
 /* Various standard manipulations */
-extern int bconcat (bstring b0, const_bstring b1);
-extern int bconchar (bstring b0, char c);
-extern int bcatcstr (bstring b, const char * s);
-extern int bcatblk (bstring b, const void * s, int len);
-extern int binsert (bstring s1, int pos, const_bstring s2, unsigned char fill);
-extern int binsertblk (bstring s1, int pos, const void * s2, int len, unsigned char fill);
-extern int binsertch (bstring s1, int pos, int len, unsigned char fill);
-extern int breplace (bstring b1, int pos, int len, const_bstring b2, unsigned char fill);
+extern int bconcat (bstring b0, const_bstring b1)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bconchar (bstring b0, char c)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bcatcstr (bstring b, const char * s)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bcatblk (bstring b, const void * s, int len)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int binsert (bstring s1, int pos, const_bstring s2, unsigned char fill)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int binsertblk (bstring s1, int pos, const void * s2, int len, unsigned char fill)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int binsertch (bstring s1, int pos, int len, unsigned char fill)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int breplace (bstring b1, int pos, int len, const_bstring b2, unsigned char fill)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 extern int bdelete (bstring s1, int pos, int len);
-extern int bsetstr (bstring b0, int pos, const_bstring b1, unsigned char fill);
-extern int btrunc (bstring b, int n);
+extern int bsetstr (bstring b0, int pos, const_bstring b1, unsigned char fill)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int btrunc (bstring b, int n)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 
 /* Scan/search functions */
 extern int bstricmp (const_bstring b0, const_bstring b1);
@@ -140,9 +196,21 @@ extern int btrimws (bstring b);
 
 #if !defined (BSTRLIB_NOVSNP)
 extern bstring bformat (const char * fmt, ...);
-extern int bformata (bstring b, const char * fmt, ...);
-extern int bassignformat (bstring b, const char * fmt, ...);
-extern int bvcformata (bstring b, int count, const char * fmt, va_list arglist);
+extern int bformata (bstring b, const char * fmt, ...)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bassignformat (bstring b, const char * fmt, ...)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+extern int bvcformata (bstring b, int count, const char * fmt, va_list arglist)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 
 #define bvformata(ret, b, fmt, lastarg) { \
 bstring bstrtmp_b = (b); \
@@ -189,9 +257,9 @@ extern int bsreadlnsa (bstring r, struct bStream * s, const_bstring term);
 extern int bsreada (bstring b, struct bStream * s, int n);
 extern int bsunread (struct bStream * s, const_bstring b);
 extern int bspeek (bstring r, const struct bStream * s);
-extern int bssplitscb (struct bStream * s, const_bstring splitStr, 
+extern int bssplitscb (struct bStream * s, const_bstring splitStr,
 	int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
-extern int bssplitstrcb (struct bStream * s, const_bstring splitStr, 
+extern int bssplitstrcb (struct bStream * s, const_bstring splitStr,
 	int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
 extern int bseof (const struct bStream * s);
 
