@@ -9,23 +9,15 @@
 #include <assert.h>
 #endif /* DEBUG */
 
-#ifdef USE_WIN32
+#ifdef WIN32
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
-
-#include <Windows.h>
-/* typedef uint16_t SCAFFOLD_SIZE; */
-/* typedef int16_t ssize_t; */
-#define ssize_t long
-#define SCAFFOLD_SIZE unsigned long
-#endif /* USE_WIN32 */
+#endif /* WIN32 */
 
 #include "bstrlib/bstrlib.h"
 
 #define SENTINAL 19691
-
-#ifndef USE_WIN32
 
 #ifndef BYTE
 typedef int8_t BYTE;
@@ -42,8 +34,6 @@ typedef uint8_t BOOL;
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
-
-#endif /* USE_WIN32 */
 
 typedef enum {
    SCAFFOLD_ERROR_NONE,
@@ -75,8 +65,8 @@ typedef enum {
 typedef size_t SCAFFOLD_SIZE;
 typedef ssize_t SCAFFOLD_SIZE_SIGNED;
 #else
-typedef uint32_t SCAFFOLD_SIZE;
-typedef int32_t SCAFFOLD_SIZE_SIGNED;
+typedef unsigned long SCAFFOLD_SIZE;
+typedef long SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
 #ifdef SCAFFOLD_LOG_FILE

@@ -254,7 +254,7 @@ static const unsigned char d[] = {
 **
 ** base64 encode a stream adding padding and line breaks as per spec.
 */
-void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, ssize_t linesz ) {
+void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, SCAFFOLD_SIZE_SIGNED linesz ) {
    const uint8_t* indata_bytes = (const uint8_t *)indata;
    SCAFFOLD_SIZE i;
    uint32_t concat32bits = 0;

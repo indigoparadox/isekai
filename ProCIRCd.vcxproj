@@ -126,7 +126,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\b64\b64.c" />
+    <ClCompile Include="src\b64.c" />
     <ClCompile Include="src\bstrlib\bstrlib.c" />
     <ClCompile Include="src\callbacks.c" />
     <ClCompile Include="src\channel.c" />
@@ -134,7 +134,7 @@
     <ClCompile Include="src\client.c" />
     <ClCompile Include="src\connection.c" />
     <ClCompile Include="src\datafile\xml.c" />
-    <ClCompile Include="src\ezxml\ezxml.c" />
+    <ClCompile Include="src\ezxml.c" />
     <ClCompile Include="src\gamedata.c" />
     <ClCompile Include="src\graphics\win32g.c" />
     <ClCompile Include="src\hashmap.c" />
@@ -142,9 +142,10 @@
     <ClCompile Include="src\heatshrink\heatshrink_encoder.c" />
     <ClCompile Include="src\input\win32i.c" />
     <ClCompile Include="src\ipc\syncbuff.c" />
-    <ClCompile Include="src\irc.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\mobile.c" />
+    <ClCompile Include="src\proto.c" />
+    <ClCompile Include="src\proto\irc.c" />
     <ClCompile Include="src\scaffold.c" />
     <ClCompile Include="src\server.c" />
     <ClCompile Include="src\tilemap.c" />
@@ -153,7 +154,7 @@
     <ClCompile Include="src\wdirent.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\b64\b64.h" />
+    <ClInclude Include="src\b64.h" />
     <ClInclude Include="src\bstrlib\bstrlib.h" />
     <ClInclude Include="src\callbacks.h" />
     <ClInclude Include="src\channel.h" />
@@ -161,7 +162,7 @@
     <ClInclude Include="src\client.h" />
     <ClInclude Include="src\connection.h" />
     <ClInclude Include="src\datafile.h" />
-    <ClInclude Include="src\ezxml\ezxml.h" />
+    <ClInclude Include="src\ezxml.h" />
     <ClInclude Include="src\gamedata.h" />
     <ClInclude Include="src\graphics.h" />
     <ClInclude Include="src\hashmap.h" />
@@ -171,8 +172,8 @@
     <ClInclude Include="src\heatshrink\heatshrink_encoder.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\ipc\syncbuff.h" />
-    <ClInclude Include="src\irc.h" />
     <ClInclude Include="src\mobile.h" />
+    <ClInclude Include="src\proto.h" />
     <ClInclude Include="src\ref.h" />
     <ClInclude Include="src\scaffold.h" />
     <ClInclude Include="src\server.h" />

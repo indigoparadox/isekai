@@ -400,6 +400,10 @@
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
 		</Unit>
+		<Unit filename="src/graphics/win32g.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (MingW32)" />
+		</Unit>
 		<Unit filename="src/hashmap.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -483,6 +487,10 @@
 		<Unit filename="src/input/null.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />
+		</Unit>
+		<Unit filename="src/input/win32i.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.c">
 			<Option compilerVar="CC" />

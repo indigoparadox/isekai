@@ -165,11 +165,11 @@ cleanup:
    return connected;
 }
 
-ssize_t connection_write_line( CONNECTION* n, const bstring buffer, BOOL client ) {
+SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer, BOOL client ) {
 #ifdef DEBUG
    const char* buffer_chars;
 #endif /* DEBUG */
-   ssize_t sent = -1;
+   SCAFFOLD_SIZE_SIGNED sent = -1;
 #ifdef USE_NETWORK
    SCAFFOLD_SIZE dest_socket;
    SCAFFOLD_SIZE buffer_len;
@@ -211,8 +211,8 @@ cleanup:
    return sent;
 }
 
-ssize_t connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
-   ssize_t total_read_count = 0;
+SCAFFOLD_SIZE_SIGNED connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
+	SCAFFOLD_SIZE_SIGNED total_read_count = 0;
 #ifdef USE_NETWORK
    ssize_t last_read_count = 0;
    char read_char = '\0';
