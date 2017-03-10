@@ -6,40 +6,24 @@
 #include "../src/vector.h"
 #include "check_data.h"
 
-const struct tagbstring chunker_test_filename = bsStatic( "testdata/server/testchannel.tmx" );
+const struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testchannel.tmx" );
+const struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain-small.bmp" );
 const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
 struct bstrList* chunker_mapchunks = NULL;
-struct VECTOR* chunker_mapchunk_starts;
-char* chunker_mapdata;
+struct VECTOR* chunker_mapchunk_starts = NULL;
+BYTE* chunker_mapdata = NULL;
 SCAFFOLD_SIZE chunker_mapsize;
-FILE* chunker_mapfile = NULL;
-struct CHUNKER* h;
+
+struct bstrList* chunker_imgchunks = NULL;
+struct VECTOR* chunker_imgchunk_starts = NULL;
+BYTE* chunker_imgdata = NULL;
+SCAFFOLD_SIZE chunker_imgsize;
 
 void check_chunker_setup_unchecked() {
 
-   /* Read the test data into memory for all tests. */
-   chunker_mapfile = fopen( (const char*)(chunker_test_filename.data), "rb" );
-   ck_assert( NULL != chunker_mapfile );
-   if( NULL == chunker_mapfile ) {
-      ck_abort_msg( "Unable to open testing map file." );
-      return;
-   }
-
-   /* Allocate enough space to hold the map. */
-   fseek( chunker_mapfile, 0, SEEK_END );
-   chunker_mapsize = ftell( chunker_mapfile );
-   if( 0 == chunker_mapsize ) {
-      ck_abort_msg( "Testing map file has 0 length." );
-   }
-   chunker_mapdata = (char*)calloc( chunker_mapsize, sizeof( char ) + 1 ); /* +1 for term. */
-   if( NULL == chunker_mapfile ) {
-      ck_abort_msg( "Unable to allocate map data buffer." );
-   }
-   fseek( chunker_mapfile, 0, SEEK_SET );
-
-   /* Read and close the map. */
-   fread( chunker_mapdata, sizeof( BYTE ), chunker_mapsize, chunker_mapfile );
+   scaffold_read_file_contents( &chunker_test_map_filename, &chunker_mapdata, &chunker_mapsize );
+   scaffold_read_file_contents( &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
 
    /* Prepare the chunk list. */
    chunker_mapchunks = bstrListCreate();
@@ -48,12 +32,33 @@ void check_chunker_setup_unchecked() {
    if( NULL == chunker_mapchunks || NULL == chunker_mapchunk_starts ) {
       ck_abort_msg( "Unable to create testing map chunks list." );
    }
+
+   /* Prepare the chunk list. */
+   chunker_imgchunks = bstrListCreate();
+   chunker_imgchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
+   vector_init( chunker_imgchunk_starts );
+   if( NULL == chunker_imgchunks || NULL == chunker_imgchunk_starts ) {
+      ck_abort_msg( "Unable to create testing image chunks list." );
+   }
 }
 
-void check_chunker_setup_checked() {
+void check_chunker_chunk_checked(
+   const bstring filename,
+   CHUNKER_DATA_TYPE type,
+   BYTE* data_source,
+   SCAFFOLD_SIZE data_source_len,
+   struct bstrList* chunks,
+   struct VECTOR* v_starts,
+   SCAFFOLD_SIZE chunk_len
+) {
    bstring chunk_buffer = NULL;
    SCAFFOLD_SIZE previous_pos = 0,
       * current_pos = 0;
+   struct CHUNKER* h = NULL;
+
+   /* Verify sanity. */
+   ck_assert( NULL != data_source );
+   ck_assert_int_ne( 0, data_source_len );
 
    /* Setup the chunker. */
    h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
@@ -68,19 +73,15 @@ void check_chunker_setup_checked() {
 
    /* Chunk the testing data into the chunk list. */
    chunker_chunk_start(
-      h,
-      (const bstring)&chunker_test_filename,
-      CHUNKER_DATA_TYPE_TILEMAP,
-      chunker_mapdata,
-      chunker_mapsize,
-      CHUNKER_DEFAULT_CHUNK_SIZE
+      h, filename, type, data_source, data_source_len,
+      chunk_len
    );
 
    while( TRUE != chunker_chunk_finished( h ) ) {
       current_pos = (SCAFFOLD_SIZE*)calloc( 1, sizeof( SCAFFOLD_SIZE ) );
       *current_pos = h->raw_position;
       ck_assert( *current_pos <= h->raw_length );
-      vector_add( chunker_mapchunk_starts, current_pos );
+      vector_add( v_starts, current_pos );
       chunker_chunk_pass( h, chunk_buffer );
       if( TRUE != chunker_chunk_finished( h ) ) {
          if( previous_pos == h->raw_position ) {
@@ -88,89 +89,71 @@ void check_chunker_setup_checked() {
          }
          previous_pos = h->raw_position;
       }
-      scaffold_list_append_string_cpy( chunker_mapchunks, chunk_buffer );
+      scaffold_list_append_string_cpy( chunks, chunk_buffer );
       btrunc( chunk_buffer, 0 );
    }
 
    /* Verify sanity. */
-   ck_assert( NULL != chunker_mapdata );
-   ck_assert_int_ne( 0, chunker_mapsize );
-   ck_assert_int_eq( h->raw_length, chunker_mapsize );
-   ck_assert( NULL != chunker_mapchunks );
-   if( NULL != chunker_mapchunks ) {
-      ck_assert_int_ne( 0, chunker_mapchunks->qty );
+   ck_assert_int_eq( h->raw_length, data_source_len );
+   ck_assert( NULL != chunks );
+   if( NULL != chunks ) {
+      ck_assert_int_ne( 0, chunks->qty );
    }
 
-   /* Setup the chunker for the tests. */
    if( NULL != h ) {
       chunker_free( h );
    }
-   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
-   ck_assert( NULL != h );
 }
 
-void check_chunker_teardown_checked() {
-   /* Dispose of the chunker after each test. */
-   chunker_free( h );
-}
-
-void check_chunker_teardown_unchecked() {
-   /* Get rid of the map data after all tests are complete. */
-   if( NULL != chunker_mapdata ) {
-      free( chunker_mapdata );
-   }
-
-   if( NULL != chunker_mapfile ) {
-      fclose( chunker_mapfile );
-      chunker_mapfile = NULL;
-   }
-}
-
-START_TEST( test_chunker_unchunk ) {
+void check_chunker_unchunk_checked(
+   const bstring filename,
+   CHUNKER_DATA_TYPE type,
+   BYTE* data_source,
+   SCAFFOLD_SIZE data_source_len,
+   struct bstrList* chunks,
+   struct VECTOR* v_starts,
+   SCAFFOLD_SIZE chunk_len
+) {
    bstring unchunk_buffer = NULL;
    SCAFFOLD_SIZE chunk_index = 0;
    SCAFFOLD_SIZE* curr_start = NULL;
    SCAFFOLD_SIZE* next_start = NULL;
-   SCAFFOLD_SIZE current_chunk_len = CHUNKER_DEFAULT_CHUNK_SIZE;
    SCAFFOLD_SIZE prev_start = 0;
    SCAFFOLD_SIZE chunks_count = 0;
-#ifdef CHECK_WRITE_FILES
-   FILE* check_chunk_out = NULL;
-   SCAFFOLD_SIZE i;
-#endif /* CHECK_WRITE_FILES */
+   struct CHUNKER* h = NULL;
 
-   ck_assert( NULL != chunker_mapchunks );
-   ck_assert_int_ne( 0, chunker_mapchunks->qty );
-   ck_assert_int_ne( 0, chunker_mapsize );
+   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
+   ck_assert( NULL != h );
 
-   chunker_unchunk_start(
-      h,
-      (const bstring)&chunker_test_filename,
-      CHUNKER_DATA_TYPE_TILEMAP,
-      (const bstring)&chunker_test_filename,
-      NULL
-   );
+   ck_assert( NULL != chunks );
+   ck_assert_int_ne( 0, chunks->qty );
+   ck_assert_int_ne( 0, data_source_len );
 
-   ck_assert_int_eq( chunker_mapchunks->qty, vector_count( chunker_mapchunk_starts ) );
-   if( chunker_mapchunks->qty != vector_count( chunker_mapchunk_starts ) ) {
+   chunker_unchunk_start( h, filename, type, filename, &chunker_test_cachepath );
+
+   ck_assert_int_eq( chunks->qty, vector_count( v_starts ) );
+   if( chunks->qty != vector_count( v_starts ) ) {
       ck_abort_msg( "Vector and string list size mismatch." );
    }
 
-   while( chunker_mapchunks->qty > chunk_index ) {
-      unchunk_buffer = chunker_mapchunks->entry[chunk_index];
-      curr_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index );
+   while( chunks->qty > chunk_index ) {
+      unchunk_buffer = chunks->entry[chunk_index];
+      curr_start = (SCAFFOLD_SIZE*)vector_get( v_starts, chunk_index );
       if( NULL == unchunk_buffer ) { break; }
-      next_start = (SCAFFOLD_SIZE*)vector_get( chunker_mapchunk_starts, chunk_index + 1 );
+      next_start = (SCAFFOLD_SIZE*)vector_get( v_starts, chunk_index + 1 );
       if( NULL != next_start ) {
          ck_assert_int_ne( *next_start, *curr_start );
-         ck_assert( *next_start <= chunker_mapsize );
+         ck_assert( *next_start <= data_source_len );
       }
       ck_assert( *curr_start > prev_start || *curr_start == 0 );
-      if( *curr_start >= chunker_mapsize ) {
+      if( *curr_start >= data_source_len ) {
          break;
       }
       ck_assert_int_eq( FALSE, chunker_unchunk_finished( h ) );
-      chunker_unchunk_pass( h, unchunk_buffer, *curr_start, chunker_mapsize, current_chunk_len );
+      chunker_unchunk_pass(
+         h, unchunk_buffer, *curr_start, data_source_len, chunk_len
+      );
+      ck_assert_int_eq( data_source_len, h->raw_length );
       chunk_index++;
    }
 
@@ -184,14 +167,114 @@ checkup:
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
-      ck_assert_int_eq( h->raw_length, chunker_mapsize );
-      ck_assert_int_eq( h->raw_length, strlen( (const char*)h->raw_ptr ) );
-      ck_assert_int_eq( 0, strcmp( (const char*)h->raw_ptr, (const char*)chunker_mapdata ) );
+      ck_assert_int_eq( h->raw_length, data_source_len );
+      ck_assert_int_eq(
+         0,
+         memcmp( h->raw_ptr, data_source, data_source_len )
+      );
    }
+
+   if( NULL != h ) {
+      chunker_free( h );
+   }
+}
+
+void check_chunker_teardown_unchecked() {
+   /* Get rid of the map data after all tests are complete. */
+   if( NULL != chunker_mapdata ) {
+      free( chunker_mapdata );
+   }
+   if( NULL != chunker_imgdata ) {
+      free( chunker_imgdata );
+   }
+}
+
+START_TEST( test_chunker_chunk_unchunk_tilemap ) {
+   check_chunker_chunk_checked(
+      &chunker_test_map_filename,
+      CHUNKER_DATA_TYPE_TILEMAP,
+      chunker_mapdata,
+      chunker_mapsize,
+      chunker_mapchunks,
+      chunker_mapchunk_starts,
+      CHUNKER_DEFAULT_CHUNK_SIZE
+   );
+   check_chunker_unchunk_checked(
+      &chunker_test_map_filename,
+      CHUNKER_DATA_TYPE_TILEMAP,
+      chunker_mapdata,
+      chunker_mapsize,
+      chunker_mapchunks,
+      chunker_mapchunk_starts,
+      CHUNKER_DEFAULT_CHUNK_SIZE
+   );
 }
 END_TEST
 
+START_TEST( test_chunker_chunk_unchunk_image ) {
+   check_chunker_chunk_checked(
+      &chunker_test_img_filename,
+      CHUNKER_DATA_TYPE_MOBSPRITES,
+      chunker_imgdata,
+      chunker_imgsize,
+      chunker_imgchunks,
+      chunker_imgchunk_starts,
+      CHUNKER_DEFAULT_CHUNK_SIZE
+   );
+   check_chunker_unchunk_checked(
+      &chunker_test_img_filename,
+      CHUNKER_DATA_TYPE_MOBSPRITES,
+      chunker_imgdata,
+      chunker_imgsize,
+      chunker_imgchunks,
+      chunker_imgchunk_starts,
+      CHUNKER_DEFAULT_CHUNK_SIZE
+   );
+}
+END_TEST
 
+START_TEST( test_chunker_unchunk_cache_integrity ) {
+   bstring cache_file_path = NULL;
+   BYTE* cache_file_contents = NULL;
+   SCAFFOLD_SIZE cache_file_size = 0;
+
+   cache_file_path = bstrcpy( &chunker_test_cachepath );
+   scaffold_join_path( cache_file_path, &chunker_test_map_filename );
+   scaffold_read_file_contents(
+      cache_file_path,
+      &cache_file_contents,
+      &cache_file_size
+   );
+
+   ck_assert_int_eq( 0, scaffold_error );
+   ck_assert_int_eq( cache_file_size, chunker_mapsize );
+   ck_assert_int_eq(
+      0,
+      memcmp( cache_file_contents, chunker_mapdata, chunker_mapsize )
+   );
+
+   free( cache_file_contents );
+   cache_file_contents = NULL;
+   cache_file_size = 0;
+
+   bassigncstr( cache_file_path, &chunker_test_cachepath );
+   scaffold_join_path( cache_file_path, &chunker_test_img_filename );
+   scaffold_read_file_contents(
+      cache_file_path,
+      &cache_file_contents,
+      &cache_file_size
+   );
+
+   ck_assert_int_eq( 0, scaffold_error );
+   ck_assert_int_eq( cache_file_size, chunker_imgsize );
+   ck_assert_int_eq(
+      0,
+      memcmp( cache_file_contents, chunker_imgdata, chunker_imgsize )
+   );
+}
+END_TEST
+
+#if 0
 START_TEST( test_chunker_unchunk_output ) {
    bstring unchunk_buffer = NULL;
    SCAFFOLD_SIZE chunk_index = 0;
@@ -199,6 +282,8 @@ START_TEST( test_chunker_unchunk_output ) {
    SCAFFOLD_SIZE* next_start = NULL;
    SCAFFOLD_SIZE current_chunk_len;
    SCAFFOLD_SIZE prev_start = 0;
+   FILE* check_chunk_out = NULL;
+   SCAFFOLD_SIZE i;
    FILE* check_chunk_out = NULL;
    SCAFFOLD_SIZE i;
 
@@ -252,6 +337,7 @@ START_TEST( test_chunker_unchunk_output ) {
    fclose( check_chunk_out );
 }
 END_TEST
+#endif // 0
 
 Suite* chunker_suite( void ) {
    Suite* s;
@@ -262,9 +348,13 @@ Suite* chunker_suite( void ) {
    /* Core test case */
    tc_core = tcase_create( "Core" );
 
-   tcase_add_checked_fixture( tc_core, check_chunker_setup_checked, check_chunker_teardown_checked );
-   tcase_add_unchecked_fixture( tc_core, check_chunker_setup_unchecked, check_chunker_teardown_unchecked );
-   tcase_add_test( tc_core, test_chunker_unchunk );
+   //tcase_add_checked_fixture( tc_core, check_chunker_setup_checked, check_chunker_teardown_checked );
+   tcase_add_unchecked_fixture(
+      tc_core, check_chunker_setup_unchecked, check_chunker_teardown_unchecked
+   );
+   tcase_add_test( tc_core, test_chunker_chunk_unchunk_tilemap );
+   tcase_add_test( tc_core, test_chunker_chunk_unchunk_image );
+   tcase_add_test( tc_core, test_chunker_unchunk_cache_integrity );
    suite_add_tcase( s, tc_core );
 
    return s;
