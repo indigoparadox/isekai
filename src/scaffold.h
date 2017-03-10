@@ -13,6 +13,7 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#include <windows.h>
 #endif /* WIN32 */
 
 #include "bstrlib/bstrlib.h"
@@ -23,7 +24,7 @@
 typedef uint8_t BYTE;
 #endif /* BYTE */
 
-#ifndef BOOL
+#if !defined( BOOL ) && !defined( WIN32 )
 typedef uint8_t BOOL;
 #endif /* BOOL */
 
