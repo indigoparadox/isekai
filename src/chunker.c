@@ -293,9 +293,9 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
 #ifdef USE_FILE_CACHE
    if( TRUE == h->force_finish ) {
       goto cleanup;
-   }
+   } else
 #endif
-   else if( NULL == h->raw_ptr && 0 == h->raw_length ) {
+   if( NULL == h->raw_ptr && 0 == h->raw_length ) {
       scaffold_assert( NULL == h->decoder );
       h->raw_length = src_len;
       h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );

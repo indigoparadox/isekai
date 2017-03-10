@@ -3,17 +3,17 @@
 #include <memory.h>
 #include <ncurses.h>
 
-void input_init( INPUT* p ) {
+void input_init( struct INPUT* p ) {
 #ifdef INIT_ZEROES
    memset( p, '\0', sizeof( INPUT ) );
 #endif /* INIT_ZEROES */
    timeout( 5 );
 }
 
-int input_get_char( INPUT* input ) {
+void input_get_event( struct INPUT* input ) {
    int key;
 
-   key = getch();
+   //key = getch();
 
-   return key;
+   //return key;
 }

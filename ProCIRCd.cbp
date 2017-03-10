@@ -94,7 +94,7 @@
 				<Option output="bin/Debug-MingW32/ProCIRCd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-MingW32/" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="mingw32_gnu_gcc_compiler" />
 				<Compiler>
 					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />
@@ -106,25 +106,16 @@
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-std=gnu99" />
-					<Add option="-Wstack-protector" />
-					<Add option="-fstack-protector-all" />
-					<Add option="-fsanitize=undefined" />
-					<Add option="-ggdb3" />
-					<Add option="-fvar-tracking" />
-					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
-					<Add option="-DxUSE_ALLEGRO_PNG" />
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DEZXML_NOMMAP" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
-					<Add library="alleg" />
-					<Add library="ubsan" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Curses)">
@@ -136,8 +127,12 @@
 				<Compiler>
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-std=gnu99" />
 					<Add option="-DUSE_CURSES" />
 					<Add option="-DDEBUG" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DSCAFFOLD_LOG_FILE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
