@@ -228,7 +228,6 @@ cleanup:
  */
 
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
-   int inputfd = -1;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    SCAFFOLD_SIZE_SIGNED sz_last = -1;
    struct stat inputstat;
@@ -237,6 +236,9 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #endif /* DEBUG */
 #ifdef WIN32
    LARGE_INTEGER sz_win;
+   HANDLE inputfd = NULL;
+#else
+   int inputfd = -1;
 #endif /* WIN32 */
 
    if( NULL != *buffer ) {
@@ -268,7 +270,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    /* Allocate enough space to hold the file. */
 #ifdef WIN32
    GetFileSizeEx( inputfd, &sz_win );
-   *len = sz_win;
+   *len = sz_win.LowPart;
 #else
    if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
