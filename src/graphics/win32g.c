@@ -1,12 +1,12 @@
 
 #include "../graphics.h"
 
-void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
+void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 
 }
 
-void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
@@ -48,11 +48,11 @@ BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
 
 }
 
-void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {
+void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
 
 }
 
-void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
+void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
@@ -64,19 +64,19 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 
 }
 
-void graphics_scale( GRAPHICS* g, gu w, gu h ) {
-   
+void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+
 
 }
 
 void graphics_blit(
-   GRAPHICS* g, gu x, gu y, gu s_w, gu s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
 
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
 
 }

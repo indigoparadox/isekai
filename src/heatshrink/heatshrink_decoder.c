@@ -93,12 +93,12 @@ void heatshrink_decoder_reset(heatshrink_decoder *hsd) {
 
 /* Copy SIZE bytes into the decoder's input buffer, if it will fit. */
 HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder *hsd,
-        uint8_t *in_buf, size_t size, size_t *input_size) {
+        BYTE *in_buf, SCAFFOLD_SIZE size, SCAFFOLD_SIZE *input_size) {
     if ((hsd == NULL) || (in_buf == NULL) || (input_size == NULL)) {
         return HSDR_SINK_ERROR_NULL;
     }
 
-    size_t rem = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd) - hsd->input_size;
+    SCAFFOLD_SIZE rem = HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd) - hsd->input_size;
     if (rem == 0) {
         *input_size = 0;
         return HSDR_SINK_FULL;
@@ -133,7 +133,7 @@ static HSD_state st_yield_backref(heatshrink_decoder *hsd,
     output_info *oi);
 
 HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder *hsd,
-        uint8_t *out_buf, size_t out_buf_size, size_t *output_size) {
+        BYTE *out_buf, SCAFFOLD_SIZE out_buf_size, SCAFFOLD_SIZE *output_size) {
     if ((hsd == NULL) || (out_buf == NULL) || (output_size == NULL)) {
         return HSDR_POLL_ERROR_NULL;
     }
@@ -173,7 +173,7 @@ HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder *hsd,
         default:
             return HSDR_POLL_ERROR_UNKNOWN;
         }
-        
+
         /* If the current state cannot advance, check if input or output
          * buffer are exhausted. */
         if (hsd->state == in_state) {
@@ -261,16 +261,16 @@ static HSD_state st_backref_count_lsb(heatshrink_decoder *hsd) {
 
 static HSD_state st_yield_backref(heatshrink_decoder *hsd,
         output_info *oi) {
-    size_t count = oi->buf_size - *oi->output_size;
+    SCAFFOLD_SIZE count = oi->buf_size - *oi->output_size;
     if (count > 0) {
-        size_t i = 0;
+        SCAFFOLD_SIZE i = 0;
         if (hsd->output_count < count) count = hsd->output_count;
         uint8_t *buf = &hsd->buffers[HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd)];
         uint16_t mask = (1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd)) - 1;
         uint16_t neg_offset = hsd->output_index;
         LOG("-- emitting %zu bytes from -%u bytes back\n", count, neg_offset);
         ASSERT(neg_offset <= mask + 1);
-        ASSERT(count <= (size_t)(1 << BACKREF_COUNT_BITS(hsd)));
+        ASSERT(count <= (SCAFFOLD_SIZE)(1 << BACKREF_COUNT_BITS(hsd)));
 
         for (i=0; i<count; i++) {
             uint8_t c = buf[(hsd->head_index - neg_offset) & mask];

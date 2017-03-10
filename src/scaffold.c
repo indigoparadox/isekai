@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #include "wdirent.h"
@@ -234,6 +235,9 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #ifdef DEBUG
    char* path_c = NULL;
 #endif /* DEBUG */
+#ifdef WIN32
+   LARGE_INTEGER sz_win;
+#endif /* WIN32 */
 
    if( NULL != *buffer ) {
       free( *buffer );
@@ -250,30 +254,48 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    scaffold_print_debug( "Reading from path: %s\n", path_c );
 #endif /* DEBUG */
 
+#ifdef WIN32
+   inputfd = CreateFile( bdata( path ), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+   if( NULL == inputfd ) {
+#else
    inputfd = open( bdata( path ), O_RDONLY );
    if( 0 > inputfd ) {
+#endif /* WIN32 */
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
 
    /* Allocate enough space to hold the file. */
+#ifdef WIN32
+   GetFileSizeEx( inputfd, &sz_win );
+   *len = sz_win;
+#else
    if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
    *len = inputstat.st_size;
+#endif /* WIN32 */
    *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) );
    scaffold_check_null( *buffer );
 
    /* Read and close the file. */
+#ifdef WIN32
+   ReadFile( inputfd, *buffer, *len, &sz_out,  NULL );
+#else
    sz_out = read( inputfd, *buffer, *len );
+#endif /* WIN32 */
    scaffold_check_zero( sz_out );
    scaffold_assert( sz_out == *len );
 
 cleanup:
+#ifdef WIN32
+   CloseHandle( inputfd );
+#else
    if( 0 <= inputfd ) {
       close( inputfd );
    }
+#endif /* WIN32 */
    return sz_out;
 }
 

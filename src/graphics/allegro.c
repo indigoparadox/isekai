@@ -207,7 +207,7 @@ const PACKFILE_VTABLE graphics_fmem_vtable = {
    graphics_fmem_ferror,
 };
 
-void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
+void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    int screen_return;
 
    allegro_init();
@@ -253,7 +253,7 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
    /* TODO: Free surface. */
 }
 
-void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    if( 0 < w && 0 < h) {
       g->surface = create_bitmap( w, h );
    } else {
@@ -460,7 +460,7 @@ cleanup:
    return fmem_info->block;
 }
 
-void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {
+void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
    textout_centre_ex(
       g->surface, font, bdata( text ), x, y,
       makecol( g->color.r, g->color.g, g->color.b ),
@@ -468,30 +468,31 @@ void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {
    );
 }
 
-void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
+void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
-void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r,
-                            const bstring text ) {
-
+void graphics_measure_text(
+   GRAPHICS* g, GRAPHICS_RECT* r, const bstring text
+) {
+   #warning Text measurement not implemented.
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
-
+   #warning Graphical transitions not implemented.
 }
 
-void graphics_scale( GRAPHICS* g, gu w, gu h ) {
-
+void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+   #warning Graphical scaling not implemented.
 }
 
-void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
+void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
                     const GRAPHICS* src ) {
    masked_blit( src->surface, g->surface, 0, 0, x, y, src->w, src->h );
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
    masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
 }

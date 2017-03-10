@@ -27,6 +27,7 @@ START_TEST( test_vector_add ) {
 
    ck_assert_int_eq( vector_count( v ), 0 );
 
+   /* Add 3 blobs. */
    for( i = 0 ; 3 > i ; i++ ) {
       blob = create_blob( 1212, 16, 3, 4545 );
       //printf( "Blob ref before: %d\n", blob->refcount.count );
@@ -37,8 +38,10 @@ START_TEST( test_vector_add ) {
       ck_assert_int_eq( 2, blob->refcount.count );
    }
 
+   /* Verify count of 3 blobs. */
    ck_assert_int_eq( vector_count( v ), 3 );
 
+   /* Remove front 2 blobs. */
    for( i = 0 ; 2 > i ; i++ ) {
       blob = (BLOB*)vector_get( v, i );
       ck_assert_int_eq( 2, blob->refcount.count );
@@ -50,8 +53,10 @@ START_TEST( test_vector_add ) {
       ref_dec( &(blob->refcount) );
    }
 
-cleanup:
+   /* Verify count of 1 blobs. */
+   ck_assert_int_eq( vector_count( v ), 3 );
 
+   /* Delete the remaining blob. */
    blob = (BLOB*)vector_get( v, 0 );
    vector_remove( v, 0 );
    ref_dec( &(blob->refcount) );
