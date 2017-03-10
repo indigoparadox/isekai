@@ -104,8 +104,8 @@ static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
    );
 
    server_client_printf(
-      c, ":%b 002 %b :Your host is %b, running version %b",
-      s->self.remote, c->nick, s->servername, s->version
+      c, ":%b 002 %b :Your host is ProCIRCd, running version 0.1",
+      s->self.remote, c->nick
    );
 
    server_client_printf(
@@ -114,8 +114,8 @@ static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
    );
 
    server_client_printf(
-      c, ":%b 004 %b :%b %b-%b abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
-      s->self.remote, c->nick, s->self.remote, s->servername, s->version
+      c, ":%b 004 %b :%b ProCIRCd-0.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
+      s->self.remote, c->nick, s->self.remote
    );
 
    server_client_printf(

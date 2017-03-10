@@ -16,8 +16,6 @@ typedef struct _SERVER {
 
    /* Items after this line are server-specific. */
    struct HASHMAP clients;
-   bstring servername;
-   bstring version;
 } SERVER;
 
 #define SERVER_SENTINAL 164641
