@@ -13,6 +13,7 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg );
 void* callback_send_clients( const bstring key, void* iter, void* arg );
 void* callback_search_channels( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg );
+void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
 void* callback_search_graphics( const bstring key, void* iter, void* arg );
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg );

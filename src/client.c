@@ -391,27 +391,44 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
 
       l = client_get_channel_by_name( c, t->lname );
+      scaffold_assert( NULL != l );
       scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
+
+      if( NULL != l->tilemap ) {
+         tilemap_free( l->tilemap );
+      }
+      l->tilemap = t;
 
       /* Go through the parsed tilemap and load graphics. */
       hashmap_iterate( &(t->tilesets), callback_proc_tileset_imgs, c );
 
       scaffold_print_info(
-         "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
+         "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
       );
       break;
 
    case CHUNKER_DATA_TYPE_TILESET_IMG:
+
+      l = hashmap_iterate(
+         &(c->channels),
+         callback_search_channels_tilemap_img_name,
+         h->filename
+      );
+      scaffold_assert( NULL != l );
+      t = l->tilemap;
+      scaffold_assert( NULL != t );
+
       graphics_surface_new( g, 0, 0, 0, 0 );
       scaffold_check_null( g );
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
-      scaffold_assert( NULL != t );
+
       set = hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, h->filename );
       scaffold_check_null( set )
+
       hashmap_put( &(set->images), h->filename, g );
       scaffold_print_info(
-         "Client: Tilemap image %s successfully loaded into cache.\n",
+         "Client: Tilemap image %s successfully loaded into tileset cache.\n",
          bdata( h->filename )
       );
       break;

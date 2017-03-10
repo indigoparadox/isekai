@@ -83,6 +83,7 @@ int main( int argc, char** argv ) {
          server_poll_new_clients( main_server );
          client_update( main_client, &g );
          server_service_clients( main_server );
+         graphics_flip_screen( &g );
       }
    }
 

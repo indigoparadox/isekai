@@ -121,11 +121,37 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
 }
 
 /* Searches for a tileset containing the image named in bstring arg. */
+/** \brief
+ *
+ * \param
+ * \param
+ * \return
+ *
+ */
+
 void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg ) ) {
       /* This is the tileset that contains this image. */
       return set;
+   }
+   return NULL;
+}
+
+/** \brief Searches for a channel with an attached tilemap containing a tileset
+ *         containing the image named in bstring arg.
+ *
+ * \param
+ * \param arg - A bstring containing the image filename.
+ * \return The channel with the map containing the specified image.
+ *
+ */
+/*  */
+void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   struct TILEMAP* t = l->tilemap;
+   if( NULL != hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
+      return l;
    }
    return NULL;
 }
