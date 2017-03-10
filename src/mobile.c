@@ -64,7 +64,7 @@ cleanup:
    return;
 }
 
-void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) {
+void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
    SCAFFOLD_SIZE max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
    struct CLIENT* c = NULL;
    struct CHANNEL* l = NULL;
@@ -80,18 +80,14 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) 
       return;
    }
 
-   max_x = window->x + window->width;
-   max_y = window->y + window->height;
+   max_x = twindow->x + twindow->width;
+   max_y = twindow->y + twindow->height;
 
-   if( o->x > max_x || o->y > max_y || o->x < window->x || o->y < window->y ) {
+   if( o->x > max_x || o->y > max_y || o->x < twindow->x || o->y < twindow->y ) {
       goto cleanup;
    }
 
-   d = scaffold_container_of( window->t, struct GAMEDATA, tmap );
-   if( d == NULL ) {
-      goto cleanup;
-   }
-
+#if 0
    /* If the current mobile spritesheet doesn't exist, then load it. */
    if( NULL == o->sprites && NULL == hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
       /* No sprites and no request yet, so make one! */
@@ -129,7 +125,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* window ) 
       MOBILE_SPRITE_SIZE, MOBILE_SPRITE_SIZE,
       o->sprites
    );
-
+#endif
 cleanup:
    return;
 }

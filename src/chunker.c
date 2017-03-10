@@ -1,4 +1,5 @@
 
+#define CHUNKER_C
 #include "chunker.h"
 
 #include <stdlib.h>
@@ -24,7 +25,6 @@ static void chunker_cleanup( const struct REF* ref ) {
    bdestroy( h->filecache_path );
    bdestroy( h->filename );
    bdestroy( h->serverpath );
-   bdestroy( h->channel );
 
    if( NULL != h->encoder ) {
       heatshrink_encoder_free( h->encoder );
@@ -43,7 +43,7 @@ void chunker_free( struct CHUNKER* h ) {
 }
 
 static void chunker_chunk_setup_internal(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, SCAFFOLD_SIZE tx_chunk_length
+   struct CHUNKER* h, CHUNKER_DATA_TYPE type, SCAFFOLD_SIZE tx_chunk_length
 ) {
 
    scaffold_assert( NULL != h );
@@ -73,10 +73,6 @@ static void chunker_chunk_setup_internal(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->tx_chunk_length = tx_chunk_length;
-   if( NULL != h->channel ) {
-      bdestroy( h->channel );
-   }
-   h->channel = bstrcpy( channel );
    h->type = type;
    h->filecache_path = NULL;
    if( NULL != h->filename ) {
@@ -97,12 +93,12 @@ static void chunker_chunk_setup_internal(
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_chunk_start(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,  void* src_buffer,
+   struct CHUNKER* h, CHUNKER_DATA_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 ) {
    scaffold_check_null( src_buffer );
 
-   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+   chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
    h->raw_length = src_length;
    h->raw_ptr = (BYTE*)calloc( src_length, sizeof( BYTE ) );
@@ -113,12 +109,13 @@ cleanup:
 }
 
 void chunker_chunk_start_file(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type, bstring serverpath,
+   struct CHUNKER* h, CHUNKER_DATA_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 ) {
    bstring full_file_path = NULL;
+   SCAFFOLD_SIZE_SIGNED bytes_read;
 
-   chunker_chunk_setup_internal( h, channel, type, tx_chunk_length );
+   chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
    h->filename = bstrcpy( filepath );
    scaffold_check_null( h->filename );
@@ -131,7 +128,9 @@ void chunker_chunk_start_file(
    scaffold_join_path( full_file_path, h->filename );
    scaffold_check_null( full_file_path );
 
-   scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
+   bytes_read =
+      scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
+   scaffold_check_zero( bytes_read );
 
 cleanup:
    bdestroy( full_file_path );
@@ -207,7 +206,7 @@ BOOL chunker_chunk_finished( struct CHUNKER* h ) {
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
-   struct CHUNKER* h, bstring channel, CHUNKER_DATA_TYPE type,
+   struct CHUNKER* h, CHUNKER_DATA_TYPE type,
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
@@ -236,10 +235,6 @@ void chunker_unchunk_start(
    h->force_finish = FALSE;
    h->raw_position = 0;
    h->raw_length = 0;
-   if( NULL != h->channel ) {
-      bdestroy( h->channel );
-   }
-   h->channel = bstrcpy( channel );
    h->type = type;
    if( NULL != h->filename ) {
       bdestroy( h->filename );

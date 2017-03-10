@@ -65,6 +65,7 @@
 					<Add option="-Wmissing-declarations" />
 					<Add option="-Wswitch-enum" />
 					<Add option="-pedantic" />
+					<Add option="-Wextra" />
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-Wstack-protector" />

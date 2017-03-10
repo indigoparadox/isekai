@@ -120,6 +120,17 @@ extern FILE* scaffold_log_handle_err;
 #define scaffold_check_silence() scaffold_error_silent = TRUE;
 #define scaffold_check_unsilence() scaffold_error_silent = FALSE;
 
+#define scaffold_check_null_msg( pointer, message ) \
+    if( NULL == pointer ) { \
+        scaffold_error = SCAFFOLD_ERROR_NULLPO; \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Null pointer on line: %d: %s\n", __LINE__, message ); \
+        } \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
 #define scaffold_check_null( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
@@ -174,6 +185,18 @@ extern FILE* scaffold_log_handle_err;
     } else { \
         scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
+
+#define scaffold_check_zero_msg( value, message ) \
+    if( 0 == value ) { \
+        scaffold_error = SCAFFOLD_ERROR_ZERO; \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( "Scaffold: Zero error on line: %d: %s\n", __LINE__, message ); \
+        } \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
 
 #define scaffold_check_zero_against( last, value ) \
     if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \

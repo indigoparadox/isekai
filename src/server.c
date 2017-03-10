@@ -147,20 +147,16 @@ void server_add_client( SERVER* s, struct CLIENT* c ) {
 
 struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_first ) {
    struct CHANNEL* l = NULL;
-   bstring map_serial = NULL;
 #ifdef DEBUG
    SCAFFOLD_SIZE old_count;
 #endif /* DEBUG */
-
-   map_serial = bfromcstralloc( 1024, "" );
-   scaffold_check_null( map_serial );
 
    /* Get the channel, or create it if it does not exist. */
    l = server_get_channel_by_name( s, l_name );
 
    if( NULL == l ) {
-      channel_new( l, l_name );
-      gamedata_init_server( &(l->gamedata), l_name );
+      channel_new( l, l_name, FALSE );
+      //gamedata_init_server( &(l->gamedata), l_name );
       client_add_channel( &(s->self), l );
       scaffold_print_info( "Server: Channel created: %s\n", bdata( l->name ) );
    } else {
@@ -181,6 +177,9 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
    scaffold_assert( 0 < c_first->link.refcount.count );
    scaffold_assert( 0 < l->refcount.count );
 
+   channel_load_tilemap( l );
+   scaffold_check_nonzero( scaffold_error );
+
 #ifdef DEBUG
    old_count = c_first->link.refcount.count;
    server_channel_add_client( l, c_first );
@@ -191,7 +190,6 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
 #endif /* DEBUG */
 
 cleanup:
-   bdestroy( map_serial );
    if( NULL != l ) {
       scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
       scaffold_assert( 0 < hashmap_count( &(c_first->channels) ) );

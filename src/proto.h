@@ -42,6 +42,7 @@ void proto_send_chunk(
    const bstring filename, const bstring data
 );
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h );
+void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type );
 
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(

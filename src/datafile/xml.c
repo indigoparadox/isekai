@@ -3,16 +3,23 @@
 
 #include "../b64.h"
 #include "../hashmap.h"
-#include "../gamedata.h"
 
 static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
+   char* channel_c = NULL;
+   int bstr_retval;
 
    scaffold_check_null( xml_props );
 
    xml_prop_iter = ezxml_child( xml_props, "property" );
 
    while( NULL != xml_prop_iter ) {
+      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "channel" ) ) {
+         channel_c = ezxml_attr( xml_prop_iter, "value" );
+         scaffold_check_null( channel_c );
+         bstr_retval = bassigncstr( t->lname, channel_c );
+         scaffold_check_nonzero( bstr_retval );
+      }
 
 #if 0
       if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "light_str" ) ) {
