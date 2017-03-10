@@ -48,7 +48,10 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    vector_init( &(t->positions) );
    hashmap_init( &(t->tilesets) );
 
+   bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
+
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
+   t->lname = bfromcstr( "" );
 }
 
 void tilemap_free( struct TILEMAP* t ) {

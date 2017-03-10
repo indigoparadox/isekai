@@ -81,9 +81,8 @@ int main( int argc, char** argv ) {
          break;
       } else {
          server_poll_new_clients( main_server );
-         client_update( main_client );
+         client_update( main_client, &g );
          server_service_clients( main_server );
-         gamedata_update_client( main_client, &g, &ui );
       }
    }
 

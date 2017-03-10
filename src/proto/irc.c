@@ -68,7 +68,7 @@ const struct tagbstring irc_reply_error_text[35] = {
       goto cleanup; \
    }
 
-extern struct tagbstring str_gamedata_server_path;
+extern struct tagbstring str_chunker_server_path;
 
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
@@ -76,8 +76,8 @@ void proto_send_chunk(
 ) {
    /* Note the starting point and progress for the client. */
    server_client_printf(
-      c, ":server GDB %b %b TILEMAP %b %d %d %d %d : %b",
-      c->nick, h->channel, filename, h->type, start_pos,
+      c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
+      c->nick, filename, h->type, start_pos,
       h->tx_chunk_length, h->raw_length, data
    );
 
@@ -91,6 +91,11 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       bdata( h->filename )
    );
    client_printf( c, "GDA %b", h->filename );
+}
+
+void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
+   scaffold_print_debug( "Client: Requesting file: %s\n", bdata( filename ) );
+   client_printf( c, "GRF %d %b", type, filename );
 }
 
 /* This file contains our (possibly limited, slightly incompatible) version *
@@ -534,14 +539,14 @@ static void irc_server_gamerequestfile(
    CHUNKER_DATA_TYPE type;
    int bstr_result;
 
-   irc_detect_malformed( 4, "GRF" );
+   irc_detect_malformed( 3, "GRF" );
 
    vector_new( files );
 
    file_iter_short = bfromcstralloc( CHUNKER_FILENAME_ALLOC, "" );
 
    /* This list only exists inside of this function, so no need to lock it. */
-   scaffold_list_dir( &str_gamedata_server_path, files, NULL, FALSE, FALSE );
+   scaffold_list_dir( &str_chunker_server_path, files, NULL, FALSE, FALSE );
 
    type_c = bdata( args->entry[1] );
    scaffold_check_null( type_c );
@@ -552,14 +557,14 @@ static void irc_server_gamerequestfile(
       bstr_result = bassignmidstr(
          file_iter_short,
          file_iter,
-         str_gamedata_server_path.slen + 1,
-         blength( file_iter ) - str_gamedata_server_path.slen - 1
+         str_chunker_server_path.slen + 1,
+         blength( file_iter ) - str_chunker_server_path.slen - 1
       );
       scaffold_check_nonzero( bstr_result );
 
       if( 0 == bstrcmp(
          file_iter_short,
-         args->entry[3] )
+         args->entry[2] )
       ) {
          /* FIXME: If the files request and one of the files present start    *
           * with similar names (tilelist.png.tmx requested, tilelist.png      *
@@ -567,7 +572,7 @@ static void irc_server_gamerequestfile(
          /* FIXME: Don't try to send directories. */
          scaffold_print_debug( "GRF: File Found: %s\n", bdata( file_iter ) );
          client_send_file(
-            c, args->entry[2], type, &str_gamedata_server_path, file_iter_short
+            c, type, &str_chunker_server_path, file_iter_short
          );
          break;
       }
@@ -609,7 +614,7 @@ static void irc_server_gameupdate(
       goto cleanup;
    }
 
-   gamedata_update_server( &(l->gamedata), c, &gu_args, &reply_c, &reply_l );
+   //gamedata_update_server( &(l->gamedata), c, &gu_args, &reply_c, &reply_l );
 
    /* TODO: Make sure client is actually in the channel requested. */
    c = channel_get_client_by_name( l, c->nick );
@@ -674,8 +679,7 @@ static void irc_client_join(
    /* Get the channel, or create it if it does not exist. */
    l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
-      channel_new( l, l_name );
-      gamedata_init_client( &(l->gamedata) );
+      channel_new( l, l_name, FALSE );
       client_add_channel( c, l );
       channel_add_client( l, c );
       scaffold_print_info( "Client created local channel mirror: %s\n",
@@ -693,7 +697,7 @@ static void irc_client_join(
    bcatcstr( l_filename, ".tmx" );
    scaffold_check_null( l_filename );
 
-   client_request_file( c, l, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
+   client_request_file( c, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
 
 cleanup:
    bdestroy( l_filename );
@@ -725,28 +729,25 @@ static void irc_client_gamedatablock(
       * type_c;
    struct CHUNKER_PROGRESS progress;
 
-   irc_detect_malformed( 12, "GDB" );
+   irc_detect_malformed( 11, "GDB" );
 
-   l = client_get_channel_by_name( c, args->entry[3] );
-   scaffold_check_null( l );
-
-   scaffold_check_null( args->entry[6] );
-   type_c = bdata( args->entry[6] );
+   scaffold_check_null( args->entry[5] );
+   type_c = bdata( args->entry[5] );
    scaffold_check_null( type_c );
 
-   scaffold_check_null( args->entry[7] );
-   progress_c = bdata( args->entry[7] );
+   scaffold_check_null( args->entry[6] );
+   progress_c = bdata( args->entry[6] );
    scaffold_check_null( progress_c );
 
-   scaffold_check_null( args->entry[8] );
-   length_c = bdata( args->entry[8] );
+   scaffold_check_null( args->entry[7] );
+   length_c = bdata( args->entry[7] );
    scaffold_check_null( length_c );
 
-   scaffold_check_null( args->entry[9] );
-   total_c = bdata( args->entry[9] );
+   scaffold_check_null( args->entry[8] );
+   total_c = bdata( args->entry[8] );
    scaffold_check_null( total_c );
 
-   progress.filename = args->entry[5];
+   progress.filename = args->entry[4];
    filename_c = bdata( progress.filename );
    scaffold_check_null( filename_c );
 
@@ -755,10 +756,10 @@ static void irc_client_gamedatablock(
    progress.total = atoi( total_c );
    progress.type = (CHUNKER_DATA_TYPE)atoi( type_c );
 
-   progress.data = args->entry[11];
+   progress.data = args->entry[10];
    scaffold_check_null( progress.data );
 
-   gamedata_process_data_block( &(l->gamedata), c, &progress );
+   client_process_chunk( c, &progress );
 
 cleanup:
    return;
@@ -817,7 +818,7 @@ static void irc_client_mob(
 
    serial = atoi( serial_c );
 
-   o = vector_get( &(l->gamedata.mobiles), serial );
+   o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
       mobile_new( o );
       o->serial = serial;
@@ -839,7 +840,7 @@ static void irc_client_mob(
       client_set_puppet( c, o );
    }
 
-   vector_set( &(l->gamedata.mobiles), o->serial, o, TRUE );
+   vector_set( &(l->mobiles), o->serial, o, TRUE );
 
    scaffold_print_debug(
       "Client: Local instance of mobile updated: %s (%d)\n",

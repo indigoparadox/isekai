@@ -66,11 +66,14 @@ struct TILEMAP {
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width; /* For dungeons. */
    SCAFFOLD_SIZE window_step_height;
+   bstring lname;
    uint16_t sentinal;
 };
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
 #define TILEMAP_SERIALIZE_CHUNKSIZE 80
+
+#define TILEMAP_NAME_ALLOC 30
 
 #define TILEMAP_SENTINAL 1234
 

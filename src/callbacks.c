@@ -5,6 +5,7 @@
 #include "server.h"
 #include "proto.h"
 #include "chunker.h"
+#include "tilemap.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
@@ -189,22 +190,18 @@ cleanup:
 }
 
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
-   struct CHANNEL_CLIENT* lc = (struct CHANNEL_CLIENT*)arg;
+   struct CLIENT* c = (struct CLIENT*)arg;
 
-   client_request_file(
-      lc->c, lc->l,
-      CHUNKER_DATA_TYPE_TILESET_IMG,
-      key
-   );
+   client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
 
    return NULL;
 }
 
 void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
-   struct CHANNEL_CLIENT* lc = (struct CHANNEL_CLIENT*)arg;
+   struct CLIENT* c = (struct CLIENT*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
-   return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, lc );
+   return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, c );
 }
 
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
@@ -247,7 +244,7 @@ void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) 
    struct CHANNEL* l = (struct CHANNEL*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
 
-   vector_iterate( &(l->gamedata.mobiles), callback_send_mobs_to_client, c );
+   vector_iterate( &(l->mobiles), callback_send_mobs_to_client, c );
 
    return NULL;
 }

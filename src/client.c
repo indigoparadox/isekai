@@ -4,8 +4,10 @@
 #include "callbacks.h"
 #include "proto.h"
 #include "chunker.h"
+#include "input.h"
+#include "tilemap.h"
 
-extern struct tagbstring str_gamedata_cache_path;
+static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 
 static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
@@ -20,6 +22,8 @@ static void client_cleanup( const struct REF *ref ) {
    bdestroy( c->remote );
    bdestroy( c->username );
    client_clear_puppet( c );
+   hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+   hashmap_cleanup( &(c->sprites) );
 
 #ifdef DEBUG
    deleted =
@@ -60,6 +64,7 @@ void client_init( struct CLIENT* c ) {
    ref_init( &(c->link.refcount), client_cleanup );
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
+   hashmap_init( &(c->sprites) );
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -92,10 +97,13 @@ cleanup:
 }
 
 /* This runs on the local client. */
-void client_update( struct CLIENT* c ) {
+void client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
+   struct CHANNEL* l = NULL;
 
    scaffold_set_client();
+
+   /* FIXME: Merge the next two loops. */
 
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
@@ -115,6 +123,35 @@ void client_update( struct CLIENT* c ) {
       irc_command_free( cmd );
    }
 
+   /* Do drawing. */
+   l = hashmap_get_first( &(c->channels) );
+   if( NULL == l ) {
+      /* TODO: What to display when no channel is up? */
+      goto cleanup;
+   }
+
+   if( NULL == twindow ) {
+      /* TODO: Free this, somehow. */
+      twindow = calloc( 1, sizeof( struct GRAPHICS_TILE_WINDOW ) );
+   }
+
+   twindow->width = 640 / 32;
+   twindow->height = 480 / 32;
+   twindow->g = g;
+   twindow->t = l->tilemap;
+
+   if( NULL != l->tilemap && TILEMAP_SENTINAL == l->tilemap->sentinal ) {
+      tilemap_draw_ortho( l->tilemap, g, twindow );
+   } else {
+      /* TODO: Loading... */
+   }
+
+   client_poll_input( c );
+
+   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+      graphics_flip_screen( g );
+
+cleanup:
    return;
 }
 
@@ -134,13 +171,19 @@ void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
 
 void client_join_channel( struct CLIENT* c, const bstring name ) {
    bstring buffer = NULL;
+   int bstr_retval;
    /* We won't record the channel in our list until the server confirms it. */
 
    scaffold_set_client();
 
    buffer = bfromcstr( "JOIN " );
-   bconcat( buffer, name );
+   scaffold_check_null( buffer );
+   bstr_retval = bconcat( buffer, name );
+   scaffold_check_nonzero( bstr_retval );
+
    client_send( c, buffer );
+
+cleanup:
    bdestroy( buffer );
 }
 
@@ -197,7 +240,7 @@ cleanup:
 }
 
 void client_send_file(
-   struct CLIENT* c, const bstring channel, CHUNKER_DATA_TYPE type,
+   struct CLIENT* c, CHUNKER_DATA_TYPE type,
    const bstring serverpath, const bstring filepath
 ) {
    struct CHUNKER* h = NULL;
@@ -213,7 +256,6 @@ void client_send_file(
 
    chunker_chunk_start_file(
       h,
-      channel,
       type,
       serverpath,
       filepath,
@@ -250,34 +292,158 @@ void client_clear_puppet( struct CLIENT* c ) {
 }
 
 void client_request_file(
-   struct CLIENT* c, struct CHANNEL* l, CHUNKER_DATA_TYPE type,
-   const bstring filename
+   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 ) {
    struct CHUNKER* h = NULL;
 
-   hashmap_lock( &(l->gamedata.incoming_chunkers), TRUE );
+   hashmap_lock( &(c->chunkers), TRUE );
 
-   if( FALSE != hashmap_contains_key_nolock( &(l->gamedata.incoming_chunkers), filename ) ) {
+   if( FALSE != hashmap_contains_key_nolock( &(c->chunkers), filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
 
-   h = hashmap_get_nolock( &(l->gamedata.incoming_chunkers), filename );
+   h = hashmap_get_nolock( &(c->chunkers), filename );
    if( NULL == h ) {
       /* Create a chunker and get it started, since one is not in progress. */
       /* TODO: Verify cached file hash from server. */
       h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
       chunker_unchunk_start(
-         h, l->name, type, filename,
-         &str_gamedata_cache_path
+         h, type, filename, &str_chunker_cache_path
       );
-      hashmap_put_nolock( &(l->gamedata.incoming_chunkers), filename, h );
+      hashmap_put_nolock( &(c->chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
 
-      client_printf( c, "GRF %d %b %b", type, l->name, filename );
+      proto_request_file( c, filename, type );
    }
 
 cleanup:
-   hashmap_lock( &(l->gamedata.incoming_chunkers), FALSE );
+   hashmap_lock( &(c->chunkers), FALSE );
    return;
+}
+
+void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
+   struct CHUNKER* h = NULL;
+   //struct CHANNEL* l = NULL;
+   int8_t chunker_percent;
+
+   scaffold_assert( 0 < blength( cp->data ) );
+   scaffold_assert( 0 < blength( cp->filename ) );
+
+   if( cp->current > cp->total ) {
+      scaffold_print_error( "Invalid progress for %s.\n", bdata( cp->filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   /*
+   if( 0 < d->incoming_buffer_len && d->incoming_buffer_len != progress->total ) {
+      scaffold_print_error( "Invalid total for %s.\n", bdata( progress->filename ) );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+   */
+
+   h = hashmap_get( &(c->chunkers), cp->filename );
+   if( NULL == h ) {
+      scaffold_print_error(
+         "Client: Invalid data block received (I didn't ask for this?): %s\n",
+         bdata( cp->filename )
+      )
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   chunker_unchunk_pass( h, cp->data, cp->current, cp->total, cp->chunk_size );
+
+   chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
+   if( 0 < chunker_percent ) {
+      scaffold_print_debug( "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
+   }
+
+   if( chunker_unchunk_finished( h ) ) {
+      /* Cached file found, so abort transfer. */
+      if( chunker_unchunk_cached( h ) ) {
+         proto_abort_chunker( c, h );
+      }
+
+      client_handle_finished_chunker( c, h );
+   }
+
+cleanup:
+   return;
+}
+
+void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
+   struct CHANNEL* l = NULL;
+   GRAPHICS* g = NULL;
+   struct TILEMAP_TILESET* set = NULL;
+   struct TILEMAP* t = NULL;
+
+   assert( TRUE == chunker_unchunk_finished( h ) );
+
+   switch( h->type ) {
+   case CHUNKER_DATA_TYPE_TILEMAP:
+      tilemap_new( t, TRUE );
+
+#ifdef USE_EZXML
+      datafile_parse_tilemap_ezxml( t, (BYTE*)h->raw_ptr, h->raw_length, TRUE );
+#endif /* USE_EZXML */
+
+      l = client_get_channel_by_name( c, t->lname );
+      scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
+
+      /* Go through the parsed tilemap and load graphics. */
+      hashmap_iterate( &(t->tilesets), callback_proc_tileset_imgs, c );
+
+      scaffold_print_info(
+         "Client: Tilemap for %s successfully loaded into cache.\n", bdata( l->name )
+      );
+      break;
+
+   case CHUNKER_DATA_TYPE_TILESET_IMG:
+      graphics_surface_new( g, 0, 0, 0, 0 );
+      scaffold_check_null( g );
+      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
+      scaffold_assert( NULL != t );
+      set = hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, h->filename );
+      scaffold_check_null( set )
+      hashmap_put( &(set->images), h->filename, g );
+      scaffold_print_info(
+         "Client: Tilemap image %s successfully loaded into cache.\n",
+         bdata( h->filename )
+      );
+      break;
+
+   case CHUNKER_DATA_TYPE_MOBSPRITES:
+      graphics_surface_new( g, 0, 0, 0, 0 );
+      scaffold_check_null( g );
+      //graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      scaffold_check_null( g->surface );
+      hashmap_put( &(c->sprites), h->filename, g );
+      scaffold_print_info(
+         "Client: Mobile spritesheet %s successfully loaded into cache.\n",
+         bdata( h->filename )
+      );
+      break;
+   }
+
+cleanup:
+   return;
+}
+
+void client_poll_input( struct CLIENT* c ) {
+   struct INPUT input;
+
+   input_get_event( &input );
+
+   if( INPUT_TYPE_KEY == input.type ) {
+      switch( input.character ) {
+      case 'q':
+         scaffold_set_client();
+         client_stop( c );
+         break;
+      }
+   }
 }
