@@ -22,6 +22,7 @@ main_add_test_proto( syncbuff );
 int main( void ) {
    int number_failed = 0;
 
+   main_add_test( syncbuff );
    main_add_test( vector );
    main_add_test( b64 );
    //main_add_test( connection );
@@ -29,7 +30,6 @@ int main( void ) {
    //main_add_test( client );
    main_add_test( hashmap );
    main_add_test( chunker );
-   main_add_test( syncbuff );
 
    return( number_failed == 0 ) ? 0 : 1;
 }

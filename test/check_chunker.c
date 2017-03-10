@@ -21,7 +21,32 @@ BYTE* chunker_imgdata = NULL;
 SCAFFOLD_SIZE chunker_imgsize;
 
 void check_chunker_setup_unchecked() {
+   bstring cache_file_path = NULL;
+   FILE* cache_file;
 
+   cache_file_path = bstrcpy( &chunker_test_cachepath );
+   scaffold_join_path( cache_file_path, &chunker_test_map_filename );
+   cache_file = fopen( cache_file_path->data, "r" );
+   if( NULL != cache_file ) {
+      /* Delete it! */
+      scaffold_print_info( "Deleting cached test tilemap...\n" );
+      fclose( cache_file );
+      cache_file = NULL;
+      unlink( cache_file_path->data );
+   }
+
+   bassign( cache_file_path, &chunker_test_cachepath );
+   scaffold_join_path( cache_file_path, &chunker_test_img_filename );
+   cache_file = fopen( cache_file_path->data, "r" );
+   if( NULL != cache_file ) {
+      /* Delete it! */
+      scaffold_print_info( "Deleting cached test image...\n" );
+      fclose( cache_file );
+      cache_file = NULL;
+      unlink( cache_file_path->data );
+   }
+
+   /* Prepare the original data. */
    scaffold_read_file_contents( &chunker_test_map_filename, &chunker_mapdata, &chunker_mapsize );
    scaffold_read_file_contents( &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
 
@@ -240,13 +265,17 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, &chunker_test_map_filename );
+   scaffold_error_silent = TRUE;
    scaffold_read_file_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
    );
+   scaffold_error_silent = FALSE;
 
-   ck_assert_int_eq( 0, scaffold_error );
+   if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
+      ck_abort_msg( "Unable to open cached tilemap file." );
+   }
    ck_assert_int_eq( cache_file_size, chunker_mapsize );
    ck_assert_int_eq(
       0,
@@ -257,20 +286,32 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    cache_file_contents = NULL;
    cache_file_size = 0;
 
-   bassigncstr( cache_file_path, &chunker_test_cachepath );
+   bassign( cache_file_path, &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, &chunker_test_img_filename );
+   scaffold_error_silent = TRUE;
    scaffold_read_file_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
    );
+   scaffold_error_silent = FALSE;
 
-   ck_assert_int_eq( 0, scaffold_error );
+   if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
+      ck_abort_msg( "Unable to open cached image file." );
+   }
    ck_assert_int_eq( cache_file_size, chunker_imgsize );
    ck_assert_int_eq(
       0,
       memcmp( cache_file_contents, chunker_imgdata, chunker_imgsize )
    );
+}
+END_TEST
+
+START_TEST( test_chunker_chunk_unchunk_tilemap_cached ) {
+}
+END_TEST
+
+START_TEST( test_chunker_chunk_unchunk_image_cached ) {
 }
 END_TEST
 

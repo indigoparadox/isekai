@@ -16,8 +16,8 @@
 
 #ifdef USE_SIZET
 #else
-typedef uint16_t SCAFFOLD_SIZE;
-typedef int16_t SCAFFOLD_SIZE_SIGNED;
+typedef uint32_t SCAFFOLD_SIZE;
+typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
 typedef enum _SYNCBUFF_DEST {

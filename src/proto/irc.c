@@ -74,14 +74,12 @@ void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
 ) {
-#ifdef USE_HEATSHRINK
    /* Note the starting point and progress for the client. */
    server_client_printf(
       c, ":server GDB %b %b TILEMAP %b %d %d %d %d : %b",
       c->nick, h->channel, filename, h->type, start_pos,
       h->tx_chunk_length, h->raw_length, data
    );
-#endif // USE_HEATSHRINK
 
 cleanup:
    return;
@@ -571,6 +569,7 @@ static void irc_server_gamerequestfile(
          client_send_file(
             c, args->entry[2], type, &str_gamedata_server_path, file_iter_short
          );
+         break;
       }
    }
 
