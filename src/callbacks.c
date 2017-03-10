@@ -160,9 +160,6 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
    bstring chunk_out = NULL;
    SCAFFOLD_SIZE start_pos = 0;
-#ifdef DEBUG
-   int bstr_result;
-#endif /* DEBUG */
 
    if( chunker_chunk_finished( h ) ) {
       goto cleanup;
@@ -178,9 +175,6 @@ cleanup:
 
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
-   //bstring xmit_buffer_template = NULL;
-   //struct VECTOR* chunks = NULL;
-   //bstring chunk_iter = NULL;
 
    /* Process some compression chunks. */
    hashmap_iterate_v( &(c->chunkers), callback_send_chunkers_l, c );
@@ -190,28 +184,7 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
       &(c->chunkers), callback_free_finished_chunkers, NULL
    );
 
-   #if 0
-   if( NULL == chunks ) {
-      goto cleanup; /* Silently. */
-   }
-
-   /* Send the processed chunks to the client. */
-   vector_remove_cb( chunks, callback_send_list_to_client, c );
-#endif // 0
-
 cleanup:
-   /*
-   chunk_iter = vector_get( chunks, 0 );
-   while( NULL != chunk_iter ) {
-      bdestroy( chunk_iter );
-      vector_remove( chunks, 0 );
-      vector_get( chunks, 0 );
-   }
-   if( NULL != chunks ) {
-      vector_free( chunks );
-   }
-   bdestroy( xmit_buffer_template );
-   */
    return NULL;
 }
 

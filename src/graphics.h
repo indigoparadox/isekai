@@ -9,8 +9,6 @@
 
 #define GRAPHICS_RASTER_EXTENSION ".bmp"
 
-typedef uint32_t gu;
-
 typedef enum {
    GRAPHICS_TRANSIT_FX_NONE,
    GRAPHICS_TRANSIT_FX_FADEIN,
@@ -25,10 +23,10 @@ typedef struct {
 } GRAPHICS_COLOR;
 
 typedef struct _GRAPHICS {
-   gu x;
-   gu y;
-   gu w;
-   gu h;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+   SCAFFOLD_SIZE w;
+   SCAFFOLD_SIZE h;
    void* surface;
    void* palette;
    void* font;
@@ -37,10 +35,10 @@ typedef struct _GRAPHICS {
 } GRAPHICS;
 
 typedef struct {
-   gu x;
-   gu y;
-   gu w;
-   gu h;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+   SCAFFOLD_SIZE w;
+   SCAFFOLD_SIZE h;
 } GRAPHICS_RECT;
 
 struct GRAPHICS_TILE_WINDOW {
@@ -57,8 +55,8 @@ struct GRAPHICS_TILE_WINDOW {
     scaffold_check_null( g ); \
     graphics_surface_init( g, x, y, w, h );
 
-void graphics_screen_init( GRAPHICS* g, gu w, gu h );
-void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h );
+void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
@@ -73,15 +71,15 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len )
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
-void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text );
-void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h );
+void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text );
+void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
-void graphics_scale( GRAPHICS* g, gu w, gu h );
-void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
+void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
+void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
                     const GRAPHICS* src );
 void graphics_blit_partial(
-   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
 

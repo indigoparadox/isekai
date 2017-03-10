@@ -161,7 +161,7 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 
          sink_res = heatshrink_encoder_sink(
             h->encoder,
-            (uint8_t*)&(h->raw_ptr[h->raw_position]),
+            &(h->raw_ptr[h->raw_position]),
             raw_buffer_len,
             &consumed
          );
@@ -407,6 +407,7 @@ cleanup:
 
 void chunker_unchunk_save_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
+   SCAFFOLD_SIZE written;
 
    cache_filename = bstrcpy( h->filecache_path );
    scaffold_check_silence(); /* Caching disabled is a non-event. */
@@ -414,7 +415,13 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
 
    scaffold_join_path( cache_filename, h->filename );
 
-   scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
+   written =
+      scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
+   if( 0 >= written ) {
+      scaffold_print_error(
+         "Error writing cache file: %s\n", bdata( cache_filename )
+      );
+   }
 
 cleanup:
    scaffold_check_unsilence();

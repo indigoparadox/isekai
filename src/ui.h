@@ -31,8 +31,8 @@ struct UI {
    struct VECTOR windows;
 };
 
-void ui_window_init( struct UI_WINDOW* win, struct UI* ui, gu x, gu y, gu width, gu height );
-void ui_window_transform( struct UI_WINDOW* win, gu x, gu y, gu width, gu height );
+void ui_window_init( struct UI_WINDOW* win, struct UI* ui, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE width, SCAFFOLD_SIZE height );
+void ui_window_transform( struct UI_WINDOW* win, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE width, SCAFFOLD_SIZE height );
 void ui_init( struct UI* ui, GRAPHICS* screen );
 void ui_add_window( struct UI* ui, struct UI_WINDOW* win );
 void ui_lock_windows( struct UI* ui, BOOL lock );

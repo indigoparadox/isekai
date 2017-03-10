@@ -20,7 +20,7 @@
 #define SENTINAL 19691
 
 #ifndef BYTE
-typedef int8_t BYTE;
+typedef uint8_t BYTE;
 #endif /* BYTE */
 
 #ifndef BOOL
@@ -65,8 +65,8 @@ typedef enum {
 typedef size_t SCAFFOLD_SIZE;
 typedef ssize_t SCAFFOLD_SIZE_SIGNED;
 #else
-typedef unsigned long SCAFFOLD_SIZE;
-typedef long SCAFFOLD_SIZE_SIGNED;
+typedef uint32_t SCAFFOLD_SIZE;
+typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
 #ifdef SCAFFOLD_LOG_FILE

@@ -1,12 +1,12 @@
 #include "ui.h"
 
-void ui_window_init( struct UI_WINDOW* win, struct UI* ui, gu x, gu y, gu width, gu height ) {
+void ui_window_init( struct UI_WINDOW* win, struct UI* ui, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE width, SCAFFOLD_SIZE height ) {
    win->ui = ui;
    win->title = bfromcstr( "" );
    graphics_surface_init( &(win->element), x, y, width, height );
 }
 
-void ui_window_transform( struct UI_WINDOW* win, gu x, gu y, gu width, gu height ) {
+void ui_window_transform( struct UI_WINDOW* win, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE width, SCAFFOLD_SIZE height ) {
    win->element.x = x;
    win->element.y = y;
    graphics_scale( &(win->element), width, height );

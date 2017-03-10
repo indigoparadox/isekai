@@ -5,7 +5,7 @@
 #define GFX_TEXT_DIVISOR_W 8
 #define GFX_TEXT_DIVISOR_H 20
 
-static void graphics_translate( gu* x, gu* y ) {
+static void graphics_translate( SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y ) {
    *x /= GFX_TEXT_DIVISOR_W;
    *y /= GFX_TEXT_DIVISOR_H;
 }
@@ -22,15 +22,17 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
    /* TODO: Free surface. */
 }
 
-void graphics_screen_init( GRAPHICS* g, gu w, gu h ) {
+void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    ref_init( &(g->refcount), graphics_surface_cleanup );
    initscr();
    noecho();
    raw();
 }
 
-void graphics_surface_init( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
-   ref_init( &(g->refcount), graphics_surface_cleanup );
+void graphics_surface_init(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w,
+   SCAFFOLD_SIZE h
+) {
    graphics_translate( &x, &y );
    g->surface = newwin( w, h, 0, 0 );
    g->w = w;
@@ -69,12 +71,12 @@ void graphics_set_image_data(
 ) {
 }
 
-void graphics_draw_text( GRAPHICS* g, gu x, gu y, const bstring text ) {
+void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
    graphics_translate( &x, &y );
    mvprintw( y, x, "%s", bdata( text ) );
 }
 
-void graphics_draw_rect( GRAPHICS* g, gu x, gu y, gu w, gu h ) {
+void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
@@ -88,17 +90,17 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 
 }
 
-void graphics_scale( GRAPHICS* g, gu w, gu h ) {
+void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
-void graphics_blit( GRAPHICS* g, gu x, gu y, gu s_w, gu s_h,
+void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
                     const GRAPHICS* src ) {
 
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, gu x, gu y, gu s_x, gu s_y, gu s_w, gu s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
 }
 
