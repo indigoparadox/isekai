@@ -378,7 +378,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
 
    /* Autodetect image type. */
    g->surface = load_bmp_pf( fmem, (RGB*)g->palette );
-   scaffold_assert( NULL != g->surface );
+   //scaffold_assert( NULL != g->surface );
 
 #ifdef ALLEGRO_EXPORT_PALETTE
    graphics_export_palette();splitdebug

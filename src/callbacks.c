@@ -15,6 +15,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    const IRC_COMMAND* table = NULL;
    /* TODO: Factor this out. */
    BOOL is_client = FALSE;
+   int bstr_result;
 
    /* Figure out if we're being called from a client or server. */
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
@@ -33,7 +34,8 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
       buffer = bfromcstralloc( CONNECTION_BUFFER_LEN, "" );
    } else {
       bwriteallow( (*buffer) ); /* Unprotect the buffer. */
-      btrunc( buffer, 0 );
+      bstr_result = btrunc( buffer, 0 );
+      scaffold_check_nonzero( bstr_result );
    }
 
    /* Get the next line and clean it up. */
@@ -169,7 +171,6 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    chunk_out = bfromcstralloc( CHUNKER_DEFAULT_CHUNK_SIZE, "" );
    start_pos = chunker_chunk_pass( h, chunk_out );
    proto_send_chunk( c, h, start_pos, key, chunk_out );
-
 
 cleanup:
    return NULL;

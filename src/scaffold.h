@@ -75,11 +75,19 @@ typedef enum {
 typedef size_t SCAFFOLD_SIZE;
 typedef ssize_t SCAFFOLD_SIZE_SIGNED;
 #else
-typedef uint16_t SCAFFOLD_SIZE;
-typedef int16_t SCAFFOLD_SIZE_SIGNED;
+typedef uint32_t SCAFFOLD_SIZE;
+typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
-#ifndef USE_LOGFILE
+#ifdef SCAFFOLD_LOG_FILE
+#ifndef SCAFFOLD_C
+extern FILE* scaffold_log_handle;
+extern FILE* scaffold_log_handle_err;
+#endif // SCAFFOLD_C
+#else
+#define scaffold_log_handle stdout
+#define scaffold_log_handle_err stderr
+#endif /* SCAFFOLD_LOG_FILE */
 
 #define scaffold_print_info( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle );
 #define scaffold_print_error( ... ) fprintf( scaffold_log_handle_err, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle_err );
@@ -114,16 +122,6 @@ typedef int16_t SCAFFOLD_SIZE_SIGNED;
 #define scaffold_set_server()
 
 #endif /* DEBUG */
-
-#else
-
-/* TODO: Setup a logfile. */
-
-#define scaffold_print_info( ... )
-#define scaffold_print_error( ... )
-#define scaffold_print_debug( ... )
-
-#endif /* USE_LOGFILE */
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
@@ -221,12 +219,12 @@ void scaffold_printf_debug( const char* message, ... );
 #endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
-ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
+SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
 #ifdef __GNUC__
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
-ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs )
+SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs )
 #ifdef __GNUC__
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
@@ -250,8 +248,6 @@ void scaffold_join_path( bstring path1, bstring path2 );
 #ifndef SCAFFOLD_C
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;
-extern FILE* scaffold_log_handle;
-extern FILE* scaffold_log_handle_err;
 #endif /* DEBUG */
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;

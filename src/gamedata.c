@@ -8,6 +8,7 @@
 #include "datafile.h"
 #include "input.h"
 #include "callbacks.h"
+#include "proto.h"
 
 struct tagbstring str_gamedata_cache_path =
    bsStatic( "testdata/livecache" );
@@ -272,7 +273,7 @@ void gamedata_process_finished_chunker(
    case CHUNKER_DATA_TYPE_MOBSPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
       scaffold_check_null( g );
-      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      //graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null( g->surface );
       hashmap_put( &(d->mob_sprites), h->filename, g );
       scaffold_print_info(

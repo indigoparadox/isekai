@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef _WIN32
 #include "wdirent.h"
@@ -19,9 +20,12 @@ struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
+#endif /* DEBUG */
+
+#ifdef SCAFFOLD_LOG_FILE
 FILE* scaffold_log_handle = NULL;
 FILE* scaffold_log_handle_err = NULL;
-#endif /* DEBUG */
+#endif /* SCAFFOLD_LOG_FILE */
 
 int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;
@@ -197,14 +201,19 @@ cleanup:
 
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len ) {
    SCAFFOLD_SIZE i;
-   btrunc( rand_str, 0 );
+   int bstr_result;
+   bstr_result = btrunc( rand_str, 0 );
+   scaffold_check_nonzero( bstr_result );
    for( i = 0; len > i ; i++ ) {
-      bconchar(
+      bstr_result = bconchar(
          rand_str,
          scaffold_random_chars
             [rand() % (int)(sizeof( scaffold_random_chars )-1)]
       );
+      scaffold_check_nonzero( bstr_result );
    }
+cleanup:
+   return;
 }
 
 /** \brief Provide a block of memory that contains a given file's contents.
@@ -217,9 +226,14 @@ void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len ) {
  *
  */
 
-ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
-   FILE* inputfile = NULL;
-   ssize_t sz_out = -1;
+SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
+   int inputfd = -1;
+   SCAFFOLD_SIZE_SIGNED sz_out = -1;
+   SCAFFOLD_SIZE_SIGNED sz_last = -1;
+   struct stat inputstat;
+#ifdef DEBUG
+   char* path_c = NULL;
+#endif /* DEBUG */
 
    if( NULL != *buffer ) {
       free( *buffer );
@@ -231,30 +245,39 @@ ssize_t scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE*
    /* TODO: Implement mmap() */
 
    scaffold_check_null( path );
+#ifdef DEBUG
+   path_c = bdata( path );
+   scaffold_print_debug( "Reading from path: %s\n", path_c );
+#endif /* DEBUG */
 
-   inputfile = fopen( bdata( path ), "rb" );
-   scaffold_check_null( inputfile );
+   inputfd = open( bdata( path ), O_RDONLY );
+   if( 0 > inputfd ) {
+      scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
+      goto cleanup;
+   }
 
    /* Allocate enough space to hold the file. */
-   fseek( inputfile, 0, SEEK_END );
-   *len = ftell( inputfile );
-   *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) + 1 ); /* +1 for term. */
+   if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
+      scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
+      goto cleanup;
+   }
+   *len = inputstat.st_size;
+   *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) );
    scaffold_check_null( *buffer );
-   fseek( inputfile, 0, SEEK_SET );
 
    /* Read and close the file. */
-   sz_out = fread( *buffer, sizeof( BYTE ), *len, inputfile );
+   sz_out = read( inputfd, *buffer, *len );
    scaffold_check_zero( sz_out );
    scaffold_assert( sz_out == *len );
 
 cleanup:
-   if( NULL != inputfile ) {
-      fclose( inputfile );
+   if( 0 <= inputfd ) {
+      close( inputfd );
    }
    return sz_out;
 }
 
-ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs ) {
+SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs ) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
@@ -262,7 +285,7 @@ ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL m
    SCAFFOLD_SIZE true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
-   ssize_t sz_out = -1;
+   SCAFFOLD_SIZE_SIGNED sz_out = -1;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
@@ -297,7 +320,11 @@ ssize_t scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL m
          scaffold_print_info(
             "Creating missing directory: %s\n", path_c
          );
+#ifdef WIN32
+         CreateDirectory( path_c, NULL );
+#else
          scaffold_check_nonzero( mkdir( path_c, 0 ) );
+#endif // WIN32
       }
 
       bdestroy( test_path );
@@ -333,6 +360,7 @@ void scaffold_list_dir(
    char* path_c = NULL;
    DIR* dir = NULL;
    struct dirent* entry = NULL;
+   int bstr_result;
 
    path_c = bdata( path );
    scaffold_check_null( path_c );
@@ -354,9 +382,11 @@ void scaffold_list_dir(
       scaffold_check_null( child_path );
 
       if( '/' != bchar( child_path, blength( child_path ) - 1 ) ) {
-         bconchar( child_path, '/' );
+         bstr_result = bconchar( child_path, '/' );
+         scaffold_check_nonzero( bstr_result );
       }
-      bcatcstr( child_path, entry->d_name );
+      bstr_result = bcatcstr( child_path, entry->d_name );
+      scaffold_check_nonzero( bstr_result );
 
       /* FIXME: Detect directories under Windows. */
 #ifndef _WIN32

@@ -9,10 +9,8 @@
 #include "b64.h"
 #endif /* USE_B64 */
 
-#ifdef USE_HEATSHRINK
 #include "heatshrink/heatshrink_decoder.h"
 #include "heatshrink/heatshrink_encoder.h"
-#endif /* USE_HEATSHRINK */
 
 #define CHUNKER_WINDOW_SIZE 14
 #define CHUNKER_LOOKAHEAD_SIZE 8
@@ -57,17 +55,13 @@ typedef struct _CHUNKER_TRACK {
 
 struct CHUNKER {
    struct REF refcount;
-#ifdef USE_HEATSHRINK
    heatshrink_encoder* encoder;
    heatshrink_decoder* decoder;
    SCAFFOLD_SIZE raw_position;
-#endif /* USE_HEATSHRINK */
    SCAFFOLD_SIZE raw_length;
    BYTE* raw_ptr;
-#ifdef USE_HEATSHRINK
    SCAFFOLD_SIZE tx_chunk_length;
    BOOL force_finish;
-#endif /* USE_HEATSHRINK */
    bstring channel;
    CHUNKER_DATA_TYPE type;
    struct VECTOR tracks;
