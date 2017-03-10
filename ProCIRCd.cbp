@@ -27,86 +27,6 @@
 					<Add option="-s" />
 				</Linker>
 			</Target>
-			<Target title="Debug (Linux-Curses)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-pg" />
-					<Add option="-g" />
-					<Add option="-DUSE_CURSES" />
-					<Add option="-DDEBUG" />
-				</Compiler>
-				<Linker>
-					<Add option="-pg" />
-					<Add library="curses" />
-				</Linker>
-			</Target>
-			<Target title="Debug (Linux-Curses-Threaded)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-g" />
-					<Add option="-DGFX_CURSES" />
-					<Add option="-DSCH_PTHREAD" />
-				</Compiler>
-				<Linker>
-					<Add library="curses" />
-					<Add library="pthread" />
-				</Linker>
-			</Target>
-			<Target title="Debug (Linux-Allegro4)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-Wshadow" />
-					<Add option="-Winit-self" />
-					<Add option="-Wredundant-decls" />
-					<Add option="-Wcast-align" />
-					<Add option="-Winline" />
-					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
-					<Add option="-pg" />
-					<Add option="-g" />
-					<Add option="-std=gnu99" />
-					<Add option="-DUSE_ALLEGRO" />
-					<Add option="-DDEBUG" />
-					<Add option="-DxUSE_ALLEGRO_PNG" />
-					<Add option="-DxUSE_NETWORK" />
-					<Add option="-DxDEBUG_NETWORK" />
-					<Add option="-DUSE_SYNCBUFF" />
-					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DUSE_HEATSHRINK" />
-					<Add option="-DUSE_B64" />
-				</Compiler>
-				<Linker>
-					<Add option="-pg" />
-					<Add library="alleg" />
-				</Linker>
-			</Target>
-			<Target title="Debug (Linux-NoUI)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-pg" />
-					<Add option="-g" />
-					<Add option="-DDEBUG" />
-				</Compiler>
-				<Linker>
-					<Add option="-pg" />
-				</Linker>
-			</Target>
 			<Target title="Check (Linux)">
 				<Option platforms="Unix;" />
 				<Option output="bin/Test/ProCIRCdCheck" prefix_auto="1" extension_auto="1" />
@@ -147,7 +67,11 @@
 					<Add option="-pedantic" />
 					<Add option="-pg" />
 					<Add option="-g" />
-					<Add option="-Wstack-protector -fstack-protector-all -fsanitize=undefined -ggdb3 -fvar-tracking" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-ggdb3" />
+					<Add option="-fvar-tracking" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
@@ -165,28 +89,103 @@
 					<Add library="ubsan" />
 				</Linker>
 			</Target>
-			<Target title="Debug (Linux-TCC)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug-TCC/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="tcc" />
+			<Target title="Debug (MingW32)">
+				<Option platforms="Windows;Unix;" />
+				<Option output="bin/Debug-MingW32/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-MingW32/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Wall" />
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
 					<Add option="-g" />
-					<Add option="-DDEBUG" />
+					<Add option="-std=gnu99" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-ggdb3" />
+					<Add option="-fvar-tracking" />
 					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DxUSE_HEATSHRINK" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
+					<Add option="-pg" />
 					<Add library="alleg" />
+					<Add library="ubsan" />
+				</Linker>
+			</Target>
+			<Target title="Debug (Linux-Curses)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-DUSE_CURSES" />
+					<Add option="-DDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="curses" />
+				</Linker>
+			</Target>
+			<Target title="Debug (Linux-Allegro4)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-std=gnu99" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-ggdb3" />
+					<Add option="-fvar-tracking" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DxUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DxUSE_HEATSHRINK" />
+					<Add option="-DUSE_CHUNKS" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="alleg" />
+					<Add library="ubsan" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option output="bin/Debug-CLANG/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-CLANG/" />
 				<Option type="1" />
 				<Option compiler="clang" />
 				<Compiler>
@@ -209,6 +208,40 @@
 				<Linker>
 					<Add library="alleg" />
 					<Add library="loadpng" />
+				</Linker>
+			</Target>
+			<Target title="Debug (Linux-Allegro4-TCC)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug-TCC/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-TCC/" />
+				<Option type="1" />
+				<Option compiler="tcc" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DxUSE_ALLEGRO_PNG" />
+					<Add option="-DUSE_SYNCBUFF" />
+				</Compiler>
+				<Linker>
+					<Add library="alleg" />
+				</Linker>
+			</Target>
+			<Target title="Debug (Linux-Curses-Threaded)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DGFX_CURSES" />
+					<Add option="-DSCH_PTHREAD" />
+				</Compiler>
+				<Linker>
+					<Add library="curses" />
+					<Add library="pthread" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -278,11 +311,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
@@ -290,11 +323,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
@@ -311,8 +344,29 @@
 		<Unit filename="src/channel.h" />
 		<Unit filename="src/chunker.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
-		<Unit filename="src/chunker.h" />
+		<Unit filename="src/chunker.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
+		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -338,7 +392,7 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 		</Unit>
@@ -349,7 +403,6 @@
 		</Unit>
 		<Unit filename="src/graphics/null.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/hashmap.c">
@@ -362,11 +415,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_decoder.c">
 			<Option compilerVar="CC" />
@@ -375,11 +428,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_decoder.h">
 			<Option target="Debug" />
@@ -387,11 +440,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_encoder.c">
 			<Option compilerVar="CC" />
@@ -400,11 +453,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/heatshrink/heatshrink_encoder.h">
 			<Option target="Debug" />
@@ -412,18 +465,18 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 		</Unit>
@@ -434,7 +487,6 @@
 		</Unit>
 		<Unit filename="src/input/null.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Check (Linux)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.c">
@@ -448,11 +500,11 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NoUI)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-TCC)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (MingW32)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
