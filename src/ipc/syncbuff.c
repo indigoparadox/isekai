@@ -105,10 +105,10 @@ uint8_t syncbuff_accept() {
 }
 
 /* Push a line down onto the top. */
-ssize_t syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    int bstr_result;
-   ssize_t i;
-   ssize_t size_out = -1;
+   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE_SIGNED size_out = -1;
 
    syncbuff_assert( NULL != line );
 
@@ -160,9 +160,9 @@ cleanup:
 }
 
 /* Pull a line off the bottom. */
-ssize_t syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
    int  bstr_result;
-   ssize_t size_out = -1;
+   SCAFFOLD_SIZE_SIGNED size_out = -1;
 
    syncbuff_assert( NULL != buffer );
    btrunc( buffer, 0 );

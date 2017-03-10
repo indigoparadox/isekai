@@ -423,7 +423,7 @@ cleanup:
 
 void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
-   ssize_t sz_read = -1;
+   SCAFFOLD_SIZE_SIGNED sz_read = -1;
 
    cache_filename = bstrcpy( h->filecache_path );
    scaffold_check_null( cache_filename );
