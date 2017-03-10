@@ -15,9 +15,6 @@ static void server_cleanup( const struct REF* ref ) {
 #endif /* DEBUG */
 
    if( TRUE == client_free( &(s->self) ) ) {
-      bdestroy( s->version );
-      bdestroy( s->servername );
-
       /* Remove clients. */
 #ifdef DEBUG
       deleted =
@@ -43,8 +40,6 @@ void server_init( SERVER* s, const bstring myhost ) {
    client_init( &(s->self) );
    s->self.link.refcount.gc_free = server_cleanup;
    hashmap_init( &(s->clients) );
-   s->servername =  blk2bstr( bsStaticBlkParms( "ProCIRCd" ) );
-   s->version = blk2bstr(  bsStaticBlkParms( "0.1" ) );
 
    /* Setup the jobs mailbox. */
    s->self.sentinal = SERVER_SENTINAL;
