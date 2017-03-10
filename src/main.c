@@ -35,10 +35,8 @@ int main( int argc, char** argv ) {
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
 
-#if !defined( USE_CURSES ) || (defined( USE_CURSES ) && !defined( DEBUG ))
    graphics_screen_init( &g, 640, 480 );
    scaffold_check_nonzero( scaffold_error );
-#endif /* DEBUG */
    input_init( &p );
    ui_init( &ui, &g );
 
