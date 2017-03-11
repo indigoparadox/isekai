@@ -6,7 +6,7 @@
 
 static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
-   char* channel_c = NULL;
+   const char* channel_c = NULL;
    int bstr_retval;
 
    scaffold_check_null( xml_props );
@@ -103,7 +103,8 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
    struct TILEMAP_TILE_DATA* tile_info = NULL;
    struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    struct bstrList* terrain_list = NULL;
-   int i;
+   int i,
+      bstr_retval;
 
    scaffold_error = 0;
 
@@ -131,7 +132,8 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
    scaffold_check_null( xml_attr );
    set->tileheight = atoi( xml_attr );
 
-   bassigncstr( buffer, ezxml_attr( xml_tileset, "name" ) );
+   bstr_retval = bassigncstr( buffer, ezxml_attr( xml_tileset, "name" ) );
+   scaffold_check_nonzero( bstr_retval );
    hashmap_put( &(t->tilesets), buffer, set );
 
    while( NULL != xml_image ) {
@@ -153,9 +155,11 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
 
       xml_attr = ezxml_attr( xml_terrain, "name" );
       scaffold_check_null( xml_attr );
-      bassigncstr( buffer, xml_attr );
+      bstr_retval = bassigncstr( buffer, xml_attr );
+      scaffold_check_nonzero( bstr_retval );
 
       terrain_info->name = bstrcpy( buffer );
+      scaffold_check_null( terrain_info->name );
 
       scaffold_print_debug( "Loaded terrain: %s\n", bdata( buffer ) );
 
@@ -188,7 +192,8 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
       scaffold_check_null( xml_attr );
 
       /* Parse the terrain attribute. */
-      bassigncstr( buffer, xml_attr );
+      bstr_retval = bassigncstr( buffer, xml_attr );
+      scaffold_check_nonzero( bstr_retval );
       terrain_list = bsplit( buffer, ',' );
       scaffold_check_null( terrain_list );
       for( i = 0 ; 4 > i ; i++ ) {
@@ -269,6 +274,8 @@ void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFO
       xml_props = NULL,
       xml_tileset = NULL,
       xml_data = NULL;
+
+   scaffold_assert( strlen( tmdata ) == datasize );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );

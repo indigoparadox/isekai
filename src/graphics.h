@@ -15,12 +15,30 @@ typedef enum {
    GRAPHICS_TRANSIT_FX_FADEOUT
 } GRAPHICS_TRANSIT_FX;
 
-typedef struct {
-   uint8_t r;
-   uint8_t g;
-   uint8_t b;
-   uint8_t a;
+typedef enum GRAPHICS_COLOR {
+   GRAPHICS_COLOR_TRANSPARENT,
+   GRAPHICS_COLOR_DARK_BLUE,
+   GRAPHICS_COLOR_DARK_GREEN,
+   GRAPHICS_COLOR_DARK_CYAN,
+   GRAPHICS_COLOR_DARK_RED,
+   GRAPHICS_COLOR_BROWN,
+   GRAPHICS_COLOR_GRAY,
+   GRAPHICS_COLOR_DARK_GRAY,
+   GRAPHICS_COLOR_BLUE,
+   GRAPHICS_COLOR_GREEN,
+   GRAPHICS_COLOR_CYAN,
+   GRAPHICS_COLOR_RED,
+   GRAPHICS_COLOR_MAGENTA,
+   GRAPHICS_COLOR_YELLOW,
+   GRAPHICS_COLOR_WHITE
 } GRAPHICS_COLOR;
+
+struct GRAPHICS_BITMAP {
+   SCAFFOLD_SIZE w;
+   SCAFFOLD_SIZE h;
+   SCAFFOLD_SIZE pixels_sz;
+   GRAPHICS_COLOR* pixels;
+};
 
 typedef struct _GRAPHICS {
    SCAFFOLD_SIZE x;
@@ -42,6 +60,7 @@ typedef struct {
 } GRAPHICS_RECT;
 
 struct GRAPHICS_TILE_WINDOW {
+   struct CLIENT* c;
    GRAPHICS* g;
    struct TILEMAP* t;
    SCAFFOLD_SIZE x; /* In tiles. */
@@ -79,8 +98,17 @@ void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
                     const GRAPHICS* src );
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x,
+   SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
+void graphics_colors_to_surface(
+   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
+);
+
+void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );
+void graphics_bitmap_load(
+   const BYTE* data, SCAFFOLD_SIZE data_sz, struct GRAPHICS_BITMAP** bitmap_out
+);
 
 #endif /* GRAPHICS_H */

@@ -36,6 +36,7 @@ struct TILEMAP_TILESET {
    struct VECTOR tiles;
 };
 
+/*
 struct TILEMAP_POSITION {
    SCAFFOLD_SIZE x_previous;
    SCAFFOLD_SIZE y_previous;
@@ -45,6 +46,7 @@ struct TILEMAP_POSITION {
    SCAFFOLD_SIZE z;
    struct CLIENT* entity;
 };
+*/
 
 struct TILEMAP_LAYER {
    SCAFFOLD_SIZE x;
@@ -59,7 +61,9 @@ struct TILEMAP {
    SCAFFOLD_SIZE width;
    SCAFFOLD_SIZE height;
    struct HASHMAP layers;
+   /*
    struct VECTOR positions;
+   */
    struct HASHMAP tilesets;
    SCAFFOLD_SIZE starting_x;
    SCAFFOLD_SIZE starting_y;

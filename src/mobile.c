@@ -4,10 +4,14 @@
 
 #include "proto.h"
 #include "chunker.h"
+#include "hashmap.h"
 
 #define MOBILE_SPRITE_SIZE 32
+#define MOBILE_FRAME_MAX 500
 
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
+
+static uint8_t mobile_frame_counter = 0;
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
@@ -42,7 +46,29 @@ void mobile_init( struct MOBILE* o ) {
 }
 
 void mobile_animate( struct MOBILE* o ) {
+   if( NULL == o || 0 != mobile_frame_counter ) {
+      return;
+   }
+   switch( o->frame ) {
+   case MOBILE_FRAME_NONE:
+      o->frame = MOBILE_FRAME_RIGHT_FORWARD;
+      break;
+   case MOBILE_FRAME_RIGHT_FORWARD:
+      o->frame = MOBILE_FRAME_DEFAULT;
+      break;
+   case MOBILE_FRAME_DEFAULT:
+      o->frame = MOBILE_FRAME_LEFT_FORWARD;
+      break;
+   case MOBILE_FRAME_LEFT_FORWARD:
+      o->frame = MOBILE_FRAME_NONE;
+      break;
+   }
+}
 
+void mobile_frame_count() {
+   if( mobile_frame_counter++ > MOBILE_FRAME_MAX ) {
+      mobile_frame_counter = 0;
+   }
 }
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
@@ -53,12 +79,15 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
 
    scaffold_check_null( g_tileset );
 
+   /* TODO: Arbitrary animations for mobiles. */
+   /*
    if( 0 > frame ) {
       *y = (facing * MOBILE_SPRITE_SIZE) + (4 * MOBILE_SPRITE_SIZE);
    } else {
+   */
       *y = facing * MOBILE_SPRITE_SIZE;
-   }
-   *x = frame * MOBILE_SPRITE_SIZE;
+   //}
+   *x = (0 > frame ? 0 : frame) * MOBILE_SPRITE_SIZE;
 
 cleanup:
    return;
@@ -66,9 +95,6 @@ cleanup:
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
    SCAFFOLD_SIZE max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
-   struct CLIENT* c = NULL;
-   struct CHANNEL* l = NULL;
-   struct GAMEDATA* d = NULL;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -87,20 +113,13 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       goto cleanup;
    }
 
-#if 0
    /* If the current mobile spritesheet doesn't exist, then load it. */
-   if( NULL == o->sprites && NULL == hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
+   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
       /* No sprites and no request yet, so make one! */
-
-      /* Make some assumptions to tie us to the downloading client. */
-      l = scaffold_container_of( d, struct CHANNEL, gamedata );
-      scaffold_check_null( l );
-      c = hashmap_get_first( &(l->clients) );
-      scaffold_check_null( c );
-      client_request_file( c, l, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
+      client_request_file( twindow->c, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
       goto cleanup;
-   } else if( NULL == o->sprites && NULL != hashmap_get( &(d->mob_sprites), o->sprites_filename ) ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(d->mob_sprites), o->sprites_filename );
+   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
+      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
       ref_inc( &(o->sprites->refcount) );
    } else if( NULL == o->sprites ) {
       /* Sprites must not be ready yet. */
@@ -109,8 +128,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
-   pix_x = MOBILE_SPRITE_SIZE * (o->x - window->x);
-   pix_y = MOBILE_SPRITE_SIZE * (o->y - window->y);
+   pix_x = MOBILE_SPRITE_SIZE * (o->x - twindow->x);
+   pix_y = MOBILE_SPRITE_SIZE * (o->y - twindow->y);
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
@@ -119,13 +138,12 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    );
 
    graphics_blit_partial(
-      window->g,
+      twindow->g,
       pix_x, pix_y,
       sprite_x, sprite_y,
       MOBILE_SPRITE_SIZE, MOBILE_SPRITE_SIZE,
       o->sprites
    );
-#endif
 cleanup:
    return;
 }
