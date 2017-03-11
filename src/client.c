@@ -8,8 +8,6 @@
 #include "tilemap.h"
 #include "datafile.h"
 
-static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
-
 static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
@@ -123,36 +121,6 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       }
       irc_command_free( cmd );
    }
-
-   /* Do drawing. */
-   l = hashmap_get_first( &(c->channels) );
-   if( NULL == l ) {
-      /* TODO: What to display when no channel is up? */
-      goto cleanup;
-   }
-
-   if( NULL == twindow ) {
-      /* TODO: Free this, somehow. */
-      twindow = calloc( 1, sizeof( struct GRAPHICS_TILE_WINDOW ) );
-   }
-
-   twindow->width = 640 / 32;
-   twindow->height = 480 / 32;
-   twindow->g = g;
-   twindow->t = &(l->tilemap);
-   //ref_inc( &(l->refcount) );
-   twindow->c = c;
-
-   if( TILEMAP_SENTINAL == l->tilemap.sentinal ) {
-      tilemap_draw_ortho( twindow );
-   } else {
-      /* TODO: Loading... */
-   }
-
-   client_poll_input( c );
-
-   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
-      graphics_flip_screen( g );
 
 cleanup:
    //channel_free( l );
@@ -297,8 +265,8 @@ void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
       mobile_free( c->puppet );
       c->puppet = NULL;
    }
-   ref_inc(  &(o->refcount) ); /* Add first, to avoid deletion. */
    if( NULL != o ) {
+      ref_inc(  &(o->refcount) ); /* Add first, to avoid deletion. */
       if( NULL != o->owner ) {
          client_clear_puppet( o->owner );
       }

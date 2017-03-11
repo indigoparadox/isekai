@@ -329,7 +329,9 @@ void server_service_clients( SERVER* s ) {
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args );
       } else {
-         scaffold_print_error( "Server: Invalid command: %s\n", bdata( &(cmd->command) ) );
+         scaffold_print_error(
+            "Server: Invalid command: %s\n", bdata( &(cmd->command) )
+         );
       }
       irc_command_free( cmd );
    }
