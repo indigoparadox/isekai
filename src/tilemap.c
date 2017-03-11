@@ -169,15 +169,6 @@ cleanup:
    return NULL;
 }
 
-void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* window ) {
-
-   if( NULL == window->t ) {
-      window->t = t;
-   }
-   if( NULL == window->g ) {
-      window->g = g;
-   }
-
-   hashmap_iterate( &(t->layers), tilemap_layer_draw_cb, window );
-
+void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
+   hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
 }

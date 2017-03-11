@@ -139,11 +139,12 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
    twindow->width = 640 / 32;
    twindow->height = 480 / 32;
    twindow->g = g;
-   twindow->t = l->tilemap;
+   twindow->t = &(l->tilemap);
+   //ref_inc( &(l->refcount) );
    twindow->c = c;
 
-   if( NULL != l->tilemap && TILEMAP_SENTINAL == l->tilemap->sentinal ) {
-      tilemap_draw_ortho( l->tilemap, g, twindow );
+   if( TILEMAP_SENTINAL == l->tilemap.sentinal ) {
+      tilemap_draw_ortho( twindow );
    } else {
       /* TODO: Loading... */
    }
@@ -154,6 +155,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       graphics_flip_screen( g );
 
 cleanup:
+   //channel_free( l );
    return;
 }
 
@@ -409,16 +411,16 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
 
       l = client_get_channel_by_name( c, t->lname );
-      scaffold_assert( NULL != l );
       scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
 
-      if( NULL != l->tilemap ) {
-         tilemap_free( l->tilemap );
+      /* TODO: Find a more elegant way to do this. */
+      memcpy( &(l->tilemap), t, sizeof( struct TILEMAP ) );
+      if( NULL != t ) {
+         free( t );
       }
-      l->tilemap = t;
 
       /* Go through the parsed tilemap and load graphics. */
-      hashmap_iterate( &(t->tilesets), callback_proc_tileset_imgs, c );
+      hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
 
       scaffold_print_info(
          "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
@@ -433,8 +435,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          h->filename
       );
       scaffold_assert( NULL != l );
-      t = l->tilemap;
-      scaffold_assert( NULL != t );
+      t = &(l->tilemap);
 
       graphics_surface_new( g, 0, 0, 0, 0 );
       scaffold_check_null( g );

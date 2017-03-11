@@ -6,6 +6,7 @@
 #include "client.h"
 #include "hashmap.h"
 #include "mobile.h"
+#include "tilemap.h"
 
 struct CHANNEL {
    struct REF refcount;
@@ -13,7 +14,7 @@ struct CHANNEL {
    bstring topic;
    struct HASHMAP clients;
    struct VECTOR mobiles;
-   struct TILEMAP* tilemap;
+   struct TILEMAP tilemap;
 };
 
 struct CHANNEL_CLIENT {

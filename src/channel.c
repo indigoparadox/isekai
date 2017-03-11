@@ -32,7 +32,7 @@ void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
    l->topic = bfromcstr( "No topic" );
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
-   l->tilemap = NULL;
+   tilemap_init( &(l->tilemap), local_images );
 cleanup:
    return;
 }
@@ -56,7 +56,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    client_set_puppet( c, o );
 
    if( TRUE == spawn ) {
-      t = l->tilemap;
+      t = &(l->tilemap);
       spawner = hashmap_get_first( &(t->player_spawns) );
    }
 
@@ -123,8 +123,6 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_null( mapdata_filename );
    bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
 
-   tilemap_new( l->tilemap, FALSE );
-
    mapdata_path = bstrcpy( &str_chunker_server_path );
    scaffold_check_null( mapdata_path );
 
@@ -143,7 +141,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_null_msg( mapdata_buffer, "Unable to load tilemap data." );
    scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
 
-   datafile_parse_tilemap_ezxml( l->tilemap, mapdata_buffer, mapdata_size, FALSE );
+   datafile_parse_tilemap_ezxml( &(l->tilemap), mapdata_buffer, mapdata_size, FALSE );
 #endif // USE_EZXML
 
 cleanup:
