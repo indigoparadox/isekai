@@ -205,7 +205,7 @@ void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
       goto cleanup;
    }
 
-   channel_add_client( l, c );
+   channel_add_client( l, c, TRUE );
 
    hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
 

@@ -18,19 +18,14 @@ static BOOL tilemap_tileset_free_cb( bstring res, void* iter, void* arg ) {
 }
 
 static void tilemap_cleanup( const struct REF* ref ) {
-   int i;
    struct TILEMAP* t;
 
    t = scaffold_container_of( ref, struct TILEMAP, refcount );
 
    hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    hashmap_cleanup( &(t->layers) );
-   /*
-   for( i = 0 ; vector_count( &(t->positions) ) > i ; i++ ) {
-      tilemap_position_free( vector_get( &(t->positions), i ) );
-   }
-   vector_free( &(t->positions) );
-   */
+   hashmap_remove_cb( &(t->player_spawns), callback_free_generic, NULL );
+   hashmap_cleanup( &(t->player_spawns) );
    hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
    hashmap_cleanup( &(t->tilesets) );
 
@@ -42,6 +37,7 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 
    hashmap_init( &(t->layers) );
    hashmap_init( &(t->tilesets) );
+   hashmap_init( &(t->player_spawns) );
 
    bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
 
@@ -83,10 +79,6 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 ) {
    SCAFFOLD_SIZE tiles_wide = 0;
    SCAFFOLD_SIZE tiles_high = 0;
-#ifdef USE_MATH
-   float fx;
-   float fy;
-#endif /* USE_PATH */
 
    scaffold_check_null( g_set );
 
@@ -95,15 +87,8 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 
    gid -= set->firstgid - 1;
 
-#ifdef USE_MATH
-   fx = ((gid - 1) % tiles_wide);
-   fy = ((gid - 1) / tiles_wide);
-   *y = floor( fy ) * set->tileheight;
-   *x = floor( fx ) * set->tilewidth;
-#else
    *y = ((gid - 1) / tiles_wide) * set->tileheight;
    *x = ((gid - 1) % tiles_wide) * set->tilewidth;
-#endif /* USE_MATH */
 
    scaffold_assert( *y < (set->tileheight * tiles_high) );
    scaffold_assert( *x < (set->tilewidth * tiles_wide) );

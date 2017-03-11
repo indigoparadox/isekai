@@ -36,17 +36,10 @@ struct TILEMAP_TILESET {
    struct VECTOR tiles;
 };
 
-/*
 struct TILEMAP_POSITION {
-   SCAFFOLD_SIZE x_previous;
-   SCAFFOLD_SIZE y_previous;
-   SCAFFOLD_SIZE z_previous;
    SCAFFOLD_SIZE x;
    SCAFFOLD_SIZE y;
-   SCAFFOLD_SIZE z;
-   struct CLIENT* entity;
 };
-*/
 
 struct TILEMAP_LAYER {
    SCAFFOLD_SIZE x;
@@ -65,18 +58,21 @@ struct TILEMAP {
    struct VECTOR positions;
    */
    struct HASHMAP tilesets;
+   struct HASHMAP player_spawns;
    SCAFFOLD_SIZE starting_x;
    SCAFFOLD_SIZE starting_y;
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width; /* For dungeons. */
    SCAFFOLD_SIZE window_step_height;
    bstring lname;
+#ifdef DEBUG
    uint16_t sentinal;
+#endif /* DEBUG */
 };
 
 #define TILEMAP_SERIALIZE_RESERVED (128 * 1024)
 #define TILEMAP_SERIALIZE_CHUNKSIZE 80
-
+#define TILEMAP_OBJECT_SPAWN_DIVISOR 32
 #define TILEMAP_NAME_ALLOC 30
 
 #define TILEMAP_SENTINAL 1234
