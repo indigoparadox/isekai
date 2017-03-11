@@ -124,6 +124,6 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
 SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y );
-void tilemap_draw_ortho( struct TILEMAP* t, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* window );
+void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );
 
 #endif /* TILEMAP_H */

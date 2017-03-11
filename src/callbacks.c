@@ -149,7 +149,7 @@ void* callback_search_tilesets_img_name( const bstring key, void* iter, void* ar
 /*  */
 void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
-   struct TILEMAP* t = l->tilemap;
+   struct TILEMAP* t = &(l->tilemap);
    if( NULL != hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
       return l;
    }
@@ -261,8 +261,8 @@ void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
    }
 
    server_client_printf(
-      c, "MOB %b %d %b %b",
-      o->channel->name, o->serial, o->sprites_filename, o->owner->nick
+      c, "MOB %b %d %b %b %d %d",
+      o->channel->name, o->serial, o->sprites_filename, o->owner->nick, o->x, o->y
    );
 
    return NULL;

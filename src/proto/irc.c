@@ -801,13 +801,13 @@ static void irc_client_mob(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
    struct MOBILE* o = NULL;
-   char* serial_c;
+   char* serial_c, x_c, y_c;
    uint8_t serial;
    bstring sprites_filename,
       c_nick;
    struct CHANNEL* l = NULL;
 
-   irc_detect_malformed( 5, "MOB" );
+   irc_detect_malformed( 7, "MOB" );
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
@@ -835,6 +835,16 @@ static void irc_client_mob(
 
    bassign( o->display_name, c_nick );
    scaffold_assert( NULL != o->display_name );
+
+   scaffold_check_null( args->entry[5] );
+   x_c = bdata( args->entry[5] );
+   scaffold_check_null( x_c );
+   o->x = atoi( x_c );
+
+   scaffold_check_null( args->entry[6] );
+   y_c = bdata( args->entry[6] );
+   scaffold_check_null( y_c );
+   o->y = atoi( y_c );
 
    if( 0 == bstrcmp( c->nick, c_nick ) ) {
       client_set_puppet( c, o );
