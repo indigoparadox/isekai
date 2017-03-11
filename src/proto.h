@@ -43,6 +43,9 @@ void proto_send_chunk(
 );
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h );
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type );
+void proto_send_mob( struct CLIENT* c, struct MOBILE* o );
+void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
+void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
 
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(

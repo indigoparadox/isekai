@@ -77,7 +77,7 @@ int main( int argc, char** argv ) {
       }
       */
 
-      if( !main_server->self.running ) {
+      if( !main_client->running ) {
          break;
       } else {
          mobile_frame_count();

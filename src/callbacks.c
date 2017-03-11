@@ -260,10 +260,7 @@ void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
       return NULL;
    }
 
-   server_client_printf(
-      c, "MOB %b %d %b %b %d %d",
-      o->channel->name, o->serial, o->sprites_filename, o->owner->nick, o->x, o->y
-   );
+   proto_send_mob( c, o );
 
    return NULL;
 }
@@ -273,6 +270,19 @@ void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) 
    struct CLIENT* c = (struct CLIENT*)iter;
 
    vector_iterate( &(l->mobiles), callback_send_mobs_to_client, c );
+
+   return NULL;
+}
+
+void* callback_send_updates_to_client( const bstring res, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   struct MOBILE_UPDATE_PACKET* update = (struct MOBILE_UPDATE_PACKET*)arg;
+
+   if( NULL == c || NULL == update->o ) {
+      return NULL;
+   }
+
+   proto_server_send_update( c, update );
 
    return NULL;
 }

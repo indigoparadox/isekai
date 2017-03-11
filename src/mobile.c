@@ -11,6 +11,7 @@
 
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
 
+/* FIXME: Replace with a proper frame limiter. */
 static uint8_t mobile_frame_counter = 0;
 
 static void mobile_cleanup( const struct REF* ref ) {
@@ -156,4 +157,58 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    if( NULL != o->channel ) {
       ref_inc( &(l->refcount) );
    }
+}
+
+/** \brief
+ *
+ * \param update - Packet containing update information.
+ * \param
+ * \return What the update becomes to send to the clients. MOBILE_UPDATE_NONE
+ *         if the update failed to occur.
+ *
+ */
+ MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant ) {
+   struct MOBILE* o = update->o;
+
+   /* TODO: Collision detection. */
+
+   switch( update->update ) {
+   case MOBILE_UPDATE_MOVEUP:
+      o->y--;
+      if( TRUE == instant ) {
+         o->prev_y = o->y;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX;
+      }
+      break;
+
+   case MOBILE_UPDATE_MOVEDOWN:
+      o->y++;
+      if( TRUE == instant ) {
+         o->prev_y = o->y;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX;
+      }
+      break;
+
+   case MOBILE_UPDATE_MOVELEFT:
+      o->x--;
+      if( TRUE == instant ) {
+         o->prev_x = o->x;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX;
+      }
+      break;
+
+   case MOBILE_UPDATE_MOVERIGHT:
+      o->x++;
+      if( TRUE == instant ) {
+         o->prev_x = o->x;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX;
+      }
+      break;
+   }
+
+   return update->update;
 }
