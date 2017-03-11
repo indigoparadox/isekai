@@ -100,10 +100,10 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    scaffold_check_negative( result );
 
    /* If we could bind the port, then launch the serving connection. */
-   scaffold_print_info( "Now listening for connections...\n" );
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
    listening = TRUE;
+   scaffold_print_info( "Now listening for connections...\n" );
 
 cleanup:
 #elif defined ( USE_SYNCBUFF )
@@ -129,14 +129,20 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
    struct addrinfo hints,
          * result;
    bstring service;
+   const char* server_c,
+      * service_c;
 
    service = bformat( "%d", port );
    memset( &hints, 0, sizeof hints );
    hints.ai_family = AF_UNSPEC;
    hints.ai_socktype = SOCK_STREAM;
 
-   connect_result = getaddrinfo( bdata( server ), bdata( service ), &hints,
-                                 &result );
+   server_c = bdata( server );
+   service_c = bdata( service );
+
+   connect_result = getaddrinfo(
+      bdata( server ), bdata( service ), &hints, &result
+   );
    scaffold_check_nonzero( connect_result );
 
    n->socket =
