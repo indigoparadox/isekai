@@ -5,6 +5,14 @@
 #include "ref.h"
 #include "client.h"
 
+typedef enum MOBILE_UPDATE {
+   MOBILE_UPDATE_NONE,
+   MOBILE_UPDATE_MOVEUP,
+   MOBILE_UPDATE_MOVEDOWN,
+   MOBILE_UPDATE_MOVELEFT,
+   MOBILE_UPDATE_MOVERIGHT
+} MOBILE_UPDATE;
+
 typedef enum _MOBILE_FACING {
    MOBILE_FACING_DOWN = 0,
    MOBILE_FACING_UP = 1,
@@ -44,7 +52,17 @@ struct MOBILE {
    struct CHANNEL* channel;
 };
 
+struct MOBILE_UPDATE_PACKET {
+   struct MOBILE* o;
+   struct CHANNEL* l;
+   MOBILE_UPDATE update;
+   SCAFFOLD_SIZE x;
+   SCAFFOLD_SIZE y;
+};
+
 #define MOBILE_RANDOM_SERIAL_LEN 64
+#define MOBILE_STEPS_MAX 32
+#define MOBILE_STEPS_INCREMENT 8
 
 #define mobile_new( o ) \
     o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
@@ -60,5 +78,6 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
 );
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
+MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 
 #endif /* MOBILE_H */

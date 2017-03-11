@@ -48,19 +48,20 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       goto cleanup;
    }
 
-   /* Create a basic mobile for the new client. */
-   mobile_new( o );
-   do {
-      o->serial = rand() % UCHAR_MAX;
-   } while( NULL != vector_get( &(l->mobiles), o->serial ) );
-   client_set_puppet( c, o );
-
    if( TRUE == spawn ) {
       t = &(l->tilemap);
       spawner = hashmap_get_first( &(t->player_spawns) );
    }
 
    if( NULL != spawner ) {
+      /* Create a basic mobile for the new client. */
+      mobile_new( o );
+      do {
+         o->serial = rand() % UCHAR_MAX;
+      } while( NULL != vector_get( &(l->mobiles), o->serial ) );
+      client_set_puppet( c, o );
+      mobile_set_channel( o, l );
+
       o->x = spawner->x;
       o->prev_x = spawner->x;
       o->y = spawner->y;
@@ -68,10 +69,15 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       scaffold_print_info(
          "Spawning %s at: %d, %d\n", bdata( c->nick ), o->x, o->y
       );
+
+      channel_add_mobile( l, o );
+   } else if( TRUE == spawn ) {
+      scaffold_print_error(
+         "Unable to find mobile spawner for this map.\n"
+      );
    }
 
-   channel_add_mobile( l, o );
-   mobile_set_channel( o, l );
+   client_add_channel( c, l  );
 
    hashmap_put( &(l->clients), c->nick, c );
 
@@ -100,6 +106,7 @@ struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
 
 
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
+   mobile_set_channel( o, l );
    vector_set( &(l->mobiles), o->serial, o, TRUE );
 }
 

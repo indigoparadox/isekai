@@ -2,10 +2,10 @@
 #define CHANNEL_H
 
 #include "bstrlib/bstrlib.h"
+#include "mobile.h"
 #include "vector.h"
 #include "client.h"
 #include "hashmap.h"
-#include "mobile.h"
 #include "tilemap.h"
 
 struct CHANNEL {

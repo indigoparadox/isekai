@@ -2,7 +2,6 @@
 #define PROTO_C
 #include "../proto.h"
 
-#include "../server.h"
 #include "../callbacks.h"
 #include "../chunker.h"
 #include "../datafile.h"
@@ -80,8 +79,6 @@ void proto_send_chunk(
       c->nick, filename, h->type, start_pos,
       h->tx_chunk_length, h->raw_length, data
    );
-
-cleanup:
    return;
 }
 
@@ -96,6 +93,27 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
    scaffold_print_debug( "Client: Requesting file: %s\n", bdata( filename ) );
    client_printf( c, "GRF %d %b", type, filename );
+}
+
+void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
+   server_client_printf(
+      c, "MOB %b %d %b %b %d %d",
+      o->channel->name, o->serial, o->sprites_filename, o->owner->nick, o->x, o->y
+   );
+}
+
+void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+   client_printf(
+      c, "GU %b %d %d",
+      update->l->name, update->o->serial, update->update
+   );
+}
+
+void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+   server_client_printf(
+      c, "GU %b %d %d",
+      update->l->name, update->o->serial, update->update
+   );
 }
 
 /* This file contains our (possibly limited, slightly incompatible) version *
@@ -129,6 +147,28 @@ static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
    );
 
    c->flags |= CLIENT_FLAGS_HAVE_WELCOME;
+}
+
+struct IRC_WHO_REPLY {
+   struct CLIENT* c;
+   struct CHANNEL* l;
+   SERVER* s;
+};
+
+static void* irc_callback_reply_who( bstring* key, void* iter, void* arg ) {
+   struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
+   struct CLIENT* c_iter = (struct CLIENT*)iter;
+   server_client_printf(
+      who->c,
+      ":%b 352 %b %b %b %b server %b H :0 %b",
+      who->s->self.remote,
+      who->c->nick,
+      who->l->name,
+      c_iter->nick,
+      c_iter->remote,
+      c_iter->username,
+      c_iter->realname
+   );
 }
 
 #if 0
@@ -458,13 +498,10 @@ static void irc_server_who(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
    struct CHANNEL* l = NULL;
-   struct bstrList* search_targets = NULL;
-   struct VECTOR* ison = NULL;
    struct CLIENT* c_iter = NULL;
    SCAFFOLD_SIZE i;
-   bstring response = NULL;
+   struct IRC_WHO_REPLY who;
 
-   #if 0
    irc_detect_malformed( 2, "WHO" );
 
    /* TODO: Handle non-channels. */
@@ -476,39 +513,18 @@ static void irc_server_who(
    l = client_get_channel_by_name( &(s->self), args->entry[1] );
    scaffold_check_null( l );
 
-   response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
-   scaffold_check_null( response );
-
-   search_targets = bstrListCreate();
-   scaffold_check_null( search_targets );
-
-   ison = hashmap_iterate_v( &(l->clients), callback_search_clients, NULL );
-   scaffold_check_null( ison );
-   vector_lock( ison, TRUE );
-   for( i = 0 ; vector_count( ison ) > i ; i++ ) {
-      c_iter = (struct CLIENT*)vector_get( ison, i );
-      /* 1 for the main list + 1 for the vector. */
-      scaffold_assert( 2 <= c_iter->link.refcount.count );
-
-      server_client_printf(
-         c, ":%b RPL_WHOREPLY %b %b",
-         s->self.remote, c->nick, l->name
-      );
-   }
-   vector_lock( ison, FALSE );
-   scaffold_check_null( response );
+   who.c = c;
+   who.l = l;
+   who.s = s;
+   hashmap_iterate( &(l->clients), irc_callback_reply_who, &who );
+   server_client_printf(
+      c, ":server 315 %b :End of /WHO list.",
+      c->nick, l->name
+   );
 
    hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
 
 cleanup:
-   if( NULL != ison ) {
-      vector_remove_cb( ison, callback_free_clients, NULL );
-      vector_free( ison );
-      free( ison );
-   }
-   bdestroy( response );
-   bstrListDestroy( search_targets );
-#endif // 0
    return;
 }
 
@@ -588,79 +604,71 @@ cleanup:
    return;
 }
 
-/* GU #channel px+1y+2z+3 */
 static void irc_server_gameupdate(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-   struct CHANNEL* l = NULL;
-   bstring reply_c = NULL;
-   bstring reply_l = NULL;
-   struct bstrList gu_args;
+   char* serial_c,
+      * update_c;
+   SCAFFOLD_SIZE serial;
+   struct MOBILE_UPDATE_PACKET update;
 
-   /* Strip off the command "header". */
-   memcpy( &gu_args, args, sizeof( struct bstrList ) );
-#if 0
-   /* FIXME */
-   scaffold_pop_string( &gu_args ); /* Source */
-   scaffold_pop_string( &gu_args ); /* Channel */
-#endif
+   update.l = client_get_channel_by_name( c, args->entry[1] );
+   scaffold_check_null( update.l );
 
-   /* Find out if this command affects a certain channel. */
-   if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
-      l = client_get_channel_by_name( &(s->self), args->entry[1] );
-      scaffold_check_null( l );
+   serial_c = bdata( args->entry[2] );
+   scaffold_check_null( serial_c );
+   serial = atoi( serial_c );
+
+   update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
+   scaffold_check_null( update.o );
+
+   update_c = bdata( args->entry[3] );
+   scaffold_check_null( update_c );
+   update.update = (MOBILE_UPDATE)atoi( update_c );
+
+   if( c == update.o->owner ) {
+      update.update = mobile_apply_update( &update, TRUE );
    } else {
-      scaffold_print_error( "Malformed GU statement supplied.\n" );
-      goto cleanup;
+      scaffold_print_error(
+         "Client %s attempted to modify mobile %d to %d without permission.\n",
+         bdata( c->nick ), update.o->serial, update.update
+      );
+      /* Cancel the update. */
+      update.update = MOBILE_UPDATE_NONE;
    }
 
-   //gamedata_update_server( &(l->gamedata), c, &gu_args, &reply_c, &reply_l );
-
-   /* TODO: Make sure client is actually in the channel requested. */
-   c = channel_get_client_by_name( l, c->nick );
-   scaffold_check_null( c );
-
-   if( NULL != reply_c ) {
-      server_client_printf( c, "%b", reply_c );
-   }
-
-   if( NULL != reply_l ) {
-      server_channel_printf( s, l, c, "%b", reply_l );
-   }
+   hashmap_iterate( &(update.l->clients), callback_send_updates_to_client, &update );
 
 cleanup:
-   bdestroy( reply_l );
-   bdestroy( reply_c );
    return;
 }
 
 static void irc_client_gu(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-   bstring reply = NULL;
-   struct bstrList gu_args;
+   char* serial_c,
+      * update_c;
+   SCAFFOLD_SIZE serial;
+   struct MOBILE_UPDATE_PACKET update;
 
-   memcpy( &gu_args, args, sizeof( struct bstrList ) );
+   update.l = client_get_channel_by_name( c, args->entry[1] );
+   scaffold_check_null( update.l );
 
-#if 0
-   /* Strip off the command "header". */
-   scaffold_pop_string( &gu_args ); /* Source */
-   scaffold_pop_string( &gu_args ); /* Channel */
+   serial_c = bdata( args->entry[2] );
+   scaffold_check_null( serial_c );
+   serial = atoi( serial_c );
 
-   /* Find out if this command affects a certain channel. */
-   if( 2 <= args->qty && '#' == bdata( args->entry[1] )[0] ) {
-      l = server_get_channel_by_name( s, args->entry[1] );
-      scaffold_check_null( l );
-   }
-#endif
+   update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
+   scaffold_check_null( update.o );
 
-   /* TODO: Modify gamedata based on new information. */
+   update_c = bdata( args->entry[3] );
+   scaffold_check_null( update_c );
+   update.update = (MOBILE_UPDATE)atoi( update_c );
 
-   if( NULL != reply ) {
-      client_printf( c, "%b", reply );
-   }
+   /* The client always trusts the server. */
+   update.update = mobile_apply_update( &update, FALSE );
 
-   bdestroy( reply );
+cleanup:
    return;
 }
 
@@ -801,13 +809,15 @@ static void irc_client_mob(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
    struct MOBILE* o = NULL;
-   char* serial_c, x_c, y_c;
+   char* serial_c, * x_c, * y_c;
    uint8_t serial;
    bstring sprites_filename,
       c_nick;
    struct CHANNEL* l = NULL;
 
    irc_detect_malformed( 7, "MOB" );
+
+   //char* foo1 = ((char*)((struct CHANNEL*)hashmap_get_first( &(c->channels) ))->name);
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
@@ -822,6 +832,7 @@ static void irc_client_mob(
    if( NULL == o ) {
       mobile_new( o );
       o->serial = serial;
+      mobile_set_channel( o, l );
    }
 
    sprites_filename = args->entry[3];

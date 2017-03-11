@@ -473,15 +473,43 @@ cleanup:
 
 void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
+   struct MOBILE_UPDATE_PACKET update;
+
+   scaffold_set_client();
 
    input_get_event( &input );
+   update.o = c->puppet;
+   if( NULL == c->puppet ) {
+      goto cleanup; /* Silently. */
+   }
+
+   update.l = c->puppet->channel;
+   scaffold_check_null( update.l );
 
    if( INPUT_TYPE_KEY == input.type ) {
       switch( input.character ) {
       case 'q':
-         scaffold_set_client();
          client_stop( c );
+         break;
+      case 'w':
+         update.update = MOBILE_UPDATE_MOVEUP;
+         proto_client_send_update( c, &update );
+         break;
+      case 'a':
+         update.update = MOBILE_UPDATE_MOVELEFT;
+         proto_client_send_update( c, &update );
+         break;
+      case 's':
+         update.update = MOBILE_UPDATE_MOVEDOWN;
+         proto_client_send_update( c, &update );
+         break;
+      case 'd':
+         update.update = MOBILE_UPDATE_MOVERIGHT;
+         proto_client_send_update( c, &update );
          break;
       }
    }
+
+cleanup:
+   return;
 }
