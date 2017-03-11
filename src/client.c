@@ -6,6 +6,7 @@
 #include "chunker.h"
 #include "input.h"
 #include "tilemap.h"
+#include "datafile.h"
 
 static struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 
@@ -139,6 +140,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
    twindow->height = 480 / 32;
    twindow->g = g;
    twindow->t = l->tilemap;
+   twindow->c = c;
 
    if( NULL != l->tilemap && TILEMAP_SENTINAL == l->tilemap->sentinal ) {
       tilemap_draw_ortho( l->tilemap, g, twindow );
@@ -188,33 +190,49 @@ cleanup:
 }
 
 void client_leave_channel( struct CLIENT* c, const bstring lname ) {
+   int bstr_retval;
    bstring buffer = NULL;
+
    /* We won't record the channel in our list until the server confirms it. */
 
    scaffold_assert_client();
 
    buffer = bfromcstr( "PART " );
-   bconcat( buffer, lname );
+   scaffold_check_null( buffer );
+   bstr_retval = bconcat( buffer, lname );
+   scaffold_check_nonzero( bstr_retval );
    client_send( c, buffer );
-   bdestroy( buffer );
 
    /* TODO: Add callback from parser and only delete channel on confirm. */
    hashmap_remove( &(c->channels), lname );
+
+cleanup:
+   bdestroy( buffer );
+   return;
 }
 
 void client_send( struct CLIENT* c, const bstring buffer ) {
+   int bstr_retval;
+   bstring buffer_copy = NULL;
 
    /* TODO: Make sure we're still connected. */
 
-   bconchar( buffer, '\r' );
-   bconchar( buffer, '\n' );
-   connection_write_line( &(c->link), buffer, TRUE );
+   buffer_copy = bstrcpy( buffer );
+   scaffold_check_null( buffer_copy );
+   bstr_retval = bconchar( buffer_copy, '\r' );
+   scaffold_check_nonzero( bstr_retval );
+   bstr_retval = bconchar( buffer_copy, '\n' );
+   scaffold_check_nonzero( bstr_retval );
+   connection_write_line( &(c->link), buffer_copy, TRUE );
 
 #ifdef DEBUG_NETWORK
    scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
 #endif /* DEBUG_NETWORK */
 
+cleanup:
+   bdestroy( buffer_copy );
    scaffold_assert_client();
+   return;
 }
 
 void client_printf( struct CLIENT* c, const char* message, ... ) {
@@ -436,7 +454,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    case CHUNKER_DATA_TYPE_MOBSPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
       scaffold_check_null( g );
-      //graphics_set_image_data( g, h->raw_ptr, h->raw_length );
+      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null( g->surface );
       hashmap_put( &(c->sprites), h->filename, g );
       scaffold_print_info(
@@ -445,6 +463,8 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       );
       break;
    }
+
+   hashmap_remove( &(c->chunkers), h->filename );
 
 cleanup:
    return;

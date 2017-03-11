@@ -211,7 +211,6 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
       &(c->chunkers), callback_free_finished_chunkers, NULL
    );
 
-cleanup:
    return NULL;
 }
 
@@ -245,6 +244,9 @@ void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
 
+   if( NULL == o ) { return NULL; }
+
+   mobile_animate( o );
    mobile_draw_ortho( o, twindow );
 
    return NULL;

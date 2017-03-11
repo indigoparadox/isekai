@@ -22,7 +22,7 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 #endif
 
 #define GRAPHICS_FMEM_SENTINAL 2121
-#define GRAPHICS_COLOR_DEPTH 16
+#define GRAPHICS_COLOR_DEPTH 8
 
 typedef struct _GRAPHICS_FMEM_INFO {
    BYTE safety1;
@@ -264,10 +264,13 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFF
    g->w = w;
    g->h = h;
    g->font = NULL;
+   /*
    g->color.r = 0;
    g->color.g = 0;
    g->color.b = 0;
    g->color.a = 255;
+   */
+   g->color = 0;
    ref_init( &(g->refcount), graphics_surface_cleanup );
    g->palette = NULL;
    return;
@@ -295,10 +298,11 @@ void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color ) {
 }
 
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
-   gr->color.r = r;
+   /*gr->color.r = r;
    gr->color.g = g;
    gr->color.b = b;
-   gr->color.a = a;
+   gr->color.a = a;*/
+   gr->color = 0; /* FIXME */
 }
 
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
@@ -348,18 +352,24 @@ static void graphics_export_palette() {
 
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
                               SCAFFOLD_SIZE length ) {
+#ifdef USE_ALLEGRO_BITMAP
    GRAPHICS_FMEM_INFO* fmem_info = NULL;
    PACKFILE* fmem = NULL;
    BOOL close_packfile = TRUE;
 
    fmem_info = (GRAPHICS_FMEM_INFO*)calloc( 1, sizeof( GRAPHICS_FMEM_INFO ) );
    scaffold_check_null( fmem_info );
+#else
+   struct GRAPHICS_BITMAP* bitmap = NULL;
+   SCAFFOLD_SIZE_SIGNED x, y, i = 0;
+#endif /* USE_ALLEGRO_BITMAP */
 
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;
    }
 
+#ifdef USE_ALLEGRO_BITMAP
    if( NULL == g->palette ) {
       g->palette = (RGB*)calloc( 1, sizeof( RGB ) );
    }
@@ -423,6 +433,24 @@ cleanup:
    if( NULL != fmem_info ) {
       free( fmem_info );
    }
+#else
+   graphics_bitmap_load( data, length, &bitmap );
+   scaffold_check_null( bitmap );
+   scaffold_check_null( bitmap->pixels );
+   g->surface = create_bitmap( bitmap->w, bitmap->h );
+   g->w = bitmap->w;
+   g->h = bitmap->h;
+   for( y = bitmap->h - 1 ; 0 <= y ; y-- ) {
+      for( x = 0 ; bitmap->w > x ; x++ ) {
+         putpixel( g->surface, x, y, (int)(bitmap->pixels[i++]) );
+      }
+   }
+   //graphics_colors_to_surface( g, colors, colors_sz );
+   scaffold_check_null( g->surface );
+
+cleanup:
+   graphics_free_bitmap( bitmap );
+#endif /* USE_ALLEGRO_BITMAP */
    return;
 }
 
@@ -463,7 +491,8 @@ cleanup:
 void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
    textout_centre_ex(
       g->surface, font, bdata( text ), x, y,
-      makecol( g->color.r, g->color.g, g->color.b ),
+      //makecol( g->color.r, g->color.g, g->color.b ),
+      g->color,
       -1
    );
 }
@@ -499,4 +528,16 @@ void graphics_blit_partial(
 
 void graphics_sleep( uint16_t milliseconds ) {
    rest( milliseconds );
+}
+
+void graphics_colors_to_surface(
+   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
+) {
+   SCAFFOLD_SIZE i;
+
+   /* TODO: Verify image sizes. */
+
+   for( i = 0 ; colors_sz > i ; i++ ) {
+      //putpixel( g->surface, i % g->w, i * g->w, makecol( colors[i].r, colors[i].g, colors[i].b ) );
+   }
 }

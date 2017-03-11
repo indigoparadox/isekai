@@ -229,7 +229,6 @@ cleanup:
 
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
-   SCAFFOLD_SIZE_SIGNED sz_last = -1;
    struct stat inputstat;
 #ifdef DEBUG
    char* path_c = NULL;

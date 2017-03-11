@@ -5,6 +5,7 @@
 #include "vector.h"
 #include "client.h"
 #include "hashmap.h"
+#include "mobile.h"
 
 struct CHANNEL {
    struct REF refcount;

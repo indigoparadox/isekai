@@ -223,6 +223,8 @@ struct VECTOR;
 /* Vector needs some stuff above but is needed for stuff below. */
 #include "vector.h"
 
+#define scaffold_byte( number ) (0xff & number)
+
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );

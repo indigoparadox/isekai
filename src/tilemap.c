@@ -23,18 +23,14 @@ static void tilemap_cleanup( const struct REF* ref ) {
 
    t = scaffold_container_of( ref, struct TILEMAP, refcount );
 
-#ifdef EZXML_EMBEDDED_IMAGES
-   for( i = 0 ; vector_count( &(t->freeable_chunks) ) > i ; i++ ) {
-      free( vector_get( &(t->freeable_chunks), i ) );
-   }
-   vector_free( &(t->freeable_chunks) );
-#endif /* EZXML_EMBEDDED_IMAGES */
    hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    hashmap_cleanup( &(t->layers) );
+   /*
    for( i = 0 ; vector_count( &(t->positions) ) > i ; i++ ) {
       tilemap_position_free( vector_get( &(t->positions), i ) );
    }
    vector_free( &(t->positions) );
+   */
    hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
    hashmap_cleanup( &(t->tilesets) );
 
@@ -45,7 +41,6 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
    hashmap_init( &(t->layers) );
-   vector_init( &(t->positions) );
    hashmap_init( &(t->tilesets) );
 
    bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
@@ -64,10 +59,6 @@ void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
 
 void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
    vector_free( &(layer->tiles ) );
-}
-
-void tilemap_position_cleanup( struct TILEMAP_POSITION* position ) {
-
 }
 
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset ) {

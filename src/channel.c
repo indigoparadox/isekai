@@ -3,6 +3,7 @@
 
 #include "callbacks.h"
 #include "tilemap.h"
+#include "datafile.h"
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );

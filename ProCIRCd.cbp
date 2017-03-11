@@ -73,6 +73,7 @@
 					<Add option="-fsanitize=undefined" />
 					<Add option="-ggdb3" />
 					<Add option="-fvar-tracking" />
+					<Add option="-std=gnu99" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
@@ -171,6 +172,7 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DUSE_STB" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -379,10 +381,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ezxml.h" />
-		<Unit filename="src/gamedata.c">
+		<Unit filename="src/graphics.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/gamedata.h" />
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
 			<Option compilerVar="CC" />
@@ -530,6 +531,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/server.h" />
+		<Unit filename="src/stb/stb_image.h" />
 		<Unit filename="src/tilemap.c">
 			<Option compilerVar="CC" />
 		</Unit>
