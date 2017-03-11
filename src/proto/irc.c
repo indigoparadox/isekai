@@ -681,7 +681,7 @@ static void irc_client_join(
    if( NULL == l ) {
       channel_new( l, l_name, FALSE );
       client_add_channel( c, l );
-      channel_add_client( l, c );
+      channel_add_client( l, c, FALSE );
       scaffold_print_info( "Client created local channel mirror: %s\n",
                            bdata( l_name ) );
    }

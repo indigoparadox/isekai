@@ -30,7 +30,7 @@ struct CHANNEL_CLIENT {
 void channel_init( struct CHANNEL* l, const bstring name, BOOL local_graphics );
 void channel_free( struct CHANNEL* l );
 struct CLIENT* channel_client_present( struct CHANNEL* l, struct CLIENT* c );
-void channel_add_client( struct CHANNEL* l, struct CLIENT* c );
+void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn );
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c );
 struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick );
 struct bstrList* channel_list_clients( struct CHANNEL* l );

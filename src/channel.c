@@ -37,8 +37,10 @@ cleanup:
    return;
 }
 
-void channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
+void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct MOBILE* o = NULL;
+   struct TILEMAP* t = NULL;
+   struct TILEMAP_POSITION* spawner = NULL;
 
    scaffold_check_null( c );
 
@@ -52,6 +54,22 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
       o->serial = rand() % UCHAR_MAX;
    } while( NULL != vector_get( &(l->mobiles), o->serial ) );
    client_set_puppet( c, o );
+
+   if( TRUE == spawn ) {
+      t = l->tilemap;
+      spawner = hashmap_get_first( &(t->player_spawns) );
+   }
+
+   if( NULL != spawner ) {
+      o->x = spawner->x;
+      o->prev_x = spawner->x;
+      o->y = spawner->y;
+      o->prev_y = spawner->y;
+      scaffold_print_info(
+         "Spawning %s at: %d, %d\n", bdata( c->nick ), o->x, o->y
+      );
+   }
+
    channel_add_mobile( l, o );
    mobile_set_channel( o, l );
 

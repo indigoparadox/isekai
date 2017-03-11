@@ -36,14 +36,12 @@ struct CLIENT {
    bstring mobile_sprite;
    uint8_t mode;
    uint8_t flags;
-   int x; /* Tile X */
-   int y; /* Tile Y */
    struct HASHMAP channels; /* All channels in now; all channels avail on server. */
    struct HASHMAP chunkers;
    struct VECTOR command_queue;
    struct MOBILE* puppet;
    struct HASHMAP sprites;
-   int sentinal;
+   int sentinal; /* Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542
 

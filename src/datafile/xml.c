@@ -269,6 +269,66 @@ cleanup:
    return;
 }
 
+static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
+   struct TILEMAP_LAYER* layer = NULL;
+   ezxml_t xml_object = NULL;
+   bstring buffer = NULL;
+   const char* xml_attr = NULL;
+   struct TILEMAP_POSITION* obj_out = NULL;
+
+   scaffold_check_null( xml_layer );
+
+   buffer = bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
+
+   xml_object = ezxml_child( xml_layer, "object" );
+   scaffold_check_null( xml_object );
+   scaffold_print_debug( "Loading object spawns...\n" );
+   while( NULL != xml_object ) {
+      obj_out = (struct TILEMAP_POSITION*)calloc(
+         1, sizeof( struct TILEMAP_POSITION )
+      );
+      scaffold_check_null( obj_out );
+
+      xml_attr = ezxml_attr( xml_object, "x" );
+      /* TODO: _continue versions of the abort macros.*/
+      scaffold_check_null( xml_attr );
+      obj_out->x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+
+      xml_attr = ezxml_attr( xml_object, "y" );
+      scaffold_check_null( xml_attr );
+      obj_out->y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+
+      xml_attr = ezxml_attr( xml_object, "name" );
+      scaffold_check_null( xml_attr );
+      bassigncstr( buffer, xml_attr );
+      xml_attr = ezxml_attr( xml_object, "type" );
+      scaffold_check_null( xml_attr );
+      if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
+         scaffold_print_debug(
+            "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
+         );
+         hashmap_put( &(t->player_spawns), buffer, obj_out );
+      } else {
+         /* We don't know how to handle this yet. */
+         scaffold_print_error(
+            "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
+         );
+         free( obj_out );
+      }
+
+      obj_out = NULL;
+      xml_object = ezxml_next( xml_object );
+   }
+
+cleanup:
+   if( NULL != obj_out ) {
+      /* Something went wrong. */
+      free( obj_out );
+   }
+   bdestroy( buffer );
+   return;
+}
+
 void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
@@ -297,13 +357,12 @@ void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFO
       xml_layer = ezxml_next( xml_layer );
    }
 
-#if 0
-   /* Shortcut to serialize for later. */
-   scaffold_check_null( t );
-   scaffold_print_debug( "Serializing map data to XML...\n" );
-   t->serialize_buffer = ezxml_toxml( xml_data );
-   scaffold_check_null( t->serialize_buffer );
-#endif
+   xml_layer = ezxml_child( xml_data, "objectgroup" );
+   scaffold_check_null( xml_layer );
+   while( NULL != xml_layer ) {
+      datafile_tilemap_parse_objectgroup_ezxml( t, xml_layer );
+      xml_layer = ezxml_next( xml_layer );
+   }
 
    t->sentinal = TILEMAP_SENTINAL;
 
