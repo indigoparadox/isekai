@@ -32,8 +32,6 @@ inline
 #endif /* USE_INLINES */
 void server_stop( SERVER* s );
 BOOL server_free( SERVER* s );
-void server_client_printf( struct CLIENT* c, const char* message, ... );
-void server_client_send( struct CLIENT* c, bstring buffer );
 void server_channel_printf( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... );
 void server_channel_send( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer );
 void server_add_client( SERVER* s, struct CLIENT* n );

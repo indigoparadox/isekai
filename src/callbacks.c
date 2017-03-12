@@ -15,17 +15,14 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = NULL;
    /* TODO: Factor this out. */
-   BOOL is_client = FALSE;
    int bstr_result;
 
    /* Figure out if we're being called from a client or server. */
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       table = proto_table_client;
-      is_client = TRUE;
    } else if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       s = (SERVER*)arg;
       table = proto_table_server;
-      is_client = FALSE;
    } else {
       scaffold_assert( NULL == arg ); /* Just die. */
    }
@@ -40,7 +37,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    }
 
    /* Get the next line and clean it up. */
-   last_read_count = connection_read_line( &(c->link), buffer, is_client );
+   last_read_count = connection_read_line( &(c->link), buffer, c->client_side );
    btrimws( buffer );
    bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
@@ -107,7 +104,7 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
 void* callback_send_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
-   server_client_send( c, buffer );
+   client_send( c, buffer );
    return NULL;
 }
 
@@ -294,7 +291,7 @@ BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    bstring xmit_buffer = (bstring)iter;
 
-   server_client_send( c, xmit_buffer );
+   client_send( c, xmit_buffer );
 
    bdestroy( xmit_buffer );
 

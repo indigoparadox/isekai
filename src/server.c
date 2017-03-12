@@ -38,7 +38,7 @@ BOOL server_free( SERVER* s ) {
 
 void server_init( SERVER* s, const bstring myhost ) {
    int bstr_result;
-   client_init( &(s->self) );
+   client_init( &(s->self), FALSE );
    s->self.link.refcount.gc_free = server_cleanup;
    hashmap_init( &(s->clients) );
 
@@ -52,48 +52,6 @@ cleanup:
 
 void server_stop( SERVER* s ) {
    s->self.running = FALSE;
-}
-
-void server_client_send( struct CLIENT* c, bstring buffer ) {
-   int bstr_res;
-
-   /* TODO: Make sure we're still connected? */
-   scaffold_assert( 0 != c->sentinal );
-
-   bstr_res = bconchar( buffer, '\r' );
-   scaffold_check_nonzero( bstr_res );
-   bstr_res = bconchar( buffer, '\n' );
-   scaffold_check_nonzero( bstr_res );
-   connection_write_line( &(c->link), buffer, FALSE );
-
-#ifdef DEBUG_NETWORK
-   scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
-#endif /* DEBUG_NETWORK */
-
-cleanup:
-   scaffold_assert_server();
-}
-
-void server_client_printf( struct CLIENT* c, const char* message, ... ) {
-   bstring buffer = NULL;
-   va_list varg;
-
-   buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
-
-   va_start( varg, message );
-   scaffold_snprintf( buffer, message, varg );
-   va_end( varg );
-
-   if( 0 == scaffold_error ) {
-      server_client_send( c, buffer );
-   }
-
-   scaffold_assert_server();
-
-cleanup:
-   bdestroy( buffer );
-   return;
 }
 
 void server_channel_send( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
@@ -287,7 +245,7 @@ void server_poll_new_clients( SERVER* s ) {
 
    /* Get a new standby client ready. */
    if( NULL == c ) {
-      client_new( c );
+      client_new( c, FALSE );
    }
 
    /* Check for new clients. */
