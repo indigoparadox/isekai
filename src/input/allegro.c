@@ -15,13 +15,13 @@ typedef struct {
 
 static void input_close_allegro_window() {
    scaffold_set_client();
-   client_stop( main_client );
-   server_stop( main_server );
+   //client_stop( main_client );
+   //server_stop( main_server );
+   proto_client_stop( main_client );
 }
 
 void input_init( struct INPUT* p ) {
    install_keyboard();
-
    set_close_button_callback( input_close_allegro_window );
 }
 
