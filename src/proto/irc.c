@@ -67,6 +67,11 @@ const struct tagbstring irc_reply_error_text[35] = {
       goto cleanup; \
    }
 
+void proto_register( struct CLIENT* c ) {
+   client_printf( c, "NICK %b", c->nick );
+   client_printf( c, "USER %b", c->realname );
+}
+
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
@@ -821,17 +826,17 @@ static void irc_server_mob(
 static void irc_client_mob(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-   struct MOBILE* o = NULL;
-   char* serial_c, * x_c, * y_c;
-   uint8_t serial;
-   bstring sprites_filename,
-      c_nick;
+   char* serial_c = NULL,
+      * x_c = NULL,
+      * y_c = NULL;
+   uint8_t serial = 0;
+   bstring sprites_filename = NULL,
+      nick = NULL;
    struct CHANNEL* l = NULL;
-   int bstr_res;
+   SCAFFOLD_SIZE x = 0,
+      y = 0;
 
    irc_detect_malformed( 7, "MOB" );
-
-   //char* foo1 = ((char*)((struct CHANNEL*)hashmap_get_first( &(c->channels) ))->name);
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
@@ -839,49 +844,29 @@ static void irc_client_mob(
    scaffold_check_null( args->entry[2] );
    serial_c = bdata( args->entry[2] );
    scaffold_check_null( serial_c );
-
    serial = atoi( serial_c );
-
-   o = vector_get( &(l->mobiles), serial );
-   if( NULL == o ) {
-      mobile_new( o );
-      o->serial = serial;
-      mobile_set_channel( o, l );
-   }
 
    sprites_filename = args->entry[3];
    scaffold_check_null( sprites_filename );
 
-   bstr_res = bassign( o->sprites_filename, sprites_filename );
-   scaffold_check_nonzero( bstr_res );
-   scaffold_assert( NULL != o->sprites_filename );
-
-   c_nick = args->entry[4];
-   scaffold_check_null( c_nick );
-
-   bstr_res = bassign( o->display_name, c_nick );
-   scaffold_check_nonzero( bstr_res );
-   scaffold_assert( NULL != o->display_name );
+   nick = args->entry[4];
+   scaffold_check_null( nick );
 
    scaffold_check_null( args->entry[5] );
    x_c = bdata( args->entry[5] );
    scaffold_check_null( x_c );
-   o->x = atoi( x_c );
+   x = atoi( x_c );
 
    scaffold_check_null( args->entry[6] );
    y_c = bdata( args->entry[6] );
    scaffold_check_null( y_c );
-   o->y = atoi( y_c );
+   y = atoi( y_c );
 
-   if( 0 == bstrcmp( c->nick, c_nick ) ) {
-      client_set_puppet( c, o );
-   }
-
-   vector_set( &(l->mobiles), o->serial, o, TRUE );
+   channel_set_mobile( l, serial, sprites_filename, nick, x, y );
 
    scaffold_print_debug(
       "Client: Local instance of mobile updated: %s (%d)\n",
-      bdata( o->display_name ), o->serial
+      bdata( nick ), serial
    );
 
 cleanup:
