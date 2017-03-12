@@ -524,6 +524,13 @@ cleanup:
    return found;
 }
 
+/** \brief Build a vector using the specified callback from the hashmap
+ *         contents.
+ * \param[in]  m        Hashmap to search.
+ * \param[in]  callback Callback to create vector by iterating.
+ * \param[in]  arg      Argument to pass to the callback.
+ * \return A new vector containing all found results.
+ */
 struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
    struct VECTOR* found = NULL;
    void* data = NULL;

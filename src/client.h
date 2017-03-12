@@ -21,10 +21,7 @@ typedef enum _CLIENT_FLAGS {
 } CLIENT_FLAGS;
 
 struct CLIENT {
-   /* "Root" class is REF*/
-
-   /* "Parent class" */
-   CONNECTION link;
+   CONNECTION link;  /*!< Parent "class". The "root" class is REF. */
 
    /* Items shared between server and client. */
    BOOL running;
@@ -36,13 +33,17 @@ struct CLIENT {
    bstring mobile_sprite;
    uint8_t mode;
    uint8_t flags;
-   struct HASHMAP channels; /* All channels in now; all channels avail on server. */
+   struct HASHMAP channels; /*!< All channels the client is in now, or all
+                             *   channels available if this is a server.
+                             */
    struct HASHMAP chunkers;
    struct VECTOR command_queue;
    struct MOBILE* puppet;
-   struct HASHMAP sprites;
-   BOOL client_side; /* Are we the server mirror or the real client? */
-   int sentinal; /* Used in release version to distinguish from server. */
+   struct HASHMAP sprites; /*!< Contains sprites for all mobiles this client
+                            *   encounters on client-side. Not used server-side.
+                            */
+   BOOL client_side; /*!< Are we the server mirror or the real client? */
+   int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542
 

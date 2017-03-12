@@ -65,12 +65,12 @@ typedef struct {
 
 struct GRAPHICS_TILE_WINDOW {
    struct CLIENT* c;
-   GRAPHICS* g;
+   GRAPHICS* g;            /*!< Graphics element to draw on. */
    struct TILEMAP* t;
-   SCAFFOLD_SIZE x; /* In tiles. */
-   SCAFFOLD_SIZE y;
-   SCAFFOLD_SIZE width;
-   SCAFFOLD_SIZE height;
+   SCAFFOLD_SIZE x;        /*!< Window left in tiles. */
+   SCAFFOLD_SIZE y;        /*!< Window top in tiles. */
+   SCAFFOLD_SIZE width;    /*!< Window width in tiles. */
+   SCAFFOLD_SIZE height;   /*!< Window height in tiles. */
 };
 
 #define graphics_surface_new( g, x, y, w, h ) \
