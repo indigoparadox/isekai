@@ -716,7 +716,8 @@ static void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
 #endif /* EZXML_NEWLINES */
          break;
       default:
-         bconchar( txt_out, bchar( txt_in, i ) );
+         bstr_ret = bconchar( txt_out, bchar( txt_in, i ) );
+         scaffold_check_nonzero( bstr_ret );
       }
    }
 cleanup:
@@ -741,7 +742,8 @@ static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, SCAFFOLD_SIZE start, cha
    /* parent character content up to this tag */
    ezxml_ampencode_b( txt_b, xml_out, 0 );
 
-   bformata( xml_out, "<%s", xml->name );
+   bstr_ret = bformata( xml_out, "<%s", xml->name );
+   scaffold_check_nonzero( bstr_ret );
    for (i = 0; xml->attr[i]; i += 2) { /* tag attributes */
       if (ezxml_attr(xml, xml->attr[i]) != xml->attr[i + 1]) continue;
       bstr_ret = bformata( xml_out, " %s=\"", xml->attr[i] );

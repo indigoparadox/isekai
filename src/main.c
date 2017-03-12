@@ -32,9 +32,9 @@ int main( int argc, char** argv ) {
    GRAPHICS g = { 0 };
    struct INPUT p = { 0 };
    struct UI ui = { 0 };
-   struct GRAPHICS_TILE_WINDOW twindow;
+   struct GRAPHICS_TILE_WINDOW twindow = { 0 };
    struct CHANNEL* l = NULL;
-   int bstr_result;
+   int bstr_result = 0;
 #ifdef USE_RANDOM_PORT
    bstring str_service = NULL;
 #endif /* USE_RANDOM_PORT */
@@ -90,14 +90,12 @@ int main( int argc, char** argv ) {
 
       graphics_sleep( 50 );
 
-      /*
-      if( !main_client->running ) {
-         server_stop( main_server );
+      if( !main_server->self.running ) {
+         break;
       }
-      */
 
       if( !main_client->running ) {
-         break;
+         server_stop( main_server );
       }
 
       mobile_frame_count();
@@ -130,10 +128,7 @@ cleanup:
 
    bdestroy( buffer );
    bdestroy( str_service );
-#if 0
    client_free( main_client );
-   scaffold_assert( 0 == hashmap_count( &(main_server->self.channels) ) );
-#endif
    server_free( main_server );
    free( main_server );
    /*graphics_shutdown( &g );*/

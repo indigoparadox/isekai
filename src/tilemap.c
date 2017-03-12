@@ -46,7 +46,7 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 }
 
 void tilemap_free( struct TILEMAP* t ) {
-   ref_dec( &(t->refcount) );
+   refcount_dec( t, "tilemap" );
 }
 
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
@@ -107,7 +107,15 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP* t = window->t;
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS* g_tileset = NULL;
-   SCAFFOLD_SIZE x, y, max_x, max_y, tileset_x = 0, tileset_y = 0, pix_x, pix_y;
+   SCAFFOLD_SIZE
+      x = 0,
+      y = 0,
+      max_x = 0,
+      max_y = 0,
+      tileset_x = 0,
+      tileset_y = 0,
+      pix_x = 0,
+      pix_y = 0;
    uint32_t tile;
    struct VECTOR* tiles = NULL;
 #ifdef DEBUG_TILES

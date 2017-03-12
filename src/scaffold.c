@@ -151,7 +151,8 @@ void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
 
    for( chariter = message ; '\0' != *chariter ; chariter++ ) {
       if( '%' != *chariter ) {
-         bconchar( buffer, *chariter );
+         bstr_res = bconchar( buffer, *chariter );
+         scaffold_check_nonzero( bstr_res );
          continue;
       }
 
@@ -259,7 +260,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    inputfd = CreateFile( bdata( path ), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
    if( NULL == inputfd ) {
 #else
-   inputfd = open( bdata( path ), O_RDONLY );
+   inputfd = open( path_c, O_RDONLY );
    if( 0 > inputfd ) {
 #endif /* WIN32 */
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;

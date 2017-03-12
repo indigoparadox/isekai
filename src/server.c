@@ -14,25 +14,26 @@ static void server_cleanup( const struct REF* ref ) {
    SCAFFOLD_SIZE deleted = 0;
 #endif /* DEBUG */
 
-   if( TRUE == client_free( &(s->self) ) ) {
-      /* Remove clients. */
+   /* Infinite circle. server_free > client_free > ref_dec > server_free */
+   client_free_from_server( s );
+
+   /* Remove clients. */
 #ifdef DEBUG
-      deleted =
+   deleted =
 #endif /* DEBUG */
-         hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
-      scaffold_print_debug(
-         "Removed %d clients from server. %d remaining.\n",
-         deleted, hashmap_count( &(s->clients) )
-      );
-      hashmap_cleanup( &(s->clients) );
-   }
+      hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
+   scaffold_print_debug(
+      "Removed %d clients from server. %d remaining.\n",
+      deleted, hashmap_count( &(s->clients) )
+   );
+   hashmap_cleanup( &(s->clients) );
 }
 
 BOOL server_free( SERVER* s ) {
    if( NULL == s ) {
       return FALSE;
    }
-   return ref_dec( &(s->self.link.refcount) );
+   return refcount_dec( &(s->self.link), "server" );
 }
 
 void server_init( SERVER* s, const bstring myhost ) {
@@ -54,17 +55,22 @@ void server_stop( SERVER* s ) {
 }
 
 void server_client_send( struct CLIENT* c, bstring buffer ) {
+   int bstr_res;
 
    /* TODO: Make sure we're still connected? */
    scaffold_assert( 0 != c->sentinal );
 
-   bconchar( buffer, '\r' );
-   bconchar( buffer, '\n' );
+   bstr_res = bconchar( buffer, '\r' );
+   scaffold_check_nonzero( bstr_res );
+   bstr_res = bconchar( buffer, '\n' );
+   scaffold_check_nonzero( bstr_res );
    connection_write_line( &(c->link), buffer, FALSE );
 
 #ifdef DEBUG_NETWORK
    scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
 #endif /* DEBUG_NETWORK */
+
+cleanup:
    scaffold_assert_server();
 }
 
@@ -222,6 +228,8 @@ struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
+   struct CLIENT* c = NULL;
+
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -241,6 +249,8 @@ void server_drop_client( SERVER* s, bstring nick ) {
       deleted, hashmap_count( &(s->clients) )
    );
 
+   hashmap_iterate( &(s->self.channels), callback_remove_clients, nick );
+
 #ifdef DEBUG
    new_count = hashmap_count( &(s->clients) );
    scaffold_assert( new_count == old_count - deleted );
@@ -256,6 +266,9 @@ void server_drop_client( SERVER* s, bstring nick ) {
       "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
+
+cleanup:
+   return;
 }
 
 void server_listen( SERVER* s, int port ) {
@@ -297,7 +310,7 @@ void server_poll_new_clients( SERVER* s ) {
 
       /* The only association this client should start with is the server's   *
        * client hashmap, so get rid of its initial ref.                       */
-      ref_dec( &(c->link.refcount) );
+      refcount_dec( &(c->link), "client" );
       c = NULL;
    }
 

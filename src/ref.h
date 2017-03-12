@@ -21,22 +21,40 @@ static inline void ref_init( struct REF* ref, void (*free)( const struct REF* ) 
    ref->sentinal = REF_SENTINAL;
 }
 
-static inline void ref_inc( const struct REF* ref ) {
+#define refcount_inc( obj, type ) \
+   ref_inc( &((obj)->refcount), type, __FUNCTION__ )
+#define refcount_dec( obj, type ) \
+   ref_dec( &((obj)->refcount), type, __FUNCTION__ )
+#define refcount_test_inc( obj ) ref_test_inc( obj, __FUNCTION__ )
+#define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
+
+static inline void ref_inc( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
-#ifdef DEBUG_REF
-   scaffold_print_debug( "Reference count increased: %d\n", ref->count );
-#endif /* DEBUG_REF */
    ((struct REF*)ref)->count++;
+#ifdef DEBUG_REF
+   if( NULL != type && NULL != func ) {
+      scaffold_print_debug(
+         "%s: Reference count for %s increased: %d\n", func, type, ref->count
+      );
+   }
+#endif /* DEBUG_REF */
 }
 
-static inline BOOL ref_dec( const struct REF* ref ) {
+static inline BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
+   --((struct REF*)ref)->count;
 #ifdef DEBUG_REF
-   scaffold_print_debug( "Reference count decreased: %d\n", ref->count );
+   if( NULL != type && NULL != func ) {
+      scaffold_print_debug(
+         "%s: Reference count for %s decreased: %d\n", func, type, ref->count
+      );
+   }
 #endif /* DEBUG_REF */
-   if( 0 == --((struct REF*)ref)->count ) {
+   if( 0 >= ((struct REF*)ref)->count ) {
 #ifdef DEBUG_REF
-      scaffold_print_debug( "Object freed: %d\n", ref->count );
+      if( NULL != type && NULL != func ) {
+         scaffold_print_debug( "%s: %s freed.\n", func, type );
+      }
 #endif /* DEBUG_REF */
       ref->gc_free( ref );
       return TRUE;
@@ -44,19 +62,19 @@ static inline BOOL ref_dec( const struct REF* ref ) {
    return FALSE;
 }
 
-static inline BOOL ref_test_inc( void* data ) {
+static inline BOOL ref_test_inc( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
-      ref_inc( (struct REF*)data );
+      ref_inc( (struct REF*)data, "void", func );
       return TRUE;
    }
    return FALSE;
 }
 
-static inline BOOL ref_test_dec( void* data ) {
+static inline BOOL ref_test_dec( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
-      return ref_dec( (struct REF*)data );
+      return ref_dec( (struct REF*)data, "void", func );
    }
    return FALSE;
 }

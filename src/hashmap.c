@@ -222,6 +222,25 @@ cleanup:
    return out;
 }
 
+#ifdef DEBUG
+
+static void hashmap_verify_size( struct HASHMAP* m ) {
+   SCAFFOLD_SIZE size_check = 0;
+   SCAFFOLD_SIZE i;
+
+   for( i = 0 ; i < m->table_size ; i++ ) {
+      if( 0 == m->data[i].in_use ) {
+         continue;
+      }
+
+      size_check++;
+   }
+
+   scaffold_assert( m->size == size_check );
+}
+
+#endif /* DEBUG */
+
 void hashmap_rehash( struct HASHMAP* m );
 
 /*
@@ -230,6 +249,7 @@ void hashmap_rehash( struct HASHMAP* m );
 static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* value, BOOL lock ) {
    int index;
    BOOL ok = FALSE;
+   BOOL pre_existing = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -250,17 +270,23 @@ static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* va
    /* Set the data */
    m->data[index].data = value;
    if( NULL != m->data[index].key ) {
+      scaffold_assert( 1 == m->data[index].in_use );
       bdestroy( m->data[index].key );
+      pre_existing = TRUE;
    }
    m->data[index].key = bstrcpy( key );
    bwriteprotect( (*m->data[index].key) );
    m->data[index].in_use = 1;
-   m->size++;
+   if( TRUE != pre_existing ) {
+      m->size++;
+   }
 
 cleanup:
    if( FALSE != ok && FALSE != lock ) {
       hashmap_lock( m, FALSE );
    }
+
+   hashmap_verify_size( m );
 
    return;
 }
@@ -305,6 +331,7 @@ void hashmap_rehash( struct HASHMAP* m ) {
    free( curr );
 
 cleanup:
+   hashmap_verify_size( m );
    return;
 }
 
@@ -314,7 +341,7 @@ cleanup:
 void hashmap_put( struct HASHMAP* m, const bstring key, void* value ) {
    hashmap_put_internal( m, key, value, TRUE );
    if( NULL != value ) {
-      ref_test_inc( value );
+      refcount_test_inc( value );
    }
    m->last_error = SCAFFOLD_ERROR_NONE;
 }
@@ -322,7 +349,7 @@ void hashmap_put( struct HASHMAP* m, const bstring key, void* value ) {
 void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value ) {
    hashmap_put_internal( m, key, value, FALSE );
    if( NULL != value ) {
-      ref_test_inc( value );
+      refcount_test_inc( value );
    }
    m->last_error = SCAFFOLD_ERROR_NONE;
 }
@@ -526,14 +553,19 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    }
 
 cleanup:
+   hashmap_verify_size( m );
    if( TRUE == ok ) {
       hashmap_lock( m, FALSE );
    }
    return found;
 }
 
-/* Use a callback to delete items. The callback frees the item or decreases   *
- * its refcount as applicable.                                                */
+/** \brief Use a callback to delete items. The callback frees the item or
+ *         decreases its refcount as applicable.
+ *
+ * \return Number of items deleted.
+ *
+ */
 SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
    SCAFFOLD_SIZE i;
    SCAFFOLD_SIZE removed = 0;
@@ -574,6 +606,7 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
    }
 
 cleanup:
+   hashmap_verify_size( m );
    if( TRUE == locked ) {
       hashmap_lock( m, FALSE );
    }
@@ -602,7 +635,7 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
       in_use = m->data[curr].in_use;
       if( 1 == in_use ) {
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
-            ref_test_dec( m->data[curr].data );
+            refcount_test_dec( m->data[curr].data );
 
             /* Blank out the fields */
             m->data[curr].in_use = 0;
@@ -620,6 +653,7 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
       curr = (curr + 1) % m->table_size;
    }
 cleanup:
+   hashmap_verify_size( m );
    return removed;
 }
 

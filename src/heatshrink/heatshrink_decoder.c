@@ -35,8 +35,8 @@ static const char *state_names[] = {
 
 typedef struct {
     uint8_t *buf;               /* output buffer */
-    size_t buf_size;            /* buffer size */
-    size_t *output_size;        /* bytes pushed to buffer, so far */
+    SCAFFOLD_SIZE buf_size;            /* buffer size */
+    SCAFFOLD_SIZE *output_size;        /* bytes pushed to buffer, so far */
 } output_info;
 
 #define NO_BITS ((uint16_t)-1)

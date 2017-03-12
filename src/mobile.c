@@ -33,7 +33,7 @@ static void mobile_cleanup( const struct REF* ref ) {
 }
 
 void mobile_free( struct MOBILE* o ) {
-   ref_dec( &(o->refcount) );
+   refcount_dec( o, "mobile" );
 }
 
 void mobile_init( struct MOBILE* o ) {
@@ -121,7 +121,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       goto cleanup;
    } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
       o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
-      ref_inc( &(o->sprites->refcount) );
+      refcount_inc( o->sprites, "spritesheet" );
    } else if( NULL == o->sprites ) {
       /* Sprites must not be ready yet. */
       goto cleanup;
@@ -155,7 +155,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    }
    o->channel = l;
    if( NULL != o->channel ) {
-      ref_inc( &(l->refcount) );
+      refcount_inc( l, "channel" );
    }
 }
 
@@ -207,6 +207,9 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX;
       }
+      break;
+
+   case MOBILE_UPDATE_NONE:
       break;
    }
 

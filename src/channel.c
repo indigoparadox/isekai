@@ -17,11 +17,13 @@ static void channel_cleanup( const struct REF *ref ) {
    bdestroy( l->name );
    bdestroy( l->topic );
 
+   tilemap_free( &(l->tilemap) );
+
    /* FIXME: Free channel. */
 }
 
 void channel_free( struct CHANNEL* l ) {
-   ref_dec( &(l->refcount) );
+   refcount_dec( l, "channel" );
 }
 
 void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
@@ -103,7 +105,6 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
 struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
    return hashmap_get( &(l->clients), nick );
 }
-
 
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );

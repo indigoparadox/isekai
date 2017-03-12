@@ -89,7 +89,7 @@ void vector_add( struct VECTOR* v, void* data ) {
 
    v->data[v->count] = data;
    v->count++;
-   ref_test_inc( data );
+   refcount_test_inc( data );
 
 cleanup:
    if( FALSE != ok ) {
@@ -172,10 +172,10 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
    }
 
    if( NULL != v->data[index] ) {
-      ref_test_dec( v->data[index] );
+      refcount_test_dec( v->data[index] );
    }
    v->data[index] = data;
-   ref_test_inc( data );
+   refcount_test_inc( data );
 
 cleanup:
    vector_lock( v, FALSE );
@@ -334,7 +334,7 @@ void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    scaffold_assert( v->count > index );
    scaffold_check_bounds( index, v->count );
 
-   ref_test_dec( v->data[index] );
+   refcount_test_dec( v->data[index] );
 
    for( i = index; v->count - 1 > i ; i++ ) {
       v->data[i] = v->data[i + 1];

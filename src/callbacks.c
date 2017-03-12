@@ -217,6 +217,8 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 
+   scaffold_assert( NULL == iter );
+
    client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
 
    return NULL;
@@ -308,6 +310,15 @@ BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
       return TRUE;
    }
    return FALSE;
+}
+
+void* callback_remove_clients( const bstring res, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   bstring nick = (bstring)arg;
+
+   hashmap_remove_cb( &(l->clients), callback_free_clients, nick );
+
+   return NULL;
 }
 
 BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
