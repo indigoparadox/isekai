@@ -22,6 +22,8 @@
 static SCAFFOLD_SIZE syncbuff_size[2];
 static bstring* syncbuff_lines[2];
 static SCAFFOLD_SIZE syncbuff_count[2];
+static uint8_t syncbuff_listening = 0;
+static uint8_t syncbuff_connected = 0;
 
 SCAFFOLD_SIZE syncbuff_get_count( SYNCBUFF_DEST dest ) {
    return syncbuff_count[dest];
@@ -63,12 +65,10 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
 }
 
 uint8_t syncbuff_listen() {
-   static uint8_t listening = 0;
-
 #ifdef SYNCBUFF_STRICT
    syncbuff_assert( 0 == listening );
 #else
-   if( 0 != listening ) {
+   if( 0 != syncbuff_listening ) {
       return 0;
    }
 #endif /* SYNCBUFF_STRICT */
@@ -76,19 +76,19 @@ uint8_t syncbuff_listen() {
    syncbuff_alloc( SYNCBUFF_DEST_CLIENT );
    syncbuff_alloc( SYNCBUFF_DEST_SERVER );
 
-   if( !listening ) {
-      listening = 1;
-      return listening;
+   if( !syncbuff_listening ) {
+      syncbuff_listening = 1;
+      return syncbuff_listening;
    } else {
       return 0;
    }
 }
 
 uint8_t syncbuff_connect() {
-   static uint8_t connected = 0;
-   if( !connected ) {
-      connected = 1;
-      return connected;
+   assert( 1 == syncbuff_listening );
+   if( !syncbuff_connected ) {
+      syncbuff_connected = 1;
+      return syncbuff_connected;
    } else {
       return 0;
    }

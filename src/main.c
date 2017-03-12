@@ -64,15 +64,15 @@ int main( int argc, char** argv ) {
    server_new( main_server, &str_localhost );
    client_new( main_client );
 
-#ifdef USE_RANDOM_PORT
    do {
+#ifdef USE_RANDOM_PORT
       server_port = 30000 + (rand() % 30000);
       bstr_result = bassignformat( str_service, "Port: %d", server_port );
       scaffold_check_nonzero( bstr_result );
+#endif /* USE_RANDOM_PORT */
       server_listen( main_server, server_port );
       graphics_sleep( 100 );
    } while( 0 != scaffold_error );
-#endif /* USE_RANDOM_PORT */
 
    bstr_result = bassigncstr( main_client->nick, "TestNick" );
    scaffold_check_nonzero( bstr_result );

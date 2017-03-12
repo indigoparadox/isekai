@@ -210,6 +210,8 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DUSE_STB" />
+					<Add option="-DUSE_RANDOM_PORT" />
+					<Add option="-DDEBUG_REF" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
