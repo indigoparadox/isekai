@@ -91,6 +91,62 @@ cleanup:
    return;
 }
 
+static void datafile_tilemap_parse_tileset_ezxml_terrain(
+   struct TILEMAP_TILESET* set, ezxml_t xml_terrain
+) {
+   struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
+   const char* xml_attr;
+   bstring buffer = NULL;
+   ezxml_t xml_props = NULL,
+      xml_prop_iter = NULL;
+
+   buffer = bfromcstralloc( 30, "" );
+   scaffold_check_null( buffer );
+
+   terrain_info = (struct TILEMAP_TERRAIN_DATA*)calloc(
+      1, sizeof( struct TILEMAP_TERRAIN_DATA )
+   );
+   scaffold_check_null( terrain_info );
+
+   xml_attr = ezxml_attr( xml_terrain, "name" );
+   terrain_info->name = bfromcstr( xml_attr );
+   scaffold_check_null( terrain_info->name );
+
+   xml_props = ezxml_child( xml_terrain, "properties" );
+   scaffold_check_null( xml_props );
+
+   xml_prop_iter = ezxml_child( xml_terrain, "property" );
+   while( NULL != xml_prop_iter ) {
+      xml_attr = ezxml_attr( xml_prop_iter, "name" );
+
+      if( 0 == strncmp( "movement", xml_attr, 8 ) ) {
+         xml_attr = ezxml_attr( xml_prop_iter, "value" );
+         if( NULL != xml_attr ) {
+            terrain_info->movement = atoi( xml_attr );
+         }
+      }
+
+      xml_prop_iter = ezxml_next( xml_prop_iter );
+   }
+
+   scaffold_print_debug( "Loaded terrain: %s\n", bdata( buffer ) );
+
+   xml_attr = ezxml_attr( xml_terrain, "tile" );
+   scaffold_check_null( xml_attr );
+   terrain_info->tile = atoi( xml_attr );
+
+   vector_add( &(set->terrain), terrain_info );
+   terrain_info = NULL;
+
+cleanup:
+   /* TODO: Don't scrap the whole tileset for a bad tile or two. */
+   bdestroy( buffer );
+   if( NULL != terrain_info ) {
+      bdestroy( terrain_info->name );
+      free( terrain_info );
+   }
+}
+
 static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml_tileset, BOOL local_images ) {
    struct TILEMAP_TILESET* set = NULL;
    ezxml_t
@@ -101,7 +157,6 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
    const char* xml_attr;
    bstring buffer = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
-   struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    struct bstrList* terrain_list = NULL;
    int i,
       bstr_retval;
@@ -142,33 +197,16 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
       xml_image = ezxml_next( xml_image );
    }
 
-   if( !hashmap_ready( &(set->terrain) ) ) {
-      hashmap_init( &(set->terrain) );
+   if( !vector_ready( &(set->terrain) ) ) {
+      vector_init( &(set->terrain) );
    }
 
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
    while( NULL != xml_terrain ) {
-      terrain_info = (struct TILEMAP_TERRAIN_DATA*)calloc( 1, sizeof( struct TILEMAP_TERRAIN_DATA ) );
-      scaffold_check_null( terrain_info );
 
-      xml_attr = ezxml_attr( xml_terrain, "name" );
-      scaffold_check_null( xml_attr );
-      bstr_retval = bassigncstr( buffer, xml_attr );
-      scaffold_check_nonzero( bstr_retval );
-
-      terrain_info->name = bstrcpy( buffer );
-      scaffold_check_null( terrain_info->name );
-
-      scaffold_print_debug( "Loaded terrain: %s\n", bdata( buffer ) );
-
-      xml_attr = ezxml_attr( xml_terrain, "tile" );
-      scaffold_check_null( xml_attr );
-      terrain_info->tile = atoi( xml_attr );
-
-      hashmap_put( &(set->terrain), buffer, terrain_info );
-      terrain_info = NULL;
+      datafile_tilemap_parse_tileset_ezxml_terrain( set, xml_terrain );
 
       xml_terrain = ezxml_next( xml_terrain );
    }
@@ -215,10 +253,6 @@ cleanup:
    bdestroy( buffer );
    if( NULL != tile_info ) {
       /* TODO: Delete tile info. */
-   }
-   if( NULL != terrain_info ) {
-      bdestroy( terrain_info->name );
-      free( terrain_info );
    }
    bstrListDestroy( terrain_list );
    return;

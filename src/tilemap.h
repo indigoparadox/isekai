@@ -19,6 +19,7 @@ typedef enum {
 
 struct TILEMAP_TERRAIN_DATA {
    bstring name;
+   uint8_t movement;
    SCAFFOLD_SIZE tile;
 };
 
@@ -32,7 +33,7 @@ struct TILEMAP_TILESET {
    SCAFFOLD_SIZE tileheight;
    SCAFFOLD_SIZE tilewidth;
    struct HASHMAP images;
-   struct HASHMAP terrain;
+   struct VECTOR terrain;
    struct VECTOR tiles;
 };
 
