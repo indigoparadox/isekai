@@ -220,6 +220,7 @@ cleanup:
 SCAFFOLD_SIZE_SIGNED connection_read_line( CONNECTION* n, bstring buffer, BOOL client ) {
 	SCAFFOLD_SIZE_SIGNED total_read_count = 0;
 #ifdef USE_NETWORK
+	int bstr_res;
    ssize_t last_read_count = 0;
    char read_char = '\0';
 #endif /* USE_NETWORK */
@@ -237,7 +238,8 @@ SCAFFOLD_SIZE_SIGNED connection_read_line( CONNECTION* n, bstring buffer, BOOL c
 
       /* No error and something was read, so add it to the string. */
       total_read_count++;
-      bconchar( buffer, read_char );
+      bstr_res = bconchar( buffer, read_char );
+      scaffold_check_nonzero( bstr_res );
    }
 #elif defined( USE_SYNCBUFF )
    total_read_count = syncbuff_read( buffer, client ? SYNCBUFF_DEST_CLIENT : SYNCBUFF_DEST_SERVER );
@@ -250,6 +252,8 @@ cleanup:
 }
 
 void connection_assign_remote_name( CONNECTION* n, bstring buffer ) {
+   int bstr_res;
+
    /* TODO: Figure out remote hostname. */
 #if 0
    getpeername(
@@ -259,7 +263,11 @@ void connection_assign_remote_name( CONNECTION* n, bstring buffer ) {
    );
    bassignformat( buffer, "%s", inet_ntoa( n->address.sin_addr ) );
 #endif
-   bassignformat( buffer, "localhost" );
+   bstr_res = bassignformat( buffer, "localhost" );
+   scaffold_check_nonzero( bstr_res );
+
+cleanup:
+   return;
 }
 
 void connection_cleanup( CONNECTION* n ) {

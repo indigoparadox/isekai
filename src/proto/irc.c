@@ -67,8 +67,6 @@ const struct tagbstring irc_reply_error_text[35] = {
       goto cleanup; \
    }
 
-extern struct tagbstring str_chunker_server_path;
-
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
@@ -155,7 +153,7 @@ struct IRC_WHO_REPLY {
    SERVER* s;
 };
 
-static void* irc_callback_reply_who( bstring* key, void* iter, void* arg ) {
+static void* irc_callback_reply_who( bstring key, void* iter, void* arg ) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
    server_client_printf(
@@ -169,6 +167,7 @@ static void* irc_callback_reply_who( bstring* key, void* iter, void* arg ) {
       c_iter->username,
       c_iter->realname
    );
+   return NULL;
 }
 
 #if 0
@@ -227,8 +226,10 @@ static void irc_server_user(
          }
       } else if( 4 < consumed ) {
          /* More real name. */
-         bconchar( c->realname, ' ' );
-         bconcat( c->realname, args->entry[i] );
+         bstr_result = bconchar( c->realname, ' ' );
+         scaffold_check_nonzero( bstr_result );
+         bstr_result = bconcat( c->realname, args->entry[i] );
+         scaffold_check_nonzero( bstr_result );
       }
       consumed++;
    }
@@ -331,6 +332,9 @@ static void irc_server_quit(
 
    server_drop_client( s, c->nick );
 
+   /* Client is created outside of server, so must be freed outside, as well. */
+   //client_free( c );
+
    bdestroy( message );
    bdestroy( space );
 }
@@ -342,6 +346,7 @@ static void irc_server_ison(
    bstring response = NULL;
    struct CLIENT* c_iter = NULL;
    int i;
+   int bstr_result;
 
    response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
    scaffold_check_null( response );
@@ -354,8 +359,10 @@ static void irc_server_ison(
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
       assert( 2 <= c_iter->link.refcount.count );
-      bconcat( response, c_iter->nick );
-      bconchar( response, ' ' );
+      bstr_result = bconcat( response, c_iter->nick );
+      scaffold_check_nonzero( bstr_result );
+      bstr_result = bconchar( response, ' ' );
+      scaffold_check_nonzero( bstr_result );
    }
    vector_lock( ison, FALSE );
    scaffold_check_null( response );
@@ -498,8 +505,6 @@ static void irc_server_who(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
    struct CHANNEL* l = NULL;
-   struct CLIENT* c_iter = NULL;
-   SCAFFOLD_SIZE i;
    struct IRC_WHO_REPLY who;
 
    irc_detect_malformed( 2, "WHO" );
@@ -678,6 +683,7 @@ static void irc_client_join(
    struct CHANNEL* l = NULL;
    bstring l_name = NULL;
    bstring l_filename = NULL;
+   int bstr_res;
 
    scaffold_assert_client();
 
@@ -702,7 +708,8 @@ static void irc_client_join(
 
    /* Strip off the #. */
    l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );
-   bcatcstr( l_filename, ".tmx" );
+   bstr_res = bcatcstr( l_filename, ".tmx" );
+   scaffold_check_nonzero( bstr_res );
    scaffold_check_null( l_filename );
 
    client_request_file( c, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
@@ -728,8 +735,6 @@ static void irc_client_error(
 static void irc_client_gamedatablock(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-   struct CHANNEL* l = NULL;
-   /* struct GAMEDATA* d = NULL; */
    const char* progress_c,
       * total_c,
       * length_c,
@@ -814,6 +819,7 @@ static void irc_client_mob(
    bstring sprites_filename,
       c_nick;
    struct CHANNEL* l = NULL;
+   int bstr_res;
 
    irc_detect_malformed( 7, "MOB" );
 
@@ -838,13 +844,15 @@ static void irc_client_mob(
    sprites_filename = args->entry[3];
    scaffold_check_null( sprites_filename );
 
-   bassign( o->sprites_filename, sprites_filename );
+   bstr_res = bassign( o->sprites_filename, sprites_filename );
+   scaffold_check_nonzero( bstr_res );
    scaffold_assert( NULL != o->sprites_filename );
 
    c_nick = args->entry[4];
    scaffold_check_null( c_nick );
 
-   bassign( o->display_name, c_nick );
+   bstr_res = bassign( o->display_name, c_nick );
+   scaffold_check_nonzero( bstr_res );
    scaffold_assert( NULL != o->display_name );
 
    scaffold_check_null( args->entry[5] );
@@ -903,9 +911,9 @@ static void irc_command_cleanup( const struct REF* ref ) {
    int i;
 
    /* Don't try to free the string or callback. */
-   client_free( cmd->client );
+   //client_free( cmd->client );
    cmd->client = NULL;
-   server_free( cmd->server );
+   //server_free( cmd->server );
    cmd->server = NULL;
 
    for( i = 0 ; cmd->args->qty > i ; i++ ) {
@@ -916,7 +924,7 @@ static void irc_command_cleanup( const struct REF* ref ) {
 }
 
 void irc_command_free( IRC_COMMAND* cmd ) {
-   ref_dec( &(cmd->refcount) );
+   refcount_dec( cmd, "command" );
 }
 
 IRC_COMMAND* irc_dispatch(
@@ -966,10 +974,10 @@ IRC_COMMAND* irc_dispatch(
             memcpy( out, command, sizeof( IRC_COMMAND ) );
             if( NULL != s ) {
                out->server = s;
-               ref_inc( &(s->self.link.refcount) );
+               //refcount_inc( &(s->self.link), "server" );
             }
             out->client = c;
-            ref_inc( &(c->link.refcount) );
+            //refcount_inc( &(c->link), "client" );
             out->args = args;
             ref_init( &(out->refcount), irc_command_cleanup );
 

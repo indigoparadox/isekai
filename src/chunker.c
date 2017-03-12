@@ -14,6 +14,8 @@
 static void chunker_cleanup( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
+   scaffold_print_debug( "Destroying chunker for: %s\n", bdata( h->filename ) );
+
    /* Cleanup tracks. */
    vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
    vector_free( &(h->tracks) );
@@ -39,7 +41,7 @@ static void chunker_cleanup( const struct REF* ref ) {
 }
 
 void chunker_free( struct CHUNKER* h ) {
-   ref_dec( &(h->refcount) );
+   refcount_dec( h, "chunker" );
 }
 
 static void chunker_chunk_setup_internal(

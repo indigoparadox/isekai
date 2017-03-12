@@ -12,8 +12,9 @@ static void client_cleanup( const struct REF *ref ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
 #endif /* DEBUG */
-   struct CLIENT* c = NULL;
-   c = scaffold_container_of( c, struct CLIENT, link );
+   CONNECTION* n =
+      (struct CHUNKER*)scaffold_container_of( ref, CONNECTION, refcount );
+   struct CLIENT* c = scaffold_container_of( n, struct CLIENT, link );
    scaffold_assert( NULL != c );
    connection_cleanup( &(c->link) );
    bdestroy( c->nick );
@@ -73,8 +74,20 @@ void client_init( struct CLIENT* c ) {
    c->running = TRUE;
 }
 
+ /** \brief This should ONLY be called from server_free in order to avoid
+  *         an infinite loop.
+  *
+  * \param
+  * \param
+  * \return
+  *
+  */
+BOOL client_free_from_server( SERVER* s ) {
+   client_cleanup( &(s->self.link.refcount) );
+}
+
 BOOL client_free( struct CLIENT* c ) {
-   return ref_dec( &(c->link.refcount) );
+   return refcount_dec( &(c->link), "client" );
 }
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
@@ -98,7 +111,6 @@ cleanup:
 /* This runs on the local client. */
 void client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
-   struct CHANNEL* l = NULL;
 
    scaffold_set_client();
 
@@ -122,8 +134,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       irc_command_free( cmd );
    }
 
-cleanup:
-   //channel_free( l );
+/* cleanup: */
    return;
 }
 
@@ -251,6 +262,7 @@ void client_send_file(
    );
    scaffold_check_nonzero( scaffold_error );
 
+   scaffold_print_debug( "Server: Adding chunker to send: %s\n", bdata( filepath ) );
    hashmap_put( &(c->chunkers), filepath, h );
 
 cleanup:
@@ -266,7 +278,7 @@ void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
       c->puppet = NULL;
    }
    if( NULL != o ) {
-      ref_inc(  &(o->refcount) ); /* Add first, to avoid deletion. */
+      refcount_inc( o, "mobile" ); /* Add first, to avoid deletion. */
       if( NULL != o->owner ) {
          client_clear_puppet( o->owner );
       }
@@ -299,6 +311,7 @@ void client_request_file(
       chunker_unchunk_start(
          h, type, filename, &str_chunker_cache_path
       );
+      scaffold_print_debug( "Adding unchunker to receive: %s\n", bdata( filename ) );
       hashmap_put_nolock( &(c->chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
 
@@ -433,6 +446,10 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       break;
    }
 
+   scaffold_print_debug(
+      "Client: Removing finished chunker for: %s\n", bdata( h->filename )
+   );
+   chunker_free( h );
    hashmap_remove( &(c->chunkers), h->filename );
 
 cleanup:

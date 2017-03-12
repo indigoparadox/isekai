@@ -277,7 +277,7 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFF
 }
 
 void graphics_surface_free( GRAPHICS* g ) {
-   ref_dec( &(g->refcount) );
+   refcount_dec( g, "graphics" );
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {

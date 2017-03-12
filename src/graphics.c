@@ -35,13 +35,6 @@ void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap ) {
    }
 }
 
-SCAFFOLD_INLINE
-GRAPHICS_COLOR get_graphics_bitmap_pixel(
-   struct GRAPHICS_BITMAP* bmp, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
-) {
-
-}
-
 void graphics_bitmap_load(
    const BYTE* data, SCAFFOLD_SIZE data_sz, struct GRAPHICS_BITMAP** bitmap_out
 ) {

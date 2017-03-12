@@ -231,6 +231,7 @@ static void datafile_tilemap_parse_layer_ezxml( struct TILEMAP* t, ezxml_t xml_l
    struct bstrList* tiles_list = NULL;
    int i;
    const char* xml_attr = NULL;
+   int bstr_res = 0;
 
    scaffold_check_null( xml_layer );
 
@@ -257,7 +258,8 @@ static void datafile_tilemap_parse_layer_ezxml( struct TILEMAP* t, ezxml_t xml_l
       vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
 
-   bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
+   bstr_res = bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
+   scaffold_check_nonzero( bstr_res );
    hashmap_put( &(t->layers), buffer, layer );
 
 cleanup:
@@ -270,11 +272,11 @@ cleanup:
 }
 
 static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
-   struct TILEMAP_LAYER* layer = NULL;
    ezxml_t xml_object = NULL;
    bstring buffer = NULL;
    const char* xml_attr = NULL;
    struct TILEMAP_POSITION* obj_out = NULL;
+   int bstr_res = 0;
 
    scaffold_check_null( xml_layer );
 
@@ -300,7 +302,8 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
 
       xml_attr = ezxml_attr( xml_object, "name" );
       scaffold_check_null( xml_attr );
-      bassigncstr( buffer, xml_attr );
+      bstr_res = bassigncstr( buffer, xml_attr );
+      scaffold_check_nonzero( bstr_res );
       xml_attr = ezxml_attr( xml_object, "type" );
       scaffold_check_null( xml_attr );
       if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
@@ -334,8 +337,12 @@ void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFO
       xml_props = NULL,
       xml_tileset = NULL,
       xml_data = NULL;
+   SCAFFOLD_SIZE datasize_check = 0;
 
-   scaffold_assert( strlen( tmdata ) == datasize );
+   scaffold_check_null( tmdata );
+
+   datasize_check = strlen( (const char*)tmdata );
+   scaffold_assert( datasize_check == datasize );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
