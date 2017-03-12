@@ -6,7 +6,6 @@
 #include "chunker.h"
 #include "hashmap.h"
 
-#define MOBILE_SPRITE_SIZE 32
 #define MOBILE_FRAME_MAX 500
 
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
@@ -63,6 +62,14 @@ void mobile_animate( struct MOBILE* o ) {
    case MOBILE_FRAME_LEFT_FORWARD:
       o->frame = MOBILE_FRAME_NONE;
       break;
+   }
+
+   /* TODO: Enforce walking speed server-side. */
+   if( 0 != o->steps_remaining ) {
+      o->steps_remaining += o->steps_inc;
+   } else {
+      o->prev_x = o->x;
+      o->prev_y = o->y;
    }
 }
 
@@ -129,8 +136,13 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
-   pix_x = MOBILE_SPRITE_SIZE * (o->x - twindow->x);
-   pix_y = MOBILE_SPRITE_SIZE * (o->y - twindow->y);
+   pix_x = (MOBILE_SPRITE_SIZE * (o->x - twindow->x)) +
+      (o->prev_x != o->x ? o->steps_remaining : 0);
+   pix_y = (MOBILE_SPRITE_SIZE * (o->y - twindow->y)) +
+      (o->prev_y != o->y ? o->steps_remaining : 0);
+
+   bstring pos = bformat( "%d (%d), %d (%d)", o->x, o->prev_x, o->y, o->prev_y );
+   graphics_draw_text( twindow->g, 100, 10, pos );
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
@@ -175,6 +187,8 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    switch( update->update ) {
    case MOBILE_UPDATE_MOVEUP:
       o->y--;
+      o->facing = MOBILE_FACING_UP;
+      o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
       if( TRUE == instant ) {
          o->prev_y = o->y;
       } else {
@@ -184,15 +198,19 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
 
    case MOBILE_UPDATE_MOVEDOWN:
       o->y++;
+      o->facing = MOBILE_FACING_DOWN;
+      o->steps_inc = MOBILE_STEPS_INCREMENT;
       if( TRUE == instant ) {
          o->prev_y = o->y;
       } else {
-         o->steps_remaining = MOBILE_STEPS_MAX;
+         o->steps_remaining = MOBILE_STEPS_MAX * -1;
       }
       break;
 
    case MOBILE_UPDATE_MOVELEFT:
       o->x--;
+      o->facing = MOBILE_FACING_LEFT;
+      o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
       if( TRUE == instant ) {
          o->prev_x = o->x;
       } else {
@@ -202,10 +220,12 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
 
    case MOBILE_UPDATE_MOVERIGHT:
       o->x++;
+      o->facing = MOBILE_FACING_RIGHT;
+      o->steps_inc = MOBILE_STEPS_INCREMENT;
       if( TRUE == instant ) {
          o->prev_x = o->x;
       } else {
-         o->steps_remaining = MOBILE_STEPS_MAX;
+         o->steps_remaining = MOBILE_STEPS_MAX * -1;
       }
       break;
 

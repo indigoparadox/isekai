@@ -42,7 +42,8 @@ struct MOBILE {
    SCAFFOLD_SIZE y;
    SCAFFOLD_SIZE prev_x;
    SCAFFOLD_SIZE prev_y;
-   SCAFFOLD_SIZE steps_remaining;
+   int16_t steps_inc;
+   int16_t steps_remaining;
    bstring sprites_filename;
    GRAPHICS* sprites;
    MOBILE_FRAME_ALT frame_alt;
@@ -62,7 +63,8 @@ struct MOBILE_UPDATE_PACKET {
 
 #define MOBILE_RANDOM_SERIAL_LEN 64
 #define MOBILE_STEPS_MAX 32
-#define MOBILE_STEPS_INCREMENT 8
+#define MOBILE_STEPS_INCREMENT 2
+#define MOBILE_SPRITE_SIZE 32
 
 #define mobile_new( o ) \
     o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
