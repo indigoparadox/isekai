@@ -111,6 +111,42 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    vector_set( &(l->mobiles), o->serial, o, TRUE );
 }
 
+void channel_set_mobile(
+   struct CHANNEL* l, uint8_t serial, const bstring sprites_filename,
+   const bstring nick, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+) {
+   struct MOBILE* o = NULL;
+   int bstr_res = 0;
+   struct CLIENT* c = NULL;
+
+   o = vector_get( &(l->mobiles), serial );
+   if( NULL == o ) {
+      mobile_new( o );
+      o->serial = serial;
+      mobile_set_channel( o, l );
+      vector_set( &(l->mobiles), o->serial, o, TRUE );
+   }
+
+   c = channel_get_client_by_name( l, nick );
+   if( NULL != c && 0 == bstrcmp( c->nick, nick ) ) {
+      client_set_puppet( c, o );
+   }
+
+   bstr_res = bassign( o->sprites_filename, sprites_filename );
+   scaffold_check_nonzero( bstr_res );
+   scaffold_assert( NULL != o->sprites_filename );
+
+   bstr_res = bassign( o->display_name, nick );
+   scaffold_check_nonzero( bstr_res );
+   scaffold_assert( NULL != o->display_name );
+
+   o->x = x;
+   o->y = y;
+
+cleanup:
+   return;
+}
+
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial ) {
    vector_remove( &(l->mobiles), serial );
 }

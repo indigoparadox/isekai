@@ -80,8 +80,7 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
    connection_connect( &(c->link), server , port );
    scaffold_check_nonzero( scaffold_error );
 
-   client_printf( c, "NICK %b", c->nick );
-   client_printf( c, "USER %b", c->realname );
+   proto_register( c );
 
 cleanup:
 
