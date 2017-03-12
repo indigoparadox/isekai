@@ -2,7 +2,7 @@
 #define PROTO_C
 #include "../proto.h"
 
-#include "../callbacks.h"
+#include "../callback.h"
 #include "../chunker.h"
 #include "../datafile.h"
 

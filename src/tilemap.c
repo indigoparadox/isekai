@@ -1,8 +1,6 @@
 #include "tilemap.h"
 
-#include "ezxml.h"
-#include "b64.h"
-#include "callbacks.h"
+#include "callback.h"
 
 #include <memory.h>
 #include <string.h>

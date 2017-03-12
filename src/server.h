@@ -2,7 +2,7 @@
 #define SERVER_H
 
 #include "vector.h"
-#include "connection.h"
+#include "connect.h"
 #include "client.h"
 #include "channel.h"
 

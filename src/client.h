@@ -3,7 +3,7 @@
 
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
-#include "connection.h"
+#include "connect.h"
 #include "graphics.h"
 #include "channel.h"
 #include "hashmap.h"

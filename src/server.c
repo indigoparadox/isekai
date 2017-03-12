@@ -2,9 +2,7 @@
 
 #include <stdlib.h>
 
-#include "heatshrink/heatshrink_encoder.h"
-#include "b64.h"
-#include "callbacks.h"
+#include "callback.h"
 #include "hashmap.h"
 #include "proto.h"
 
