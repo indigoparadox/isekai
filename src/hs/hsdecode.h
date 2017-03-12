@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "heatshrink_common.h"
-#include "heatshrink_config.h"
+#include "hs_com.h"
+#include "hs_conf.h"
 #include "../scaffold.h"
 
 typedef enum {

@@ -9,8 +9,8 @@
 #include "b64.h"
 #endif /* USE_B64 */
 
-#include "heatshrink/heatshrink_decoder.h"
-#include "heatshrink/heatshrink_encoder.h"
+#include "hs/hsdecode.h"
+#include "hs/hsencode.h"
 
 #define CHUNKER_WINDOW_SIZE 14
 #define CHUNKER_LOOKAHEAD_SIZE 8

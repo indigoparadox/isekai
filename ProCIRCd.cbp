@@ -407,10 +407,10 @@
 			<Option compiler="gcc" use="0" buildCommand="$compiler $includes -c $file -o $object" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.h" />
-		<Unit filename="src/callbacks.c">
+		<Unit filename="src/callback.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/callbacks.h" />
+		<Unit filename="src/callback.h" />
 		<Unit filename="src/channel.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -448,10 +448,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
-		<Unit filename="src/connection.c">
+		<Unit filename="src/connect.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/connection.h" />
+		<Unit filename="src/connect.h" />
 		<Unit filename="src/datafile.h" />
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
@@ -491,78 +491,16 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/hashmap.h" />
-		<Unit filename="src/heatshrink/heatshrink_config.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (MingW32)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_decoder.c">
+		<Unit filename="src/hs/hs_com.h" />
+		<Unit filename="src/hs/hs_conf.h" />
+		<Unit filename="src/hs/hsdecode.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (MingW32)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
 		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_decoder.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (MingW32)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_encoder.c">
+		<Unit filename="src/hs/hsdecode.h" />
+		<Unit filename="src/hs/hsencode.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (MingW32)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
 		</Unit>
-		<Unit filename="src/heatshrink/heatshrink_encoder.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
-			<Option target="Check (Linux)" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (MingW32)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-		</Unit>
+		<Unit filename="src/hs/hsencode.h" />
 		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
