@@ -332,9 +332,6 @@ static void irc_server_quit(
 
    server_drop_client( s, c->nick );
 
-   /* Client is created outside of server, so must be freed outside, as well. */
-   //client_free( c );
-
    bdestroy( message );
    bdestroy( space );
 }
@@ -728,6 +725,9 @@ static void irc_client_error(
       2 <= args->qty &&
       0 == bstrcmp( &str_closing, args->entry[1] )
    ) {
+      /* We're quitting, so remove all channel mirrors. */
+      client_remove_all_channels( c );
+
       c->running = FALSE;
    }
 }

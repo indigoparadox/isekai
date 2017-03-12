@@ -165,8 +165,12 @@ SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
    SCAFFOLD_SIZE_SIGNED size_out = -1;
 
    syncbuff_assert( NULL != buffer );
-   btrunc( buffer, 0 );
+   bstr_result = btrunc( buffer, 0 );
    syncbuff_assert( 0 == blength( buffer ) );
+   if( 0 != bstr_result ) {
+      syncbuff_trace( "btrunc error on line: %d\n", __LINE__ );
+      goto cleanup;
+   }
 
    if( 0 < syncbuff_count[dest] ) {
       (syncbuff_count[dest])--;
