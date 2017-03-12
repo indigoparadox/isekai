@@ -65,6 +65,8 @@ struct MOBILE_UPDATE_PACKET {
 #define MOBILE_STEPS_MAX 32
 #define MOBILE_STEPS_INCREMENT 2
 #define MOBILE_SPRITE_SIZE 32
+#define MOBILE_FRAME_DIVISOR 90
+#define MOBILE_MOVE_DIVISOR 30
 
 #define mobile_new( o ) \
     o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \

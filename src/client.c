@@ -517,6 +517,7 @@ void client_poll_input( struct CLIENT* c ) {
    scaffold_check_null( update.l );
 
    if( INPUT_TYPE_KEY == input.type ) {
+#if 0
       if(
          NULL != c->puppet &&
          (c->puppet->prev_x != c->puppet->x ||
@@ -524,6 +525,7 @@ void client_poll_input( struct CLIENT* c ) {
       ) {
          goto cleanup; /* Silently ignore input until animations are done. */
       }
+#endif // 0
 
       switch( input.character ) {
       case 'q':

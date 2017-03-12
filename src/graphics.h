@@ -9,6 +9,10 @@
 
 #define GRAPHICS_RASTER_EXTENSION ".bmp"
 
+typedef enum GRAPHICS_TIMER {
+   GRAPHICS_TIMER_FPS = 30
+} GRAPHICS_TIMER;
+
 typedef enum {
    GRAPHICS_TRANSIT_FX_NONE,
    GRAPHICS_TRANSIT_FX_FADEIN,
@@ -105,6 +109,7 @@ void graphics_sleep( uint16_t milliseconds );
 void graphics_colors_to_surface(
    GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
 );
+void graphics_wait_for_fps_timer();
 
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );
 void graphics_bitmap_load(

@@ -6,12 +6,11 @@
 #include "chunker.h"
 #include "hashmap.h"
 
-#define MOBILE_FRAME_MAX 500
-
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
 
 /* FIXME: Replace with a proper frame limiter. */
 static uint8_t mobile_frame_counter = 0;
+static uint8_t mobile_move_counter = 0;
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
@@ -46,36 +45,44 @@ void mobile_init( struct MOBILE* o ) {
 }
 
 void mobile_animate( struct MOBILE* o ) {
-   if( NULL == o || 0 != mobile_frame_counter ) {
-      return;
-   }
-   switch( o->frame ) {
-   case MOBILE_FRAME_NONE:
-      o->frame = MOBILE_FRAME_RIGHT_FORWARD;
-      break;
-   case MOBILE_FRAME_RIGHT_FORWARD:
-      o->frame = MOBILE_FRAME_DEFAULT;
-      break;
-   case MOBILE_FRAME_DEFAULT:
-      o->frame = MOBILE_FRAME_LEFT_FORWARD;
-      break;
-   case MOBILE_FRAME_LEFT_FORWARD:
-      o->frame = MOBILE_FRAME_NONE;
-      break;
-   }
-
-   /* TODO: Enforce walking speed server-side. */
-   if( 0 != o->steps_remaining ) {
-      o->steps_remaining += o->steps_inc;
-   } else {
-      o->prev_x = o->x;
-      o->prev_y = o->y;
-   }
-}
-
-void mobile_frame_count() {
-   if( mobile_frame_counter++ > MOBILE_FRAME_MAX ) {
+   if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
+   }
+   if( NULL != o && 0 == mobile_frame_counter ) {
+      switch( o->frame ) {
+      case MOBILE_FRAME_NONE:
+         o->frame = MOBILE_FRAME_RIGHT_FORWARD;
+         break;
+      case MOBILE_FRAME_RIGHT_FORWARD:
+         o->frame = MOBILE_FRAME_DEFAULT;
+         break;
+      case MOBILE_FRAME_DEFAULT:
+         o->frame = MOBILE_FRAME_LEFT_FORWARD;
+         break;
+      case MOBILE_FRAME_LEFT_FORWARD:
+         o->frame = MOBILE_FRAME_NONE;
+         break;
+      }
+   }
+
+   if( mobile_move_counter++ > MOBILE_MOVE_DIVISOR ) {
+      mobile_move_counter = 0;
+   }
+   if( NULL != o && 0 == mobile_move_counter ) {
+      /* TODO: Enforce walking speed server-side. */
+      if( 0 != o->steps_remaining ) {
+         o->steps_remaining += o->steps_inc;
+         /* Clamp to zero for odd increments. */
+         if(
+            (0 < o->steps_inc && 0 < o->steps_remaining) ||
+            (0 > o->steps_inc && 0 > o->steps_remaining)
+         ) {
+            o->steps_remaining = 0;
+         }
+      } else {
+         o->prev_x = o->x;
+         o->prev_y = o->y;
+      }
    }
 }
 
@@ -186,6 +193,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
 
    switch( update->update ) {
    case MOBILE_UPDATE_MOVEUP:
+      o->prev_x = o->x; /* Forceful reset. */
       o->y--;
       o->facing = MOBILE_FACING_UP;
       o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
@@ -197,6 +205,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
       break;
 
    case MOBILE_UPDATE_MOVEDOWN:
+      o->prev_x = o->x; /* Forceful reset. */
       o->y++;
       o->facing = MOBILE_FACING_DOWN;
       o->steps_inc = MOBILE_STEPS_INCREMENT;
@@ -208,6 +217,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
       break;
 
    case MOBILE_UPDATE_MOVELEFT:
+      o->prev_y = o->y; /* Forceful reset. */
       o->x--;
       o->facing = MOBILE_FACING_LEFT;
       o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
@@ -219,6 +229,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
       break;
 
    case MOBILE_UPDATE_MOVERIGHT:
+      o->prev_y = o->y; /* Forceful reset. */
       o->x++;
       o->facing = MOBILE_FACING_RIGHT;
       o->steps_inc = MOBILE_STEPS_INCREMENT;

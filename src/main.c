@@ -90,7 +90,7 @@ int main( int argc, char** argv ) {
 
    while( TRUE ) {
 
-      graphics_sleep( 50 );
+      graphics_wait_for_fps_timer();
 
       if( !main_server->self.running ) {
          break;
@@ -100,7 +100,6 @@ int main( int argc, char** argv ) {
          server_stop( main_server );
       }
 
-      mobile_frame_count();
       server_poll_new_clients( main_server );
       client_update( main_client, &g );
       server_service_clients( main_server );
