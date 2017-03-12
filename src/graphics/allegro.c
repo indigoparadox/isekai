@@ -541,3 +541,7 @@ void graphics_colors_to_surface(
       //putpixel( g->surface, i % g->w, i * g->w, makecol( colors[i].r, colors[i].g, colors[i].b ) );
    }
 }
+
+void graphics_wait_for_fps_timer() {
+   rest( 1.0f / GRAPHICS_TIMER_FPS );
+}
