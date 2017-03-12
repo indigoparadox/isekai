@@ -15,7 +15,7 @@ static void server_cleanup( const struct REF* ref ) {
 #endif /* DEBUG */
 
    /* Infinite circle. server_free > client_free > ref_dec > server_free */
-   client_free_from_server( s );
+   client_free_from_server( &(s->self) );
 
    /* Remove clients. */
 #ifdef DEBUG
@@ -162,7 +162,6 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
 
    if( NULL == l ) {
       channel_new( l, l_name, FALSE );
-      //gamedata_init_server( &(l->gamedata), l_name );
       client_add_channel( &(s->self), l );
       scaffold_print_info( "Server: Channel created: %s\n", bdata( l->name ) );
    } else {
@@ -228,8 +227,6 @@ struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
 }
 
 void server_drop_client( SERVER* s, bstring nick ) {
-   struct CLIENT* c = NULL;
-
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -267,7 +264,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
       deleted, hashmap_count( &(s->self.channels) )
    );
 
-cleanup:
+/* cleanup: */
    return;
 }
 

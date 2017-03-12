@@ -11,6 +11,7 @@
 #include "wdirent.h"
 #else
 #include <dirent.h>
+#include <unistd.h>
 #endif /* _WIN32 */
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );

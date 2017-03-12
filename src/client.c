@@ -13,7 +13,7 @@ static void client_cleanup( const struct REF *ref ) {
    SCAFFOLD_SIZE deleted;
 #endif /* DEBUG */
    CONNECTION* n =
-      (struct CHUNKER*)scaffold_container_of( ref, CONNECTION, refcount );
+      (struct CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
    struct CLIENT* c = scaffold_container_of( n, struct CLIENT, link );
    scaffold_assert( NULL != c );
    connection_cleanup( &(c->link) );
@@ -45,14 +45,7 @@ static void client_cleanup( const struct REF *ref ) {
    );
    hashmap_cleanup( &(c->chunkers) );
 
-#ifdef DEBUG
-   deleted =
-#endif /* DEBUG */
-      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
-   scaffold_print_debug(
-      "Removed %d channels. %d remaining.\n",
-      deleted, hashmap_count( &(c->channels) )
-   );
+   client_remove_all_channels( c );
    hashmap_cleanup( &(c->channels) );
 
    c->sentinal = 0;
@@ -77,13 +70,13 @@ void client_init( struct CLIENT* c ) {
  /** \brief This should ONLY be called from server_free in order to avoid
   *         an infinite loop.
   *
-  * \param
-  * \param
-  * \return
+  * \param c - The CLIENT struct from inside of the SERVER being freed.
+  * \return TRUE for now.
   *
   */
-BOOL client_free_from_server( SERVER* s ) {
-   client_cleanup( &(s->self.link.refcount) );
+BOOL client_free_from_server( struct CLIENT* c ) {
+   client_cleanup( &(c->link.refcount) );
+   return TRUE;
 }
 
 BOOL client_free( struct CLIENT* c ) {
@@ -106,6 +99,19 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
 cleanup:
 
    return;
+}
+
+void client_remove_all_channels( struct CLIENT* c ) {
+#ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
+
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+   scaffold_print_debug(
+      "Removed %d channels. %d remaining.\n",
+      deleted, hashmap_count( &(c->channels) )
+   );
 }
 
 /* This runs on the local client. */

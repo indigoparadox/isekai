@@ -57,7 +57,9 @@ int main( int argc, char** argv ) {
    */
 
    buffer = bfromcstr( "" );
+#ifdef USE_RANDOM_PORT
    str_service = bfromcstralloc( 8, "" );
+#endif /* USE_RANDOM_PORT */
 
    server_new( main_server, &str_localhost );
    client_new( main_client );
@@ -120,14 +122,18 @@ int main( int argc, char** argv ) {
       tilemap_draw_ortho( &twindow );
       client_poll_input( main_client );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
+#ifdef USE_RANDOM_PORT
       graphics_draw_text( &g, 40, 10, str_service );
+#endif /* USE_RANDOM_PORT */
       graphics_flip_screen( &g );
    }
 
 cleanup:
 
    bdestroy( buffer );
+#ifdef USE_RANDOM_PORT
    bdestroy( str_service );
+#endif /* USE_RANDOM_PORT */
    client_free( main_client );
    server_free( main_server );
    free( main_server );

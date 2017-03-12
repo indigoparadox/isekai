@@ -59,10 +59,12 @@ BOOL cb_client_del_channels( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, vo
 void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 
 void client_init( struct CLIENT* c );
+BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
 void client_add_channel( struct CLIENT* c, struct CHANNEL* l );
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
 void client_connect( struct CLIENT* c, const bstring server, int port );
+void client_remove_all_channels( struct CLIENT* c );
 void client_update( struct CLIENT* c, GRAPHICS* g );
 void client_join_channel( struct CLIENT* c, const bstring name );
 void client_leave_channel( struct CLIENT* c, const bstring lname );
