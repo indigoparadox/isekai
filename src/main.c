@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
 #endif /* USE_RANDOM_PORT */
 
    server_new( main_server, &str_localhost );
-   client_new( main_client );
+   client_new( main_client, TRUE );
 
    do {
 #ifdef USE_RANDOM_PORT

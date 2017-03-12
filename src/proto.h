@@ -46,6 +46,7 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o );
 void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
+void proto_client_stop( struct CLIENT* c );
 
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(

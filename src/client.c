@@ -9,43 +9,23 @@
 #include "datafile.h"
 
 static void client_cleanup( const struct REF *ref ) {
-#ifdef DEBUG
-   SCAFFOLD_SIZE deleted;
-#endif /* DEBUG */
    CONNECTION* n =
-      (struct CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
+      (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
    struct CLIENT* c = scaffold_container_of( n, struct CLIENT, link );
    scaffold_assert( NULL != c );
+
    connection_cleanup( &(c->link) );
+
    bdestroy( c->nick );
    bdestroy( c->realname );
    bdestroy( c->remote );
    bdestroy( c->username );
-   client_clear_puppet( c );
-   hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    hashmap_cleanup( &(c->sprites) );
 
-#ifdef DEBUG
-   deleted =
-#endif /* DEBUG */
-      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
-   scaffold_print_debug(
-      "Removed %d commands. %d remaining.\n",
-      deleted, vector_count( &(c->command_queue) )
-   );
+   client_stop( c );
+
    vector_free( &(c->command_queue) );
-
-#ifdef DEBUG
-   deleted =
-#endif /* DEBUG */
-      hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
-   scaffold_print_debug(
-      "Removed %d chunkers. %d remaining.\n",
-      deleted, hashmap_count( &(c->chunkers) )
-   );
    hashmap_cleanup( &(c->chunkers) );
-
-   client_remove_all_channels( c );
    hashmap_cleanup( &(c->channels) );
 
    c->sentinal = 0;
@@ -53,17 +33,21 @@ static void client_cleanup( const struct REF *ref ) {
    /* free( c ); */
 }
 
-void client_init( struct CLIENT* c ) {
+void client_init( struct CLIENT* c, BOOL client_side ) {
    ref_init( &(c->link.refcount), client_cleanup );
+
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
    hashmap_init( &(c->sprites) );
+   hashmap_init( &(c->chunkers) );
+
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+
    c->sentinal = CLIENT_SENTINAL;
-   hashmap_init( &(c->chunkers) );
+   c->client_side = client_side;
    c->running = TRUE;
 }
 
@@ -75,6 +59,9 @@ void client_init( struct CLIENT* c ) {
   *
   */
 BOOL client_free_from_server( struct CLIENT* c ) {
+   /* Kind of a hack, but make sure "running" is set to true to fool the      *
+    * client_stop() call that comes later.                                    */
+   c->running = TRUE;
    client_cleanup( &(c->link.refcount) );
    return TRUE;
 }
@@ -99,19 +86,6 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
 cleanup:
 
    return;
-}
-
-void client_remove_all_channels( struct CLIENT* c ) {
-#ifdef DEBUG
-   SCAFFOLD_SIZE deleted;
-
-   deleted =
-#endif /* DEBUG */
-      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
-   scaffold_print_debug(
-      "Removed %d channels. %d remaining.\n",
-      deleted, hashmap_count( &(c->channels) )
-   );
 }
 
 /* This runs on the local client. */
@@ -146,12 +120,66 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
 
 void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
+#ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
 
-   scaffold_assert_client();
+   scaffold_assert( TRUE == c->running );
 
-   buffer = bfromcstr( "QUIT" );
-   client_send( c, buffer );
+   if( TRUE == c->client_side ) {
+      scaffold_assert_client();
+   } else {
+      scaffold_assert_server();
+   }
+#endif /* DEBUG */
+
+   client_clear_puppet( c );
+
+   buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
+   scaffold_check_null( buffer );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+   scaffold_print_debug(
+      "Removed %d channels. %d remaining.\n",
+      deleted, hashmap_count( &(c->channels) )
+   );
+   scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
+   scaffold_print_debug(
+      "Removed %d commands. %d remaining.\n",
+      deleted, vector_count( &(c->command_queue) )
+   );
+   scaffold_assert( 0 == vector_count( &(c->command_queue) ) );
+
+#ifdef DEBUG
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
+   scaffold_print_debug(
+      "Removed %d chunkers. %d remaining.\n",
+      deleted, hashmap_count( &(c->chunkers) )
+   );
+   scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
+
+   /* Empty receiving buffer. */
+   while( 0 < connection_read_line( &(c->link), buffer, c->client_side ) );
+
+   client_clear_puppet( c );
+   if( TRUE == c->client_side ) {
+      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+   }
+
+   c->running = FALSE;
+
+cleanup:
    bdestroy( buffer );
+   return;
 }
 
 void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
@@ -210,15 +238,23 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
    scaffold_check_nonzero( bstr_retval );
    bstr_retval = bconchar( buffer_copy, '\n' );
    scaffold_check_nonzero( bstr_retval );
-   connection_write_line( &(c->link), buffer_copy, TRUE );
+   connection_write_line( &(c->link), buffer_copy, c->client_side );
 
 #ifdef DEBUG_NETWORK
-   scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
+   if( TRUE == c->client_side ) {
+      scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
+   } else {
+      scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
+   }
 #endif /* DEBUG_NETWORK */
 
 cleanup:
    bdestroy( buffer_copy );
-   scaffold_assert_client();
+   if( TRUE == c->client_side ) {
+      scaffold_assert_client();
+   } else {
+      scaffold_assert_server();
+   }
    return;
 }
 
@@ -226,7 +262,11 @@ void client_printf( struct CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
-   scaffold_assert_client();
+   if( TRUE == c->client_side ) {
+      scaffold_assert_client();
+   } else {
+      scaffold_assert_server();
+   }
 
    buffer = bfromcstralloc( strlen( message ), "" );
    scaffold_check_null( buffer );
@@ -480,7 +520,7 @@ void client_poll_input( struct CLIENT* c ) {
    if( INPUT_TYPE_KEY == input.type ) {
       switch( input.character ) {
       case 'q':
-         client_stop( c );
+         proto_client_stop( c );
          break;
       case 'w':
          update.update = MOBILE_UPDATE_MOVEUP;

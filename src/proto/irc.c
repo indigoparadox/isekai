@@ -55,7 +55,7 @@ const struct tagbstring irc_reply_error_text[35] = {
 #define IRC_STANZA_ALLOC 80
 
 #define irc_error( enum_index ) \
-   server_client_printf( \
+   client_printf( \
       c, ":%b %d %b %b", \
       s->self.remote, enum_index, c->nick, irc_reply_error_text[enum_index - 400] \
    );
@@ -71,8 +71,9 @@ void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
 ) {
+   scaffold_assert_server();
    /* Note the starting point and progress for the client. */
-   server_client_printf(
+   client_printf(
       c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
       c->nick, filename, h->type, start_pos,
       h->tx_chunk_length, h->raw_length, data
@@ -81,6 +82,7 @@ void proto_send_chunk(
 }
 
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
+   scaffold_assert_client();
    scaffold_print_debug(
       "Client: Aborting transfer of %s from server due to cached copy.\n",
       bdata( h->filename )
@@ -89,18 +91,21 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 }
 
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
+   scaffold_assert_client();
    scaffold_print_debug( "Client: Requesting file: %s\n", bdata( filename ) );
    client_printf( c, "GRF %d %b", type, filename );
 }
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
-   server_client_printf(
+   scaffold_assert_server();
+   client_printf(
       c, "MOB %b %d %b %b %d %d",
       o->channel->name, o->serial, o->sprites_filename, o->owner->nick, o->x, o->y
    );
 }
 
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+   scaffold_assert_client();
    client_printf(
       c, "GU %b %d %d",
       update->l->name, update->o->serial, update->update
@@ -108,10 +113,16 @@ void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
 }
 
 void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
-   server_client_printf(
+   scaffold_assert_server();
+   client_printf(
       c, "GU %b %d %d",
       update->l->name, update->o->serial, update->update
    );
+}
+
+void proto_client_stop( struct CLIENT* c ) {
+   scaffold_assert_client();
+   client_printf( c, "QUIT" );
 }
 
 /* This file contains our (possibly limited, slightly incompatible) version *
@@ -119,27 +130,27 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
 
 static void irc_server_reply_welcome( struct CLIENT* c, SERVER* s ) {
 
-   server_client_printf(
+   client_printf(
       c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
       s->self.remote, c->nick, c->nick, c->username, c->remote
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 002 %b :Your host is ProCIRCd, running version 0.1",
       s->self.remote, c->nick
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 003 %b :This server was created 01/01/1970",
       s->self.remote, c->nick
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 004 %b :%b ProCIRCd-0.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
       s->self.remote, c->nick, s->self.remote
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
       s->self.remote, c->nick, hashmap_count( &(s->clients) )
    );
@@ -156,7 +167,7 @@ struct IRC_WHO_REPLY {
 static void* irc_callback_reply_who( bstring key, void* iter, void* arg ) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
-   server_client_printf(
+   client_printf(
       who->c,
       ":%b 352 %b %b %b %b server %b H :0 %b",
       who->s->self.remote,
@@ -257,7 +268,7 @@ static void irc_server_nick(
 
    server_set_client_nick( s, c, newnick );
    if( SCAFFOLD_ERROR_NULLPO == scaffold_error ) {
-      server_client_printf(
+      client_printf(
          c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
       );
@@ -265,7 +276,7 @@ static void irc_server_nick(
    }
 
    if( SCAFFOLD_ERROR_NOT_NULLPO == scaffold_error ) {
-      server_client_printf(
+      client_printf(
          c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->nick
       );
@@ -298,7 +309,7 @@ static void irc_server_nick(
       irc_server_reply_welcome( c, s );
    }
 
-   server_client_printf(
+   client_printf(
       c, ":%b %b :%b!%b@%b NICK %b",
       s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
    );
@@ -325,7 +336,7 @@ static void irc_server_quit(
    space = bfromcstr( " " );
    message = bjoin( args, space );
 
-   server_client_printf(
+   client_printf(
       c, "ERROR :Closing Link: %b (Client Quit)",
       c->nick
    );
@@ -364,7 +375,7 @@ static void irc_server_ison(
    vector_lock( ison, FALSE );
    scaffold_check_null( response );
 
-   server_client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
+   client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
 
 cleanup:
    if( NULL != ison ) {
@@ -386,7 +397,7 @@ static void irc_server_join(
    struct bstrList* cat_names = NULL;
 
    if( 2 > args->qty ) {
-      server_client_printf(
+      client_printf(
          c, ":%b 461 %b %b :Not enough parameters",
          s->self.remote, c->username, args->entry[0]
       );
@@ -399,7 +410,7 @@ static void irc_server_join(
    scaffold_check_nonzero( bstr_result );
 
    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
-      server_client_printf(
+      client_printf(
          c, ":%b 403 %b %b :No such channel",
          s->self.remote, c->username, namehunt
       );
@@ -422,7 +433,7 @@ static void irc_server_join(
    );
 
    /* Now tell the joining client. */
-   server_client_printf(
+   client_printf(
       c, ":%b!%b@%b JOIN %b",
       c->nick, c->username, c->remote, l->name
    );
@@ -432,17 +443,17 @@ static void irc_server_join(
    hashmap_iterate( &(l->clients), callback_concat_clients, cat_names );
    names = bjoinblk( cat_names, " ", 1 );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 332 %b %b :%b",
       s->self.remote, c->nick, l->name, l->topic
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 353 %b = %b :%b",
       s->self.remote, c->nick, l->name, names
    );
 
-   server_client_printf(
+   client_printf(
       c, ":%b 366 %b %b :End of NAMES list",
       s->self.remote, c->nick, l->name
    );
@@ -476,7 +487,7 @@ static void irc_server_privmsg(
 
    c_dest = server_get_client( s, args->entry[1] );
    if( NULL != c_dest ) {
-      server_client_printf(
+      client_printf(
          c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
       );
       goto cleanup;
@@ -519,7 +530,7 @@ static void irc_server_who(
    who.l = l;
    who.s = s;
    hashmap_iterate( &(l->clients), irc_callback_reply_who, &who );
-   server_client_printf(
+   client_printf(
       c, ":server 315 %b :End of /WHO list.",
       c->nick, l->name
    );
@@ -538,7 +549,7 @@ static void irc_server_ping(
       goto cleanup;
    }
 
-   server_client_printf(
+   client_printf(
       c, ":%b PONG %b :%b", s->self.remote, s->self.remote, c->remote
    );
 
@@ -725,10 +736,7 @@ static void irc_client_error(
       2 <= args->qty &&
       0 == bstrcmp( &str_closing, args->entry[1] )
    ) {
-      /* We're quitting, so remove all channel mirrors. */
-      client_remove_all_channels( c );
-
-      c->running = FALSE;
+      client_stop( c );
    }
 }
 
