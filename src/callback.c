@@ -242,9 +242,9 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
 cleanup:
    if( NULL == tdata ) {
 #ifdef DEBUG_TILES
-      scaffold_print_debug(
+      /* scaffold_print_debug(
          "Unable to get tileset for: %d, %d\n", pos->x, pos->y
-      );
+      ); */
 #endif /* DEBUG_TILES */
    }
    return tdata;
