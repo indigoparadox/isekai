@@ -13,6 +13,10 @@
 #include <unistd.h>
 #endif /* _WIN32 */
 
+#if defined( USE_CONNECT_DIALOG ) && !defined( USE_NETWORK )
+#error Connect dialog requires network to be enabled!
+#endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
+
 SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
@@ -91,7 +95,9 @@ int main( int argc, char** argv ) {
 #ifdef USE_RANDOM_PORT
       server_port = 30000 + (rand() % 30000);
 #endif /* USE_RANDOM_PORT */
+#if defined( USE_RANDOM_PORT ) || defined( USE_CONNECT_DIALOG )
       bstr_result = bassignformat( str_service, "Port: %d", server_port );
+#endif /* USE_RANDOM_PORT || USE_CONNECT_DIALOG */
       scaffold_check_nonzero( bstr_result );
       server_listen( main_server, server_port );
       graphics_sleep( 100 );

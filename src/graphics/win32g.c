@@ -67,7 +67,7 @@ cleanup:
    return;
 }
 
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
 }
 
@@ -109,7 +109,10 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 
 }
 
-void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
+void graphics_draw_text(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
+   const bstring text
+) {
 
 }
 
