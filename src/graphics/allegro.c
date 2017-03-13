@@ -207,6 +207,10 @@ const PACKFILE_VTABLE graphics_fmem_vtable = {
    graphics_fmem_ferror,
 };
 
+SCAFFOLD_INLINE static int graphics_get_color( GRAPHICS* g ) {
+   return g->color;
+}
+
 void graphics_screen_init(
    GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2
 ) {
@@ -255,14 +259,12 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
    /* TODO: Free surface. */
 }
 
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    if( 0 < w && 0 < h) {
       g->surface = create_bitmap( w, h );
    } else {
       g->surface = NULL;
    }
-   g->x = x;
-   g->y = y;
    g->w = w;
    g->h = h;
    g->font = NULL;
@@ -491,18 +493,43 @@ cleanup:
    return fmem_info->block;
 }
 
-void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
-   textout_centre_ex(
-      NULL == g ? screen : g->surface,
-      font, bdata( text ), x, y,
-      //makecol( g->color.r, g->color.g, g->color.b ),
-      NULL == g ? 0 : g->color,
-      -1
-   );
+void graphics_draw_text(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
+   const bstring text
+) {
+   switch( align ) {
+   case GRAPHICS_TEXT_ALIGN_CENTER:
+      textout_centre_ex(
+         NULL == g ? screen : g->surface,
+         font, bdata( text ), x, y,
+         //makecol( g->color.r, g->color.g, g->color.b ),
+         NULL == g ? 0 : g->color,
+         -1
+      );
+      break;
+   case GRAPHICS_TEXT_ALIGN_LEFT:
+      textout_ex(
+         NULL == g ? screen : g->surface,
+         font, bdata( text ), x, y,
+         //makecol( g->color.r, g->color.g, g->color.b ),
+         NULL == g ? 0 : g->color,
+         -1
+      );
+      break;
+   case GRAPHICS_TEXT_ALIGN_RIGHT:
+      textout_right_ex(
+         NULL == g ? screen : g->surface,
+         font, bdata( text ), x, y,
+         //makecol( g->color.r, g->color.g, g->color.b ),
+         NULL == g ? 0 : g->color,
+         -1
+      );
+      break;
+   }
 }
 
 void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-
+   rectfill( g->surface, x, y, x + w, y + h, graphics_get_color( g ) );
 }
 
 void graphics_measure_text(

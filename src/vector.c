@@ -442,6 +442,13 @@ void vector_lock( struct VECTOR* v, BOOL lock ) {
    #endif /* USE_THREADS */
 }
 
+/** \brief Iterate through the given vector with the given callback.
+ * \param[in] v         The vector through which to iterate.
+ * \param[in] callback  The callback to run on each item.
+ * \param[in] arg       The argument to pass the callback.
+ * \return If one of the callbacks returns an item, the iteration loop will
+ *         break and return this item. Otherwise, NULL will be returned.
+ */
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
    void* current_iter = NULL;
@@ -454,6 +461,37 @@ void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
 
    vector_lock( v, TRUE );
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
+      current_iter = vector_get( v, i );
+      cb_return = callback( NULL, current_iter, arg );
+      if( NULL != cb_return ) {
+         break;
+      }
+   }
+   vector_lock( v, FALSE );
+
+cleanup:
+   return cb_return;
+}
+
+/** \brief Iterate through the given vector with the given callback in reverse.
+ * \param[in] v         The vector through which to iterate.
+ * \param[in] callback  The callback to run on each item.
+ * \param[in] arg       The argument to pass the callback.
+ * \return If one of the callbacks returns an item, the iteration loop will
+ *         break and return this item. Otherwise, NULL will be returned.
+ */
+void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg ) {
+   void* cb_return = NULL;
+   void* current_iter = NULL;
+   SCAFFOLD_SIZE_SIGNED i;
+
+   scaffold_check_null( v );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   /* TODO: This can work for scalars too, can't it? */
+   scaffold_assert( FALSE == v->scalar );
+
+   vector_lock( v, TRUE );
+   for( i = vector_count( v ) - 1 ; 0 <= i ; i-- ) {
       current_iter = vector_get( v, i );
       cb_return = callback( NULL, current_iter, arg );
       if( NULL != cb_return ) {

@@ -184,7 +184,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->x, o->prev_x, o->y, o->prev_y
    );
    graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
-   graphics_draw_text( twindow->g, 100, 30, pos );
+   graphics_draw_text( twindow->g, 100, 30, GRAPHICS_TEXT_ALIGN_LEFT, pos );
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */

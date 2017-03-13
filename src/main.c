@@ -1,7 +1,7 @@
 
+#include "input.h"
 #include "server.h"
 #include "ui.h"
-#include "input.h"
 #include "b64.h"
 #include "scaffold.h"
 #include "callback.h"
@@ -19,6 +19,10 @@ struct CLIENT* main_client = NULL;
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
 static struct tagbstring str_default_channel = bsStatic( "#testchannel" );
+#ifdef USE_CONNECT_DIALOG
+static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
+static struct tagbstring str_cdialog_prompt = bsStatic( "Connect to [address:port]:" );
+#endif /* USE_CONNECT_DIALOG */
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO
@@ -44,6 +48,12 @@ int main( int argc, char** argv ) {
    struct GRAPHICS_TILE_WINDOW twindow = { 0 };
    struct CHANNEL* l = NULL;
    int bstr_result = 0;
+   bstring server_address = NULL;
+#ifdef USE_CONNECT_DIALOG
+   struct UI_WINDOW* win = NULL;
+   const char* server_port_c = NULL;
+   struct bstrList* server_tuple = NULL;
+#endif /* USE_CONNECT_DIALOG */
 #ifdef USE_RANDOM_PORT
    bstring str_service = NULL;
 #endif /* USE_RANDOM_PORT */
@@ -80,9 +90,9 @@ int main( int argc, char** argv ) {
    do {
 #ifdef USE_RANDOM_PORT
       server_port = 30000 + (rand() % 30000);
+#endif /* USE_RANDOM_PORT */
       bstr_result = bassignformat( str_service, "Port: %d", server_port );
       scaffold_check_nonzero( bstr_result );
-#endif /* USE_RANDOM_PORT */
       server_listen( main_server, server_port );
       graphics_sleep( 100 );
    } while( 0 != scaffold_error );
@@ -95,7 +105,54 @@ int main( int argc, char** argv ) {
    scaffold_check_nonzero( bstr_result );
 
    do {
-      client_connect( main_client, &str_localhost, server_port );
+#ifdef USE_CONNECT_DIALOG
+      /* Prompt for an address and port. */
+      ui_window_new(
+         win, &ui,
+         UI_WINDOW_TYPE_SIMPLE_TEXT,
+         &str_cdialog_title,
+         &str_cdialog_prompt,
+         40, 40, 300, 80
+      );
+      scaffold_check_null( win );
+      ui_window_push( &ui, win );
+      bstr_result =
+         bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
+      scaffold_check_nonzero( bstr_result );
+      do {
+         ui_draw( &ui, &g );
+         graphics_flip_screen( &g );
+         graphics_wait_for_fps_timer();
+      } while( 0 == ui_poll_input( &ui, &p, buffer ) );
+      ui_window_pop( &ui );
+
+      /* Split up the address and port. */
+      server_tuple = bsplit( buffer, ':' );
+      if( 2 < server_tuple->qty ) {
+         bstrListDestroy( server_tuple );
+         server_tuple = NULL;
+         continue;
+      }
+      server_address = server_tuple->entry[0];
+      server_port_c = bdata( server_tuple->entry[1] );
+      if( NULL == server_port_c ) {
+         bstrListDestroy( server_tuple );
+         server_tuple = NULL;
+         continue;
+      }
+      server_port = atoi( server_port_c );
+#else
+      server_address = &str_localhost;
+#endif /* USE_CONNECT_DIALOG */
+
+      client_connect( main_client, server_address, server_port );
+
+#ifdef USE_CONNECT_DIALOG
+      /* Destroy this after, since server_address is a ptr inside of it. */
+      bstrListDestroy( server_tuple );
+      server_tuple = NULL;
+#endif /* USE_CONNECT_DIALOG */
+
       graphics_sleep( 100 );
    } while( 0 != scaffold_error );
 
@@ -131,7 +188,7 @@ int main( int argc, char** argv ) {
       ) {
          graphics_draw_text(
             &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
-            &str_loading
+            GRAPHICS_TEXT_ALIGN_CENTER, &str_loading
          );
          continue;
       }
@@ -153,7 +210,7 @@ int main( int argc, char** argv ) {
       client_poll_input( main_client );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT
-      graphics_draw_text( &g, 40, 10, str_service );
+      graphics_draw_text( &g, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
 #endif /* USE_RANDOM_PORT */
       graphics_flip_screen( &g );
    }

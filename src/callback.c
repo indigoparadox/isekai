@@ -6,6 +6,7 @@
 #include "proto.h"
 #include "chunker.h"
 #include "tilemap.h"
+#include "ui.h"
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
@@ -446,6 +447,18 @@ BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
 BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
    free( iter );
    return TRUE;
+}
+
+BOOL callback_free_controls( const bstring key, void* iter, void* arg ) {
+   bstring id = (bstring)key;
+   bstring id_search = (bstring)arg;
+   struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
+
+   if( NULL == arg || 0 == bstrcmp( id_search, id ) ) {
+      ui_control_free( control );
+      return TRUE;
+   }
+   return FALSE;
 }
 
 BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {

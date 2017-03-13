@@ -5,6 +5,11 @@
 
 #include <stdint.h>
 
+typedef enum INPUT_SCANCODE {
+   INPUT_SCANCODE_BACKSPACE = 63,
+   INPUT_SCANCODE_ENTER = 67
+} INPUT_SCANCODE;
+
 typedef enum _INPUT_TYPE {
    INPUT_TYPE_NONE,
    INPUT_TYPE_KEY,
@@ -13,7 +18,8 @@ typedef enum _INPUT_TYPE {
 
 struct INPUT {
    void* event;
-   int16_t character;
+   uint16_t character;
+   uint16_t scancode;
    INPUT_TYPE type;
 };
 

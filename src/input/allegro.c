@@ -16,8 +16,6 @@ typedef struct {
 
 static void input_close_allegro_window() {
    scaffold_set_client();
-   //client_stop( main_client );
-   //server_stop( main_server );
    proto_client_stop( main_client );
 }
 
@@ -28,10 +26,16 @@ void input_init( struct INPUT* p ) {
 
 void input_get_event( struct INPUT* input ) {
    poll_keyboard();
+   uint16_t key_pressed;
 
    if( keypressed() ) {
+      key_pressed = readkey();
       input->type = INPUT_TYPE_KEY;
-      input->character = readkey() & 0xff;
+      input->character = key_pressed & 0xff;
+      input->scancode = (key_pressed & 0xff00) >> 8;
+#ifdef DEBUG_KEYS
+      scaffold_print_debug( "Scancode: %d\n", input->scancode );
+#endif /* DEBUG_KEYS */
    } else {
       input->type = INPUT_TYPE_NONE;
       input->character = 0;
