@@ -1,26 +1,6 @@
 
 #include "../graphics.h"
 
-void _IPWinBGPaint( HWND hWnd, HDC hdc ) {
-   static HBRUSH hHatchBrush = NULL;
-   RECT sClientRect;
-   HRGN sClientRgn;
-
-   if( NULL == hHatchBrush ) {
-      /* Create the brush. */
-      hHatchBrush = CreateHatchBrush( HS_DIAGCROSS, RGB( 64, 64, 64 ) );
-      SetBkMode( hHatchBrush, TRANSPARENT );
-   }
-
-   /* Set the background color. */
-   SetBkColor( hdc, RGB( 0, 0, 0 ) );
-
-   /* Draw the hatching. */
-   GetClientRect( hWnd, &sClientRect );
-   sClientRgn = CreateRectRgnIndirect( &sClientRect );
-   FillRgn( hdc, sClientRgn, hHatchBrush );
-}
-
 LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
    PAINTSTRUCT ps;
@@ -72,7 +52,7 @@ void graphics_screen_init(
       nRetVal = 1;
       goto cleanup;
    }
-   
+
    hWnd = CreateWindowEx(
       NULL, "IPWindowClass", "ProIRCd",
       WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU,

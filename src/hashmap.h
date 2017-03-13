@@ -96,6 +96,7 @@ void* hashmap_get_nolock( struct HASHMAP* m, const bstring key );
 
 void* hashmap_get_first( struct HASHMAP* m );
 
+const bstring hashmap_next_key( struct HASHMAP* m, const bstring key );
 BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key );
 BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key );
 

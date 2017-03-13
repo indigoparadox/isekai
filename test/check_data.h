@@ -15,6 +15,7 @@ typedef struct _BLOB {
    uint32_t sentinal_end;
 } BLOB;
 
+void free_blob( BLOB* blob );
 BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, SCAFFOLD_SIZE c, uint32_t sent_e );
 
 #endif /* CHECK_DATA_H */

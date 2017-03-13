@@ -524,7 +524,7 @@ cleanup:
    if( FALSE != ok ) {
       hashmap_lock( m, FALSE );
    }
-   return found_key;
+   return key_out;
 }
 
 BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {

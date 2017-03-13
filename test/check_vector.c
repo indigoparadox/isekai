@@ -50,18 +50,21 @@ START_TEST( test_vector_add ) {
       ck_assert_int_eq( 1, blob->refcount.count );
 
       /* Delete the blob. */
-      ref_dec( &(blob->refcount) );
+      free_blob( blob );
    }
 
    /* Verify count of 1 blobs. */
-   ck_assert_int_eq( vector_count( v ), 3 );
+   ck_assert_int_eq( vector_count( v ), 1 );
 
    /* Delete the remaining blob. */
    blob = (BLOB*)vector_get( v, 0 );
    vector_remove( v, 0 );
-   ref_dec( &(blob->refcount) );
+   free_blob( blob );
 
    vector_free( v );
+
+cleanup:
+   return;
 }
 END_TEST
 
@@ -126,8 +129,8 @@ START_TEST( test_vector_get ) {
 
 cleanup:
 
-   ref_dec( &(((BLOB*)vector_get( v, 0 ))->refcount) );
-   ref_dec( &(((BLOB*)vector_get( v, 1 ))->refcount) );
+   free_blob( (BLOB*)vector_get( v, 0 ) );
+   free_blob( (BLOB*)vector_get( v, 1 ) );
    vector_remove( v, 0 );
    vector_remove( v, 0 );
    vector_free( v );
@@ -154,7 +157,7 @@ START_TEST( test_vector_delete ) {
       blob = (BLOB*)vector_get( v, i );
       vector_remove( v, i );
       ck_assert_int_eq( blob->sentinal_start, 10101 * i );
-      ref_dec( &(blob->refcount) );
+      free_blob( blob );
    }
 
    ck_assert_int_eq( vector_count( v ), 0 );
@@ -170,7 +173,7 @@ START_TEST( test_vector_delete ) {
       blob = (BLOB*)vector_get( v, 0 );
       vector_remove( v, 0 );
       ck_assert_int_eq( blob->sentinal_start, 10101 * i );
-      ref_dec( &(blob->refcount) );
+      free_blob( blob );
    }
 
    ck_assert_int_eq( vector_count( v ), 0 );

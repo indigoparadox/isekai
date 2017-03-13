@@ -248,7 +248,7 @@ cleanup:
 #ifdef DEBUG_TILES
    bdestroy( bnum );
 #endif /* DEBUG_TILES */
-   return;
+   return NULL;
 }
 
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {

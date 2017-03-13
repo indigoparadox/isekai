@@ -493,7 +493,7 @@ cleanup:
    return basename_out;
 }
 
-void scaffold_join_path( bstring path1, bstring path2 ) {
+void scaffold_join_path( bstring path1, const bstring path2 ) {
    int bstr_res = 0;
    if( SCAFFOLD_DIRSEP_CHAR != bchar( path1, blength( path1 ) - 1 ) ) {
       bstr_res = bconchar( path1, SCAFFOLD_DIRSEP_CHAR );

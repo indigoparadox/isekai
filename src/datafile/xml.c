@@ -164,8 +164,12 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
       bstr_retval;
    SCAFFOLD_SIZE terrain_id = 0;
    struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
-   char* terrain_c = NULL;
+   const char* terrain_c = NULL;
    char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1] = { 0 };
+#ifdef DEBUG
+   SCAFFOLD_SIZE dbg_terrain_id[4];
+   const char* dbg_terrain_name[4];
+#endif /* DEBUG */
 
    scaffold_error = 0;
 
@@ -276,18 +280,30 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
          terrain_c++;
       }
 
+#ifdef DEBUG
+      for( i = 0 ; 4 > i ; i++ ) {
+         if( NULL == tile_info->terrain[i] ) {
+            dbg_terrain_name[i] = NULL;
+            dbg_terrain_id[i] = 0;
+         } else {
+            dbg_terrain_name[i] = bdata( tile_info->terrain[i]->name );
+            dbg_terrain_id[i] = tile_info->terrain[i]->id;
+         }
+      }
+
       scaffold_print_debug(
          "Loaded tile %d: %d (%s), %d (%s), %d (%s), %d (%s)\n",
          tile_info->id,
-         NULL == tile_info->terrain[0] ? NULL : tile_info->terrain[0]->id,
-         NULL == tile_info->terrain[0] ? NULL : bdata( tile_info->terrain[0]->name ),
-         NULL == tile_info->terrain[1] ? NULL : tile_info->terrain[1]->id,
-         NULL == tile_info->terrain[1] ? NULL : bdata( tile_info->terrain[1]->name ),
-         NULL == tile_info->terrain[2] ? NULL : tile_info->terrain[2]->id,
-         NULL == tile_info->terrain[2] ? NULL : bdata( tile_info->terrain[2]->name ),
-         NULL == tile_info->terrain[3] ? NULL : tile_info->terrain[3]->id,
-         NULL == tile_info->terrain[3] ? NULL : bdata( tile_info->terrain[3]->name )
+         dbg_terrain_id[0],
+         dbg_terrain_name[0],
+         dbg_terrain_id[1],
+         dbg_terrain_name[1],
+         dbg_terrain_id[2],
+         dbg_terrain_name[2],
+         dbg_terrain_id[3],
+         dbg_terrain_name[3]
       );
+#endif /* DEBUG */
 
       vector_set( &(set->tiles), tile_info->id, tile_info, TRUE );
       tile_info = NULL;

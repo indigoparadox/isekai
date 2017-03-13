@@ -85,6 +85,10 @@ void mobile_apply_steps_remaining(
 );
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
+MOBILE_UPDATE mobile_calculate_terrain(
+   struct TILEMAP* t, MOBILE_UPDATE update_in,
+   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+);
 MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 SCAFFOLD_INLINE
 SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );

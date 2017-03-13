@@ -25,7 +25,7 @@ void check_chunker_setup_unchecked() {
    FILE* cache_file;
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
-   scaffold_join_path( cache_file_path, &chunker_test_map_filename );
+   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
@@ -98,7 +98,7 @@ void check_chunker_chunk_checked(
 
    /* Chunk the testing data into the chunk list. */
    chunker_chunk_start(
-      h, filename, type, data_source, data_source_len,
+      h, type, data_source, data_source_len,
       chunk_len
    );
 
@@ -154,7 +154,7 @@ void check_chunker_unchunk_checked(
    ck_assert_int_ne( 0, chunks->qty );
    ck_assert_int_ne( 0, data_source_len );
 
-   chunker_unchunk_start( h, filename, type, filename, &chunker_test_cachepath );
+   chunker_unchunk_start( h, type, filename, &chunker_test_cachepath );
 
    ck_assert_int_eq( chunks->qty, vector_count( v_starts ) );
    if( chunks->qty != vector_count( v_starts ) ) {
@@ -264,7 +264,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    SCAFFOLD_SIZE cache_file_size = 0;
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
-   scaffold_join_path( cache_file_path, &chunker_test_map_filename );
+   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    scaffold_error_silent = TRUE;
    scaffold_read_file_contents(
       cache_file_path,
@@ -287,7 +287,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    cache_file_size = 0;
 
    bassign( cache_file_path, &chunker_test_cachepath );
-   scaffold_join_path( cache_file_path, &chunker_test_img_filename );
+   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
    scaffold_error_silent = TRUE;
    scaffold_read_file_contents(
       cache_file_path,
