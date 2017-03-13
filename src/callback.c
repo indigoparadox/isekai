@@ -179,6 +179,33 @@ void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
+   bstring file_iter = (bstring)iter,
+      file_iter_short = NULL,
+      file_search = (bstring)arg;
+
+   file_iter_short = bmidstr(
+      file_iter,
+      str_chunker_server_path.slen + 1,
+      blength( file_iter ) - str_chunker_server_path.slen - 1
+   );
+   scaffold_check_null( file_iter_short );
+
+   if( 0 != bstrcmp( file_iter_short, file_search ) ) {
+      /* FIXME: If the files request and one of the files present start    *
+       * with similar names (tilelist.png.tmx requested, tilelist.png      *
+       * exists, eg), then weird stuff happens.                            */
+      /* FIXME: Don't try to send directories. */
+      bdestroy( file_iter_short );
+      file_iter_short = NULL;
+   } else {
+      scaffold_print_debug( "Server: File Found: %s\n", bdata( file_iter ) );
+   }
+
+cleanup:
+   return file_iter_short;
+}
+
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
@@ -203,7 +230,6 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    struct TILEMAP* t = layer->tilemap;
    struct TILEMAP_TILESET* set = NULL;
    uint32_t gid = 0;
-   struct TILEMAP_TERRAIN_DATA* terrain = NULL;
    struct TILEMAP_TILE_DATA* tdata = NULL;
 
    gid = tilemap_get_tile( layer, pos->x, pos->y );

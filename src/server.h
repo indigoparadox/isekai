@@ -47,5 +47,6 @@ void server_listen( SERVER* s, int port );
 void server_poll_new_clients( SERVER* s );
 void server_service_clients( SERVER* s );
 void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick );
+bstring server_file_search( bstring search_filename );
 
 #endif /* SERVER_H */

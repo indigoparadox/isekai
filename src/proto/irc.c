@@ -565,60 +565,24 @@ cleanup:
 static void irc_server_gamerequestfile(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
-   struct VECTOR* files = NULL;
-   SCAFFOLD_SIZE i;
-   bstring file_iter = NULL;
-   bstring file_iter_short = NULL;
    char* type_c;
    CHUNKER_DATA_TYPE type;
    int bstr_result;
+   bstring file_path_found = NULL;
 
    irc_detect_malformed( 3, "GRF" );
-
-   vector_new( files );
-
-   file_iter_short = bfromcstralloc( CHUNKER_FILENAME_ALLOC, "" );
-
-   /* This list only exists inside of this function, so no need to lock it. */
-   scaffold_list_dir( &str_chunker_server_path, files, NULL, FALSE, FALSE );
 
    type_c = bdata( args->entry[1] );
    scaffold_check_null( type_c );
    type = atoi( type_c );
 
-   for( i = 0 ; vector_count( files ) > i ; i++ ) {
-      file_iter = (bstring)vector_get( files, i );
-      bstr_result = bassignmidstr(
-         file_iter_short,
-         file_iter,
-         str_chunker_server_path.slen + 1,
-         blength( file_iter ) - str_chunker_server_path.slen - 1
-      );
-      scaffold_check_nonzero( bstr_result );
+   file_path_found = server_file_search( args->entry[2] );
+   scaffold_check_null( file_path_found );
 
-      if( 0 == bstrcmp(
-         file_iter_short,
-         args->entry[2] )
-      ) {
-         /* FIXME: If the files request and one of the files present start    *
-          * with similar names (tilelist.png.tmx requested, tilelist.png      *
-          * exists, eg), then weird stuff happens.                            */
-         /* FIXME: Don't try to send directories. */
-         scaffold_print_debug( "GRF: File Found: %s\n", bdata( file_iter ) );
-         client_send_file(
-            c, type, &str_chunker_server_path, file_iter_short
-         );
-         break;
-      }
-   }
+   client_send_file( c, type, &str_chunker_server_path, file_path_found );
 
 cleanup:
-   if( NULL != files ) {
-      vector_remove_cb( files, callback_free_strings, NULL );
-   }
-   vector_free( files );
-   free( files );
-   bdestroy( file_iter_short );
+   bdestroy( file_path_found );
    return;
 }
 
