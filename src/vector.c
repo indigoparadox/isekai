@@ -39,10 +39,12 @@ inline static void vector_reset( struct VECTOR* v ) {
 inline static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    SCAFFOLD_SIZE old_size = v->size,
       i;
+   void* new_data = NULL;
 
    v->size = new_size;
-   v->data = (void**)realloc( v->data, sizeof(void*) * v->size );
+   new_data = (void**)realloc( v->data, sizeof(void*) * v->size );
    scaffold_check_null( v->data );
+   v->data = new_data;
    for( i = old_size ; i < v->size ; i++ ) {
       v->data[i] = NULL;
    }
@@ -151,6 +153,8 @@ cleanup:
 }
 
 void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force ) {
+   SCAFFOLD_SIZE new_size = v->size;
+
    scaffold_check_null( v );
 
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -166,8 +170,14 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
 
    if( FALSE == force ) {
       scaffold_check_bounds( index, v->count );
-   } else if( index > v->size ) {
-      vector_grow( v, index + 1 );
+   } else if( index + 1 > v->size ) {
+      while( v->size < index + 1 ) {
+         new_size = v->size * 2;
+         vector_grow( v, new_size );
+         scaffold_check_nonzero( scaffold_error );
+      }
+
+      /* TODO: Is this the right thing to do? */
       v->count = index + 1;
    }
 

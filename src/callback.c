@@ -197,6 +197,24 @@ cleanup:
    return NULL;
 }
 
+void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
+   struct TILEMAP* t = layer->tilemap;
+   struct TILEMAP_TILESET* set = NULL;
+   uint32_t gid = 0;
+   struct TILEMAP_TERRAIN_DATA* terrain = NULL;
+   struct TILEMAP_TILE_DATA* tdata = NULL;
+
+   gid = tilemap_get_tile( layer, pos->x, pos->y );
+   set = tilemap_get_tileset( t, gid );
+   scaffold_check_null( set );
+   tdata = vector_get( &(set->tiles), gid - 1 );
+
+cleanup:
+   return tdata;
+}
+
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 

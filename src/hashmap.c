@@ -443,6 +443,7 @@ static BOOL hashmap_contains_key_internal( struct HASHMAP* m, const bstring key,
    int i;
    int in_use;
    BOOL ok = FALSE;
+   BOOL retval = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -464,7 +465,8 @@ static BOOL hashmap_contains_key_internal( struct HASHMAP* m, const bstring key,
          scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
 #endif /* DEBUG_MATCHING */
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
-            return TRUE;
+            retval = TRUE;
+            break;
          }
       }
 
@@ -475,7 +477,50 @@ cleanup:
    if( FALSE != lock && FALSE != ok ) {
       hashmap_lock( m, FALSE );
    }
-   return FALSE;
+   return retval;
+}
+
+const bstring hashmap_next_key( struct HASHMAP* m, const bstring key ) {
+   int curr;
+   int i;
+   int in_use;
+   BOOL ok = FALSE;
+   bstring key_out = NULL;
+   BOOL found_key = FALSE;
+
+   scaffold_check_null( m );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
+
+   hashmap_lock( m, TRUE );
+   ok = TRUE;
+
+   /* Find data location */
+   curr = hashmap_hash_int( m, key );
+
+   /* Linear probing, if necessary */
+   for( i = 0 ; MAX_CHAIN_LENGTH > i ; i++ ) {
+      in_use = m->data[curr].in_use;
+      if( 1 == in_use ) {
+#ifdef DEBUG_MATCHING
+         scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+#endif /* DEBUG_MATCHING */
+         if( 0 == bstrcmp( m->data[curr].key, key ) ) {
+            found_key = TRUE;
+         } else if( TRUE == found_key ) {
+            /* TODO: Should we copy this? */
+            key_out = m->data[curr].key;
+         }
+      }
+
+      curr = (curr + 1) % m->table_size;
+   }
+
+cleanup:
+   if( FALSE != ok ) {
+      hashmap_lock( m, FALSE );
+   }
+   return found_key;
 }
 
 BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {

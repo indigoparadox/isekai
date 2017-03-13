@@ -293,8 +293,9 @@ void graphics_set_font( GRAPHICS* g, const bstring name ) {
    /* TODO: Support fonts. */
 }
 
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color ) {
-   memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) );
+void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
+   //memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) );
+   g->color = color;
 }
 
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
@@ -490,9 +491,10 @@ cleanup:
 
 void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
    textout_centre_ex(
-      g->surface, font, bdata( text ), x, y,
+      NULL == g ? screen : g->surface,
+      font, bdata( text ), x, y,
       //makecol( g->color.r, g->color.g, g->color.b ),
-      g->color,
+      NULL == g ? 0 : g->color,
       -1
    );
 }
