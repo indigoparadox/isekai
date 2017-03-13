@@ -127,21 +127,24 @@ void channel_set_mobile(
       vector_set( &(l->mobiles), o->serial, o, TRUE );
    }
 
+   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
    c = channel_get_client_by_name( l, nick );
    if( NULL != c && 0 == bstrcmp( c->nick, nick ) ) {
       client_set_puppet( c, o );
    }
 
    bstr_res = bassign( o->sprites_filename, sprites_filename );
-   scaffold_check_nonzero( bstr_res );
    scaffold_assert( NULL != o->sprites_filename );
+   scaffold_check_nonzero( bstr_res );
 
    bstr_res = bassign( o->display_name, nick );
-   scaffold_check_nonzero( bstr_res );
    scaffold_assert( NULL != o->display_name );
+   scaffold_check_nonzero( bstr_res );
 
    o->x = x;
    o->y = y;
+   o->prev_x = x;
+   o->prev_y = y;
 
 cleanup:
    return;

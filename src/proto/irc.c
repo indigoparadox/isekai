@@ -827,6 +827,7 @@ static void irc_client_mob(
    y = atoi( y_c );
 
    channel_set_mobile( l, serial, sprites_filename, nick, x, y );
+   scaffold_assert( 0 == scaffold_error );
 
    scaffold_print_debug(
       "Client: Local instance of mobile updated: %s (%d)\n",

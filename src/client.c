@@ -509,6 +509,7 @@ cleanup:
 void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
    struct MOBILE_UPDATE_PACKET update;
+   struct MOBILE* puppet = c->puppet;
 #ifdef DEBUG_TERRAIN
    bstring tilemap_dbg_key = NULL;
 #endif /* DEBUG_TERRAIN */
@@ -516,24 +517,21 @@ void client_poll_input( struct CLIENT* c ) {
    scaffold_set_client();
 
    input_get_event( &input );
-   update.o = c->puppet;
-   if( NULL == c->puppet ) {
+   update.o = puppet;
+   if( NULL == puppet ) {
       goto cleanup; /* Silently. */
    }
 
-   update.l = c->puppet->channel;
+   update.l = puppet->channel;
    scaffold_check_null( update.l );
 
    if( INPUT_TYPE_KEY == input.type ) {
-#if 0
       if(
-         NULL != c->puppet &&
-         (c->puppet->prev_x != c->puppet->x ||
-            c->puppet->prev_y != c->puppet->y)
+         NULL != puppet &&
+         (puppet->steps_remaining < -8 || puppet->steps_remaining > 8)
       ) {
          goto cleanup; /* Silently ignore input until animations are done. */
       }
-#endif // 0
 
       switch( input.character ) {
       case 'q':
