@@ -173,8 +173,8 @@
 					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DUSE_STB" />
-					<Add option="-DxDEBUG_TERRAIN" />
 					<Add option="-DDEBUG_TILES" />
+					<Add option="-DxUSE_INLINE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -331,15 +331,11 @@
 					<Add option="-ggdb3" />
 					<Add option="-fvar-tracking" />
 					<Add option="-DUSE_ALLEGRO" />
-					<Add option="-DDEBUG" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
-					<Add option="-DxUSE_NETWORK" />
-					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
-					<Add option="-DUSE_STB" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />

@@ -140,6 +140,7 @@ static void* tilemap_layer_draw_tile(
       pix_x = 0,
       pix_y = 0;
    struct TILEMAP* t = twindow->t;
+   const struct MOBILE* o = twindow->c->puppet;
    GRAPHICS* g_tileset = NULL;
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -169,11 +170,11 @@ static void* tilemap_layer_draw_tile(
    }
    tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
 
-   if( mobile_inside_inner_map_x( twindow->c->puppet, twindow ) ) {
+   if( tilemap_inside_inner_map_x( o->x, o->y, twindow ) ) {
       pix_x += mobile_get_steps_remaining_x( twindow->c->puppet, TRUE );
    }
 
-   if( mobile_inside_inner_map_y( twindow->c->puppet, twindow ) ) {
+   if( tilemap_inside_inner_map_y( o->x, o->y, twindow ) ) {
       pix_y += mobile_get_steps_remaining_y( twindow->c->puppet, TRUE );
    }
 
@@ -254,7 +255,7 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = twindow->t;
-   SCAFFOLD_SIZE
+   SCAFFOLD_SIZE_SIGNED
       x = 0,
       y = 0;
    uint32_t tile;
@@ -285,28 +286,62 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
 }
 
+/** \brief
+ *
+ * \param x X coordinate in tiles.
+ * \param y Y coordinate in tiles.
+ * \return
+ */
+SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_x(
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
+   return
+      x > window_half_width_tiles &&
+      x < (twindow->t->width - window_half_width_tiles) + 2;
+}
+
+/** \brief
+ *
+ * \param x X coordinate in tiles.
+ * \param y Y coordinate in tiles.
+ * \return
+ */
+SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_y(
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
+   return
+      y > window_half_height_tiles &&
+      y < (twindow->t->height - window_half_height_tiles) + 2;
+}
+
 void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct CLIENT* c ) {
    struct MOBILE* puppet = c->puppet;
+   SCAFFOLD_SIZE_SIGNED
+      border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
+      border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
+   struct TILEMAP* t = twindow->t;
 
    /* TODO: Only calculate these when window moves and store them. */
-   twindow->max_x = twindow->x + twindow->width + TILEMAP_BORDER < twindow->t->width ?
-      twindow->x + twindow->width + TILEMAP_BORDER : twindow->t->width;
-   twindow->max_y = twindow->y + twindow->height + TILEMAP_BORDER < twindow->t->height ?
-      twindow->y + twindow->height + TILEMAP_BORDER : twindow->t->height;
+   twindow->max_x = twindow->x + twindow->width + border_x < t->width ?
+      twindow->x + twindow->width + border_x : twindow->t->width;
+   twindow->max_y = twindow->y + twindow->height + border_y < t->height ?
+      twindow->y + twindow->height + border_y : t->height;
 
    twindow->min_x =
-      twindow->x - TILEMAP_BORDER > 0 &&
-      twindow->x + twindow->width <= twindow->t->width
-      ? twindow->x - TILEMAP_BORDER : 0;
+      twindow->x - border_x >= 0 &&
+      twindow->x + twindow->width <= t->width
+      ? twindow->x - border_x : 0;
    twindow->min_y =
-      twindow->y - TILEMAP_BORDER > 0 &&
-      twindow->y + twindow->height <= twindow->t->height
-      ? twindow->y - TILEMAP_BORDER : 0;
+      twindow->y - border_y >= 0 &&
+      twindow->y + twindow->height <= t->height
+      ? twindow->y - border_y : 0;
 
-   if( mobile_inside_inner_map_x( puppet, twindow ) ) {
-      twindow->x = puppet->x - (twindow->width / 2);
+   if( tilemap_inside_inner_map_x( puppet->x, puppet->y, twindow ) ) {
+      twindow->x = puppet->x - (twindow->width / 2) - 1;
    }
-   if( mobile_inside_inner_map_y( puppet, twindow ) ) {
-      twindow->y = puppet->y - (twindow->height / 2);
+   if( tilemap_inside_inner_map_y( puppet->x, puppet->y, twindow ) ) {
+      twindow->y = puppet->y - (twindow->height / 2) - 1;
    }
 }

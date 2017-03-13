@@ -171,11 +171,11 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
-   if( !mobile_inside_inner_map_x( o, twindow ) ) {
+   if( !tilemap_inside_inner_map_x( o->x, o->y, twindow ) ) {
       pix_x += mobile_get_steps_remaining_x( o, FALSE );
    }
 
-   if( !mobile_inside_inner_map_y( o, twindow ) ) {
+   if( !tilemap_inside_inner_map_y( o->x, o->y, twindow ) ) {
       pix_y += mobile_get_steps_remaining_y( o, FALSE );
    }
 
@@ -366,22 +366,4 @@ cleanup:
    }
 
    return update->update;
-}
-
-SCAFFOLD_INLINE BOOL mobile_inside_inner_map_x(
-   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
-) {
-   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
-   return NULL != o &&
-      o->x > window_half_width_tiles &&
-      o->x < (twindow->t->width - window_half_width_tiles) + 1;
-}
-
-SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
-   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
-) {
-   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
-   return NULL != o &&
-      o->y > window_half_height_tiles &&
-      o->y < (twindow->t->height - window_half_height_tiles) + 1;
 }
