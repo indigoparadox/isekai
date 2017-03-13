@@ -1,9 +1,9 @@
 
-#include "ui.h"
+#include "../ui.h"
 
 #include <stdlib.h>
 
-#include "callback.h"
+#include "../callback.h"
 
 const struct tagbstring str_dialog_control_default_id =
    bsStatic( "dialog_text" );
@@ -315,3 +315,4 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
       graphics_draw_text( g, 10, 20 * i, GRAPHICS_TEXT_ALIGN_LEFT, color_test );
    } */
 }
+
