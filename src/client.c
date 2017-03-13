@@ -8,6 +8,11 @@
 #include "tilemap.h"
 #include "datafile.h"
 
+#ifdef DEBUG_TERRAIN
+extern volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state;
+extern volatile uint8_t tilemap_dt_layer;
+#endif /* DEBUG_TERRAIN */
+
 static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
       (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
@@ -504,6 +509,9 @@ cleanup:
 void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
    struct MOBILE_UPDATE_PACKET update;
+#ifdef DEBUG_TERRAIN
+   bstring tilemap_dbg_key = NULL;
+#endif /* DEBUG_TERRAIN */
 
    scaffold_set_client();
 
@@ -547,6 +555,21 @@ void client_poll_input( struct CLIENT* c ) {
          update.update = MOBILE_UPDATE_MOVERIGHT;
          proto_client_send_update( c, &update );
          break;
+#ifdef DEBUG_TERRAIN
+      case 't':
+         switch( tilemap_dt_state ) {
+         case TILEMAP_DEBUG_TERRAIN_NAMES:
+            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
+            break;
+         case TILEMAP_DEBUG_TERRAIN_QUARTERS:
+            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
+            break;
+         }
+         break;
+      case 'l':
+         tilemap_dt_layer++;
+         break;
+#endif /* DEBUG_TERRAIN */
       }
    }
 

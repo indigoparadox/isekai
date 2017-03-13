@@ -1,5 +1,10 @@
 #include "tilemap.h"
 
+#ifdef DEBUG_TERRAIN
+volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
+volatile uint8_t tilemap_dt_layer = 0;
+#endif /* DEBUG_TERRAIN */
+
 #include "callback.h"
 
 #include <memory.h>
@@ -66,14 +71,28 @@ void tilemap_iterate_screen_row(
 
 }
 
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, SCAFFOLD_SIZE gid ) {
+/** \brief Given a tile GID, get the tileset it belongs to.
+ * \param[in] t   The tilemap on which the tile resides.
+ * \param[in] gid The GID of the tile information to fetch.
+ * \return The tileset containing the tile with the requested GID.
+ */
+SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
+   struct TILEMAP* t, SCAFFOLD_SIZE gid
+) {
    return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
 }
 
-#define CEILING_POS(X) ((X-(int)(X)) > 0 ? (int)(X+1) : (int)(X))
-
+/** \brief Get the tileset position for the given tile GID.
+ * \param[in]  set   The tileset to fetch from.
+ * \param[in]  g_set
+ * \param[in]  gid
+ * \param[out] x
+ * \param[out] y
+ * \return
+ */
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
-   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid,
+   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
    SCAFFOLD_SIZE tiles_wide = 0;
    SCAFFOLD_SIZE tiles_high = 0;
@@ -94,31 +113,140 @@ cleanup:
    return;
 }
 
-SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y ) {
+/** \brief Get the GID of the tile at the given position on the given layer.
+ * \param[in] layer  Layer from which to fetch the tile.
+ * \param[in] x      X coordinate of the tile to fetch.
+ * \param[in] y      Y coordinate of the tile to fetch.
+ * \return A GID that can be used to find the tile's image or terrain info.
+ */
+SCAFFOLD_INLINE uint32_t tilemap_get_tile(
+   struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
    return vector_get_scalar( &(layer->tiles), index );
+}
+
+static void* tilemap_layer_draw_tile(
+   struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE gid
+) {
+   struct TILEMAP_TILESET* set = NULL;
+   SCAFFOLD_SIZE
+      tileset_x = 0,
+      tileset_y = 0,
+      pix_x = 0,
+      pix_y = 0;
+   struct TILEMAP* t = twindow->t;
+   GRAPHICS* g_tileset = NULL;
+#ifdef DEBUG_TERRAIN
+   bstring bnum = NULL;
+   struct TILEMAP_TILE_DATA* tile_info = NULL;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   SCAFFOLD_SIZE td_i;
+
+   bnum = bfromcstralloc( 10, "" );
+   scaffold_check_null( bnum );
+#endif /* DEBUG_TERRAIN */
+
+   set = tilemap_get_tileset( t, gid );
+   scaffold_check_null( set );
+   scaffold_check_zero( set->tilewidth );
+   scaffold_check_zero( set->tileheight );
+
+   /* Figure out the window position to draw to. */
+   pix_x = set->tilewidth * (x - twindow->x);
+   pix_y = set->tileheight * (y - twindow->y);
+
+   /* Figure out the graphical tile to draw from. */
+   /* TODO: Support multiple images. */
+   g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
+   if( NULL == g_tileset ) {
+      /* TODO: Use a built-in placeholder tileset. */
+      goto cleanup;
+   }
+   tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
+
+   graphics_blit_partial(
+      twindow->g,
+      pix_x, pix_y,
+      tileset_x, tileset_y,
+      set->tilewidth, set->tileheight,
+      g_tileset
+   );
+
+#ifdef DEBUG_TILES
+   bnum = bformat( "%d,", tileset_x );
+   graphics_draw_text( window->g, pix_x + 16, pix_y + 10, bnum );
+   bassignformat( bnum, "%d", tileset_y );
+   graphics_draw_text( window->g, pix_x + 16, pix_y + 22, bnum );
+   bdestroy( bnum );
+#endif /* DEBUG_TILES */
+#ifdef DEBUG_TERRAIN
+   if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
+      tilemap_dt_layer = 0;
+   }
+
+   if( layer->z != tilemap_dt_layer ) {
+      /* Don't bother with the debug stuff for another layer. */
+      goto cleanup;
+   }
+
+   tile_info = vector_get( &(set->tiles), gid - 1 );
+   switch( tilemap_dt_state ) {
+   case TILEMAP_DEBUG_TERRAIN_NAMES:
+      if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
+         bassignformat(
+            bnum, "%c%c:%d",
+            bdata( tile_info->terrain[0]->name )[0],
+            bdata( tile_info->terrain[0]->name )[1],
+            tile_info->terrain[0]->movement
+         );
+         graphics_draw_text(
+            twindow->g,
+            pix_x + 16, pix_y + (10 * layer->z), bnum
+         );
+      }
+      break;
+   case TILEMAP_DEBUG_TERRAIN_QUARTERS:
+      for( td_i = 0 ; 4 > td_i ; td_i++ ) {
+         if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
+            bassignformat( bnum, "x" );
+         } else {
+            bassignformat(
+               bnum, "%d",
+               tile_info->terrain[td_i]->id
+            );
+         }
+         graphics_set_color( twindow->g, td_i + 4 );
+         graphics_draw_text(
+            twindow->g,
+            pix_x + ((td_i % 2) * 12),
+            pix_y + ((td_i / 2) * 16),
+            bnum
+         );
+      }
+      break;
+   }
+#endif /* DEBUG_TERRAIN */
+
+cleanup:
+#ifdef DEBUG_TERRAIN
+   bdestroy( bnum );
+#endif /* DEBUG_TERRAIN */
+   return;
 }
 
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* window = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = window->t;
-   struct TILEMAP_TILESET* set = NULL;
-   GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE
       x = 0,
       y = 0,
       max_x = 0,
-      max_y = 0,
-      tileset_x = 0,
-      tileset_y = 0,
-      pix_x = 0,
-      pix_y = 0;
+      max_y = 0;
    uint32_t tile;
    struct VECTOR* tiles = NULL;
-#ifdef DEBUG_TILES
-   bstring bnum = NULL;
-#endif /* DEBUG_TILES */
 
    max_x = window->x + window->width;
    max_y = window->y + window->height;
@@ -135,39 +263,7 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
             continue;
          }
 
-         set = tilemap_get_tileset( t, tile );
-         scaffold_check_null( set );
-         scaffold_check_zero( set->tilewidth );
-         scaffold_check_zero( set->tileheight );
-
-         /* Figure out the window position to draw to. */
-         pix_x = set->tilewidth * (x - window->x);
-         pix_y = set->tileheight * (y - window->y);
-
-         /* Figure out the graphical tile to draw from. */
-         /* TODO: Support multiple images. */
-         g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
-         if( NULL == g_tileset ) {
-            /* TODO: Use a built-in placeholder tileset. */
-            goto cleanup;
-         }
-         tilemap_get_tile_tileset_pos( set, g_tileset, tile, &tileset_x, &tileset_y );
-
-         graphics_blit_partial(
-            window->g,
-            pix_x, pix_y,
-            tileset_x, tileset_y,
-            set->tilewidth, set->tileheight,
-            g_tileset
-         );
-
-#ifdef DEBUG_TILES
-         bnum = bformat( "%d,", tileset_x );
-         graphics_draw_text( window->g, pix_x + 16, pix_y + 10, bnum );
-         bassignformat( bnum, "%d", tileset_y );
-         graphics_draw_text( window->g, pix_x + 16, pix_y + 22, bnum );
-         bdestroy( bnum );
-#endif /* DEBUG_TILES */
+         tilemap_layer_draw_tile( layer, window, x, y, tile );
       }
    }
 

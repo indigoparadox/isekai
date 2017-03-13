@@ -84,7 +84,7 @@ void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_font( GRAPHICS* g, bstring name );
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color );
+void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color );
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data( GRAPHICS* g, const BYTE* data,

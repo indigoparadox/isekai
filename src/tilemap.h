@@ -12,29 +12,43 @@
 struct CLIENT;
 struct TILEMAP;
 
+#ifdef DEBUG_TERRAIN
+typedef enum TILEMAP_DEBUG_TERRAIN_STATE {
+   TILEMAP_DEBUG_TERRAIN_NAMES,
+   TILEMAP_DEBUG_TERRAIN_QUARTERS
+} TILEMAP_DEBUG_TERRAIN_STATE;
+#endif /* DEBUG_TERRAIN */
+
 typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
    TILEMAP_ORIENTATION_ISO
 } TILEMAP_ORIENTATION;
 
+typedef enum TILEMAP_MOVEMENT_MOD {
+   TILEMAP_MOVEMENT_BLOCK = 0,
+   TILEMAP_MOVEMENT_NORMAL = 1,
+   TILEMAP_MOVEMENT_HALF = 2
+} TILEMAP_MOVEMENT_MOD;
+
 struct TILEMAP_TERRAIN_DATA {
    bstring name;
-   uint8_t movement;
+   TILEMAP_MOVEMENT_MOD movement;   /*!< Movement modifier for this terrain. */
    SCAFFOLD_SIZE tile;
+   SCAFFOLD_SIZE id;
 };
 
 struct TILEMAP_TILE_DATA {
    SCAFFOLD_SIZE id;
-   SCAFFOLD_SIZE terrain[4];
+   struct TILEMAP_TERRAIN_DATA* terrain[4];
 };
 
 struct TILEMAP_TILESET {
    SCAFFOLD_SIZE firstgid;
-   SCAFFOLD_SIZE tileheight;
-   SCAFFOLD_SIZE tilewidth;
-   struct HASHMAP images;
-   struct VECTOR terrain;
-   struct VECTOR tiles;
+   SCAFFOLD_SIZE tileheight;  /*!< Height of tiles in pixels. */
+   SCAFFOLD_SIZE tilewidth;   /*!< Width of tiles in pixels. */
+   struct HASHMAP images;     /*!< Graphics indexed by filename. */
+   struct VECTOR terrain;     /*!< Terrains in file order. */
+   struct VECTOR tiles;       /*!< Tile data in file order. */
 };
 
 struct TILEMAP_POSITION {
@@ -43,15 +57,18 @@ struct TILEMAP_POSITION {
 };
 
 struct TILEMAP_LAYER {
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
-   SCAFFOLD_SIZE width;
-   SCAFFOLD_SIZE height;
+   SCAFFOLD_SIZE x;        /*!< Layer left in tiles. */
+   SCAFFOLD_SIZE y;        /*!< Layer top in tiles. */
+   SCAFFOLD_SIZE z;
+   SCAFFOLD_SIZE width;    /*!< Layer width in tiles. */
+   SCAFFOLD_SIZE height;   /*!< Layer height in tiles. */
    struct VECTOR tiles;
+   struct TILEMAP* tilemap;
 };
 
 struct TILEMAP {
-   struct REF refcount;
+   struct REF refcount; /*!< Parent "class". */
+
    SCAFFOLD_SIZE width;
    SCAFFOLD_SIZE height;
    struct HASHMAP layers;
@@ -63,8 +80,8 @@ struct TILEMAP {
    SCAFFOLD_SIZE starting_x;
    SCAFFOLD_SIZE starting_y;
    TILEMAP_ORIENTATION orientation;
-   SCAFFOLD_SIZE window_step_width; /* For dungeons. */
-   SCAFFOLD_SIZE window_step_height;
+   SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
+   SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */
    bstring lname;
 #ifdef DEBUG
    uint16_t sentinal;

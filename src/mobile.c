@@ -5,6 +5,7 @@
 #include "proto.h"
 #include "chunker.h"
 #include "hashmap.h"
+#include "callback.h"
 
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
 
@@ -148,7 +149,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - twindow->y)) +
       (o->prev_y != o->y ? o->steps_remaining : 0);
 
-   bstring pos = bformat( "%d (%d), %d (%d)", o->x, o->prev_x, o->y, o->prev_y );
+   bstring pos = bformat(
+      "%d (%d), %d (%d)",
+      o->x, o->prev_x, o->y, o->prev_y
+   );
    graphics_draw_text( twindow->g, 100, 10, pos );
 
    /* Figure out the graphical sprite to draw from. */
@@ -178,18 +182,104 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    }
 }
 
-/** \brief
- *
- * \param update - Packet containing update information.
- * \param
+/** \brief Calculate the movement success between two tiles on the given
+ *         mobile's present tilemap based on all available layers.
+ * \param[in] x_1 Starting X.
+ * \param[in] y_1 Starting Y.
+ * \param[in] x_2 Finishing X.
+ * \param[in] y_2 Finishing Y.
+ * \return A MOBILE_UPDATE indicating action resulting.
+ */
+MOBILE_UPDATE mobile_calculate_terrain(
+   struct TILEMAP* t, MOBILE_UPDATE update_in,
+   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+) {
+   struct VECTOR* tiles_start = NULL;
+   struct VECTOR* tiles_end = NULL;
+   struct TILEMAP_POSITION pos_start;
+   struct TILEMAP_POSITION pos_end;
+   MOBILE_UPDATE update_out = update_in;
+   struct TILEMAP_TILE_DATA* tile_iter = NULL;
+   int8_t i, j;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+
+   pos_start.x = x_1;
+   pos_start.y = y_1;
+   pos_end.x = x_2;
+   pos_end.y = y_2;
+
+   /* Fetch the source tile on all layers. */
+   /*tiles_start =
+      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_start );*/
+
+   /* Fetch the destination tile on all layers. */
+   tiles_end =
+      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+
+   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
+      tile_iter = vector_get( tiles_end, i );
+      scaffold_check_null( tile_iter );
+
+      for( j = 0 ; 4 > j ; j++ ) {
+         /* TODO: Implement terrain slow-down. */
+         terrain_iter = tile_iter->terrain[j];
+         if( NULL == terrain_iter ) { continue; }
+         switch( terrain_iter->movement ) {
+         case TILEMAP_MOVEMENT_BLOCK:
+            update_out = MOBILE_UPDATE_NONE;
+            break;
+         }
+      }
+   }
+
+cleanup:
+   if( NULL != tiles_end ) {
+      /* Force the count to 0 so we can delete it. */
+      tiles_end->count = 0;
+      vector_free( tiles_end );
+      free( tiles_end );
+   }
+   return update_out;
+}
+
+/** \brief Apply an update received from a remote client to a local mobile.
+ * \param[in] update    Packet containing update information.
+ * \param[in] instant   A BOOL indicating whether to force the update instantly
+ *                      or allow any relevant animations to take place.
  * \return What the update becomes to send to the clients. MOBILE_UPDATE_NONE
  *         if the update failed to occur.
- *
  */
- MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant ) {
+ MOBILE_UPDATE mobile_apply_update(
+   struct MOBILE_UPDATE_PACKET* update, BOOL instant
+) {
    struct MOBILE* o = update->o;
 
    /* TODO: Collision detection. */
+   if( TRUE == instant ) {
+      /* Figure out the desired coordinates given the given update. */
+      switch( update->update ) {
+      case MOBILE_UPDATE_MOVEUP:
+         update->x = o->x;
+         update->y = o->y - 1;
+         break;
+      case MOBILE_UPDATE_MOVEDOWN:
+         update->x = o->x;
+         update->y = o->y + 1;
+         break;
+      case MOBILE_UPDATE_MOVELEFT:
+         update->x = o->x - 1;
+         update->y = o->y;
+         break;
+      case MOBILE_UPDATE_MOVERIGHT:
+         update->x = o->x + 1;
+         update->y = o->y;
+         break;
+      }
+
+      update->update =
+         mobile_calculate_terrain( &(update->l->tilemap), update->update,
+            o->x, o->y, update->x, update->y );
+   }
 
    switch( update->update ) {
    case MOBILE_UPDATE_MOVEUP:
