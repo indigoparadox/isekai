@@ -1,9 +1,9 @@
 #include "tilemap.h"
 
-#ifdef DEBUG_TERRAIN
-volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
+#ifdef DEBUG_TILES
+volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
 volatile uint8_t tilemap_dt_layer = 0;
-#endif /* DEBUG_TERRAIN */
+#endif /* DEBUG_TILES */
 
 extern struct CLIENT* main_client;
 
@@ -141,7 +141,7 @@ static void* tilemap_layer_draw_tile(
       pix_y = 0;
    struct TILEMAP* t = twindow->t;
    GRAPHICS* g_tileset = NULL;
-#if defined( DEBUG_TERRAIN ) || defined( DEBUG_TILES )
+#ifdef DEBUG_TILES
    bstring bnum = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
@@ -149,7 +149,7 @@ static void* tilemap_layer_draw_tile(
 
    bnum = bfromcstralloc( 10, "" );
    scaffold_check_null( bnum );
-#endif /* DEBUG_TERRAIN */
+#endif /* DEBUG_TILES */
 
    set = tilemap_get_tileset( t, gid );
    scaffold_check_null( set );
@@ -186,16 +186,6 @@ static void* tilemap_layer_draw_tile(
    );
 
 #ifdef DEBUG_TILES
-   if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
-      graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
-      bassignformat( bnum, "%d,", x );
-      graphics_draw_text( twindow->g, pix_x + 16, pix_y + 10, bnum );
-      bassignformat( bnum, "%d", y );
-      graphics_draw_text( twindow->g, pix_x + 16, pix_y + 22, bnum );
-      bdestroy( bnum );
-   }
-#endif /* DEBUG_TILES */
-#ifdef DEBUG_TERRAIN
    if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
    }
@@ -207,6 +197,16 @@ static void* tilemap_layer_draw_tile(
 
    tile_info = vector_get( &(set->tiles), gid - 1 );
    switch( tilemap_dt_state ) {
+   case TILEMAP_DEBUG_TERRAIN_COORDS:
+      if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
+         graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
+         bassignformat( bnum, "%d,", x );
+         graphics_draw_text( twindow->g, pix_x + 16, pix_y + 10, bnum );
+         bassignformat( bnum, "%d", y );
+         graphics_draw_text( twindow->g, pix_x + 16, pix_y + 22, bnum );
+         bdestroy( bnum );
+      }
+      break;
    case TILEMAP_DEBUG_TERRAIN_NAMES:
       if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
          bassignformat(
@@ -241,12 +241,12 @@ static void* tilemap_layer_draw_tile(
       }
       break;
    }
-#endif /* DEBUG_TERRAIN */
+#endif /* DEBUG_TILES */
 
 cleanup:
-#ifdef defined( DEBUG_TERRAIN ) || defined( DEBUG_TILES )
+#ifdef DEBUG_TILES
    bdestroy( bnum );
-#endif /* DEBUG_TERRAIN */
+#endif /* DEBUG_TILES */
    return;
 }
 

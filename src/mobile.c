@@ -374,7 +374,7 @@ SCAFFOLD_INLINE BOOL mobile_inside_inner_map_x(
    const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
    return NULL != o &&
       o->x > window_half_width_tiles &&
-      o->x < (twindow->t->width - window_half_width_tiles);
+      o->x < (twindow->t->width - window_half_width_tiles) + 1;
 }
 
 SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
@@ -383,5 +383,5 @@ SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
    const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
    return NULL != o &&
       o->y > window_half_height_tiles &&
-      o->y < (twindow->t->height - window_half_height_tiles);
+      o->y < (twindow->t->height - window_half_height_tiles) + 1;
 }
