@@ -90,11 +90,5 @@ SCAFFOLD_INLINE
 SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
 SCAFFOLD_INLINE
 SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
-SCAFFOLD_INLINE BOOL mobile_inside_inner_map_x(
-   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
-);
-SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
-   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
-);
 
 #endif /* MOBILE_H */
