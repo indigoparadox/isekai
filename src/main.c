@@ -101,6 +101,11 @@ int main( int argc, char** argv ) {
 
    client_join_channel( main_client, &str_default_channel );
 
+   twindow.width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
+   twindow.height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
+   twindow.g = &g;
+   twindow.c = main_client;
+
    while( TRUE ) {
 
       graphics_wait_for_fps_timer();
@@ -120,17 +125,16 @@ int main( int argc, char** argv ) {
       /* Do drawing. */
       l = hashmap_get_first( &(main_client->channels) );
       if( NULL == l || TILEMAP_SENTINAL != l->tilemap.sentinal ) {
-         /* TODO: What to display when no channel is up? */
-         graphics_draw_text( &g, 640/2, 480/2, &str_loading );
+         graphics_draw_text(
+            &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
+            &str_loading
+         );
          continue;
       }
 
-      twindow.width = 640 / 32;
-      twindow.height = 480 / 32;
-      twindow.g = &g;
       twindow.t = &(l->tilemap);
-      twindow.c = main_client;
 
+      tilemap_update_window_ortho( &twindow, main_client );
       tilemap_draw_ortho( &twindow );
       client_poll_input( main_client );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );

@@ -5,10 +5,11 @@ volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NA
 volatile uint8_t tilemap_dt_layer = 0;
 #endif /* DEBUG_TERRAIN */
 
-#include "callback.h"
-
 #include <memory.h>
 #include <string.h>
+
+#include "callback.h"
+#include "mobile.h"
 
 static BOOL tilemap_layer_free_cb( bstring res, void* iter, void* arg ) {
    tilemap_layer_free( (struct TILEMAP_LAYER*)iter );
@@ -273,4 +274,15 @@ cleanup:
 
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+}
+
+void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct CLIENT* c ) {
+   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
+   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
+   if( NULL != c->puppet && c->puppet->x > window_half_width_tiles ) {
+      twindow->x = c->puppet->x - window_half_width_tiles;
+   }
+   if( NULL != c->puppet && c->puppet->y > window_half_height_tiles ) {
+      twindow->y = c->puppet->y - window_half_height_tiles;
+   }
 }
