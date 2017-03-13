@@ -234,10 +234,18 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
 
    gid = tilemap_get_tile( layer, pos->x, pos->y );
    set = tilemap_get_tileset( t, gid );
-   scaffold_check_null( set );
-   tdata = vector_get( &(set->tiles), gid - 1 );
+   if( NULL != set ) {
+      tdata = vector_get( &(set->tiles), gid - 1 );
+   }
 
 cleanup:
+   if( NULL == tdata ) {
+#ifdef DEBUG_TILES
+      scaffold_print_debug(
+         "Unable to get tileset for: %d, %d\n", pos->x, pos->y
+      );
+#endif /* DEBUG_TILES */
+   }
    return tdata;
 }
 
