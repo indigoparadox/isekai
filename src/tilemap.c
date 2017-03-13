@@ -5,6 +5,8 @@ volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NA
 volatile uint8_t tilemap_dt_layer = 0;
 #endif /* DEBUG_TERRAIN */
 
+extern struct CLIENT* main_client;
+
 #include <memory.h>
 #include <string.h>
 
@@ -108,8 +110,8 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    *y = ((gid - 1) / tiles_wide) * set->tileheight;
    *x = ((gid - 1) % tiles_wide) * set->tilewidth;
 
-   scaffold_assert( *y < (set->tileheight * tiles_high) );
-   scaffold_assert( *x < (set->tilewidth * tiles_wide) );
+   /* scaffold_assert( *y < (set->tileheight * tiles_high) );
+   scaffold_assert( *x < (set->tilewidth * tiles_wide) ); */
 cleanup:
    return;
 }
@@ -139,7 +141,7 @@ static void* tilemap_layer_draw_tile(
       pix_y = 0;
    struct TILEMAP* t = twindow->t;
    GRAPHICS* g_tileset = NULL;
-#ifdef DEBUG_TERRAIN
+#if defined( DEBUG_TERRAIN ) || defined( DEBUG_TILES )
    bstring bnum = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
@@ -167,6 +169,14 @@ static void* tilemap_layer_draw_tile(
    }
    tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
 
+   if( mobile_inside_inner_map_x( twindow->c->puppet, twindow ) ) {
+      pix_x += mobile_get_steps_remaining_x( twindow->c->puppet, TRUE );
+   }
+
+   if( mobile_inside_inner_map_y( twindow->c->puppet, twindow ) ) {
+      pix_y += mobile_get_steps_remaining_y( twindow->c->puppet, TRUE );
+   }
+
    graphics_blit_partial(
       twindow->g,
       pix_x, pix_y,
@@ -176,11 +186,14 @@ static void* tilemap_layer_draw_tile(
    );
 
 #ifdef DEBUG_TILES
-   bnum = bformat( "%d,", tileset_x );
-   graphics_draw_text( window->g, pix_x + 16, pix_y + 10, bnum );
-   bassignformat( bnum, "%d", tileset_y );
-   graphics_draw_text( window->g, pix_x + 16, pix_y + 22, bnum );
-   bdestroy( bnum );
+   if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
+      graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
+      bassignformat( bnum, "%d,", x );
+      graphics_draw_text( twindow->g, pix_x + 16, pix_y + 10, bnum );
+      bassignformat( bnum, "%d", y );
+      graphics_draw_text( twindow->g, pix_x + 16, pix_y + 22, bnum );
+      bdestroy( bnum );
+   }
 #endif /* DEBUG_TILES */
 #ifdef DEBUG_TERRAIN
    if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
@@ -231,7 +244,7 @@ static void* tilemap_layer_draw_tile(
 #endif /* DEBUG_TERRAIN */
 
 cleanup:
-#ifdef DEBUG_TERRAIN
+#ifdef defined( DEBUG_TERRAIN ) || defined( DEBUG_TILES )
    bdestroy( bnum );
 #endif /* DEBUG_TERRAIN */
    return;
@@ -239,32 +252,41 @@ cleanup:
 
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   struct GRAPHICS_TILE_WINDOW* window = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = window->t;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TILEMAP* t = twindow->t;
    SCAFFOLD_SIZE
       x = 0,
       y = 0,
+      min_x = 0,
+      min_y = 0,
       max_x = 0,
       max_y = 0;
    uint32_t tile;
    struct VECTOR* tiles = NULL;
 
-   max_x = window->x + window->width;
-   max_y = window->y + window->height;
+   /* TODO: Only calculate these when window moves and store them. */
+   max_x = twindow->x + twindow->width + TILEMAP_BORDER < twindow->t->width ?
+      twindow->x + twindow->width + TILEMAP_BORDER : twindow->t->width;
+   max_y = twindow->y + twindow->height + TILEMAP_BORDER < twindow->t->height ?
+      twindow->y + twindow->height + TILEMAP_BORDER : twindow->t->height;
+
+   min_x = twindow->x - TILEMAP_BORDER > 0 ? twindow->x - TILEMAP_BORDER : 0;
+   min_y = twindow->y - TILEMAP_BORDER > 0 ? twindow->y - TILEMAP_BORDER : 0;
+
    tiles = &(layer->tiles);
 
    if( NULL == tiles || 0 == vector_count( tiles ) ) {
       goto cleanup;
    }
 
-   for( x = window->x ; max_x > x ; x++ ) {
-      for( y = window->y ; max_y > y ; y++ ) {
+   for( x = min_x ; max_x > x ; x++ ) {
+      for( y = min_y ; max_y > y ; y++ ) {
          tile = tilemap_get_tile( layer, x, y );
          if( 0 == tile ) {
             continue;
          }
 
-         tilemap_layer_draw_tile( layer, window, x, y, tile );
+         tilemap_layer_draw_tile( layer,twindow, x, y, tile );
       }
    }
 
@@ -277,12 +299,11 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
 }
 
 void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct CLIENT* c ) {
-   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
-   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
-   if( NULL != c->puppet && c->puppet->x > window_half_width_tiles ) {
-      twindow->x = c->puppet->x - window_half_width_tiles;
+   struct MOBILE* puppet = c->puppet;
+   if( mobile_inside_inner_map_x( puppet, twindow ) ) {
+      twindow->x = puppet->x - (twindow->width / 2);
    }
-   if( NULL != c->puppet && c->puppet->y > window_half_height_tiles ) {
-      twindow->y = c->puppet->y - window_half_height_tiles;
+   if( mobile_inside_inner_map_y( puppet, twindow ) ) {
+      twindow->y = puppet->y - (twindow->height / 2);
    }
 }

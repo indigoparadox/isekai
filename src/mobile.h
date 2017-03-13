@@ -80,8 +80,21 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
    MOBILE_FRAME_ALT frame_alt, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
+void mobile_apply_steps_remaining(
+   struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
+);
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
 MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
+SCAFFOLD_INLINE
+SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
+SCAFFOLD_INLINE
+SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
+SCAFFOLD_INLINE BOOL mobile_inside_inner_map_x(
+   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
+);
+SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
+   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
+);
 
 #endif /* MOBILE_H */

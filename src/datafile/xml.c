@@ -347,6 +347,14 @@ static void datafile_tilemap_parse_layer_ezxml(
    scaffold_check_nonzero( bstr_res );
    hashmap_put( &(t->layers), buffer, layer );
 
+   /* The map is as large as the largest layer. */
+   if( layer->width > t->width ) {
+      t->width = layer->width;
+   }
+   if( layer->height > t->height ) {
+      t->height = layer->height;
+   }
+
 cleanup:
    if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
       tilemap_layer_free( layer );

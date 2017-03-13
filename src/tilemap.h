@@ -77,8 +77,6 @@ struct TILEMAP {
    */
    struct HASHMAP tilesets;
    struct HASHMAP player_spawns;
-   SCAFFOLD_SIZE starting_x;
-   SCAFFOLD_SIZE starting_y;
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
    SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */
@@ -92,6 +90,7 @@ struct TILEMAP {
 #define TILEMAP_SERIALIZE_CHUNKSIZE 80
 #define TILEMAP_OBJECT_SPAWN_DIVISOR 32
 #define TILEMAP_NAME_ALLOC 30
+#define TILEMAP_BORDER 1
 
 #define TILEMAP_SENTINAL 1234
 
