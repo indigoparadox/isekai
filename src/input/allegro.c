@@ -1,9 +1,10 @@
 #include "../input.h"
 
+#include <allegro.h>
+
 #include "../client.h"
 #include "../server.h"
-
-#include <allegro.h>
+#include "../proto.h"
 
 extern struct CLIENT* main_client;
 extern SERVER* main_server;

@@ -259,7 +259,7 @@ BOOL scaffold_check_directory( const bstring path )
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
-void scaffold_join_path( bstring path1, bstring path2 );
+void scaffold_join_path( bstring path1, const bstring path2 );
 
 #ifndef SCAFFOLD_C
 #ifdef DEBUG

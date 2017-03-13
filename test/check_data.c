@@ -9,10 +9,14 @@ struct tagbstring str_key_also3 = bsStatic( "This key ain't relevant." );
 
 #include <stdlib.h>
 
-static void free_blob( const struct REF *ref ) {
+static void cleanup_blob( const struct REF *ref ) {
     BLOB* blob = scaffold_container_of( ref, struct _BLOB, refcount );
     free( blob->data );
     free( blob );
+}
+
+void free_blob( BLOB* blob ) {
+   refcount_dec( blob, "blob" );
 }
 
 BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, SCAFFOLD_SIZE c, uint32_t sent_e ) {
@@ -20,7 +24,7 @@ BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, SCAFFOLD_SIZE c, uint32_t sen
    BLOB* blob;
 
    blob = (BLOB*)calloc( 1, sizeof( BLOB ) );
-   ref_init( &(blob->refcount), free_blob );
+   ref_init( &(blob->refcount), cleanup_blob );
 
    blob->sentinal_start = sent_s;
    blob->data_len = c;

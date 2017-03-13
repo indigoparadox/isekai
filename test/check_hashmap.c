@@ -21,7 +21,7 @@ START_TEST( test_hashmap_add_get ) {
 
    ck_assert_int_eq( test_blob->sentinal_start, 12121 );
 
-   ref_dec( &(test_blob->refcount) );
+   free_blob( blob );
    hashmap_remove( &h, &str_key_hit );
 
 /* cleanup: */
@@ -54,7 +54,7 @@ START_TEST( test_hashmap_delete ) {
 
    ck_assert_int_eq( test_blob->sentinal_start, 12121 );
 
-   ref_dec( &(test_blob->refcount) );
+   free_blob( blob );
    hashmap_remove( &h, &str_key_hit );
 
 /* cleanup: */
