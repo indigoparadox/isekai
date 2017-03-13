@@ -1,9 +1,90 @@
 
 #include "../graphics.h"
 
-void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void _IPWinBGPaint( HWND hWnd, HDC hdc ) {
+   static HBRUSH hHatchBrush = NULL;
+   RECT sClientRect;
+   HRGN sClientRgn;
 
+   if( NULL == hHatchBrush ) {
+      /* Create the brush. */
+      hHatchBrush = CreateHatchBrush( HS_DIAGCROSS, RGB( 64, 64, 64 ) );
+      SetBkMode( hHatchBrush, TRANSPARENT );
+   }
 
+   /* Set the background color. */
+   SetBkColor( hdc, RGB( 0, 0, 0 ) );
+
+   /* Draw the hatching. */
+   GetClientRect( hWnd, &sClientRect );
+   sClientRgn = CreateRectRgnIndirect( &sClientRect );
+   FillRgn( hdc, sClientRgn, hHatchBrush );
+}
+
+LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+   PAINTSTRUCT ps;
+   HDC hdc;
+
+   switch( message )
+   {
+      case WM_PAINT:
+         hdc = BeginPaint( hWnd, &ps );
+
+         EndPaint( hWnd, &ps );
+         break;
+      case WM_DESTROY:
+         PostQuitMessage( 0 );
+         break;
+      default:
+         return DefWindowProc( hWnd, message, wParam, lParam );
+         break;
+   }
+
+   return 0;
+}
+
+void graphics_screen_init(
+   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2
+) {
+   int result;
+   HWND hWnd;
+   INT nRetVal = 0;
+   WNDCLASSEX winclass;
+   HBRUSH hBrush;
+   ZeroMemory( &winclass, sizeof( WNDCLASSEX ) );
+
+   hBrush = CreateSolidBrush( RGB( 0, 0, 0 ) );
+
+   winclass.cbSize = sizeof( WNDCLASSEX );
+   winclass.hbrBackground = hBrush;
+   winclass.hCursor = LoadCursor( NULL, IDC_ARROW );
+   winclass.hInstance = arg2;
+   winclass.lpfnWndProc = (WNDPROC)WndProc;
+   winclass.lpszClassName = "IPWindowClass";
+   winclass.style = CS_HREDRAW | CS_VREDRAW;
+
+   result = RegisterClassEx( &winclass );
+   if( !result ) {
+      /* TODO: Display error. */
+      GetLastError();
+      MessageBox( NULL, "Error registering window class.", "Error", MB_ICONERROR | MB_OK );
+      nRetVal = 1;
+      goto cleanup;
+   }
+   
+   hWnd = CreateWindowEx(
+      NULL, "IPWindowClass", "ProIRCd",
+      WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU,
+      0, 0, w, h, NULL, NULL, arg2, NULL
+   );
+
+   /* SetWindowDisplayAflfinity( hWnd, WDA_MONITOR ); */
+
+   ShowWindow( hWnd, arg1 );
+
+cleanup:
+   return;
 }
 
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
@@ -26,7 +107,7 @@ void graphics_set_font( GRAPHICS* g, bstring name ) {
 
 }
 
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR* color ) {
+void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
 
 }
 
@@ -39,12 +120,12 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 }
 
 void graphics_set_image_data(
-   GRAPHICS* g, const BYTE* data, size_t length
+   GRAPHICS* g, const BYTE* data, SCAFFOLD_SIZE length
 ) {
 
 }
 
-BYTE* graphics_export_image_data( GRAPHICS* g, size_t* out_len ) {
+BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 
 }
 
@@ -82,5 +163,15 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
+
+}
+
+void graphics_colors_to_surface(
+   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
+) {
+
+}
+
+void graphics_wait_for_fps_timer() {
 
 }

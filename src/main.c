@@ -26,7 +26,16 @@ static uint32_t server_port = 33080;
 void allegro_exit();
 #endif /* USE_ALLEGRO */
 
+#ifdef WIN32
+int CALLBACK WinMain(
+   _In_ HINSTANCE hInstance,
+   _In_ HINSTANCE hPrevInstance,
+   _In_ LPSTR     lpCmdLine,
+   _In_ int       nShowCmd
+) {
+#else
 int main( int argc, char** argv ) {
+#endif /* WIN32 */
    bstring buffer = NULL;
    time_t tm = 0;
    GRAPHICS g = { 0 };
@@ -43,7 +52,11 @@ int main( int argc, char** argv ) {
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
 
-   graphics_screen_init( &g, 640, 480 );
+#ifdef WIN32
+   graphics_screen_init( &g, 640, 480, nShowCmd, hInstance );
+#else
+   graphics_screen_init( &g, 640, 480, 0, NULL );
+#endif /* WIN32 */
    scaffold_check_nonzero( scaffold_error );
    input_init( &p );
    ui_init( &ui, &g );

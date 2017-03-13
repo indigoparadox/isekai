@@ -15,7 +15,7 @@ typedef struct REF {
    int count;
 } REF;
 
-static inline void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
+static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
    ref->count = 1;
    ref->gc_free = free;
    ref->sentinal = REF_SENTINAL;

@@ -173,7 +173,7 @@
 					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DUSE_STB" />
-					<Add option="-DDEBUG_TERRAIN" />
+					<Add option="-DxDEBUG_TERRAIN" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
