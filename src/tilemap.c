@@ -202,9 +202,15 @@ static void* tilemap_layer_draw_tile(
       if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
          graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
          bassignformat( bnum, "%d,", x );
-         graphics_draw_text( twindow->g, pix_x + 16, pix_y + 10, bnum );
+         graphics_draw_text(
+            twindow->g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
+            bnum
+         );
          bassignformat( bnum, "%d", y );
-         graphics_draw_text( twindow->g, pix_x + 16, pix_y + 22, bnum );
+         graphics_draw_text(
+            twindow->g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
+            bnum
+         );
          bdestroy( bnum );
       }
       break;
@@ -217,8 +223,8 @@ static void* tilemap_layer_draw_tile(
             tile_info->terrain[0]->movement
          );
          graphics_draw_text(
-            twindow->g,
-            pix_x + 16, pix_y + (10 * layer->z), bnum
+            twindow->g, pix_x + 16, pix_y + (10 * layer->z),
+            GRAPHICS_TEXT_ALIGN_CENTER, bnum
          );
       }
       break;
@@ -237,6 +243,7 @@ static void* tilemap_layer_draw_tile(
             twindow->g,
             pix_x + ((td_i % 2) * 12),
             pix_y + ((td_i / 2) * 16),
+            GRAPHICS_TEXT_ALIGN_CENTER,
             bnum
          );
       }

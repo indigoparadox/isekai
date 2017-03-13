@@ -39,6 +39,7 @@ BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg )
 BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_commands( const bstring res, void* iter, void* arg );
 BOOL callback_free_generic( const bstring res, void* iter, void* arg );
+BOOL callback_free_controls( const bstring res, void* iter, void* arg );
 BOOL callback_free_strings( const bstring res, void* iter, void* arg );
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg );
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );

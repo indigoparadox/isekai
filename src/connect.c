@@ -190,7 +190,7 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
 
    dest_socket = n->socket;
    buffer_len = blength( buffer );
-   scaffold_assert( 0 != dest_socket );
+   scaffold_check_zero( dest_socket );
 
    sent = send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
 #elif defined( USE_SYNCBUFF )

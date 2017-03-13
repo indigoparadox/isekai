@@ -17,6 +17,12 @@ typedef enum GRAPHICS_TIMER {
    GRAPHICS_TIMER_FPS = 30
 } GRAPHICS_TIMER;
 
+typedef enum GRAPHICS_TEXT_ALIGN {
+   GRAPHICS_TEXT_ALIGN_LEFT,
+   GRAPHICS_TEXT_ALIGN_CENTER,
+   GRAPHICS_TEXT_ALIGN_RIGHT
+} GRAPHICS_TEXT_ALIGN;
+
 typedef enum {
    GRAPHICS_TRANSIT_FX_NONE,
    GRAPHICS_TRANSIT_FX_FADEIN,
@@ -24,21 +30,21 @@ typedef enum {
 } GRAPHICS_TRANSIT_FX;
 
 typedef enum GRAPHICS_COLOR {
-   GRAPHICS_COLOR_TRANSPARENT,
-   GRAPHICS_COLOR_DARK_BLUE,
-   GRAPHICS_COLOR_DARK_GREEN,
-   GRAPHICS_COLOR_DARK_CYAN,
-   GRAPHICS_COLOR_DARK_RED,
-   GRAPHICS_COLOR_BROWN,
-   GRAPHICS_COLOR_GRAY,
-   GRAPHICS_COLOR_DARK_GRAY,
-   GRAPHICS_COLOR_BLUE,
-   GRAPHICS_COLOR_GREEN,
-   GRAPHICS_COLOR_CYAN,
-   GRAPHICS_COLOR_RED,
-   GRAPHICS_COLOR_MAGENTA,
-   GRAPHICS_COLOR_YELLOW,
-   GRAPHICS_COLOR_WHITE
+   GRAPHICS_COLOR_TRANSPARENT =  0,
+   GRAPHICS_COLOR_DARK_BLUE   =  1,
+   GRAPHICS_COLOR_DARK_GREEN  =  2,
+   GRAPHICS_COLOR_DARK_CYAN   =  3,
+   GRAPHICS_COLOR_DARK_RED    =  4,
+   GRAPHICS_COLOR_MAGENTA     =  5,
+   GRAPHICS_COLOR_BROWN       =  6,
+   GRAPHICS_COLOR_GRAY        =  7,
+   GRAPHICS_COLOR_DARK_GRAY   =  8,
+   GRAPHICS_COLOR_BLUE        =  9,
+   GRAPHICS_COLOR_GREEN       = 10,
+   GRAPHICS_COLOR_CYAN        = 11,
+   GRAPHICS_COLOR_RED         = 12,
+   GRAPHICS_COLOR_YELLOW      = 13,
+   GRAPHICS_COLOR_WHITE       = 14
 } GRAPHICS_COLOR;
 
 struct GRAPHICS_BITMAP {
@@ -49,8 +55,6 @@ struct GRAPHICS_BITMAP {
 };
 
 typedef struct _GRAPHICS {
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
    SCAFFOLD_SIZE w;
    SCAFFOLD_SIZE h;
    void* surface;
@@ -84,10 +88,10 @@ struct GRAPHICS_TILE_WINDOW {
 #define graphics_surface_new( g, x, y, w, h ) \
     g = (GRAPHICS*)calloc( 1, sizeof( GRAPHICS ) ); \
     scaffold_check_null( g ); \
-    graphics_surface_init( g, x, y, w, h );
+    graphics_surface_init( g, w, h );
 
 void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2 );
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
@@ -102,7 +106,10 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len )
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
-void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text );
+void graphics_draw_text(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
+   const bstring text
+);
 void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
