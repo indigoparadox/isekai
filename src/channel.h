@@ -27,6 +27,8 @@ struct CHANNEL_CLIENT {
     scaffold_check_null( l ); \
     channel_init( l, name, local_graphics );
 
+struct MOBILE;
+
 void channel_init( struct CHANNEL* l, const bstring name, BOOL local_graphics );
 void channel_free( struct CHANNEL* l );
 struct CLIENT* channel_client_present( struct CHANNEL* l, struct CLIENT* c );
