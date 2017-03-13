@@ -109,8 +109,34 @@ cleanup:
    return;
 }
 
+SCAFFOLD_INLINE
+SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
+   if( o->prev_x != o->x ) {
+      return TRUE != reverse ? o->steps_remaining : -1 * o->steps_remaining;
+   } else {
+      return 0;
+   }
+}
+
+SCAFFOLD_INLINE
+SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
+   if( o->prev_y != o->y ) {
+      return TRUE != reverse ? o->steps_remaining : -1 * o->steps_remaining;
+   } else {
+      return 0;
+   }
+}
+
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
-   SCAFFOLD_SIZE max_x, max_y, sprite_x, sprite_y, pix_x, pix_y;
+   SCAFFOLD_SIZE
+      max_x,
+      max_y,
+      min_x,
+      min_y,
+      sprite_x,
+      sprite_y,
+      pix_x,
+      pix_y;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -122,10 +148,15 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       return;
    }
 
-   max_x = twindow->x + twindow->width;
-   max_y = twindow->y + twindow->height;
+   max_x = twindow->x + twindow->width + TILEMAP_BORDER < twindow->t->width ?
+      twindow->x + twindow->width + TILEMAP_BORDER : twindow->t->width;
+   max_y = twindow->y + twindow->height + TILEMAP_BORDER < twindow->t->height ?
+      twindow->y + twindow->height + TILEMAP_BORDER : twindow->t->height;
 
-   if( o->x > max_x || o->y > max_y || o->x < twindow->x || o->y < twindow->y ) {
+   min_x = twindow->x - TILEMAP_BORDER > 0 ? twindow->x - TILEMAP_BORDER : 0;
+   min_y = twindow->y - TILEMAP_BORDER > 0 ? twindow->y - TILEMAP_BORDER : 0;
+
+   if( o->x > max_x || o->y > max_y || o->x < min_x || o->y < min_y ) {
       goto cleanup;
    }
 
@@ -144,16 +175,23 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
-   pix_x = (MOBILE_SPRITE_SIZE * (o->x - twindow->x)) +
-      (o->prev_x != o->x ? o->steps_remaining : 0);
-   pix_y = (MOBILE_SPRITE_SIZE * (o->y - twindow->y)) +
-      (o->prev_y != o->y ? o->steps_remaining : 0);
+   pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
+   pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
+
+   if( !mobile_inside_inner_map_x( o, twindow ) ) {
+      pix_x += mobile_get_steps_remaining_x( o, FALSE );
+   }
+
+   if( !mobile_inside_inner_map_y( o, twindow ) ) {
+      pix_y += mobile_get_steps_remaining_y( o, FALSE );
+   }
 
    bstring pos = bformat(
       "%d (%d), %d (%d)",
       o->x, o->prev_x, o->y, o->prev_y
    );
-   graphics_draw_text( twindow->g, 100, 10, pos );
+   graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
+   graphics_draw_text( twindow->g, 100, 30, pos );
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
@@ -335,4 +373,22 @@ cleanup:
    }
 
    return update->update;
+}
+
+SCAFFOLD_INLINE BOOL mobile_inside_inner_map_x(
+   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
+   return NULL != o &&
+      o->x > window_half_width_tiles &&
+      o->x < (twindow->t->width - window_half_width_tiles);
+}
+
+SCAFFOLD_INLINE BOOL mobile_inside_inner_map_y(
+   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
+   return NULL != o &&
+      o->y > window_half_height_tiles &&
+      o->y < (twindow->t->height - window_half_height_tiles);
 }
