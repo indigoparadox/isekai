@@ -918,7 +918,10 @@ IRC_COMMAND* irc_dispatch(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
 #ifdef DEBUG
-            if( 0 != bstrncmp( cmd_test, &(proto_table_client[3].command), 3 ) ) {
+            if(
+               0 != bstrncmp( cmd_test, &(proto_table_client[3].command), 3 ) &&
+               0 != bstrncmp( cmd_test, &(proto_table_client[0].command), 2 )
+            ) {
                if( table == proto_table_server ) {
                   scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
                } else {
