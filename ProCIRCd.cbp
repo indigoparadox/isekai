@@ -627,10 +627,23 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/tilemap.h" />
-		<Unit filename="src/ui.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/ui.h" />
+		<Unit filename="src/ui/graphicu.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+		</Unit>
 		<Unit filename="src/vector.c">
 			<Option compilerVar="CC" />
 		</Unit>
