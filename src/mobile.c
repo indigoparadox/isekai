@@ -129,10 +129,6 @@ SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
    SCAFFOLD_SIZE
-      max_x,
-      max_y,
-      min_x,
-      min_y,
       sprite_x,
       sprite_y,
       pix_x,
@@ -148,15 +144,12 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       return;
    }
 
-   max_x = twindow->x + twindow->width + TILEMAP_BORDER < twindow->t->width ?
-      twindow->x + twindow->width + TILEMAP_BORDER : twindow->t->width;
-   max_y = twindow->y + twindow->height + TILEMAP_BORDER < twindow->t->height ?
-      twindow->y + twindow->height + TILEMAP_BORDER : twindow->t->height;
-
-   min_x = twindow->x - TILEMAP_BORDER > 0 ? twindow->x - TILEMAP_BORDER : 0;
-   min_y = twindow->y - TILEMAP_BORDER > 0 ? twindow->y - TILEMAP_BORDER : 0;
-
-   if( o->x > max_x || o->y > max_y || o->x < min_x || o->y < min_y ) {
+   if(
+      o->x > twindow->max_x ||
+      o->y > twindow->max_y ||
+      o->x < twindow->min_x ||
+      o->y < twindow->min_y
+   ) {
       goto cleanup;
    }
 

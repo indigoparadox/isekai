@@ -232,9 +232,7 @@ cleanup:
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    struct stat inputstat;
-#ifdef DEBUG
    char* path_c = NULL;
-#endif /* DEBUG */
 #ifdef WIN32
    LARGE_INTEGER sz_win;
    HANDLE inputfd = NULL;
@@ -252,10 +250,8 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    /* TODO: Implement mmap() */
 
    scaffold_check_null( path );
-#ifdef DEBUG
    path_c = bdata( path );
    scaffold_print_debug( "Reading from path: %s\n", path_c );
-#endif /* DEBUG */
 
 #ifdef WIN32
    inputfd = CreateFile( bdata( path ), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );

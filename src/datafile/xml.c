@@ -470,7 +470,9 @@ void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFO
       xml_layer = ezxml_next( xml_layer );
    }
 
+#ifdef DEBUG
    t->sentinal = TILEMAP_SENTINAL;
+#endif /* DEBUG */
 
 cleanup:
    if( NULL != xml_data ) {

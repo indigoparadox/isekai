@@ -286,7 +286,9 @@ cleanup:
       hashmap_lock( m, FALSE );
    }
 
+#ifdef DEBUG
    hashmap_verify_size( m );
+#endif /* DEBUG */
 
    return;
 }
@@ -331,7 +333,9 @@ void hashmap_rehash( struct HASHMAP* m ) {
    free( curr );
 
 cleanup:
+#ifdef DEBUG
    hashmap_verify_size( m );
+#endif /* DEBUG */
    return;
 }
 
@@ -605,7 +609,9 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    }
 
 cleanup:
+#ifdef DEBUG
    hashmap_verify_size( m );
+#endif /* DEBUG */
    if( TRUE == ok ) {
       hashmap_lock( m, FALSE );
    }
@@ -658,7 +664,9 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
    }
 
 cleanup:
+#ifdef DEBUG
    hashmap_verify_size( m );
+#endif /* DEBUG */
    if( TRUE == locked ) {
       hashmap_lock( m, FALSE );
    }
@@ -705,7 +713,9 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
       curr = (curr + 1) % m->table_size;
    }
 cleanup:
+#ifdef DEBUG
    hashmap_verify_size( m );
+#endif /* DEBUG */
    return removed;
 }
 

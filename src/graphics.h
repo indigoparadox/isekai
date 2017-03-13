@@ -75,6 +75,10 @@ struct GRAPHICS_TILE_WINDOW {
    SCAFFOLD_SIZE y;        /*!< Window top in tiles. */
    SCAFFOLD_SIZE width;    /*!< Window width in tiles. */
    SCAFFOLD_SIZE height;   /*!< Window height in tiles. */
+   SCAFFOLD_SIZE_SIGNED max_x;
+   SCAFFOLD_SIZE_SIGNED max_y;
+   SCAFFOLD_SIZE_SIGNED min_x;
+   SCAFFOLD_SIZE_SIGNED min_y;
 };
 
 #define graphics_surface_new( g, x, y, w, h ) \
