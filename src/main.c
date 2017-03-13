@@ -124,7 +124,11 @@ int main( int argc, char** argv ) {
 
       /* Do drawing. */
       l = hashmap_get_first( &(main_client->channels) );
-      if( NULL == l || TILEMAP_SENTINAL != l->tilemap.sentinal ) {
+      if(
+         NULL == l ||
+         NULL == main_client->puppet /* ||
+         TILEMAP_SENTINAL != l->tilemap.sentinal */
+      ) {
          graphics_draw_text(
             &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
             &str_loading
@@ -134,7 +138,17 @@ int main( int argc, char** argv ) {
 
       twindow.t = &(l->tilemap);
 
-      tilemap_update_window_ortho( &twindow, main_client );
+      /* If there's no puppet then there should be a load screen. */
+      scaffold_assert( NULL != main_client->puppet );
+
+      /* If we're on the move then update the window frame. */
+      if(
+         0 != main_client->puppet->steps_remaining ||
+         twindow.max_x == twindow.min_x
+      ) {
+         tilemap_update_window_ortho( &twindow, main_client );
+      }
+
       tilemap_draw_ortho( &twindow );
       client_poll_input( main_client );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );

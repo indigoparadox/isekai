@@ -172,11 +172,9 @@ cleanup:
 }
 
 SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer, BOOL client ) {
-#ifdef DEBUG
-   const char* buffer_chars;
-#endif /* DEBUG */
    SCAFFOLD_SIZE_SIGNED sent = -1;
 #ifdef USE_NETWORK
+   const char* buffer_chars;
    SCAFFOLD_SIZE dest_socket;
    SCAFFOLD_SIZE buffer_len;
 #elif defined( USE_SYNCBUFF )
@@ -186,12 +184,10 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
-#ifdef DEBUG
+#ifdef USE_NETWORK
    buffer_chars = bdata( buffer );
-#endif /* DEBUG */
    scaffold_assert( NULL != buffer_chars );
 
-#ifdef USE_NETWORK
    dest_socket = n->socket;
    buffer_len = blength( buffer );
    scaffold_assert( 0 != dest_socket );
