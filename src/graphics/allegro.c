@@ -207,7 +207,9 @@ const PACKFILE_VTABLE graphics_fmem_vtable = {
    graphics_fmem_ferror,
 };
 
-void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_screen_init(
+   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2
+) {
    int screen_return;
 
    allegro_init();
