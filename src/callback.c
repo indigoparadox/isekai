@@ -360,7 +360,7 @@ BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
 
    return TRUE;
 }
-#endif // 0
+#endif
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;

@@ -104,7 +104,7 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    } else {
    */
       *y = facing * MOBILE_SPRITE_SIZE;
-   //}
+   /* } */
    *x = (0 > frame ? 0 : frame) * MOBILE_SPRITE_SIZE;
 
 cleanup:
@@ -438,6 +438,9 @@ cleanup:
       case MOBILE_UPDATE_MOVERIGHT:
          update->x = o->x + 1;
          update->y = o->y;
+         break;
+
+      case MOBILE_UPDATE_NONE:
          break;
       }
 

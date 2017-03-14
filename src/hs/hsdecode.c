@@ -10,7 +10,7 @@ typedef enum {
    HSDS_BACKREF_INDEX_LSB,     /* least significant byte of index */
    HSDS_BACKREF_COUNT_MSB,     /* most significant byte of count */
    HSDS_BACKREF_COUNT_LSB,     /* least significant byte of count */
-   HSDS_YIELD_BACKREF,         /* ready to yield back-reference */
+   HSDS_YIELD_BACKREF         /* ready to yield back-reference */
 } HSD_state;
 
 #if HEATSHRINK_DEBUGGING_LOGS
@@ -123,7 +123,7 @@ HSD_sink_res heatshrink_decoder_sink(heatshrink_decoder* hsd,
 #define BACKREF_COUNT_BITS(HSD) (HEATSHRINK_DECODER_LOOKAHEAD_BITS(HSD))
 #define BACKREF_INDEX_BITS(HSD) (HEATSHRINK_DECODER_WINDOW_BITS(HSD))
 
-// States
+/* States */
 static HSD_state st_tag_bit(heatshrink_decoder* hsd);
 static HSD_state st_yield_literal(heatshrink_decoder* hsd,
                                   output_info* oi);
@@ -188,7 +188,7 @@ HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder* hsd,
 }
 
 static HSD_state st_tag_bit(heatshrink_decoder* hsd) {
-   uint32_t bits = get_bits(hsd, 1);  // get tag bit
+   uint32_t bits = get_bits(hsd, 1);  /* get tag bit */
    if (bits == NO_BITS) {
       return HSDS_TAG_BIT;
    } else if (bits) {

@@ -25,8 +25,9 @@ void input_init( struct INPUT* p ) {
 }
 
 void input_get_event( struct INPUT* input ) {
-   poll_keyboard();
    uint16_t key_pressed;
+
+   poll_keyboard();
 
    if( keypressed() ) {
       key_pressed = readkey();

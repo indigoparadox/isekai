@@ -883,9 +883,9 @@ static void irc_command_cleanup( const struct REF* ref ) {
    int i;
 
    /* Don't try to free the string or callback. */
-   //client_free( cmd->client );
+   /* client_free( cmd->client ); */
    cmd->client = NULL;
-   //server_free( cmd->server );
+   /* server_free( cmd->server ); */
    cmd->server = NULL;
 
    for( i = 0 ; cmd->args->qty > i ; i++ ) {
@@ -949,10 +949,10 @@ IRC_COMMAND* irc_dispatch(
             memcpy( out, command, sizeof( IRC_COMMAND ) );
             if( NULL != s ) {
                out->server = s;
-               //refcount_inc( &(s->self.link), "server" );
+               /* refcount_inc( &(s->self.link), "server" ); */
             }
             out->client = c;
-            //refcount_inc( &(c->link), "client" );
+            /* refcount_inc( &(c->link), "client" ); */
             out->args = args;
             ref_init( &(out->refcount), irc_command_cleanup );
 

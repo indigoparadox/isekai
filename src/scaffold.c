@@ -31,6 +31,7 @@ FILE* scaffold_log_handle_err = NULL;
 
 int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;
+bstring scaffold_print_buffer = NULL;
 
 static char scaffold_random_chars[] =
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -123,24 +124,56 @@ BOOL scaffold_string_is_printable( bstring str ) {
    return is_printable;
 }
 
-#if 0
+void scaffold_print_debug( const char* message, ... ) {
 #ifdef DEBUG
-void scaffold_printf_debug( const char* message, ... ) {
-   bstring buffer = NULL;
    va_list varg;
 
-   buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
+   if( NULL == scaffold_print_buffer ) {
+      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
+   }
+   scaffold_assert( NULL != scaffold_print_buffer );
 
    va_start( varg, message );
-   scaffold_snprintf( buffer, message, varg );
+   scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
 cleanup:
-   bdestroy( buffer );
    return;
-}
 #endif /* DEBUG */
-#endif
+}
+
+void scaffold_print_info( const char* message, ... ) {
+#ifdef DEBUG
+   va_list varg;
+
+   if( NULL == scaffold_print_buffer ) {
+      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
+   }
+   scaffold_assert( NULL != scaffold_print_buffer );
+
+   va_start( varg, message );
+   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   va_end( varg );
+cleanup:
+   return;
+#endif /* DEBUG */
+}
+
+void scaffold_print_error( const char* message, ... ) {
+#ifdef DEBUG
+   va_list varg;
+
+   if( NULL == scaffold_print_buffer ) {
+      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
+   }
+   scaffold_assert( NULL != scaffold_print_buffer );
+
+   va_start( varg, message );
+   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   va_end( varg );
+cleanup:
+   return;
+#endif /* DEBUG */
+}
 
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
    const char* chariter;
@@ -345,7 +378,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
          CreateDirectory( path_c, NULL );
 #else
          scaffold_check_nonzero( mkdir( path_c, 0 ) );
-#endif // WIN32
+#endif /* WIN32 */
       }
 
       bdestroy( test_path );

@@ -132,7 +132,7 @@ void ui_control_add(
    scaffold_print_debug(
       "Added control: %s to window: %s\n",
       bdata( control->text ), bdata( win->title )
-   )
+   );
 
    if(
       UI_CONTROL_TYPE_BUTTON == control->type ||
@@ -142,7 +142,7 @@ void ui_control_add(
       scaffold_print_debug(
       "Set focusable control as focus: %s\n",
          bdata( control->text ), bdata( win->title )
-      )
+      );
    }
 }
 
@@ -269,6 +269,9 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
          control->self.height
       );
       graphics_set_color( g, GRAPHICS_COLOR_WHITE );
+      break;
+
+   case UI_CONTROL_TYPE_NONE:
       break;
    }
 

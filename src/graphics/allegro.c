@@ -306,7 +306,7 @@ void graphics_set_font( GRAPHICS* g, const bstring name ) {
 }
 
 void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
-   //memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) );
+   /* memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) ); */
    g->color = color;
 }
 
@@ -401,7 +401,6 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
 
    /* Autodetect image type. */
    g->surface = load_bmp_pf( fmem, (RGB*)g->palette );
-   //scaffold_assert( NULL != g->surface );
 
 #ifdef ALLEGRO_EXPORT_PALETTE
    graphics_export_palette();splitdebug
@@ -458,7 +457,6 @@ cleanup:
          putpixel( g->surface, x, y, (int)(bitmap->pixels[i++]) );
       }
    }
-   //graphics_colors_to_surface( g, colors, colors_sz );
    scaffold_check_null( g->surface );
 
 cleanup:
@@ -510,7 +508,6 @@ void graphics_draw_text(
       textout_centre_ex(
          NULL == g ? screen : g->surface,
          font, bdata( text ), x, y,
-         //makecol( g->color.r, g->color.g, g->color.b ),
          NULL == g ? 0 : g->color,
          -1
       );
@@ -519,7 +516,6 @@ void graphics_draw_text(
       textout_ex(
          NULL == g ? screen : g->surface,
          font, bdata( text ), x, y,
-         //makecol( g->color.r, g->color.g, g->color.b ),
          NULL == g ? 0 : g->color,
          -1
       );
@@ -528,7 +524,6 @@ void graphics_draw_text(
       textout_right_ex(
          NULL == g ? screen : g->surface,
          font, bdata( text ), x, y,
-         //makecol( g->color.r, g->color.g, g->color.b ),
          NULL == g ? 0 : g->color,
          -1
       );
@@ -577,7 +572,7 @@ void graphics_colors_to_surface(
    /* TODO: Verify image sizes. */
 
    for( i = 0 ; colors_sz > i ; i++ ) {
-      //putpixel( g->surface, i % g->w, i * g->w, makecol( colors[i].r, colors[i].g, colors[i].b ) );
+      /* putpixel( g->surface, i % g->w, i * g->w, makecol( colors[i].r, colors[i].g, colors[i].b ) ); */
    }
 }
 

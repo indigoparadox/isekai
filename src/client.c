@@ -386,7 +386,6 @@ cleanup:
 
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    struct CHUNKER* h = NULL;
-   //struct CHANNEL* l = NULL;
    int8_t chunker_percent;
 
    scaffold_assert( 0 < blength( cp->data ) );
@@ -411,7 +410,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       scaffold_print_error(
          "Client: Invalid data block received (I didn't ask for this?): %s\n",
          bdata( cp->filename )
-      )
+      );
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }

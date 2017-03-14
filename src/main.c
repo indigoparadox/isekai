@@ -257,7 +257,7 @@ cleanup:
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );
    fclose( scaffold_log_handle_err );
-#endif // SCAFFOLD_LOG_FILE
+#endif /* SCAFFOLD_LOG_FILE */
 #ifdef USE_ALLEGRO
    allegro_exit();
 #endif /* USE_ALLEGRO */
