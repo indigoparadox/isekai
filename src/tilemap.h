@@ -32,9 +32,16 @@ typedef enum TILEMAP_MOVEMENT_MOD {
    TILEMAP_MOVEMENT_HALF = 2
 } TILEMAP_MOVEMENT_MOD;
 
+typedef enum TILEMAP_CUTOFF {
+   TILEMAP_CUTOFF_NONE = 0,
+   TILEMAP_CUTOFF_HALF = 2,
+   TILEMAP_CUTOFF_2THIRDS = 3
+} TILEMAP_CUTOFF;
+
 struct TILEMAP_TERRAIN_DATA {
    bstring name;
    TILEMAP_MOVEMENT_MOD movement;   /*!< Movement modifier for this terrain. */
+   TILEMAP_CUTOFF cutoff;
    SCAFFOLD_SIZE tile;
    SCAFFOLD_SIZE id;
 };

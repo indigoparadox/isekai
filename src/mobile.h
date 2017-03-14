@@ -42,8 +42,11 @@ struct MOBILE {
    SCAFFOLD_SIZE y;
    SCAFFOLD_SIZE prev_x;
    SCAFFOLD_SIZE prev_y;
-   int16_t steps_inc;
-   int16_t steps_remaining;
+   SCAFFOLD_SIZE sprite_height;
+   SCAFFOLD_SIZE sprite_height_default;
+   SCAFFOLD_SIZE_SIGNED steps_inc;
+   SCAFFOLD_SIZE_SIGNED steps_inc_default;
+   SCAFFOLD_SIZE_SIGNED steps_remaining;
    bstring sprites_filename;
    GRAPHICS* sprites;
    MOBILE_FRAME_ALT frame_alt;
@@ -85,14 +88,12 @@ void mobile_apply_steps_remaining(
 );
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
-MOBILE_UPDATE mobile_calculate_terrain(
-   struct TILEMAP* t, MOBILE_UPDATE update_in,
-   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
-);
 MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
+SCAFFOLD_SIZE_SIGNED
+mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
+SCAFFOLD_SIZE_SIGNED
+mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 
 #endif /* MOBILE_H */

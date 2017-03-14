@@ -233,6 +233,8 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    uint32_t gid = 0;
    struct TILEMAP_TILE_DATA* tdata = NULL;
 
+   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+
    gid = tilemap_get_tile( layer, pos->x, pos->y );
    set = tilemap_get_tileset( t, gid );
    if( NULL != set ) {

@@ -43,6 +43,8 @@ void mobile_init( struct MOBILE* o ) {
    o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    o->frame_alt = MOBILE_FRAME_ALT_NONE;
    o->frame = MOBILE_FRAME_DEFAULT;
+   o->sprite_height_default = MOBILE_SPRITE_SIZE;
+   o->steps_inc_default = MOBILE_STEPS_INCREMENT;
 }
 
 void mobile_animate( struct MOBILE* o ) {
@@ -110,21 +112,31 @@ cleanup:
 }
 
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
+SCAFFOLD_SIZE_SIGNED
+mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
+   SCAFFOLD_SIZE_SIGNED steps_out = 0;
    if( o->prev_x != o->x ) {
-      return TRUE != reverse ? o->steps_remaining : -1 * o->steps_remaining;
-   } else {
-      return 0;
+      if( TRUE != reverse ) {
+         steps_out = o->steps_remaining;
+      } else {
+         steps_out = -1 * o->steps_remaining;
+      }
    }
+   return steps_out;
 }
 
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
+SCAFFOLD_SIZE_SIGNED
+mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
+   SCAFFOLD_SIZE_SIGNED steps_out = 0;
    if( o->prev_y != o->y ) {
-      return TRUE != reverse ? o->steps_remaining : -1 * o->steps_remaining;
-   } else {
-      return 0;
+      if( TRUE != reverse ) {
+         steps_out = o->steps_remaining;
+      } else {
+         steps_out = -1 * o->steps_remaining;
+      }
    }
+   return steps_out;
 }
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
@@ -133,6 +145,9 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       sprite_y,
       pix_x,
       pix_y;
+   SCAFFOLD_SIZE_SIGNED
+      steps_remaining_x,
+      steps_remaining_y;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -172,16 +187,18 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
    if( !tilemap_inside_inner_map_x( o->x, o->y, twindow ) ) {
-      pix_x += mobile_get_steps_remaining_x( o, FALSE );
+      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      pix_x += steps_remaining_x;
    }
 
    if( !tilemap_inside_inner_map_y( o->x, o->y, twindow ) ) {
-      pix_y += mobile_get_steps_remaining_y( o, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      pix_y += steps_remaining_y;
    }
 
    bstring pos = bformat(
-      "%d (%d), %d (%d)",
-      o->x, o->prev_x, o->y, o->prev_y
+      "%d (%d)[%d], %d (%d)[%d]",
+      o->x, o->prev_x, steps_remaining_x, o->y, o->prev_y, steps_remaining_y
    );
    graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
    graphics_draw_text( twindow->g, 10, 30, GRAPHICS_TEXT_ALIGN_LEFT, pos );
@@ -196,7 +213,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       twindow->g,
       pix_x, pix_y,
       sprite_x, sprite_y,
-      MOBILE_SPRITE_SIZE, MOBILE_SPRITE_SIZE,
+      MOBILE_SPRITE_SIZE, o->sprite_height,
       o->sprites
    );
 cleanup:
@@ -221,7 +238,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
  * \param[in] y_2 Finishing Y.
  * \return A MOBILE_UPDATE indicating action resulting.
  */
-MOBILE_UPDATE mobile_calculate_terrain(
+static MOBILE_UPDATE mobile_calculate_terrain_result(
    struct TILEMAP* t, MOBILE_UPDATE update_in,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 ) {
@@ -273,6 +290,98 @@ cleanup:
    return update_out;
 }
 
+static SCAFFOLD_SIZE mobile_calculate_terrain_steps_inc(
+   struct TILEMAP* t, SCAFFOLD_SIZE steps_inc_in,
+   SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+) {
+   struct VECTOR* tiles_end = NULL;
+   struct TILEMAP_POSITION pos_end;
+   struct TILEMAP_TILE_DATA* tile_iter = NULL;
+   int8_t i, j;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   SCAFFOLD_SIZE steps_inc_out = steps_inc_in;
+
+   pos_end.x = x_2;
+   pos_end.y = y_2;
+
+   /* Fetch the destination tile on all layers. */
+   tiles_end =
+      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+
+   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
+      tile_iter = vector_get( tiles_end, i );
+      scaffold_check_null( tile_iter );
+
+      for( j = 0 ; 4 > j ; j++ ) {
+         /* TODO: Implement terrain slow-down. */
+         terrain_iter = tile_iter->terrain[j];
+         if( NULL == terrain_iter ) { continue; }
+         if(
+            terrain_iter->movement != 0 &&
+            steps_inc_in / terrain_iter->movement < steps_inc_out
+         ) {
+            steps_inc_out = steps_inc_in / terrain_iter->movement;
+         }
+      }
+   }
+
+cleanup:
+   if( NULL != tiles_end ) {
+      /* Force the count to 0 so we can delete it. */
+      tiles_end->count = 0;
+      vector_free( tiles_end );
+      free( tiles_end );
+   }
+   return steps_inc_out;
+}
+
+static SCAFFOLD_SIZE mobile_calculate_terrain_sprite_height(
+   struct TILEMAP* t, SCAFFOLD_SIZE sprite_height_in,
+   SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+) {
+   struct VECTOR* tiles_end = NULL;
+   struct TILEMAP_POSITION pos_end;
+   struct TILEMAP_TILE_DATA* tile_iter = NULL;
+   int8_t i, j;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   SCAFFOLD_SIZE sprite_height_out = sprite_height_in;
+
+   pos_end.x = x_2;
+   pos_end.y = y_2;
+
+   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+
+   /* Fetch the destination tile on all layers. */
+   tiles_end =
+      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+
+   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
+      tile_iter = vector_get( tiles_end, i );
+      scaffold_check_null( tile_iter );
+
+      for( j = 0 ; 4 > j ; j++ ) {
+         /* TODO: Implement terrain slow-down. */
+         terrain_iter = tile_iter->terrain[j];
+         if( NULL == terrain_iter ) { continue; }
+         if(
+            terrain_iter->cutoff != 0 &&
+            sprite_height_in / terrain_iter->cutoff < sprite_height_out
+         ) {
+            sprite_height_out = sprite_height_in / terrain_iter->cutoff;
+         }
+      }
+   }
+
+cleanup:
+   if( NULL != tiles_end ) {
+      /* Force the count to 0 so we can delete it. */
+      tiles_end->count = 0;
+      vector_free( tiles_end );
+      free( tiles_end );
+   }
+   return sprite_height_out;
+}
+
 /** \brief Apply an update received from a remote client to a local mobile.
  * \param[in] update    Packet containing update information.
  * \param[in] instant   A BOOL indicating whether to force the update instantly
@@ -284,6 +393,7 @@ cleanup:
    struct MOBILE_UPDATE_PACKET* update, BOOL instant
 ) {
    struct MOBILE* o = update->o;
+   struct CHANNEL* l = update->l;
 
    /* TODO: Collision detection. */
    if( TRUE == instant ) {
@@ -308,7 +418,7 @@ cleanup:
       }
 
       update->update =
-         mobile_calculate_terrain( &(update->l->tilemap), update->update,
+         mobile_calculate_terrain_result( &(l->tilemap), update->update,
             o->x, o->y, update->x, update->y );
    }
 
@@ -317,7 +427,10 @@ cleanup:
       o->prev_x = o->x; /* Forceful reset. */
       o->y--;
       o->facing = MOBILE_FACING_UP;
-      o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            &(l->tilemap), o->steps_inc_default,
+            o->x, o->y ) * -1;
       if( TRUE == instant ) {
          o->prev_y = o->y;
       } else {
@@ -329,7 +442,10 @@ cleanup:
       o->prev_x = o->x; /* Forceful reset. */
       o->y++;
       o->facing = MOBILE_FACING_DOWN;
-      o->steps_inc = MOBILE_STEPS_INCREMENT;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            &(l->tilemap), o->steps_inc_default,
+            o->x, o->y );
       if( TRUE == instant ) {
          o->prev_y = o->y;
       } else {
@@ -341,7 +457,10 @@ cleanup:
       o->prev_y = o->y; /* Forceful reset. */
       o->x--;
       o->facing = MOBILE_FACING_LEFT;
-      o->steps_inc = MOBILE_STEPS_INCREMENT * -1;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            &(l->tilemap), o->steps_inc_default,
+            o->x, o->y ) * -1;
       if( TRUE == instant ) {
          o->prev_x = o->x;
       } else {
@@ -353,7 +472,10 @@ cleanup:
       o->prev_y = o->y; /* Forceful reset. */
       o->x++;
       o->facing = MOBILE_FACING_RIGHT;
-      o->steps_inc = MOBILE_STEPS_INCREMENT;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            &(l->tilemap), o->steps_inc_default,
+            o->x, o->y );
       if( TRUE == instant ) {
          o->prev_x = o->x;
       } else {
@@ -362,8 +484,16 @@ cleanup:
       break;
 
    case MOBILE_UPDATE_NONE:
-      break;
+      goto cleanup;
    }
 
+   if( FALSE == instant ) {
+      o->sprite_height =
+         mobile_calculate_terrain_sprite_height(
+            &(l->tilemap), o->sprite_height_default,
+            o->x, o->y );
+   }
+
+cleanup:
    return update->update;
 }
