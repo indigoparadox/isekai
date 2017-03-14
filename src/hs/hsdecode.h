@@ -1,11 +1,12 @@
 #ifndef HEATSHRINK_DECODER_H
 #define HEATSHRINK_DECODER_H
 
+#include "../scaffold.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include "hs_com.h"
 #include "hs_conf.h"
-#include "../scaffold.h"
 
 typedef enum {
     HSDR_SINK_OK,               /* data sunk, ready to poll */

@@ -1,12 +1,12 @@
 #ifndef HEATSHRINK_ENCODER_H
 #define HEATSHRINK_ENCODER_H
 
+#include "../scaffold.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include "hs_com.h"
 #include "hs_conf.h"
-
-#include "../scaffold.h"
 
 typedef enum {
     HSER_SINK_OK,               /* data sunk into input buffer */
