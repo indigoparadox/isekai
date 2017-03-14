@@ -283,19 +283,31 @@ static void* tilemap_layer_draw_tile(
    tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
 
    if(
-      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) ||
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
+         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
+       TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+         tilemap_inside_inner_map_x( o->x, twindow )
+      ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_x( o->x - 1, twindow )
+         tilemap_inside_window_deadzone_x( o->x - 1, twindow ) &&
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
+         tilemap_inside_inner_map_x( o->x, twindow )
+      )
    ) {
       pix_x += mobile_get_steps_remaining_x( twindow->c->puppet, TRUE );
    }
 
    if(
-      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_y( o->y + 1, twindow ) ||
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
+         tilemap_inside_window_deadzone_y( o->y + 1, twindow )  &&
+       TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+         tilemap_inside_inner_map_y( o->y, twindow )
+      ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_y( o->y - 1, twindow )
+         tilemap_inside_window_deadzone_y( o->y - 1, twindow ) &&
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
+         tilemap_inside_inner_map_y( o->y, twindow )
+      )
    ) {
       pix_y += mobile_get_steps_remaining_y( twindow->c->puppet, TRUE );
    }
@@ -418,7 +430,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    struct TILEMAP* t = twindow->t;
    if( x < ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
-   } else if( x > t->width - ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
+   } else if( x >= t->width - ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN;
    } else {
       return TILEMAP_EXCLUSION_INSIDE;
@@ -438,7 +450,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
       y < ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y)
    ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
-   } else if( y > t->height - ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y) ) {
+   } else if( y >= t->height - ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN;
    } else {
       return TILEMAP_EXCLUSION_INSIDE;
@@ -506,22 +518,30 @@ void tilemap_update_window_ortho(
    /* Scroll the window to follow the focal point. */
    exclusion = tilemap_inside_window_deadzone_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point right of window dead zone.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->x++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point left of window dead zone.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->x--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    }
 
    exclusion = tilemap_inside_window_deadzone_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point below window dead zone.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->y++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point above window dead zone.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->y--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    }
@@ -529,19 +549,27 @@ void tilemap_update_window_ortho(
    /* Clamp the window to the edge of the map. */
    exclusion = tilemap_inside_inner_map_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point too close to map left edge.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->x = t->width - twindow->width;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point too close to map right edge.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->x = 0;
    }
 
    exclusion = tilemap_inside_inner_map_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point too close to map bottom edge.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->y = t->height - twindow->height;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Focal point too close to map top edge.\n" );
+#endif /* DEBUG_TILES_VERBOSE */
       twindow->y = 0;
    }
 
@@ -583,7 +611,9 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    t->redraw_state = st;
 
    if( TILEMAP_REDRAW_ALL == st ) {
+#ifdef DEBUG_TILES_VERBOSE
       scaffold_print_debug( "Initiating full tilemap redraw...\n" );
+#endif /* DEBUG_TILES_VERBOSE */
    }
 
    /* Always reset dirty tiles. */

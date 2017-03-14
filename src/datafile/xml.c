@@ -320,7 +320,7 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
          terrain_c++;
       }
 
-#ifdef DEBUG
+#ifdef DEBUG_TILES_VERBOSE
       for( i = 0 ; 4 > i ; i++ ) {
          if( NULL == tile_info->terrain[i] ) {
             dbg_terrain_name[i] = NULL;
@@ -343,7 +343,7 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
          dbg_terrain_id[3],
          dbg_terrain_name[3]
       );
-#endif /* DEBUG */
+#endif /* DEBUG_TILES_VERBOSE */
 
       vector_set( &(set->tiles), tile_info->id, tile_info, TRUE );
       tile_info = NULL;

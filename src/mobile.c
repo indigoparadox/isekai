@@ -260,25 +260,22 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
    struct TILEMAP* t, MOBILE_UPDATE update_in,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 ) {
-   struct VECTOR* tiles_start = NULL;
    struct VECTOR* tiles_end = NULL;
-   struct TILEMAP_POSITION pos_start;
    struct TILEMAP_POSITION pos_end;
    MOBILE_UPDATE update_out = update_in;
    struct TILEMAP_TILE_DATA* tile_iter = NULL;
    int8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
 
-   pos_start.x = x_1;
-   pos_start.y = y_1;
+   if( x_2 >= t->width || y_2 >= t->height || x_2 < 0 || y_2 < 0 ) {
+      update_out = MOBILE_UPDATE_NONE;
+      goto cleanup;
+   }
+
    pos_end.x = x_2;
    pos_end.y = y_2;
 
    /* Fetch the source tile on all layers. */
-   /*tiles_start =
-      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_start );*/
-
-   /* Fetch the destination tile on all layers. */
    tiles_end =
       hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
 
