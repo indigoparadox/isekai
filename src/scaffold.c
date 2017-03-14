@@ -136,6 +136,11 @@ void scaffold_print_debug( const char* message, ... ) {
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
+
+   /* TODO: Put newline if missing. */
+
+   fprintf( scaffold_log_handle, "%s", bdata( scaffold_print_buffer ) );
+
 cleanup:
    return;
 #endif /* DEBUG */
@@ -153,6 +158,9 @@ void scaffold_print_info( const char* message, ... ) {
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
+
+   fprintf( scaffold_log_handle, "%s", bdata( scaffold_print_buffer ) );
+
 cleanup:
    return;
 #endif /* DEBUG */
@@ -170,6 +178,9 @@ void scaffold_print_error( const char* message, ... ) {
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
+
+   fprintf( scaffold_log_handle_err, "%s", bdata( scaffold_print_buffer ) );
+
 cleanup:
    return;
 #endif /* DEBUG */
@@ -254,14 +265,11 @@ cleanup:
 
 /** \brief Provide a block of memory that contains a given file's contents.
  *         May be pulled from weird special storage/ROM or mmap'ed.
- *
- * \param path - The path to identify the file to open.
- * \param buffer - A pointer to a pointer to NULL. Will return the buffer.
- * \param len - A pointer to the size indicator for the buffer.
+ * \param[in] path   The path to identify the file to open.
+ * \param[in] buffer A pointer to a pointer to NULL. Will return the buffer.
+ * \param[in] len    A pointer to the size indicator for the buffer.
  * \return The number of bytes read, or -1 on failure.
- *
  */
-
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    struct stat inputstat;
