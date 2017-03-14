@@ -16,7 +16,7 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
    scaffold_assert( NULL != lname_buffer );
    scaffold_check_null( tmdata );
 
-   xml_data = ezxml_parse_str( (const char*)tmdata, datasize );
+   xml_data = ezxml_parse_str( tmdata, datasize );
    scaffold_check_null( xml_data );
 
    xml_props = ezxml_child( xml_data, "properties" );
