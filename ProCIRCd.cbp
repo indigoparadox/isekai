@@ -95,7 +95,7 @@
 			</Target>
 			<Target title="Debug (MingW32)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug-MingW32/ProCIRCd.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-MingW32/" />
 				<Option type="0" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
@@ -120,12 +120,13 @@
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
+					<Add option="-static" />
 					<Add library="gdi32" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Curses)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ProCIRCd-Curses" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -145,9 +146,9 @@
 					<Add library="curses" />
 				</Linker>
 			</Target>
-			<Target title="Debug (Linux-Allegro4)">
+			<Target title="Debug (Linux-SB-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ProCIRCd-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -187,7 +188,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ProCIRCd-Allegro-NET" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -217,6 +218,7 @@
 					<Add option="-DUSE_RANDOM_PORT" />
 					<Add option="-DxDEBUG_REF" />
 					<Add option="-DUSE_CONNECT_DIALOG" />
+					<Add option="-DDEBUG_TILES" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -226,7 +228,7 @@
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ProCIRCd-Allegro-SHM" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -252,7 +254,7 @@
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug-CLANG/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug-CLANG/ProCIRCd-Allegro" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-CLANG/" />
 				<Option type="1" />
 				<Option compiler="clang" />
@@ -281,7 +283,7 @@
 			</Target>
 			<Target title="Debug (Linux-Allegro4-TCC)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug-TCC/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug-TCC/ProCIRCd-Allegro" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-TCC/" />
 				<Option type="1" />
 				<Option compiler="tcc" />
@@ -300,7 +302,7 @@
 			</Target>
 			<Target title="Debug (Linux-Curses-Threaded)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ProCIRCd-Curses" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -317,7 +319,7 @@
 			</Target>
 			<Target title="Release (Linux-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Release/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/ProCIRCd-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -374,6 +376,46 @@
 					<Add library="ubsan" />
 				</Linker>
 			</Target>
+			<Target title="Debug (Linux-NET-SDL)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd-SDL-NET" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-std=gnu99" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-ggdb3" />
+					<Add option="-fvar-tracking" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DUSE_RANDOM_PORT" />
+					<Add option="-DxDEBUG_REF" />
+					<Add option="-DUSE_CONNECT_DIALOG" />
+					<Add option="-DDEBUG_TILES" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="alleg" />
+					<Add library="ubsan" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-DEZXML_CSTR" />
@@ -408,7 +450,7 @@
 			<Option target="Release" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
@@ -417,13 +459,14 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
@@ -432,6 +475,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
@@ -452,7 +496,7 @@
 			<Option target="Release" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
@@ -461,13 +505,14 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
@@ -476,6 +521,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
@@ -499,7 +545,7 @@
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -538,7 +584,7 @@
 		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegro.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -568,7 +614,7 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32)" />
 			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
@@ -583,7 +629,7 @@
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32)" />
 			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
@@ -597,7 +643,7 @@
 			<Option target="Release" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -606,6 +652,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
@@ -627,7 +674,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/server.h" />
-		<Unit filename="src/stb/stb_image.h" />
+		<Unit filename="src/stb/stb_image.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/tilemap.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -640,7 +689,7 @@
 			<Option target="Check (Linux)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -648,6 +697,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
