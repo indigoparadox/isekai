@@ -187,8 +187,8 @@ void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
 
    file_iter_short = bmidstr(
       file_iter,
-      str_chunker_server_path.slen + 1,
-      blength( file_iter ) - str_chunker_server_path.slen - 1
+      str_server_data_path.slen + 1,
+      blength( file_iter ) - str_server_data_path.slen - 1
    );
    scaffold_check_null( file_iter_short );
 
@@ -207,6 +207,8 @@ cleanup:
    return file_iter_short;
 }
 
+#ifdef USE_CHUNKS
+
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
@@ -224,6 +226,8 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
 cleanup:
    return NULL;
 }
+
+#endif /* USE_CHUNKS */
 
 void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
@@ -252,6 +256,8 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    return tdata;
 }
 
+#ifdef USE_CHUNKS
+
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 
@@ -265,6 +271,8 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
    return NULL;
 }
+
+#endif /* USE_CHUNKS */
 
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -406,6 +414,8 @@ BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
    return FALSE;
 }
 
+#ifdef USE_CHUNKS
+
 BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
    bstring filename = (bstring)arg;
    if( NULL == filename || 0 == bstrcmp( key, filename ) ) {
@@ -439,6 +449,8 @@ BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg
    }
    return FALSE;
 }
+
+#endif /* USE_CHUNKS */
 
 BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
    IRC_COMMAND* cmd = (IRC_COMMAND*)iter;

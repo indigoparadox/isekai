@@ -4,6 +4,7 @@
 #include "callback.h"
 #include "tilemap.h"
 #include "datafile.h"
+#include "server.h"
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -170,7 +171,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_null( mapdata_filename );
    bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
 
-   mapdata_path = bstrcpy( &str_chunker_server_path );
+   mapdata_path = bstrcpy( &str_server_data_path );
    scaffold_check_null( mapdata_path );
 
    scaffold_join_path( mapdata_path, mapdata_filename );

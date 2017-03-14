@@ -74,17 +74,28 @@ void client_send( struct CLIENT* c, const bstring buffer );
 void client_printf( struct CLIENT* c, const char* message, ... );
 void client_lock_channels( struct CLIENT* c, BOOL lock );
 void client_stop( struct CLIENT* c );
+#ifdef USE_CHUNKS
 void client_send_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type,
    const bstring serverpath, const bstring filepath
 );
+#endif /* USE_CHUNKS */
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o );
 void client_clear_puppet( struct CLIENT* c );
 void client_request_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 );
+#ifdef USE_CHUNKS
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
+#endif /* USE_CHUNKS */
 void client_poll_input( struct CLIENT* c );
+
+#ifdef CLIENT_C
+struct tagbstring str_client_cache_path =
+   bsStatic( "testdata/livecache" );
+#else
+extern struct tagbstring str_client_cache_path;
+#endif /* CLIENT_C */
 
 #endif /* CLIENT_H */

@@ -562,6 +562,8 @@ cleanup:
    return;
 }
 
+#ifdef USE_CHUNKS
+
 static void irc_server_gamerequestfile(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
@@ -579,12 +581,14 @@ static void irc_server_gamerequestfile(
    file_path_found = server_file_search( args->entry[2] );
    scaffold_check_null( file_path_found );
 
-   client_send_file( c, type, &str_chunker_server_path, file_path_found );
+   client_send_file( c, type, &str_server_data_path, file_path_found );
 
 cleanup:
    bdestroy( file_path_found );
    return;
 }
+
+#endif /* USE_CHUNKS */
 
 static void irc_server_gameupdate(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
@@ -709,6 +713,8 @@ static void irc_client_error(
    }
 }
 
+#ifdef USE_CHUNKS
+
 static void irc_client_gamedatablock(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
@@ -770,6 +776,8 @@ static void irc_server_gamedataabort(
 cleanup:
    return;
 }
+
+#endif /* USE_CHUNKS */
 
 static void irc_server_gamenewsprite(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
@@ -849,8 +857,10 @@ IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
 IRC_COMMAND_ROW( "WHO", irc_server_who ),
 IRC_COMMAND_ROW( "PING", irc_server_ping ),
 IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
+#ifdef USE_CHUNKS
 IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
+#endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
 IRC_COMMAND_ROW( "NOB", irc_server_mob ),
 IRC_COMMAND_TABLE_END() };
@@ -859,7 +869,9 @@ IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
 IRC_COMMAND_ROW( "366", irc_client_join ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
+#ifdef USE_CHUNKS
 IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
+#endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_client_mob ),
 IRC_COMMAND_TABLE_END() };

@@ -1,3 +1,5 @@
+
+#define CLIENT_C
 #include "client.h"
 
 #include "server.h"
@@ -161,6 +163,8 @@ void client_stop( struct CLIENT* c ) {
    );
    scaffold_assert( 0 == vector_count( &(c->command_queue) ) );
 
+#ifdef USE_CHUNKS
+
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
@@ -170,6 +174,8 @@ void client_stop( struct CLIENT* c ) {
       deleted, hashmap_count( &(c->chunkers) )
    );
    scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
+
+#endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
    while( 0 < connection_read_line( &(c->link), buffer, c->client_side ) );
@@ -288,6 +294,8 @@ cleanup:
    return;
 }
 
+#ifdef USE_CHUNKS
+
 void client_send_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type,
    const bstring serverpath, const bstring filepath
@@ -322,6 +330,8 @@ cleanup:
    return;
 }
 
+#endif /* USE_CHUNKS */
+
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
    if( NULL != c->puppet ) { /* Take care of existing mob before anything. */
       mobile_free( c->puppet );
@@ -344,6 +354,7 @@ void client_clear_puppet( struct CLIENT* c ) {
 void client_request_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 ) {
+#ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
 
    hashmap_lock( &(c->chunkers), TRUE );
@@ -359,7 +370,7 @@ void client_request_file(
       /* TODO: Verify cached file hash from server. */
       h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
       chunker_unchunk_start(
-         h, type, filename, &str_chunker_cache_path
+         h, type, filename, &str_client_cache_path
       );
       scaffold_print_debug( "Adding unchunker to receive: %s\n", bdata( filename ) );
       hashmap_put_nolock( &(c->chunkers), filename, h );
@@ -371,7 +382,12 @@ void client_request_file(
 cleanup:
    hashmap_lock( &(c->chunkers), FALSE );
    return;
+#else
+#warning No file receiving method implemented!
+#endif /* USE_CHUNKS */
 }
+
+#ifdef USE_CHUNKS
 
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    struct CHUNKER* h = NULL;
@@ -513,6 +529,8 @@ cleanup:
    hashmap_remove( &(c->chunkers), h->filename );
    return;
 }
+
+#endif /* USE_CHUNKS */
 
 void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
