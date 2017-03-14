@@ -1,6 +1,11 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
+#if __STDC_VERSION__ >= 199901L
+#define C99
+#define _GNU_SOURCE
+#endif /* C99 */
+
 #ifndef WIN16
 #include <stdint.h>
 #endif /* WIN16 */
