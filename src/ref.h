@@ -28,7 +28,7 @@ static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struc
 #define refcount_test_inc( obj ) ref_test_inc( obj, __FUNCTION__ )
 #define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
 
-static inline void ref_inc( const struct REF* ref, const char* type, const char* func ) {
+static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
    ((struct REF*)ref)->count++;
 #ifdef DEBUG_REF
@@ -40,7 +40,7 @@ static inline void ref_inc( const struct REF* ref, const char* type, const char*
 #endif /* DEBUG_REF */
 }
 
-static inline BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
+static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
    --((struct REF*)ref)->count;
 #ifdef DEBUG_REF
@@ -62,7 +62,7 @@ static inline BOOL ref_dec( const struct REF* ref, const char* type, const char*
    return FALSE;
 }
 
-static inline BOOL ref_test_inc( void* data, const char* func ) {
+static SCAFFOLD_INLINE BOOL ref_test_inc( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
       ref_inc( (struct REF*)data, "void", func );
@@ -71,7 +71,7 @@ static inline BOOL ref_test_inc( void* data, const char* func ) {
    return FALSE;
 }
 
-static inline BOOL ref_test_dec( void* data, const char* func ) {
+static SCAFFOLD_INLINE BOOL ref_test_dec( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
       return ref_dec( (struct REF*)data, "void", func );

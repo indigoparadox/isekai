@@ -22,7 +22,7 @@ CPPUSEPCHFLAG =
 FIRSTC = B64.C       
 FIRSTCPP =             
 RC = rc
-CFLAGS_D_WEXE = /nologo /G2 /W3 /Zi /AM /Od /D "_DEBUG" /D "USE_SYNCBUFF" /D "USE_FILE_CACHE" /D "WIN16" /FR /GA /Fd"PROCIRCD.PDB"
+CFLAGS_D_WEXE = /nologo /G2 /W3 /Zi /AM /Od /D "_DEBUG" /D "USE_SYNCBUFF" /D "USE_FILE_CACHE" /D "WIN16" /D "DEBUG" /FR /GA /Fd"PROCIRCD.PDB"
 CFLAGS_R_WEXE = /nologo /W3 /AM /O1 /D "NDEBUG" /D "USE_SYNCBUFF" /D "USE_FILE_CACHE" /D "WIN16" /FR /GA 
 LFLAGS_D_WEXE = /NOLOGO /NOD /PACKC:61440 /STACK:10240 /ALIGN:16 /ONERROR:NOEXE /CO  
 LFLAGS_R_WEXE = /NOLOGO /NOD /PACKC:61440 /STACK:10240 /ALIGN:16 /ONERROR:NOEXE  
@@ -88,7 +88,6 @@ CALLBACK_DEP = t:\procircd\src\callback.h \
 	t:\procircd\src\client.h \
 	t:\procircd\src\connect.h \
 	t:\procircd\src\ref.h \
-	netinet/in.h \
 	t:\procircd\src\graphics.h \
 	t:\procircd\src\channel.h \
 	t:\procircd\src\tilemap.h \
@@ -139,7 +138,6 @@ CLIENT_DEP = t:\procircd\src\client.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\connect.h \
 	t:\procircd\src\ref.h \
-	netinet/in.h \
 	t:\procircd\src\graphics.h \
 	t:\procircd\src\channel.h \
 	t:\procircd\src\hashmap.h \
@@ -164,7 +162,6 @@ CONNECT_DEP = t:\procircd\src\connect.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\vector.h \
 	t:\procircd\src\ref.h \
-	netinet/in.h \
 	sys/socket.h \
 	arpa/inet.h \
 	t:\procircd\src\ipc/syncbuff.h

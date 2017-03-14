@@ -378,7 +378,7 @@ cleanup:
    hashmap_lock( &(c->chunkers), FALSE );
    return;
 #else
-#warning No file receiving method implemented!
+/* FIXME: No file receiving method implemented! */
 #endif /* USE_CHUNKS */
 }
 

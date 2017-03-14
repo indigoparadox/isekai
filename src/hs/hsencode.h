@@ -3,7 +3,6 @@
 
 #include "../scaffold.h"
 
-#include <stdint.h>
 #include <stddef.h>
 #include "hs_com.h"
 #include "hs_conf.h"
