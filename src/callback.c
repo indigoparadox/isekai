@@ -241,7 +241,7 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
       tdata = vector_get( &(set->tiles), gid - 1 );
    }
 
-cleanup:
+/* cleanup: */
    if( NULL == tdata ) {
 #ifdef DEBUG_TILES
       /* scaffold_print_debug(
