@@ -1,8 +1,6 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include <stdint.h>
-
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 #include "ref.h"

@@ -2,23 +2,13 @@
 #ifndef SYNCBUFF_H
 #define SYNCBUFF_H
 
-#include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
 #include "../scaffold.h"
-#endif /* _WIN32 */
-
 #include "../bstrlib/bstrlib.h"
 
 /* TODO: Minimal ifdefs for scaffold. */
-
-#ifdef USE_SIZET
-#else
-typedef uint32_t SCAFFOLD_SIZE;
-typedef int32_t SCAFFOLD_SIZE_SIGNED;
-#endif /* USE_SIZET */
 
 typedef enum _SYNCBUFF_DEST {
    SYNCBUFF_DEST_SERVER,

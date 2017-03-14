@@ -5,7 +5,6 @@
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 
-#include <stdint.h>
 #include <stddef.h>
 
 void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, SCAFFOLD_SIZE_SIGNED linesz );

@@ -8,9 +8,10 @@
 #endif /* C99 */
 #endif /* __STDC_VERSION__ */
 
-#ifndef WIN16
+#ifndef WIN16                       
 #include <stdint.h>
 #endif /* WIN16 */
+
 #include <stdio.h>
 #include <stddef.h>
 
@@ -38,8 +39,13 @@ typedef unsigned char BOOL;
 #define TRUE 1
 #define FALSE 0
 typedef unsigned long SCAFFOLD_SIZE;
-typedef long SCAFFOLD_SIZE;
-
+typedef long SCAFFOLD_SIZE_SIGNED;
+typedef int int16_t;
+typedef unsigned int uint16_t;
+typedef long int32_t;
+typedef unsigned long uint32_t;
+typedef char int8_t;
+typedef unsigned char uint8_t;
 #else
 
 #ifndef BYTE

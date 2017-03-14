@@ -1,9 +1,8 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include "scaffold.h"
 #include "client.h"
-
-#include <stdint.h>
 
 typedef enum INPUT_SCANCODE {
    INPUT_SCANCODE_BACKSPACE = 63,
