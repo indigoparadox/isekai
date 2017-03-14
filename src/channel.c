@@ -194,7 +194,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    datafile_parse_tilemap_ezxml_string(
       &(l->tilemap), mapdata_buffer, mapdata_size, FALSE
    );
-#endif // USE_EZXML
+#endif /* USE_EZXML */
 
 cleanup:
    bdestroy( mapdata_filename );

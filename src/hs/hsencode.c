@@ -13,7 +13,7 @@ typedef enum {
    HSES_YIELD_BR_LENGTH,       /* yielding backref length */
    HSES_SAVE_BACKLOG,          /* copying buffer to backlog */
    HSES_FLUSH_BITS,            /* flush bit buffer */
-   HSES_DONE,                  /* done */
+   HSES_DONE                   /* done */
 } HSE_state;
 
 #if HEATSHRINK_DEBUGGING_LOGS
@@ -612,7 +612,7 @@ static void save_backlog(heatshrink_encoder* hse) {
     * used for future matches. Don't bother checking whether the
     * input is less than the maximum size, because if it isn't,
     * we're done anyway. */
-   uint16_t rem = input_buf_sz - msi; // unprocessed bytes
+   uint16_t rem = input_buf_sz - msi; /* unprocessed bytes */
    uint16_t shift_sz = input_buf_sz + rem;
 
    memmove(&hse->buffer[0],

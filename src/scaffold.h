@@ -29,6 +29,8 @@
 
 #define SENTINAL 19691
 
+#define SCAFFOLD_PRINT_BUFFER_ALLOC 110
+
 #ifdef WIN16
 
 typedef unsigned char BYTE;
@@ -102,12 +104,17 @@ extern FILE* scaffold_log_handle_err;
 #define scaffold_log_handle_err stderr
 #endif /* SCAFFOLD_LOG_FILE */
 
-#define scaffold_print_info( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle );
-#define scaffold_print_error( ... ) fprintf( scaffold_log_handle_err, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle_err );
-
 #ifdef DEBUG
 
+#ifdef DEBUG_OUT_PREPRO
 #define scaffold_print_debug( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ );
+#define scaffold_print_info( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle );
+#define scaffold_print_error( ... ) fprintf( scaffold_log_handle_err, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle_err );
+#else
+void scaffold_print_debug( const char* message, ... );
+void scaffold_print_info( const char* message, ... );
+void scaffold_print_error( const char* message, ... );
+#endif /* DEBUG_OUT_PREPRO */
 
 #define scaffold_assert( arg ) assert( arg )
 
@@ -252,9 +259,6 @@ bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str );
 BOOL scaffold_string_is_printable( bstring str );
-#ifdef DEBUG
-void scaffold_printf_debug( const char* message, ... );
-#endif /* DEBUG */
 void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )

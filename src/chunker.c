@@ -270,7 +270,7 @@ void chunker_unchunk_start(
    } else {
       h->filecache_path = NULL;
    }
-#endif // USE_FILE_CACHE
+#endif /* USE_FILE_CACHE */
 
 cleanup:
    return;
@@ -511,7 +511,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
       finished = TRUE;
       goto cleanup;
    }
-#endif // USE_FILE_CACHE
+#endif /* USE_FILE_CACHE */
 
    /* Ensure chunks are contiguous and complete. */
    vector_sort_cb( &(h->tracks), callback_sort_chunker_tracks );
@@ -544,7 +544,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
       );
       chunker_unchunk_save_cache( h );
    }
-#endif // USE_FILE_CACHE
+#endif /* USE_FILE_CACHE */
 cleanup:
    if( FALSE != chunks_locked ){
       vector_lock( &(h->tracks), FALSE );
@@ -558,7 +558,7 @@ BOOL chunker_unchunk_cached(struct CHUNKER* h) {
    return h->force_finish;
 #else
    return FALSE;
-#endif // USE_FILE_CACHE
+#endif /* USE_FILE_CACHE */
 }
 
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {

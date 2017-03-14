@@ -61,6 +61,7 @@
 					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />
 					<Add option="-Wredundant-decls" />
+					<Add option="-Wundef" />
 					<Add option="-Winline" />
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
@@ -74,7 +75,6 @@
 					<Add option="-fsanitize=undefined" />
 					<Add option="-ggdb3" />
 					<Add option="-fvar-tracking" />
-					<Add option="-std=gnu99" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
