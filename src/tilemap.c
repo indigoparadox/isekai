@@ -144,6 +144,7 @@ static void* tilemap_layer_draw_tile(
    struct TILEMAP_TILE_DATA* tile_info = NULL;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
    SCAFFOLD_SIZE td_i;
+   int bstr_result;
 
    bnum = bfromcstralloc( 10, "" );
    scaffold_check_null( bnum );
@@ -198,12 +199,14 @@ static void* tilemap_layer_draw_tile(
    case TILEMAP_DEBUG_TERRAIN_COORDS:
       if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
          graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
-         bassignformat( bnum, "%d,", x );
+         bstr_result = bassignformat( bnum, "%d,", x );
+         scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             twindow->g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
             bnum
          );
-         bassignformat( bnum, "%d", y );
+         bstr_result = bassignformat( bnum, "%d", y );
+         scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             twindow->g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
             bnum
@@ -213,12 +216,13 @@ static void* tilemap_layer_draw_tile(
       break;
    case TILEMAP_DEBUG_TERRAIN_NAMES:
       if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
-         bassignformat(
+         bstr_result = bassignformat(
             bnum, "%c%c:%d",
             bdata( tile_info->terrain[0]->name )[0],
             bdata( tile_info->terrain[0]->name )[1],
             tile_info->terrain[0]->movement
          );
+         scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             twindow->g, pix_x + 16, pix_y + (10 * layer->z),
             GRAPHICS_TEXT_ALIGN_CENTER, bnum
@@ -228,12 +232,14 @@ static void* tilemap_layer_draw_tile(
    case TILEMAP_DEBUG_TERRAIN_QUARTERS:
       for( td_i = 0 ; 4 > td_i ; td_i++ ) {
          if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
-            bassignformat( bnum, "x" );
+            bstr_result = bassignformat( bnum, "x" );
+            scaffold_check_nonzero( bstr_result );
          } else {
-            bassignformat(
+            bstr_result = bassignformat(
                bnum, "%d",
                tile_info->terrain[td_i]->id
             );
+            scaffold_check_nonzero( bstr_result );
          }
          graphics_set_color( twindow->g, td_i + 4 );
          graphics_draw_text(
