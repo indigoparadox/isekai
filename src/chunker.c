@@ -28,6 +28,7 @@ static void chunker_cleanup( const struct REF* ref ) {
    bdestroy( h->filename );
    bdestroy( h->serverpath );
 
+#if HEATSHRINK_DYNAMIC_ALLOC
    if( NULL != h->encoder ) {
       heatshrink_encoder_free( h->encoder );
       h->decoder = NULL;
@@ -36,6 +37,7 @@ static void chunker_cleanup( const struct REF* ref ) {
       heatshrink_decoder_free( h->decoder );
       h->encoder = NULL;
    }
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
    free( h );
 }
@@ -54,6 +56,7 @@ static void chunker_chunk_setup_internal(
       ref_init( &(h->refcount), chunker_cleanup );
    }
 
+#if HEATSHRINK_DYNAMIC_ALLOC
    if( NULL != h->decoder ) {
       heatshrink_decoder_free( h->decoder );
       h->decoder = NULL;
@@ -67,6 +70,9 @@ static void chunker_chunk_setup_internal(
       CHUNKER_WINDOW_SIZE,
       CHUNKER_LOOKAHEAD_SIZE
    );
+#else
+   heatshrink_encoder_reset( &(h->encoder) );
+#endif /* HEATSHRINK_DYNAMIC_ALLOC  */
 
    if( VECTOR_SENTINAL != h->tracks.sentinal ) {
       vector_init( &(h->tracks) );
@@ -151,7 +157,8 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
    scaffold_check_null( hs_buffer );
-   heatshrink_encoder_reset( h->encoder );
+
+   heatshrink_encoder_reset( chunker_get_encoder( h ) );
 
    do {
       if( 0 < raw_buffer_len ) {
@@ -161,7 +168,11 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
          }
 
          sink_res = heatshrink_encoder_sink(
+#if HEATSHRINK_DYNAMIC_ALLOC
             h->encoder,
+#else
+            &(h->encoder),
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
             &(h->raw_ptr[h->raw_position]),
             raw_buffer_len,
             &consumed
@@ -175,13 +186,13 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
          raw_buffer_len -= consumed;
 
          if( 0 >= raw_buffer_len ) {
-            heatshrink_encoder_finish( h->encoder );
+            heatshrink_encoder_finish( chunker_get_encoder( h ) );
          }
       }
 
       do {
          poll_res = heatshrink_encoder_poll(
-            h->encoder,
+            chunker_get_encoder( h ),
             &(hs_buffer[hs_buffer_pos]),
             (hs_buffer_len - hs_buffer_pos),
             &exhumed
@@ -221,12 +232,14 @@ void chunker_unchunk_start(
       ref_init( &(h->refcount), chunker_cleanup );
    }
 
+#if HEATSHRINK_DYNAMIC_ALLOC
    if( NULL != h->decoder ) {
       heatshrink_decoder_free( h->decoder );
    }
    if( NULL != h->encoder ) {
       heatshrink_encoder_free( h->encoder );
    }
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
    if( VECTOR_SENTINAL != h->tracks.sentinal ) {
       vector_init( &(h->tracks) );
@@ -279,7 +292,9 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    int b64_res = 0;
 #endif /* DEBUG */
 
+#if HEATSHRINK_DYNAMIC_ALLOC
    scaffold_assert( NULL == h->encoder );
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
    if( 0 >= h->tx_chunk_length ) {
       h->tx_chunk_length = src_chunk_len;
@@ -293,16 +308,20 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    } else
 #endif
    if( NULL == h->raw_ptr && 0 == h->raw_length ) {
+#if HEATSHRINK_DYNAMIC_ALLOC
       scaffold_assert( NULL == h->decoder );
-      h->raw_length = src_len;
-      h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
       h->decoder = heatshrink_decoder_alloc(
          mid_buffer_length, /* TODO */
          CHUNKER_WINDOW_SIZE,
          CHUNKER_LOOKAHEAD_SIZE
       );
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
+      h->raw_length = src_len;
+      h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
    } else {
+#if HEATSHRINK_DYNAMIC_ALLOC
       scaffold_assert( NULL != h->decoder );
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
       scaffold_assert( src_len == h->raw_length );
    }
 
@@ -317,7 +336,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
       b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
    scaffold_assert( 0 == b64_res );
 
-   heatshrink_decoder_reset( h->decoder );
+   heatshrink_decoder_reset( chunker_get_decoder( h ) );
 
    /* Add a tracker to the list. */
    track = (CHUNKER_TRACK*)calloc( 1, sizeof( CHUNKER_TRACK ) );
@@ -329,7 +348,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    do {
       if( 0 < mid_buffer_length ) {
          sink_res = heatshrink_decoder_sink(
-            h->decoder,
+            chunker_get_decoder( h ),
             &(mid_buffer[mid_buffer_pos]),
             mid_buffer_length - mid_buffer_pos,
             &consumed
@@ -343,13 +362,13 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
          mid_buffer_length -= consumed;
 
          if( 0 >= mid_buffer_length ) {
-            heatshrink_decoder_finish( h->decoder );
+            heatshrink_decoder_finish( chunker_get_decoder( h ) );
          }
       }
 
       do {
          poll_res = heatshrink_decoder_poll(
-            h->decoder,
+            chunker_get_decoder( h ),
             (uint8_t*)&(h->raw_ptr[h->raw_position]),
             (h->raw_length - h->raw_position),
             &exhumed
@@ -369,7 +388,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
 
    while( HSDR_POLL_MORE == poll_res ) {
       poll_res = heatshrink_decoder_poll(
-         h->decoder,
+         chunker_get_decoder( h ),
          &(tail_output_buffer[tail_output_pos]),
          tail_output_alloc - tail_output_pos,
          &exhumed

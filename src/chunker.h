@@ -55,8 +55,13 @@ typedef struct _CHUNKER_TRACK {
 
 struct CHUNKER {
    struct REF refcount;
+#if HEATSHRINK_DYNAMIC_ALLOC
    heatshrink_encoder* encoder;
    heatshrink_decoder* decoder;
+#else
+   heatshrink_encoder encoder;
+   heatshrink_decoder decoder;
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
    SCAFFOLD_SIZE raw_position;
    SCAFFOLD_SIZE raw_length;
    BYTE* raw_ptr;
@@ -69,6 +74,14 @@ struct CHUNKER {
    bstring serverpath;
    SCAFFOLD_SIZE last_percent;
 };
+
+#if HEATSHRINK_DYNAMIC_ALLOC
+#define chunker_get_encoder( h ) (h->encoder)
+#define chunker_get_decoder( h ) (h->decoder)
+#else
+#define chunker_get_encoder( h ) (&(h->encoder))
+#define chunker_get_decoder( h ) (&(h->decoder))
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
 void chunker_free( struct CHUNKER* h );
 void chunker_chunk_start(
