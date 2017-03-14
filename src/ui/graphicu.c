@@ -202,6 +202,7 @@ SCAFFOLD_SIZE ui_poll_input(
    struct UI_WINDOW* win = NULL;
    SCAFFOLD_SIZE input_length = 0;
    struct UI_CONTROL* control = NULL;
+   int bstr_result;
 
    win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
    if( NULL == win ) { goto cleanup; }
@@ -222,7 +223,8 @@ SCAFFOLD_SIZE ui_poll_input(
       INPUT_TYPE_KEY == input->type &&
       scaffold_char_is_printable( input->character )
    ) {
-      bconchar( buffer, input->character );
+      bstr_result = bconchar( buffer, input->character );
+      scaffold_check_nonzero( bstr_result );
 #ifdef DEBUG_KEYS
       scaffold_print_debug( "Input field: %s\n", bdata( buffer ) );
 #endif /* DEBUG_KEYS */
@@ -230,7 +232,8 @@ SCAFFOLD_SIZE ui_poll_input(
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_BACKSPACE == input->scancode
    ) {
-      btrunc( buffer, blength( buffer ) - 1 );
+      bstr_result = btrunc( buffer, blength( buffer ) - 1 );
+      scaffold_check_nonzero( bstr_result );
    } else if(
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_ENTER == input->scancode
