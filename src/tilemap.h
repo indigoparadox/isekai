@@ -22,6 +22,11 @@ typedef enum TILEMAP_DEBUG_TERRAIN_STATE {
 #endif /* DEBUG_TILES */
 
 typedef enum {
+   TILEMAP_REDRAW_DIRTY,
+   TILEMAP_REDRAW_ALL
+} TILEMAP_REDRAW_STATE;
+
+typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
    TILEMAP_ORIENTATION_ISO
 } TILEMAP_ORIENTATION;
@@ -90,6 +95,8 @@ struct TILEMAP {
    SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
    SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */
    bstring lname;
+   struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
+   TILEMAP_REDRAW_STATE redraw_state;
 #ifdef DEBUG
    uint16_t sentinal;
 #endif /* DEBUG */

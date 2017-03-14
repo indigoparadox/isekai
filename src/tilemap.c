@@ -42,6 +42,10 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
    hashmap_init( &(t->tilesets) );
    hashmap_init( &(t->player_spawns) );
 
+   vector_init( &(t->dirty_tiles) );
+
+   tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
    bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
@@ -294,6 +298,7 @@ cleanup:
 
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+   tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
 }
 
 /** \brief
@@ -354,4 +359,27 @@ void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct C
    if( tilemap_inside_inner_map_y( puppet->x, puppet->y, twindow ) ) {
       twindow->y = puppet->y - (twindow->height / 2) - 1;
    }
+}
+
+void tilemap_add_dirty_tile(
+   struct TILEMAP* t, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+) {
+   struct TILEMAP_POSITION* pos = NULL;
+
+   pos =
+      (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) );
+   scaffold_check_null( pos );
+
+   vector_add( &(t->dirty_tiles), pos );
+
+cleanup:
+   return;
+};
+
+void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
+   t->redraw_state = st;
+
+   /* Always reset dirty tiles. */
+   vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );
+   scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
 }

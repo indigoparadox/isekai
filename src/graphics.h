@@ -12,6 +12,8 @@
 #define GRAPHICS_SCREEN_HEIGHT 480
 #define GRAPHICS_SPRITE_WIDTH 32
 #define GRAPHICS_SPRITE_HEIGHT 32
+#define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
+#define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 
 typedef enum GRAPHICS_TIMER {
    GRAPHICS_TIMER_FPS = 30
@@ -90,7 +92,10 @@ struct GRAPHICS_TILE_WINDOW {
     scaffold_check_null( g ); \
     graphics_surface_init( g, w, h );
 
-void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2 );
+void graphics_screen_init(
+   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
+);
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );

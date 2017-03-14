@@ -67,9 +67,16 @@ int main( int argc, char** argv ) {
 #endif /* SCAFFOLD_LOG_FILE */
 
 #ifdef WIN32
-   graphics_screen_init( &g, 640, 480, nShowCmd, hInstance );
+   graphics_screen_init(
+      &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
+      GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT,
+      nShowCmd, hInstance
+   );
 #else
-   graphics_screen_init( &g, 640, 480, 0, NULL );
+   graphics_screen_init(
+      &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
+      GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT, 0, NULL
+   );
 #endif /* WIN32 */
    scaffold_check_nonzero( scaffold_error );
    input_init( &p );
