@@ -4,6 +4,41 @@
 #include "../b64.h"
 #include "../hashmap.h"
 
+ezxml_t datafile_tilemap_ezxml_peek_lname(
+   const BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
+) {
+   ezxml_t xml_props,
+      xml_prop_iter = NULL,
+      xml_data = NULL;
+   const char* channel_c = NULL;
+   int bstr_retval;
+
+   scaffold_assert( NULL != lname_buffer );
+   scaffold_check_null( tmdata );
+
+   xml_data = ezxml_parse_str( (const char*)tmdata, datasize );
+   scaffold_check_null( xml_data );
+
+   xml_props = ezxml_child( xml_data, "properties" );
+   scaffold_check_null( xml_props );
+
+   xml_prop_iter = ezxml_child( xml_props, "property" );
+
+   while( NULL != xml_prop_iter ) {
+      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "channel" ) ) {
+         channel_c = ezxml_attr( xml_prop_iter, "value" );
+         scaffold_check_null( channel_c );
+         bstr_retval = bassigncstr( lname_buffer, channel_c );
+         scaffold_check_nonzero( bstr_retval );
+         break;
+      }
+      xml_prop_iter = ezxml_next( xml_prop_iter );
+   }
+
+cleanup:
+   return xml_data;
+}
+
 static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t xml_props ) {
    ezxml_t xml_prop_iter = NULL;
    const char* channel_c = NULL;
@@ -119,6 +154,11 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
          if( NULL != xml_attr ) {
             terrain_info->movement = atoi( xml_attr );
+         }
+      } else if( 0 == strncmp( "cutoff", xml_attr, 6 ) ) {
+         xml_attr = ezxml_attr( xml_prop_iter, "value" );
+         if( NULL != xml_attr ) {
+            terrain_info->cutoff = atoi( xml_attr );
          }
       }
 
@@ -441,25 +481,14 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images ) {
+void datafile_parse_tilemap_ezxml_t(
+   struct TILEMAP* t, ezxml_t xml_data, BOOL local_images
+) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
-      xml_tileset = NULL,
-      xml_data = NULL;
-#ifdef EZXML_STRICT
-   SCAFFOLD_SIZE datasize_check = 0;
-#endif /* EZXML_STRICT */
+      xml_tileset = NULL;
+
    SCAFFOLD_SIZE z = 0;
-
-   scaffold_check_null( tmdata );
-
-#ifdef EZXML_STRICT
-   datasize_check = strlen( (const char*)o );
-   scaffold_assert( datasize_check == datasize );
-#endif /* EZXML_STRICT */
-
-   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
 
    xml_tileset = ezxml_child( xml_data, "tileset" );
    scaffold_check_null( xml_tileset );
@@ -489,6 +518,30 @@ void datafile_parse_tilemap_ezxml( struct TILEMAP* t, const BYTE* tmdata, SCAFFO
 #ifdef DEBUG
    t->sentinal = TILEMAP_SENTINAL;
 #endif /* DEBUG */
+
+cleanup:
+   return;
+}
+
+void datafile_parse_tilemap_ezxml_string(
+   struct TILEMAP* t, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+) {
+   ezxml_t xml_data = NULL;
+#ifdef EZXML_STRICT
+   SCAFFOLD_SIZE datasize_check = 0;
+#endif /* EZXML_STRICT */
+
+   scaffold_check_null( tmdata );
+
+#ifdef EZXML_STRICT
+   datasize_check = strlen( (const char*)o );
+   scaffold_assert( datasize_check == datasize );
+#endif /* EZXML_STRICT */
+
+   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
+   scaffold_check_null( xml_data );
+
+   datafile_parse_tilemap_ezxml_t( t, xml_data, local_images );
 
 cleanup:
    if( NULL != xml_data ) {
