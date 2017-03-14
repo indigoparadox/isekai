@@ -681,6 +681,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/tilemap.h" />
+		<Unit filename="src/tinypy/tinypy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/tinypy/tinypy.h" />
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/graphicu.c">
 			<Option compilerVar="CC" />
