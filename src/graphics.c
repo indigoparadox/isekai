@@ -44,7 +44,7 @@ void graphics_bitmap_load(
 #else
    struct GRAPHICS_BITMAP_FILE_HEADER* file_header = NULL;
    struct GRAPHICS_BITMAP_HEADER* header = NULL;
-#endif // USE_BITMAP_DISCREET
+#endif /* USE_BITMAP_DISCREET */
    SCAFFOLD_SIZE pixels_sz = 0,
       i,
       output_i = 0;

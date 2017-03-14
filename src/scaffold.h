@@ -89,7 +89,7 @@ typedef enum {
 #ifndef SCAFFOLD_C
 extern FILE* scaffold_log_handle;
 extern FILE* scaffold_log_handle_err;
-#endif // SCAFFOLD_C
+#endif /* SCAFFOLD_C */
 #else
 #define scaffold_log_handle stdout
 #define scaffold_log_handle_err stderr
