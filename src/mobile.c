@@ -196,12 +196,16 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       pix_y += steps_remaining_y;
    }
 
-   bstring pos = bformat(
-      "%d (%d)[%d], %d (%d)[%d]",
-      o->x, o->prev_x, steps_remaining_x, o->y, o->prev_y, steps_remaining_y
-   );
-   graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
-   graphics_draw_text( twindow->g, 10, 30, GRAPHICS_TEXT_ALIGN_LEFT, pos );
+#ifdef DEBUG_TILES
+   if( TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state ) {
+      bstring pos = bformat(
+         "%d (%d)[%d], %d (%d)[%d]",
+         o->x, o->prev_x, steps_remaining_x, o->y, o->prev_y, steps_remaining_y
+      );
+      graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
+      graphics_draw_text( twindow->g, 10, 30, GRAPHICS_TEXT_ALIGN_LEFT, pos );
+   }
+#endif /* DEBUG_TILES */
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
