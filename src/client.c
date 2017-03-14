@@ -429,26 +429,28 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    struct CHANNEL* l = NULL;
    GRAPHICS* g = NULL;
    struct TILEMAP_TILESET* set = NULL;
-   struct TILEMAP* t = NULL;
+   bstring lname = NULL;
+#ifdef USE_EZXML
+   ezxml_t xml_data = NULL;
+#endif /* USE_EZXML */
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
    switch( h->type ) {
    case CHUNKER_DATA_TYPE_TILEMAP:
-      tilemap_new( t, TRUE );
-
+      lname = bfromcstr( "" );
 #ifdef USE_EZXML
-      datafile_parse_tilemap_ezxml( t, (BYTE*)h->raw_ptr, h->raw_length, TRUE );
+      xml_data = datafile_tilemap_ezxml_peek_lname(
+         (BYTE*)h->raw_ptr, h->raw_length, lname
+      );
 #endif /* USE_EZXML */
 
-      l = client_get_channel_by_name( c, t->lname );
+      l = client_get_channel_by_name( c, lname );
       scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
 
-      /* TODO: Find a more elegant way to do this. */
-      memcpy( &(l->tilemap), t, sizeof( struct TILEMAP ) );
-      if( NULL != t ) {
-         free( t );
-      }
+#ifdef USE_EZXML
+      datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, TRUE );
+#endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
       hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
@@ -466,14 +468,15 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          h->filename
       );
       scaffold_assert( NULL != l );
-      t = &(l->tilemap);
 
       graphics_surface_new( g, 0, 0, 0, 0 );
       scaffold_check_null( g );
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
 
-      set = hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, h->filename );
+      set = hashmap_iterate(
+         &(l->tilemap.tilesets), callback_search_tilesets_img_name, h->filename
+      );
       scaffold_check_null( set )
 
       hashmap_put( &(set->images), h->filename, g );
@@ -496,13 +499,18 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       break;
    }
 
+cleanup:
+   bdestroy( lname );
+#ifdef USE_EZXML
+   if( NULL != xml_data ) {
+      ezxml_free( xml_data );
+   }
+#endif /* USE_EZXML */
    scaffold_print_debug(
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )
    );
    chunker_free( h );
    hashmap_remove( &(c->chunkers), h->filename );
-
-cleanup:
    return;
 }
 
