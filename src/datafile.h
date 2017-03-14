@@ -10,8 +10,15 @@ typedef void (*datafile_cb)(
 );
 
 #ifdef USE_EZXML
-void datafile_parse_tilemap_ezxml(
-   struct TILEMAP* t, const BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+ezxml_t datafile_tilemap_ezxml_peek_lname(
+   const BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
+);
+
+void datafile_parse_tilemap_ezxml_t(
+   struct TILEMAP* t, ezxml_t xml_data, BOOL local_images
+);
+void datafile_parse_tilemap_ezxml_string(
+   struct TILEMAP* t, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
 );
 #endif /* USE_EZXML */
 
