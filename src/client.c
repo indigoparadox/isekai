@@ -9,6 +9,10 @@
 #include "input.h"
 #include "tilemap.h"
 #include "datafile.h"
+#include "ui.h"
+#include "tinypy/tinypy.h"
+
+bstring client_input_from_ui = NULL;
 
 static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
@@ -37,6 +41,12 @@ static void client_cleanup( const struct REF *ref ) {
 
 void client_init( struct CLIENT* c, BOOL client_side ) {
    ref_init( &(c->link.refcount), client_cleanup );
+
+   if( TRUE == c->client_side ) {
+      scaffold_assert_client();
+      bdestroy( client_input_from_ui );
+      client_input_from_ui = NULL;
+   }
 
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
@@ -534,6 +544,12 @@ void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
    struct MOBILE_UPDATE_PACKET update;
    struct MOBILE* puppet = NULL;
+   struct UI* ui = NULL;
+   struct UI_WINDOW* win = NULL;
+   struct TILEMAP* t = NULL;
+   tp_obj globals;
+   tp_obj code;
+   tp_obj compiled;
 #ifdef DEBUG_TILES
    bstring tilemap_dbg_key = NULL;
 #endif /* DEBUG_TILES */
@@ -542,6 +558,7 @@ void client_poll_input( struct CLIENT* c ) {
 
    if( NULL != c ) {
       puppet = c->puppet;
+      ui = c->ui;
    }
 
    input_get_event( &input );
@@ -550,6 +567,7 @@ void client_poll_input( struct CLIENT* c ) {
    if( NULL != puppet ) {
       update.l = puppet->channel;
       scaffold_check_null( update.l );
+      t = &(c->puppet->channel->tilemap);
    }
 
    if( INPUT_TYPE_KEY == input.type ) {
@@ -560,6 +578,45 @@ void client_poll_input( struct CLIENT* c ) {
          goto cleanup; /* Silently ignore input until animations are done. */
       }
 
+      /* Handle windows first. */
+      if( NULL != ui_window_by_id( ui, &str_client_window_id_repl ) ) {
+         if( NULL == client_input_from_ui ) {
+            client_input_from_ui = bfromcstralloc( 80, "" );
+            scaffold_check_null( client_input_from_ui );
+         }
+         if( 0 != ui_poll_input(
+            ui, &input, client_input_from_ui, &str_client_window_id_repl
+         ) ) {
+            ui_window_pop( ui );
+            tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
+            /* TODO: Process collected input. */
+
+            /* FIXME: Move this into channel_update() and have it call tp_step
+             *        once per cycle.
+             */
+
+            /*
+            tp_obj fname = tp_string("test");
+            tp_obj text = tp_string("print 2");
+            tp_obj c = tp_compile(tp, text, fname);
+            tp_exec(tp, c, tp->builtins);
+            */
+
+            /* code = tp_string_n(
+               bdata( client_input_from_ui ),
+               blength( client_input_from_ui )
+            );
+            globals = tp_string( "test" );
+            compiled = tp_compile( update.l->vm, code, globals ); */
+            tp_eval( update.l->vm, bdata( client_input_from_ui ), update.l->vm->builtins );
+
+            btrunc( client_input_from_ui, 0 );
+         }
+         goto cleanup;
+      }
+
+      /* If no windows need input, then move on to game input. */
       switch( input.character ) {
       case 'q':
          if( NULL != puppet ) {
@@ -590,6 +647,21 @@ void client_poll_input( struct CLIENT* c ) {
          update.update = MOBILE_UPDATE_MOVERIGHT;
          if( NULL != puppet ) {
             proto_client_send_update( c, &update );
+         }
+         break;
+      case 'p':
+         if(
+            NULL ==
+            ui_window_by_id( ui, &str_client_window_id_repl )
+         ) {
+            ui_window_new(
+               win, ui, UI_WINDOW_TYPE_SIMPLE_TEXT,
+               &str_client_window_id_repl,
+               &str_client_window_title_repl,
+               &str_client_window_prompt_repl,
+               40, 40, 400, 200
+            );
+            ui_window_push( ui, win );
          }
          break;
 #ifdef DEBUG_TILES

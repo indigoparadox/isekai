@@ -287,7 +287,7 @@ tp_obj tp_params(TP) ;
 tp_obj tp_params_n(TP,int n, tp_obj argv[]) ;
 tp_obj tp_params_v(TP,int n,...) ;
 tp_obj tp_string_t(TP, int n) ;
-tp_obj tp_printf(TP,char *fmt,...) ;
+/* tp_obj tp_printf(TP,char *fmt,...) ; */
 int _tp_str_index(tp_obj s, tp_obj k) ;
 tp_obj tp_join(TP) ;
 tp_obj tp_string_slice(TP,tp_obj s, int a, int b) ;
@@ -319,7 +319,7 @@ tp_num _roundf(tp_num v) ;
 tp_obj tp_round(TP) ;
 tp_obj tp_exists(TP) ;
 tp_obj tp_mtime(TP) ;
-void tp_grey(TP,tp_obj v) ;
+/* void tp_grey(TP,tp_obj v) ; */
 void tp_follow(TP,tp_obj v) ;
 void tp_reset(TP) ;
 void tp_gc_init(TP) ;
@@ -329,13 +329,13 @@ void tp_collect(TP) ;
 void _tp_gcinc(TP) ;
 void tp_full(TP) ;
 void tp_gcinc(TP) ;
-tp_obj tp_track(TP,tp_obj v) ;
-tp_obj tp_str(TP,tp_obj self) ;
+/* tp_obj tp_track(TP,tp_obj v) ;
+tp_obj tp_str(TP,tp_obj self) ; */
 int tp_bool(TP,tp_obj v) ;
 tp_obj tp_has(TP,tp_obj self, tp_obj k) ;
 void tp_del(TP,tp_obj self, tp_obj k) ;
 tp_obj tp_iter(TP,tp_obj self, tp_obj k) ;
-tp_obj tp_get(TP,tp_obj self, tp_obj k) ;
+/* tp_obj tp_get(TP,tp_obj self, tp_obj k) ; */
 int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) ;
 void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) ;
 tp_obj tp_add(TP,tp_obj a, tp_obj b) ;
@@ -1450,9 +1450,6 @@ TP_OP(tp_sub,a-b);
 TP_OP(tp_div,a/b);
 TP_OP(tp_pow,pow(a,b));
 
-
-//
-
 tp_vm *_tp_init(void) {
     int i;
     tp_vm *tp = tp_malloc(sizeof(tp_vm));
@@ -1548,7 +1545,7 @@ void tp_handle(TP) {
         return;
     }
     tp_print_stack(tp);
-    exit(-1);
+    /* exit(-1); */
 }
 
 void _tp_call(TP,tp_obj *dest, tp_obj fnc, tp_obj params) {

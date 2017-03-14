@@ -9,6 +9,9 @@
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
+   tp_deinit( l->vm );
+   //tp_free( l->vm );
+
    /* FIXME: Actually free stuff. */
    hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
    hashmap_cleanup( &(l->clients) );
@@ -36,6 +39,7 @@ void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images );
+   l->vm = tp_init( 0, NULL );
 cleanup:
    return;
 }

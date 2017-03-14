@@ -6,6 +6,7 @@
 #include "chunker.h"
 #include "hashmap.h"
 #include "callback.h"
+#include "tinypy/tinypy.h"
 
 const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
 

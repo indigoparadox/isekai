@@ -12,6 +12,7 @@
 
 struct CHANNEL;
 struct MOBILE;
+struct UI;
 
 typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_HAVE_USER = 0x01,
@@ -33,6 +34,7 @@ struct CLIENT {
    bstring mobile_sprite;
    uint8_t mode;
    uint8_t flags;
+   struct UI* ui;
    struct HASHMAP channels; /*!< All channels the client is in now, or all
                              *   channels available if this is a server.
                              */
@@ -95,6 +97,12 @@ BOOL client_connected( struct CLIENT* c );
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
    bsStatic( "testdata/livecache" );
+struct tagbstring str_client_window_id_repl =
+   bsStatic( "repl" );
+struct tagbstring str_client_window_title_repl =
+   bsStatic( "Internal REPL" );
+struct tagbstring str_client_window_prompt_repl =
+   bsStatic( "Enter a line to execute:" );
 #else
 extern struct tagbstring str_client_cache_path;
 #endif /* CLIENT_C */

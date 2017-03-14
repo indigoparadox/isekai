@@ -5,6 +5,8 @@
 #include "ref.h"
 #include "client.h"
 
+struct tp_vm;
+
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,
    MOBILE_UPDATE_MOVEUP,
@@ -54,6 +56,7 @@ struct MOBILE {
    MOBILE_FACING facing;
    bstring display_name;
    struct CHANNEL* channel;
+   struct tp_vm* vm;
 };
 
 struct MOBILE_UPDATE_PACKET {
