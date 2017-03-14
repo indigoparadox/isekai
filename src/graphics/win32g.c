@@ -25,7 +25,8 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 void graphics_screen_init(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, int32_t arg1, void* arg2
+   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh,  int32_t arg1, void* arg2
 ) {
    int result;
    HWND hWnd;
@@ -102,7 +103,28 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 void graphics_set_image_data(
    GRAPHICS* g, const BYTE* data, SCAFFOLD_SIZE length
 ) {
+   BITMAPFILEHEADER bfh = *(BITMAPFILEHEADER*)data;
+   BITMAPINFOHEADER bih = *(BITMAPINFOHEADER*)(data +
+                                 sizeof( BITMAPFILEHEADER ));
+   RGBQUAD             rgb = *(RGBQUAD*)(data +
+                                 sizeof( BITMAPFILEHEADER ) +
+                                 sizeof( BITMAPINFOHEADER ));
+   BITMAPINFO bi;
+   bi.bmiColors[0] = rgb;
+   bi.bmiHeader = bih;
+   BYTE* pPixels = (data + bfh.bfOffBits);
+   BYTE* ppvBits;
 
+   if( NULL != g->surface ) {
+      DeleteObject( g->surface );
+      g->surface = NULL;
+   }
+
+   g->surface =
+      CreateDIBSection( NULL, &bi, DIB_RGB_COLORS, (void**) &ppvBits, NULL, 0 );
+   SetDIBits( NULL, g->surface, 0, bih.biHeight, pPixels, &bi, DIB_RGB_COLORS );
+
+   /* GetObject( g->surface, sizeof( BITMAP ), NULL ); */
 }
 
 BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
@@ -140,9 +162,29 @@ void graphics_blit(
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y,
+   SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
+   HDC hdcDest;
+   HDC hdcSrc;
+   BITMAP srcBitmap;
+   HBITMAP srcHbm;
 
+   hdcSrc = CreateCompatibleDC( hdcDest );
+   srcHbm = SelectObject( hdcSrc, src->surface );
+
+   GetObject( src->surface, sizeof( BITMAP ), &srcBitmap );
+
+   BitBlt(
+      hdcDest, 0, 0, srcBitmap.bmWidth, srcBitmap.bmHeight, hdcSrc, 0, 0,
+      SRCCOPY
+   );
+
+   SelectObject( hdcDest, srcHbm );
+
+   DeleteDC( hdcSrc );
+   DeleteDC( hdcDest );
 }
 
 void graphics_sleep( uint16_t milliseconds ) {

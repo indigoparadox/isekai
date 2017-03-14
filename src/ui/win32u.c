@@ -132,7 +132,7 @@ void ui_control_add(
    scaffold_print_debug(
       "Added control: %s to window: %s\n",
       bdata( control->text ), bdata( win->title )
-   )
+   );
 
    if(
       UI_CONTROL_TYPE_BUTTON == control->type ||
@@ -142,7 +142,7 @@ void ui_control_add(
       scaffold_print_debug(
       "Set focusable control as focus: %s\n",
          bdata( control->text ), bdata( win->title )
-      )
+      );
    }
 }
 
