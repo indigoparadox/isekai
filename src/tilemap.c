@@ -1,9 +1,6 @@
-#include "tilemap.h"
 
-#ifdef DEBUG_TILES
-volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
-volatile uint8_t tilemap_dt_layer = 0;
-#endif /* DEBUG_TILES */
+#define TILEMAP_C
+#include "tilemap.h"
 
 extern struct CLIENT* main_client;
 

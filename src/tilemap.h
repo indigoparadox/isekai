@@ -159,4 +159,20 @@ SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_y(
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
 );
 
+#ifdef TILEMAP_C
+
+#ifdef DEBUG_TILES
+volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
+volatile uint8_t tilemap_dt_layer = 0;
+#endif /* DEBUG_TILES */
+
+#else
+
+#ifdef DEBUG_TILES
+extern volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state;
+extern volatile uint8_t tilemap_dt_layer;
+#endif /* DEBUG_TILES */
+
+#endif /* TILEMAP_C */
+
 #endif /* TILEMAP_H */
