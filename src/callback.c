@@ -118,6 +118,15 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+void* callback_search_windows( const bstring key, void* iter, void* arg ) {
+   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
+   bstring wid = (bstring)arg;
+   if( 0 == bstrcmp( win->id, wid ) ) {
+      return win;
+   }
+   return NULL;
+}
+
 /* Searches for a tileset containing the image named in bstring arg. */
 /** \brief
  *

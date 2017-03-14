@@ -133,6 +133,8 @@ void scaffold_print_debug( const char* message, ... ) {
    }
    scaffold_assert( NULL != scaffold_print_buffer );
 
+   btrunc( scaffold_print_buffer, 0 );
+
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
@@ -155,6 +157,8 @@ void scaffold_print_info( const char* message, ... ) {
    }
    scaffold_assert( NULL != scaffold_print_buffer );
 
+   btrunc( scaffold_print_buffer, 0 );
+
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
@@ -174,6 +178,8 @@ void scaffold_print_error( const char* message, ... ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
    }
    scaffold_assert( NULL != scaffold_print_buffer );
+
+   btrunc( scaffold_print_buffer, 0 );
 
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );

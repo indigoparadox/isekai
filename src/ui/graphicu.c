@@ -18,7 +18,7 @@ const struct tagbstring str_dialog_default_title =
  */
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
-   const bstring title, const bstring prompt,
+   const bstring id, const bstring title, const bstring prompt,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
@@ -29,6 +29,12 @@ void ui_window_init(
    win->y = y;
    win->width = width;
    win->height = height;
+
+   if( NULL != id ) {
+      win->id = bstrcpy( id );
+   } else {
+      win->id = bfromcstr( "generic" );
+   }
 
    if( NULL != title ) {
       win->title = bstrcpy( title );
@@ -190,21 +196,29 @@ cleanup:
 }
 
 /** \brief
- * \param
- * \param
+ * \param[in]  ui
+ * \param[in]  input    The input object to pull input from.
+ * \param[out] buffer   The string that a text input dialog will dump its input
+ *                      to when the user presses enter.
+ * \param[in]  id       The ID of the window to send input to, or NULL to just
+ *                      send it to whatever's on top.
  * \return When the window is dismissed, returns the input length from the
  *         window. Could be 1/2 for a Y/N dialog, 1 for an OK dialog, or
  *         a length of text for a text input dialog.
  */
 SCAFFOLD_SIZE ui_poll_input(
-   struct UI* ui, struct INPUT* input, bstring buffer
+   struct UI* ui, struct INPUT* input, bstring buffer, const bstring id
 ) {
    struct UI_WINDOW* win = NULL;
    SCAFFOLD_SIZE input_length = 0;
    struct UI_CONTROL* control = NULL;
    int bstr_result;
 
-   win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+   if( NULL == id ) {
+      win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+   } else {
+      win = ui_window_by_id( ui, id );
+   }
    if( NULL == win ) { goto cleanup; }
 
    control = win->active_control;
@@ -218,10 +232,10 @@ SCAFFOLD_SIZE ui_poll_input(
       control->text = buffer;
    }
 
-   input_get_event( input );
    if(
       INPUT_TYPE_KEY == input->type &&
-      scaffold_char_is_printable( input->character )
+      scaffold_char_is_printable( input->character ) ||
+      ' ' == input->character
    ) {
       bstr_result = bconchar( buffer, input->character );
       scaffold_check_nonzero( bstr_result );
@@ -322,3 +336,6 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
    } */
 }
 
+struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
+   vector_iterate( &(ui->windows), callback_search_windows, wid );
+}

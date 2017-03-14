@@ -503,6 +503,10 @@ void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
    const bstring text
 ) {
+
+   scaffold_assert( NULL != g );
+   scaffold_assert( NULL != text );
+
    switch( align ) {
    case GRAPHICS_TEXT_ALIGN_CENTER:
       textout_centre_ex(

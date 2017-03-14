@@ -7,6 +7,8 @@
 #include "hashmap.h"
 #include "tilemap.h"
 
+struct tp_vm;
+
 struct CHANNEL {
    struct REF refcount;
    bstring name;
@@ -14,6 +16,7 @@ struct CHANNEL {
    struct HASHMAP clients;
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
+   struct tp_vm* vm;
 };
 
 struct CHANNEL_CLIENT {

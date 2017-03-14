@@ -259,7 +259,7 @@ int _tp_sort_cmp(tp_obj *a,tp_obj *b) ;
 tp_obj tp_sort(TP) ;
 int tp_lua_hash(void *v,int l) ;
 void _tp_dict_free(_tp_dict *self) ;
-// void _tp_dict_reset(_tp_dict *self) ;
+/* void _tp_dict_reset(_tp_dict *self) ; */
 int tp_hash(TP,tp_obj v) ;
 void _tp_dict_hash_set(TP,_tp_dict *self, int hash, tp_obj k, tp_obj v) ;
 void _tp_dict_tp_realloc(TP,_tp_dict *self,int len) ;
@@ -287,7 +287,7 @@ tp_obj tp_params(TP) ;
 tp_obj tp_params_n(TP,int n, tp_obj argv[]) ;
 tp_obj tp_params_v(TP,int n,...) ;
 tp_obj tp_string_t(TP, int n) ;
-tp_obj tp_printf(TP,char *fmt,...) ;
+/* tp_obj tp_printf(TP,char *fmt,...) ; */
 int _tp_str_index(tp_obj s, tp_obj k) ;
 tp_obj tp_join(TP) ;
 tp_obj tp_string_slice(TP,tp_obj s, int a, int b) ;
@@ -319,7 +319,7 @@ tp_num _roundf(tp_num v) ;
 tp_obj tp_round(TP) ;
 tp_obj tp_exists(TP) ;
 tp_obj tp_mtime(TP) ;
-void tp_grey(TP,tp_obj v) ;
+/* void tp_grey(TP,tp_obj v) ; */
 void tp_follow(TP,tp_obj v) ;
 void tp_reset(TP) ;
 void tp_gc_init(TP) ;
@@ -329,23 +329,23 @@ void tp_collect(TP) ;
 void _tp_gcinc(TP) ;
 void tp_full(TP) ;
 void tp_gcinc(TP) ;
-tp_obj tp_track(TP,tp_obj v) ;
-tp_obj tp_str(TP,tp_obj self) ;
+/* tp_obj tp_track(TP,tp_obj v) ; */
+/* tp_obj tp_str(TP,tp_obj self) ; */
 int tp_bool(TP,tp_obj v) ;
 tp_obj tp_has(TP,tp_obj self, tp_obj k) ;
 void tp_del(TP,tp_obj self, tp_obj k) ;
 tp_obj tp_iter(TP,tp_obj self, tp_obj k) ;
-tp_obj tp_get(TP,tp_obj self, tp_obj k) ;
+/* tp_obj tp_get(TP,tp_obj self, tp_obj k) ; */
 int tp_iget(TP,tp_obj *r, tp_obj self, tp_obj k) ;
-void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) ;
+/* void tp_set(TP,tp_obj self, tp_obj k, tp_obj v) ; */
 tp_obj tp_add(TP,tp_obj a, tp_obj b) ;
 tp_obj tp_mul(TP,tp_obj a, tp_obj b) ;
-tp_obj tp_len(TP,tp_obj self) ;
-int tp_cmp(TP,tp_obj a, tp_obj b) ;
+/* tp_obj tp_len(TP,tp_obj self) ; */
+/* int tp_cmp(TP,tp_obj a, tp_obj b) ; */
 tp_vm *_tp_init(void) ;
 void tp_deinit(TP) ;
 void tp_frame(TP,tp_obj globals,tp_code *codes,tp_obj *ret_dest) ;
-void _tp_raise(TP,tp_obj e) ;
+/* void _tp_raise(TP,tp_obj e) ; */
 void tp_print_stack(TP) ;
 void tp_handle(TP) ;
 void _tp_call(TP,tp_obj *dest, tp_obj fnc, tp_obj params) ;

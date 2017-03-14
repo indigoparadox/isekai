@@ -118,12 +118,15 @@ int main( int argc, char** argv ) {
    bstr_result = bassigncstr( main_client->username, "TestUser" );
    scaffold_check_nonzero( bstr_result );
 
+   main_client->ui = &ui;
+
    do {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
       ui_window_new(
          win, &ui,
          UI_WINDOW_TYPE_SIMPLE_TEXT,
+         NULL,
          &str_cdialog_title,
          &str_cdialog_prompt,
          40, 40, 300, 80
@@ -137,7 +140,8 @@ int main( int argc, char** argv ) {
          ui_draw( &ui, &g );
          graphics_flip_screen( &g );
          graphics_wait_for_fps_timer();
-      } while( 0 == ui_poll_input( &ui, &p, buffer ) );
+         input_get_event( &p );
+      } while( 0 == ui_poll_input( &ui, &p, buffer, NULL ) );
       ui_window_pop( &ui );
 
       /* Split up the address and port. */
@@ -239,6 +243,9 @@ int main( int argc, char** argv ) {
 #ifdef USE_RANDOM_PORT
       graphics_draw_text( &g, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
 #endif /* USE_RANDOM_PORT */
+
+      ui_draw( &ui, &g );
+
       graphics_flip_screen( &g );
    }
 
