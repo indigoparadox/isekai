@@ -34,8 +34,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-pedantic" />
+					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add option="-std=gnu99" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DxDEBUG_SYNCBUFF" />
 					<Add option="-DUSE_HEATSHRINK" />
@@ -172,8 +173,6 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DxUSE_HEATSHRINK" />
-					<Add option="-DUSE_CHUNKS" />
-					<Add option="-DUSE_STB" />
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxUSE_INLINE" />
 				</Compiler>
