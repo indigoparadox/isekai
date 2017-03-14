@@ -85,6 +85,7 @@
 					<Add option="-DxUSE_ALLEGRO_GIF" />
 					<Add option="-DUSE_HEATSHRINK" />
 					<Add option="-DUSE_B64" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -137,6 +138,7 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DSCAFFOLD_LOG_FILE" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -175,6 +177,7 @@
 					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxUSE_INLINE" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -269,6 +272,7 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_HEATSHRINK" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -288,6 +292,7 @@
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DxUSE_ALLEGRO_PNG" />
 					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -303,6 +308,7 @@
 					<Add option="-g" />
 					<Add option="-DGFX_CURSES" />
 					<Add option="-DSCH_PTHREAD" />
+					<Add option="-DUSE_CHUNKS" />
 				</Compiler>
 				<Linker>
 					<Add library="curses" />
@@ -359,7 +365,6 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DxUSE_HEATSHRINK" />
-					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DDEBUG_TILES" />
 				</Compiler>
 				<Linker>
@@ -374,6 +379,7 @@
 			<Add option="-DEZXML_CSTR" />
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
 			<Add option="-DUSE_EZXML" />
+			<Add option="-DEZXML_NOMMAP" />
 		</Compiler>
 		<Unit filename="src/algif/algif.c">
 			<Option compilerVar="CC" />
