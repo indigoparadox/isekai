@@ -644,6 +644,10 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (MSDOS-BCC)" />
 		</Unit>
+		<Unit filename="src/ui/win32u.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (MingW32)" />
+		</Unit>
 		<Unit filename="src/vector.c">
 			<Option compilerVar="CC" />
 		</Unit>

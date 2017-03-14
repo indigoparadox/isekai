@@ -1,7 +1,9 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
+#ifndef WIN16
 #include <stdint.h>
+#endif /* WIN16 */
 #include <stdio.h>
 #include <stddef.h>
 
@@ -20,6 +22,17 @@
 
 #define SENTINAL 19691
 
+#ifdef WIN16
+
+typedef unsigned char BYTE;
+typedef unsigned char BOOL;
+#define TRUE 1
+#define FALSE 0
+typedef unsigned long SCAFFOLD_SIZE;
+typedef long SCAFFOLD_SIZE;
+
+#else
+
 #ifndef BYTE
 typedef uint8_t BYTE;
 #endif /* BYTE */
@@ -35,6 +48,16 @@ typedef uint8_t BOOL;
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
+
+#ifdef USE_SIZET
+typedef size_t SCAFFOLD_SIZE;
+typedef ssize_t SCAFFOLD_SIZE_SIGNED;
+#else
+typedef uint32_t SCAFFOLD_SIZE;
+typedef int32_t SCAFFOLD_SIZE_SIGNED;
+#endif /* USE_SIZET */
+
+#endif /* WIN16 */
 
 typedef enum {
    SCAFFOLD_ERROR_NONE,
@@ -61,14 +84,6 @@ typedef enum {
 #else
 #define SCAFFOLD_INLINE
 #endif /* USE_INLINE */
-
-#ifdef USE_SIZET
-typedef size_t SCAFFOLD_SIZE;
-typedef ssize_t SCAFFOLD_SIZE_SIGNED;
-#else
-typedef uint32_t SCAFFOLD_SIZE;
-typedef int32_t SCAFFOLD_SIZE_SIGNED;
-#endif /* USE_SIZET */
 
 #ifdef SCAFFOLD_LOG_FILE
 #ifndef SCAFFOLD_C
