@@ -17,14 +17,18 @@ void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, 
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
 void* callback_search_graphics( const bstring key, void* iter, void* arg );
 void* callback_search_servefiles( const bstring res, void* iter, void* arg );
+#ifdef USE_CHUNKS
 void* callback_send_chunkers_l( const bstring key, void* iter, void* arg );
+#endif /* USE_CHUNKS */
 void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg );
 void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg );
 void* callback_send_updates_to_client( const bstring res, void* iter, void* arg );
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg );
 void* callback_get_tile_stack_l( bstring key, void* iter, void* arg );
 void* callback_get_tile_blocker( bstring res, void* iter, void* arg );
+#ifdef USE_CHUNKS
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg );
+#endif /* USE_CHUNKS */
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg );
 void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg );
@@ -34,9 +38,11 @@ void* callback_remove_clients( const bstring res, void* iter, void* arg );
 BOOL callback_free_channels( const bstring key, void* iter, void* arg );
 BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg );
 BOOL callback_free_mobiles( const bstring key, void* iter, void* arg );
+#ifdef USE_CHUNKS
 BOOL callback_free_chunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg );
 BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg );
+#endif /* USE_CHUNKS */
 BOOL callback_free_commands( const bstring res, void* iter, void* arg );
 BOOL callback_free_generic( const bstring res, void* iter, void* arg );
 BOOL callback_free_controls( const bstring res, void* iter, void* arg );

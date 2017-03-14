@@ -49,4 +49,11 @@ void server_service_clients( SERVER* s );
 void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick );
 bstring server_file_search( bstring search_filename );
 
+#ifdef SERVER_C
+struct tagbstring str_server_data_path =
+   bsStatic( "testdata/server" );
+#else
+extern struct tagbstring str_server_data_path;
+#endif /* SERVER_C */
+
 #endif /* SERVER_H */

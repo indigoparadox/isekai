@@ -109,14 +109,4 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h );
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
 BOOL chunker_unchunk_cached( struct CHUNKER* h );
 
-#ifdef CHUNKER_C
-struct tagbstring str_chunker_cache_path =
-   bsStatic( "testdata/livecache" );
-struct tagbstring str_chunker_server_path =
-   bsStatic( "testdata/server" );
-#else
-extern struct tagbstring str_chunker_cache_path;
-extern struct tagbstring str_chunker_server_path;
-#endif /* CHUNKER_C */
-
 #endif /* CHUNKER_H */

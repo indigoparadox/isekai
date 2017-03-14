@@ -463,6 +463,7 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
    LOG("-- scanning for match of buf[%u:%u] between buf[%u:%u] (max %u bytes)\n",
        end, end + maxlen, start, end + maxlen - 1, maxlen);
    uint8_t* buf = hse->buffer;
+   int16_t pos;
 
    uint16_t match_maxlen = 0;
    uint16_t match_index = MATCH_NOT_FOUND;
@@ -499,7 +500,7 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
       pos = hsi->index[pos];
    }
 #else
-   for (int16_t pos=end - 1; pos - (int16_t)start >= 0; pos--) {
+   for (pos=end - 1; pos - (int16_t)start >= 0; pos--) {
       uint8_t* const pospoint = &buf[pos];
       if ((pospoint[match_maxlen] == needlepoint[match_maxlen])
             && (*pospoint == *needlepoint)) {
@@ -564,6 +565,7 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi) {
  * Bytes are set from the lowest bits, up. */
 static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
                       output_info* oi) {
+   int i;
    ASSERT(count <= 8);
    LOG("++ push_bits: %d bits, input of 0x%02x\n", count, bits);
 
@@ -572,7 +574,7 @@ static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
    if (count == 8 && hse->bit_index == 0x80) {
       oi->buf[(*oi->output_size)++] = bits;
    } else {
-      for (int i=count - 1; i>=0; i--) {
+      for (i=count - 1; i>=0; i--) {
          bool bit = bits & (1 << i);
          if (bit) {
             hse->current_byte |= hse->bit_index;

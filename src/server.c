@@ -1,3 +1,5 @@
+
+#define SERVER_C
 #include "server.h"
 
 #include <stdlib.h>
@@ -302,8 +304,12 @@ void server_service_clients( SERVER* s ) {
       irc_command_free( cmd );
    }
 
+#ifdef USE_CHUNKS
+
    /* Send files in progress. */
    hashmap_iterate( &(s->clients), callback_proc_chunkers, s );
+
+#endif /* USE_CHUNKS */
 
 cleanup:
    return;
@@ -336,7 +342,7 @@ bstring server_file_search( bstring search_filename ) {
    bstring path_out = NULL;
 
    vector_new( files );
-   scaffold_list_dir( &str_chunker_server_path, files, NULL, FALSE, FALSE );
+   scaffold_list_dir( &str_server_data_path, files, NULL, FALSE, FALSE );
    path_out = vector_iterate( files, callback_search_servefiles, search_filename );
 
 cleanup:

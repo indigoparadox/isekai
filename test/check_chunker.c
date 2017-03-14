@@ -389,6 +389,8 @@ Suite* chunker_suite( void ) {
    /* Core test case */
    tc_core = tcase_create( "Core" );
 
+   tcase_set_timeout( tc_core, 8000 );
+
    //tcase_add_checked_fixture( tc_core, check_chunker_setup_checked, check_chunker_teardown_checked );
    tcase_add_unchecked_fixture(
       tc_core, check_chunker_setup_unchecked, check_chunker_teardown_unchecked
