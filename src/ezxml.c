@@ -60,9 +60,15 @@ struct ezxml_root {      /* additional data for the root tag */
 char *EZXML_NIL[] = { NULL }; /* empty, null terminated array of strings */
 
 /* returns the first child tag with the given name or NULL if not found */
-ezxml_t ezxml_child(ezxml_t xml, const char *name) {
-   xml = (xml) ? xml->child : NULL;
-   while (xml && strcmp(name, xml->name)) xml = xml->sibling;
+ezxml_t ezxml_child( ezxml_t xml, const char *name ) {
+   if( NULL != xml ) {
+      xml = xml->child;
+   } else {
+      xml = NULL;
+   }
+   while( NULL != xml && 0 != strcmp( name, xml->name ) ) {
+      xml = xml->sibling;
+   }
    return xml;
 }
 
@@ -471,7 +477,13 @@ static void ezxml_free_attr(char **attr) {
    free(attr);
 }
 
-/* parse the given xml string and return an ezxml structure */
+/** \brief Parse the given xml string and return an ezxml structure.
+ * \warning The given string *will* be modified by placing null terminators
+ *          after tag names, among other things.
+ * \param
+ * \param
+ * \return
+ */
 ezxml_t ezxml_parse_str(char *s, SCAFFOLD_SIZE len) {
    ezxml_root_t root = (ezxml_root_t)ezxml_new(NULL);
    char q, e, *d, **attr, **a = NULL; /* initialize a to avoid compile warning */
