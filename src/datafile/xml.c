@@ -5,7 +5,7 @@
 #include "../hashmap.h"
 
 ezxml_t datafile_tilemap_ezxml_peek_lname(
-   const BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
+   BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
 ) {
    ezxml_t xml_props,
       xml_prop_iter = NULL,

@@ -10,11 +10,6 @@
 #include "tilemap.h"
 #include "datafile.h"
 
-#ifdef DEBUG_TILES
-extern volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state;
-extern volatile uint8_t tilemap_dt_layer;
-#endif /* DEBUG_TILES */
-
 static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
       (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );

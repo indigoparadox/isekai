@@ -11,7 +11,7 @@ typedef void (*datafile_cb)(
 
 #ifdef USE_EZXML
 ezxml_t datafile_tilemap_ezxml_peek_lname(
-   const BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
+   BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
 );
 
 void datafile_parse_tilemap_ezxml_t(
