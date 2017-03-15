@@ -22,6 +22,7 @@ SCAFFOLD_MODULE( "main.c" );
 struct SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
+static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
@@ -80,6 +81,9 @@ int main( int argc, char** argv ) {
    );
 #endif /* _WIN32 */
    scaffold_check_nonzero( scaffold_error );
+
+   graphics_set_window_title( &g, &str_title, NULL );
+
    input_init( &p );
    ui_init( &ui, &g );
 
