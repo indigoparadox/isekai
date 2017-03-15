@@ -16,8 +16,9 @@
 #ifndef BSTRAUX_INCLUDE
 #define BSTRAUX_INCLUDE
 
+#include "../scaffold.h"
+
 #include <time.h>
-#include "bstrlib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +76,19 @@ extern struct bStream * bsUuDecode (struct bStream * sInp, int * badlines);
 extern bstring bUuDecodeEx (const_bstring src, int * badlines);
 extern bstring bUuEncode (const_bstring src);
 extern bstring bYEncode (const_bstring src);
+SCAFFOLD_SIZE
+b_yencode_raw( BYTE* src, SCAFFOLD_SIZE src_len, bstring out )
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 extern bstring bYDecode (const_bstring src);
+SCAFFOLD_SIZE
+b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len )
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 extern int bSGMLEncode (bstring b);
 
 /* Writable stream */
@@ -111,5 +124,9 @@ extern bstring bSecureInput (int maxlen, int termchar,
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef BSTRAUX_C
+SCAFFOLD_MODULE( "bstraux.c" );
+#endif /* BSTRAUX_C */
 
 #endif
