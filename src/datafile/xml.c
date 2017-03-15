@@ -76,24 +76,6 @@ static void datafile_mobile_parse_animation_ezxml(
    animation =
       (struct MOBILE_ANI_DEF*)calloc( 1, sizeof( struct MOBILE_ANI_DEF ) );
 
-   /* TODO: Case insensitivity. */
-   xml_attr = ezxml_attr( xml_animation, "facing" );
-   scaffold_check_null( xml_attr );
-   if( 0 == strncmp( "down", xml_attr, 4 ) ) {
-      animation->facing = MOBILE_FACING_DOWN;
-   } else if( 0 == strncmp( "up", xml_attr, 2 ) ) {
-      animation->facing = MOBILE_FACING_UP;
-   } else if( 0 == strncmp( "left", xml_attr, 4 ) ) {
-      animation->facing = MOBILE_FACING_LEFT;
-   } else if( 0 == strncmp( "right", xml_attr, 5 ) ) {
-      animation->facing = MOBILE_FACING_RIGHT;
-   } else {
-      goto cleanup;
-   }
-   bstr_retval =
-      bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
-   scaffold_check_nonzero( bstr_retval );
-
    xml_attr = ezxml_attr( xml_animation, "name" );
    scaffold_check_null( xml_attr );
    animation->name = bfromcstr( xml_attr );
@@ -121,6 +103,27 @@ static void datafile_mobile_parse_animation_ezxml(
 
       xml_frame_iter = ezxml_next( xml_frame_iter );
    }
+
+   /* TODO: Case insensitivity. */
+   xml_attr = ezxml_attr( xml_animation, "facing" );
+   scaffold_check_null( xml_attr );
+   if( 0 == strncmp( "down", xml_attr, 4 ) ) {
+      animation->facing = MOBILE_FACING_DOWN;
+   } else if( 0 == strncmp( "up", xml_attr, 2 ) ) {
+      animation->facing = MOBILE_FACING_UP;
+   } else if( 0 == strncmp( "left", xml_attr, 4 ) ) {
+      animation->facing = MOBILE_FACING_LEFT;
+   } else if( 0 == strncmp( "right", xml_attr, 5 ) ) {
+      animation->facing = MOBILE_FACING_RIGHT;
+   } else {
+      goto cleanup;
+   }
+   bstr_retval =
+      bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
+   scaffold_print_debug(
+      &module, "Loaded mobile animation: %b", name_dir
+   );
+   scaffold_check_nonzero( bstr_retval );
 
    hashmap_put( &(o->ani_defs), name_dir, animation );
    animation = NULL;
@@ -152,6 +155,7 @@ void datafile_parse_mobile_ezxml_t(
       xml_image = NULL;
    const char* xml_attr = NULL;
    int bstr_retval;
+   bstring walk_ani_key = NULL;
 
    scaffold_check_null( xml_data );
 
@@ -210,7 +214,26 @@ void datafile_parse_mobile_ezxml_t(
       scaffold_check_nonzero( bstr_retval );
    }
 
+   walk_ani_key = bformat(
+      "%s-%s",
+      str_mobile_default_ani.data,
+      str_mobile_facing[MOBILE_FACING_DOWN].data
+   );
+
+   o->initialized = TRUE;
+   o->sprite_display_height = o->sprite_height;
+   o->facing = MOBILE_FACING_DOWN;
+   scaffold_print_debug(
+      &module, "Mobile animation defaulting to: %b", walk_ani_key
+   );
+   o->current_animation = (struct MOBILE_ANI_DEF*)hashmap_get(
+         &(o->ani_defs), walk_ani_key
+   );
+   /* TODO: Don't die if this fails. */
+   scaffold_assert( NULL != o->current_animation );
+
 cleanup:
+   bdestroy( walk_ani_key );
    return;
 }
 
