@@ -554,11 +554,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       );
 #endif /* USE_EZXML */
 
-      /* Go through the parsed tilemap and load graphics. */
-      //hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
-
-      /* proto_request_file( c, img_src, CHUNKER_DATA_TYPE_MOBSPRITES ); */
-
       scaffold_print_info(
          &module,
          "Client: Mobile def for %s successfully attached to channel.\n",
@@ -611,8 +606,10 @@ void client_poll_input( struct CLIENT* c ) {
    struct MOBILE* puppet = NULL;
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
+#ifdef DEBUG_VM
    struct TILEMAP* t = NULL;
    int bstr_ret;
+#endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
    bstring tilemap_dbg_key = NULL;
 #endif /* DEBUG_TILES */
@@ -630,7 +627,9 @@ void client_poll_input( struct CLIENT* c ) {
    if( NULL != puppet ) {
       update.l = puppet->channel;
       scaffold_check_null( update.l );
+#ifdef DEBUG_VM
       t = &(c->puppet->channel->tilemap);
+#endif /* DEBUG_TILES */
    }
 
    if( INPUT_TYPE_KEY == input.type ) {

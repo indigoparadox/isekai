@@ -42,10 +42,12 @@ THE SOFTWARE.
 #define tp_realloc(x,y) realloc(x,y)
 #define tp_free(x) free(x)
 
-// #include <gc/gc.h>
-// #define tp_malloc(x) GC_MALLOC(x)
-// #define tp_realloc(x,y) GC_REALLOC(x,y)
-// #define tp_free(x)
+/*
+#include <gc/gc.h>
+#define tp_malloc(x) GC_MALLOC(x)
+#define tp_realloc(x,y) GC_REALLOC(x,y)
+#define tp_free(x)
+*/
 
 enum {
     TP_NONE,TP_NUMBER,TP_STRING,TP_DICT,
@@ -151,7 +153,7 @@ typedef struct tp_frame_ {
 
 #define TP_GCMAX 4096
 #define TP_FRAMES 256
-// #define TP_REGS_PER_FRAME 256
+/* #define TP_REGS_PER_FRAME 256 */
 #define TP_REGS 16384
 typedef struct tp_vm {
     tp_obj builtins;
@@ -167,7 +169,7 @@ typedef struct tp_vm {
     tp_obj ex;
     char chars[256][2];
     int cur;
-    // gc
+    /* gc */
     _tp_list *white;
     _tp_list *grey;
     _tp_list *black;
@@ -181,16 +183,18 @@ typedef struct tp_meta {
     tp_obj (*get)(TP,tp_obj,tp_obj);
     void (*set)(TP,tp_obj,tp_obj,tp_obj);
     void (*free)(TP,tp_obj);
-//     tp_obj (*del)(TP,tp_obj,tp_obj);
-//     tp_obj (*has)(TP,tp_obj,tp_obj);
-//     tp_obj (*len)(TP,tp_obj);
+/*
+    tp_obj (*del)(TP,tp_obj,tp_obj);
+    tp_obj (*has)(TP,tp_obj,tp_obj);
+    tp_obj (*len)(TP,tp_obj);
+*/
 } tp_meta;
 typedef struct _tp_data {
     int gci;
     tp_meta meta;
 } _tp_data;
 
-// NOTE: these are the few out of namespace items for convenience
+/* NOTE: these are the few out of namespace items for convenience */
 #define None ((tp_obj){TP_NONE})
 #define True tp_number(1)
 #define False tp_number(0)
@@ -206,7 +210,7 @@ tp_obj tp_printf(TP,char *fmt,...);
 tp_obj tp_track(TP,tp_obj);
 void tp_grey(TP,tp_obj);
 
-// __func__ __VA_ARGS__ __FILE__ __LINE__
+/* __func__ __VA_ARGS__ __FILE__ __LINE__ */
 #define tp_raise(r,fmt,...) { \
     _tp_raise(tp,tp_printf(tp,fmt,__VA_ARGS__)); \
     return r; \
@@ -238,7 +242,7 @@ inline static tp_obj tp_string_n(char *v,int n) {
 }
 
 #endif
-//
+
 void _tp_list_realloc(_tp_list *self,int len) ;
 void _tp_list_set(TP,_tp_list *self,int k, tp_obj v, char *error) ;
 void _tp_list_free(_tp_list *self) ;

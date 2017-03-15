@@ -282,13 +282,13 @@
 /* C99 or above */
 #undef DUK_F_C99
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#define DUK_F_C99
+/* #define DUK_F_C99 */
 #endif
 
 /* C++11 or above */
 #undef DUK_F_CPP11
 #if defined(__cplusplus) && (__cplusplus >= 201103L)
-#define DUK_F_CPP11
+/* #define DUK_F_CPP11 */
 #endif
 
 /* GCC.  Clang also defines __GNUC__ so don't detect GCC if using Clang. */

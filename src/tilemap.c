@@ -99,12 +99,10 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
    SCAFFOLD_SIZE tiles_wide = 0;
-   SCAFFOLD_SIZE tiles_high = 0;
 
    scaffold_check_null( g_set );
 
    tiles_wide = g_set->w / set->tilewidth;
-   tiles_high = g_set->h / set->tileheight;
 
    gid -= set->firstgid - 1;
 
@@ -333,9 +331,7 @@ cleanup:
 static void* tilemap_layer_draw_dirty_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct VECTOR* v = NULL;
    struct TILEMAP* t = twindow->t;
-   int i;
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    uint32_t tile;
 
@@ -355,7 +351,6 @@ cleanup:
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->t;
    SCAFFOLD_SIZE_SIGNED
       x = 0,
       y = 0;
@@ -497,15 +492,11 @@ void tilemap_update_window_ortho(
       border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
    struct TILEMAP* t = twindow->t;
-   SCAFFOLD_SIZE twindow_middle_x, twindow_middle_y;
    TILEMAP_EXCLUSION exclusion;
 
    if( NULL == t ) {
       return;
    }
-
-   twindow_middle_x = (twindow->x + (twindow->width / 2));
-   twindow_middle_y = (twindow->y + (twindow->height / 2));
 
    /* Find the focal point if we're not centered on it. */
    if( focal_x < twindow->x || focal_x > twindow->x + twindow->width ) {

@@ -305,7 +305,6 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
-   //struct CLIENT* c = (struct CLIENT*)iter;
 
    scaffold_assert_server();
 
@@ -395,7 +394,8 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
-   const char* mob_id_test;
+   const char* mob_id_test = NULL;
+   const char* mob_id_c = NULL;
 
    /* Since the vector index is set by serial, there will be a number of      *
     * NULLs before we find one that isn't.                                    */
@@ -406,7 +406,8 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
    mob_id_test = ezxml_attr( xml_data, "id" );
    scaffold_check_null( mob_id_test );
 
-   if( 0 == strncmp( bdata( o->mob_id ), mob_id_test, blength( o->mob_id ) ) ) {
+   mob_id_c = bdata( o->mob_id );
+   if( 0 == strncmp( mob_id_c, mob_id_test, blength( o->mob_id ) ) ) {
       scaffold_print_debug(
          &module, "Client: Found mobile with ID: %b\n", o->mob_id
       );

@@ -5,6 +5,8 @@
 #include "../src/vector.h"
 #include "check_data.h"
 
+static struct tagbstring module = bsStatic( "check_vector.c" );
+
 START_TEST( test_vector_create ) {
    struct VECTOR* v;
 
@@ -30,11 +32,9 @@ START_TEST( test_vector_add ) {
    /* Add 3 blobs. */
    for( i = 0 ; 3 > i ; i++ ) {
       blob = create_blob( 1212, 16, 3, 4545 );
-      //printf( "Blob ref before: %d\n", blob->refcount.count );
       ck_assert_int_eq( 1, blob->refcount.count );
 
       vector_add( v, blob );
-      //printf( "Blob ref after: %d\n", blob->refcount.count );
       ck_assert_int_eq( 2, blob->refcount.count );
    }
 

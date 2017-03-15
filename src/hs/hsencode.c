@@ -67,8 +67,12 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi);
 static void push_literal_byte(heatshrink_encoder* hse, output_info* oi);
 
 #if HEATSHRINK_DYNAMIC_ALLOC
-heatshrink_encoder* heatshrink_encoder_alloc(uint8_t window_sz2,
-      uint8_t lookahead_sz2) {
+heatshrink_encoder* heatshrink_encoder_alloc(
+   uint8_t window_sz2, uint8_t lookahead_sz2
+) {
+   SCAFFOLD_SIZE buf_sz;
+   heatshrink_encoder* hse = NULL;
+
    if ((window_sz2 < HEATSHRINK_MIN_WINDOW_BITS) ||
          (window_sz2 > HEATSHRINK_MAX_WINDOW_BITS) ||
          (lookahead_sz2 < HEATSHRINK_MIN_LOOKAHEAD_BITS) ||
@@ -80,9 +84,9 @@ heatshrink_encoder* heatshrink_encoder_alloc(uint8_t window_sz2,
     * (1 << window_sz2) bytes for the current input, and an additional
     * (1 << window_sz2) bytes for the previous buffer of input, which
     * will be scanned for useful backreferences. */
-   size_t buf_sz = (2 << window_sz2);
+   buf_sz = (2 << window_sz2);
 
-   heatshrink_encoder* hse = HEATSHRINK_MALLOC(sizeof(*hse) + buf_sz);
+   hse = HEATSHRINK_MALLOC(sizeof(*hse) + buf_sz);
    if (hse == NULL) {
       return NULL;
    }
@@ -136,8 +140,15 @@ void heatshrink_encoder_reset(heatshrink_encoder* hse) {
 #endif
 }
 
-HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder* hse,
-                                     BYTE* in_buf, SCAFFOLD_SIZE size, SCAFFOLD_SIZE* input_size) {
+HSE_sink_res heatshrink_encoder_sink(
+   heatshrink_encoder* hse, BYTE* in_buf, SCAFFOLD_SIZE size,
+   SCAFFOLD_SIZE* input_size
+) {
+   uint16_t write_offset;
+   uint16_t ibs;
+   uint16_t rem;
+   uint16_t cp_sz;
+
    if ((hse == NULL) || (in_buf == NULL) || (input_size == NULL)) {
       return HSER_SINK_ERROR_NULL;
    }
@@ -152,10 +163,10 @@ HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder* hse,
       return HSER_SINK_ERROR_MISUSE;
    }
 
-   uint16_t write_offset = get_input_offset(hse) + hse->input_size;
-   uint16_t ibs = get_input_buffer_size(hse);
-   uint16_t rem = ibs - hse->input_size;
-   uint16_t cp_sz = rem < size ? rem : size;
+   write_offset = get_input_offset(hse) + hse->input_size;
+   ibs = get_input_buffer_size(hse);
+   rem = ibs - hse->input_size;
+   cp_sz = rem < size ? rem : size;
 
    memcpy(&hse->buffer[write_offset], in_buf, cp_sz);
    *input_size = cp_sz;
@@ -193,8 +204,13 @@ static HSE_state st_save_backlog(heatshrink_encoder* hse);
 static HSE_state st_flush_bit_buffer(heatshrink_encoder* hse,
                                      output_info* oi);
 
-HSE_poll_res heatshrink_encoder_poll(heatshrink_encoder* hse,
-                                     BYTE* out_buf, SCAFFOLD_SIZE out_buf_size, SCAFFOLD_SIZE* output_size) {
+HSE_poll_res heatshrink_encoder_poll(
+   heatshrink_encoder* hse, BYTE* out_buf, SCAFFOLD_SIZE out_buf_size,
+   SCAFFOLD_SIZE* output_size
+) {
+   output_info oi;
+   uint8_t in_state;
+
    if ((hse == NULL) || (out_buf == NULL) || (output_size == NULL)) {
       return HSER_POLL_ERROR_NULL;
    }
@@ -204,7 +220,6 @@ HSE_poll_res heatshrink_encoder_poll(heatshrink_encoder* hse,
    }
    *output_size = 0;
 
-   output_info oi;
    oi.buf = out_buf;
    oi.buf_size = out_buf_size;
    oi.output_size = output_size;
@@ -213,7 +228,7 @@ HSE_poll_res heatshrink_encoder_poll(heatshrink_encoder* hse,
       LOG("-- polling, state %u (%s), flags 0x%02x\n",
           hse->state, state_names[hse->state], hse->flags);
 
-      uint8_t in_state = hse->state;
+      in_state = hse->state;
       switch (in_state) {
       case HSES_NOT_FULL:
          return HSER_POLL_EMPTY;
@@ -271,10 +286,18 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
    uint16_t window_length = get_input_buffer_size(hse);
    uint16_t lookahead_sz = get_lookahead_size(hse);
    uint16_t msi = hse->match_scan_index;
+   uint16_t match_length;
+   uint16_t input_offset;
+   bool fin;
+   uint16_t end;
+   uint16_t start;
+   uint16_t max_possible;
+   uint16_t match_pos;
+
    LOG("## step_search, scan @ +%d (%d/%d), input size %d\n",
        msi, hse->input_size + msi, 2*window_length, hse->input_size);
 
-   bool fin = is_finishing(hse);
+   fin = is_finishing(hse);
    if (msi > hse->input_size - (fin ? 1 : lookahead_sz)) {
       /* Current search buffer is exhausted, copy it into the
        * backlog and await more input. */
@@ -282,17 +305,17 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
       return fin ? HSES_FLUSH_BITS : HSES_SAVE_BACKLOG;
    }
 
-   uint16_t input_offset = get_input_offset(hse);
-   uint16_t end = input_offset + msi;
-   uint16_t start = end - window_length;
+   input_offset = get_input_offset(hse);
+   end = input_offset + msi;
+   start = end - window_length;
 
-   uint16_t max_possible = lookahead_sz;
+   max_possible = lookahead_sz;
    if (hse->input_size - msi < lookahead_sz) {
       max_possible = hse->input_size - msi;
    }
 
-   uint16_t match_length = 0;
-   uint16_t match_pos = find_longest_match(hse,
+   match_length = 0;
+   match_pos = find_longest_match(hse,
                                            start, end, max_possible, &match_length);
 
    if (match_pos == MATCH_NOT_FOUND) {
@@ -470,6 +493,11 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
 
    uint16_t len = 0;
    uint8_t* const needlepoint = &buf[end];
+
+   uint8_t* /* const */ pospoint;
+
+   /* const */ SCAFFOLD_SIZE break_even_point;
+
 #if HEATSHRINK_USE_INDEX
    struct hs_index* hsi = HEATSHRINK_ENCODER_INDEX(hse);
    int16_t pos = hsi->index[end];
@@ -501,7 +529,7 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
    }
 #else
    for (pos=end - 1; pos - (int16_t)start >= 0; pos--) {
-      uint8_t* const pospoint = &buf[pos];
+      pospoint = &buf[pos];
       if ((pospoint[match_maxlen] == needlepoint[match_maxlen])
             && (*pospoint == *needlepoint)) {
          for (len=1; len<maxlen; len++) {
@@ -524,7 +552,7 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
    }
 #endif
 
-   const size_t break_even_point =
+   break_even_point =
       (1 + HEATSHRINK_ENCODER_WINDOW_BITS(hse) +
        HEATSHRINK_ENCODER_LOOKAHEAD_BITS(hse));
 

@@ -54,14 +54,14 @@ struct GRAPHICS_BITMAP {
    GRAPHICS_COLOR* pixels;
 };
 
-typedef struct _GRAPHICS {
+typedef struct GRAPHICS {
+   struct REF refcount;
    SCAFFOLD_SIZE w;
    SCAFFOLD_SIZE h;
    void* surface;
    void* palette;
    void* font;
    GRAPHICS_COLOR color;
-   struct REF refcount;
    SCAFFOLD_SIZE virtual_x;
    SCAFFOLD_SIZE virtual_y;
 } GRAPHICS;

@@ -15,7 +15,7 @@ ezxml_t datafile_mobile_ezxml_peek_mob_id(
    scaffold_assert( NULL != mob_id_buffer );
    scaffold_check_null( tmdata );
 
-   xml_data = ezxml_parse_str( tmdata, datasize );
+   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
 
    mob_id_c = ezxml_attr( xml_data, "id" );
@@ -32,9 +32,7 @@ cleanup:
 static void datafile_mobile_parse_sprite_ezxml(
    struct MOBILE* o, ezxml_t xml_sprite, BOOL local_images
 ) {
-   ezxml_t xml_frame_iter = NULL;
    const char* xml_attr = NULL;
-   int bstr_retval;
    struct MOBILE_SPRITE_DEF* sprite = NULL;
 
    scaffold_check_null( xml_sprite );
@@ -147,7 +145,6 @@ void datafile_parse_mobile_ezxml_t(
 ) {
    ezxml_t xml_sprites = NULL,
       xml_sprite_iter = NULL,
-      xml_props = NULL,
       xml_animations = NULL,
       xml_animation_iter = NULL,
       xml_scripts = NULL,
@@ -276,7 +273,7 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
    scaffold_assert( NULL != lname_buffer );
    scaffold_check_null( tmdata );
 
-   xml_data = ezxml_parse_str( tmdata, datasize );
+   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
 
    xml_props = ezxml_child( xml_data, "properties" );
@@ -466,10 +463,10 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
    struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    const char* terrain_c = NULL;
    char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1] = { 0 };
-#ifdef DEBUG
+#ifdef DEBUG_TILES_VERBOSE
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
-#endif /* DEBUG */
+#endif /* DEBUG_TILES_VERBOSE */
 
    scaffold_error = 0;
 

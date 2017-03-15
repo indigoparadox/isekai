@@ -8,9 +8,6 @@
 #include "callback.h"
 #include "tinypy/tinypy.h"
 
-const struct tagbstring str_mobile_def_path_default =
-   bsStatic( "mobs/maid_black.xml" );
-
 /* FIXME: Replace with a proper frame limiter. */
 static uint8_t mobile_frame_counter = 0;
 static uint8_t mobile_move_counter = 0;
@@ -109,14 +106,10 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
    SCAFFOLD_SIZE tiles_wide = 0;
-   SCAFFOLD_SIZE tiles_high = 0;
 
    scaffold_check_null( o->sprites );
 
    tiles_wide = o->sprites->w / o->sprite_width;
-   tiles_high = o->sprites->h / o->sprite_height;
-
-   //gid -= set->firstgid - 1;
 
    *y = ((gid) / tiles_wide) * o->sprite_height;
    *x = ((gid) % tiles_wide) * o->sprite_width;
