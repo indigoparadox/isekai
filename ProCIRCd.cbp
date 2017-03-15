@@ -752,6 +752,10 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
+		<Unit filename="src/tnacl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/tnacl.h" />
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/graphicu.c">
 			<Option compilerVar="CC" />
