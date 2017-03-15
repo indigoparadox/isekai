@@ -620,6 +620,8 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
 }
 
+#ifdef DEBUG_TILES
+
 void tilemap_toggle_debug_state() {
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_OFF:
@@ -644,3 +646,5 @@ void tilemap_toggle_debug_state() {
       break;
    }
 }
+
+#endif /* DEBUG_TILES */

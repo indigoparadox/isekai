@@ -93,6 +93,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
 #endif /* USE_CHUNKS */
 void client_poll_input( struct CLIENT* c );
 BOOL client_connected( struct CLIENT* c );
+void client_set_names(
+   struct CLIENT* c, bstring nick, bstring uname, bstring rname
+);
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

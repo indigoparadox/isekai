@@ -5,10 +5,6 @@
 #include "scaffold.h"
 #include "ref.h"
 
-#ifdef USE_NETWORK
-#include <netinet/in.h>
-#endif /* USE_NETWORK */
-
 #define CONNECTION_BUFFER_LEN 80
 
 typedef struct _CONNECTION {

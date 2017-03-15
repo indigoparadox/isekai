@@ -216,4 +216,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 
 }
 
+void ui_cleanup( struct UI* ui ) {
+}
+
 

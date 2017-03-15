@@ -66,7 +66,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
  /** \brief This should ONLY be called from server_free in order to avoid
   *         an infinite loop.
   *
-  * \param c - The CLIENT struct from inside of the SERVER being freed.
+  * \param c - The CLIENT struct from inside of the struct SERVER being freed.
   * \return TRUE for now.
   *
   */
@@ -713,4 +713,20 @@ BOOL client_connected( struct CLIENT* c ) {
    } else {
       return FALSE;
    }
+}
+
+void client_set_names(
+   struct CLIENT* c, bstring nick, bstring uname, bstring rname
+) {
+   int bstr_result;
+   /* TODO: Handle this if we're connected. */
+   scaffold_assert( FALSE == client_connected( c ) );
+   bstr_result = bassign( c->nick, nick );
+   scaffold_assert( BSTR_ERR != bstr_result );
+   bstr_result = bassign( c->realname, uname );
+   scaffold_assert( BSTR_ERR != bstr_result );
+   bstr_result = bassign( c->username, rname );
+   scaffold_assert( BSTR_ERR != bstr_result );
+cleanup:
+   return;
 }

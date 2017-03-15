@@ -7,12 +7,12 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "wdirent.h"
-#elif defined( __GNUC__ )
+#elif defined( __linux )
 #include <dirent.h>
 #include <unistd.h>
-#endif /* WIN32 || WIN16 || __GNUC__ */
+#endif /* _WIN32 || __linux */
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
@@ -301,7 +301,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    struct stat inputstat;
    char* path_c = NULL;
-#if defined( WIN32 )
+#if defined( _WIN32 )
    LARGE_INTEGER sz_win;
    HANDLE inputfd = NULL;
 #elif defined( WIN16 )
@@ -309,7 +309,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    HFILE inputfd = NULL;
 #else
    int inputfd = -1;
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
    if( NULL != *buffer ) {
       free( *buffer );
@@ -324,7 +324,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    path_c = bdata( path );
    scaffold_print_debug( &module, "Reading from path: %s\n", path_c );
 
-#if defined( WIN32 )
+#if defined( _WIN32 )
    inputfd = CreateFile(
       bdata( path ), GENERIC_READ, 0, NULL,
       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
@@ -335,13 +335,13 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #else
    inputfd = open( path_c, O_RDONLY );
    if( 0 > inputfd ) {
-#endif /* WIN32 */
+#endif /* _WIN32 || _WIN16 */
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
 
    /* Allocate enough space to hold the file. */
-#if defined( WIN32 )
+#if defined( _WIN32 )
    GetFileSizeEx( inputfd, &sz_win );
    *len = sz_win.LowPart;
 #elif defined( WIN16 )
@@ -352,27 +352,27 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
       goto cleanup;
    }
    *len = inputstat.st_size;
-#endif /* WIN32 */
+#endif /* _WIN32 || _WIN16 */
    *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) );
    scaffold_check_null( *buffer );
 
    /* Read and close the file. */
-#if defined( WIN32 ) || defined( WIN16 )
+#if defined( _WIN32 ) || defined( WIN16 )
    ReadFile( inputfd, *buffer, *len, &sz_out,  NULL );
 #else
    sz_out = read( inputfd, *buffer, *len );
-#endif /* WIN32 */
+#endif /* _WIN32 || WIN16 */
    scaffold_check_zero( sz_out );
    scaffold_assert( sz_out == *len );
 
 cleanup:
-#if defined( WIN32 ) || defined( WIN16 )
+#if defined( _WIN32 ) || defined( WIN16 )
    CloseHandle( inputfd );
 #else
    if( 0 <= inputfd ) {
       close( inputfd );
    }
-#endif /* WIN32 */
+#endif /* _WIN32 || WIN16 */
    return sz_out;
 }
 
@@ -419,11 +419,11 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
          scaffold_print_info(
             &module, "Creating missing directory: %s\n", path_c
          );
-#ifdef WIN32
+#ifdef _WIN32
          CreateDirectory( path_c, NULL );
 #else
          scaffold_check_nonzero( mkdir( path_c, 0 ) );
-#endif /* WIN32 */
+#endif /* _WIN32 */
       }
 
       bdestroy( test_path );

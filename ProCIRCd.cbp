@@ -34,16 +34,21 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-Winit-self" />
+					<Add option="-Wundef" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-Wzero-as-null-pointer-constant" />
 					<Add option="-pedantic" />
 					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DxUSE_SYNCBUFF" />
 					<Add option="-DxDEBUG_SYNCBUFF" />
-					<Add option="-DUSE_HEATSHRINK" />
 					<Add option="-DUSE_B64" />
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
+					<Add option="-DUSE_NETWORK" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -355,31 +360,6 @@
 					<Add library="ubsan" />
 				</Linker>
 			</Target>
-			<Target title="Debug (MSDOS-BCC)">
-				<Option platforms="Unix;" />
-				<Option output="bin/Debug-BCC-MSDOS/ProCIRCd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug-BCC-MSDOS/" />
-				<Option type="1" />
-				<Option compiler="bruces_c_compiler" />
-				<Compiler>
-					<Add option="-Md" />
-					<Add option="-3" />
-					<Add option="-DUSE_ALLEGRO" />
-					<Add option="-DDEBUG" />
-					<Add option="-DxUSE_NETWORK" />
-					<Add option="-DxDEBUG_NETWORK" />
-					<Add option="-DUSE_SYNCBUFF" />
-					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DxUSE_HEATSHRINK" />
-					<Add option="-DDEBUG_TILES" />
-				</Compiler>
-				<Linker>
-					<Add option="-Md" />
-					<Add option="-3" />
-					<Add library="alleg" />
-					<Add library="ubsan" />
-				</Linker>
-			</Target>
 			<Target title="Debug (Linux-NET-SDL)">
 				<Option platforms="Unix;" />
 				<Option output="bin/Debug/ProCIRCd-SDL-NET" prefix_auto="1" extension_auto="1" />
@@ -462,7 +442,6 @@
 			<Option target="Debug (MingW32)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/b64.h">
@@ -478,7 +457,6 @@
 			<Option target="Debug (MingW32)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
@@ -508,7 +486,6 @@
 			<Option target="Debug (MingW32)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
@@ -524,7 +501,6 @@
 			<Option target="Debug (MingW32)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/client.c">
@@ -548,10 +524,8 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/dukhelp.h">
@@ -563,10 +537,8 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.c">
@@ -579,10 +551,8 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.h">
@@ -594,10 +564,8 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ezxml.c">
@@ -617,7 +585,6 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 		</Unit>
 		<Unit filename="src/graphics/curses.c">
 			<Option compilerVar="CC" />
@@ -656,7 +623,6 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 		</Unit>
 		<Unit filename="src/input/curses.c">
 			<Option compilerVar="CC" />
@@ -685,7 +651,6 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.h">
 			<Option target="Debug" />
@@ -700,7 +665,6 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 		</Unit>
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
@@ -716,7 +680,6 @@
 			<Option target="Debug (MingW32)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
@@ -760,7 +723,6 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
@@ -776,7 +738,6 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ui.h" />
@@ -794,7 +755,6 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (MSDOS-BCC)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">

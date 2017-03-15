@@ -21,7 +21,7 @@ SCAFFOLD_MODULE( "main.c" );
 #error Connect dialog requires network to be enabled!
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
 
-SERVER* main_server = NULL;
+struct SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
 static struct tagbstring str_loading = bsStatic( "Loading..." );
@@ -34,7 +34,7 @@ static uint32_t server_port = 33080;
 void allegro_exit();
 #endif /* USE_ALLEGRO */
 
-#ifdef WIN32
+#ifdef _WIN32
 int CALLBACK WinMain(
    _In_ HINSTANCE hInstance,
    _In_ HINSTANCE hPrevInstance,
@@ -43,7 +43,7 @@ int CALLBACK WinMain(
 ) {
 #else
 int main( int argc, char** argv ) {
-#endif /* WIN32 */
+#endif /* _WIN32 */
    bstring buffer = NULL;
    time_t tm = 0;
    GRAPHICS g;
@@ -69,7 +69,7 @@ int main( int argc, char** argv ) {
 
    memset( &g, '\0', sizeof( GRAPHICS ) );
 
-#ifdef WIN32
+#ifdef _WIN32
    graphics_screen_init(
       &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT,
@@ -80,7 +80,7 @@ int main( int argc, char** argv ) {
       &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT, 0, NULL
    );
-#endif /* WIN32 */
+#endif /* _WIN32 */
    scaffold_check_nonzero( scaffold_error );
    input_init( &p );
    ui_init( &ui, &g );

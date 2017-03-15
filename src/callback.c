@@ -15,7 +15,7 @@
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
-   SERVER* s = NULL;
+   struct SERVER* s = NULL;
    static bstring buffer = NULL;
    struct CLIENT* c = (struct CLIENT*)iter;
    IRC_COMMAND* cmd = NULL;
@@ -27,7 +27,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       table = proto_table_client;
    } else if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
-      s = (SERVER*)arg;
+      s = (struct SERVER*)arg;
       table = proto_table_server;
    } else {
       scaffold_assert( NULL == arg ); /* Just die. */

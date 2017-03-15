@@ -1,40 +1,15 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
-#ifdef WIN16
-
-#include <windows.h>
-
-#elif defined( WIN32 )
-
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#include <windows.h>
-#include <stdint.h>
-
-#elif defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 199901L
-
+#if defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 199901L
 #define C99
-#define _GNU_SOURCE
-#include <stdint.h>
+#endif /* C99 */
 
-#endif /* WIN16 || WIN32 || C99 */
-
-#include <stdio.h>
-#include <stddef.h>
-
-#ifdef DEBUG
-#include <assert.h>
-#endif /* DEBUG */
-
-#include "bstrlib/bstrlib.h"
-
-#define SENTINAL 19691
-
-#define SCAFFOLD_PRINT_BUFFER_ALLOC 110
+/* = OS Detection Stuff = */
 
 #ifdef WIN16
+
+#include <windows.h>
 
 typedef unsigned char BYTE;
 typedef unsigned long SCAFFOLD_SIZE;
@@ -48,7 +23,35 @@ typedef unsigned char uint8_t;
 #define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
 
-#else
+#elif defined( _WIN32 )
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#include <windows.h>
+#include <stdint.h>
+
+#elif defined( __linux )
+
+#define _GNU_SOURCE
+#include <stdint.h>
+
+#endif /* WIN16 || _WIN32 || __linux */
+
+/* = Debug */
+
+#ifdef DEBUG
+#include <assert.h>
+#endif /* DEBUG */
+
+/* = Common Headers = */
+
+#include <stdio.h>
+#include <stddef.h>
+
+#include "bstrlib/bstrlib.h"
+
+/* = Missing Types = */
 
 #ifndef BYTE
 typedef uint8_t BYTE;
@@ -74,7 +77,11 @@ typedef uint32_t SCAFFOLD_SIZE;
 typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
-#endif /* WIN16 */
+/* = Configuration = */
+
+#define SENTINAL 19691
+
+#define SCAFFOLD_PRINT_BUFFER_ALLOC 110
 
 typedef enum {
    SCAFFOLD_ERROR_NONE,

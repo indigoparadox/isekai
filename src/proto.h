@@ -10,8 +10,8 @@
 typedef struct _IRC_COMMAND {
    struct REF refcount;
    const struct tagbstring command;
-   void (*callback)( struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line );
-   SERVER* server;
+   void (*callback)( struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line );
+   struct SERVER* server;
    struct CLIENT* client;
    const struct bstrList* args;
    bstring line;
@@ -59,7 +59,7 @@ void proto_client_debug_vm(
 
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
-   const IRC_COMMAND* table, SERVER* s, struct CLIENT* c, const_bstring line
+   const IRC_COMMAND* table, struct SERVER* s, struct CLIENT* c, const_bstring line
 );
 
 #ifdef PROTO_C

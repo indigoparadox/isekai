@@ -9,7 +9,7 @@
 #include "../proto.h"
 
 extern struct CLIENT* main_client;
-extern SERVER* main_server;
+extern struct SERVER* main_server;
 
 typedef struct {
    int keysym;
