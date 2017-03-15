@@ -330,6 +330,7 @@ extern struct tagbstring scaffold_space_string;
 extern struct tagbstring scaffold_colon_string;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
+BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
 
 #endif /* SCAFFOLD_C */
 
