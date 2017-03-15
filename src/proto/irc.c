@@ -60,10 +60,13 @@ const struct tagbstring irc_reply_error_text[35] = {
       s->self.remote, enum_index, c->nick, irc_reply_error_text[enum_index - 400] \
    );
 
-#define irc_detect_malformed( args_qty, expression ) \
+#define irc_detect_malformed( args_qty, expression, line_var ) \
    if( args_qty != args->qty ) { \
       scaffold_print_error( \
-         &module, "IRC: Malformed " expression " expression received.\n" ); \
+         &module, \
+         "IRC: Malformed " expression " expression received: %b\n", \
+         line_var \
+      ); \
       scaffold_error = SCAFFOLD_ERROR_MISC; \
       goto cleanup; \
    }
@@ -568,7 +571,7 @@ static void irc_server_who(
    struct CHANNEL* l = NULL;
    struct IRC_WHO_REPLY who;
 
-   irc_detect_malformed( 2, "WHO" );
+   irc_detect_malformed( 2, "WHO", line );
 
    /* TODO: Handle non-channels. */
    if( '#' != args->entry[1]->data[0] ) {
@@ -620,7 +623,7 @@ static void irc_server_gamerequestfile(
    int bstr_result;
    bstring file_path_found = NULL;
 
-   irc_detect_malformed( 3, "GRF" );
+   irc_detect_malformed( 3, "GRF", line );
 
    type_c = bdata( args->entry[1] );
    scaffold_check_null( type_c );
@@ -807,7 +810,7 @@ static void irc_client_gamedatablock(
       * type_c;
    struct CHUNKER_PROGRESS progress;
 
-   irc_detect_malformed( 11, "GDB" );
+   irc_detect_malformed( 11, "GDB", line );
 
    scaffold_check_null( args->entry[5] );
    type_c = bdata( args->entry[5] );
@@ -846,7 +849,7 @@ cleanup:
 static void irc_server_gamedataabort(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
-   irc_detect_malformed( 2, "GDA" );
+   irc_detect_malformed( 2, "GDA", line );
 
    scaffold_print_info(
       &module,
@@ -892,7 +895,7 @@ static void irc_client_mob(
    SCAFFOLD_SIZE x = 0,
       y = 0;
 
-   irc_detect_malformed( 8, "MOB" );
+   irc_detect_malformed( 8, "MOB", line );
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
