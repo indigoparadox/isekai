@@ -29,6 +29,8 @@ void check_chunker_setup_unchecked() {
    FILE* cache_file;
    int bstr_res;
 
+   scaffold_print_info( &module, "====== BEGIN CHUNKER TRACE ======\n" );
+
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    cache_file = fopen( cache_file_path->data, "r" );
@@ -223,6 +225,8 @@ void check_chunker_teardown_unchecked() {
    if( NULL != chunker_imgdata ) {
       free( chunker_imgdata );
    }
+
+   scaffold_print_info( &module, "====== END CHUNKER TRACE ======\n" );
 }
 
 START_TEST( test_chunker_chunk_unchunk_tilemap ) {

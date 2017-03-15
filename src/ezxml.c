@@ -24,9 +24,9 @@
 
 #include "scaffold.h"
 
-#ifdef __GNUC__
+#ifdef __linux
 #include <unistd.h>
-#endif /* __GNUC__ */
+#endif /* __linux */
 
 #include <stdlib.h>
 #include <stdio.h>

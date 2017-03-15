@@ -9,7 +9,7 @@
 #include "proto.h"
 
 static void server_cleanup( const struct REF* ref ) {
-   SERVER* s = scaffold_container_of( ref, SERVER, self.link.refcount );
+   struct SERVER* s = scaffold_container_of( ref, struct SERVER, self.link.refcount );
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted = 0;
 #endif /* DEBUG */
@@ -29,14 +29,14 @@ static void server_cleanup( const struct REF* ref ) {
    hashmap_cleanup( &(s->clients) );
 }
 
-BOOL server_free( SERVER* s ) {
+BOOL server_free( struct SERVER* s ) {
    if( NULL == s ) {
       return FALSE;
    }
    return refcount_dec( &(s->self.link), "server" );
 }
 
-void server_init( SERVER* s, const bstring myhost ) {
+void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
    client_init( &(s->self), FALSE );
    s->self.link.refcount.gc_free = server_cleanup;
@@ -50,11 +50,11 @@ cleanup:
    return;
 }
 
-void server_stop( SERVER* s ) {
+void server_stop( struct SERVER* s ) {
    s->self.running = FALSE;
 }
 
-void server_channel_send( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
+void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
    struct VECTOR* l_clients = NULL;
 
    l_clients =
@@ -72,7 +72,7 @@ cleanup:
    scaffold_assert_server();
 }
 
-void server_channel_printf( SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... ) {
+void server_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
@@ -94,7 +94,7 @@ cleanup:
    return;
 }
 
-void server_add_client( SERVER* s, struct CLIENT* c ) {
+void server_add_client( struct SERVER* s, struct CLIENT* c ) {
    if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
@@ -109,7 +109,7 @@ void server_add_client( SERVER* s, struct CLIENT* c ) {
    );
 }
 
-struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_first ) {
+struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLIENT* c_first ) {
    struct CHANNEL* l = NULL;
 #ifdef DEBUG
    SCAFFOLD_SIZE old_count;
@@ -178,15 +178,15 @@ cleanup:
    return;
 }
 
-struct CLIENT* server_get_client( SERVER* s, const bstring nick ) {
+struct CLIENT* server_get_client( struct SERVER* s, const bstring nick ) {
    return hashmap_get( &(s->clients), nick );
 }
 
-struct CHANNEL* server_get_channel_by_name( SERVER* s, const bstring nick ) {
+struct CHANNEL* server_get_channel_by_name( struct SERVER* s, const bstring nick ) {
    return client_get_channel_by_name( &(s->self), (bstring)nick );
 }
 
-void server_drop_client( SERVER* s, bstring nick ) {
+void server_drop_client( struct SERVER* s, bstring nick ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -228,7 +228,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
    return;
 }
 
-void server_listen( SERVER* s, int port ) {
+void server_listen( struct SERVER* s, int port ) {
    s->self.link.arg = s;
    connection_listen( &(s->self.link), port );
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
@@ -237,8 +237,9 @@ void server_listen( SERVER* s, int port ) {
    }
 }
 
-void server_poll_new_clients( SERVER* s ) {
+BOOL server_poll_new_clients( struct SERVER* s ) {
    static struct CLIENT* c = NULL;
+   BOOL new_clients = FALSE;
 #ifdef DEBUG
    SCAFFOLD_SIZE old_client_count = 0;
 
@@ -270,14 +271,17 @@ void server_poll_new_clients( SERVER* s ) {
        * client hashmap, so get rid of its initial ref.                       */
       refcount_dec( &(c->link), "client" );
       c = NULL;
+
+      new_clients = TRUE;
    }
 
 cleanup:
-   return;
+   return new_clients;
 }
 
-void server_service_clients( SERVER* s ) {
+BOOL server_service_clients( struct SERVER* s ) {
    IRC_COMMAND* cmd = NULL;
+   BOOL executed = FALSE;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
@@ -291,6 +295,7 @@ void server_service_clients( SERVER* s ) {
    }
    if( NULL != cmd ) {
       vector_add( &(s->self.command_queue), cmd );
+      executed = TRUE;
    }
 
    /* Execute one command per cycle if available. */
@@ -305,6 +310,7 @@ void server_service_clients( SERVER* s ) {
          );
       }
       irc_command_free( cmd );
+      executed = TRUE;
    }
 
 #ifdef USE_CHUNKS
@@ -318,7 +324,7 @@ void server_service_clients( SERVER* s ) {
    hashmap_iterate( &(s->self.channels), callback_proc_channel_vms, NULL );
 
 cleanup:
-   return;
+   return executed;
 }
 
 /* Scaffold errors if unsuccessful:
@@ -327,7 +333,7 @@ cleanup:
  * NOT_NULLPO = Nick already taken.
  * NONZERO = Allocation error.
  */
-void server_set_client_nick( SERVER* s, struct CLIENT* c, const bstring nick ) {
+void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick ) {
    int bstr_result = 0;
    struct CLIENT* c_test = NULL;
 

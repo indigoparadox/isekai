@@ -22,12 +22,14 @@ main_add_test_proto( syncbuff )
 int main( void ) {
    int number_failed = 0;
 
+#ifdef USE_SYNCBUFF
    main_add_test( syncbuff );
+#endif /* USE_SYNCBUFF */
    main_add_test( vector );
    main_add_test( b64 );
+   main_add_test( channel );
    /*
    main_add_test( connection );
-   main_add_test( channel );
    main_add_test( client );
    */
    main_add_test( hashmap );
