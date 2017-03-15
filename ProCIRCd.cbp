@@ -43,6 +43,7 @@
 					<Add option="-DUSE_B64" />
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -538,12 +539,67 @@
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/duktape/duk_config.h" />
-		<Unit filename="src/duktape/dukhelp.h" />
+		<Unit filename="src/duktape/duk_config.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+		</Unit>
+		<Unit filename="src/duktape/dukhelp.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+		</Unit>
 		<Unit filename="src/duktape/duktape.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
-		<Unit filename="src/duktape/duktape.h" />
+		<Unit filename="src/duktape/duktape.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -692,8 +748,37 @@
 		<Unit filename="src/tilemap.h" />
 		<Unit filename="src/tinypy/tinypy.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
-		<Unit filename="src/tinypy/tinypy.h" />
+		<Unit filename="src/tinypy/tinypy.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (MSDOS-BCC)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+		</Unit>
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/graphicu.c">
 			<Option compilerVar="CC" />

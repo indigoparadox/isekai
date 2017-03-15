@@ -111,10 +111,12 @@ void graphics_set_image_data(
                                  sizeof( BITMAPFILEHEADER ) +
                                  sizeof( BITMAPINFOHEADER ));
    BITMAPINFO bi;
+   BYTE* pPixels = NULL;
+   BYTE* ppvBits = NULL;
+
    bi.bmiColors[0] = rgb;
    bi.bmiHeader = bih;
-   BYTE* pPixels = (data + bfh.bfOffBits);
-   BYTE* ppvBits;
+   pPixels = (data + bfh.bfOffBits);
 
    if( NULL != g->surface ) {
       DeleteObject( g->surface );

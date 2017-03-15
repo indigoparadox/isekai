@@ -19,7 +19,7 @@ const struct tagbstring str_dialog_default_title =
  */
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
-   const bstring title, const bstring prompt,
+   const bstring id, const bstring title, const bstring prompt,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
@@ -42,7 +42,7 @@ void ui_window_init(
    if( NULL != prompt ) {
       ui_control_new(
          control, win, prompt, UI_CONTROL_TYPE_LABEL,
-         FALSE, 5, 20, width - 10, 10
+         FALSE, NULL, 5, 20, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_label_default_id,
@@ -53,7 +53,7 @@ void ui_window_init(
    if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
       ui_control_new(
          control, win, NULL, UI_CONTROL_TYPE_TEXT,
-         FALSE, 5, 40, width - 10, 10
+         FALSE, NULL, 5, 40, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_control_default_id,
@@ -91,6 +91,7 @@ void ui_window_free( struct UI_WINDOW* win ) {
 void ui_control_init(
    struct UI_CONTROL* control, struct UI_WINDOW* win,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus,
+   bstring buffer,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
@@ -198,7 +199,7 @@ cleanup:
  *         a length of text for a text input dialog.
  */
 SCAFFOLD_SIZE ui_poll_input(
-   struct UI* ui, struct INPUT* input, bstring buffer
+   struct UI* ui, struct INPUT* input, bstring buffer, const bstring id
 ) {
    return 0;
 }
