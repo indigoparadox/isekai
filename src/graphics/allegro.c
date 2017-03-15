@@ -543,15 +543,15 @@ void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, const bstring text
 ) {
-   #warning Text measurement not implemented.
+   /* TODO: Text measurement not implemented. */
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
-   #warning Graphical transitions not implemented.
+   /* TODO: Graphical transitions not implemented. */
 }
 
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   #warning Graphical scaling not implemented.
+   /* TODO: Graphical scaling not implemented. */
 }
 
 void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,

@@ -39,9 +39,9 @@ static const char* state_names[] = {
 #define ASSERT(X) /* no-op */
 #endif
 
-// Encoder flags
+/* Encoder flags */
 enum {
-   FLAG_IS_FINISHING = 0x01,
+   FLAG_IS_FINISHING = 0x01
 };
 
 typedef struct {
