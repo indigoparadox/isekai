@@ -243,7 +243,7 @@ int main( int argc, char** argv ) {
    }
 
 cleanup:
-
+   ui_cleanup( &ui );
    bdestroy( buffer );
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );

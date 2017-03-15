@@ -15,6 +15,11 @@ const struct tagbstring str_dialog_label_default_id =
 const struct tagbstring str_dialog_default_title =
    bsStatic( "Untitled Window" );
 
+void ui_cleanup( struct UI* ui ) {
+   vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
+   vector_free( &(ui->windows) );
+}
+
 /** \brief
  * \param[in] title  Can be NULL for default title.
  * \param

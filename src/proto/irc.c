@@ -230,7 +230,7 @@ cleanup:
 #endif
 
 static void irc_server_user(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    int i,
        consumed = 0;
@@ -285,7 +285,7 @@ cleanup:
 }
 
 static void irc_server_nick(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    bstring oldnick = NULL;
    bstring newnick = NULL;
@@ -356,7 +356,7 @@ cleanup:
 }
 
 static void irc_server_quit(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    bstring message;
    bstring space;
@@ -377,7 +377,7 @@ static void irc_server_quit(
 }
 
 static void irc_server_ison(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    struct VECTOR* ison = NULL;
    bstring response = NULL;
@@ -417,7 +417,7 @@ cleanup:
 }
 
 static void irc_server_join(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    struct CHANNEL* l = NULL;
    bstring namehunt = NULL;
@@ -500,24 +500,35 @@ cleanup:
 }
 
 static void irc_server_part(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
 }
 
 static void irc_server_privmsg(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    struct CLIENT* c_dest = NULL;
    struct CHANNEL* l_dest = NULL;
    bstring msg = NULL;
+   struct bstrList* msg_list = NULL;
+   int i;
 
-   /* bdestroy( scaffold_pop_string( args ) ); */
-   msg = bjoin( args, &scaffold_space_string );
+   msg_list = bstrListCreate();
+   bstrListAlloc( msg_list, args->qty - 1 );
+   for( i = 1 ; args->qty > i ; i++ ) {
+      msg_list->entry[i - 1] = bstrcpy( args->entry[i] );
+   }
+
+   scaffold_print_debug( &module, "%s\n", msg_list->entry[0]->data );
+
+   msg = bjoin( msg_list, &scaffold_space_string );
+   btrimws( msg );
+   char* cc = line->data;
 
    c_dest = server_get_client( s, args->entry[1] );
    if( NULL != c_dest ) {
       client_printf(
-         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, cc
       );
       goto cleanup;
    }
@@ -526,7 +537,7 @@ static void irc_server_privmsg(
    l_dest = client_get_channel_by_name( &(s->self), args->entry[1] );
    if( NULL != l_dest ) {
       server_channel_printf(
-         s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, msg
+         s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, cc
       );
       goto cleanup;
    }
@@ -535,11 +546,12 @@ static void irc_server_privmsg(
 
 cleanup:
    bdestroy( msg );
+   bstrListDestroy( msg_list );
    return;
 }
 
 static void irc_server_who(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    struct CHANNEL* l = NULL;
    struct IRC_WHO_REPLY who;
@@ -589,7 +601,7 @@ cleanup:
 #ifdef USE_CHUNKS
 
 static void irc_server_gamerequestfile(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* type_c;
    CHUNKER_DATA_TYPE type;
@@ -615,7 +627,7 @@ cleanup:
 #endif /* USE_CHUNKS */
 
 static void irc_server_gameupdate(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* serial_c,
       * update_c;
@@ -657,7 +669,7 @@ cleanup:
 #ifdef DEBUG_VM
 
 static void irc_server_debugvm(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    bstring code = NULL;
    bstring lname = args->entry[1];
@@ -687,7 +699,7 @@ cleanup:
 #endif /* DEBUG_VM */
 
 static void irc_client_gu(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* serial_c,
       * update_c;
@@ -716,7 +728,7 @@ cleanup:
 }
 
 static void irc_client_join(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    struct CHANNEL* l = NULL;
    bstring l_name = NULL;
@@ -761,7 +773,7 @@ cleanup:
 static const struct tagbstring str_closing = bsStatic( ":Closing" );
 
 static void irc_client_error(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    if(
       2 <= args->qty &&
@@ -774,7 +786,7 @@ static void irc_client_error(
 #ifdef USE_CHUNKS
 
 static void irc_client_gamedatablock(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    const char* progress_c,
       * total_c,
@@ -820,7 +832,7 @@ cleanup:
 }
 
 static void irc_server_gamedataabort(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    irc_detect_malformed( 2, "GDA" );
 
@@ -839,23 +851,23 @@ cleanup:
 #endif /* USE_CHUNKS */
 
 static void irc_server_gamenewsprite(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
 }
 
 static void irc_client_gamenewsprite(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
 }
 
 static void irc_server_mob(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    /* TODO: If the serial matches c's mob, update server. Otherwise send requested mob's details. */
 }
 
 static void irc_client_mob(
-   struct CLIENT* c, SERVER* s, const struct bstrList* args
+   struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* serial_c = NULL,
       * x_c = NULL,
@@ -909,6 +921,14 @@ cleanup:
    return;
 }
 
+static void irc_client_privmsg(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+   scaffold_print_debug( &module, "1: %s 2: %s 3: %s 4: %s",
+                        args->entry[0]->data, args->entry[1]->data,
+                        args->entry[2]->data, args->entry[2]->data );
+}
+
 IRC_COMMAND_TABLE_START( server ) = {
 IRC_COMMAND_ROW( "USER", irc_server_user ),
 IRC_COMMAND_ROW( "NICK", irc_server_nick ),
@@ -940,6 +960,7 @@ IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
 #endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_client_mob ),
+IRC_COMMAND_ROW( "PRIVMSG", irc_client_privmsg ),
 IRC_COMMAND_TABLE_END() };
 
 static void irc_command_cleanup( const struct REF* ref ) {
@@ -1020,6 +1041,7 @@ IRC_COMMAND* irc_dispatch(
             out->client = c;
             /* refcount_inc( &(c->link), "client" ); */
             out->args = args;
+            out->line = line;
             ref_init( &(out->refcount), irc_command_cleanup );
 
             scaffold_assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
