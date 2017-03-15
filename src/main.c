@@ -1,11 +1,9 @@
 
+#include "scaffold.h"
 #include "input.h"
 #include "server.h"
 #include "ui.h"
-#include "b64.h"
-#include "scaffold.h"
 #include "callback.h"
-
 #include "windefs.h"
 
 #include <stdlib.h>
