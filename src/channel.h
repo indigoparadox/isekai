@@ -64,4 +64,8 @@ void channel_vm_step( struct CHANNEL* l );
 void channel_vm_end( struct CHANNEL* l );
 BOOL channel_vm_can_step( struct CHANNEL* l );
 
+#ifdef CHANNEL_C
+SCAFFOLD_MODULE( "channel.c" );
+#endif /* CHANNEL_C */
+
 #endif /* CHANNEL_H */

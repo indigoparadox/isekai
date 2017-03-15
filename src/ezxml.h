@@ -168,4 +168,8 @@ ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, SCAFFOLD_SIZE off);
 }
 #endif
 
+#ifdef EZXML_C
+SCAFFOLD_MODULE( "ezxml.c" );
+#endif /* _EZXML_C */
+
 #endif /* _EZXML_H */

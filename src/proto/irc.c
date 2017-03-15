@@ -62,7 +62,8 @@ const struct tagbstring irc_reply_error_text[35] = {
 
 #define irc_detect_malformed( args_qty, expression ) \
    if( args_qty != args->qty ) { \
-      scaffold_print_error( "IRC: Malformed " expression " expression received.\n" ); \
+      scaffold_print_error( \
+         &module, "IRC: Malformed " expression " expression received.\n" ); \
       scaffold_error = SCAFFOLD_ERROR_MISC; \
       goto cleanup; \
    }
@@ -89,6 +90,7 @@ void proto_send_chunk(
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    scaffold_assert_client();
    scaffold_print_debug(
+      &module,
       "Client: Aborting transfer of %s from server due to cached copy.\n",
       bdata( h->filename )
    );
@@ -103,7 +105,9 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
  */
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
    scaffold_assert_client();
-   scaffold_print_debug( "Client: Requesting file: %s\n", bdata( filename ) );
+   scaffold_print_debug(
+      &module, "Client: Requesting file: %s\n", bdata( filename )
+   );
    client_printf( c, "GRF %d %b", type, filename );
 }
 
@@ -324,7 +328,7 @@ static void irc_server_nick(
    /* Don't reply yet if there's been no USER statement yet. */
    if( !(c->flags & CLIENT_FLAGS_HAVE_USER) ) {
       scaffold_print_debug(
-         "Client %d quietly changed nick from: %s To: %s\n",
+         &module, "Client %d quietly changed nick from: %s To: %s\n",
          c->link.socket, bdata( oldnick ), bdata( c->nick )
       );
       goto cleanup;
@@ -340,7 +344,7 @@ static void irc_server_nick(
    );
 
    scaffold_print_debug(
-      "Client %d changed nick from: %s To: %s\n",
+      &module, "Client %d changed nick from: %s To: %s\n",
       c->link.socket, bdata( oldnick ), bdata( c->nick )
    );
 
@@ -544,7 +548,7 @@ static void irc_server_who(
 
    /* TODO: Handle non-channels. */
    if( '#' != args->entry[1]->data[0] ) {
-      scaffold_print_error( "Non-channel WHO not yet implemented.\n" );
+      scaffold_print_error( &module, "Non-channel WHO not yet implemented.\n" );
       goto cleanup;
    }
 
@@ -636,6 +640,7 @@ static void irc_server_gameupdate(
       update.update = mobile_apply_update( &update, TRUE );
    } else {
       scaffold_print_error(
+         &module,
          "Client %s attempted to modify mobile %d to %d without permission.\n",
          bdata( c->nick ), update.o->serial, update.update
       );
@@ -729,11 +734,14 @@ static void irc_client_join(
       channel_new( l, l_name, FALSE );
       client_add_channel( c, l );
       channel_add_client( l, c, FALSE );
-      scaffold_print_info( "Client created local channel mirror: %s\n",
-                           bdata( l_name ) );
+      scaffold_print_info(
+         &module, "Client created local channel mirror: %s\n", bdata( l_name )
+      );
    }
 
-   scaffold_print_info( "Client joined channel: %s\n", bdata( l_name ) );
+   scaffold_print_info(
+      &module, "Client joined channel: %s\n", bdata( l_name )
+   );
 
    scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
 
@@ -817,6 +825,7 @@ static void irc_server_gamedataabort(
    irc_detect_malformed( 2, "GDA" );
 
    scaffold_print_info(
+      &module,
       "Server: Terminating transfer of %s at request of client: %d\n",
       bdata( args->entry[1] ), c->link.socket
    );
@@ -892,7 +901,7 @@ static void irc_client_mob(
    scaffold_assert( 0 == scaffold_error );
 
    scaffold_print_debug(
-      "Client: Local instance of mobile updated: %s (%d)\n",
+      &module, "Client: Local instance of mobile updated: %s (%d)\n",
       bdata( nick ), serial
    );
 
@@ -992,9 +1001,11 @@ IRC_COMMAND* irc_dispatch(
                0 != bstrncmp( cmd_test, &(proto_table_client[0].command), 2 )
             ) {
                if( table == proto_table_server ) {
-                  scaffold_print_debug( "Server Parse: %s\n", bdata( line ) );
+                  scaffold_print_debug(
+                     &module, "Server Parse: %s\n", bdata( line ) );
                } else {
-                  scaffold_print_debug( "Client Parse: %s\n", bdata( line ) );
+                  scaffold_print_debug(
+                     &module, "Client Parse: %s\n", bdata( line ) );
                }
             }
 #endif /* DEBUG */
@@ -1021,10 +1032,12 @@ IRC_COMMAND* irc_dispatch(
 
    if( table == proto_table_server ) {
       scaffold_assert_server();
-      scaffold_print_error( "Server: Parser unable to interpret: %s\n", bdata( line ) );
+      scaffold_print_error(
+         &module, "Server: Parser unable to interpret: %s\n", bdata( line ) );
    } else if( table == proto_table_client ) {
       scaffold_assert_client();
-      scaffold_print_error( "Client: Parser unable to interpret: %s\n", bdata( line ) );
+      scaffold_print_error(
+         &module, "Client: Parser unable to interpret: %s\n", bdata( line ) );
    }
 
 

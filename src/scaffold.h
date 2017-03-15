@@ -8,7 +8,7 @@
 #endif /* C99 */
 #endif /* __STDC_VERSION__ */
 
-#ifndef WIN16                       
+#ifndef WIN16
 #include <stdint.h>
 #endif /* WIN16 */
 
@@ -112,15 +112,9 @@ extern FILE* scaffold_log_handle_err;
 
 #ifdef DEBUG
 
-#ifdef DEBUG_OUT_PREPRO
-#define scaffold_print_debug( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ );
-#define scaffold_print_info( ... ) fprintf( scaffold_log_handle, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle );
-#define scaffold_print_error( ... ) fprintf( scaffold_log_handle_err, __FILE__ ": " __VA_ARGS__ ); fflush( scaffold_log_handle_err );
-#else
-void scaffold_print_debug( const char* message, ... );
-void scaffold_print_info( const char* message, ... );
-void scaffold_print_error( const char* message, ... );
-#endif /* DEBUG_OUT_PREPRO */
+void scaffold_print_debug( const bstring module, const char* message, ... );
+void scaffold_print_info( const bstring module, const char* message, ... );
+void scaffold_print_error( const bstring module, const char* message, ... );
 
 #define scaffold_assert( arg ) assert( arg )
 
@@ -149,6 +143,8 @@ void scaffold_print_error( const char* message, ... );
 
 #endif /* DEBUG */
 
+#define SCAFFOLD_MODULE( mod_name ) static struct tagbstring module = bsStatic( mod_name )
+
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
@@ -159,7 +155,7 @@ void scaffold_print_error( const char* message, ... );
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Null pointer on line: %d: %s\n", __LINE__, message ); \
+            scaffold_print_error( &module, "Scaffold: Null pointer on line: %d: %s\n", __LINE__, message ); \
         } \
         goto cleanup; \
     } else { \
@@ -170,7 +166,7 @@ void scaffold_print_error( const char* message, ... );
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -181,7 +177,7 @@ void scaffold_print_error( const char* message, ... );
     if( NULL != pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -192,7 +188,7 @@ void scaffold_print_error( const char* message, ... );
     if( index >= bound ) { \
         scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -203,7 +199,7 @@ void scaffold_print_error( const char* message, ... );
     if( 0 > value ) { \
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -214,7 +210,7 @@ void scaffold_print_error( const char* message, ... );
     if( 0 != value ) { \
         scaffold_error = SCAFFOLD_ERROR_NONZERO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -225,7 +221,7 @@ void scaffold_print_error( const char* message, ... );
     if( 0 == value ) { \
         scaffold_error = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Zero error on line: %d: %s\n", __LINE__, message ); \
+            scaffold_print_error( &module, "Scaffold: Zero error on line: %d: %s\n", __LINE__, message ); \
         } \
         goto cleanup; \
     } else { \
@@ -237,7 +233,7 @@ void scaffold_print_error( const char* message, ... );
     if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( "Scaffold: Zero error on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Zero error on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else if( SCAFFOLD_ERROR_ZERO != last ) { \
@@ -293,7 +289,10 @@ __attribute__ ((warn_unused_result))
 ;
 void scaffold_join_path( bstring path1, const bstring path2 );
 
-#ifndef SCAFFOLD_C
+#ifdef SCAFFOLD_C
+/* SCAFFOLD_MODULE( "scaffold.c" ); */
+static struct tagbstring module = bsStatic( "scaffold.c" );
+#else
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;
 #endif /* DEBUG */

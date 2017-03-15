@@ -34,6 +34,7 @@ static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, co
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
       scaffold_print_debug(
+         &module,
          "%s: Reference count for %s increased: %d\n", func, type, ref->count
       );
    }
@@ -46,6 +47,7 @@ static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, co
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
       scaffold_print_debug(
+         &module,
          "%s: Reference count for %s decreased: %d\n", func, type, ref->count
       );
    }
@@ -53,7 +55,7 @@ static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, co
    if( 0 >= ((struct REF*)ref)->count ) {
 #ifdef DEBUG_REF
       if( NULL != type && NULL != func ) {
-         scaffold_print_debug( "%s: %s freed.\n", func, type );
+         scaffold_print_debug( &module, "%s: %s freed.\n", func, type );
       }
 #endif /* DEBUG_REF */
       ref->gc_free( ref );

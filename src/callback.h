@@ -55,4 +55,8 @@ BOOL callback_free_strings( const bstring res, void* iter, void* arg );
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg );
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );
 
+#ifdef CALLBACKS_C
+SCAFFOLD_MODULE( "callback.c" );
+#endif /* CALLBACKS_C */
+
 #endif /* CALLBACKS_H */

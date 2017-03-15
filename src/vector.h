@@ -54,4 +54,8 @@ void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg );
 void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg );
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb );
 
+#ifdef VECTOR_C
+SCAFFOLD_MODULE( "vector.c" );
+#endif /* VECTOR_C */
+
 #endif /* VECTOR_H */

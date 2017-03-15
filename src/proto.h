@@ -31,7 +31,8 @@ extern IRC_COMMAND_TABLE_START( client );
 #ifdef DEBUG
 #define irc_print_args() \
    for( i = 0 ; args->qty > i ; i++ ) { \
-      scaffold_print_debug( "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
+      scaffold_print_debug( \
+         &module, "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
    }
 #endif
 
@@ -59,5 +60,9 @@ void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, SERVER* s, struct CLIENT* c, const_bstring line
 );
+
+#ifdef PROTO_C
+SCAFFOLD_MODULE( "proto.c" );
+#endif /* PROTO_C */
 
 #endif /* PARSER_H */

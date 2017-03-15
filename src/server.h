@@ -52,6 +52,7 @@ bstring server_file_search( bstring search_filename );
 #ifdef SERVER_C
 struct tagbstring str_server_data_path =
    bsStatic( "testdata/server" );
+SCAFFOLD_MODULE( "server.c" );
 #else
 extern struct tagbstring str_server_data_path;
 #endif /* SERVER_C */

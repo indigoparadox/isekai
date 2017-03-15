@@ -1,4 +1,5 @@
 
+#define UI_C
 #include "../ui.h"
 
 #include <stdlib.h>
@@ -63,7 +64,7 @@ void ui_window_init(
    graphics_surface_init( &(win->element), width, height );
 
    scaffold_print_debug(
-      "Created window with %d controls: %s (%d, %d)\n",
+      &module, "Created window with %d controls: %s (%d, %d)\n",
       hashmap_count( &(win->controls) ), bdata( win->title ), win->x, win->y
    );
 
@@ -108,7 +109,7 @@ void ui_control_init(
    control->self.title = NULL;
 
    scaffold_print_debug(
-      "Created control: %s (%d, %d)\n",
+      &module, "Created control: %s (%d, %d)\n",
       bdata( control->text ), control->self.x, control->self.y
    );
 }
@@ -130,7 +131,7 @@ void ui_control_add(
    hashmap_put( &(win->controls), id, control );
 
    scaffold_print_debug(
-      "Added control: %s to window: %s\n",
+      &module, "Added control: %s to window: %s\n",
       bdata( control->text ), bdata( win->title )
    );
 
@@ -140,7 +141,7 @@ void ui_control_add(
    ) {
       win->active_control = control;
       scaffold_print_debug(
-      "Set focusable control as focus: %s\n",
+         &module, "Set focusable control as focus: %s\n",
          bdata( control->text ), bdata( win->title )
       );
    }

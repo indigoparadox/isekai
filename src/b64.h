@@ -15,4 +15,8 @@ __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
 
+#ifdef B64_C
+SCAFFOLD_MODULE( "b64.c" );
+#endif /* B64_C */
+
 #endif /* B64_H */

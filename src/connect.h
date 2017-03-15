@@ -29,4 +29,8 @@ void connection_unlock( CONNECTION* c );
 void connection_assign_remote_name( CONNECTION* n, const bstring buffer );
 void connection_cleanup( CONNECTION* c );
 
+#ifdef CONNECTION_C
+SCAFFOLD_MODULE( "connect.c" );
+#endif /* CONNECTION_C */
+
 #endif /* CONNECTION_H */

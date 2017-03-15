@@ -120,7 +120,9 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args );
       } else {
-         scaffold_print_error( "Client: Invalid command: %s\n", bdata( &(cmd->command) ) );
+         scaffold_print_error(
+            &module, "Client: Invalid command: %s\n", bdata( &(cmd->command) )
+         );
       }
       irc_command_free( cmd );
    }
@@ -153,6 +155,7 @@ void client_stop( struct CLIENT* c ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
    scaffold_print_debug(
+      &module,
       "Removed %d channels. %d remaining.\n",
       deleted, hashmap_count( &(c->channels) )
    );
@@ -163,6 +166,7 @@ void client_stop( struct CLIENT* c ) {
 #endif /* DEBUG */
       vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
    scaffold_print_debug(
+      &module,
       "Removed %d commands. %d remaining.\n",
       deleted, vector_count( &(c->command_queue) )
    );
@@ -175,6 +179,7 @@ void client_stop( struct CLIENT* c ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
    scaffold_print_debug(
+      &module,
       "Removed %d chunkers. %d remaining.\n",
       deleted, hashmap_count( &(c->chunkers) )
    );
@@ -257,9 +262,14 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
 
 #ifdef DEBUG_NETWORK
    if( TRUE == c->client_side ) {
-      scaffold_print_debug( "Client sent to server: %s\n", bdata( buffer ) );
+      scaffold_print_debug(
+         &module, "Client sent to server: %s\n", bdata( buffer )
+      );
    } else {
-      scaffold_print_debug( "Server sent to client %d: %s\n", c->link.socket, bdata( buffer ) );
+      scaffold_print_debug(
+         &module, "Server sent to client %d: %s\n",
+         c->link.socket, bdata( buffer )
+      );
    }
 #endif /* DEBUG_NETWORK */
 
@@ -308,7 +318,7 @@ void client_send_file(
    struct CHUNKER* h = NULL;
 
    scaffold_print_debug(
-      "Sending file to client %d: %s\n",
+      &module, "Sending file to client %d: %s\n",
       c->link.socket, bdata( filepath )
    );
 
@@ -325,7 +335,9 @@ void client_send_file(
    );
    scaffold_check_nonzero( scaffold_error );
 
-   scaffold_print_debug( "Server: Adding chunker to send: %s\n", bdata( filepath ) );
+   scaffold_print_debug(
+      &module, "Server: Adding chunker to send: %s\n", bdata( filepath )
+   );
    hashmap_put( &(c->chunkers), filepath, h );
 
 cleanup:
@@ -377,7 +389,9 @@ void client_request_file(
       chunker_unchunk_start(
          h, type, filename, &str_client_cache_path
       );
-      scaffold_print_debug( "Adding unchunker to receive: %s\n", bdata( filename ) );
+      scaffold_print_debug(
+         &module, "Adding unchunker to receive: %s\n", bdata( filename )
+      );
       hashmap_put_nolock( &(c->chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
 
@@ -402,7 +416,9 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    scaffold_assert( 0 < blength( cp->filename ) );
 
    if( cp->current > cp->total ) {
-      scaffold_print_error( "Invalid progress for %s.\n", bdata( cp->filename ) );
+      scaffold_print_error(
+         &module, "Invalid progress for %s.\n", bdata( cp->filename )
+      );
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
@@ -418,6 +434,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    h = hashmap_get( &(c->chunkers), cp->filename );
    if( NULL == h ) {
       scaffold_print_error(
+         &module,
          "Client: Invalid data block received (I didn't ask for this?): %s\n",
          bdata( cp->filename )
       );
@@ -429,7 +446,8 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
 
    chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
    if( 0 < chunker_percent ) {
-      scaffold_print_debug( "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
+      scaffold_print_debug(
+         &module, "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
    }
 
    if( chunker_unchunk_finished( h ) ) {
@@ -482,6 +500,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
 
       scaffold_print_info(
+         &module,
          "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
       );
       break;
@@ -507,6 +526,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
       hashmap_put( &(set->images), h->filename, g );
       scaffold_print_info(
+         &module,
          "Client: Tilemap image %s successfully loaded into tileset cache.\n",
          bdata( h->filename )
       );
@@ -540,6 +560,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       /* proto_request_file( c, img_src, CHUNKER_DATA_TYPE_MOBSPRITES ); */
 
       scaffold_print_info(
+         &module,
          "Client: Mobile def for %s successfully attached to channel.\n",
          bdata( mob_id )
       );
@@ -553,6 +574,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_check_null( g->surface );
       hashmap_put( &(c->sprites), h->filename, g );
       scaffold_print_info(
+         &module,
          "Client: Mobile spritesheet %s successfully loaded into cache.\n",
          bdata( h->filename )
       );
@@ -573,6 +595,7 @@ cleanup:
    }
 #endif /* USE_EZXML */
    scaffold_print_debug(
+      &module,
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )
    );
    chunker_free( h );
@@ -697,23 +720,23 @@ void client_poll_input( struct CLIENT* c ) {
          switch( tilemap_dt_state ) {
          case TILEMAP_DEBUG_TERRAIN_OFF:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_COORDS;
-            scaffold_print_debug( "Terrain Debug: Coords\n" );
+            scaffold_print_debug( &module, "Terrain Debug: Coords\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_COORDS:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
-            scaffold_print_debug( "Terrain Debug: Terrain Names\n" );
+            scaffold_print_debug( &module, "Terrain Debug: Terrain Names\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_NAMES:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
-            scaffold_print_debug( "Terrain Debug: Terrain Quarters\n" );
+            scaffold_print_debug( &module, "Terrain Debug: Terrain Quarters\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_QUARTERS:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_DEADZONE;
-            scaffold_print_debug( "Terrain Debug: Window Deadzone\n" );
+            scaffold_print_debug( &module, "Terrain Debug: Window Deadzone\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_DEADZONE:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
-            scaffold_print_debug( "Terrain Debug: Off\n" );
+            scaffold_print_debug( &module, "Terrain Debug: Off\n" );
             break;
          }
          break;

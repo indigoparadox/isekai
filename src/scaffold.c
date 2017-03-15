@@ -124,7 +124,7 @@ BOOL scaffold_string_is_printable( bstring str ) {
    return is_printable;
 }
 
-void scaffold_print_debug( const char* message, ... ) {
+void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
    int bstr_ret;
@@ -143,14 +143,15 @@ void scaffold_print_debug( const char* message, ... ) {
 
    /* TODO: Put newline if missing. */
 
-   fprintf( scaffold_log_handle, "%s", bdata( scaffold_print_buffer ) );
+   fprintf( scaffold_log_handle, "%s: %s",
+      bdata( mod_in ), bdata( scaffold_print_buffer ) );
 
 cleanup:
    return;
 #endif /* DEBUG */
 }
 
-void scaffold_print_info( const char* message, ... ) {
+void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
    int bstr_ret;
@@ -167,14 +168,15 @@ void scaffold_print_info( const char* message, ... ) {
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
 
-   fprintf( scaffold_log_handle, "%s", bdata( scaffold_print_buffer ) );
+   fprintf( scaffold_log_handle, "%s: %s",
+      bdata( mod_in ), bdata( scaffold_print_buffer ) );
 
 cleanup:
    return;
 #endif /* DEBUG */
 }
 
-void scaffold_print_error( const char* message, ... ) {
+void scaffold_print_error( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
    int bstr_ret;
@@ -191,7 +193,8 @@ void scaffold_print_error( const char* message, ... ) {
    scaffold_snprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
 
-   fprintf( scaffold_log_handle_err, "%s", bdata( scaffold_print_buffer ) );
+   fprintf( scaffold_log_handle_err, "%s: %s",
+      bdata( mod_in ), bdata( scaffold_print_buffer ) );
 
 cleanup:
    return;
@@ -304,7 +307,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 
    scaffold_check_null( path );
    path_c = bdata( path );
-   scaffold_print_debug( "Reading from path: %s\n", path_c );
+   scaffold_print_debug( &module, "Reading from path: %s\n", path_c );
 
 #ifdef WIN32
    inputfd = CreateFile( bdata( path ), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
@@ -384,7 +387,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
       if( 0 == (test_path_stat.st_mode & S_IFDIR) ) {
          scaffold_error = SCAFFOLD_ERROR_ZERO;
          scaffold_print_error(
-            "Path %s is not a directory. Aborting.\n", path_c
+            &module, "Path %s is not a directory. Aborting.\n", path_c
          );
          goto cleanup;
       }
@@ -392,7 +395,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
       if( 0 != stat_res  ) {
          /* Directory does not exist, so create it. */
          scaffold_print_info(
-            "Creating missing directory: %s\n", path_c
+            &module, "Creating missing directory: %s\n", path_c
          );
 #ifdef WIN32
          CreateDirectory( path_c, NULL );
@@ -514,11 +517,12 @@ cleanup:
    scaffold_check_unsilence();
    switch( scaffold_error ) {
    case SCAFFOLD_ERROR_NONZERO:
-      scaffold_print_error( "Unable to open directory: %s\n", bdata( path ) );
+      scaffold_print_error(
+         &module, "Unable to open directory: %s\n", bdata( path ) );
       return FALSE;
 
    case SCAFFOLD_ERROR_ZERO:
-      scaffold_print_error( "Not a directory: %s\n", bdata( path ) );
+      scaffold_print_error( &module, "Not a directory: %s\n", bdata( path ) );
       return FALSE;
 
    default:

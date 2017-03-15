@@ -23,7 +23,7 @@ static void server_cleanup( const struct REF* ref ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
    scaffold_print_debug(
-      "Removed %d clients from server. %d remaining.\n",
+      &module, "Removed %d clients from server. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
    );
    hashmap_cleanup( &(s->clients) );
@@ -104,7 +104,7 @@ void server_add_client( SERVER* s, struct CLIENT* c ) {
    scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    hashmap_put( &(s->clients), c->nick, c );
    scaffold_print_debug(
-      "Client %d added to server with nick: %s\n",
+      &module, "Client %d added to server with nick: %s\n",
       c->link.socket, bdata( c->nick )
    );
 }
@@ -121,16 +121,18 @@ struct CHANNEL* server_add_channel( SERVER* s, bstring l_name, struct CLIENT* c_
    if( NULL == l ) {
       channel_new( l, l_name, FALSE );
       client_add_channel( &(s->self), l );
-      scaffold_print_info( "Server: Channel created: %s\n", bdata( l->name ) );
+      scaffold_print_info(
+         &module, "Server: Channel created: %s\n", bdata( l->name ) );
    } else {
-      scaffold_print_info( "Server: Channel found on server: %s\n", bdata( l->name ) );
+      scaffold_print_info(
+         &module, "Server: Channel found on server: %s\n", bdata( l->name ) );
    }
 
    /* Make sure the user is not already in the channel. If they are, then  *
     * just shut up and explode.                                            */
    if( NULL != channel_get_client_by_name( l, c_first->nick ) ) {
       scaffold_print_debug(
-         "Server: %s already in channel %s; ignoring.\n",
+         &module, "Server: %s already in channel %s; ignoring.\n",
          bdata( c_first->nick ), bdata( l->name )
       );
       l = NULL;
@@ -200,7 +202,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
    scaffold_print_debug(
-      "Server: Removed %d clients. %d remaining.\n",
+      &module, "Server: Removed %d clients. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
    );
 
@@ -218,7 +220,7 @@ void server_drop_client( SERVER* s, bstring nick ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
    scaffold_print_debug(
-      "Removed %d channels from server. %d remaining.\n",
+      &module, "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
 
@@ -230,7 +232,8 @@ void server_listen( SERVER* s, int port ) {
    s->self.link.arg = s;
    connection_listen( &(s->self.link), port );
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
-      scaffold_print_error( "Server: Unable to bind to specified port. Exiting.\n" );
+      scaffold_print_error(
+         &module, "Server: Unable to bind to specified port. Exiting.\n" );
    }
 }
 
@@ -298,7 +301,7 @@ void server_service_clients( SERVER* s ) {
          cmd->callback( cmd->client, cmd->server, cmd->args );
       } else {
          scaffold_print_error(
-            "Server: Invalid command: %s\n", bdata( &(cmd->command) )
+            &module, "Server: Invalid command: %s\n", bdata( &(cmd->command) )
          );
       }
       irc_command_free( cmd );

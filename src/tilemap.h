@@ -193,6 +193,8 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
 
 #ifdef TILEMAP_C
 
+SCAFFOLD_MODULE( "tilemap.c" );
+
 #ifdef DEBUG_TILES
 volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
 volatile uint8_t tilemap_dt_layer = 0;

@@ -519,13 +519,15 @@ void tilemap_update_window_ortho(
    exclusion = tilemap_inside_window_deadzone_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point right of window dead zone.\n" );
+      scaffold_print_debug(
+         &module, "Focal point right of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point left of window dead zone.\n" );
+      scaffold_print_debug(
+         &module, "Focal point left of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -534,13 +536,15 @@ void tilemap_update_window_ortho(
    exclusion = tilemap_inside_window_deadzone_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point below window dead zone.\n" );
+      scaffold_print_debug(
+         &module, "Focal point below window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point above window dead zone.\n" );
+      scaffold_print_debug(
+         &module, "Focal point above window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -550,12 +554,14 @@ void tilemap_update_window_ortho(
    exclusion = tilemap_inside_inner_map_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point too close to map left edge.\n" );
+      scaffold_print_debug(
+         &module, "Focal point too close to map left edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = t->width - twindow->width;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point too close to map right edge.\n" );
+      scaffold_print_debug(
+         &module, "Focal point too close to map right edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = 0;
    }
@@ -563,12 +569,14 @@ void tilemap_update_window_ortho(
    exclusion = tilemap_inside_inner_map_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point too close to map bottom edge.\n" );
+      scaffold_print_debug(
+         &module, "Focal point too close to map bottom edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = t->height - twindow->height;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Focal point too close to map top edge.\n" );
+      scaffold_print_debug(
+         &module, "Focal point too close to map top edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = 0;
    }
@@ -612,7 +620,7 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
 
    if( TILEMAP_REDRAW_ALL == st ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( "Initiating full tilemap redraw...\n" );
+      scaffold_print_debug( &module, "Initiating full tilemap redraw...\n" );
 #endif /* DEBUG_TILES_VERBOSE */
    }
 

@@ -1,4 +1,5 @@
 
+#define CALLBACKS_C
 #include "callback.h"
 
 #include "client.h"
@@ -52,6 +53,7 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 
 #ifdef DEBUG_NETWORK
    scaffold_print_debug(
+      &module,
       "Server: Line received from %d: %s\n",
       c->link.socket, bdata( buffer )
    );
@@ -213,7 +215,7 @@ void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
       bdestroy( file_iter_short );
       file_iter_short = NULL;
    } else {
-      scaffold_print_debug( "Server: File Found: %s\n", bdata( file_iter ) );
+      scaffold_print_debug( &module, "Server: File Found: %s\n", bdata( file_iter ) );
    }
 
 cleanup:
@@ -403,7 +405,9 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
    scaffold_check_null( mob_id_test );
 
    if( 0 == strncmp( bdata( o->mob_id ), mob_id_test, blength( o->mob_id ) ) ) {
-      scaffold_print_debug( "Client: Found mobile with ID: %b\n", o->mob_id );
+      scaffold_print_debug(
+         &module, "Client: Found mobile with ID: %b\n", o->mob_id
+      );
       datafile_parse_mobile_ezxml_t( o, xml_data, TRUE );
       return o;
    }
@@ -506,7 +510,7 @@ BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg )
    struct CHUNKER* h = (struct CHUNKER*)iter;
    if( chunker_chunk_finished( h ) ) {
       scaffold_print_debug(
-         "Chunker for %s has finished. Removing...\n", bdata( key )
+         &module, "Chunker for %s has finished. Removing...\n", bdata( key )
       );
       chunker_free( h );
       return TRUE;
@@ -518,7 +522,7 @@ BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg
    struct CHUNKER* h = (struct CHUNKER*)iter;
    if( chunker_unchunk_finished( h ) ) {
       scaffold_print_debug(
-         "Unchunker for %s has finished. Removing...\n", bdata( key )
+         &module, "Unchunker for %s has finished. Removing...\n", bdata( key )
       );
       chunker_free( h );
       return TRUE;

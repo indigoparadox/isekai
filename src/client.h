@@ -103,6 +103,7 @@ struct tagbstring str_client_window_title_repl =
    bsStatic( "Internal REPL" );
 struct tagbstring str_client_window_prompt_repl =
    bsStatic( "Enter a line to execute:" );
+SCAFFOLD_MODULE( "client.c" );
 #else
 extern struct tagbstring str_client_cache_path;
 #endif /* CLIENT_C */
