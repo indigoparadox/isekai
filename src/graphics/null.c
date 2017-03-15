@@ -1,4 +1,5 @@
 
+#define GRAPHICS_C
 #include "../graphics.h"
 
 void graphics_screen_init(

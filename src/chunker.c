@@ -15,7 +15,9 @@
 static void chunker_cleanup( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
-   scaffold_print_debug( "Destroying chunker for: %s\n", bdata( h->filename ) );
+   scaffold_print_debug(
+      &module, "Destroying chunker for: %s\n", bdata( h->filename )
+   );
 
    /* Cleanup tracks. */
    vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
@@ -263,6 +265,7 @@ void chunker_unchunk_start(
 #ifdef USE_FILE_CACHE
    if( NULL != filecache_path && TRUE == scaffold_check_directory( filecache_path ) ) {
       scaffold_print_debug(
+         &module,
          "Chunker: Activating cache: %s\n",
          bdata( filecache_path )
       );
@@ -438,7 +441,7 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
       scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
    if( 0 >= written ) {
       scaffold_print_error(
-         "Error writing cache file: %s\n", bdata( cache_filename )
+         &module, "Error writing cache file: %s\n", bdata( cache_filename )
       );
    }
 
@@ -465,13 +468,15 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    scaffold_error_silent = FALSE;
    if( 0 != scaffold_error ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
-      scaffold_print_error( "Unable to open: %s\n", bdata(cache_filename ) );
+      scaffold_print_error(
+         &module, "Unable to open: %s\n", bdata(cache_filename )
+      );
       goto cleanup;
    }
    scaffold_check_negative( sz_read );
 
    scaffold_print_info(
-      "Chunker: Cached copy read: %s\n",
+      &module, "Chunker: Cached copy read: %s\n",
       bdata( cache_filename )
    );
 
@@ -483,7 +488,7 @@ cleanup:
    case SCAFFOLD_ERROR_NEGATIVE:
    case SCAFFOLD_ERROR_OUTOFBOUNDS:
       scaffold_print_error(
-         "Chunker: Cache file could not be opened: %s\n",
+         &module, "Chunker: Cache file could not be opened: %s\n",
          bdata( cache_filename )
       );
       break;
@@ -508,7 +513,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    if( TRUE == h->force_finish ) {
       /* Force finish, probably due to cache. */
       scaffold_print_info(
-         "Chunker: Assuming cached file finished: %s\n",
+         &module, "Chunker: Assuming cached file finished: %s\n",
          bdata( h->filename )
       );
       finished = TRUE;
@@ -542,6 +547,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    /* If the file is complete and the cache is enabled, then do that. */
    if( TRUE == finished ) {
       scaffold_print_info(
+         &module,
          "Chunker: Saving cached copy of finished file: %s\n",
          bdata( h->filename )
       );

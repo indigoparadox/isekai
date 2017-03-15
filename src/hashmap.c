@@ -1,6 +1,8 @@
 /*
  * Generic map implementation.
  */
+
+#define HASHMAP_C
 #include "hashmap.h"
 
 #include <stdlib.h>
@@ -466,7 +468,10 @@ static BOOL hashmap_contains_key_internal( struct HASHMAP* m, const bstring key,
       in_use = m->data[curr].in_use;
       if( 1 == in_use ) {
 #ifdef DEBUG_MATCHING
-         scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+         scaffold_print_debug(
+            &module,
+            "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key )
+         );
 #endif /* DEBUG_MATCHING */
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             retval = TRUE;
@@ -536,7 +541,9 @@ const bstring hashmap_get_next_key( struct HASHMAP* m, const bstring key ) {
       in_use = m->data[curr].in_use;
       if( 1 == in_use ) {
 #ifdef DEBUG_MATCHING
-         scaffold_print_debug( "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key ) );
+         scaffold_print_debug(
+            &module, "Hashmap: %s vs %s\n", bdata( m->data[curr].key ), bdata( key )
+         );
 #endif /* DEBUG_MATCHING */
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             found_key = TRUE;

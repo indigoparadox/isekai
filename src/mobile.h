@@ -134,4 +134,8 @@ SCAFFOLD_INLINE
 SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 
+#ifdef MOBILE_C
+SCAFFOLD_MODULE( "mobile.c" );
+#endif /* MOBILE_C */
+
 #endif /* MOBILE_H */

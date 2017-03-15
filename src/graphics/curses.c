@@ -1,3 +1,5 @@
+
+#define GRAPHICS_C
 #include "../graphics.h"
 
 #include <ncurses.h>

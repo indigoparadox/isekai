@@ -13,6 +13,8 @@
 #include <unistd.h>
 #endif /* _WIN32 */
 
+SCAFFOLD_MODULE( "main.c" );
+
 #if defined( USE_CONNECT_DIALOG ) && !defined( USE_NETWORK )
 #error Connect dialog requires network to be enabled!
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */

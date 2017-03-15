@@ -139,4 +139,8 @@ void graphics_bitmap_load(
    const BYTE* data, SCAFFOLD_SIZE data_sz, struct GRAPHICS_BITMAP** bitmap_out
 );
 
+#ifdef GRAPHICS_C
+SCAFFOLD_MODULE( "graphics.c" );
+#endif /* GRAPHICS_C */
+
 #endif /* GRAPHICS_H */

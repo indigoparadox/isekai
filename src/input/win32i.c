@@ -1,4 +1,5 @@
 
+#define INPUT_C
 #include "../input.h"
 
 void input_init( struct INPUT* p ) {

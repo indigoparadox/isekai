@@ -7,6 +7,7 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 #define FALSE 0
 #else
 
+#define GRAPHICS_C
 #include "../graphics.h"
 
 #include "../scaffold.h"
@@ -328,7 +329,8 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    }
    g->surface = load_bitmap( bdata( path ), (RGB*)(g->palette) );
    if( NULL == g->surface ) {
-      scaffold_print_error( "Image load error: %s: %s\n", bdata( path ), allegro_error );
+      scaffold_print_error(
+         &module, "Image load error: %s: %s\n", bdata( path ), allegro_error );
    }
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;

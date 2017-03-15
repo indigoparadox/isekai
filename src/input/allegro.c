@@ -1,3 +1,5 @@
+
+#define INPUT_C
 #include "../input.h"
 
 #include <allegro.h>
@@ -35,7 +37,7 @@ void input_get_event( struct INPUT* input ) {
       input->character = key_pressed & 0xff;
       input->scancode = (key_pressed & 0xff00) >> 8;
 #ifdef DEBUG_KEYS
-      scaffold_print_debug( "Scancode: %d\n", input->scancode );
+      scaffold_print_debug( &module, "Scancode: %d\n", input->scancode );
 #endif /* DEBUG_KEYS */
    } else {
       input->type = INPUT_TYPE_NONE;

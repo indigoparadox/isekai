@@ -1,3 +1,5 @@
+
+#define GRAPHICS_C
 #include "graphics.h"
 
 #include <stdlib.h>
@@ -52,7 +54,9 @@ void graphics_bitmap_load(
    file_header = (struct GRAPHICS_BITMAP_FILE_HEADER*)&(data[0]);
    header = (struct GRAPHICS_BITMAP_HEADER*)&(data[14]);
 
-   scaffold_print_debug( "Bitmap: %d x %d\n", header->width, header->height );
+   scaffold_print_debug(
+      &module, "Bitmap: %d x %d\n", header->width, header->height
+   );
 
    pixels_sz = ((header->width * header->height) / 2);
 

@@ -29,7 +29,7 @@ void check_chunker_setup_unchecked() {
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
-      scaffold_print_info( "Deleting cached test tilemap...\n" );
+      scaffold_print_info( &module, "Deleting cached test tilemap...\n" );
       fclose( cache_file );
       cache_file = NULL;
       unlink( cache_file_path->data );
@@ -40,7 +40,7 @@ void check_chunker_setup_unchecked() {
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
-      scaffold_print_info( "Deleting cached test image...\n" );
+      scaffold_print_info( &module, "Deleting cached test image...\n" );
       fclose( cache_file );
       cache_file = NULL;
       unlink( cache_file_path->data );

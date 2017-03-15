@@ -1,3 +1,5 @@
+
+#define INPUT_C
 #include "../input.h"
 
 #include <memory.h>

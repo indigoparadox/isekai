@@ -33,4 +33,8 @@ void datafile_parse_tilemap_ezxml_string(
 
 void datafile_reserialize_tilemap( struct TILEMAP* t );
 
+#ifdef DATAFILE_C
+SCAFFOLD_MODULE( "datafile.c" );
+#endif /* DATAFILE_C */
+
 #endif /* DATAFILE_H */

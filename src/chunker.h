@@ -111,4 +111,8 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h );
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
 BOOL chunker_unchunk_cached( struct CHUNKER* h );
 
+#ifdef CHUNKER_C
+SCAFFOLD_MODULE( "chunker.c" );
+#endif /* CHUNKER_C */
+
 #endif /* CHUNKER_H */

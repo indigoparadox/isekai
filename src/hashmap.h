@@ -124,4 +124,8 @@ int hashmap_active_count( struct HASHMAP* m );
 
 void hashmap_lock( struct HASHMAP* m, BOOL lock );
 
+#ifdef HASHMAP_C
+SCAFFOLD_MODULE( "hashmap.c" );
+#endif /* HASHMAP_C */
+
 #endif /* __HASHMAP_H__ */

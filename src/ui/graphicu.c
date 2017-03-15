@@ -1,4 +1,5 @@
 
+#define UI_C
 #include "../ui.h"
 
 #include <stdlib.h>
@@ -69,7 +70,7 @@ void ui_window_init(
    graphics_surface_init( &(win->element), width, height );
 
    scaffold_print_debug(
-      "Created window with %d controls: %s (%d, %d)\n",
+      &module, "Created window with %d controls: %s (%d, %d)\n",
       hashmap_count( &(win->controls) ), bdata( win->title ), win->x, win->y
    );
 
@@ -128,7 +129,7 @@ void ui_control_init(
    control->self.title = NULL;
 
    scaffold_print_debug(
-      "Created control: %s (%d, %d)\n",
+      &module, "Created control: %s (%d, %d)\n",
       bdata( control->text ), control->self.x, control->self.y
    );
 }
@@ -150,7 +151,7 @@ void ui_control_add(
    hashmap_put( &(win->controls), id, control );
 
    scaffold_print_debug(
-      "Added control: %s to window: %s\n",
+      &module, "Added control: %s to window: %s\n",
       bdata( control->text ), bdata( win->title )
    );
 
@@ -160,7 +161,7 @@ void ui_control_add(
    ) {
       win->active_control = control;
       scaffold_print_debug(
-      "Set focusable control as focus: %s\n",
+         &module, "Set focusable control as focus: %s\n",
          bdata( control->text ), bdata( win->title )
       );
    }
@@ -254,7 +255,7 @@ SCAFFOLD_SIZE ui_poll_input(
       bstr_result = bconchar( buffer, input->character );
       scaffold_check_nonzero( bstr_result );
 #ifdef DEBUG_KEYS
-      scaffold_print_debug( "Input field: %s\n", bdata( buffer ) );
+      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
 #endif /* DEBUG_KEYS */
    } else if(
       INPUT_TYPE_KEY == input->type &&

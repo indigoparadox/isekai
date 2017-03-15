@@ -1,4 +1,5 @@
 
+#define DATAFILE_C
 #include "../datafile.h"
 
 #include "../b64.h"
@@ -112,7 +113,7 @@ static void datafile_mobile_parse_animation_ezxml(
       sprite = vector_get( &(o->sprite_defs), frame_id );
       if( NULL == sprite ) {
          scaffold_print_error(
-            "Bad frame in parsed mobile animation: %d\n", frame_id
+            &module, "Bad frame in parsed mobile animation: %d\n", frame_id
          );
       }
 
@@ -159,7 +160,8 @@ void datafile_parse_mobile_ezxml_t(
    if( NULL == o->mob_id ) {
       o->mob_id = bfromcstr( xml_attr );
    } else {
-      bassigncstr( o->mob_id, xml_attr );
+      bstr_retval = bassigncstr( o->mob_id, xml_attr );
+      scaffold_check_nonzero( bstr_retval );
    }
 
    xml_attr = ezxml_attr( xml_data, "spritewidth" );
@@ -346,7 +348,7 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
    bstr_res = bcatcstr( buffer, GRAPHICS_RASTER_EXTENSION );
    scaffold_check_nonzero( bstr_res );
    scaffold_print_debug(
-      "Tilemap: Tileset filename adjusted to: %s\n", bdata( buffer )
+      &module, "Tilemap: Tileset filename adjusted to: %s\n", bdata( buffer )
    );
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
@@ -401,7 +403,7 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    }
 
    scaffold_print_debug(
-      "Loaded terrain %d: %s: %d\n",
+      &module, "Loaded terrain %d: %s: %d\n",
       id, bdata( terrain_info->name ), terrain_info->movement
    );
 
@@ -567,7 +569,7 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
       }
 
       scaffold_print_debug(
-         "Loaded tile %d: %d (%s), %d (%s), %d (%s), %d (%s)\n",
+         &module, "Loaded tile %d: %d (%s), %d (%s), %d (%s), %d (%s)\n",
          tile_info->id,
          dbg_terrain_id[0],
          dbg_terrain_name[0],
@@ -680,7 +682,7 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
 
    xml_object = ezxml_child( xml_layer, "object" );
    scaffold_check_null( xml_object );
-   scaffold_print_debug( "Loading object spawns...\n" );
+   scaffold_print_debug( &module, "Loading object spawns...\n" );
    while( NULL != xml_object ) {
       obj_out = (struct TILEMAP_POSITION*)calloc(
          1, sizeof( struct TILEMAP_POSITION )
@@ -704,13 +706,13 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
       scaffold_check_null( xml_attr );
       if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
          scaffold_print_debug(
-            "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
+            &module, "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
          );
          hashmap_put( &(t->player_spawns), buffer, obj_out );
       } else {
          /* We don't know how to handle this yet. */
          scaffold_print_error(
-            "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
+            &module, "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
          );
          free( obj_out );
       }

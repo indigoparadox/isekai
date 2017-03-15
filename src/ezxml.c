@@ -36,6 +36,8 @@
 #include <sys/mman.h>
 #endif /* EZXML_NOMMAP */
 #include <sys/stat.h>
+
+#define EZXML_C
 #include "ezxml.h"
 
 #define EZXML_WS   "\t\r\n "  /* whitespace */

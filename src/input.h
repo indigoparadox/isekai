@@ -25,4 +25,8 @@ struct INPUT {
 void input_init( struct INPUT* p );
 void input_get_event( struct INPUT* input );
 
+#ifdef INPUT_C
+SCAFFOLD_MODULE( "input.c" );
+#endif /* INPUT_C */
+
 #endif /* INPUT_H */

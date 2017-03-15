@@ -1,4 +1,5 @@
 
+#define CHANNEL_C
 #include "channel.h"
 
 #include "callback.h"
@@ -84,7 +85,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
          o->def_filename = bstrcpy( &str_mobile_def_path_default );
       }
 
-      scaffold_print_info( "Loading mobile definition: %b\n", o->def_filename );
+      scaffold_print_info(
+         &module, "Loading mobile definition: %b\n", o->def_filename
+      );
       mobdata_path = bstrcpy( &str_server_data_path );
       scaffold_check_null( mobdata_path );
       scaffold_join_path( mobdata_path, o->def_filename );
@@ -92,7 +95,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
 #ifdef USE_EZXML
       /* TODO: Support other mobiles. */
-      scaffold_print_info( "Loading for XML data in: %s\n", bdata( mobdata_path ) );
+      scaffold_print_info(
+         &module, "Loading for XML data in: %s\n", bdata( mobdata_path )
+      );
       bytes_read = scaffold_read_file_contents( mobdata_path, &mobdata_buffer, &mobdata_size );
       scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
       scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
@@ -110,12 +115,14 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       o->y = spawner->y;
       o->prev_y = spawner->y;
       scaffold_print_info(
+         &module,
          "Spawning %s at: %d, %d\n", bdata( c->nick ), o->x, o->y
       );
 
       channel_add_mobile( l, o );
    } else if( TRUE == spawn ) {
       scaffold_print_error(
+         &module,
          "Unable to find mobile spawner for this map.\n"
       );
    }
@@ -138,7 +145,7 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
       }
 
       scaffold_print_debug(
-         "Removed 1 clients from channel %s. %d remaining.\n",
+         &module, "Removed 1 clients from channel %s. %d remaining.\n",
          bdata( l->name ), hashmap_count( &(l->clients) )
       );
    }
@@ -222,7 +229,9 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    SCAFFOLD_SIZE_SIGNED bytes_read = 0;
    SCAFFOLD_SIZE mapdata_size = 0;
 
-   scaffold_print_info( "Loading tilemap for channel: %s\n", bdata( l->name ) );
+   scaffold_print_info(
+      &module, "Loading tilemap for channel: %s\n", bdata( l->name )
+   );
    mapdata_filename = bstrcpy( l->name );
    scaffold_check_null( mapdata_filename );
    bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
@@ -240,9 +249,12 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    bstr_retval = bcatcstr( mapdata_path, ".tmx" );
    scaffold_check_nonzero( bstr_retval );
 
-   scaffold_print_info( "Loading for XML data in: %s\n", bdata( mapdata_path ) );
-   bytes_read = scaffold_read_file_contents( mapdata_path, &mapdata_buffer, &mapdata_size );
-   scaffold_check_null_msg( mapdata_buffer, "Unable to load tilemap data." );
+   scaffold_print_info(
+      &module, "Loading for XML data in: %s\n", bdata( mapdata_path ) );
+   bytes_read = scaffold_read_file_contents(
+      mapdata_path, &mapdata_buffer, &mapdata_size );
+   scaffold_check_null_msg(
+      mapdata_buffer, "Unable to load tilemap data." );
    scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
 
    datafile_parse_tilemap_ezxml_string(
@@ -286,7 +298,7 @@ void channel_vm_start( struct CHANNEL* l, bstring code ) {
 #ifdef TINYPY_SJLJ
    if( setjmp( l->vm->buf ) ) {
       tp_handle( l->vm );
-      scaffold_print_error( "Error executing script for channel.\n" );
+      scaffold_print_error( &module, "Error executing script for channel.\n" );
    }
 #endif // TINYPY_SJLJ
 #endif /* USE_TINYPY */
@@ -298,7 +310,7 @@ void channel_vm_step( struct CHANNEL* l ) {
    if( l->vm->cur >= l->vm_cur && l->vm_step_ret != -1 ) {
       l->vm_step_ret = tp_step( l->vm );
    } else {
-      scaffold_print_error( "Channel VM stopped: %b\n", l->name );
+      scaffold_print_error( &module, "Channel VM stopped: %b\n", l->name );
    }
 #endif /* USE_TINYPY */
 }

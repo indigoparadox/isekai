@@ -93,4 +93,8 @@ SCAFFOLD_SIZE ui_poll_input(
 void ui_draw( struct UI* ui, GRAPHICS* g );
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );
 
+#ifdef UI_C
+SCAFFOLD_MODULE( "ui.c" );
+#endif /* UI_C */
+
 #endif /* CURSES_RPG_H */

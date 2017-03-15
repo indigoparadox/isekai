@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define VECTOR_C
 #include "vector.h"
 #include "ref.h"
 
@@ -128,6 +129,7 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
          if( v->scalar_data[i] == value ) {
             scaffold_error = SCAFFOLD_ERROR_DUPLICATE;
             scaffold_print_error(
+               &module,
                "Warning: Attempted to add duplicate %d to scalar vector.\n",
                value
             );

@@ -1,3 +1,5 @@
+
+#define CONNECTION_C
 #include "connect.h"
 
 #include <string.h>
@@ -49,8 +51,8 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
 
    if( 0 > n->socket ) {
-      scaffold_print_error( "Error while connecting on %d: %d\n", n->socket,
-                            errno );
+      scaffold_print_error(
+         &module, "Error while connecting on %d: %d\n", n->socket, errno );
       connection_cleanup( n );
       goto cleanup;
    }
@@ -67,7 +69,7 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
 
    if( TRUE == connected ) {
       /* The client seems OK. */
-      scaffold_print_info( "New client: %d\n", n->socket );
+      scaffold_print_info( &module, "New client: %d\n", n->socket );
    }
 
    /* TODO: Grab the remote hostname. */
@@ -103,7 +105,7 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    result = listen( n->socket, 5 );
    scaffold_check_negative( result );
    listening = TRUE;
-   scaffold_print_info( "Now listening for connections...\n" );
+   scaffold_print_info( &module, "Now listening for connections...\n" );
 
 cleanup:
 #elif defined ( USE_SYNCBUFF )
@@ -200,6 +202,7 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
    scaffold_assert( 0 <= sent );
    if( syncbuff_previous_size < syncbuff_get_allocated( client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT ) ) {
       scaffold_print_debug(
+         &module,
          "Syncbuff: Resized from %d to %d for: %s\n",
          syncbuff_previous_size,
          syncbuff_get_allocated( client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT ),
