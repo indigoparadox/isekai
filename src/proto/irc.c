@@ -132,7 +132,6 @@ void proto_client_stop( struct CLIENT* c ) {
 
 void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l ) {
    client_printf( c, "WHO %b", l->name );
-
 }
 
 /* This file contains our (possibly limited, slightly incompatible) version *

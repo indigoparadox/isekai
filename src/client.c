@@ -598,15 +598,23 @@ void client_poll_input( struct CLIENT* c ) {
          switch( tilemap_dt_state ) {
          case TILEMAP_DEBUG_TERRAIN_OFF:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_COORDS;
+            scaffold_print_debug( "Terrain Debug: Coords\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_COORDS:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
+            scaffold_print_debug( "Terrain Debug: Terrain Names\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_NAMES:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
+            scaffold_print_debug( "Terrain Debug: Terrain Quarters\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_QUARTERS:
+            tilemap_dt_state = TILEMAP_DEBUG_DEADZONE;
+            scaffold_print_debug( "Terrain Debug: Window Deadzone\n" );
+            break;
+         case TILEMAP_DEBUG_DEADZONE:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
+            scaffold_print_debug( "Terrain Debug: Off\n" );
             break;
          }
          break;

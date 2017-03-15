@@ -498,4 +498,4 @@ VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {
       return VECTOR_SORT_A_B_EQUAL;
    }
    return (cta->start > ctb->start) ? VECTOR_SORT_A_HEAVIER : VECTOR_SORT_A_LIGHTER;
-}
+ }

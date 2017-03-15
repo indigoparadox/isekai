@@ -44,7 +44,7 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 
    vector_init( &(t->dirty_tiles) );
 
-   tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+   tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
 
    bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
 
@@ -217,6 +217,10 @@ static void tilemap_layer_draw_tile_debug(
          );
       }
       break;
+   case TILEMAP_DEAD_ZONE:
+      graphics_set_color( g, GRAPHICS_COLOR_DARK_RED );
+      graphics_draw_rect( g, pix_x, pix_y, 32, 32 );
+      break;
    }
 
 cleanup:
@@ -242,7 +246,10 @@ static void* tilemap_layer_draw_tile(
    GRAPHICS* g_tileset = NULL;
 
    set = tilemap_get_tileset( t, gid );
-   scaffold_check_null( set );
+   if( NULL == set ) {
+      goto cleanup; /* Silently. */
+   }
+
    scaffold_check_zero( set->tilewidth );
    scaffold_check_zero( set->tileheight );
 
@@ -251,7 +258,7 @@ static void* tilemap_layer_draw_tile(
    pix_y = set->tileheight * (y - twindow->y);
 
    if( 0 > pix_x || 0 > pix_y ) {
-      goto cleanup;
+      goto cleanup; /* Silently. */
    }
 
    /* Figure out the graphical tile to draw from. */
@@ -263,11 +270,19 @@ static void* tilemap_layer_draw_tile(
    }
    tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
 
-   if( tilemap_inside_inner_map_x( o->x, o->y, twindow ) ) {
+   if(
+      tilemap_inside_inner_map_x( o->x, twindow ) &&
+      (!tilemap_inside_window_deadzone_x( o->x + 1, twindow ) ||
+       !tilemap_inside_window_deadzone_x( o->x - 1, twindow ))
+   ) {
       pix_x += mobile_get_steps_remaining_x( twindow->c->puppet, TRUE );
    }
 
-   if( tilemap_inside_inner_map_y( o->x, o->y, twindow ) ) {
+   if(
+      tilemap_inside_inner_map_y( o->y, twindow ) &&
+      (!tilemap_inside_window_deadzone_y( o->y + 1, twindow ) ||
+       !tilemap_inside_window_deadzone_y( o->y - 1, twindow ))
+   ) {
       pix_y += mobile_get_steps_remaining_y( twindow->c->puppet, TRUE );
    }
 
@@ -308,7 +323,7 @@ static void* tilemap_layer_draw_dirty_cb( bstring key, void* iter, void* arg ) {
    }
 
 cleanup:
-   return;
+   return NULL;
 }
 
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
@@ -338,8 +353,6 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
       }
    }
 
-   tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
-
 cleanup:
    return NULL;
 }
@@ -349,7 +362,12 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
       return;
    }
 
-   if( TILEMAP_REDRAW_ALL == twindow->t->redraw_state ) {
+   if(
+      TILEMAP_REDRAW_ALL == twindow->t->redraw_state
+#ifdef DEBUG_TILES
+      || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
+#endif /* DEBUG_TILES */
+   ) {
       hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
    } else if(
       TILEMAP_REDRAW_DIRTY == twindow->t->redraw_state &&
@@ -362,56 +380,140 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
 
    /* If we've done a full redraw as requested then switch back to just dirty *
     * tiles.                                                                  */
-   tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
+   if(
+      0 != twindow->c->puppet->steps_remaining &&
+      TILEMAP_REDRAW_ALL != twindow->t->redraw_state
+   ) {
+      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_ALL );
+   } else if(
+      0 == twindow->c->puppet->steps_remaining &&
+      TILEMAP_REDRAW_DIRTY != twindow->t->redraw_state
+   ) {
+      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
+   }
 }
 
-/** \brief
- *
+/** \brief Determine if the following coordinate is inside the area that can be
+ *         displayed by the tilemap window without going off the edge.
  * \param x X coordinate in tiles.
- * \param y Y coordinate in tiles.
  * \return
  */
 SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_x(
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   const SCAFFOLD_SIZE window_half_width_tiles = twindow->width / 2;
-   return
-      x > window_half_width_tiles &&
-      x < (twindow->t->width - window_half_width_tiles) + 2;
+   struct TILEMAP* t = twindow->t;
+   if(
+      x > (twindow->width - TILEMAP_DEAD_ZONE) &&
+      x < t->width - (twindow->width - TILEMAP_DEAD_ZONE)
+   ) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
 }
 
-/** \brief
- *
- * \param x X coordinate in tiles.
+/** \brief Determine if the following coordinate is inside the area that can be
+ *         displayed by the tilemap window without going off the edge.
  * \param y Y coordinate in tiles.
  * \return
  */
 SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_y(
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   const SCAFFOLD_SIZE window_half_height_tiles = twindow->height / 2;
-   return
-      y > window_half_height_tiles &&
-      y < (twindow->t->height - window_half_height_tiles) + 2;
+   struct TILEMAP* t = twindow->t;
+   if(
+      y > (twindow->height - TILEMAP_DEAD_ZONE) &&
+      y < t->height - (twindow->height - TILEMAP_DEAD_ZONE)
+   ) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
 }
 
-void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct CLIENT* c ) {
-   struct MOBILE* puppet = c->puppet;
+SCAFFOLD_INLINE BOOL tilemap_inside_window_deadzone_x(
+   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   SCAFFOLD_SIZE twindow_middle_x = 0;
+
+   twindow_middle_x = (twindow->x + (twindow->width / 2));
+
+   return
+      x > twindow_middle_x - TILEMAP_DEAD_ZONE &&
+      x < twindow_middle_x + TILEMAP_DEAD_ZONE;
+}
+
+SCAFFOLD_INLINE BOOL tilemap_inside_window_deadzone_y(
+   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   SCAFFOLD_SIZE twindow_middle_y = 0;
+
+   twindow_middle_y = (twindow->y + (twindow->height / 2));
+
+   return
+      y > twindow_middle_y - TILEMAP_DEAD_ZONE &&
+      y < twindow_middle_y + TILEMAP_DEAD_ZONE;
+}
+
+void tilemap_update_window_ortho(
+   struct GRAPHICS_TILE_WINDOW* twindow,
+   SCAFFOLD_SIZE focal_x, SCAFFOLD_SIZE focal_y
+) {
    SCAFFOLD_SIZE_SIGNED
       border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
    struct TILEMAP* t = twindow->t;
+   SCAFFOLD_SIZE twindow_middle_x, twindow_middle_y;
 
-   if( NULL == t || NULL == puppet ) {
+   if( NULL == t ) {
       return;
    }
 
-   /* Figure out where the window is first. */
-   if( tilemap_inside_inner_map_x( puppet->x, puppet->y, twindow ) ) {
-      twindow->x = puppet->x - (twindow->width / 2) - 1;
+   /* Find the focal point if we're not centered on it. */
+   if( focal_x < twindow->x || focal_x > twindow->x + twindow->width ) {
+      twindow->x = focal_x - (twindow->width / 2);
    }
-   if( tilemap_inside_inner_map_y( puppet->x, puppet->y, twindow ) ) {
-      twindow->y = puppet->y - (twindow->height / 2) - 1;
+   if( focal_y < twindow->y || focal_y > twindow->y + twindow->height ) {
+      twindow->y = focal_y - (twindow->height / 2);
+   }
+
+   /* Scroll the window to follow the focal point. */
+   if( !tilemap_inside_window_deadzone_x( focal_x, twindow ) ) {
+      twindow_middle_x = (twindow->x + (twindow->width / 2));
+      if( focal_x > twindow_middle_x ) {
+         twindow->x++;
+      } else if( focal_x < twindow_middle_x ) {
+         twindow->x--;
+      }
+      tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+   }
+
+   if( !tilemap_inside_window_deadzone_y( focal_y, twindow ) ) {
+      twindow_middle_y = (twindow->y + (twindow->height / 2));
+      if( focal_y > twindow_middle_y ) {
+         twindow->y++;
+      } else if( focal_y < twindow_middle_y ) {
+         twindow->y--;
+      }
+      tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+   }
+
+   /* Clamp the window to the edge of the map. */
+   if( !tilemap_inside_inner_map_x( focal_x, twindow ) ) {
+      twindow_middle_x = (twindow->x + (twindow->width / 2));
+      if( focal_x > twindow_middle_x ) {
+         twindow->x = t->width - twindow->width;
+      } else if( focal_x < twindow_middle_x ) {
+         twindow->x = 0;
+      }
+   }
+   if( !tilemap_inside_inner_map_y( focal_y, twindow ) ) {
+      twindow_middle_y = (twindow->y + (twindow->height / 2));
+      if( focal_y > twindow_middle_y ) {
+         twindow->y = t->height - twindow->height;
+      } else if( focal_y < twindow_middle_y ) {
+         twindow->y = 0;
+      }
    }
 
    /* TODO: Only calculate these when window moves and store them. */
