@@ -178,9 +178,6 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
          vector_grow( v, new_size );
          scaffold_check_nonzero( scaffold_error );
       }
-
-      /* TODO: Is this the right thing to do? */
-      v->count = index + 1;
    }
 
    if( NULL != v->data[index] ) {
@@ -188,6 +185,12 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
    }
    v->data[index] = data;
    refcount_test_inc( data );
+
+
+   /* TODO: Is this the right thing to do? */
+   if( v->count <= index ) {
+      v->count = index + 1;
+   }
 
 cleanup:
    vector_lock( v, FALSE );
