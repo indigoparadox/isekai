@@ -287,11 +287,18 @@ void graphics_surface_free( GRAPHICS* g ) {
 
 void graphics_flip_screen( GRAPHICS* g ) {
    blit( g->surface, screen, 0, 0, 0, 0, g->w, g->h );
-   clear_bitmap( g->surface );
+   /* clear_bitmap( g->surface ); */
 }
 
 void graphics_shutdown( GRAPHICS* g ) {
    graphics_surface_free( g );
+}
+
+void graphics_screen_scroll(
+   GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
+) {
+   g->virtual_x += offset_x;
+   g->virtual_y += offset_y;
 }
 
 void graphics_set_font( GRAPHICS* g, const bstring name ) {

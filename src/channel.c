@@ -147,6 +147,8 @@ void channel_set_mobile(
    o->prev_x = x;
    o->prev_y = y;
 
+   tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
+
 cleanup:
    return;
 }

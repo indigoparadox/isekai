@@ -484,7 +484,36 @@ cleanup:
    return retval;
 }
 
-const bstring hashmap_next_key( struct HASHMAP* m, const bstring key ) {
+#if 0
+const bstring hashmap_get_first_key( struct HASHMAP* m ) {
+   int i;
+   BOOL ok = FALSE;
+   bstring key_out = NULL;
+
+   scaffold_check_null( m );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
+
+   hashmap_lock( m, TRUE );
+   ok = TRUE;
+
+   /* Linear probing, if necessary */
+   for( i = 0 ; m->table_size > i ; i++ ) {
+      if( 1 == m->data[i].in_use ) {
+         /* TODO: Should we copy this? */
+         key_out = m->data[i].key;
+         break;
+      }
+   }
+
+cleanup:
+   if( FALSE != ok ) {
+      hashmap_lock( m, FALSE );
+   }
+   return key_out;
+}
+
+const bstring hashmap_get_next_key( struct HASHMAP* m, const bstring key ) {
    int curr;
    int i;
    int in_use;
@@ -526,6 +555,7 @@ cleanup:
    }
    return key_out;
 }
+#endif
 
 BOOL hashmap_contains_key( struct HASHMAP* m, const bstring key ) {
    return hashmap_contains_key_internal( m, key, TRUE );

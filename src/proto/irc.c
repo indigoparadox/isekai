@@ -130,6 +130,11 @@ void proto_client_stop( struct CLIENT* c ) {
    client_printf( c, "QUIT" );
 }
 
+void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l ) {
+   client_printf( c, "WHO %b", l->name );
+
+}
+
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -684,8 +689,6 @@ static void irc_client_join(
    scaffold_print_info( "Client joined channel: %s\n", bdata( l_name ) );
 
    scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
-
-   client_printf( c, "WHO %b", l->name );
 
    /* Strip off the #. */
    l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );

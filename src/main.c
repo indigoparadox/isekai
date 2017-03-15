@@ -53,6 +53,7 @@ int main( int argc, char** argv ) {
    struct CHANNEL* l = NULL;
    int bstr_result = 0;
    bstring server_address = NULL;
+   BOOL post_load_finished = FALSE;
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
@@ -175,6 +176,7 @@ int main( int argc, char** argv ) {
    twindow.height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
    twindow.g = &g;
    twindow.c = main_client;
+   twindow.t = NULL;
 
    while( TRUE ) {
 
@@ -196,31 +198,39 @@ int main( int argc, char** argv ) {
       l = hashmap_get_first( &(main_client->channels) );
       if(
          NULL == l ||
-         NULL == main_client->puppet /* ||
-         TILEMAP_SENTINAL != l->tilemap.sentinal */
+         NULL == main_client->puppet
       ) {
+         client_poll_input( main_client );
+         graphics_set_color( &g, GRAPHICS_COLOR_WHITE );
          graphics_draw_text(
             &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
             GRAPHICS_TEXT_ALIGN_CENTER, &str_loading
          );
+         graphics_flip_screen( &g );
          continue;
+      } else if( TRUE != post_load_finished ) {
+         twindow.t = &(l->tilemap);
+         tilemap_update_window_ortho( &twindow, main_client );
+         post_load_finished = TRUE;
       }
 
-      twindow.t = &(l->tilemap);
-
-      /* If there's no puppet then there should be a load screen. */
-      scaffold_assert( NULL != main_client->puppet );
+      /* Client drawing stuff after this. */
+      scaffold_set_client();
 
       /* If we're on the move then update the window frame. */
       if(
          0 != main_client->puppet->steps_remaining ||
-         twindow.max_x == twindow.min_x
+         twindow.max_x == twindow.min_x ||
+         TILEMAP_REDRAW_ALL == twindow.t->redraw_state
       ) {
          tilemap_update_window_ortho( &twindow, main_client );
       }
 
-      tilemap_draw_ortho( &twindow );
+      /* If there's no puppet then there should be a load screen. */
+      scaffold_assert( NULL != main_client->puppet );
+
       client_poll_input( main_client );
+      tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT
       graphics_draw_text( &g, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
@@ -234,7 +244,9 @@ cleanup:
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
+   scaffold_set_client();
    client_free( main_client );
+   scaffold_set_server();
    server_free( main_server );
    free( main_server );
    /*graphics_shutdown( &g );*/

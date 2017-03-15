@@ -495,6 +495,10 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          "Client: Tilemap image %s successfully loaded into tileset cache.\n",
          bdata( h->filename )
       );
+
+      /* TODO: When do we ask for the mobs when not using chunkers? */
+      proto_client_request_mobs( c, l );
+      tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
       break;
 
    case CHUNKER_DATA_TYPE_MOBSPRITES:
@@ -530,21 +534,24 @@ cleanup:
 void client_poll_input( struct CLIENT* c ) {
    struct INPUT input;
    struct MOBILE_UPDATE_PACKET update;
-   struct MOBILE* puppet = c->puppet;
+   struct MOBILE* puppet = NULL;
 #ifdef DEBUG_TILES
    bstring tilemap_dbg_key = NULL;
 #endif /* DEBUG_TILES */
 
    scaffold_set_client();
 
-   input_get_event( &input );
-   update.o = puppet;
-   if( NULL == puppet ) {
-      goto cleanup; /* Silently. */
+   if( NULL != c ) {
+      puppet = c->puppet;
    }
 
-   update.l = puppet->channel;
-   scaffold_check_null( update.l );
+   input_get_event( &input );
+   update.o = puppet;
+
+   if( NULL != puppet ) {
+      update.l = puppet->channel;
+      scaffold_check_null( update.l );
+   }
 
    if( INPUT_TYPE_KEY == input.type ) {
       if(
@@ -556,23 +563,35 @@ void client_poll_input( struct CLIENT* c ) {
 
       switch( input.character ) {
       case 'q':
-         proto_client_stop( c );
+         if( NULL != puppet ) {
+            proto_client_stop( c );
+         } else {
+            /* TODO: Emergency stop. */
+         }
          break;
       case 'w':
          update.update = MOBILE_UPDATE_MOVEUP;
-         proto_client_send_update( c, &update );
+         if( NULL != puppet ) {
+            proto_client_send_update( c, &update );
+         }
          break;
       case 'a':
          update.update = MOBILE_UPDATE_MOVELEFT;
-         proto_client_send_update( c, &update );
+         if( NULL != puppet ) {
+            proto_client_send_update( c, &update );
+         }
          break;
       case 's':
          update.update = MOBILE_UPDATE_MOVEDOWN;
-         proto_client_send_update( c, &update );
+         if( NULL != puppet ) {
+            proto_client_send_update( c, &update );
+         }
          break;
       case 'd':
          update.update = MOBILE_UPDATE_MOVERIGHT;
-         proto_client_send_update( c, &update );
+         if( NULL != puppet ) {
+            proto_client_send_update( c, &update );
+         }
          break;
 #ifdef DEBUG_TILES
       case 't':
@@ -600,4 +619,12 @@ void client_poll_input( struct CLIENT* c ) {
 
 cleanup:
    return;
+}
+
+BOOL client_connected( struct CLIENT* c ) {
+   if( 0 < c->link.socket ) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
 }
