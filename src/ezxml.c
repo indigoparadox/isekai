@@ -930,7 +930,7 @@ cleanup:
    return xml_out;
 }
 
-/* free the memory allocated for the ezxml structure */
+/** \brief Free the memory allocated for the ezxml structure. */
 void ezxml_free(ezxml_t xml) {
    ezxml_root_t root = (ezxml_root_t)xml;
    int i, j;
@@ -972,13 +972,13 @@ void ezxml_free(ezxml_t xml) {
    free(xml);
 }
 
-/* return parser error message or empty string if none */
+/** \brief Return parser error message or empty string if none. */
 const char *ezxml_error(ezxml_t xml) {
    while (xml && xml->parent) xml = xml->parent; /* find root tag */
    return (xml) ? ((ezxml_root_t)xml)->err : "";
 }
 
-/* returns a new empty ezxml structure with the given root tag name */
+/** \brief Returns a new empty ezxml structure with the given root tag name. */
 ezxml_t ezxml_new(const char *name) {
    static char *ent[] = { "lt;", "&#60;", "gt;", "&#62;", "quot;", "&#34;",
                      "apos;", "&#39;", "amp;", "&#38;", NULL
@@ -992,7 +992,7 @@ ezxml_t ezxml_new(const char *name) {
    return &root->xml;
 }
 
-/* inserts an existing tag into an ezxml structure */
+/** \brief Inserts an existing tag into an ezxml structure. */
 ezxml_t ezxml_insert(ezxml_t xml, ezxml_t dest, SCAFFOLD_SIZE off) {
    ezxml_t cur, prev, head;
 
