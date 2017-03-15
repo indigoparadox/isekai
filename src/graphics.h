@@ -64,6 +64,8 @@ typedef struct _GRAPHICS {
    void* font;
    GRAPHICS_COLOR color;
    struct REF refcount;
+   SCAFFOLD_SIZE virtual_x;
+   SCAFFOLD_SIZE virtual_y;
 } GRAPHICS;
 
 typedef struct {

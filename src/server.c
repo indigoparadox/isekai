@@ -250,7 +250,7 @@ void server_poll_new_clients( SERVER* s ) {
 
    /* Check for new clients. */
    connection_register_incoming( &(s->self.link), &(c->link) );
-   if( 0 >= c->link.socket ) {
+   if( TRUE != client_connected( c ) ) {
       goto cleanup;
    } else {
 

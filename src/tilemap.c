@@ -130,6 +130,102 @@ SCAFFOLD_INLINE uint32_t tilemap_get_tile(
    return vector_get_scalar( &(layer->tiles), index );
 }
 
+#ifdef DEBUG_TILES
+
+static void tilemap_layer_draw_tile_debug(
+   struct TILEMAP_LAYER* layer, GRAPHICS* g,
+   SCAFFOLD_SIZE_SIGNED tile_x, SCAFFOLD_SIZE_SIGNED tile_y,
+   SCAFFOLD_SIZE_SIGNED pix_x, SCAFFOLD_SIZE_SIGNED pix_y, uint32_t gid
+) {
+   struct TILEMAP_TILESET* set = NULL;
+   bstring bnum = NULL;
+   struct TILEMAP_TILE_DATA* tile_info = NULL;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   SCAFFOLD_SIZE td_i;
+   int bstr_result;
+   struct TILEMAP* t = layer->tilemap;
+
+   bnum = bfromcstralloc( 10, "" );
+   scaffold_check_null( bnum );
+
+   set = tilemap_get_tileset( t, gid );
+   scaffold_check_null( set );
+   scaffold_check_zero( set->tilewidth );
+   scaffold_check_zero( set->tileheight );
+
+   if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
+      tilemap_dt_layer = 0;
+   }
+
+   if( layer->z != tilemap_dt_layer ) {
+      /* Don't bother with the debug stuff for another layer. */
+      goto cleanup;
+   }
+
+   tile_info = vector_get( &(set->tiles), gid - 1 );
+   switch( tilemap_dt_state ) {
+   case TILEMAP_DEBUG_TERRAIN_COORDS:
+      if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
+         graphics_set_color( g, GRAPHICS_COLOR_DARK_BLUE );
+         bstr_result = bassignformat( bnum, "%d,", tile_x );
+         scaffold_check_nonzero( bstr_result );
+         graphics_draw_text(
+            g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER, bnum
+         );
+         bstr_result = bassignformat( bnum, "%d", tile_y );
+         scaffold_check_nonzero( bstr_result );
+         graphics_draw_text(
+            g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER, bnum
+         );
+         bdestroy( bnum );
+      }
+      break;
+   case TILEMAP_DEBUG_TERRAIN_NAMES:
+      if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
+         bstr_result = bassignformat(
+            bnum, "%c%c:%d",
+            bdata( tile_info->terrain[0]->name )[0],
+            bdata( tile_info->terrain[0]->name )[1],
+            tile_info->terrain[0]->movement
+         );
+         scaffold_check_nonzero( bstr_result );
+         graphics_draw_text(
+            g, pix_x + 16, pix_y + (10 * layer->z),
+            GRAPHICS_TEXT_ALIGN_CENTER, bnum
+         );
+      }
+      break;
+   case TILEMAP_DEBUG_TERRAIN_QUARTERS:
+      for( td_i = 0 ; 4 > td_i ; td_i++ ) {
+         if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
+            bstr_result = bassignformat( bnum, "x" );
+            scaffold_check_nonzero( bstr_result );
+         } else {
+            bstr_result = bassignformat(
+               bnum, "%d",
+               tile_info->terrain[td_i]->id
+            );
+            scaffold_check_nonzero( bstr_result );
+         }
+         graphics_set_color( g, td_i + 4 );
+         graphics_draw_text(
+            g,
+            pix_x + ((td_i % 2) * 12),
+            pix_y + ((td_i / 2) * 16),
+            GRAPHICS_TEXT_ALIGN_CENTER,
+            bnum
+         );
+      }
+      break;
+   }
+
+cleanup:
+   bdestroy( bnum );
+   return;
+}
+
+#endif /* DEBUG_TILES */
+
 static void* tilemap_layer_draw_tile(
    struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE gid
@@ -137,22 +233,13 @@ static void* tilemap_layer_draw_tile(
    struct TILEMAP_TILESET* set = NULL;
    SCAFFOLD_SIZE
       tileset_x = 0,
-      tileset_y = 0,
+      tileset_y = 0;
+   SCAFFOLD_SIZE_SIGNED
       pix_x = 0,
       pix_y = 0;
    struct TILEMAP* t = twindow->t;
    const struct MOBILE* o = twindow->c->puppet;
    GRAPHICS* g_tileset = NULL;
-#ifdef DEBUG_TILES
-   bstring bnum = NULL;
-   struct TILEMAP_TILE_DATA* tile_info = NULL;
-   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
-   SCAFFOLD_SIZE td_i;
-   int bstr_result;
-
-   bnum = bfromcstralloc( 10, "" );
-   scaffold_check_null( bnum );
-#endif /* DEBUG_TILES */
 
    set = tilemap_get_tileset( t, gid );
    scaffold_check_null( set );
@@ -162,6 +249,10 @@ static void* tilemap_layer_draw_tile(
    /* Figure out the window position to draw to. */
    pix_x = set->tilewidth * (x - twindow->x);
    pix_y = set->tileheight * (y - twindow->y);
+
+   if( 0 > pix_x || 0 > pix_y ) {
+      goto cleanup;
+   }
 
    /* Figure out the graphical tile to draw from. */
    /* TODO: Support multiple images. */
@@ -189,80 +280,35 @@ static void* tilemap_layer_draw_tile(
    );
 
 #ifdef DEBUG_TILES
-   if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
-      tilemap_dt_layer = 0;
-   }
-
-   if( layer->z != tilemap_dt_layer ) {
-      /* Don't bother with the debug stuff for another layer. */
-      goto cleanup;
-   }
-
-   tile_info = vector_get( &(set->tiles), gid - 1 );
-   switch( tilemap_dt_state ) {
-   case TILEMAP_DEBUG_TERRAIN_COORDS:
-      if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
-         graphics_set_color( twindow->g, GRAPHICS_COLOR_DARK_BLUE );
-         bstr_result = bassignformat( bnum, "%d,", x );
-         scaffold_check_nonzero( bstr_result );
-         graphics_draw_text(
-            twindow->g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
-            bnum
-         );
-         bstr_result = bassignformat( bnum, "%d", y );
-         scaffold_check_nonzero( bstr_result );
-         graphics_draw_text(
-            twindow->g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
-            bnum
-         );
-         bdestroy( bnum );
-      }
-      break;
-   case TILEMAP_DEBUG_TERRAIN_NAMES:
-      if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
-         bstr_result = bassignformat(
-            bnum, "%c%c:%d",
-            bdata( tile_info->terrain[0]->name )[0],
-            bdata( tile_info->terrain[0]->name )[1],
-            tile_info->terrain[0]->movement
-         );
-         scaffold_check_nonzero( bstr_result );
-         graphics_draw_text(
-            twindow->g, pix_x + 16, pix_y + (10 * layer->z),
-            GRAPHICS_TEXT_ALIGN_CENTER, bnum
-         );
-      }
-      break;
-   case TILEMAP_DEBUG_TERRAIN_QUARTERS:
-      for( td_i = 0 ; 4 > td_i ; td_i++ ) {
-         if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
-            bstr_result = bassignformat( bnum, "x" );
-            scaffold_check_nonzero( bstr_result );
-         } else {
-            bstr_result = bassignformat(
-               bnum, "%d",
-               tile_info->terrain[td_i]->id
-            );
-            scaffold_check_nonzero( bstr_result );
-         }
-         graphics_set_color( twindow->g, td_i + 4 );
-         graphics_draw_text(
-            twindow->g,
-            pix_x + ((td_i % 2) * 12),
-            pix_y + ((td_i / 2) * 16),
-            GRAPHICS_TEXT_ALIGN_CENTER,
-            bnum
-         );
-      }
-      break;
-   }
+   tilemap_layer_draw_tile_debug(
+      layer, twindow->g, x, y, pix_x, pix_y, gid
+   );
 #endif /* DEBUG_TILES */
 
 cleanup:
-#ifdef DEBUG_TILES
-   bdestroy( bnum );
-#endif /* DEBUG_TILES */
    return NULL;
+}
+
+static void* tilemap_layer_draw_dirty_cb( bstring key, void* iter, void* arg ) {
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct VECTOR* v = NULL;
+   struct TILEMAP* t = twindow->t;
+   int i;
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
+   uint32_t tile;
+
+   scaffold_check_null( t );
+
+   layer = t->first_layer;
+   while( NULL != layer ) {
+      tile = tilemap_get_tile( layer, pos->x, pos->y );
+      tilemap_layer_draw_tile( layer, twindow, pos->x, pos->y, tile );
+      layer = layer->next_layer;
+   }
+
+cleanup:
+   return;
 }
 
 static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
@@ -292,12 +338,30 @@ static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
       }
    }
 
+   tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
+
 cleanup:
    return NULL;
 }
 
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
-   hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+   if( NULL == twindow->t ) {
+      return;
+   }
+
+   if( TILEMAP_REDRAW_ALL == twindow->t->redraw_state ) {
+      hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+   } else if(
+      TILEMAP_REDRAW_DIRTY == twindow->t->redraw_state &&
+      0 < vector_count( &(twindow->t->dirty_tiles ) )
+   ) {
+      vector_iterate(
+         &(twindow->t->dirty_tiles), tilemap_layer_draw_dirty_cb, twindow
+      );
+   }
+
+   /* If we've done a full redraw as requested then switch back to just dirty *
+    * tiles.                                                                  */
    tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
 }
 
@@ -338,6 +402,18 @@ void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct C
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
    struct TILEMAP* t = twindow->t;
 
+   if( NULL == t || NULL == puppet ) {
+      return;
+   }
+
+   /* Figure out where the window is first. */
+   if( tilemap_inside_inner_map_x( puppet->x, puppet->y, twindow ) ) {
+      twindow->x = puppet->x - (twindow->width / 2) - 1;
+   }
+   if( tilemap_inside_inner_map_y( puppet->x, puppet->y, twindow ) ) {
+      twindow->y = puppet->y - (twindow->height / 2) - 1;
+   }
+
    /* TODO: Only calculate these when window moves and store them. */
    twindow->max_x = twindow->x + twindow->width + border_x < t->width ?
       twindow->x + twindow->width + border_x : twindow->t->width;
@@ -352,13 +428,6 @@ void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct C
       twindow->y - border_y >= 0 &&
       twindow->y + twindow->height <= t->height
       ? twindow->y - border_y : 0;
-
-   if( tilemap_inside_inner_map_x( puppet->x, puppet->y, twindow ) ) {
-      twindow->x = puppet->x - (twindow->width / 2) - 1;
-   }
-   if( tilemap_inside_inner_map_y( puppet->x, puppet->y, twindow ) ) {
-      twindow->y = puppet->y - (twindow->height / 2) - 1;
-   }
 }
 
 void tilemap_add_dirty_tile(
@@ -370,6 +439,9 @@ void tilemap_add_dirty_tile(
       (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) );
    scaffold_check_null( pos );
 
+   pos->x = x;
+   pos->y = y;
+
    vector_add( &(t->dirty_tiles), pos );
 
 cleanup:
@@ -378,6 +450,10 @@ cleanup:
 
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    t->redraw_state = st;
+
+   if( TILEMAP_REDRAW_ALL == st ) {
+      scaffold_print_debug( "Initiating full tilemap redraw...\n" );
+   }
 
    /* Always reset dirty tiles. */
    vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );

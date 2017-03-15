@@ -78,6 +78,7 @@ struct TILEMAP_LAYER {
    SCAFFOLD_SIZE height;   /*!< Layer height in tiles. */
    struct VECTOR tiles;
    struct TILEMAP* tilemap;
+   struct TILEMAP_LAYER* next_layer;
 };
 
 struct TILEMAP {
@@ -97,6 +98,7 @@ struct TILEMAP {
    bstring lname;
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
+   struct TILEMAP_LAYER* first_layer;
 #ifdef DEBUG
    uint16_t sentinal;
 #endif /* DEBUG */

@@ -370,6 +370,7 @@ static void datafile_tilemap_parse_layer_ezxml(
    int i;
    const char* xml_attr = NULL;
    int bstr_res = 0;
+   struct TILEMAP_LAYER* prev_layer = NULL;
 
    scaffold_check_null( xml_layer );
 
@@ -409,6 +410,17 @@ static void datafile_tilemap_parse_layer_ezxml(
    }
    if( layer->height > t->height ) {
       t->height = layer->height;
+   }
+
+   /* Add to the layers linked list. */
+   if( NULL == t->first_layer ) {
+      t->first_layer = layer;
+   } else {
+      prev_layer = t->first_layer;
+      while( NULL != prev_layer->next_layer ) {
+         prev_layer = prev_layer->next_layer;
+      }
+      prev_layer->next_layer = layer;
    }
 
 cleanup:

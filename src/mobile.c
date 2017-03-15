@@ -213,6 +213,16 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->sprites, o->facing, o->frame, o->frame_alt, &sprite_x, &sprite_y
    );
 
+   /* Add dirty tiles to list before drawing. */
+   tilemap_add_dirty_tile( twindow->t, o->x, o->y );
+#if 0
+   tilemap_add_dirty_tile( twindow->t, o->x + 1, o->y );
+   tilemap_add_dirty_tile( twindow->t, o->x, o->y + 1 );
+   tilemap_add_dirty_tile( twindow->t, o->x - 1, o->y );
+   tilemap_add_dirty_tile( twindow->t, o->x, o->y - 1 );
+#endif // 0
+   tilemap_add_dirty_tile( twindow->t, o->prev_x, o->prev_y );
+
    graphics_blit_partial(
       twindow->g,
       pix_x, pix_y,
