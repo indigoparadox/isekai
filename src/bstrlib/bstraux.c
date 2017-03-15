@@ -18,6 +18,8 @@
 # define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#define BSTRAUX_C
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -727,16 +729,14 @@ unsigned int c0, c1, c2;
 	return out;
 }
 
-/*  bstring bYEncode (const_bstring src)
- *
- *  Performs a YEncode of a block of data.  No header or tail info is
- *  appended.  See: http://www.yenc.org/whatis.htm and
- *  http://www.yenc.org/yenc-draft.1.3.txt
+/** \brief Performs a YEncode of a block of data.  No header or tail info is
+ *         appended.  See: http://www.yenc.org/whatis.htm and
+ *         http://www.yenc.org/yenc-draft.1.3.txt
  */
 bstring bYEncode (const_bstring src) {
-int i;
-bstring out;
-unsigned char c;
+   int i;
+   bstring out;
+   unsigned char c;
 
 	if (src == NULL || src->slen < 0 || src->data == NULL) return NULL;
 	if ((out = bfromcstr ("")) == NULL) return NULL;
@@ -757,19 +757,116 @@ unsigned char c;
 	return out;
 }
 
-/*  bstring bYDecode (const_bstring src)
- *
- *  Performs a YDecode of a block of data.  See:
- *  http://www.yenc.org/whatis.htm and http://www.yenc.org/yenc-draft.1.3.txt
+/** \brief Performs a YEncode of a block of data.  No header or tail info is
+ *         appended.  See: http://www.yenc.org/whatis.htm and
+ *         http://www.yenc.org/yenc-draft.1.3.txt
  */
+SCAFFOLD_SIZE
+b_yencode_raw( BYTE* src, SCAFFOLD_SIZE src_len, bstring out ) {
+   int i;
+   unsigned char c;
+   int bstr_ret;
+
+	scaffold_check_null( out );
+   scaffold_check_null( src );
+   if( 0 > src_len ) {
+      goto cleanup;
+	}
+
+   for( i = 0; i < src_len ; i++ ) {
+		c = (unsigned char)(src[i] + 42);
+		if( c == '=' || c == '\0' || c == '\r' || c == '\n' ) {
+         bstr_ret = bconchar( out, (char)'=' );
+         scaffold_check_nonzero( bstr_ret );
+			c += (unsigned char)64;
+		}
+		bstr_ret = bconchar( out, c );
+		scaffold_check_nonzero( bstr_ret );
+	}
+
+cleanup:
+   if( 0 != scaffold_error ) {
+      bdestroy( out );
+   }
+	return i;
+}
+
 #define MAX_OB_LEN (64)
 
+SCAFFOLD_SIZE
+b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len ) {
+   int i;
+   unsigned char c = 0;
+   unsigned char octetbuff[MAX_OB_LEN];
+   SCAFFOLD_SIZE needed_len = 0,
+      out_pos = 0,
+      obl = 0;
+   BOOL ok = FALSE;
+
+	if( NULL == src || 0 > src->slen || NULL == src->data ) {
+      goto cleanup;
+	}
+
+	scaffold_assert( NULL == *dest );
+   *dest_len = src->slen;
+   *dest = (BYTE*)calloc( *dest_len, sizeof( BYTE ) );
+
+	for( i = 0 ; i < src->slen ; i++ ) {
+		if( '=' == (c = src->data[i]) ) { /* The = escape mode */
+			i++;
+			scaffold_check_bounds( i, src->slen );
+			c = (unsigned char)(src->data[i] - 64);
+		} else {
+		   scaffold_check_zero( c );
+
+			/* Extraneous CR/LFs are to be ignored. */
+			if( '\r' == c || '\n' == c ) {
+            continue;
+			}
+		}
+
+		octetbuff[obl] = (unsigned char)((int) c - 42);
+		obl++;
+
+		if( obl >= MAX_OB_LEN ) {
+         needed_len = out_pos + obl;
+		   if( needed_len > *dest_len ) {
+            ok = scaffold_buffer_grow( dest, dest_len, needed_len );
+            scaffold_check_nonzero( ok );
+		   }
+         memcpy( &((*dest)[out_pos]), octetbuff, obl );
+         out_pos += obl;
+         obl = 0;
+		}
+	}
+
+   needed_len = out_pos + obl;
+   if( needed_len > *dest_len ) {
+      ok = scaffold_buffer_grow( dest, dest_len, needed_len );
+      scaffold_check_nonzero( ok );
+   }
+   memcpy( &((*dest)[out_pos]), octetbuff, obl );
+   out_pos += obl;
+   obl = 0;
+
+cleanup:
+   if( 0 != scaffold_error ) {
+      free( *dest );
+      *dest = NULL;
+   }
+   return;
+}
+
+/** \brief Performs a YDecode of a block of data.  See:
+ *         http://www.yenc.org/whatis.htm and
+ *         http://www.yenc.org/yenc-draft.1.3.txt
+ */
 bstring bYDecode (const_bstring src) {
-int i;
-bstring out;
-unsigned char c;
-unsigned char octetbuff[MAX_OB_LEN];
-int obl;
+   int i;
+   bstring out;
+   unsigned char c;
+   unsigned char octetbuff[MAX_OB_LEN];
+   int obl;
 
 	if (src == NULL || src->slen < 0 || src->data == NULL) return NULL;
 	if ((out = bfromcstr ("")) == NULL) return NULL;
