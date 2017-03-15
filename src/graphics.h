@@ -61,7 +61,11 @@ typedef struct GRAPHICS {
    void* surface;
    void* palette;
    void* font;
+#ifdef USE_SDL
+   void* color;
+#else
    GRAPHICS_COLOR color;
+#endif /* USE_SDL */
    SCAFFOLD_SIZE virtual_x;
    SCAFFOLD_SIZE virtual_y;
 } GRAPHICS;
@@ -100,6 +104,7 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
+void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
 void graphics_screen_scroll(
    GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
 );
@@ -138,9 +143,6 @@ void graphics_blit_partial(
    SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
-void graphics_colors_to_surface(
-   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
-);
 void graphics_wait_for_fps_timer();
 
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );
