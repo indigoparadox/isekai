@@ -47,23 +47,27 @@
 
 typedef struct ezxml_root *ezxml_root_t;
 struct ezxml_root {      /* additional data for the root tag */
-   struct ezxml xml;    /* is a super-struct built on top of ezxml struct */
-   ezxml_t cur;        /* current xml tree insertion point */
-   char *m;           /* original xml string */
-   SCAFFOLD_SIZE len;         /* length of allocated memory for mmap, -1 for malloc */
-   char *u;           /* UTF-8 conversion of string if original was UTF-16 */
-   char *s;           /* start of work area */
-   char *e;           /* end of work area */
-   char **ent;         /* general entities (ampersand sequences) */
-   char ***attr;       /* default attributes */
-   char ***pi;         /* processing instructions */
-   short standalone;    /* non-zero if <?xml standalone="yes"?> */
-   char err[EZXML_ERRL]; /* error string */
+   struct ezxml xml;    /*!< A super-struct built on top of ezxml struct. */
+   ezxml_t cur;         /*!< Current xml tree insertion point. */
+   char *m;             /*!< Original xml string. */
+   SCAFFOLD_SIZE len;   /*!< Length of memory for mmap, -1 for malloc. */
+   char *u;             /*!< UTF-8 conversion of string if orig was UTF-16. */
+   char *s;             /*!< Start of work area. */
+   char *e;             /*!< End of work area. */
+   char **ent;          /*!< General entities (ampersand sequences). */
+   char ***attr;        /*!< Default attributes. */
+   char ***pi;          /*!< Processing instructions. */
+   short standalone;    /*!< Non-zero if <?xml standalone="yes"?>. */
+   char err[EZXML_ERRL];/*!< Error string. */
 };
 
-char *EZXML_NIL[] = { NULL }; /* empty, null terminated array of strings */
+/** \brief Empty, null terminated array of strings.
+ */
+char *EZXML_NIL[] = { NULL };
 
-/* returns the first child tag with the given name or NULL if not found */
+/** \brief Returns the first child tag with the given name or NULL if not
+ *         found.
+ */
 ezxml_t ezxml_child( ezxml_t xml, const char *name ) {
    if( NULL != xml ) {
       xml = xml->child;
@@ -76,14 +80,17 @@ ezxml_t ezxml_child( ezxml_t xml, const char *name ) {
    return xml;
 }
 
-/* returns the Nth tag with the same name in the same subsection or NULL if not */
-/* found */
+/** \brief Returns the Nth tag with the same name in the same subsection or
+ *         NULL if not found.
+ */
 ezxml_t ezxml_idx(ezxml_t xml, int idx) {
    for (; xml && idx; idx--) xml = xml->next;
    return xml;
 }
 
-/* returns the value of the requested tag attribute or NULL if not found */
+/** \brief Returns the value of the requested tag attribute or NULL if not
+ *         found.
+ */
 const char *ezxml_attr(ezxml_t xml, const char *attr) {
    int i = 0, j = 1;
    ezxml_root_t root = (ezxml_root_t)xml;
@@ -99,7 +106,8 @@ const char *ezxml_attr(ezxml_t xml, const char *attr) {
    return (root->attr[i][j]) ? root->attr[i][j + 1] : NULL; /* found default */
 }
 
-/* same as ezxml_get but takes an already initialized va_list */
+/** \brief Same as ezxml_get but takes an already initialized va_list.
+ */
 static ezxml_t ezxml_vget(ezxml_t xml, va_list ap) {
    char *name = va_arg(ap, char *);
    int idx = -1;
@@ -127,8 +135,9 @@ ezxml_t ezxml_get(ezxml_t xml, ...) {
    return r;
 }
 
-/* returns a null terminated array of processing instructions for the given */
-/* target */
+/** \brief Returns a null terminated array of processing instructions for the
+ *         given target.
+ */
 const char **ezxml_pi(ezxml_t xml, const char *target) {
    ezxml_root_t root = (ezxml_root_t)xml;
    int i = 0;
@@ -139,7 +148,8 @@ const char **ezxml_pi(ezxml_t xml, const char *target) {
    return (const char **)((root->pi[i]) ? root->pi[i] + 1 : EZXML_NIL);
 }
 
-/* set an error string and return root */
+/** \brief Set an error string and return root.
+ */
 static ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...) {
    va_list ap;
    int line = 1;
