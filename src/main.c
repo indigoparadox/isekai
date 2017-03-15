@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifndef _WIN32
+#ifdef _GNU_SOURCE
 #include <unistd.h>
-#endif /* _WIN32 */
+#endif /* _GNU_SOURCE */
 
 SCAFFOLD_MODULE( "main.c" );
 
@@ -48,7 +48,7 @@ int main( int argc, char** argv ) {
 #endif /* WIN32 */
    bstring buffer = NULL;
    time_t tm = 0;
-   GRAPHICS g = { 0 };
+   GRAPHICS g;
    struct INPUT p = { 0 };
    struct UI ui = { 0 };
    struct GRAPHICS_TILE_WINDOW twindow = { 0 };
@@ -68,6 +68,8 @@ int main( int argc, char** argv ) {
    scaffold_log_handle = fopen( "stdout.log", "w" );
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
+
+   memset( &g, '\0', sizeof( GRAPHICS ) );
 
 #ifdef WIN32
    graphics_screen_init(

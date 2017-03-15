@@ -102,7 +102,8 @@ CALLBACK_DEP = t:\procircd\src\callback.h \
 	t:\procircd\src\server.h \
 	t:\procircd\src\proto.h \
 	t:\procircd\src\ui.h \
-	t:\procircd\src\input.h
+	t:\procircd\src\input.h \
+	t:\procircd\src\datafile.h
 
 
 CHANNEL_DEP = t:\procircd\src\channel.h \
@@ -115,7 +116,16 @@ CHANNEL_DEP = t:\procircd\src\channel.h \
 	t:\procircd\src\ezxml.h \
 	t:\procircd\src\graphics.h \
 	t:\procircd\src\callback.h \
-	t:\procircd\src\datafile.h
+	t:\procircd\src\datafile.h \
+	t:\procircd\src\mobile.h \
+	t:\procircd\src\server.h \
+	t:\procircd\src\connect.h \
+	t:\procircd\src\proto.h \
+	t:\procircd\src\ref.h \
+	t:\procircd\src\chunker.h \
+	t:\procircd\src\tinypy/tinypy.h \
+	t:\procircd\src\duktape/duktape.h \
+	t:\procircd\src\duktape/dukhelp.h
 
 
 CHUNKER_DEP = t:\procircd\src\chunker.h \
@@ -154,7 +164,9 @@ CLIENT_DEP = t:\procircd\src\client.h \
 	t:\procircd\src\callback.h \
 	t:\procircd\src\proto.h \
 	t:\procircd\src\input.h \
-	t:\procircd\src\datafile.h
+	t:\procircd\src\datafile.h \
+	t:\procircd\src\ui.h \
+	t:\procircd\src\tinypy/tinypy.h
 
 
 CONNECT_DEP = t:\procircd\src\connect.h \
@@ -162,13 +174,10 @@ CONNECT_DEP = t:\procircd\src\connect.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\vector.h \
 	t:\procircd\src\ref.h \
-	sys/socket.h \
-	arpa/inet.h \
 	t:\procircd\src\ipc/syncbuff.h
 
 
-EZXML_DEP = sys/mman.h \
-	t:\procircd\src\ezxml.h \
+EZXML_DEP = t:\procircd\src\ezxml.h \
 	t:\procircd\src\bstrlib/bstrlib.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\vector.h
@@ -189,14 +198,14 @@ HASHMAP_DEP = t:\procircd\src\hashmap.h \
 
 
 MAIN_DEP = t:\procircd\src\input.h \
+	t:\procircd\src\scaffold.h \
+	t:\procircd\src\bstrlib/bstrlib.h \
+	t:\procircd\src\vector.h \
 	t:\procircd\src\client.h \
 	t:\procircd\src\server.h \
-	t:\procircd\src\vector.h \
-	t:\procircd\src\scaffold.h \
 	t:\procircd\src\connect.h \
 	t:\procircd\src\channel.h \
 	t:\procircd\src\ui.h \
-	t:\procircd\src\bstrlib/bstrlib.h \
 	t:\procircd\src\hashmap.h \
 	t:\procircd\src\graphics.h \
 	t:\procircd\src\b64.h \
@@ -218,7 +227,8 @@ MOBILE_DEP = t:\procircd\src\mobile.h \
 	t:\procircd\src\hs/\hs_conf.h \
 	t:\procircd\src\hs/hsencode.h \
 	t:\procircd\src\hashmap.h \
-	t:\procircd\src\callback.h
+	t:\procircd\src\callback.h \
+	t:\procircd\src\tinypy/tinypy.h
 
 
 PROTO_DEP = t:\procircd\src\proto.h \
@@ -276,29 +286,28 @@ BSTRLIB_DEP = t:\procircd\src\bstrlib\bstrlib.h
 
 XML_DEP = t:\procircd\src\datafile.h \
 	t:\procircd\src\tilemap.h \
-	t:\procircd\src\bstrlib/bstrlib.h \
-	t:\procircd\src\ezxml.h \
 	t:\procircd\src\scaffold.h \
+	t:\procircd\src\bstrlib/bstrlib.h \
 	t:\procircd\src\vector.h \
-	t:\procircd\src\hashmap.h \
-	t:\procircd\src\graphics.h \
-	t:\procircd\src\b64.h
+	t:\procircd\src\mobile.h \
+	t:\procircd\src\b64.h \
+	t:\procircd\src\hashmap.h
 
 
 HSDECODE_DEP = t:\procircd\src\hs\hsdecode.h \
-	t:\procircd\src\hs\hs_com.h \
-	t:\procircd\src\hs\hs_conf.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\bstrlib/bstrlib.h \
-	t:\procircd\src\vector.h
+	t:\procircd\src\vector.h \
+	t:\procircd\src\hs\hs_com.h \
+	t:\procircd\src\hs\hs_conf.h
 
 
 HSENCODE_DEP = t:\procircd\src\hs\hsencode.h \
-	t:\procircd\src\hs\hs_com.h \
-	t:\procircd\src\hs\hs_conf.h \
 	t:\procircd\src\scaffold.h \
 	t:\procircd\src\bstrlib/bstrlib.h \
-	t:\procircd\src\vector.h
+	t:\procircd\src\vector.h \
+	t:\procircd\src\hs\hs_com.h \
+	t:\procircd\src\hs\hs_conf.h
 
 
 SYNCBUFF_DEP = t:\procircd\src\ipc\syncbuff.h \
@@ -324,8 +333,7 @@ IRC_DEP = t:\procircd\src\proto.h \
 	t:\procircd\src\hs/hsencode.h \
 	t:\procircd\src\datafile.h \
 	t:\procircd\src\tilemap.h \
-	t:\procircd\src\ezxml.h \
-	t:\procircd\src\graphics.h
+	t:\procircd\src\mobile.h
 
 
 all:	$(PROJ).EXE $(PROJ).BSC

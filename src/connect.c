@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef _WIN32
+#ifdef _GNU_SOURCE
 #include <unistd.h>
 #endif /* _WIN32 */
 

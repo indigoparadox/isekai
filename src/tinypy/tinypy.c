@@ -178,7 +178,7 @@ typedef struct tp_vm {
    tp_obj ex;
    char chars[256][2];
    int cur;
-   // gc
+   /* gc */
    _tp_list* white;
    _tp_list* grey;
    _tp_list* black;
@@ -192,16 +192,18 @@ typedef struct tp_meta {
    tp_obj (*get)(TP,tp_obj,tp_obj);
    void (*set)(TP,tp_obj,tp_obj,tp_obj);
    void (*free)(TP,tp_obj);
-//     tp_obj (*del)(TP,tp_obj,tp_obj);
-//     tp_obj (*has)(TP,tp_obj,tp_obj);
-//     tp_obj (*len)(TP,tp_obj);
+/*
+     tp_obj (*del)(TP,tp_obj,tp_obj);
+     tp_obj (*has)(TP,tp_obj,tp_obj);
+     tp_obj (*len)(TP,tp_obj);
+*/
 } tp_meta;
 typedef struct _tp_data {
    int gci;
    tp_meta meta;
 } _tp_data;
 
-// NOTE: these are the few out of namespace items for convenience
+/* NOTE: these are the few out of namespace items for convenience */
 #define None ((tp_obj){TP_NONE})
 #define True tp_number(1)
 #define False tp_number(0)
@@ -217,7 +219,7 @@ tp_obj tp_printf(TP,char* fmt,...);
 tp_obj tp_track(TP,tp_obj);
 void tp_grey(TP,tp_obj);
 
-// __func__ __VA_ARGS__ __FILE__ __LINE__
+/* __func__ __VA_ARGS__ __FILE__ __LINE__ */
 #define tp_raise(r,fmt,...) { \
     _tp_raise(tp,tp_printf(tp,fmt,__VA_ARGS__)); \
     return r; \
@@ -267,7 +269,7 @@ inline static tp_obj tp_string_n(char* v,int n) {
 }
 
 #endif
-//
+
 void _tp_list_realloc(_tp_list* self,int len) ;
 void _tp_list_set(TP,_tp_list* self,int k, tp_obj v, char* error) ;
 void _tp_list_free(_tp_list* self) ;
@@ -291,7 +293,7 @@ int _tp_sort_cmp(tp_obj* a,tp_obj* b) ;
 tp_obj tp_sort(TP) ;
 int tp_lua_hash(void* v,int l) ;
 void _tp_dict_free(_tp_dict* self) ;
-// void _tp_dict_reset(_tp_dict *self) ;
+/* void _tp_dict_reset(_tp_dict *self) ; */
 int tp_hash(TP,tp_obj v) ;
 void _tp_dict_hash_set(TP,_tp_dict* self, int hash, tp_obj k, tp_obj v) ;
 void _tp_dict_tp_realloc(TP,_tp_dict* self,int len) ;
@@ -548,11 +550,6 @@ tp_obj tp_sort(TP) {
    return None;
 }
 
-
-
-//
-
-
 int tp_lua_hash(void* v,int l) {
    int i,step = (l>>5)+1;
    int h = l + (l >= 4?*(int*)v:0);
@@ -566,12 +563,14 @@ void _tp_dict_free(_tp_dict* self) {
    tp_free(self);
 }
 
-// void _tp_dict_reset(_tp_dict *self) {
-//     memset(self->items,0,self->alloc*sizeof(tp_item));
-//     self->len = 0;
-//     self->used = 0;
-//     self->cur = 0;
-// }
+/*
+void _tp_dict_reset(_tp_dict *self) {
+   memset(self->items,0,self->alloc*sizeof(tp_item));
+   self->len = 0;
+   self->used = 0;
+   self->cur = 0;
+}
+*/
 
 int tp_hash(TP,tp_obj v) {
    switch (v.type) {
@@ -830,8 +829,6 @@ tp_obj tp_params_v(TP,int n,...) {
    return r;
 }
 
-//
-
 tp_obj tp_string_t(TP, int n) {
    tp_obj r = tp_string_n(0,n);
    r.string.info = tp_malloc(sizeof(_tp_string)+n);
@@ -905,10 +902,10 @@ tp_obj tp_split(TP) {
       _tp_list_append(tp,r.list.val,tp_string_slice(tp,v,0,i));
       v.string.val += i + d.string.len;
       v.string.len -= i + d.string.len;
-//         tp_grey(tp,r); // should stop gc or something instead
+         /* tp_grey(tp,r); */ /* should stop gc or something instead */
    }
    _tp_list_append(tp,r.list.val,tp_string_slice(tp,v,0,v.string.len));
-//     tp_grey(tp,r); // should stop gc or something instead
+         /* tp_grey(tp,r); */ /* should stop gc or something instead */
    return r;
 }
 
@@ -974,7 +971,7 @@ tp_obj tp_replace(TP) {
       p.string.val += i + k.string.len;
       p.string.len -= i + k.string.len;
    }
-//     fprintf(stderr,"ns: %d\n",n);
+   /* fprintf(stderr,"ns: %d\n",n); */
    int l = s.string.len + n * (v.string.len-k.string.len);
    int c;
    tp_obj rr = tp_string_t(tp,l);
@@ -1188,12 +1185,14 @@ tp_obj tp_mtime(TP) {
    }
    tp_raise(None,"tp_mtime(%s)",s);
 }
-// tp_obj tp_track(TP,tp_obj v) { return v; }
-// void tp_grey(TP,tp_obj v) { }
-// void tp_full(TP) { }
-// void tp_gc_init(TP) { }
-// void tp_gc_deinit(TP) { }
-// void tp_delete(TP,tp_obj v) { }
+/*
+tp_obj tp_track(TP,tp_obj v) { return v; }
+void tp_grey(TP,tp_obj v) { }
+void tp_full(TP) { }
+void tp_gc_init(TP) { }
+void tp_gc_deinit(TP) { }
+void tp_delete(TP,tp_obj v) { }
+*/
 
 void tp_grey(TP,tp_obj v) {
    if (v.type < TP_STRING || (!v.gci.data) || *v.gci.data) {
@@ -1286,8 +1285,8 @@ void tp_collect(TP) {
          continue;
       }
       if (r.type == TP_STRING) {
-         //this can't be moved into tp_delete, because tp_delete is
-         // also used by tp_track_s to delete redundant strings
+         /* this can't be moved into tp_delete, because tp_delete is */
+         /* also used by tp_track_s to delete redundant strings */
          _tp_dict_del(tp,tp->strings,r,"tp_collect");
       }
       tp_delete(tp,r);
@@ -1342,9 +1341,6 @@ tp_obj tp_track(TP,tp_obj v) {
    tp_grey(tp,v);
    return v;
 }
-
-//
-
 
 tp_obj tp_str(TP,tp_obj self) {
    int type = self.type;
@@ -1718,14 +1714,14 @@ void tp_deinit(TP) {
 }
 
 
-// tp_frame_
+/* tp_frame_ */
 void tp_frame(TP,tp_obj globals,tp_code* codes,tp_obj* ret_dest) {
    tp_frame_ f;
    f.globals = globals;
    f.codes = codes;
    f.cur = f.codes;
    f.jmp = 0;
-//     fprintf(stderr,"tp->cur: %d\n",tp->cur);
+   /* fprintf(stderr,"tp->cur: %d\n",tp->cur); */
    f.regs = (tp->cur <= 0?tp->regs:tp->frames[tp->cur].regs+tp->frames[tp->cur].cregs);
    f.ret_dest = ret_dest;
    f.lineno = 0;
@@ -1733,7 +1729,7 @@ void tp_frame(TP,tp_obj globals,tp_code* codes,tp_obj* ret_dest) {
    f.name = tp_string("?");
    f.fname = tp_string("?");
    f.cregs = 0;
-//     return f;
+   /* return f; */
    if (f.regs+256 >= tp->regs+TP_REGS || tp->cur >= TP_FRAMES-1) {
       tp_raise(,"tp_frame: stack overflow %d",tp->cur);
    }
@@ -1753,7 +1749,7 @@ void _tp_raise(TP,tp_obj e) {
    }
    tp_grey(tp,e);
    longjmp(tp->buf,1);
-#endif // TINYPY_SJLJ
+#endif /* TINYPY_SJLJ */
 }
 
 void tp_print_stack(TP) {
@@ -1819,8 +1815,10 @@ void tp_return(TP, tp_obj v) {
       *dest = v;
       tp_grey( tp, v );
    }
-//     memset(tp->frames[tp->cur].regs,0,TP_REGS_PER_FRAME*sizeof(tp_obj));
-//     fprintf(stderr,"regs:%d\n",(tp->frames[tp->cur].cregs+1));
+   /*
+   memset(tp->frames[tp->cur].regs,0,TP_REGS_PER_FRAME*sizeof(tp_obj));
+   fprintf(stderr,"regs:%d\n",(tp->frames[tp->cur].cregs+1));
+   */
    memset(tp->frames[tp->cur].regs,0,tp->frames[tp->cur].cregs*sizeof(tp_obj));
    tp->cur -= 1;
 }
@@ -1834,12 +1832,14 @@ enum {
    TP_ITOTAL
 };
 
-// char *tp_strings[TP_ITOTAL] = {
-//     "EOF","ADD","SUB","MUL","DIV","POW","AND","OR","CMP","GET","SET","NUM",
-//     "STR","GGET","GSET","MOVE","DEF","PASS","JUMP","CALL","RETURN","IF","DEBUG",
-//     "EQ","LE","LT","DICT","LIST","NONE","LEN","LINE","PARAMS","IGET","FILE",
-//     "NAME","NE","HAS","RAISE","SETJMP","MOD","LSH","RSH","ITER","DEL","REGS",
-// };
+/*
+char *tp_strings[TP_ITOTAL] = {
+   "EOF","ADD","SUB","MUL","DIV","POW","AND","OR","CMP","GET","SET","NUM",
+   "STR","GGET","GSET","MOVE","DEF","PASS","JUMP","CALL","RETURN","IF","DEBUG",
+   "EQ","LE","LT","DICT","LIST","NONE","LEN","LINE","PARAMS","IGET","FILE",
+   "NAME","NE","HAS","RAISE","SETJMP","MOD","LSH","RSH","ITER","DEL","REGS",
+};
+*/
 
 #define VA ((int)e.regs.a)
 #define VB ((int)e.regs.b)
@@ -1858,8 +1858,10 @@ int tp_step(TP) {
    tp_code* cur = f->cur;
    while(1) {
       tp_code e = *cur;
-//     fprintf(stderr,"%2d.%4d: %-6s %3d %3d %3d\n",tp->cur,cur-f->codes,tp_strings[e.i],VA,VB,VC);
-//     int i; for(i=0;i<16;i++) { fprintf(stderr,"%d: %s\n",i,STR(regs[i])); }
+      /*
+      fprintf(stderr,"%2d.%4d: %-6s %3d %3d %3d\n",tp->cur,cur-f->codes,tp_strings[e.i],VA,VB,VC);
+      int i; for(i=0;i<16;i++) { fprintf(stderr,"%d: %s\n",i,STR(regs[i])); }
+      */
       switch (e.i) {
       case TP_IEOF:
          tp_return(tp,None);
@@ -2007,7 +2009,7 @@ int tp_step(TP) {
          break;
       case TP_ILINE:
          f->line = tp_string_n((*(cur+1)).string.val,VA*4-1);
-//             fprintf(stderr,"%7d: %s\n",UVBC,f->line.string.val);
+         /* fprintf(stderr,"%7d: %s\n",UVBC,f->line.string.val); */
          cur += VA;
          f->lineno = UVBC;
          break;
@@ -2174,7 +2176,6 @@ tp_vm* tp_init(int argc, char* argv[]) {
 }
 
 
-//
 #ifndef TP_COMPILER
 #define TP_COMPILER 1
 #endif
@@ -2193,7 +2194,6 @@ void tp_compiler(TP) {
 void tp_compiler(TP) { }
 #endif
 
-//
 unsigned char tp_tokenize[] = {
    44,61,0,0,16,0,0,97,44,16,0,0,28,2,0,0,
    9,1,0,2,28,4,0,0,9,3,0,4,28,6,0,0,

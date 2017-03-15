@@ -249,7 +249,7 @@ cleanup:
 }
 
 static void graphics_surface_cleanup( const struct REF *ref ) {
-   GRAPHICS* g = scaffold_container_of( ref, struct _GRAPHICS, refcount );
+   GRAPHICS* g = scaffold_container_of( ref, GRAPHICS, refcount );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;

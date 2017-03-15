@@ -46,6 +46,8 @@ typedef long int32_t;
 typedef unsigned long uint32_t;
 typedef char int8_t;
 typedef unsigned char uint8_t;
+#define __FUNCTION__ "Unavailable:"
+
 #else
 
 #ifndef BYTE
@@ -131,8 +133,6 @@ void scaffold_print_error( const bstring module, const char* message, ... );
 #else
 
 /* Disable debug-level notifications. */
-
-#define scaffold_print_debug( ... )
 
 #define scaffold_assert( expr )
 
