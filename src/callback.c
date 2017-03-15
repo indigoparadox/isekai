@@ -397,7 +397,9 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
    ezxml_t xml_data = (ezxml_t)arg;
    const char* mob_id_test;
 
-   if( NULL == 0 ) {
+   /* Since the vector index is set by serial, there will be a number of      *
+    * NULLs before we find one that isn't.                                    */
+   if( NULL == iter ) {
       goto cleanup;
    }
 

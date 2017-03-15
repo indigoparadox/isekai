@@ -114,6 +114,19 @@ struct MOBILE_UPDATE_PACKET {
     scaffold_check_null( o ); \
     mobile_init( o );
 
+#define mobile_set_animation_facing( o, buffer, facing ) \
+   if( NULL != o->current_animation ) { \
+      buffer = bformat( \
+         "%s-%s", \
+         bdata( o->current_animation->name ), \
+         str_mobile_facing[facing].data \
+      ); \
+      if( NULL != hashmap_get( &(o->ani_defs), buffer ) ) { \
+         o->current_animation = \
+            hashmap_get( &(o->ani_defs), buffer ); \
+      } \
+   }
+
 void mobile_free( struct MOBILE* o );
 void mobile_init( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
@@ -124,9 +137,12 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
 );
-void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow );
+void mobile_draw_ortho(
+   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
+);
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
-MOBILE_UPDATE mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
+MOBILE_UPDATE
+mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 SCAFFOLD_INLINE
 SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
@@ -136,6 +152,16 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );
+const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );
+const struct tagbstring str_mobile_facing[4] = {
+   bsStatic( "down" ),
+   bsStatic( "up" ),
+   bsStatic( "right" ),
+   bsStatic( "left" )
+};
+#else
+extern const struct tagbstring str_mobile_default_ani;
+extern const struct tagbstring str_mobile_facing[4];
 #endif /* MOBILE_C */
 
 #endif /* MOBILE_H */

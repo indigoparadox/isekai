@@ -53,6 +53,7 @@ void mobile_init( struct MOBILE* o ) {
 }
 
 void mobile_animate( struct MOBILE* o ) {
+   bstring walk_ani_key = NULL;
    if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
    }
@@ -72,6 +73,15 @@ void mobile_animate( struct MOBILE* o ) {
          break;
       }
    } */
+
+   if( NULL != o && 0 == mobile_frame_counter && TRUE == o->initialized ) {
+      scaffold_assert( NULL != o->current_animation );
+      if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
+         o->current_frame = 0;
+      } else {
+         o->current_frame++;
+      }
+   }
 
    if( mobile_move_counter++ > MOBILE_MOVE_DIVISOR ) {
       mobile_move_counter = 0;
@@ -98,19 +108,18 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
    SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
-   //scaffold_assert( frame < 0 || frame_alt < 0 );
+   SCAFFOLD_SIZE tiles_wide = 0;
+   SCAFFOLD_SIZE tiles_high = 0;
 
-   //scaffold_check_null( g_tileset );
+   scaffold_check_null( o->sprites );
 
-   /* TODO: Arbitrary animations for mobiles. */
-   /*
-   if( 0 > frame ) {
-      *y = (facing * MOBILE_SPRITE_SIZE) + (4 * MOBILE_SPRITE_SIZE);
-   } else {
-   */
-      //*y = facing * MOBILE_SPRITE_SIZE;
-   /* } */
-   //*x = (0 > frame ? 0 : frame) * MOBILE_SPRITE_SIZE;
+   tiles_wide = o->sprites->w / o->sprite_width;
+   tiles_high = o->sprites->h / o->sprite_height;
+
+   //gid -= set->firstgid - 1;
+
+   *y = ((gid) / tiles_wide) * o->sprite_height;
+   *x = ((gid) % tiles_wide) * o->sprite_width;
 
 cleanup:
    return;
@@ -169,7 +178,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->x > twindow->max_x ||
       o->y > twindow->max_y ||
       o->x < twindow->min_x ||
-      o->y < twindow->min_y
+      o->y < twindow->min_y ||
+      NULL == o->current_animation
    ) {
       goto cleanup;
    }
@@ -189,6 +199,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
+   /* TODO: This should use tilemap tile size. */
    pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
@@ -225,7 +236,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
-   current_frame = vector_get( &(o->sprite_defs), 0 );
+   current_frame = (struct MOBILE_SPRITE_DEF*)
+      vector_get( &(o->current_animation->frames), o->current_frame );
+   scaffold_check_null( current_frame );
+
    mobile_get_spritesheet_pos_ortho(
       o, current_frame->id, &sprite_x, &sprite_y
    );
@@ -416,6 +430,7 @@ cleanup:
 ) {
    struct MOBILE* o = update->o;
    struct CHANNEL* l = update->l;
+   bstring animation_key = NULL;
 
    /* TODO: Collision detection. */
    if( TRUE == instant ) {
@@ -452,6 +467,7 @@ cleanup:
       o->prev_x = o->x; /* Forceful reset. */
       o->y--;
       o->facing = MOBILE_FACING_UP;
+      mobile_set_animation_facing( o, animation_key, MOBILE_FACING_UP );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -467,6 +483,7 @@ cleanup:
       o->prev_x = o->x; /* Forceful reset. */
       o->y++;
       o->facing = MOBILE_FACING_DOWN;
+      mobile_set_animation_facing( o, animation_key, MOBILE_FACING_DOWN );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -482,6 +499,7 @@ cleanup:
       o->prev_y = o->y; /* Forceful reset. */
       o->x--;
       o->facing = MOBILE_FACING_LEFT;
+      mobile_set_animation_facing( o, animation_key, MOBILE_FACING_LEFT );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -497,6 +515,7 @@ cleanup:
       o->prev_y = o->y; /* Forceful reset. */
       o->x++;
       o->facing = MOBILE_FACING_RIGHT;
+      mobile_set_animation_facing( o, animation_key, MOBILE_FACING_RIGHT );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -520,5 +539,6 @@ cleanup:
    }
 
 cleanup:
+   bdestroy( animation_key );
    return update->update;
 }
