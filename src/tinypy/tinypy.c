@@ -42,10 +42,12 @@ THE SOFTWARE.
 #define tp_realloc(x,y) realloc(x,y)
 #define tp_free(x) free(x)
 
-// #include <gc/gc.h>
-// #define tp_malloc(x) GC_MALLOC(x)
-// #define tp_realloc(x,y) GC_REALLOC(x,y)
-// #define tp_free(x)
+/*
+#include <gc/gc.h>
+#define tp_malloc(x) GC_MALLOC(x)
+#define tp_realloc(x,y) GC_REALLOC(x,y)
+#define tp_free(x)
+*/
 
 enum {
    TP_NONE,TP_NUMBER,TP_STRING,TP_DICT,
@@ -160,7 +162,7 @@ typedef struct tp_frame_ {
 
 #define TP_GCMAX 4096
 #define TP_FRAMES 256
-// #define TP_REGS_PER_FRAME 256
+/* #define TP_REGS_PER_FRAME 256 */
 #define TP_REGS 16384
 typedef struct tp_vm {
    tp_obj builtins;

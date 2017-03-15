@@ -249,8 +249,8 @@ SCAFFOLD_SIZE ui_poll_input(
 
    if(
       INPUT_TYPE_KEY == input->type &&
-      scaffold_char_is_printable( input->character ) ||
-      ' ' == input->character
+      (scaffold_char_is_printable( input->character ) ||
+      ' ' == input->character)
    ) {
       bstr_result = bconchar( buffer, input->character );
       scaffold_check_nonzero( bstr_result );
@@ -341,6 +341,8 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    graphics_blit(
       g, win->x, win->y, win->width, win->height, &(win->element)
    );
+
+   return NULL;
 }
 
 void ui_draw( struct UI* ui, GRAPHICS* g ) {
@@ -359,5 +361,5 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 }
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
-   vector_iterate( &(ui->windows), callback_search_windows, wid );
+   return vector_iterate( &(ui->windows), callback_search_windows, wid );
 }

@@ -539,6 +539,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/duktape/duk_config.h" />
+		<Unit filename="src/duktape/dukhelp.h" />
 		<Unit filename="src/duktape/duktape.c">
 			<Option compilerVar="CC" />
 		</Unit>

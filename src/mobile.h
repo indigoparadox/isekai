@@ -159,9 +159,12 @@ const struct tagbstring str_mobile_facing[4] = {
    bsStatic( "right" ),
    bsStatic( "left" )
 };
+const struct tagbstring str_mobile_def_path_default =
+   bsStatic( "mobs/maid_black.xml" );
 #else
 extern const struct tagbstring str_mobile_default_ani;
 extern const struct tagbstring str_mobile_facing[4];
+extern const struct tagbstring str_mobile_def_path_default;
 #endif /* MOBILE_C */
 
 #endif /* MOBILE_H */

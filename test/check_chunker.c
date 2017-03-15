@@ -6,9 +6,13 @@
 #include "../src/vector.h"
 #include "check_data.h"
 
-const struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testchannel.tmx" );
-const struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain-small.bmp" );
-const struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
+#include <unistd.h>
+
+static struct tagbstring module = bsStatic( "check_chunker.c" );
+
+struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testchannel.tmx" );
+struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain-small.bmp" );
+struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
 struct bstrList* chunker_mapchunks = NULL;
 struct VECTOR* chunker_mapchunk_starts = NULL;
@@ -23,6 +27,7 @@ SCAFFOLD_SIZE chunker_imgsize;
 void check_chunker_setup_unchecked() {
    bstring cache_file_path = NULL;
    FILE* cache_file;
+   int bstr_res;
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
@@ -32,10 +37,11 @@ void check_chunker_setup_unchecked() {
       scaffold_print_info( &module, "Deleting cached test tilemap...\n" );
       fclose( cache_file );
       cache_file = NULL;
-      unlink( cache_file_path->data );
+      unlink( (char*)(cache_file_path->data) );
    }
 
-   bassign( cache_file_path, &chunker_test_cachepath );
+   bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
+   scaffold_check_nonzero( bstr_res );
    scaffold_join_path( cache_file_path, &chunker_test_img_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
@@ -43,12 +49,14 @@ void check_chunker_setup_unchecked() {
       scaffold_print_info( &module, "Deleting cached test image...\n" );
       fclose( cache_file );
       cache_file = NULL;
-      unlink( cache_file_path->data );
+      unlink( (char*)(cache_file_path->data) );
    }
 
    /* Prepare the original data. */
-   scaffold_read_file_contents( &chunker_test_map_filename, &chunker_mapdata, &chunker_mapsize );
-   scaffold_read_file_contents( &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
+   scaffold_read_file_contents(
+      &chunker_test_map_filename, &chunker_mapdata, &chunker_mapsize );
+   scaffold_read_file_contents(
+      &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
 
    /* Prepare the chunk list. */
    chunker_mapchunks = bstrListCreate();
@@ -65,6 +73,9 @@ void check_chunker_setup_unchecked() {
    if( NULL == chunker_imgchunks || NULL == chunker_imgchunk_starts ) {
       ck_abort_msg( "Unable to create testing image chunks list." );
    }
+
+cleanup:
+   return;
 }
 
 void check_chunker_chunk_checked(
@@ -80,6 +91,7 @@ void check_chunker_chunk_checked(
    SCAFFOLD_SIZE previous_pos = 0,
       * current_pos = 0;
    struct CHUNKER* h = NULL;
+   int bstr_res;
 
    /* Verify sanity. */
    ck_assert( NULL != data_source );
@@ -115,7 +127,8 @@ void check_chunker_chunk_checked(
          previous_pos = h->raw_position;
       }
       scaffold_list_append_string_cpy( chunks, chunk_buffer );
-      btrunc( chunk_buffer, 0 );
+      bstr_res = btrunc( chunk_buffer, 0 );
+      scaffold_check_nonzero( bstr_res );
    }
 
    /* Verify sanity. */
@@ -125,6 +138,7 @@ void check_chunker_chunk_checked(
       ck_assert_int_ne( 0, chunks->qty );
    }
 
+cleanup:
    if( NULL != h ) {
       chunker_free( h );
    }
@@ -186,9 +200,6 @@ void check_chunker_unchunk_checked(
    ck_assert_int_eq( chunk_index, chunks_count + 1 );
    printf( "%d of %d %d-byte chunks complete.\n", chunk_index, chunks_count, h->tx_chunk_length );
    ck_assert_int_eq( TRUE, chunker_unchunk_finished( h ) );
-
-
-checkup:
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
@@ -262,6 +273,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    bstring cache_file_path = NULL;
    BYTE* cache_file_contents = NULL;
    SCAFFOLD_SIZE cache_file_size = 0;
+   int bstr_res;
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
@@ -286,7 +298,8 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    cache_file_contents = NULL;
    cache_file_size = 0;
 
-   bassign( cache_file_path, &chunker_test_cachepath );
+   bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
+   scaffold_check_nonzero( bstr_res );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
    scaffold_error_silent = TRUE;
    scaffold_read_file_contents(
@@ -304,8 +317,13 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
       0,
       memcmp( cache_file_contents, chunker_imgdata, chunker_imgsize )
    );
+
+cleanup:
+   return;
 }
 END_TEST
+
+#if 0
 
 START_TEST( test_chunker_chunk_unchunk_tilemap_cached ) {
 }
@@ -315,7 +333,6 @@ START_TEST( test_chunker_chunk_unchunk_image_cached ) {
 }
 END_TEST
 
-#if 0
 START_TEST( test_chunker_unchunk_output ) {
    bstring unchunk_buffer = NULL;
    SCAFFOLD_SIZE chunk_index = 0;
@@ -378,7 +395,7 @@ START_TEST( test_chunker_unchunk_output ) {
    fclose( check_chunk_out );
 }
 END_TEST
-#endif // 0
+#endif
 
 Suite* chunker_suite( void ) {
    Suite* s;
@@ -391,7 +408,8 @@ Suite* chunker_suite( void ) {
 
    tcase_set_timeout( tc_core, 8000 );
 
-   //tcase_add_checked_fixture( tc_core, check_chunker_setup_checked, check_chunker_teardown_checked );
+   /* tcase_add_checked_fixture(
+      tc_core, check_chunker_setup_checked, check_chunker_teardown_checked ); */
    tcase_add_unchecked_fixture(
       tc_core, check_chunker_setup_unchecked, check_chunker_teardown_unchecked
    );

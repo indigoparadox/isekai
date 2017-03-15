@@ -12,9 +12,8 @@
 #endif /* USE_TINYPY */
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
+#include "duktape/dukhelp.h"
 #endif /* USE_DUKTAPE */
-
-extern const struct tagbstring str_mobile_def_path_default;
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -273,7 +272,12 @@ cleanup:
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {
 #ifdef USE_DUKTAPE
-   l->vm = duk_create_heap_default();
+   if( NULL == l->vm ) {
+      l->vm =
+         duk_create_heap( NULL, NULL, NULL, l, duktape_helper_channel_crash );
+      /* duk_push_c_function( l->vm, dukt ) */
+   }
+   duk_peval_string( l->vm, bdata( code ) );
 #endif /* USE_DUKTAPE */
 #ifdef USE_TINYPY
    tp_obj tp_code_str;
@@ -300,13 +304,13 @@ void channel_vm_start( struct CHANNEL* l, bstring code ) {
       tp_handle( l->vm );
       scaffold_print_error( &module, "Error executing script for channel.\n" );
    }
-#endif // TINYPY_SJLJ
+#endif /* TINYPY_SJLJ */
 #endif /* USE_TINYPY */
 }
 
 void channel_vm_step( struct CHANNEL* l ) {
 #ifdef USE_TINYPY
-   //void tp_run(tp_vm *tp,int cur) {
+   /* void tp_run(tp_vm *tp,int cur) { */
    if( l->vm->cur >= l->vm_cur && l->vm_step_ret != -1 ) {
       l->vm_step_ret = tp_step( l->vm );
    } else {
@@ -316,6 +320,12 @@ void channel_vm_step( struct CHANNEL* l ) {
 }
 
 void channel_vm_end( struct CHANNEL* l ) {
+#ifdef USE_DUKTAPE
+   if( NULL != l->vm ) {
+      duk_destroy_heap( l->vm );
+      l->vm = NULL;
+   }
+#endif /* USE_DUKTAPE */
 #ifdef USE_TINYPY
    l->vm->cur = l->vm_cur - 1;
    l->vm->jmp = 0;
@@ -327,11 +337,11 @@ void channel_vm_end( struct CHANNEL* l ) {
 BOOL channel_vm_can_step( struct CHANNEL* l ) {
    BOOL retval = FALSE;
 
-#ifdef USE_TINYPY
+#if defined( USE_TINYPY ) || defined( USE_DUKTAPE )
    if( NULL != l->vm ) {
       retval = TRUE;
    }
-#endif /* USE_TINYPY */
+#endif /* USE_TINYPY || USE_DUKTAPE */
 
    return retval;
 }

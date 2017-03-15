@@ -41,8 +41,6 @@ START_TEST( test_channel_server_channel ) {
    server_drop_client( server, client_b->nick );
    assert( 1 == vector_count( &(server->self.channels) ) );
    assert( l == l_b );
-   //assert( 1 == vector_count( &(l->clients) ) );
-   //assert( 1 == vector_count( &(l_b->clients) ) );
    assert( 1 == vector_count( &(server->clients) ) );
 }
 
