@@ -295,6 +295,13 @@ __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
 void scaffold_join_path( bstring path1, const bstring path2 );
+BOOL scaffold_buffer_grow(
+   BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
+)
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 
 #ifdef SCAFFOLD_C
 

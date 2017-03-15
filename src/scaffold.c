@@ -583,3 +583,23 @@ void scaffold_join_path( bstring path1, const bstring path2 ) {
 cleanup:
    return;
 }
+
+BOOL scaffold_buffer_grow(
+   BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
+) {
+   BYTE* realloc_tmp = NULL;
+   BOOL ok = FALSE;
+
+   if( new_len > *len ) {
+      realloc_tmp = (BYTE*)realloc( *buffer, new_len * sizeof( BYTE ) );
+      scaffold_check_null( realloc_tmp );
+      *len = new_len;
+      *buffer = realloc_tmp;
+      realloc_tmp = NULL;
+   }
+
+   ok = TRUE;
+
+cleanup:
+   return ok;
+}
