@@ -23,64 +23,10 @@ void ui_window_init(
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
-   struct UI_CONTROL* control = NULL;
 
-   win->ui = ui;
-   win->x = x;
-   win->y = y;
-   win->width = width;
-   win->height = height;
-
-   if( NULL != title ) {
-      win->title = bstrcpy( title );
-   } else {
-      win->title = bstrcpy( &str_dialog_default_title );
-   }
-
-   hashmap_init( &(win->controls) );
-
-   if( NULL != prompt ) {
-      ui_control_new(
-         control, win, prompt, UI_CONTROL_TYPE_LABEL,
-         FALSE, NULL, 5, 20, width - 10, 10
-      );
-      ui_control_add(
-         win, (const bstring)&str_dialog_label_default_id,
-         control
-      );
-   }
-
-   if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
-      ui_control_new(
-         control, win, NULL, UI_CONTROL_TYPE_TEXT,
-         FALSE, NULL, 5, 40, width - 10, 10
-      );
-      ui_control_add(
-         win, (const bstring)&str_dialog_control_default_id,
-         control
-      );
-   }
-
-   graphics_surface_init( &(win->element), width, height );
-
-   scaffold_print_debug(
-      &module, "Created window with %d controls: %s (%d, %d)\n",
-      hashmap_count( &(win->controls) ), bdata( win->title ), win->x, win->y
-   );
-
-cleanup:
-   return;
 }
 
 void ui_window_cleanup( struct UI_WINDOW* win ) {
-   bdestroy( win->title );
-   if( NULL != win->controls.data ) {
-      hashmap_remove_cb( &(win->controls), callback_free_controls, NULL );
-      hashmap_cleanup( &(win->controls) );
-   }
-   if( NULL != win->element.surface ) {
-      graphics_surface_free( &(win->element) );
-   }
 }
 
 void ui_window_free( struct UI_WINDOW* win ) {
@@ -95,57 +41,11 @@ void ui_control_init(
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
-   control->owner = win;
-   control->type = type;
-   if( NULL != text ) {
-      control->text = bstrcpy( text );
-   } else {
-      control->text = NULL;
-   }
-   control->self.x = x;
-   control->self.y = y;
-   control->self.width = width;
-   control->self.height = height;
-   control->can_focus = can_focus;
-   control->self.title = NULL;
-
-   scaffold_print_debug(
-      &module, "Created control: %s (%d, %d)\n",
-      bdata( control->text ), control->self.x, control->self.y
-   );
 }
 
 void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 ) {
-#ifdef DEBUG
-   struct UI_CONTROL* control_test = NULL;
-
-   if( 0 < hashmap_count( &(win->controls) ) ) {
-      control_test = (struct UI_CONTROL*)hashmap_get( &(win->controls), id );
-      scaffold_assert( NULL == control_test );
-   }
-#endif /* DEBUG */
-   scaffold_assert( NULL != win );
-   scaffold_assert( NULL != control );
-
-   hashmap_put( &(win->controls), id, control );
-
-   scaffold_print_debug(
-      &module, "Added control: %s to window: %s\n",
-      bdata( control->text ), bdata( win->title )
-   );
-
-   if(
-      UI_CONTROL_TYPE_BUTTON == control->type ||
-      UI_CONTROL_TYPE_TEXT == control->type
-   ) {
-      win->active_control = control;
-      scaffold_print_debug(
-         &module, "Set focusable control as focus: %s\n",
-         bdata( control->text ), bdata( win->title )
-      );
-   }
 }
 
 void ui_control_free( struct UI_CONTROL* control ) {
@@ -164,11 +64,6 @@ void ui_window_transform(
    struct UI_WINDOW* win, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
-   win->x = x;
-   win->y = y;
-   win->width = width;
-   win->height = height;
-   graphics_scale( &(win->element), width, height );
 }
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
@@ -219,4 +114,6 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 void ui_cleanup( struct UI* ui ) {
 }
 
+struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
+}
 

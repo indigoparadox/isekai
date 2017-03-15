@@ -552,6 +552,7 @@ cleanup:
 void mobile_speak( struct MOBILE* o, bstring speech ) {
    struct CHANNEL_BUFFER_LINE* line = NULL;
    time_t time_now;
+   struct tm* time_temp = NULL;
 
    scaffold_check_null_msg(
       o->channel, "Mobile without channel cannot speak.\n" );
@@ -566,8 +567,11 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
    }
    line->display_name = bstrcpy( o->display_name );
    line->line = bstrcpy( speech );
+
+   /* Grab the time in a platform-agnostic way. */
    time( &time_now );
-   localtime_r( &time_now, &(line->time) );
+   time_temp = localtime( &time_now );
+   memcpy( &(line->time), time_temp, sizeof( struct tm ) );
 
    vector_insert( &(o->channel->speech_backlog), 0, line );
 
