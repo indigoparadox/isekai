@@ -30,9 +30,7 @@
 #define UNUSED(x) (void)(x)
 #endif
 
-/*  bstring bTail (bstring b, int n)
- *
- *  Return with a string of the last n characters of b.
+/** \brief Return with a string of the last n characters of b.
  */
 bstring bTail (bstring b, int n) {
 	if (b == NULL || n < 0 || (b->mlen < b->slen && b->mlen > 0)) return NULL;
@@ -40,9 +38,7 @@ bstring bTail (bstring b, int n) {
 	return bmidstr (b, b->slen - n, n);
 }
 
-/*  bstring bHead (bstring b, int n)
- *
- *  Return with a string of the first n characters of b.
+/** \brief Return with a string of the first n characters of b.
  */
 bstring bHead (bstring b, int n) {
 	if (b == NULL || n < 0 || (b->mlen < b->slen && b->mlen > 0)) return NULL;
@@ -50,9 +46,7 @@ bstring bHead (bstring b, int n) {
 	return bmidstr (b, 0, n);
 }
 
-/*  int bFill (bstring a, char c, int len)
- *
- *  Fill a given bstring with the character in parameter c, for a length n.
+/** \brief Fill a given bstring with the character in parameter c, for a length n.
  */
 int bFill (bstring b, char c, int len) {
 	if (b == NULL || len < 0 || (b->mlen < b->slen && b->mlen > 0)) return -__LINE__;
@@ -60,17 +54,13 @@ int bFill (bstring b, char c, int len) {
 	return bsetstr (b, len, NULL, c);
 }
 
-/*  int bReplicate (bstring b, int n)
- *
- *  Replicate the contents of b end to end n times and replace it in b.
+/** \brief Replicate the contents of b end to end n times and replace it in b.
  */
 int bReplicate (bstring b, int n) {
 	return bpattern (b, n * b->slen);
 }
 
-/*  int bReverse (bstring b)
- *
- *  Reverse the contents of b in place.
+/** \brief Reverse the contents of b in place.
  */
 int bReverse (bstring b) {
 int i, n, m;
@@ -90,15 +80,13 @@ unsigned char t;
 	return 0;
 }
 
-/*  int bInsertChrs (bstring b, int pos, int len, unsigned char c, unsigned char fill)
- *
- *  Insert a repeated sequence of a given character into the string at 
- *  position pos for a length len.
+/** \brief Insert a repeated sequence of a given character into the string at
+ *         position pos for a length len.
  */
 int bInsertChrs (bstring b, int pos, int len, unsigned char c, unsigned char fill) {
 	if (b == NULL || b->slen < 0 || b->mlen < b->slen || pos < 0 || len <= 0) return -__LINE__;
 
-	if (pos > b->slen 
+	if (pos > b->slen
 	 && 0 > bsetstr (b, pos, NULL, fill)) return -__LINE__;
 
 	if (0 > balloc (b, b->slen + len)) return -__LINE__;
@@ -109,9 +97,7 @@ int bInsertChrs (bstring b, int pos, int len, unsigned char c, unsigned char fil
 	return BSTR_OK;
 }
 
-/*  int bJustifyLeft (bstring b, int space)
- *
- *  Left justify a string.
+/** \brief Left justify a string.
  */
 int bJustifyLeft (bstring b, int space) {
 int j, i, s, t;
@@ -132,9 +118,7 @@ unsigned char c = (unsigned char) space;
 	return BSTR_OK;
 }
 
-/*  int bJustifyRight (bstring b, int width, int space)
- *
- *  Right justify a string to within a given width.
+/** \brief Right justify a string to within a given width.
  */
 int bJustifyRight (bstring b, int width, int space) {
 int ret;
@@ -145,10 +129,8 @@ int ret;
 	return BSTR_OK;
 }
 
-/*  int bJustifyCenter (bstring b, int width, int space)
- *
- *  Center a string's non-white space characters to within a given width by
- *  inserting whitespaces at the beginning.
+/** \brief Center a string's non-white space characters to within a given width
+ *         by inserting whitespaces at the beginning.
  */
 int bJustifyCenter (bstring b, int width, int space) {
 int ret;
@@ -159,11 +141,9 @@ int ret;
 	return BSTR_OK;
 }
 
-/*  int bJustifyMargin (bstring b, int width, int space)
- *
- *  Stretch a string to flush against left and right margins by evenly
- *  distributing additional white space between words.  If the line is too
- *  long to be margin justified, it is left justified.
+/** \brief Stretch a string to flush against left and right margins by evenly
+ *         distributing additional white space between words.  If the line is
+ *         too long to be margin justified, it is left justified.
  */
 int bJustifyMargin (bstring b, int width, int space) {
 struct bstrList * sl;
@@ -209,10 +189,8 @@ static size_t readNothing (void *buff, size_t elsize, size_t nelem, void *parm) 
 	return 0; /* Immediately indicate EOF. */
 }
 
-/*  struct bStream * bsFromBstr (const_bstring b);
- *
- *  Create a bStream whose contents are a copy of the bstring passed in.
- *  This allows the use of all the bStream APIs with bstrings.
+/** \brief Create a bStream whose contents are a copy of the bstring passed in.
+ *         This allows the use of all the bStream APIs with bstrings.
  */
 struct bStream * bsFromBstr (const_bstring b) {
 struct bStream * s = bsopen ((bNread) readNothing, NULL);
@@ -235,9 +213,9 @@ size_t tsz = elsize * nelem;
 }
 
 /*  The "by reference" version of the above function.  This function puts
- *  a number of restrictions on the call site (the passed in struct 
+ *  a number of restrictions on the call site (the passed in struct
  *  tagbstring *will* be modified by this function, and the source data
- *  must remain alive and constant for the lifetime of the bStream).  
+ *  must remain alive and constant for the lifetime of the bStream).
  *  Hence it is not presented as an extern.
  */
 static struct bStream * bsFromBstrRef (struct tagbstring * t) {
@@ -247,10 +225,10 @@ static struct bStream * bsFromBstrRef (struct tagbstring * t) {
 
 /*  char * bStr2NetStr (const_bstring b)
  *
- *  Convert a bstring to a netstring.  See 
+ *  Convert a bstring to a netstring.  See
  *  http://cr.yp.to/proto/netstrings.txt for a description of netstrings.
- *  Note: 1) The value returned should be freed with a call to bcstrfree() at 
- *           the point when it will no longer be referenced to avoid a memory 
+ *  Note: 1) The value returned should be freed with a call to bcstrfree() at
+ *           the point when it will no longer be referenced to avoid a memory
  *           leak.
  *        2) If the returned value is non-NULL, then it also '\0' terminated
  *           in the character position one past the "," terminator.
@@ -274,7 +252,7 @@ unsigned char * buff;
 
 /*  bstring bNetStr2Bstr (const char * buf)
  *
- *  Convert a netstring to a bstring.  See 
+ *  Convert a netstring to a bstring.  See
  *  http://cr.yp.to/proto/netstrings.txt for a description of netstrings.
  *  Note that the terminating "," *must* be present, however a following '\0'
  *  is *not* required.
@@ -306,9 +284,7 @@ bstring b;
 
 static char b64ETable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/*  bstring bBase64Encode (const_bstring b)
- *
- *  Generate a base64 encoding.  See: RFC1341
+/** \brief Generate a base64 encoding.  See: RFC1341
  */
 bstring bBase64Encode (const_bstring b) {
 int i, c0, c1, c2, c3;
@@ -390,10 +366,8 @@ static int base64DecodeSymbol (unsigned char alpha) {
    else                   return B64_ERR;
 }
 
-/*  bstring bBase64DecodeEx (const_bstring b, int * boolTruncError)
- *
- *  Decode a base64 block of data.  All MIME headers are assumed to have been
- *  removed.  See: RFC1341
+/** \brief Decode a base64 block of data.  All MIME headers are assumed to have
+ *         been removed.  See: RFC1341
  */
 bstring bBase64DecodeEx (const_bstring b, int * boolTruncError) {
 int i, v;
@@ -518,7 +492,7 @@ int i, llen, otlen, ret, c0, c1, c2, c3, d0, d1, d2, d3;
 
 	otlen = t->slen;
 
-	if (((unsigned) llen) > UU_MAX_LINELEN) { ret = -__LINE__; 
+	if (((unsigned) llen) > UU_MAX_LINELEN) { ret = -__LINE__;
 		goto bl;
 	}
 
@@ -577,20 +551,16 @@ int i, llen, otlen, ret, c0, c1, c2, c3, d0, d1, d2, d3;
 	return ret;
 }
 
-/*  bstring bUuDecodeEx (const_bstring src, int * badlines)
- *
- *  Performs a UUDecode of a block of data.  If there are errors in the
- *  decoding, they are counted up and returned in "badlines", if badlines is
- *  not NULL. It is assumed that the "begin" and "end" lines have already 
- *  been stripped off.  The potential security problem of writing the 
- *  filename in the begin line is something that is beyond the scope of a 
- *  portable library.
+/** \brief Performs a UUDecode of a block of data.  If there are errors in the
+ *         decoding, they are counted up and returned in "badlines", if
+ *         badlines is not NULL. It is assumed that the "begin" and "end" lines
+ *         have already been stripped off.  The potential security problem of
+ *         writing the filename in the begin line is something that is beyond
+ *         the scope of a portable library.
  */
-
 #ifdef _MSC_VER
 #pragma warning(disable:4204)
 #endif
-
 bstring bUuDecodeEx (const_bstring src, int * badlines) {
 struct tagbstring t;
 struct bStream * s;
@@ -685,10 +655,10 @@ int l, lret;
 /*  bStream * bsUuDecode (struct bStream * sInp, int * badlines)
  *
  *  Creates a bStream which performs the UUDecode of an an input stream.  If
- *  there are errors in the decoding, they are counted up and returned in 
- *  "badlines", if badlines is not NULL. It is assumed that the "begin" and 
- *  "end" lines have already been stripped off.  The potential security 
- *  problem of writing the filename in the begin line is something that is 
+ *  there are errors in the decoding, they are counted up and returned in
+ *  "badlines", if badlines is not NULL. It is assumed that the "begin" and
+ *  "end" lines have already been stripped off.  The potential security
+ *  problem of writing the filename in the begin line is something that is
  *  beyond the scope of a portable library.
  */
 
@@ -721,7 +691,7 @@ struct bStream * sOut;
 
 /*  bstring bUuEncode (const_bstring src)
  *
- *  Performs a UUEncode of a block of data.  The "begin" and "end" lines are 
+ *  Performs a UUEncode of a block of data.  The "begin" and "end" lines are
  *  not appended.
  */
 bstring bUuEncode (const_bstring src) {
@@ -759,8 +729,8 @@ unsigned int c0, c1, c2;
 
 /*  bstring bYEncode (const_bstring src)
  *
- *  Performs a YEncode of a block of data.  No header or tail info is 
- *  appended.  See: http://www.yenc.org/whatis.htm and 
+ *  Performs a YEncode of a block of data.  No header or tail info is
+ *  appended.  See: http://www.yenc.org/whatis.htm and
  *  http://www.yenc.org/yenc-draft.1.3.txt
  */
 bstring bYEncode (const_bstring src) {
@@ -789,7 +759,7 @@ unsigned char c;
 
 /*  bstring bYDecode (const_bstring src)
  *
- *  Performs a YDecode of a block of data.  See: 
+ *  Performs a YDecode of a block of data.  See:
  *  http://www.yenc.org/whatis.htm and http://www.yenc.org/yenc-draft.1.3.txt
  */
 #define MAX_OB_LEN (64)
@@ -865,7 +835,7 @@ int i;
  *
  *  Takes a format string that is compatible with strftime and a struct tm
  *  pointer, formats the time according to the format string and outputs
- *  the bstring as a result. Note that if there is an early generation of a 
+ *  the bstring as a result. Note that if there is an early generation of a
  *  '\0' character, the bstring will be truncated to this end point.
  */
 bstring bStrfTime (const char * fmt, const struct tm * timeptr) {
@@ -882,7 +852,7 @@ size_t r;
 	if (fmt == NULL) return NULL;
 
 	/* Since the length is not determinable beforehand, a search is
-	   performed using the truncating "strftime" call on increasing 
+	   performed using the truncating "strftime" call on increasing
 	   potential sizes for the output result. */
 
 	if ((n = (int) (2*strlen (fmt))) < 16) n = 16;
@@ -913,7 +883,7 @@ size_t r;
  *  Sets the character at position pos to the character c in the bstring a.
  *  If the character c is NUL ('\0') then the string is truncated at this
  *  point.  Note: this does not enable any other '\0' character in the bstring
- *  as terminator indicator for the string.  pos must be in the position 
+ *  as terminator indicator for the string.  pos must be in the position
  *  between 0 and b->slen inclusive, otherwise BSTR_ERR will be returned.
  */
 int bSetCstrChar (bstring b, int pos, char c) {
@@ -954,7 +924,7 @@ int bSetChar (bstring b, int pos, char c) {
 
 #define INIT_SECURE_INPUT_LENGTH (256)
 
-/*  bstring bSecureInput (int maxlen, int termchar, 
+/*  bstring bSecureInput (int maxlen, int termchar,
  *                        bNgetc vgetchar, void * vgcCtx)
  *
  *  Read input from an abstracted input interface, for a length of at most
@@ -1017,7 +987,7 @@ struct bwriteStream {
 
 /*  struct bwriteStream * bwsOpen (bNwrite writeFn, void * parm)
  *
- *  Wrap a given open stream (described by a fwrite work-a-like function 
+ *  Wrap a given open stream (described by a fwrite work-a-like function
  *  pointer and stream handle) into an open bwriteStream suitable for write
  *  streaming functions.
  */
@@ -1054,7 +1024,7 @@ struct bwriteStream * ws;
  *  Force any pending data to be written to the core stream.
  */
 int bwsWriteFlush (struct bwriteStream * ws) {
-	if (NULL == ws || ws->isEOF || 0 >= ws->minBuffSz || 
+	if (NULL == ws || ws->isEOF || 0 >= ws->minBuffSz ||
 	    NULL == ws->writeFn || NULL == ws->buff) return BSTR_ERR;
 	internal_bwswriteout (ws, ws->buff);
 	ws->buff->slen = 0;
@@ -1106,7 +1076,7 @@ int l;
 
 /*  int bwsWriteBlk (struct bwriteStream * ws, void * blk, int len)
  *
- *  Send a block of data a bwriteStream.  If the stream is at EOF BSTR_ERR is 
+ *  Send a block of data a bwriteStream.  If the stream is at EOF BSTR_ERR is
  *  returned.
  */
 int bwsWriteBlk (struct bwriteStream * ws, void * blk, int len) {
@@ -1118,18 +1088,18 @@ struct tagbstring t;
 
 /*  int bwsIsEOF (const struct bwriteStream * ws)
  *
- *  Returns 0 if the stream is currently writable, 1 if the core stream has 
+ *  Returns 0 if the stream is currently writable, 1 if the core stream has
  *  responded by not accepting the previous attempted write.
  */
 int bwsIsEOF (const struct bwriteStream * ws) {
-	if (NULL == ws || NULL == ws->buff || 0 > ws->minBuffSz || 
+	if (NULL == ws || NULL == ws->buff || 0 > ws->minBuffSz ||
 	    NULL == ws->writeFn) return BSTR_ERR;
 	return ws->isEOF;
 }
 
 /*  int bwsBuffLength (struct bwriteStream * ws, int sz)
  *
- *  Set the length of the buffer used by the bwsStream.  If sz is zero, the 
+ *  Set the length of the buffer used by the bwsStream.  If sz is zero, the
  *  length is not set.  This function returns with the previous length.
  */
 int bwsBuffLength (struct bwriteStream * ws, int sz) {
@@ -1142,13 +1112,13 @@ int oldSz;
 
 /*  void * bwsClose (struct bwriteStream * s)
  *
- *  Close the bwriteStream, and return the handle to the stream that was 
+ *  Close the bwriteStream, and return the handle to the stream that was
  *  originally used to open the given stream.  Note that even if the stream
  *  is at EOF it still needs to be closed with a call to bwsClose.
  */
 void * bwsClose (struct bwriteStream * ws) {
 void * parm;
-	if (NULL == ws || NULL == ws->buff || 0 >= ws->minBuffSz || 
+	if (NULL == ws || NULL == ws->buff || 0 >= ws->minBuffSz ||
 	    NULL == ws->writeFn) return NULL;
 	bwsWriteFlush (ws);
 	parm = ws->parm;
