@@ -22,9 +22,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _WIN32
+#include "scaffold.h"
+
+#ifdef _GNU_SOURCE
 #include <unistd.h>
-#endif /* _WIN32 */
+#endif /* _GNU_SOURCE */
 
 #include <stdlib.h>
 #include <stdio.h>

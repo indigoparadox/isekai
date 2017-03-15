@@ -1,6 +1,11 @@
+
 #include <stdlib.h>
 #include <string.h>
+
+/* FIXME */
 #include <stdbool.h>
+
+#define HEATSHRINK_ENCODER_C
 #include "hsencode.h"
 
 typedef enum {
@@ -16,12 +21,7 @@ typedef enum {
    HSES_DONE                   /* done */
 } HSE_state;
 
-#if HEATSHRINK_DEBUGGING_LOGS
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
-#define LOG(...) fprintf(stderr, __VA_ARGS__)
-#define ASSERT(X) assert(X)
+#ifdef DEBUG
 static const char* state_names[] = {
    "not_full",
    "filled",
@@ -34,9 +34,6 @@ static const char* state_names[] = {
    "flush_bits",
    "done",
 };
-#else
-#define LOG(...) /* no-op */
-#define ASSERT(X) /* no-op */
 #endif
 
 /* Encoder flags */
@@ -104,7 +101,7 @@ heatshrink_encoder* heatshrink_encoder_alloc(
    hse->search_index->size = index_sz;
 #endif
 
-   LOG("-- allocated encoder with buffer size of %zu (%u byte input size)\n",
+   scaffold_print_debug( &module, "-- allocated encoder with buffer size of %zu (%u byte input size)\n",
        buf_sz, get_input_buffer_size(hse));
    return hse;
 }
@@ -172,10 +169,10 @@ HSE_sink_res heatshrink_encoder_sink(
    *input_size = cp_sz;
    hse->input_size += cp_sz;
 
-   LOG("-- sunk %u bytes (of %zu) into encoder at %d, input buffer now has %u\n",
+   scaffold_print_debug( &module, "-- sunk %u bytes (of %zu) into encoder at %d, input buffer now has %u\n",
        cp_sz, size, write_offset, hse->input_size);
    if (cp_sz == rem) {
-      LOG("-- internal buffer is now full\n");
+      scaffold_print_debug( &module, "-- internal buffer is now full\n");
       hse->state = HSES_FILLED;
    }
 
@@ -215,7 +212,7 @@ HSE_poll_res heatshrink_encoder_poll(
       return HSER_POLL_ERROR_NULL;
    }
    if (out_buf_size == 0) {
-      LOG("-- MISUSE: output buffer size is 0\n");
+      scaffold_print_debug( &module, "-- MISUSE: output buffer size is 0\n");
       return HSER_POLL_ERROR_MISUSE;
    }
    *output_size = 0;
@@ -225,8 +222,8 @@ HSE_poll_res heatshrink_encoder_poll(
    oi.output_size = output_size;
 
    while (1) {
-      LOG("-- polling, state %u (%s), flags 0x%02x\n",
-          hse->state, state_names[hse->state], hse->flags);
+      /* scaffold_print_debug( &module, "-- polling, state %u (%s), flags 0x%02x\n",
+          hse->state, state_names[hse->state], hse->flags); */
 
       in_state = hse->state;
       switch (in_state) {
@@ -259,7 +256,7 @@ HSE_poll_res heatshrink_encoder_poll(
       case HSES_DONE:
          return HSER_POLL_EMPTY;
       default:
-         LOG("-- bad state %s\n", state_names[hse->state]);
+         scaffold_print_debug( &module, "-- bad state %s\n", state_names[hse->state]);
          return HSER_POLL_ERROR_MISUSE;
       }
 
@@ -274,7 +271,7 @@ HSE_finish_res heatshrink_encoder_finish(heatshrink_encoder* hse) {
    if (hse == NULL) {
       return HSER_FINISH_ERROR_NULL;
    }
-   LOG("-- setting is_finishing flag\n");
+   scaffold_print_debug( &module, "-- setting is_finishing flag\n");
    hse->flags |= FLAG_IS_FINISHING;
    if (hse->state == HSES_NOT_FULL) {
       hse->state = HSES_FILLED;
@@ -294,14 +291,14 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
    uint16_t max_possible;
    uint16_t match_pos;
 
-   LOG("## step_search, scan @ +%d (%d/%d), input size %d\n",
+   scaffold_print_debug( &module, "## step_search, scan @ +%d (%d/%d), input size %d\n",
        msi, hse->input_size + msi, 2*window_length, hse->input_size);
 
    fin = is_finishing(hse);
    if (msi > hse->input_size - (fin ? 1 : lookahead_sz)) {
       /* Current search buffer is exhausted, copy it into the
        * backlog and await more input. */
-      LOG("-- end of search @ %d\n", msi);
+      scaffold_print_debug( &module, "-- end of search @ %d\n", msi);
       return fin ? HSES_FLUSH_BITS : HSES_SAVE_BACKLOG;
    }
 
@@ -319,15 +316,15 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
                                            start, end, max_possible, &match_length);
 
    if (match_pos == MATCH_NOT_FOUND) {
-      LOG("ss Match not found\n");
+      scaffold_print_debug( &module, "ss Match not found\n");
       hse->match_scan_index++;
       hse->match_length = 0;
       return HSES_YIELD_TAG_BIT;
    } else {
-      LOG("ss Found match of %d bytes at %d\n", match_length, match_pos);
+      scaffold_print_debug( &module, "ss Found match of %d bytes at %d\n", match_length, match_pos);
       hse->match_pos = match_pos;
       hse->match_length = match_length;
-      ASSERT(match_pos <= 1 << HEATSHRINK_ENCODER_WINDOW_BITS(hse) /*window_length*/);
+      scaffold_assert(match_pos <= 1 << HEATSHRINK_ENCODER_WINDOW_BITS(hse) /*window_length*/);
 
       return HSES_YIELD_TAG_BIT;
    }
@@ -363,7 +360,7 @@ static HSE_state st_yield_literal(heatshrink_encoder* hse,
 static HSE_state st_yield_br_index(heatshrink_encoder* hse,
                                    output_info* oi) {
    if (can_take_byte(oi)) {
-      LOG("-- yielding backref index %u\n", hse->match_pos);
+      scaffold_print_debug( &module, "-- yielding backref index %u\n", hse->match_pos);
       if (push_outgoing_bits(hse, oi) > 0) {
          return HSES_YIELD_BR_INDEX; /* continue */
       } else {
@@ -379,7 +376,7 @@ static HSE_state st_yield_br_index(heatshrink_encoder* hse,
 static HSE_state st_yield_br_length(heatshrink_encoder* hse,
                                     output_info* oi) {
    if (can_take_byte(oi)) {
-      LOG("-- yielding backref length %u\n", hse->match_length);
+      scaffold_print_debug( &module, "-- yielding backref length %u\n", hse->match_length);
       if (push_outgoing_bits(hse, oi) > 0) {
          return HSES_YIELD_BR_LENGTH;
       } else {
@@ -393,7 +390,7 @@ static HSE_state st_yield_br_length(heatshrink_encoder* hse,
 }
 
 static HSE_state st_save_backlog(heatshrink_encoder* hse) {
-   LOG("-- saving backlog\n");
+   scaffold_print_debug( &module, "-- saving backlog\n");
    save_backlog(hse);
    return HSES_NOT_FULL;
 }
@@ -401,12 +398,12 @@ static HSE_state st_save_backlog(heatshrink_encoder* hse) {
 static HSE_state st_flush_bit_buffer(heatshrink_encoder* hse,
                                      output_info* oi) {
    if (hse->bit_index == 0x80) {
-      LOG("-- done!\n");
+      scaffold_print_debug( &module, "-- done!\n");
       return HSES_DONE;
    } else if (can_take_byte(oi)) {
-      LOG("-- flushing remaining byte (bit_index == 0x%02x)\n", hse->bit_index);
+      scaffold_print_debug( &module, "-- flushing remaining byte (bit_index == 0x%02x)\n", hse->bit_index);
       oi->buf[(*oi->output_size)++] = hse->current_byte;
-      LOG("-- done!\n");
+      scaffold_print_debug( &module, "-- done!\n");
       return HSES_DONE;
    } else {
       return HSES_FLUSH_BITS;
@@ -414,7 +411,7 @@ static HSE_state st_flush_bit_buffer(heatshrink_encoder* hse,
 }
 
 static void add_tag_bit(heatshrink_encoder* hse, output_info* oi, uint8_t tag) {
-   LOG("-- adding tag bit: %d\n", tag);
+   scaffold_print_debug( &module, "-- adding tag bit: %d\n", tag);
    push_bits(hse, 1, tag, oi);
 }
 
@@ -483,7 +480,7 @@ static int can_take_byte(output_info* oi) {
  * buf[start] and buf[end-1]. If no match is found, return -1. */
 static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
                                    uint16_t end, const uint16_t maxlen, uint16_t* match_length) {
-   LOG("-- scanning for match of buf[%u:%u] between buf[%u:%u] (max %u bytes)\n",
+   scaffold_print_debug( &module, "-- scanning for match of buf[%u:%u] between buf[%u:%u] (max %u bytes)\n",
        end, end + maxlen, start, end + maxlen - 1, maxlen);
    uint8_t* buf = hse->buffer;
    int16_t pos;
@@ -534,7 +531,7 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
             && (*pospoint == *needlepoint)) {
          for (len=1; len<maxlen; len++) {
             if (0) {
-               LOG("  --> cmp buf[%d] == 0x%02x against %02x (start %u)\n",
+               scaffold_print_debug( &module, "  --> cmp buf[%d] == 0x%02x against %02x (start %u)\n",
                    pos + len, pospoint[len], needlepoint[len], start);
             }
             if (pospoint[len] != needlepoint[len]) {
@@ -561,12 +558,12 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
     * overflow. Since MIN_WINDOW_BITS and MIN_LOOKAHEAD_BITS are 4 and
     * 3, respectively, break_even_point/8 will always be at least 1. */
    if (match_maxlen > (break_even_point / 8)) {
-      LOG("-- best match: %u bytes at -%u\n",
+      scaffold_print_debug( &module, "-- best match: %u bytes at -%u\n",
           match_maxlen, end - match_index);
       *match_length = match_maxlen;
       return end - match_index;
    }
-   LOG("-- none found\n");
+   scaffold_print_debug( &module, "-- none found\n");
    return MATCH_NOT_FOUND;
 }
 
@@ -582,7 +579,7 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi) {
    }
 
    if (count > 0) {
-      LOG("-- pushing %d outgoing bits: 0x%02x\n", count, bits);
+      scaffold_print_debug( &module, "-- pushing %d outgoing bits: 0x%02x\n", count, bits);
       push_bits(hse, count, bits, oi);
       hse->outgoing_bits_count -= count;
    }
@@ -594,8 +591,8 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi) {
 static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
                       output_info* oi) {
    int i;
-   ASSERT(count <= 8);
-   LOG("++ push_bits: %d bits, input of 0x%02x\n", count, bits);
+   scaffold_assert(count <= 8);
+   scaffold_print_debug( &module, "++ push_bits: %d bits, input of 0x%02x\n", count, bits);
 
    /* If adding a whole byte and at the start of a new output byte,
     * just push it through whole and skip the bit IO loop. */
@@ -608,13 +605,13 @@ static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
             hse->current_byte |= hse->bit_index;
          }
          if (0) {
-            LOG("  -- setting bit %d at bit index 0x%02x, byte => 0x%02x\n",
+            scaffold_print_debug( &module, "  -- setting bit %d at bit index 0x%02x, byte => 0x%02x\n",
                 bit ? 1 : 0, hse->bit_index, hse->current_byte);
          }
          hse->bit_index >>= 1;
          if (hse->bit_index == 0x00) {
             hse->bit_index = 0x80;
-            LOG(" > pushing byte 0x%02x\n", hse->current_byte);
+            scaffold_print_debug( &module, " > pushing byte 0x%02x\n", hse->current_byte);
             oi->buf[(*oi->output_size)++] = hse->current_byte;
             hse->current_byte = 0x00;
          }
@@ -626,7 +623,7 @@ static void push_literal_byte(heatshrink_encoder* hse, output_info* oi) {
    uint16_t processed_offset = hse->match_scan_index - 1;
    uint16_t input_offset = get_input_offset(hse) + processed_offset;
    uint8_t c = hse->buffer[input_offset];
-   LOG("-- yielded literal byte 0x%02x ('%c') from +%d\n",
+   scaffold_print_debug( &module, "-- yielded literal byte 0x%02x ('%c') from +%d\n",
        c, isprint(c) ? c : '.', input_offset);
    push_bits(hse, 8, c, oi);
 }

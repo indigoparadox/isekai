@@ -128,6 +128,16 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
    int bstr_ret;
+#ifndef HEATSHRINK_DEBUGGING_LOGS
+   const char* mod_in_c = NULL;
+
+   mod_in_c = bdata( mod_in );
+
+   /* How's this for an innovative solution to keeping it C89? */
+   if( 0 == strncmp( "hs", mod_in_c, 2 ) ) {
+      goto cleanup;
+   }
+#endif /* HEATSHRINK_DEBUGGING_LOGS */
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );

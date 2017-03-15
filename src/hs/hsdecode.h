@@ -98,4 +98,8 @@ HSD_poll_res heatshrink_decoder_poll(heatshrink_decoder *hsd,
  * call heatshrink_decoder_poll and repeat. */
 HSD_finish_res heatshrink_decoder_finish(heatshrink_decoder *hsd);
 
-#endif
+#ifdef HEATSHRINK_DECODER_C
+SCAFFOLD_MODULE( "hsdecode.c" );
+#endif /* HEATSHRINK_DECODER_C */
+
+#endif /* HEATSHRINK_DECODER_H */
