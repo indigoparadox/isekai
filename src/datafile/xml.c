@@ -2,7 +2,6 @@
 #define DATAFILE_C
 #include "../datafile.h"
 
-#include "../b64.h"
 #include "../hashmap.h"
 
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
