@@ -125,8 +125,6 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       irc_command_free( cmd );
    }
 
-   hashmap_iterate_nolock( &(c->chunkers), callback_proc_client_chunkers, c );
-
 /* cleanup: */
    return;
 }
@@ -486,7 +484,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_print_info(
          "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
       );
-      ok_to_remove = TRUE;
       break;
 
    case CHUNKER_DATA_TYPE_TILESET_IMG:
@@ -517,10 +514,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       /* TODO: When do we ask for the mobs when not using chunkers? */
       proto_client_request_mobs( c, l );
       tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
-
-      ok_to_remove = TRUE;
       break;
-
 
    case CHUNKER_DATA_TYPE_MOBDEF:
       mob_id = bfromcstr( "" );
@@ -535,16 +529,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       img_src_c = ezxml_attr( xml_image, "src" );
       img_src = bfromcstr( img_src_c ); */
 
-      v_applied = hashmap_iterate_v(
+      hashmap_iterate(
          &(c->channels), callback_parse_mob_channels, xml_data
       );
-      if( NULL != v_applied && 0 < vector_count( v_applied ) ) {
-         scaffold_print_debug(
-            "Definition loaded for %d mobiles.\n",
-            vector_count( v_applied )
-         );
-         ok_to_remove = TRUE;
-      }
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
@@ -569,8 +556,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          "Client: Mobile spritesheet %s successfully loaded into cache.\n",
          bdata( h->filename )
       );
-
-      ok_to_remove = TRUE;
       break;
    }
 
@@ -590,10 +575,8 @@ cleanup:
    scaffold_print_debug(
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )
    );
-   if( ok_to_remove ) {
-      chunker_free( h );
-      hashmap_remove( &(c->chunkers), h->filename );
-   }
+   chunker_free( h );
+   hashmap_remove( &(c->chunkers), h->filename );
    return;
 }
 

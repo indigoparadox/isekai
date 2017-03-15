@@ -603,33 +603,6 @@ cleanup:
    return found;
 }
 
-/* TODO: This is an abomination. */
-void* hashmap_iterate_nolock( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
-   SCAFFOLD_SIZE i;
-   void* found = NULL;
-   void* data = NULL;
-   void* test = NULL;
-
-   scaffold_check_null( m );
-   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against( m->last_error, hashmap_count( m ) );
-
-   /* Linear probing */
-   for( i = 0; m->table_size > i ; i++ ) {
-      if( 0 != m->data[i].in_use ) {
-         data = (void*)(m->data[i].data);
-         test = callback( m->data[i].key, data, arg );
-         if( NULL != test ) {
-            found = test;
-            goto cleanup;
-         }
-      }
-   }
-
-cleanup:
-   return found;
-}
-
 /** \brief Build a vector using the specified callback from the hashmap
  *         contents.
  * \param[in]  m        Hashmap to search.
