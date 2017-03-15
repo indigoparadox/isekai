@@ -609,10 +609,10 @@ void client_poll_input( struct CLIENT* c ) {
             scaffold_print_debug( "Terrain Debug: Terrain Quarters\n" );
             break;
          case TILEMAP_DEBUG_TERRAIN_QUARTERS:
-            tilemap_dt_state = TILEMAP_DEBUG_DEADZONE;
+            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_DEADZONE;
             scaffold_print_debug( "Terrain Debug: Window Deadzone\n" );
             break;
-         case TILEMAP_DEBUG_DEADZONE:
+         case TILEMAP_DEBUG_TERRAIN_DEADZONE:
             tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
             scaffold_print_debug( "Terrain Debug: Off\n" );
             break;

@@ -187,26 +187,24 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
    if(
-      !tilemap_inside_inner_map_x( o->prev_x, twindow ) ||
-      (tilemap_inside_window_deadzone_y( o->x, twindow ) &&
-      tilemap_inside_window_deadzone_y( o->prev_x, twindow ))
+      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) ||
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
+         tilemap_inside_inner_map_x( o->x - 1, twindow )
    ) {
       steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
       pix_x += steps_remaining_x;
-   } /* else if( !tilemap_inside_window_deadzone_x( o->x, twindow ) ) {
-      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_ALL );
-   } */
+   }
 
    if(
-      !tilemap_inside_inner_map_y( o->prev_y, twindow ) ||
-      (tilemap_inside_window_deadzone_y( o->y, twindow ) &&
-      tilemap_inside_window_deadzone_y( o->prev_y, twindow ))
+      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+         tilemap_inside_window_deadzone_y( o->y + 1, twindow ) &&
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
+         tilemap_inside_window_deadzone_y( o->y - 1, twindow )
    ) {
       steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
       pix_y += steps_remaining_y;
-   } /* else if( !tilemap_inside_window_deadzone_y( o->y, twindow ) ) {
-      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_ALL );
-   } */
+   }
 
 #ifdef DEBUG_TILES
    if( TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state ) {
