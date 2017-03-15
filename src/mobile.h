@@ -15,6 +15,7 @@ typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_MOVERIGHT
 } MOBILE_UPDATE;
 
+/*
 typedef enum _MOBILE_FACING {
    MOBILE_FACING_DOWN = 0,
    MOBILE_FACING_UP = 1,
@@ -35,6 +36,31 @@ typedef enum _MOBILE_FRAME_ALT {
    MOBILE_FRAME_ALT_ATTACK2 = 1,
    MOBILE_FRAME_ALT_KNOCKBACK = 2
 } MOBILE_FRAME_ALT;
+*/
+
+typedef enum MOBILE_ANI_TYPE {
+   MOBILE_ANI_TYPE_WALK,
+   MOBILE_ANI_TYPE_ATTACK,
+   MOBILE_ANI_TYPE_KNOCKBACK
+} MOBILE_ANI_TYPE;
+
+typedef enum MOBILE_FACING {
+   MOBILE_FACING_DOWN = 0,
+   MOBILE_FACING_UP = 1,
+   MOBILE_FACING_RIGHT = 2,
+   MOBILE_FACING_LEFT = 3
+} MOBILE_FACING;
+
+struct MOBILE_ANI_DEF {
+   MOBILE_FACING facing;
+   bstring name;
+   short speed;
+   struct VECTOR frames; /*!< Pointers to the sprite defs in the sprite_defs vector. */
+};
+
+struct MOBILE_SPRITE_DEF {
+   SCAFFOLD_SIZE id;
+};
 
 struct MOBILE {
    struct REF refcount;
@@ -44,19 +70,28 @@ struct MOBILE {
    SCAFFOLD_SIZE y;
    SCAFFOLD_SIZE prev_x;
    SCAFFOLD_SIZE prev_y;
+   SCAFFOLD_SIZE sprite_width;
    SCAFFOLD_SIZE sprite_height;
-   SCAFFOLD_SIZE sprite_height_default;
+   SCAFFOLD_SIZE sprite_display_height;
    SCAFFOLD_SIZE_SIGNED steps_inc;
    SCAFFOLD_SIZE_SIGNED steps_inc_default;
    SCAFFOLD_SIZE_SIGNED steps_remaining;
    bstring sprites_filename;
    GRAPHICS* sprites;
-   MOBILE_FRAME_ALT frame_alt;
-   MOBILE_FRAME frame;
+   /* MOBILE_FRAME_ALT frame_alt;
+   MOBILE_FRAME frame; */
+   uint8_t current_frame;
    MOBILE_FACING facing;
    bstring display_name;
+   bstring def_filename;
+   bstring mob_id;
    struct CHANNEL* channel;
    struct tp_vm* vm;
+   struct VECTOR sprite_defs;
+   struct HASHMAP ani_defs;
+   struct HASHMAP script_defs;
+   struct MOBILE_ANI_DEF* current_animation;
+   BOOL initialized;
 };
 
 struct MOBILE_UPDATE_PACKET {
@@ -83,8 +118,8 @@ void mobile_free( struct MOBILE* o );
 void mobile_init( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
-   GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
-   MOBILE_FRAME_ALT frame_alt, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   struct MOBILE* o, SCAFFOLD_SIZE gid,
+   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse

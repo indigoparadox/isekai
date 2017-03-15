@@ -36,7 +36,8 @@
 typedef enum _CHUNKER_DATA_TYPE {
    CHUNKER_DATA_TYPE_TILEMAP,
    CHUNKER_DATA_TYPE_TILESET_IMG,
-   CHUNKER_DATA_TYPE_MOBSPRITES
+   CHUNKER_DATA_TYPE_MOBSPRITES,
+   CHUNKER_DATA_TYPE_MOBDEF
 } CHUNKER_DATA_TYPE;
 
 struct CHUNKER_PROGRESS {
@@ -73,6 +74,7 @@ struct CHUNKER {
    bstring filename;
    bstring serverpath;
    SCAFFOLD_SIZE last_percent;
+   void* placeholder; /*!< For use by a parser function. */
 };
 
 #if HEATSHRINK_DYNAMIC_ALLOC

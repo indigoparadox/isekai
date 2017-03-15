@@ -95,6 +95,12 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    client_printf( c, "GDA %b", h->filename );
 }
 
+/** \brief This should ONLY be called by client_request_file(). All requests for
+ *         files should go through that function.
+ * \param
+ * \param
+ * \return
+ */
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
    scaffold_assert_client();
    scaffold_print_debug( "Client: Requesting file: %s\n", bdata( filename ) );
@@ -104,8 +110,8 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    scaffold_assert_server();
    client_printf(
-      c, "MOB %b %d %b %b %d %d",
-      o->channel->name, o->serial, o->sprites_filename, o->owner->nick, o->x, o->y
+      c, "MOB %b %d %b %b %b %d %d",
+      o->channel->name, o->serial, o->mob_id, o->def_filename, o->owner->nick, o->x, o->y
    );
 }
 
@@ -846,13 +852,14 @@ static void irc_client_mob(
       * x_c = NULL,
       * y_c = NULL;
    uint8_t serial = 0;
-   bstring sprites_filename = NULL,
+   bstring def_filename = NULL,
+      mob_id = NULL,
       nick = NULL;
    struct CHANNEL* l = NULL;
    SCAFFOLD_SIZE x = 0,
       y = 0;
 
-   irc_detect_malformed( 7, "MOB" );
+   irc_detect_malformed( 8, "MOB" );
 
    l = client_get_channel_by_name( c, args->entry[1] );
    scaffold_check_null( l );
@@ -862,23 +869,26 @@ static void irc_client_mob(
    scaffold_check_null( serial_c );
    serial = atoi( serial_c );
 
-   sprites_filename = args->entry[3];
-   scaffold_check_null( sprites_filename );
+   mob_id = args->entry[3];
+   scaffold_check_null( mob_id );
 
-   nick = args->entry[4];
+   def_filename = args->entry[4];
+   scaffold_check_null( def_filename );
+
+   nick = args->entry[5];
    scaffold_check_null( nick );
 
-   scaffold_check_null( args->entry[5] );
-   x_c = bdata( args->entry[5] );
+   scaffold_check_null( args->entry[6] );
+   x_c = bdata( args->entry[6] );
    scaffold_check_null( x_c );
    x = atoi( x_c );
 
-   scaffold_check_null( args->entry[6] );
-   y_c = bdata( args->entry[6] );
+   scaffold_check_null( args->entry[7] );
+   y_c = bdata( args->entry[7] );
    scaffold_check_null( y_c );
    y = atoi( y_c );
 
-   channel_set_mobile( l, serial, sprites_filename, nick, x, y );
+   channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y );
    scaffold_assert( 0 == scaffold_error );
 
    scaffold_print_debug(

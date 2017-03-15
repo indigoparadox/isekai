@@ -179,6 +179,8 @@
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxUSE_INLINE" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DDEBUG_VM" />
+					<Add option="-DUSE_DUKTAPE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -536,6 +538,11 @@
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/duktape/duk_config.h" />
+		<Unit filename="src/duktape/duktape.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/duktape/duktape.h" />
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -125,6 +125,8 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       irc_command_free( cmd );
    }
 
+   hashmap_iterate_nolock( &(c->chunkers), callback_proc_client_chunkers, c );
+
 /* cleanup: */
    return;
 }
@@ -449,10 +451,16 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    struct CHANNEL* l = NULL;
    GRAPHICS* g = NULL;
    struct TILEMAP_TILESET* set = NULL;
-   bstring lname = NULL;
+   bstring lname = NULL,
+      mob_id = NULL,
+      img_src = NULL;
 #ifdef USE_EZXML
-   ezxml_t xml_data = NULL;
+   ezxml_t xml_data = NULL,
+      xml_image = NULL;
+   const char* img_src_c = NULL;
 #endif /* USE_EZXML */
+   BOOL ok_to_remove = FALSE;
+   struct VECTOR* v_applied = NULL;
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
@@ -478,6 +486,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_print_info(
          "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
       );
+      ok_to_remove = TRUE;
       break;
 
    case CHUNKER_DATA_TYPE_TILESET_IMG:
@@ -508,7 +517,47 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       /* TODO: When do we ask for the mobs when not using chunkers? */
       proto_client_request_mobs( c, l );
       tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
+
+      ok_to_remove = TRUE;
       break;
+
+
+   case CHUNKER_DATA_TYPE_MOBDEF:
+      mob_id = bfromcstr( "" );
+
+#ifdef USE_EZXML
+      xml_data = datafile_mobile_ezxml_peek_mob_id(
+         (BYTE*)h->raw_ptr, h->raw_length, mob_id
+      );
+      scaffold_check_null( xml_data );
+      /* xml_image = ezxml_child( xml_data, "image" );
+      scaffold_check_null( xml_image );
+      img_src_c = ezxml_attr( xml_image, "src" );
+      img_src = bfromcstr( img_src_c ); */
+
+      v_applied = hashmap_iterate_v(
+         &(c->channels), callback_parse_mob_channels, xml_data
+      );
+      if( NULL != v_applied && 0 < vector_count( v_applied ) ) {
+         scaffold_print_debug(
+            "Definition loaded for %d mobiles.\n",
+            vector_count( v_applied )
+         );
+         ok_to_remove = TRUE;
+      }
+#endif /* USE_EZXML */
+
+      /* Go through the parsed tilemap and load graphics. */
+      //hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
+
+      /* proto_request_file( c, img_src, CHUNKER_DATA_TYPE_MOBSPRITES ); */
+
+      scaffold_print_info(
+         "Client: Mobile def for %s successfully attached to channel.\n",
+         bdata( mob_id )
+      );
+      break;
+
 
    case CHUNKER_DATA_TYPE_MOBSPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
@@ -520,11 +569,19 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          "Client: Mobile spritesheet %s successfully loaded into cache.\n",
          bdata( h->filename )
       );
+
+      ok_to_remove = TRUE;
       break;
    }
 
 cleanup:
+   if( NULL != v_applied ) {
+      v_applied->count = 0; /* Force delete. */
+      vector_free( v_applied );
+      free( v_applied );
+   }
    bdestroy( lname );
+   bdestroy( img_src );
 #ifdef USE_EZXML
    if( NULL != xml_data ) {
       ezxml_free( xml_data );
@@ -533,8 +590,10 @@ cleanup:
    scaffold_print_debug(
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )
    );
-   chunker_free( h );
-   hashmap_remove( &(c->chunkers), h->filename );
+   if( ok_to_remove ) {
+      chunker_free( h );
+      hashmap_remove( &(c->chunkers), h->filename );
+   }
    return;
 }
 

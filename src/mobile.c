@@ -8,7 +8,8 @@
 #include "callback.h"
 #include "tinypy/tinypy.h"
 
-const struct tagbstring str_mobile_spritesheet_path_default = bsStatic( "mobs/sprites_maid_black" GRAPHICS_RASTER_EXTENSION );
+const struct tagbstring str_mobile_def_path_default =
+   bsStatic( "mobs/maid_black.xml" );
 
 /* FIXME: Replace with a proper frame limiter. */
 static uint8_t mobile_frame_counter = 0;
@@ -38,21 +39,24 @@ void mobile_free( struct MOBILE* o ) {
 
 void mobile_init( struct MOBILE* o ) {
    ref_init( &(o->refcount), mobile_cleanup );
-   o->sprites_filename = bstrcpy( &str_mobile_spritesheet_path_default );
+   o->sprites_filename = NULL;
+      /* bstrcpy( &str_mobile_spritesheet_path_default ); */
    o->serial = 0;
    o->channel = NULL;
    o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
-   o->frame_alt = MOBILE_FRAME_ALT_NONE;
-   o->frame = MOBILE_FRAME_DEFAULT;
-   o->sprite_height_default = MOBILE_SPRITE_SIZE;
+   o->current_frame = 0;
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
+
+   vector_init( &(o->sprite_defs) );
+   hashmap_init( &(o->ani_defs) );
+   hashmap_init( &(o->script_defs) );
 }
 
 void mobile_animate( struct MOBILE* o ) {
    if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
    }
-   if( NULL != o && 0 == mobile_frame_counter ) {
+   /* if( NULL != o && 0 == mobile_frame_counter ) {
       switch( o->frame ) {
       case MOBILE_FRAME_NONE:
          o->frame = MOBILE_FRAME_RIGHT_FORWARD;
@@ -67,7 +71,7 @@ void mobile_animate( struct MOBILE* o ) {
          o->frame = MOBILE_FRAME_NONE;
          break;
       }
-   }
+   } */
 
    if( mobile_move_counter++ > MOBILE_MOVE_DIVISOR ) {
       mobile_move_counter = 0;
@@ -91,12 +95,12 @@ void mobile_animate( struct MOBILE* o ) {
 }
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
-   GRAPHICS* g_tileset, MOBILE_FACING facing, MOBILE_FRAME frame,
-   MOBILE_FRAME_ALT frame_alt, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   struct MOBILE* o, SCAFFOLD_SIZE gid,
+   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
-   scaffold_assert( frame < 0 || frame_alt < 0 );
+   //scaffold_assert( frame < 0 || frame_alt < 0 );
 
-   scaffold_check_null( g_tileset );
+   //scaffold_check_null( g_tileset );
 
    /* TODO: Arbitrary animations for mobiles. */
    /*
@@ -104,9 +108,9 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
       *y = (facing * MOBILE_SPRITE_SIZE) + (4 * MOBILE_SPRITE_SIZE);
    } else {
    */
-      *y = facing * MOBILE_SPRITE_SIZE;
+      //*y = facing * MOBILE_SPRITE_SIZE;
    /* } */
-   *x = (0 > frame ? 0 : frame) * MOBILE_SPRITE_SIZE;
+   //*x = (0 > frame ? 0 : frame) * MOBILE_SPRITE_SIZE;
 
 cleanup:
    return;
@@ -149,6 +153,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    SCAFFOLD_SIZE_SIGNED
       steps_remaining_x,
       steps_remaining_y;
+   struct MOBILE_SPRITE_DEF* current_frame = NULL;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -156,7 +161,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    scaffold_assert_client();
 
-   if( NULL == o ) {
+   if( NULL == o || NULL == o->sprites_filename ) {
       return;
    }
 
@@ -220,8 +225,9 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
+   current_frame = vector_get( &(o->sprite_defs), 0 );
    mobile_get_spritesheet_pos_ortho(
-      o->sprites, o->facing, o->frame, o->frame_alt, &sprite_x, &sprite_y
+      o, current_frame->id, &sprite_x, &sprite_y
    );
 
    /* Add dirty tiles to list before drawing. */
@@ -232,7 +238,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       twindow->g,
       pix_x, pix_y,
       sprite_x, sprite_y,
-      MOBILE_SPRITE_SIZE, o->sprite_height,
+      o->sprite_width, o->sprite_display_height,
       o->sprites
    );
 cleanup:
@@ -390,7 +396,7 @@ static SCAFFOLD_SIZE mobile_calculate_terrain_sprite_height(
 
 cleanup:
    if( NULL != tiles_end ) {
-      /* Force the count to 0 so we can delete it. */
+      /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
       tiles_end->count = 0;
       vector_free( tiles_end );
       free( tiles_end );
@@ -507,9 +513,9 @@ cleanup:
    }
 
    if( FALSE == instant ) {
-      o->sprite_height =
+      o->sprite_display_height =
          mobile_calculate_terrain_sprite_height(
-            &(l->tilemap), o->sprite_height_default,
+            &(l->tilemap), o->sprite_height,
             o->x, o->y );
    }
 
