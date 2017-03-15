@@ -17,7 +17,8 @@ typedef enum TILEMAP_DEBUG_TERRAIN_STATE {
    TILEMAP_DEBUG_TERRAIN_OFF,
    TILEMAP_DEBUG_TERRAIN_COORDS,
    TILEMAP_DEBUG_TERRAIN_NAMES,
-   TILEMAP_DEBUG_TERRAIN_QUARTERS
+   TILEMAP_DEBUG_TERRAIN_QUARTERS,
+   TILEMAP_DEBUG_DEADZONE
 } TILEMAP_DEBUG_TERRAIN_STATE;
 #endif /* DEBUG_TILES */
 
@@ -109,7 +110,7 @@ struct TILEMAP {
 #define TILEMAP_OBJECT_SPAWN_DIVISOR 32
 #define TILEMAP_NAME_ALLOC 30
 #define TILEMAP_BORDER 1
-#define TILEMAP_DEAD_ZONE 4
+#define TILEMAP_DEAD_ZONE 6
 
 #define TILEMAP_SENTINAL 1234
 
@@ -161,13 +162,27 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 );
 SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y );
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );
-void tilemap_update_window_ortho( struct GRAPHICS_TILE_WINDOW* twindow, struct CLIENT* c );
+void tilemap_update_window_ortho(
+   struct GRAPHICS_TILE_WINDOW* twindow,
+   SCAFFOLD_SIZE focal_x, SCAFFOLD_SIZE focal_y
+);
 SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_x(
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
 );
 SCAFFOLD_INLINE BOOL tilemap_inside_inner_map_y(
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
 );
+SCAFFOLD_INLINE BOOL tilemap_inside_window_deadzone_x(
+   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
+);
+SCAFFOLD_INLINE BOOL tilemap_inside_window_deadzone_y(
+   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+);
+void tilemap_add_dirty_tile(
+   struct TILEMAP* t, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+);
+void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
+
 
 #ifdef TILEMAP_C
 

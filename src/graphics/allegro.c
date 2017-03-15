@@ -286,7 +286,7 @@ void graphics_surface_free( GRAPHICS* g ) {
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
-   blit( g->surface, screen, 0, 0, 0, 0, g->w, g->h );
+   blit( g->surface, screen, g->virtual_x, g->virtual_y, 0, 0, g->w, g->h );
    /* clear_bitmap( g->surface ); */
 }
 

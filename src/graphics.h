@@ -102,6 +102,9 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
+void graphics_screen_scroll(
+   GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
+);
 void graphics_set_font( GRAPHICS* g, bstring name );
 void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color );
 void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a );

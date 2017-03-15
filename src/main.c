@@ -210,7 +210,9 @@ int main( int argc, char** argv ) {
          continue;
       } else if( TRUE != post_load_finished ) {
          twindow.t = &(l->tilemap);
-         tilemap_update_window_ortho( &twindow, main_client );
+         tilemap_update_window_ortho(
+            &twindow, main_client->puppet->x, main_client->puppet->y
+         );
          post_load_finished = TRUE;
       }
 
@@ -223,7 +225,9 @@ int main( int argc, char** argv ) {
          twindow.max_x == twindow.min_x ||
          TILEMAP_REDRAW_ALL == twindow.t->redraw_state
       ) {
-         tilemap_update_window_ortho( &twindow, main_client );
+         tilemap_update_window_ortho(
+            &twindow, main_client->puppet->x, main_client->puppet->y
+         );
       }
 
       /* If there's no puppet then there should be a load screen. */
