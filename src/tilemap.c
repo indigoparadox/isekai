@@ -577,7 +577,7 @@ void tilemap_add_dirty_tile(
 
 cleanup:
    return;
-};
+}
 
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    t->redraw_state = st;
