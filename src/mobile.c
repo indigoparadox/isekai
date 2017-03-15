@@ -26,6 +26,16 @@ static void mobile_cleanup( const struct REF* ref ) {
       channel_free( o->channel );
       o->channel = NULL;
    }
+
+   vector_remove_cb( &(o->sprite_defs), callback_free_generic, NULL );
+   vector_free( &(o->sprite_defs) );
+
+   vector_remove_cb( &(o->speech_backlog), callback_free_strings, NULL );
+   vector_free( &(o->speech_backlog) );
+
+   hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
+   hashmap_cleanup( &(o->ani_defs) );
+
    bdestroy( o->display_name );
    free( o );
 }
@@ -45,6 +55,7 @@ void mobile_init( struct MOBILE* o ) {
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
 
    vector_init( &(o->sprite_defs) );
+   vector_init( &(o->speech_backlog ) );
    hashmap_init( &(o->ani_defs) );
    hashmap_init( &(o->script_defs) );
 }
@@ -231,6 +242,16 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->sprite_width, o->sprite_display_height,
       o->sprites
    );
+
+   pix_y -= o->sprite_height;
+
+   if( 0 < vector_count( &(o->speech_backlog) ) ) {
+      graphics_set_color( twindow->g, GRAPHICS_COLOR_CYAN);
+      graphics_draw_text(
+         twindow->g, pix_x, pix_y, GRAPHICS_TEXT_ALIGN_CENTER,
+         (bstring)vector_get( &(o->speech_backlog), 0 )
+      );
+   }
 cleanup:
    return;
 }
@@ -517,4 +538,8 @@ cleanup:
 cleanup:
    bdestroy( animation_key );
    return update->update;
+}
+
+void mobile_speak( struct MOBILE* o, bstring speech ) {
+   vector_insert( &(o->speech_backlog), 0, bstrcpy( speech ) );
 }

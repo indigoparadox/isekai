@@ -131,6 +131,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    hashmap_put( &(l->clients), c->nick, c );
 
 cleanup:
+   if( NULL != mobdata_buffer ) {
+      free( mobdata_buffer );
+   }
    bdestroy( mobdata_path );
    return;
 }

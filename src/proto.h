@@ -10,10 +10,11 @@
 typedef struct _IRC_COMMAND {
    struct REF refcount;
    const struct tagbstring command;
-   void (*callback)( struct CLIENT* c, SERVER* s, const struct bstrList* args );
+   void (*callback)( struct CLIENT* c, SERVER* s, const struct bstrList* args, bstring line );
    SERVER* server;
    struct CLIENT* client;
    const struct bstrList* args;
+   bstring line;
 } IRC_COMMAND;
 
 #define IRC_COMMAND_TABLE_START( name ) \
@@ -36,7 +37,7 @@ extern IRC_COMMAND_TABLE_START( client );
    }
 #endif
 
-#define IRC_LINE_CMD_SEARCH_RANGE 2
+#define IRC_LINE_CMD_SEARCH_RANGE 3
 
 void proto_register( struct CLIENT* c );
 void proto_send_chunk(

@@ -298,7 +298,7 @@ void server_service_clients( SERVER* s ) {
       cmd = vector_get( &(s->self.command_queue), 0 );
       vector_remove( &(s->self.command_queue), 0 );
       if( NULL != cmd->callback ) {
-         cmd->callback( cmd->client, cmd->server, cmd->args );
+         cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
       } else {
          scaffold_print_error(
             &module, "Server: Invalid command: %s\n", bdata( &(cmd->command) )

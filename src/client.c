@@ -118,7 +118,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       cmd = vector_get( &(c->command_queue), 0 );
       vector_remove( &(c->command_queue), 0 );
       if( NULL != cmd->callback ) {
-         cmd->callback( cmd->client, cmd->server, cmd->args );
+         cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
       } else {
          scaffold_print_error(
             &module, "Client: Invalid command: %s\n", bdata( &(cmd->command) )

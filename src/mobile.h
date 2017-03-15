@@ -91,6 +91,7 @@ struct MOBILE {
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
    struct MOBILE_ANI_DEF* current_animation;
+   struct VECTOR speech_backlog;
    BOOL initialized;
 };
 

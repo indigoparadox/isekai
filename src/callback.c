@@ -239,6 +239,7 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
    proto_send_chunk( c, h, start_pos, key, chunk_out );
 
 cleanup:
+   bdestroy( chunk_out );
    return NULL;
 }
 
@@ -569,6 +570,27 @@ BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_windows( const bstring res, void* iter, void* arg ) {
+   bstring wid = (bstring)arg;
+   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
+   if( NULL == arg || 0 == bstrcmp( wid, win->id ) ) {
+      ui_window_free( win );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
+   struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
+   if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
+      animation->frames.count = 0;
+      vector_free( &(animation->frames) );
+      bdestroy( animation->name );
       return TRUE;
    }
    return FALSE;

@@ -222,7 +222,7 @@
 					<Add option="-DxDEBUG_REF" />
 					<Add option="-DUSE_CONNECT_DIALOG" />
 					<Add option="-DDEBUG_TILES" />
-					<Add option="-DDEBUG_VM" />
+					<Add option="-DxDEBUG_VM" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -805,6 +805,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/vector.h" />
+		<Unit filename="src/windefs.h" />
 		<Unit filename="test/check_b64.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux)" />

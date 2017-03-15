@@ -50,6 +50,7 @@ struct UI {
    struct VECTOR windows;
 };
 
+void ui_cleanup( struct UI* ui );
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
    const bstring id, const bstring title, const bstring prompt,

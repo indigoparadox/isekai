@@ -71,6 +71,52 @@ cleanup:
    return;
 }
 
+/** \brief Insert an item into the vector at the specified position and push
+ *         subsequent items later.
+ * \param[in] v      Vector to manipulate.
+ * \param[in] index  Index to push the item at. Vector will be extended to
+ *                   include this index if it does not already.
+ * \param[in] data   Pointer to the item to add.
+ */
+void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
+   BOOL ok = FALSE;
+   SCAFFOLD_SIZE i;
+
+   scaffold_check_null( v );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+
+   scaffold_assert( FALSE == v->scalar );
+
+   vector_lock( v, TRUE );
+   ok = TRUE;
+
+   if( 0 == v->size ) {
+      v->size = 10;
+      v->data = (void**)calloc( v->size, sizeof(void*) );
+      scaffold_check_null( v->data );
+   }
+
+   while( v->size <= index || v->count == v->size - 1 ) {
+      vector_grow( v, v->size * 2 );
+      scaffold_check_nonzero( scaffold_error );
+   }
+
+   for( i = index ; v->size - 1 > i ; i++ ) {
+      v->data[i + 1] = v->data[i];
+   }
+   v->data[index] = data;
+   v->count++;
+   refcount_test_inc( data );
+
+cleanup:
+   if( FALSE != ok ) {
+      vector_lock( v, FALSE );
+   }
+   scaffold_assert( 0 == v->lock_count );
+
+   return;
+}
+
 void vector_add( struct VECTOR* v, void* data ) {
    BOOL ok = FALSE;
 
