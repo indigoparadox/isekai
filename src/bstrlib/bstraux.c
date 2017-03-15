@@ -854,7 +854,7 @@ cleanup:
       free( *dest );
       *dest = NULL;
    }
-   return;
+   return i;
 }
 
 /** \brief Performs a YDecode of a block of data.  See:
