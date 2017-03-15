@@ -701,9 +701,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/mobile.h" />
-		<Unit filename="src/proto.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/proto.h" />
 		<Unit filename="src/proto/irc.c">
 			<Option compilerVar="CC" />
