@@ -38,7 +38,6 @@
 					<Add option="-Wundef" />
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
-					<Add option="-Wzero-as-null-pointer-constant" />
 					<Add option="-pedantic" />
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -459,11 +458,27 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
+		<Unit filename="src/bstrlib/bsafe.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrlib/bsafe.h" />
+		<Unit filename="src/bstrlib/bstraux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrlib/bstraux.h" />
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
 			<Option compiler="gcc" use="0" buildCommand="$compiler $includes -c $file -o $object" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.h" />
+		<Unit filename="src/bstrlib/buniutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrlib/buniutil.h" />
+		<Unit filename="src/bstrlib/utf8util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrlib/utf8util.h" />
 		<Unit filename="src/callback.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -810,6 +825,15 @@
 			<debugger />
 			<envvars set="check_no_fork" />
 			<editor_config active="1" use_tabs="0" tab_indents="1" tab_width="3" indent="3" eol_mode="2" />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output man="1" />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
