@@ -323,6 +323,8 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
 #if HEATSHRINK_DYNAMIC_ALLOC
       scaffold_assert( NULL != h->decoder );
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
+
+      /* TODO: Delete corrupt files that don't match. */
       scaffold_assert( src_len == h->raw_length );
    }
 

@@ -5,12 +5,15 @@
 #include "tilemap.h"
 #include "datafile.h"
 #include "server.h"
+#include "proto.h"
 #ifdef USE_TINYPY
 #include "tinypy/tinypy.h"
 #endif /* USE_TINYPY */
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
 #endif /* USE_DUKTAPE */
+
+extern const struct tagbstring str_mobile_def_path_default;
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -54,6 +57,10 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
    struct TILEMAP_POSITION* spawner = NULL;
+   SCAFFOLD_SIZE bytes_read = 0;
+   BYTE* mobdata_buffer = NULL;
+   SCAFFOLD_SIZE mobdata_size = 0;
+   bstring mobdata_path = NULL;
 
    scaffold_check_null( c );
 
@@ -72,6 +79,29 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       do {
          o->serial = rand() % UCHAR_MAX;
       } while( NULL != vector_get( &(l->mobiles), o->serial ) );
+
+      if( NULL == o->def_filename ) {
+         o->def_filename = bstrcpy( &str_mobile_def_path_default );
+      }
+
+      scaffold_print_info( "Loading mobile definition: %b\n", o->def_filename );
+      mobdata_path = bstrcpy( &str_server_data_path );
+      scaffold_check_null( mobdata_path );
+      scaffold_join_path( mobdata_path, o->def_filename );
+      scaffold_check_nonzero( scaffold_error );
+
+#ifdef USE_EZXML
+      /* TODO: Support other mobiles. */
+      scaffold_print_info( "Loading for XML data in: %s\n", bdata( mobdata_path ) );
+      bytes_read = scaffold_read_file_contents( mobdata_path, &mobdata_buffer, &mobdata_size );
+      scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
+      scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
+
+      datafile_parse_mobile_ezxml_string(
+         o, mobdata_buffer, mobdata_size, FALSE
+      );
+#endif /* USE_EZXML */
+
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
 
@@ -95,6 +125,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    hashmap_put( &(l->clients), c->nick, c );
 
 cleanup:
+   bdestroy( mobdata_path );
    return;
 }
 
@@ -123,19 +154,39 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
 }
 
 void channel_set_mobile(
-   struct CHANNEL* l, uint8_t serial, const bstring sprites_filename,
-   const bstring nick, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   struct CHANNEL* l, uint8_t serial, const bstring mob_id,
+   const bstring def_filename, const bstring nick,
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 ) {
    struct MOBILE* o = NULL;
    int bstr_res = 0;
    struct CLIENT* c = NULL;
 
+   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
+   c = channel_get_client_by_name( l, nick );
+   scaffold_check_null( c );
+
    o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
       mobile_new( o );
       o->serial = serial;
+      if( NULL == o->def_filename ) {
+         o->def_filename = bstrcpy( def_filename );
+      } else {
+         bstr_res = bassign( o->def_filename, def_filename );
+         scaffold_check_nonzero( bstr_res );
+      }
+      scaffold_assert( NULL != o->def_filename );
+      o->initialized = FALSE;
+      if( NULL == o->mob_id ) {
+         o->mob_id = bstrcpy( mob_id );
+      } else {
+         bstr_res = bassign( o->mob_id, mob_id );
+         scaffold_check_nonzero( bstr_res );
+      }
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
+      client_request_file( c, CHUNKER_DATA_TYPE_MOBDEF, o->def_filename );
    }
 
    scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
@@ -143,10 +194,6 @@ void channel_set_mobile(
    if( NULL != c && 0 == bstrcmp( c->nick, nick ) ) {
       client_set_puppet( c, o );
    }
-
-   bstr_res = bassign( o->sprites_filename, sprites_filename );
-   scaffold_assert( NULL != o->sprites_filename );
-   scaffold_check_nonzero( bstr_res );
 
    bstr_res = bassign( o->display_name, nick );
    scaffold_assert( NULL != o->display_name );
@@ -174,9 +221,6 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    int bstr_retval;
    SCAFFOLD_SIZE_SIGNED bytes_read = 0;
    SCAFFOLD_SIZE mapdata_size = 0;
-
-   mapdata_filename = bfromcstralloc( CHUNKER_FILENAME_ALLOC, "" );
-   scaffold_check_null( mapdata_filename );
 
    scaffold_print_info( "Loading tilemap for channel: %s\n", bdata( l->name ) );
    mapdata_filename = bstrcpy( l->name );

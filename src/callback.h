@@ -24,10 +24,13 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg );
 void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg );
 void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg );
 void* callback_send_updates_to_client( const bstring res, void* iter, void* arg );
+void* callback_parse_mobs( const bstring res, void* iter, void* arg );
+void* callback_parse_mob_channels( const bstring key, void* iter, void* arg );
 BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg );
 void* callback_get_tile_stack_l( bstring key, void* iter, void* arg );
 void* callback_get_tile_blocker( bstring res, void* iter, void* arg );
 #ifdef USE_CHUNKS
+void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg );
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg );
 #endif /* USE_CHUNKS */
 void* callback_proc_channel_vms( const bstring res, void* iter, void* arg );

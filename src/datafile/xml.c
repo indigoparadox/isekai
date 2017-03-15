@@ -4,6 +4,241 @@
 #include "../b64.h"
 #include "../hashmap.h"
 
+ezxml_t datafile_mobile_ezxml_peek_mob_id(
+   BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
+) {
+   ezxml_t xml_data = NULL;
+   const char* mob_id_c = NULL;
+   int bstr_retval;
+
+   scaffold_assert( NULL != mob_id_buffer );
+   scaffold_check_null( tmdata );
+
+   xml_data = ezxml_parse_str( tmdata, datasize );
+   scaffold_check_null( xml_data );
+
+   mob_id_c = ezxml_attr( xml_data, "id" );
+   scaffold_check_null( mob_id_c );
+
+   bstr_retval = bassigncstr( mob_id_buffer, mob_id_c );
+   scaffold_check_nonzero( bstr_retval );
+
+cleanup:
+   return xml_data;
+
+}
+
+static void datafile_mobile_parse_sprite_ezxml(
+   struct MOBILE* o, ezxml_t xml_sprite, BOOL local_images
+) {
+   ezxml_t xml_frame_iter = NULL;
+   const char* xml_attr = NULL;
+   int bstr_retval;
+   struct MOBILE_SPRITE_DEF* sprite = NULL;
+
+   scaffold_check_null( xml_sprite );
+
+   sprite =
+      (struct MOBILE_SPRITE_DEF*)calloc( 1, sizeof( struct MOBILE_SPRITE_DEF* ) );
+
+   /* TODO: Case insensitivity. */
+   xml_attr = ezxml_attr( xml_sprite, "id" );
+   scaffold_check_null( xml_attr );
+   sprite->id = atoi( xml_attr );
+
+   vector_set( &(o->sprite_defs), sprite->id, sprite, TRUE );
+   sprite = NULL;
+
+cleanup:
+   if( NULL != sprite ) {
+      free( sprite );
+   }
+   return;
+}
+
+static void datafile_mobile_parse_animation_ezxml(
+   struct MOBILE* o, ezxml_t xml_animation
+) {
+   ezxml_t xml_frame_iter = NULL;
+   const char* xml_attr = NULL;
+   int bstr_retval,
+      frame_id;
+   struct MOBILE_ANI_DEF* animation = NULL;
+   bstring name_dir = NULL;
+   struct MOBILE_SPRITE_DEF* sprite = NULL;
+
+   scaffold_check_null( xml_animation );
+
+   name_dir = bfromcstralloc( 10, "" );
+   scaffold_check_null( name_dir );
+
+   animation =
+      (struct MOBILE_ANI_DEF*)calloc( 1, sizeof( struct MOBILE_ANI_DEF ) );
+
+   /* TODO: Case insensitivity. */
+   xml_attr = ezxml_attr( xml_animation, "facing" );
+   scaffold_check_null( xml_attr );
+   if( 0 == strncmp( "down", xml_attr, 4 ) ) {
+      animation->facing = MOBILE_FACING_DOWN;
+   } else if( 0 == strncmp( "up", xml_attr, 2 ) ) {
+      animation->facing = MOBILE_FACING_UP;
+   } else if( 0 == strncmp( "left", xml_attr, 4 ) ) {
+      animation->facing = MOBILE_FACING_LEFT;
+   } else if( 0 == strncmp( "right", xml_attr, 5 ) ) {
+      animation->facing = MOBILE_FACING_RIGHT;
+   } else {
+      goto cleanup;
+   }
+   bstr_retval =
+      bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
+   scaffold_check_nonzero( bstr_retval );
+
+   xml_attr = ezxml_attr( xml_animation, "name" );
+   scaffold_check_null( xml_attr );
+   animation->name = bfromcstr( xml_attr );
+
+   xml_attr = ezxml_attr( xml_animation, "speed" );
+   scaffold_check_null( xml_attr );
+   animation->speed = atoi( xml_attr );
+
+   vector_init( &(animation->frames) );
+
+   xml_frame_iter = ezxml_child( xml_animation, "frame" );
+   while( NULL != xml_frame_iter ) {
+      xml_attr = ezxml_attr( xml_frame_iter, "id" );
+      scaffold_check_null( xml_attr );
+      frame_id = atoi( xml_attr );
+
+      sprite = vector_get( &(o->sprite_defs), frame_id );
+      if( NULL == sprite ) {
+         scaffold_print_error(
+            "Bad frame in parsed mobile animation: %d\n", frame_id
+         );
+      }
+
+      vector_add( &(animation->frames), sprite );
+
+      xml_frame_iter = ezxml_next( xml_frame_iter );
+   }
+
+   hashmap_put( &(o->ani_defs), name_dir, animation );
+   animation = NULL;
+
+cleanup:
+   if( NULL != animation ) {
+      free( animation );
+   }
+   bdestroy( name_dir );
+   return;
+}
+
+static void datafile_mobile_parse_script_ezxml(
+   struct MOBILE* o, ezxml_t xml_script
+) {
+   /* TODO */
+}
+
+void datafile_parse_mobile_ezxml_t(
+   struct MOBILE* o, ezxml_t xml_data, BOOL local_images
+) {
+   ezxml_t xml_sprites = NULL,
+      xml_sprite_iter = NULL,
+      xml_props = NULL,
+      xml_animations = NULL,
+      xml_animation_iter = NULL,
+      xml_scripts = NULL,
+      xml_script_iter = NULL,
+      xml_image = NULL;
+   const char* xml_attr = NULL;
+   int bstr_retval;
+
+   scaffold_check_null( xml_data );
+
+   xml_attr = ezxml_attr( xml_data, "id" );
+   scaffold_check_null( xml_attr );
+   if( NULL == o->mob_id ) {
+      o->mob_id = bfromcstr( xml_attr );
+   } else {
+      bassigncstr( o->mob_id, xml_attr );
+   }
+
+   xml_attr = ezxml_attr( xml_data, "spritewidth" );
+   scaffold_check_null( xml_attr );
+   o->sprite_width = atoi( xml_attr );
+
+   xml_attr = ezxml_attr( xml_data, "spriteheight" );
+   scaffold_check_null( xml_attr );
+   o->sprite_height = atoi( xml_attr );
+
+   xml_sprites = ezxml_child( xml_data, "sprites" );
+   scaffold_check_null( xml_sprites );
+
+   xml_sprite_iter = ezxml_child( xml_sprites, "sprite" );
+   while( NULL != xml_sprite_iter ) {
+      datafile_mobile_parse_sprite_ezxml( o, xml_sprite_iter, local_images );
+      xml_sprite_iter = ezxml_next( xml_sprite_iter );
+   }
+
+   xml_animations = ezxml_child( xml_data, "animations" );
+   scaffold_check_null( xml_animations );
+
+   xml_animation_iter = ezxml_child( xml_animations, "animation" );
+   while( NULL != xml_animation_iter ) {
+      datafile_mobile_parse_animation_ezxml( o, xml_animation_iter );
+      xml_animation_iter = ezxml_next( xml_animation_iter );
+   }
+
+   xml_scripts = ezxml_child( xml_data, "scripts" );
+   scaffold_check_null( xml_scripts );
+
+   xml_script_iter = ezxml_child( xml_scripts, "script" );
+   while( NULL != xml_script_iter ) {
+      datafile_mobile_parse_script_ezxml( o, xml_script_iter );
+      xml_script_iter = ezxml_next( xml_script_iter );
+   }
+
+   xml_image = ezxml_child( xml_data, "image" );
+   scaffold_check_null( xml_image );
+   xml_attr = ezxml_attr( xml_image, "src" );
+   scaffold_check_null( xml_attr );
+   if( NULL == o->sprites_filename ) {
+      o->sprites_filename = bfromcstr( xml_attr );
+   } else {
+      bstr_retval = bassigncstr( o->sprites_filename, xml_attr );
+      scaffold_check_nonzero( bstr_retval );
+   }
+
+cleanup:
+   return;
+}
+
+void datafile_parse_mobile_ezxml_string(
+   struct MOBILE* o, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+) {
+   ezxml_t xml_data = NULL;
+#ifdef EZXML_STRICT
+   SCAFFOLD_SIZE datasize_check = 0;
+#endif /* EZXML_STRICT */
+
+   scaffold_check_null( tmdata );
+
+#ifdef EZXML_STRICT
+   datasize_check = strlen( (const char*)o );
+   scaffold_assert( datasize_check == datasize );
+#endif /* EZXML_STRICT */
+
+   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
+   scaffold_check_null( xml_data );
+
+   datafile_parse_mobile_ezxml_t( o, xml_data, local_images );
+
+cleanup:
+   if( NULL != xml_data ) {
+      ezxml_free( xml_data );
+   }
+   return;
+}
+
 ezxml_t datafile_tilemap_ezxml_peek_lname(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
 ) {

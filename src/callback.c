@@ -7,6 +7,10 @@
 #include "chunker.h"
 #include "tilemap.h"
 #include "ui.h"
+#ifdef USE_EZXML
+#include "datafile.h"
+#include "ezxml.h"
+#endif /* USE_EZXML */
 
 void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
@@ -267,6 +271,20 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
 
 #ifdef USE_CHUNKS
 
+void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg ) {
+   struct CHUNKER* h = (struct CHUNKER*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   if( chunker_unchunk_finished( h ) ) {
+      /* Cached file found, so abort transfer. */
+      if( chunker_unchunk_cached( h ) ) {
+         proto_abort_chunker( c, h );
+      }
+
+      client_handle_finished_chunker( c, h );
+   }
+}
+
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 
@@ -368,6 +386,42 @@ void* callback_send_updates_to_client( const bstring res, void* iter, void* arg 
 
    proto_server_send_update( c, update );
 
+   return NULL;
+}
+
+void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+#ifdef USE_EZXML
+   ezxml_t xml_data = (ezxml_t)arg;
+   const char* mob_id_test;
+
+   if( NULL == 0 ) {
+      goto cleanup;
+   }
+
+   mob_id_test = ezxml_attr( xml_data, "id" );
+   scaffold_check_null( mob_id_test );
+
+   if( 0 == strncmp( bdata( o->mob_id ), mob_id_test, blength( o->mob_id ) ) ) {
+      scaffold_print_debug( "Client: Found mobile with ID: %b\n", o->mob_id );
+      datafile_parse_mobile_ezxml_t( o, xml_data, TRUE );
+      return o;
+   }
+
+#endif /* USE_EZXML */
+cleanup:
+   return NULL;
+}
+
+void* callback_parse_mob_channels( const bstring key, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+#ifdef USE_EZXML
+   ezxml_t xml_data = (ezxml_t)arg;
+
+   /* TODO: Return a condensed vector, somehow? */
+
+   return vector_iterate( &(l->mobiles), callback_parse_mobs, xml_data );
+#endif /* USE_EZXML */
    return NULL;
 }
 
