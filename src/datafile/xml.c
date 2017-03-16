@@ -49,7 +49,7 @@ static void datafile_mobile_parse_sprite_ezxml(
 
 cleanup:
    if( NULL != sprite ) {
-      free( sprite );
+      scaffold_free( sprite );
    }
    return;
 }
@@ -127,7 +127,7 @@ static void datafile_mobile_parse_animation_ezxml(
 
 cleanup:
    if( NULL != animation ) {
-      free( animation );
+      scaffold_free( animation );
    }
    bdestroy( name_dir );
    return;
@@ -439,7 +439,7 @@ cleanup:
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */
    if( NULL != terrain_info ) {
       bdestroy( terrain_info->name );
-      free( terrain_info );
+      scaffold_free( terrain_info );
    }
 }
 
@@ -733,7 +733,7 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
          scaffold_print_error(
             &module, "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
          );
-         free( obj_out );
+         scaffold_free( obj_out );
       }
 
       obj_out = NULL;
@@ -743,7 +743,7 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
 cleanup:
    if( NULL != obj_out ) {
       /* Something went wrong. */
-      free( obj_out );
+      scaffold_free( obj_out );
    }
    bdestroy( buffer );
    return;

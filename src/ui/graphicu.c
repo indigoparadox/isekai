@@ -17,7 +17,7 @@ const struct tagbstring str_dialog_default_title =
 
 void ui_cleanup( struct UI* ui ) {
    vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
-   vector_free( &(ui->windows) );
+   vector_cleanup( &(ui->windows) );
 }
 
 /** \brief
@@ -97,7 +97,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
 
 void ui_window_free( struct UI_WINDOW* win ) {
    ui_window_cleanup( win );
-   free( win );
+   scaffold_free( win );
 }
 
 /** \brief
@@ -178,7 +178,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
    if( FALSE == control->borrowed_text_field ) {
       bdestroy( control->text );
    }
-   free( control );
+   scaffold_free( control );
 }
 
 void ui_init( struct UI* ui, GRAPHICS* screen ) {

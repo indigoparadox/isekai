@@ -220,10 +220,10 @@ void check_chunker_unchunk_checked(
 void check_chunker_teardown_unchecked() {
    /* Get rid of the map data after all tests are complete. */
    if( NULL != chunker_mapdata ) {
-      free( chunker_mapdata );
+      scaffold_free( chunker_mapdata );
    }
    if( NULL != chunker_imgdata ) {
-      free( chunker_imgdata );
+      scaffold_free( chunker_imgdata );
    }
 
    scaffold_print_info( &module, "====== END CHUNKER TRACE ======\n" );
@@ -298,7 +298,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
       memcmp( cache_file_contents, chunker_mapdata, chunker_mapsize )
    );
 
-   free( cache_file_contents );
+   scaffold_free( cache_file_contents );
    cache_file_contents = NULL;
    cache_file_size = 0;
 

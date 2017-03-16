@@ -11,8 +11,8 @@ struct tagbstring str_key_also3 = bsStatic( "This key ain't relevant." );
 
 static void cleanup_blob( const struct REF *ref ) {
     BLOB* blob = scaffold_container_of( ref, struct _BLOB, refcount );
-    free( blob->data );
-    free( blob );
+    scaffold_free( blob->data );
+    scaffold_free( blob );
 }
 
 void free_blob( BLOB* blob ) {
@@ -39,7 +39,7 @@ BLOB* create_blob( uint32_t sent_s, uint16_t ptrn, SCAFFOLD_SIZE c, uint32_t sen
 
 /*
 void free_blob( BLOB* blob ) {
-   free( blob->data );
-   free( blob );
+   scaffold_free( blob->data );
+   scaffold_free( blob );
 }
 */

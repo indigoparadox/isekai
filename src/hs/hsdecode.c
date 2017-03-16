@@ -58,7 +58,7 @@ heatshrink_decoder* heatshrink_decoder_alloc(
    /* TODO: Fix this defeat of malloc safety. */
    buffers_sz = (1 << window_sz2) + input_buffer_size;
    sz = sizeof(heatshrink_decoder) + buffers_sz;
-   hsd = scaffold_alloc(sz, BYTE);
+   hsd = (heatshrink_decoder*)scaffold_alloc(sz, BYTE);
    if (hsd == NULL) {
       return NULL;
    }

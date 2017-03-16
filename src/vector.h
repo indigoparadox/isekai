@@ -36,7 +36,7 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
    vector_init( v );
 
 void vector_init( struct VECTOR* v );
-void vector_free( struct VECTOR* v );
+void vector_cleanup( struct VECTOR* v );
 void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data );
 void vector_add( struct VECTOR* v, void* data );
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe );

@@ -67,8 +67,8 @@ void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_
 cleanup:
    if( NULL != l_clients ) {
       vector_remove_cb( l_clients, callback_free_clients, NULL );
-      vector_free( l_clients );
-      free( l_clients );
+      vector_cleanup( l_clients );
+      scaffold_free( l_clients );
    }
    scaffold_assert_server();
 }
@@ -362,7 +362,7 @@ cleanup:
    if( NULL != files ) {
       vector_remove_cb( files, callback_free_strings, NULL );
    }
-   vector_free( files );
-   free( files );
+   vector_cleanup( files );
+   scaffold_free( files );
    return path_out;
 }

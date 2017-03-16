@@ -851,7 +851,7 @@ b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len ) {
 
 cleanup:
    if( 0 != scaffold_error ) {
-      free( *dest );
+      scaffold_free( *dest );
       *dest = NULL;
    }
    return i;

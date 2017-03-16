@@ -31,7 +31,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
 
 void ui_window_free( struct UI_WINDOW* win ) {
    ui_window_cleanup( win );
-   free( win );
+   scaffold_free( win );
 }
 
 void ui_control_init(
@@ -53,7 +53,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
    if( FALSE == control->borrowed_text_field ) {
       bdestroy( control->text );
    }
-   free( control );
+   scaffold_free( control );
 }
 
 void ui_init( struct UI* ui, GRAPHICS* screen ) {

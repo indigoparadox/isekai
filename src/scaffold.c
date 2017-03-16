@@ -306,7 +306,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #endif /* _WIN32 */
 
    if( NULL != *buffer ) {
-      free( *buffer );
+      scaffold_free( *buffer );
    }
 
    *buffer = NULL;
@@ -591,7 +591,7 @@ BOOL scaffold_buffer_grow(
    BOOL ok = FALSE;
 
    if( new_len > *len ) {
-      realloc_tmp = (BYTE*)realloc( *buffer, new_len * sizeof( BYTE ) );
+      realloc_tmp = scaffold_realloc( *buffer, new_len, BYTE );
       scaffold_check_null( realloc_tmp );
       *len = new_len;
       *buffer = realloc_tmp;

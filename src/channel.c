@@ -26,7 +26,7 @@ static void channel_free_final( const struct REF *ref ) {
    hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
    hashmap_cleanup( &(l->clients) );
    vector_remove_cb( &(l->mobiles), callback_free_mobiles, NULL );
-   vector_free( &(l->mobiles) );
+   vector_cleanup( &(l->mobiles) );
 
    bdestroy( l->name );
    bdestroy( l->topic );
@@ -34,7 +34,7 @@ static void channel_free_final( const struct REF *ref ) {
    tilemap_free( &(l->tilemap) );
 
    /* Free channel. */
-   free( l );
+   scaffold_free( l );
 }
 
 void channel_free( struct CHANNEL* l ) {
@@ -134,7 +134,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
 cleanup:
    if( NULL != mobdata_buffer ) {
-      free( mobdata_buffer );
+      scaffold_free( mobdata_buffer );
    }
    bdestroy( mobdata_path );
    return;
@@ -270,7 +270,7 @@ cleanup:
    bdestroy( mapdata_filename );
    bdestroy( mapdata_path );
    if( NULL != mapdata_buffer ) {
-      free( mapdata_buffer );
+      scaffold_free( mapdata_buffer );
    }
    return;
 }

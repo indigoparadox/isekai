@@ -332,7 +332,7 @@ void hashmap_rehash( struct HASHMAP* m ) {
       scaffold_check_nonzero( scaffold_error );
    }
 
-   free( curr );
+   scaffold_free( curr );
 
 cleanup:
 #ifdef DEBUG
@@ -761,7 +761,7 @@ void hashmap_cleanup( struct HASHMAP* m ) {
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    scaffold_assert( 0 >= hashmap_count( m ) );
-   free( m->data );
+   scaffold_free( m->data );
    m->sentinal = 0;
 cleanup:
    return;

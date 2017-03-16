@@ -28,16 +28,16 @@ static void mobile_cleanup( const struct REF* ref ) {
    }
 
    vector_remove_cb( &(o->sprite_defs), callback_free_generic, NULL );
-   vector_free( &(o->sprite_defs) );
+   vector_cleanup( &(o->sprite_defs) );
 
    /* vector_remove_cb( &(o->speech_backlog), callback_free_strings, NULL );
-   vector_free( &(o->speech_backlog) ); */
+   vector_cleanup( &(o->speech_backlog) ); */
 
    hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
    hashmap_cleanup( &(o->ani_defs) );
 
    bdestroy( o->display_name );
-   free( o );
+   scaffold_free( o );
 }
 
 void mobile_free( struct MOBILE* o ) {
@@ -319,8 +319,8 @@ cleanup:
    if( NULL != tiles_end ) {
       /* Force the count to 0 so we can delete it. */
       tiles_end->count = 0;
-      vector_free( tiles_end );
-      free( tiles_end );
+      vector_cleanup( tiles_end );
+      scaffold_free( tiles_end );
    }
    return update_out;
 }
@@ -364,8 +364,8 @@ cleanup:
    if( NULL != tiles_end ) {
       /* Force the count to 0 so we can delete it. */
       tiles_end->count = 0;
-      vector_free( tiles_end );
-      free( tiles_end );
+      vector_cleanup( tiles_end );
+      scaffold_free( tiles_end );
    }
    return steps_inc_out;
 }
@@ -411,8 +411,8 @@ cleanup:
    if( NULL != tiles_end ) {
       /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
       tiles_end->count = 0;
-      vector_free( tiles_end );
-      free( tiles_end );
+      vector_cleanup( tiles_end );
+      scaffold_free( tiles_end );
    }
    return sprite_height_out;
 }

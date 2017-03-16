@@ -16,7 +16,7 @@ START_TEST( test_vector_create ) {
 
 cleanup:
 
-   vector_free( v );
+   vector_cleanup( v );
 }
 END_TEST
 
@@ -61,7 +61,7 @@ START_TEST( test_vector_add ) {
    vector_remove( v, 0 );
    free_blob( blob );
 
-   vector_free( v );
+   vector_cleanup( v );
 
 cleanup:
    return;
@@ -102,7 +102,7 @@ START_TEST( test_vector_add_scalar ) {
 
 cleanup:
 
-   vector_free( v );
+   vector_cleanup( v );
 }
 END_TEST
 
@@ -133,7 +133,7 @@ cleanup:
    free_blob( (BLOB*)vector_get( v, 1 ) );
    vector_remove( v, 0 );
    vector_remove( v, 0 );
-   vector_free( v );
+   vector_cleanup( v );
 }
 END_TEST
 
@@ -180,7 +180,7 @@ START_TEST( test_vector_delete ) {
 
 cleanup:
 
-   vector_free( v );
+   vector_cleanup( v );
 }
 END_TEST
 
