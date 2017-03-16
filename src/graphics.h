@@ -96,8 +96,8 @@ struct GRAPHICS_TILE_WINDOW {
     scaffold_check_null( g ); \
     graphics_surface_init( g, w, h );
 
-void graphics_screen_init(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+void graphics_screen_new(
+   GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 );
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );

@@ -45,7 +45,7 @@ int main( int argc, char** argv ) {
 #endif /* _WIN32 */
    bstring buffer = NULL;
    time_t tm = 0;
-   GRAPHICS g;
+   GRAPHICS* g_screen;
    struct INPUT p = { 0 };
    struct UI ui = { 0 };
    struct GRAPHICS_TILE_WINDOW twindow = { 0 };
@@ -66,8 +66,6 @@ int main( int argc, char** argv ) {
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
 
-   memset( &g, '\0', sizeof( GRAPHICS ) );
-
 #ifdef _WIN32
    graphics_screen_init(
       &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
@@ -75,17 +73,17 @@ int main( int argc, char** argv ) {
       nShowCmd, hInstance
    );
 #else
-   graphics_screen_init(
-      &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
+   graphics_screen_new(
+      &g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT, 0, NULL
    );
 #endif /* _WIN32 */
    scaffold_check_nonzero( scaffold_error );
 
-   graphics_set_window_title( &g, &str_title, NULL );
+   graphics_set_window_title( g_screen, &str_title, NULL );
 
    input_init( &p );
-   ui_init( &ui, &g );
+   ui_init( &ui, g_screen );
 
    srand( (unsigned)time( &tm ) );
 
@@ -132,8 +130,8 @@ int main( int argc, char** argv ) {
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );
       do {
-         ui_draw( &ui, &g );
-         graphics_flip_screen( &g );
+         ui_draw( &ui, g_screen );
+         graphics_flip_screen( g_screen );
          graphics_wait_for_fps_timer();
          input_get_event( &p );
       } while( 0 == ui_poll_input( &ui, &p, buffer, NULL ) );
@@ -173,7 +171,7 @@ int main( int argc, char** argv ) {
 
    twindow.width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
    twindow.height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
-   twindow.g = &g;
+   twindow.g = g_screen;
    twindow.c = main_client;
    twindow.t = NULL;
 
@@ -190,7 +188,7 @@ int main( int argc, char** argv ) {
       }
 
       server_poll_new_clients( main_server );
-      client_update( main_client, &g );
+      client_update( main_client, g_screen );
       server_service_clients( main_server );
 
       /* Do drawing. */
@@ -200,12 +198,12 @@ int main( int argc, char** argv ) {
          NULL == main_client->puppet
       ) {
          client_poll_input( main_client, l );
-         graphics_set_color( &g, GRAPHICS_COLOR_WHITE );
+         graphics_set_color( g_screen, GRAPHICS_COLOR_WHITE );
          graphics_draw_text(
-            &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
+            g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
             GRAPHICS_TEXT_ALIGN_CENTER, &str_loading
          );
-         graphics_flip_screen( &g );
+         graphics_flip_screen( g_screen );
          continue;
       } else if( TRUE != post_load_finished ) {
          twindow.t = &(l->tilemap);
@@ -236,12 +234,12 @@ int main( int argc, char** argv ) {
       tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT
-      graphics_draw_text( &g, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
+      graphics_draw_text( g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
 #endif /* USE_RANDOM_PORT */
 
-      ui_draw( &ui, &g );
+      ui_draw( &ui, g_screen );
 
-      graphics_flip_screen( &g );
+      graphics_flip_screen( g_screen );
    }
 
 cleanup:
