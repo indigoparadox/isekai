@@ -701,6 +701,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    case 'a': client_key_update( MOBILE_UPDATE_MOVELEFT ); return TRUE;
    case 's': client_key_update( MOBILE_UPDATE_MOVEDOWN ); return TRUE;
    case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
+   case ' ': client_key_update( MOBILE_UPDATE_ATTACK ); return TRUE;
    case '\\': windef_show_chat( ui, update.l ); return TRUE;
 #ifdef DEBUG_VM
    case 'p': windef_show_repl( ui ); return TRUE;

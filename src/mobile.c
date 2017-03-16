@@ -435,7 +435,7 @@ cleanup:
  * \return What the update becomes to send to the clients. MOBILE_UPDATE_NONE
  *         if the update failed to occur.
  */
- MOBILE_UPDATE mobile_apply_update(
+MOBILE_UPDATE mobile_apply_update(
    struct MOBILE_UPDATE_PACKET* update, BOOL instant
 ) {
    struct MOBILE* o = update->o;
@@ -535,6 +535,9 @@ cleanup:
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX * -1;
       }
+      break;
+
+   case MOBILE_UPDATE_ATTACK:
       break;
 
    case MOBILE_UPDATE_NONE:
