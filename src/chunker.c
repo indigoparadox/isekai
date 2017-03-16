@@ -12,7 +12,7 @@
 #include "callback.h"
 #include "ref.h"
 
-static void chunker_cleanup( const struct REF* ref ) {
+static void chunker_destroy( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
    scaffold_print_debug(
@@ -56,7 +56,7 @@ static void chunker_chunk_setup_internal(
    scaffold_assert( NULL != h );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
-      ref_init( &(h->refcount), chunker_cleanup );
+      ref_init( &(h->refcount), chunker_destroy );
    }
 
 #if HEATSHRINK_DYNAMIC_ALLOC
@@ -232,7 +232,7 @@ void chunker_unchunk_start(
    scaffold_assert( NULL == h->raw_ptr );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
-      ref_init( &(h->refcount), chunker_cleanup );
+      ref_init( &(h->refcount), chunker_destroy );
    }
 
 #if HEATSHRINK_DYNAMIC_ALLOC
