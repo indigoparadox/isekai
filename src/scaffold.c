@@ -136,9 +136,12 @@ static void scaffold_log(
 
    scaffold_snprintf( scaffold_print_buffer, message, varg );
 
-   binsertch( scaffold_print_buffer, 0, 1, ' ' );
-   binsertch( scaffold_print_buffer, 0, 1, ':' );
-   binsert( scaffold_print_buffer, 0, mod_in, '\0' );
+   bstr_ret = binsertch( scaffold_print_buffer, 0, 1, ' ' );
+   if( 0 > bstr_ret ) { goto cleanup; }
+   bstr_ret = binsertch( scaffold_print_buffer, 0, 1, ':' );
+   if( 0 > bstr_ret ) { goto cleanup; }
+   bstr_ret = binsert( scaffold_print_buffer, 0, mod_in, '\0' );
+   if( 0 > bstr_ret ) { goto cleanup; }
 
    scaffold_colorize( scaffold_print_buffer, color );
 
