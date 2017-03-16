@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include "bstrlib.h"
+#include "../scaffold.h"
 
 /* Optionally include a mechanism for debugging memory */
 
@@ -30,6 +31,7 @@
 #include "memdbg.h"
 #endif
 
+/*
 #ifndef bstr__alloc
 #if defined (BSTRLIB_TEST_CANARY)
 void* bstr__alloc (size_t sz) {
@@ -41,7 +43,9 @@ void* bstr__alloc (size_t sz) {
 #define bstr__alloc(x) calloc (1, x)
 #endif
 #endif
+*/
 
+/*
 #ifndef bstr__free
 #define bstr__free(p) free (p)
 #endif
@@ -49,6 +53,7 @@ void* bstr__alloc (size_t sz) {
 #ifndef bstr__realloc
 #define bstr__realloc(p,x) realloc ((p), (x))
 #endif
+*/
 
 #ifndef bstr__memcpy
 #define bstr__memcpy(d,s,l) memcpy ((d), (s), (l))
@@ -124,14 +129,16 @@ int balloc (bstring b, int olen) {
 
 			reallocStrategy:;
 
-			x = (unsigned char *) bstr__realloc (b->data, (size_t) len);
+			/* x = (unsigned char *) bstr__realloc (b->data, (size_t) len); */
+			x = scaffold_realloc( b->data, len, unsigned char );
 			if (x == NULL) {
 
 				/* Since we failed, try allocating the tighest possible
 				   allocation */
 
 				len = olen;
-				x = (unsigned char *) bstr__realloc (b->data, (size_t) olen);
+				/* x = (unsigned char *) bstr__realloc (b->data, (size_t) olen); */
+				x = scaffold_realloc( b->data, olen, unsigned char );
 				if (NULL == x) {
 					return BSTR_ERR;
 				}
@@ -142,7 +149,8 @@ int balloc (bstring b, int olen) {
 			   the extra bytes that are allocated, but not considered part of
 			   the string */
 
-			if (NULL == (x = (unsigned char *) bstr__alloc ((size_t) len))) {
+			/* if (NULL == (x = (unsigned char *) bstr__alloc ((size_t) len))) { */
+			if (NULL == (x = scaffold_alloc( len, unsigned char ))) {
 
 				/* Perhaps there is no available memory for the two
 				   allocations to be in memory at once */
@@ -152,7 +160,7 @@ int balloc (bstring b, int olen) {
 			} else {
 				if (b->slen) bstr__memcpy ((char *) x, (char *) b->data,
 				                           (size_t) b->slen);
-				bstr__free (b->data);
+				scaffold_free( b->data );
 			}
 		}
 		b->data = x;
@@ -187,7 +195,8 @@ int ballocmin (bstring b, int len) {
 	if (len < b->slen + 1) len = b->slen + 1;
 
 	if (len != b->mlen) {
-		s = (unsigned char *) bstr__realloc (b->data, (size_t) len);
+		/* s = (unsigned char *) bstr__realloc (b->data, (size_t) len); */
+		s = scaffold_realloc( b->data, (size_t)len, unsigned char );
 		if (NULL == s) return BSTR_ERR;
 		s[b->slen] = (unsigned char) '\0';
 		b->data = s;
@@ -212,11 +221,13 @@ size_t j;
 	i = snapUpSize ((int) (j + (2 - (j != 0))));
 	if (i <= (int) j) return NULL;
 
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+	/* b = (bstring) bstr__alloc (sizeof (struct tagbstring)); */
+	b = scaffold_alloc( 1, struct tagbstring );
 	if (NULL == b) return NULL;
 	b->slen = (int) j;
-	if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
-		bstr__free (b);
+	/* if (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) { */
+	if (NULL == (b->data = scaffold_alloc( (b->mlen = i), unsigned char ))) {
+		scaffold_free( b );
 		return NULL;
 	}
 
@@ -246,14 +257,16 @@ size_t j;
 	if (maxl < minl) maxl = minl;
 	i = maxl;
 
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+	/* b = (bstring) bstr__alloc (sizeof (struct tagbstring)); */
+	b = scaffold_alloc( 1, struct tagbstring );
 	if (b == NULL) return NULL;
 	b->slen = (int) j;
 
-	while (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) {
+	/* while (NULL == (b->data = (unsigned char *) bstr__alloc (b->mlen = i))) { */
+	while (NULL == (b->data = scaffold_alloc( (b->mlen = i), unsigned char))) {
 		int k = (i >> 1) + (minl >> 1);
 		if (i == k || i < minl) {
-			bstr__free (b);
+			scaffold_free (b);
 			return NULL;
 		}
 		i = k;
@@ -283,7 +296,8 @@ bstring b;
 int i;
 
 	if (blk == NULL || len < 0) return NULL;
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+	/* b = (bstring) bstr__alloc (sizeof (struct tagbstring)); */
+	b = scaffold_alloc( 1, struct tagbstring );
 	if (b == NULL) return NULL;
 	b->slen = len;
 
@@ -292,9 +306,10 @@ int i;
 
 	b->mlen = i;
 
-	b->data = (unsigned char *) bstr__alloc ((size_t) b->mlen);
+	/* b->data = (unsigned char *) bstr__alloc ((size_t) b->mlen); */
+	b->data = scaffold_alloc( b->mlen, unsigned char );
 	if (b->data == NULL) {
-		bstr__free (b);
+		scaffold_free (b);
 		return NULL;
 	}
 
@@ -317,7 +332,8 @@ char * r;
 
 	if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
 	l = b->slen;
-	r = (char *) bstr__alloc ((size_t) (l + 1));
+	/* r = (char *) bstr__alloc ((size_t) (l + 1)); */
+	r = scaffold_alloc( l + 1, char );
 	if (r == NULL) return r;
 
 	for (i=0; i < l; i ++) {
@@ -342,7 +358,7 @@ char * r;
  */
 int bcstrfree (char * s) {
 	if (s) {
-		bstr__free (s);
+		scaffold_free (s);
 		return BSTR_OK;
 	}
 	return BSTR_ERR;
@@ -454,7 +470,8 @@ int i,j;
 	/* Attempted to copy an invalid string? */
 	if (b == NULL || b->slen < 0 || b->data == NULL) return NULL;
 
-	b0 = (bstring) bstr__alloc (sizeof (struct tagbstring));
+	/* b0 = (bstring) bstr__alloc (sizeof (struct tagbstring)); */
+	b0 = scaffold_alloc( 1, struct tagbstring );
 	if (b0 == NULL) {
 		/* Unable to allocate memory for string header */
 		return NULL;
@@ -463,13 +480,15 @@ int i,j;
 	i = b->slen;
 	j = snapUpSize (i + 1);
 
-	b0->data = (unsigned char *) bstr__alloc (j);
+	/* b0->data = (unsigned char *) bstr__alloc (j); */
+	b0->data = scaffold_alloc( j, unsigned char );
 	if (b0->data == NULL) {
 		j = i + 1;
-		b0->data = (unsigned char *) bstr__alloc (j);
+		/* b0->data = (unsigned char *) bstr__alloc (j); */
+		b0->data = scaffold_alloc( j, unsigned char );
 		if (b0->data == NULL) {
 			/* Unable to allocate memory for string data */
-			bstr__free (b0);
+			scaffold_free( b0 );
 			return NULL;
 		}
 	}
@@ -1072,7 +1091,7 @@ int bdestroy (bstring b) {
 	    b->data == NULL)
 		return BSTR_ERR;
 
-	bstr__free (b->data);
+	scaffold_free (b->data);
 
 	/* In case there is any stale usage, there is one more chance to
 	   notice this error. */
@@ -1081,7 +1100,7 @@ int bdestroy (bstring b) {
 	b->mlen = -__LINE__;
 	b->data = NULL;
 
-	bstr__free (b);
+	scaffold_free (b);
 	return BSTR_OK;
 }
 
@@ -1553,7 +1572,8 @@ unsigned char* aux = (unsigned char*) blk;
 	/* Aliasing case */
 	if (((size_t) ((unsigned char*) blk + len)) >= ((size_t) b->data) &&
 		((size_t) blk) < ((size_t) (b->data + b->mlen))) {
-		if (NULL == (aux = (unsigned char*) bstr__alloc (len)))
+		/* if (NULL == (aux = (unsigned char*) bstr__alloc (len))) */
+		if (NULL == (aux = scaffold_alloc( len, unsigned char )))
 			return BSTR_ERR;
 		bstr__memcpy (aux, blk, len);
 	}
@@ -1561,7 +1581,7 @@ unsigned char* aux = (unsigned char*) blk;
 	if (l > d) {
 		/* Inserting past the end of the string */
 		if (balloc (b, l + 1) != BSTR_OK) {
-			if (aux != (unsigned char*) blk) bstr__free (aux);
+			if (aux != (unsigned char*) blk) scaffold_free(aux);
 			return BSTR_ERR;
 		}
 		bstr__memset (b->data + b->slen, (int) fill,
@@ -1570,7 +1590,7 @@ unsigned char* aux = (unsigned char*) blk;
 	} else {
 		/* Inserting in the middle of the string */
 		if (balloc (b, d + 1) != BSTR_OK) {
-			if (aux != (unsigned char*) blk) bstr__free (aux);
+			if (aux != (unsigned char*) blk) scaffold_free (aux);
 			return BSTR_ERR;
 		}
 		bBlockCopy (b->data + l, b->data + pos, d - l);
@@ -1578,7 +1598,7 @@ unsigned char* aux = (unsigned char*) blk;
 	}
 	bBlockCopy (b->data + pos, aux, len);
 	b->data[b->slen] = (unsigned char) '\0';
-	if (aux != (unsigned char*) blk) bstr__free (aux);
+	if (aux != (unsigned char*) blk) scaffold_free (aux);
 	return BSTR_OK;
 }
 
@@ -1758,7 +1778,8 @@ bstring auxr = (bstring) repl;
 			mlen += mlen;
 			sl = sizeof (int *) * mlen;
 			if (static_d == d) d = NULL; /* static_d cannot be realloced */
-			if (NULL == (t = (int *) bstr__realloc (d, sl))) {
+			/* if (NULL == (t = (int *) bstr__realloc (d, sl))) { */
+			if (NULL == (t = (int*)scaffold_realloc( d, sl, BYTE ))) {
 				ret = BSTR_ERR;
 				goto done;
 			}
@@ -1797,7 +1818,7 @@ bstring auxr = (bstring) repl;
 	}
 
 	done:;
-	if (static_d != d) bstr__free (d);
+	if (static_d != d) scaffold_free (d);
 	if (auxf != find) bdestroy (auxf);
 	if (auxr != repl) bdestroy (auxr);
 	return ret;
@@ -2042,7 +2063,8 @@ struct bStream * bsopen (bNread readPtr, void * parm) {
 struct bStream * s;
 
 	if (readPtr == NULL) return NULL;
-	s = (struct bStream *) bstr__alloc (sizeof (struct bStream));
+	/* s = (struct bStream *) bstr__alloc (sizeof (struct bStream)); */
+	s = scaffold_alloc( 1, struct bStream );
 	if (s == NULL) return NULL;
 	s->parm = parm;
 	s->buff = bfromcstr ("");
@@ -2084,7 +2106,7 @@ void * parm;
 	parm = s->parm;
 	s->parm = NULL;
 	s->isEOF = 1;
-	bstr__free (s);
+	scaffold_free (s);
 	return parm;
 }
 
@@ -2383,12 +2405,14 @@ int i, c, v;
 		c += v;
 	}
 
-	b = (bstring) bstr__alloc (sizeof (struct tagbstring));
+	/* b = (bstring) bstr__alloc (sizeof (struct tagbstring)); */
+	b = scaffold_alloc( 1, struct tagbstring );
    assert( NULL != b );
 	if (len == 0) {
-		p = b->data = (unsigned char *) bstr__alloc (c);
+		/* p = b->data = (unsigned char *) bstr__alloc (c); */
+		p = b->data = scaffold_alloc( c, unsigned char );
 		if (p == NULL) {
-			bstr__free (b);
+			scaffold_free (b);
 			return NULL;
 		}
 		for (i = 0; i < bl->qty; i++) {
@@ -2402,9 +2426,10 @@ int i, c, v;
 		    v / len != bl->qty - 1) return NULL; /* Overflow */
 		if (v > INT_MAX - c) return NULL;	/* Overflow */
 		c += v;
-		p = b->data = (unsigned char *) bstr__alloc (c);
+		/* p = b->data = (unsigned char *) bstr__alloc (c); */
+		p = b->data = scaffold_alloc( c, unsigned char );
 		if (p == NULL) {
-			bstr__free (b);
+			scaffold_free (b);
 			return NULL;
 		}
 		v = bl->entry[0]->slen;
@@ -2575,11 +2600,13 @@ int i, p, ret;
  */
 struct bstrList * bstrListCreate (void) {
 struct bstrList * sl =
-	(struct bstrList *) bstr__alloc (sizeof (struct bstrList));
+	/* (struct bstrList *) bstr__alloc (sizeof (struct bstrList)); */
+	scaffold_alloc( 1, struct bstrList );
 	if (sl) {
-		sl->entry = (bstring *) bstr__alloc (1*sizeof (bstring));
+		/* sl->entry = (bstring *) bstr__alloc (1*sizeof (bstring)); */
+		sl->entry = scaffold_alloc( 1, bstring );
 		if (!sl->entry) {
-			bstr__free (sl);
+			scaffold_free (sl);
 			sl = NULL;
 		} else {
 			sl->qty = 0;
@@ -2605,9 +2632,9 @@ int i;
 	}
 	sl->qty  = -1;
 	sl->mlen = -1;
-	bstr__free (sl->entry);
+	scaffold_free (sl->entry);
 	sl->entry = NULL;
-	bstr__free (sl);
+	scaffold_free (sl);
 	return BSTR_OK;
 }
 
@@ -2626,11 +2653,13 @@ size_t nsz;
 	smsz = snapUpSize (msz);
 	nsz = ((size_t) smsz) * sizeof (bstring);
 	if (nsz < (size_t) smsz) return BSTR_ERR;
-	l = (bstring *) bstr__realloc (sl->entry, nsz);
+	/* l = (bstring *) bstr__realloc (sl->entry, nsz); */
+	l = scaffold_realloc( sl->entry, nsz, bstring );
 	if (!l) {
 		smsz = msz;
 		nsz = ((size_t) smsz) * sizeof (bstring);
-		l = (bstring *) bstr__realloc (sl->entry, nsz);
+		/* l = (bstring *) bstr__realloc (sl->entry, nsz); */
+		l = scaffold_realloc( sl->entry, nsz, bstring );
 		if (!l) return BSTR_ERR;
 	}
 	sl->mlen = smsz;
@@ -2652,7 +2681,8 @@ size_t nsz;
 	if (sl->mlen == msz) return BSTR_OK;
 	nsz = ((size_t) msz) * sizeof (bstring);
 	if (nsz < (size_t) msz) return BSTR_ERR;
-	l = (bstring *) bstr__realloc (sl->entry, nsz);
+	/* l = (bstring *) bstr__realloc (sl->entry, nsz); */
+	l = scaffold_realloc( sl->entry, nsz, bstring );
 	if (!l) return BSTR_ERR;
 	sl->mlen = msz;
 	sl->entry = l;
@@ -2797,8 +2827,9 @@ struct genBstrList * g = (struct genBstrList *) parm;
 			mlen += mlen;
 		}
 
-		tbl = (bstring *) bstr__realloc (g->bl->entry,
-		                                 sizeof (bstring) * mlen);
+		/* tbl = (bstring *) bstr__realloc (g->bl->entry,
+		                                 sizeof (bstring) * mlen); */
+      tbl = scaffold_realloc( g->bl->entry, mlen, bstring );
 		if (tbl == NULL) return BSTR_ERR;
 
 		g->bl->entry = tbl;
@@ -2820,12 +2851,14 @@ struct genBstrList g;
 
 	if (str == NULL || str->data == NULL || str->slen < 0) return NULL;
 
-	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
+	/* g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList)); */
+	g.bl = scaffold_alloc( 1, struct bstrList );
 	if (g.bl == NULL) return NULL;
 	g.bl->mlen = 4;
-	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	/* g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring)); */
+	g.bl->entry = scaffold_alloc( g.bl->mlen, bstring );
 	if (NULL == g.bl->entry) {
-		bstr__free (g.bl);
+		scaffold_free(g.bl);
 		return NULL;
 	}
 
@@ -2848,12 +2881,14 @@ struct genBstrList g;
 
 	if (str == NULL || str->data == NULL || str->slen < 0) return NULL;
 
-	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
+	/* g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList)); */
+	g.bl = scaffold_alloc( 1, struct bstrList );
 	if (g.bl == NULL) return NULL;
 	g.bl->mlen = 4;
-	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	/* g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring)); */
+	g.bl->entry = scaffold_alloc( g.bl->mlen, bstring );
 	if (NULL == g.bl->entry) {
-		bstr__free (g.bl);
+		scaffold_free (g.bl);
 		return NULL;
 	}
 
@@ -2879,12 +2914,14 @@ struct genBstrList g;
 	    splitStr == NULL || splitStr->slen < 0 || splitStr->data == NULL)
 		return NULL;
 
-	g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList));
+	/* g.bl = (struct bstrList *) bstr__alloc (sizeof (struct bstrList)); */
+	g.bl = scaffold_alloc( 1, struct bstrList );
 	if (g.bl == NULL) return NULL;
 	g.bl->mlen = 4;
-	g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring));
+	/* g.bl->entry = (bstring *) bstr__alloc (g.bl->mlen * sizeof (bstring)); */
+	g.bl->entry = scaffold_alloc( g.bl->mlen, bstring );
 	if (NULL == g.bl->entry) {
-		bstr__free (g.bl);
+		scaffold_free (g.bl);
 		return NULL;
 	}
 	g.b = (bstring) str;
