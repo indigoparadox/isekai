@@ -48,6 +48,14 @@ typedef enum GRAPHICS_COLOR {
    GRAPHICS_COLOR_WHITE       = 15
 } GRAPHICS_COLOR;
 
+typedef enum GRAPHICS_FONT_SIZE {
+   GRAPHICS_FONT_SIZE_8  = 8,
+   GRAPHICS_FONT_SIZE_10 = 10,
+   GRAPHICS_FONT_SIZE_12 = 12,
+   GRAPHICS_FONT_SIZE_16 = 16,
+   GRAPHICS_FONT_SIZE_32 = 32
+} GRAPHICS_FONT_SIZE;
+
 struct GRAPHICS_BITMAP {
    SCAFFOLD_SIZE w;
    SCAFFOLD_SIZE h;
@@ -62,11 +70,6 @@ typedef struct GRAPHICS {
    void* surface;
    void* palette;
    void* font;
-#ifdef USE_SDL
-   void* color;
-#else
-   GRAPHICS_COLOR color;
-#endif /* USE_SDL */
    SCAFFOLD_SIZE virtual_x;
    SCAFFOLD_SIZE virtual_y;
 } GRAPHICS;
@@ -109,11 +112,6 @@ void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
 void graphics_screen_scroll(
    GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
 );
-void graphics_set_font( GRAPHICS* g, bstring name );
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color );
-void graphics_set_color_ex(
-   GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a
-);
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data(
    GRAPHICS* g, const BYTE* data, SCAFFOLD_SIZE length
@@ -124,14 +122,21 @@ __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
 void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
+   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
    const bstring text
 );
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
 );
-void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text );
+void graphics_measure_text(
+   GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
+);
+void graphics_draw_char(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_COLOR color,
+   GRAPHICS_FONT_SIZE size, char c
+);
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_blit(

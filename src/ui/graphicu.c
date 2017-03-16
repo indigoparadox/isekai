@@ -267,26 +267,28 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS* g = win->element;
+   GRAPHICS_RECT control_size;
+   GRAPHICS_COLOR fg = UI_LABEL_FG;
+
+   graphics_measure_text( g, &control_size, UI_TEXT_SIZE, control->text );
 
    switch( control->type ) {
    case UI_CONTROL_TYPE_LABEL:
-      graphics_set_color( g, GRAPHICS_COLOR_WHITE );
       break;
    case UI_CONTROL_TYPE_BUTTON:
-      graphics_set_color( g, GRAPHICS_COLOR_DARK_CYAN );
       graphics_draw_rect(
-         g, control->self.x, control->self.y, control->self.width,
-         control->self.height
+         g, control->self.x, control->self.y, control_size.w, control_size.h,
+         UI_BUTTON_BG
       );
-      graphics_set_color( g, GRAPHICS_COLOR_WHITE );
+      fg = UI_BUTTON_FG;
       break;
    case UI_CONTROL_TYPE_TEXT:
-      graphics_set_color( g, GRAPHICS_COLOR_DARK_BLUE );
       graphics_draw_rect(
-         g, control->self.x, control->self.y, control->self.width,
-         control->self.height
+         g, control->self.x, control->self.y,
+         control->self.width, control_size.h + (UI_TEXT_MARGIN * 2),
+         UI_TEXT_BG
       );
-      graphics_set_color( g, GRAPHICS_COLOR_WHITE );
+      fg = UI_TEXT_FG;
       break;
 
    case UI_CONTROL_TYPE_NONE:
@@ -296,8 +298,8 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    /* TODO: Draw the control onto the window. */
    if( NULL != control->text ) {
       graphics_draw_text(
-         g, control->self.x + 5, control->self.y + 2, GRAPHICS_TEXT_ALIGN_LEFT,
-         control->text
+         g, control->self.x + 5, control->self.y + UI_TEXT_MARGIN,
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, control->text
       );
    }
 
@@ -309,19 +311,18 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
 
    /* Draw the window. */
-   graphics_set_color( win->element, GRAPHICS_COLOR_BLUE );
    graphics_draw_rect(
-      win->element, 0, 0, win->width, win->height
+      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE
    );
 
    /* Draw the title bar. */
-   graphics_set_color( win->element, GRAPHICS_COLOR_BROWN );
    graphics_draw_rect(
-      win->element, 2, 2, win->width - 4, 12 /* TODO: Get text height. */
+      win->element, 2, 2, win->width - 4, UI_TITLEBAR_SIZE + 4,
+      UI_TITLEBAR_BG
    );
-   graphics_set_color( win->element, GRAPHICS_COLOR_WHITE );
    graphics_draw_text(
-      win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER, win->title
+      win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
+      UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title
    );
 
    hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
@@ -347,9 +348,8 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
       color_test = bfromcstr( "" );
    }
    for( i = 0 ; 16 > i ; i++ ) {
-      graphics_set_color( g, i );
       bassignformat( color_test, "%d", i );
-      graphics_draw_text( g, 10, 20 * i, GRAPHICS_TEXT_ALIGN_LEFT, color_test );
+      graphics_draw_text( g, 10, 20 * i, GRAPHICS_TEXT_ALIGN_LEFT, i, GRAPHICS_FONT_SIZE_12, color_test );
    }
 #endif /* DEBUG_PALETTE */
 }
