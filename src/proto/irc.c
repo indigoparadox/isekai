@@ -939,20 +939,33 @@ cleanup:
 static void irc_client_privmsg(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
-   bstring msg = NULL;
+   bstring msg = NULL,
+      nick = NULL;
+   struct CHANNEL* l = NULL;
+   struct MOBILE* o = NULL;
+   struct CLIENT* c_sender = NULL;
 
-
+   if( 3 > args->qty ) {
+      goto cleanup;
+   }
 
    msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
    scaffold_check_null( msg );
 
    scaffold_print_info( &module, "Message Incoming: %b\n", msg );
 
-   /*
-   scaffold_print_debug( &module, "1: %s 2: %s 3: %s 4: %s",
-                        args->entry[0]->data, args->entry[1]->data,
-                        args->entry[2]->data, args->entry[2]->data );
-   */
+   l = client_get_channel_by_name( c, args->entry[2] );
+   scaffold_check_null( l );
+
+   nick = /* Start at 1 to filter the : */
+      bmidstr( line, 1, binchr( line, 0, &scaffold_exclamation_string ) - 1 );
+   c_sender = channel_get_client_by_name( l, nick );
+   scaffold_check_null_msg( c_sender, bdata( nick ) );
+
+   o = c_sender->puppet;
+   scaffold_check_null( o );
+
+   mobile_speak( o, msg );
 
 cleanup:
    return;
