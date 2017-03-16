@@ -47,7 +47,7 @@ void ui_window_init(
    if( NULL != prompt ) {
       ui_control_new(
          control, win, prompt, UI_CONTROL_TYPE_LABEL,
-         FALSE, 5, 20, width - 10, 10
+         FALSE, NULL, 5, 20, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_label_default_id,
@@ -58,7 +58,7 @@ void ui_window_init(
    if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
       ui_control_new(
          control, win, NULL, UI_CONTROL_TYPE_TEXT,
-         FALSE, 5, 40, width - 10, 10
+         FALSE, NULL, 5, 40, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_control_default_id,
@@ -93,16 +93,30 @@ void ui_window_free( struct UI_WINDOW* win ) {
    free( win );
 }
 
+/** \brief
+ *
+ * \param
+ * \param[in] buffer    A writable field. This gives external processes a way
+ *                      to update this field.
+ * \return
+ *
+ */
+
 void ui_control_init(
    struct UI_CONTROL* control, struct UI_WINDOW* win,
-   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus,
+   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 ) {
    control->owner = win;
    control->type = type;
    if( NULL != text ) {
+      scaffold_assert( NULL == buffer );
       control->text = bstrcpy( text );
+   } else if( NULL != buffer ) {
+      scaffold_assert( NULL == text );
+      control->text = buffer;
+      control->borrowed_text_field = TRUE;
    } else {
       control->text = NULL;
    }
@@ -304,13 +318,20 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
 
+   /* Draw the window. */
    graphics_set_color( &(win->element), GRAPHICS_COLOR_BLUE );
    graphics_draw_rect(
       &(win->element), 0, 0, win->width, win->height
    );
+
+   /* Draw the title bar. */
+   graphics_set_color( &(win->element), GRAPHICS_COLOR_BROWN );
+   graphics_draw_rect(
+      &(win->element), 2, 2, win->width - 4, 12 /* TODO: Get text height. */
+   );
    graphics_set_color( &(win->element), GRAPHICS_COLOR_WHITE );
    graphics_draw_text(
-      &(win->element), win->width / 2, 2, GRAPHICS_TEXT_ALIGN_CENTER, win->title
+      &(win->element), win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER, win->title
    );
 
    hashmap_iterate( &(win->controls), ui_control_draw_cb, win );

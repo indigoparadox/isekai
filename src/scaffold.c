@@ -127,13 +127,15 @@ BOOL scaffold_string_is_printable( bstring str ) {
 void scaffold_print_debug( const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
+   int bstr_ret;
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
    }
    scaffold_assert( NULL != scaffold_print_buffer );
 
-   btrunc( scaffold_print_buffer, 0 );
+   bstr_ret = btrunc( scaffold_print_buffer, 0 );
+   scaffold_check_nonzero( bstr_ret );
 
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
@@ -151,13 +153,15 @@ cleanup:
 void scaffold_print_info( const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
+   int bstr_ret;
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
    }
    scaffold_assert( NULL != scaffold_print_buffer );
 
-   btrunc( scaffold_print_buffer, 0 );
+   bstr_ret = btrunc( scaffold_print_buffer, 0 );
+   scaffold_check_nonzero( bstr_ret );
 
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );
@@ -173,13 +177,15 @@ cleanup:
 void scaffold_print_error( const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
+   int bstr_ret;
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
    }
    scaffold_assert( NULL != scaffold_print_buffer );
 
-   btrunc( scaffold_print_buffer, 0 );
+   bstr_ret = btrunc( scaffold_print_buffer, 0 );
+   scaffold_check_nonzero( bstr_ret );
 
    va_start( varg, message );
    scaffold_snprintf( scaffold_print_buffer, message, varg );

@@ -289,7 +289,7 @@ void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
 
    scaffold_assert_server();
 
-   if( NULL != l->vm ) {
+   if( channel_vm_can_step( l ) ) {
       channel_vm_step( l );
    }
 

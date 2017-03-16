@@ -16,9 +16,11 @@ struct CHANNEL {
    struct HASHMAP clients;
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
+#ifdef USE_TINYPY
    struct tp_vm* vm;
    int vm_cur;
    int vm_step_ret;
+#endif /* USE_TINYPY */
 };
 
 struct CHANNEL_CLIENT {
@@ -51,5 +53,6 @@ void channel_load_tilemap( struct CHANNEL* l );
 void channel_vm_start( struct CHANNEL* l, bstring code );
 void channel_vm_step( struct CHANNEL* l );
 void channel_vm_end( struct CHANNEL* l );
+BOOL channel_vm_can_step( struct CHANNEL* l );
 
 #endif /* CHANNEL_H */
