@@ -212,8 +212,8 @@ SCAFFOLD_INLINE static int graphics_get_color( GRAPHICS* g ) {
    return g->color;
 }
 
-void graphics_screen_init(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+void graphics_screen_new(
+   GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
    int screen_return;
@@ -237,12 +237,14 @@ void graphics_screen_init(
    scaffold_check_nonzero( screen_return );
 
    /* TODO: Free double buffer. */
-   g->surface = create_bitmap( w, h );
-   g->w = w;
-   g->h = h;
-   scaffold_check_null( g->surface );
+   *g = scaffold_alloc( 1, GRAPHICS );
+   scaffold_check_null( *g );
+   (*g)->surface = create_bitmap( w, h );
+   (*g)->w = w;
+   (*g)->h = h;
+   scaffold_check_null( (*g)->surface );
 
-   clear_bitmap( g->surface );
+   clear_bitmap( (*g)->surface );
 
 cleanup:
    return;
