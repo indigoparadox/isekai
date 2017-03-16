@@ -162,16 +162,17 @@ static void tilemap_layer_draw_tile_debug(
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_COORDS:
       if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
-         graphics_set_color( g, GRAPHICS_COLOR_DARK_BLUE );
          bstr_result = bassignformat( bnum, "%d,", tile_x );
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
-            g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER, bnum
+            g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
          );
          bstr_result = bassignformat( bnum, "%d", tile_y );
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
-            g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER, bnum
+            g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
          );
          bdestroy( bnum );
       }
@@ -187,7 +188,8 @@ static void tilemap_layer_draw_tile_debug(
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + (10 * layer->z),
-            GRAPHICS_TEXT_ALIGN_CENTER, bnum
+            GRAPHICS_TEXT_ALIGN_CENTER,
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
          );
       }
       break;
@@ -203,12 +205,12 @@ static void tilemap_layer_draw_tile_debug(
             );
             scaffold_check_nonzero( bstr_result );
          }
-         graphics_set_color( g, td_i + 4 );
          graphics_draw_text(
             g,
             pix_x + ((td_i % 2) * 12),
             pix_y + ((td_i / 2) * 16),
             GRAPHICS_TEXT_ALIGN_CENTER,
+            td_i + 4, GRAPHICS_FONT_SIZE_8,
             bnum
          );
       }
@@ -218,15 +220,15 @@ static void tilemap_layer_draw_tile_debug(
          !tilemap_inside_inner_map_x( tile_x, twin ) &&
          !tilemap_inside_inner_map_y( tile_y, twin )
       ) {
-         graphics_set_color( g, GRAPHICS_COLOR_DARK_RED );
-         graphics_draw_rect( g, pix_x, pix_y, 32, 32 );
+         graphics_draw_rect( g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED );
       }
       if(
          !tilemap_inside_window_deadzone_x( tile_x, twin ) &&
          !tilemap_inside_window_deadzone_y( tile_y, twin )
       ) {
-         graphics_set_color( g, GRAPHICS_COLOR_DARK_CYAN );
-         graphics_draw_rect( g, pix_x, pix_y, 32, 32 );
+         graphics_draw_rect(
+            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN
+         );
       }
       break;
    }

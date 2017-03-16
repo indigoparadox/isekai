@@ -6,6 +6,7 @@
 #ifdef USE_SDL_IMAGE
 #include <SDL/SDL_image.h>
 #endif /* USE_SDL_IMAGE */
+#include "../font.h"
 
 static
 SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
@@ -26,6 +27,37 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_YELLOW      = 13, */ { 255, 255,   0, 0 },
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
+
+static void SDL_PutPixel( SDL_Surface *surface, int x, int y, uint32_t pixel ) {
+    int bpp = surface->format->BytesPerPixel;
+    uint8_t* p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
+
+    switch(bpp) {
+    case 1:
+        *p = pixel;
+        break;
+
+    case 2:
+        *(uint16_t*)p = pixel;
+        break;
+
+    case 3:
+        if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
+            p[0] = (pixel >> 16) & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = pixel & 0xff;
+        } else {
+            p[0] = pixel & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = (pixel >> 16) & 0xff;
+        }
+        break;
+
+    case 4:
+        *(uint32_t*)p = pixel;
+        break;
+    }
+}
 
 static void graphics_surface_cleanup( const struct REF *ref ) {
    GRAPHICS* g = scaffold_container_of( ref, GRAPHICS, refcount );
@@ -95,8 +127,6 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
       screen->format->Amask
    );
    scaffold_check_null( g->surface );
-   g->color = &(graphics_stock_colors[GRAPHICS_COLOR_BLUE]);
-   g->font = NULL;
    g->virtual_x = 0;
    g->virtual_y = 0;
    g->w = w;
@@ -121,18 +151,6 @@ void graphics_shutdown( GRAPHICS* g ) {
 
 void graphics_screen_scroll(
    GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
-) {
-}
-
-void graphics_set_font( GRAPHICS* g, bstring name ) {
-}
-
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
-   g->color = &(graphics_stock_colors[color]);
-}
-
-void graphics_set_color_ex(
-   GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a
 ) {
 }
 
@@ -248,26 +266,18 @@ cleanup:
 BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 }
 
-void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
-   const bstring text
-) {
-}
-
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color_i
 ) {
    SDL_Rect rect;
-   SDL_Color* color = NULL;
+   SDL_Color* color = &(graphics_stock_colors[color_i]);
    SDL_Surface* surface = g->surface;
 
    rect.x = x;
    rect.y = y;
    rect.w = w,
    rect.h = h;
-
-   color = g->color;
 
    SDL_FillRect(
       g->surface,
@@ -276,7 +286,28 @@ void graphics_draw_rect(
    );
 }
 
-void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text ) {
+void graphics_draw_char(
+   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS_COLOR color_i, GRAPHICS_FONT_SIZE size, char c
+) {
+   SCAFFOLD_SIZE x, y, bit;
+   uint8_t* font_char;
+   float divisor;
+   SDL_Color* color;
+
+   divisor = size / 8.0f;
+
+   color = &(graphics_stock_colors[color_i]);
+
+   SDL_LockSurface( g->surface );
+   for( y = 0 ; size > y ; y++ ) {
+      for( x = 0 ; size > x ; x++ ) {
+         if( font8x8_basic[c][(uint8_t)(y / divisor)] & 1 << (uint8_t)(x / divisor) ) {
+            SDL_PutPixel( g->surface, x_start + x, y_start + y, *((uint32_t*)color) );
+         }
+      }
+   }
+   SDL_UnlockSurface( g->surface );
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {

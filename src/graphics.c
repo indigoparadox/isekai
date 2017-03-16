@@ -130,3 +130,44 @@ void graphics_wait_for_fps_timer() {
    */
 #endif /* USE_POSIX_TIMER */
 }
+
+void graphics_draw_text(
+   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
+   const bstring text
+) {
+   SCAFFOLD_SIZE x = x_start,
+      y = y_start;
+   char c;
+   int i;
+   GRAPHICS_RECT text_size;
+
+   scaffold_assert( NULL != g );
+   scaffold_assert( NULL != text );
+
+   switch( align ) {
+   case GRAPHICS_TEXT_ALIGN_CENTER:
+      graphics_measure_text( g, &text_size, size, text );
+      x -= (text_size.w / 2);
+      break;
+   case GRAPHICS_TEXT_ALIGN_LEFT:
+      break;
+   case GRAPHICS_TEXT_ALIGN_RIGHT:
+      /* TODO */
+      break;
+   }
+
+   for( i = 0 ; text->slen > i ; i++ ) {
+      c = text->data[i];
+      graphics_draw_char( g, x + (size * i), y, color, size, c );
+   }
+}
+
+
+void graphics_measure_text(
+   GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
+) {
+   r->w = size;
+   r->h = size;
+   r->w *= blength( text );
+}

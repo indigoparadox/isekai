@@ -9,8 +9,8 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 
 #define GRAPHICS_C
 #include "../graphics.h"
-
 #include "../scaffold.h"
+#include "../font.h"
 
 #include <allegro.h>
 
@@ -215,10 +215,6 @@ const PACKFILE_VTABLE graphics_fmem_vtable = {
    graphics_fmem_ferror,
 };
 
-SCAFFOLD_INLINE static int graphics_get_color( GRAPHICS* g ) {
-   return g->color;
-}
-
 void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
@@ -285,14 +281,6 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    }
    g->w = w;
    g->h = h;
-   g->font = NULL;
-   /*
-   g->color.r = 0;
-   g->color.g = 0;
-   g->color.b = 0;
-   g->color.a = 255;
-   */
-   g->color = 0;
    ref_init( &(g->refcount), graphics_surface_cleanup );
    g->palette = NULL;
    return;
@@ -321,23 +309,6 @@ void graphics_screen_scroll(
 ) {
    g->virtual_x += offset_x;
    g->virtual_y += offset_y;
-}
-
-void graphics_set_font( GRAPHICS* g, const bstring name ) {
-   /* TODO: Support fonts. */
-}
-
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
-   /* memcpy( &(g->color), color, sizeof( GRAPHICS_COLOR ) ); */
-   g->color = color;
-}
-
-void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
-   /*gr->color.r = r;
-   gr->color.g = g;
-   gr->color.b = b;
-   gr->color.a = a;*/
-   gr->color = 0; /* FIXME */
 }
 
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
@@ -522,50 +493,33 @@ cleanup:
    return fmem_info->block;
 }
 
-void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
-   const bstring text
+void graphics_draw_rect(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   GRAPHICS_COLOR color
 ) {
+   rectfill( g->surface, x, y, x + w, y + h, color );
+}
 
-   scaffold_assert( NULL != g );
-   scaffold_assert( NULL != text );
+void graphics_draw_char(
+   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
+) {
+   SCAFFOLD_SIZE x, y, bit;
+   uint8_t* font_char;
+   float divisor;
 
-   switch( align ) {
-   case GRAPHICS_TEXT_ALIGN_CENTER:
-      textout_centre_ex(
-         NULL == g ? screen : g->surface,
-         font, bdata( text ), x, y,
-         NULL == g ? 0 : g->color,
-         -1
-      );
-      break;
-   case GRAPHICS_TEXT_ALIGN_LEFT:
-      textout_ex(
-         NULL == g ? screen : g->surface,
-         font, bdata( text ), x, y,
-         NULL == g ? 0 : g->color,
-         -1
-      );
-      break;
-   case GRAPHICS_TEXT_ALIGN_RIGHT:
-      textout_right_ex(
-         NULL == g ? screen : g->surface,
-         font, bdata( text ), x, y,
-         NULL == g ? 0 : g->color,
-         -1
-      );
-      break;
+   divisor = size / 8.0f;
+
+   lock_bitmap( g->surface );
+   for( y = 0 ; size > y ; y++ ) {
+      for( x = 0 ; size > x ; x++ ) {
+         if( font8x8_basic[c][(uint8_t)(y / divisor)] & 1 << (uint8_t)(x / divisor) ) {
+            putpixel( g->surface, x_start + x, y_start + y, color );
+         }
+      }
    }
-}
-
-void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   rectfill( g->surface, x, y, x + w, y + h, graphics_get_color( g ) );
-}
-
-void graphics_measure_text(
-   GRAPHICS* g, GRAPHICS_RECT* r, const bstring text
-) {
-   /* TODO: Text measurement not implemented. */
+   release_bitmap( g->surface );
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {

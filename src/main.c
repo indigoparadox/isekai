@@ -197,10 +197,10 @@ int main( int argc, char** argv ) {
          NULL == main_client->puppet
       ) {
          client_poll_input( main_client, l, &p );
-         graphics_set_color( g_screen, GRAPHICS_COLOR_WHITE );
          graphics_draw_text(
             g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
-            GRAPHICS_TEXT_ALIGN_CENTER, &str_loading
+            GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
+            GRAPHICS_FONT_SIZE_16, &str_loading
          );
          graphics_flip_screen( g_screen );
          graphics_wait_for_fps_timer();
@@ -234,8 +234,9 @@ int main( int argc, char** argv ) {
       tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT
-      graphics_set_color( g_screen, GRAPHICS_COLOR_WHITE );
-      graphics_draw_text( g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
+      graphics_draw_text(
+         g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
+         GRAPHICS_FONT_SIZE_10, str_service );
 #endif /* USE_RANDOM_PORT */
 
       ui_draw( &ui, g_screen );
