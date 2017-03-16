@@ -7,6 +7,9 @@
 #include <SDL/SDL_image.h>
 #endif /* USE_SDL_IMAGE */
 
+uint32_t graphics_time = 0;
+int graphics_fps_delay = 0;
+
 static
 SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_TRANSPARENT =  0, */ {   0,   0,   0, 0 },
@@ -44,6 +47,9 @@ void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
+
+   graphics_fps_delay = 1000 / GRAPHICS_TIMER_FPS;
+
    (*g) = scaffold_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
    (*g)->surface = SDL_SetVideoMode(
@@ -327,7 +333,19 @@ void graphics_sleep( uint16_t milliseconds ) {
    SDL_Delay( milliseconds );
 }
 
-void graphics_wait_for_fps_timer() {
-   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
+void graphics_start_fps_timer() {
+   graphics_time = SDL_GetTicks();
 }
 
+void graphics_wait_for_fps_timer() {
+   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
+   if( GRAPHICS_TIMER_FPS > (SDL_GetTicks() - graphics_time) ) {
+      /* Subtract the time since graphics_Start_fps_timer() was last called
+       * from the nominal delay required to maintain our FPS.
+       */
+      SDL_Delay( graphics_fps_delay  - (SDL_GetTicks() - graphics_time) );
+   }
+   /*
+   scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
+   */
+}

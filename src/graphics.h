@@ -14,7 +14,7 @@
 #define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 
 typedef enum GRAPHICS_TIMER {
-   GRAPHICS_TIMER_FPS = 30
+   GRAPHICS_TIMER_FPS = 15
 } GRAPHICS_TIMER;
 
 typedef enum GRAPHICS_TEXT_ALIGN {
@@ -143,6 +143,7 @@ void graphics_blit_partial(
    SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
+void graphics_start_fps_timer();
 void graphics_wait_for_fps_timer();
 
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );
