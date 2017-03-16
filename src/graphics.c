@@ -92,22 +92,25 @@ cleanup:
 
 void graphics_setup() {
    graphics_fps_delay = 1000 / GRAPHICS_TIMER_FPS;
-#ifdef USE_PLATFORM_TIMER
-#elif defined _WIN32 || defined WIN16
-#error
-#endif
 }
 
 void graphics_start_fps_timer() {
-#ifdef USE_PLATFORM_TIMER
-   graphics_time = graphics_get_ticks();
-#else
+#ifdef USE_POSIX_TIMER
    graphics_time = clock();
-#endif
+#else
+   graphics_time = graphics_get_ticks();
+#endif /* USE_POSIX_TIMER */
 }
 
 void graphics_wait_for_fps_timer() {
-#ifdef USE_PLATFORM_TIMER
+#ifdef USE_POSIX_TIMER
+   double elapsed;
+
+   elapsed = ((double)(clock() - graphics_time)) / CLOCKS_PER_SEC;
+   if( GRAPHICS_TIMER_FPS > elapsed ) {
+      graphics_sleep( graphics_fps_delay - elapsed );
+   }
+#else
    //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
    uint32_t ticks = graphics_get_ticks();
 
@@ -123,13 +126,5 @@ void graphics_wait_for_fps_timer() {
    if( 0 == ticks % 1000) {
       scaffold_print_debug( &module, "%d\n", (ticks - graphics_time) );
    }
-#else
-   double elapsed;
-
-   elapsed = ((double)(clock() - graphics_time)) / CLOCKS_PER_SEC;
-   if( GRAPHICS_TIMER_FPS > elapsed ) {
-      graphics_sleep( graphics_fps_delay - elapsed );
-   }
-
-#endif
+#endif /* USE_POSIX_TIMER */
 }
