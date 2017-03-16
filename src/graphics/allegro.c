@@ -285,7 +285,7 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 }
 
 void graphics_surface_free( GRAPHICS* g ) {
-   refcount_dec( g, "graphics" );
+   graphics_surface_cleanup( &(g->refcount) );
 }
 
 
@@ -299,6 +299,7 @@ void graphics_flip_screen( GRAPHICS* g ) {
 
 void graphics_shutdown( GRAPHICS* g ) {
    graphics_surface_free( g );
+   allegro_exit();
 }
 
 void graphics_screen_scroll(

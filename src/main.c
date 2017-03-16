@@ -253,14 +253,11 @@ cleanup:
    scaffold_set_server();
    server_free( main_server );
    scaffold_free( main_server );
-   /*graphics_shutdown( &g );*/
+   graphics_shutdown( g_screen );
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );
    fclose( scaffold_log_handle_err );
 #endif /* SCAFFOLD_LOG_FILE */
-#ifdef USE_ALLEGRO
-   allegro_exit();
-#endif /* USE_ALLEGRO */
 
    return 0;
 }
