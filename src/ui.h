@@ -13,7 +13,7 @@ struct UI_WINDOW {
    struct UI* ui;
    bstring title;
    struct HASHMAP controls;
-   GRAPHICS element;
+   GRAPHICS* element;
    BOOL modal;
    struct UI_CONTROL* active_control;
    SCAFFOLD_SIZE x;

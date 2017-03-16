@@ -37,6 +37,7 @@ void ui_window_init(
    win->y = y;
    win->width = width;
    win->height = height;
+   win->element = scaffold_alloc( 1, GRAPHICS );
 
    if( NULL != id ) {
       win->id = bstrcpy( id );
@@ -72,7 +73,7 @@ void ui_window_init(
       );
    }
 
-   graphics_surface_init( &(win->element), width, height );
+   graphics_surface_init( win->element, width, height );
 
    scaffold_print_debug(
       &module, "Created window with %d controls: %s (%d, %d)\n",
@@ -90,8 +91,9 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
       hashmap_remove_cb( &(win->controls), callback_free_controls, NULL );
       hashmap_cleanup( &(win->controls) );
    }
-   if( NULL != win->element.surface ) {
-      graphics_surface_free( &(win->element) );
+   if( NULL != win->element && NULL != win->element->surface ) {
+      graphics_surface_free( win->element );
+      free( win->element );
    }
 }
 
@@ -193,7 +195,7 @@ void ui_window_transform(
    win->y = y;
    win->width = width;
    win->height = height;
-   graphics_scale( &(win->element), width, height );
+   graphics_scale( win->element, width, height );
 }
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
@@ -283,7 +285,7 @@ cleanup:
 static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
-   GRAPHICS* g = &(win->element);
+   GRAPHICS* g = win->element;
 
    switch( control->type ) {
    case UI_CONTROL_TYPE_LABEL:
@@ -326,26 +328,26 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
 
    /* Draw the window. */
-   graphics_set_color( &(win->element), GRAPHICS_COLOR_BLUE );
+   graphics_set_color( win->element, GRAPHICS_COLOR_BLUE );
    graphics_draw_rect(
-      &(win->element), 0, 0, win->width, win->height
+      win->element, 0, 0, win->width, win->height
    );
 
    /* Draw the title bar. */
-   graphics_set_color( &(win->element), GRAPHICS_COLOR_BROWN );
+   graphics_set_color( win->element, GRAPHICS_COLOR_BROWN );
    graphics_draw_rect(
-      &(win->element), 2, 2, win->width - 4, 12 /* TODO: Get text height. */
+      win->element, 2, 2, win->width - 4, 12 /* TODO: Get text height. */
    );
-   graphics_set_color( &(win->element), GRAPHICS_COLOR_WHITE );
+   graphics_set_color( win->element, GRAPHICS_COLOR_WHITE );
    graphics_draw_text(
-      &(win->element), win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER, win->title
+      win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER, win->title
    );
 
    hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
    /* Draw the window onto the screen. */
    graphics_blit(
-      g, win->x, win->y, win->width, win->height, &(win->element)
+      g, win->x, win->y, win->width, win->height, win->element
    );
 
    return NULL;
