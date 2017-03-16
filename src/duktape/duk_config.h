@@ -1957,6 +1957,7 @@ typedef struct duk_hthread duk_context;
  * (which is unfortunately named).  May sometimes need replacement, e.g.
  * some compilers don't handle zero length or NULL correctly in realloc().
  */
+/*
 #if !defined(DUK_ANSI_MALLOC)
 #define DUK_ANSI_MALLOC      malloc
 #endif
@@ -1969,6 +1970,7 @@ typedef struct duk_hthread duk_context;
 #if !defined(DUK_ANSI_FREE)
 #define DUK_ANSI_FREE        free
 #endif
+*/
 
 /* ANSI C (various versions) and some implementations require that the
  * pointer arguments to memset(), memcpy(), and memmove() be valid values

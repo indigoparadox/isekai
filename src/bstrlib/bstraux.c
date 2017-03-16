@@ -665,7 +665,7 @@ int l, lret;
  */
 
 struct bStream * bsUuDecode (struct bStream * sInp, int * badlines) {
-struct bsUuCtx * luuCtx = (struct bsUuCtx *) malloc (sizeof (struct bsUuCtx));
+struct bsUuCtx * luuCtx = scaffold_alloc( 1, struct bsUuCtx );
 struct bStream * sOut;
 
 	if (NULL == luuCtx) return NULL;
@@ -1092,7 +1092,7 @@ struct bwriteStream * bwsOpen (bNwrite writeFn, void * parm) {
 struct bwriteStream * ws;
 
 	if (NULL == writeFn) return NULL;
-	ws = (struct bwriteStream *) malloc (sizeof (struct bwriteStream));
+	ws = scaffold_alloc( 1, struct bwriteStream );
 	if (ws) {
 		if (NULL == (ws->buff = bfromcstr (""))) {
 			free (ws);

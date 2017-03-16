@@ -74,13 +74,14 @@ heatshrink_encoder* heatshrink_encoder_alloc(
       return NULL;
    }
 
+   /* TODO: Fix this defeat of malloc safety. */
    /* Note: 2 * the window size is used because the buffer needs to fit
     * (1 << window_sz2) bytes for the current input, and an additional
     * (1 << window_sz2) bytes for the previous buffer of input, which
     * will be scanned for useful backreferences. */
    buf_sz = (2 << window_sz2);
 
-   hse = HEATSHRINK_MALLOC(sizeof(*hse) + buf_sz);
+   hse = (heatshrink_encoder*)scaffold_alloc(sizeof(*hse) + buf_sz, BYTE);
    if (hse == NULL) {
       return NULL;
    }
@@ -107,10 +108,12 @@ void heatshrink_encoder_free(heatshrink_encoder* hse) {
    size_t buf_sz = (2 << HEATSHRINK_ENCODER_WINDOW_BITS(hse));
 #if HEATSHRINK_USE_INDEX
    size_t index_sz = sizeof(struct hs_index) + hse->search_index->size;
-   HEATSHRINK_FREE(hse->search_index, index_sz);
+   /* HEATSHRINK_FREE(hse->search_index, index_sz); */
+   scaffold_free( hse->search_index );
    (void)index_sz;
 #endif
-   HEATSHRINK_FREE(hse, sizeof(heatshrink_encoder) + buf_sz);
+   /*HEATSHRINK_FREE(hse, sizeof(heatshrink_encoder) + buf_sz); */
+   scaffold_free( hse );
    (void)buf_sz;
 }
 #endif

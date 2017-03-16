@@ -286,6 +286,10 @@ void graphics_surface_free( GRAPHICS* g ) {
    refcount_dec( g, "graphics" );
 }
 
+
+void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
+}
+
 void graphics_flip_screen( GRAPHICS* g ) {
    blit( g->surface, screen, g->virtual_x, g->virtual_y, 0, 0, g->w, g->h );
    /* clear_bitmap( g->surface ); */
@@ -568,18 +572,6 @@ void graphics_blit_partial(
 
 void graphics_sleep( uint16_t milliseconds ) {
    rest( milliseconds );
-}
-
-void graphics_colors_to_surface(
-   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
-) {
-   SCAFFOLD_SIZE i;
-
-   /* TODO: Verify image sizes. */
-
-   for( i = 0 ; colors_sz > i ; i++ ) {
-      /* putpixel( g->surface, i % g->w, i * g->w, makecol( colors[i].r, colors[i].g, colors[i].b ) ); */
-   }
 }
 
 void graphics_wait_for_fps_timer() {

@@ -264,6 +264,15 @@ struct VECTOR;
 
 #define scaffold_byte( number ) (0xff & number)
 
+#define scaffold_alloc( count, type ) \
+   (type*)calloc( count, sizeof( type ) )
+#define scaffold_free( ptr ) free( ptr )
+#define scaffold_realloc( ptr, count, type ) \
+   (type*)realloc( \
+      ptr, \
+      (count * sizeof( type ) >= count ? (count * sizeof( type )) : 0) \
+   )
+
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );

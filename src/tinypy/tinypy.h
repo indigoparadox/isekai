@@ -38,9 +38,11 @@ THE SOFTWARE.
 #include <stdarg.h>
 #include <math.h>
 
+/*
 #define tp_malloc(x) calloc((x),1)
 #define tp_realloc(x,y) realloc(x,y)
 #define tp_free(x) free(x)
+*/
 
 /*
 #include <gc/gc.h>
