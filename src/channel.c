@@ -5,7 +5,12 @@
 #include "tilemap.h"
 #include "datafile.h"
 #include "server.h"
+#ifdef USE_TINYPY
 #include "tinypy/tinypy.h"
+#endif /* USE_TINYPY */
+#ifdef USE_DUKTAPE
+#include "duktape/duktape.h"
+#endif /* USE_DUKTAPE */
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -211,6 +216,9 @@ cleanup:
 }
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {
+#ifdef USE_DUKTAPE
+   l->vm = duk_create_heap_default();
+#endif /* USE_DUKTAPE */
 #ifdef USE_TINYPY
    tp_obj tp_code_str;
    tp_obj compiled;
