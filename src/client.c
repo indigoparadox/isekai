@@ -547,9 +547,7 @@ void client_poll_input( struct CLIENT* c ) {
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct TILEMAP* t = NULL;
-   tp_obj globals;
-   tp_obj code;
-   tp_obj compiled;
+   int bstr_ret;
 #ifdef DEBUG_TILES
    bstring tilemap_dbg_key = NULL;
 #endif /* DEBUG_TILES */
@@ -591,23 +589,12 @@ void client_poll_input( struct CLIENT* c ) {
             ui_window_pop( ui );
             tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
-            /* TODO: Process collected input. */
-
-            /* FIXME: Move this into channel_update() and have it call tp_step
-             *        once per cycle.
-             */
-
-            /* code = tp_string_n(
-               bdata( client_input_from_ui ),
-               blength( client_input_from_ui )
-            );
-            globals = tp_string( "test" );
-            compiled = tp_compile( update.l->vm, code, globals ); */
-            //tp_eval( update.l->vm, bdata( client_input_from_ui ), update.l->vm->builtins );
+            /* Process collected input. */
 
             proto_client_debug_vm( c, update.l, client_input_from_ui );
 
-            btrunc( client_input_from_ui, 0 );
+            bstr_ret = btrunc( client_input_from_ui, 0 );
+            scaffold_check_nonzero( bstr_ret );
          }
          goto cleanup;
       }
@@ -657,7 +644,7 @@ void client_poll_input( struct CLIENT* c ) {
                &str_client_window_id_repl,
                &str_client_window_title_repl,
                &str_client_window_prompt_repl,
-               40, 40, 400, 200
+               40, 40, 400, 80
             );
             ui_window_push( ui, win );
          }

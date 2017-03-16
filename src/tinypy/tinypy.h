@@ -1,3 +1,6 @@
+
+#ifdef USE_TINYPY
+
 /*
 The tinypy License
 
@@ -365,3 +368,5 @@ tp_obj tp_eval(TP, char *text, tp_obj globals) ;
 tp_vm *tp_init(int argc, char *argv[]) ;
 void tp_compiler(TP) ;
 #endif
+
+#endif /* USE_TINYPY */

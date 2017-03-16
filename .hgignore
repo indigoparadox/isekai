@@ -16,3 +16,6 @@ ProCIRCd.sdf
 ProCIRCd.vcxproj.filters
 ProCIRCd.vcxproj.user
 glob:doxygen
+glob:src/tinypy/*.py
+glob:src/tinypy/*.pyc
+glob:src/tinypy/*.tpc

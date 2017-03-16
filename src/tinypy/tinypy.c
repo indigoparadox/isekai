@@ -1,3 +1,6 @@
+
+#ifdef USE_TINYPY
+
 /*
 The tinypy License
 
@@ -1810,9 +1813,9 @@ void _tp_call(TP,tp_obj* dest, tp_obj fnc, tp_obj params) {
 
 void tp_return(TP, tp_obj v) {
    tp_obj* dest = tp->frames[tp->cur].ret_dest;
-   if (dest) {
+   if( dest ) {
       *dest = v;
-      tp_grey(tp,v);
+      tp_grey( tp, v );
    }
 //     memset(tp->frames[tp->cur].regs,0,TP_REGS_PER_FRAME*sizeof(tp_obj));
 //     fprintf(stderr,"regs:%d\n",(tp->frames[tp->cur].cregs+1));
@@ -5793,3 +5796,5 @@ unsigned char tp_py2bc[] = {
    0,0,0,0,0,0,0,64,9,14,14,15,31,11,13,2,
    19,11,12,11,18,0,0,1,0,0,0,0,
 };
+
+#endif /* USE_TINYPY */

@@ -652,12 +652,15 @@ static void irc_server_debugvm(
    bstring lname = args->entry[1];
    int i;
    struct CHANNEL* l = NULL;
+   int bstr_ret;
 
    code = bfromcstr( "" );
 
    for( i = 2 /* Skip command and channel. */ ; args->qty > i ; i++ ) {
-      bconchar( code, ' ' );
-      bconcat( code, args->entry[i] );
+      bstr_ret = bconchar( code, ' ' );
+      scaffold_check_nonzero( bstr_ret );
+      bstr_ret = bconcat( code, args->entry[i] );
+      scaffold_check_nonzero( bstr_ret );
    }
 
    l = server_get_channel_by_name( s, lname );

@@ -10,8 +10,8 @@
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
-   if( NULL != l->vm ) {
-      tp_deinit( l->vm );
+   if( channel_vm_can_step( l ) ) {
+      channel_vm_end( l );
    }
 
    /* FIXME: Actually free stuff. */
@@ -211,6 +211,7 @@ cleanup:
 }
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {
+#ifdef USE_TINYPY
    tp_obj tp_code_str;
    tp_obj compiled;
    tp_obj r = None;
@@ -230,24 +231,43 @@ void channel_vm_start( struct CHANNEL* l, bstring code ) {
       tp_raise( , "tp_run(%d) called recusively", l->vm->cur );
    }
    l->vm->jmp = 1;
+#ifdef TINYPY_SJLJ
    if( setjmp( l->vm->buf ) ) {
-      /* tp_handle( l->vm ); */
+      tp_handle( l->vm );
       scaffold_print_error( "Error executing script for channel.\n" );
    }
+#endif // TINYPY_SJLJ
+#endif /* USE_TINYPY */
 }
 
 void channel_vm_step( struct CHANNEL* l ) {
+#ifdef USE_TINYPY
    //void tp_run(tp_vm *tp,int cur) {
    if( l->vm->cur >= l->vm_cur && l->vm_step_ret != -1 ) {
       l->vm_step_ret = tp_step( l->vm );
    } else {
       scaffold_print_error( "Channel VM stopped: %b\n", l->name );
    }
+#endif /* USE_TINYPY */
 }
 
 void channel_vm_end( struct CHANNEL* l ) {
+#ifdef USE_TINYPY
    l->vm->cur = l->vm_cur - 1;
    l->vm->jmp = 0;
    tp_deinit( l->vm );
    l->vm = NULL;
+#endif /* USE_TINYPY */
+}
+
+BOOL channel_vm_can_step( struct CHANNEL* l ) {
+   BOOL retval = FALSE;
+
+#ifdef USE_TINYPY
+   if( NULL != l->vm ) {
+      retval = TRUE;
+   }
+#endif /* USE_TINYPY */
+
+   return retval;
 }

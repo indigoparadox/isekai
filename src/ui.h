@@ -56,11 +56,11 @@ struct UI {
    ui_window_init( win, ui, type, id, title, prompt, x, y, w, h );
 
 #define ui_control_new( \
-      control, win, text, type, can_focus, x, y, w, h \
+      control, win, text, type, can_focus, buffer, x, y, w, h \
 ) \
    control = (struct UI_CONTROL*)calloc( 1, sizeof( struct UI_CONTROL ) ); \
    scaffold_check_null( control ); \
-   ui_control_init( control, win, text, type, can_focus, x, y, w, h );
+   ui_control_init( control, win, text, type, can_focus, buffer, x, y, w, h );
 
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
@@ -72,7 +72,7 @@ void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
    struct UI_CONTROL* control, struct UI_WINDOW* win,
-   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus,
+   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
 );
