@@ -4,6 +4,9 @@
 
 #include <stdlib.h>
 
+static uint32_t graphics_time = 0;
+static int graphics_fps_delay = 0;
+
 #pragma pack(push,1)
 struct GRAPHICS_BITMAP_FILE_HEADER {
     int8_t type[2];
@@ -84,4 +87,30 @@ void graphics_bitmap_load(
 
 cleanup:
    return;
+}
+
+void graphics_setup() {
+   graphics_fps_delay = 1000 / GRAPHICS_TIMER_FPS;
+}
+
+void graphics_start_fps_timer() {
+   graphics_time = graphics_get_ticks();
+}
+
+void graphics_wait_for_fps_timer() {
+   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
+   uint32_t ticks = graphics_get_ticks();
+
+   if( GRAPHICS_TIMER_FPS > (ticks - graphics_time) ) {
+      /* Subtract the time since graphics_Start_fps_timer() was last called
+       * from the nominal delay required to maintain our FPS.
+       */
+      graphics_sleep( graphics_fps_delay  - (ticks - graphics_time) );
+   }
+   /*
+   scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
+   */
+   if( 0 == ticks % 1000) {
+      scaffold_print_debug( &module, "%d\n", (ticks - graphics_time) );
+   }
 }

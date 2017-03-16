@@ -7,9 +7,6 @@
 #include <SDL/SDL_image.h>
 #endif /* USE_SDL_IMAGE */
 
-uint32_t graphics_time = 0;
-int graphics_fps_delay = 0;
-
 static
 SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_TRANSPARENT =  0, */ {   0,   0,   0, 0 },
@@ -48,7 +45,7 @@ void graphics_screen_new(
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
 
-   graphics_fps_delay = 1000 / GRAPHICS_TIMER_FPS;
+   graphics_setup();
 
    (*g) = scaffold_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
@@ -333,10 +330,11 @@ void graphics_sleep( uint16_t milliseconds ) {
    SDL_Delay( milliseconds );
 }
 
-void graphics_start_fps_timer() {
-   graphics_time = SDL_GetTicks();
+uint32_t graphics_get_ticks() {
+   return SDL_GetTicks();
 }
 
+#if 0
 void graphics_wait_for_fps_timer() {
    //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
    if( GRAPHICS_TIMER_FPS > (SDL_GetTicks() - graphics_time) ) {
@@ -349,3 +347,4 @@ void graphics_wait_for_fps_timer() {
    scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
    */
 }
+#endif
