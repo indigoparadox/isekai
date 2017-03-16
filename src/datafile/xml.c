@@ -4,6 +4,38 @@
 
 #include "../hashmap.h"
 
+void datafile_parse_item_ezxml_t(
+   struct ITEM* e, ezxml_t xml_data, BOOL local_images
+) {
+}
+
+void datafile_parse_item_ezxml_string(
+   struct ITEM* e, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+) {
+   ezxml_t xml_data = NULL;
+#ifdef EZXML_STRICT
+   SCAFFOLD_SIZE datasize_check = 0;
+#endif /* EZXML_STRICT */
+
+   scaffold_check_null( tmdata );
+
+#ifdef EZXML_STRICT
+   datasize_check = strlen( (const char*)o );
+   scaffold_assert( datasize_check == datasize );
+#endif /* EZXML_STRICT */
+
+   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
+   scaffold_check_null( xml_data );
+
+   datafile_parse_item_ezxml_t( e, xml_data, local_images );
+
+cleanup:
+   if( NULL != xml_data ) {
+      ezxml_free( xml_data );
+   }
+   return;
+}
+
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
 ) {

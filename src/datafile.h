@@ -5,6 +5,7 @@
 #include "tilemap.h"
 #include "scaffold.h"
 #include "mobile.h"
+#include "item.h"
 
 typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize

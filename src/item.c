@@ -1,14 +1,14 @@
 
 #include "item.h"
 
-void item_init(
-   struct ITEM* t, ITEM_TYPE type, SCAFFOLD_SIZE serial, const bstring display
-) {
-   t->display_name = bstrcpy( display );
-   t->serial = serial;
-   t->type = type;
+void item_init( struct ITEM* e ) {
+   e->display_name = NULL;
+   e->serial = 0;
+   e->type = ITEM_TYPE_GENERIC;
+   e->sprites_filename = NULL;
+   e->sprites = NULL;
 }
 
-void item_set_contents( struct ITEM* t, union ITEM_CONTENT content ) {
-   t->content = content;
+void item_set_contents( struct ITEM* e, union ITEM_CONTENT content ) {
+   e->content = content;
 }
