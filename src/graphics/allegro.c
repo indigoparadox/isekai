@@ -23,6 +23,13 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 #define GRAPHICS_FMEM_SENTINAL 2121
 #define GRAPHICS_COLOR_DEPTH 8
 
+static volatile uint32_t allegro_ticks = 0;
+
+static void allegro_ticker() {
+   allegro_ticks++;
+}
+END_OF_STATIC_FUNCTION( allegro_ticker )
+
 typedef struct _GRAPHICS_FMEM_INFO {
    BYTE safety1;
    BYTE safety2;
@@ -219,6 +226,13 @@ void graphics_screen_new(
    int screen_return;
 
    allegro_init();
+
+   LOCK_VARIABLE( allegro_ticks );
+   LOCK_FUNCTION( allegro_ticker )
+
+   install_int( allegro_ticker, BPS_TO_TIMER( 1000 ) );
+
+   graphics_setup();
 
 #ifdef USE_ALLEGRO_PNG
    loadpng_init();
@@ -574,9 +588,25 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
-   rest( milliseconds );
+   rest( 1.0f / milliseconds );
 }
 
-void graphics_wait_for_fps_timer() {
-   rest( 1.0f / GRAPHICS_TIMER_FPS );
+uint32_t graphics_get_ticks() {
+   scaffold_print_debug( &module, "X: %d\n", allegro_ticks );
+   return allegro_ticks;
 }
+
+#if 0
+void graphics_wait_for_fps_timer() {
+   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
+   if( GRAPHICS_TIMER_FPS > (allegro_ticks - graphics_time) ) {
+      /* Subtract the time since graphics_Start_fps_timer() was last called
+       * from the nominal delay required to maintain our FPS.
+       */
+      //SDL_Delay( graphics_fps_delay  - (SDL_GetTicks() - graphics_time) );
+      rest( 10000.0f / ((graphics_fps_delay) - (allegro_ticks - graphics_time)) );
+   }
+   scaffold_print_debug( &module, "%d\n", (allegro_ticks - graphics_time) );
+
+}
+#endif
