@@ -30,6 +30,7 @@ void* callback_get_tile_blocker( bstring res, void* iter, void* arg );
 #ifdef USE_CHUNKS
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg );
 #endif /* USE_CHUNKS */
+void* callback_proc_channel_vms( const bstring res, void* iter, void* arg );
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg );
 void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg );

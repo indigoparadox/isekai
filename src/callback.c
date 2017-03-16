@@ -283,6 +283,19 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 #endif /* USE_CHUNKS */
 
+void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   //struct CLIENT* c = (struct CLIENT*)iter;
+
+   scaffold_assert_server();
+
+   if( NULL != l->vm ) {
+      channel_vm_step( l );
+   }
+
+   return NULL;
+}
+
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 

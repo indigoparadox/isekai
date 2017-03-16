@@ -219,6 +219,7 @@
 					<Add option="-DxDEBUG_REF" />
 					<Add option="-DUSE_CONNECT_DIALOG" />
 					<Add option="-DDEBUG_TILES" />
+					<Add option="-DDEBUG_VM" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

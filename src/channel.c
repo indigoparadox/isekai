@@ -5,12 +5,14 @@
 #include "tilemap.h"
 #include "datafile.h"
 #include "server.h"
+#include "tinypy/tinypy.h"
 
 static void channel_cleanup( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
-   tp_deinit( l->vm );
-   //tp_free( l->vm );
+   if( NULL != l->vm ) {
+      tp_deinit( l->vm );
+   }
 
    /* FIXME: Actually free stuff. */
    hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
@@ -39,7 +41,6 @@ void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images );
-   l->vm = tp_init( 0, NULL );
 cleanup:
    return;
 }
@@ -207,4 +208,46 @@ cleanup:
       free( mapdata_buffer );
    }
    return;
+}
+
+void channel_vm_start( struct CHANNEL* l, bstring code ) {
+   tp_obj tp_code_str;
+   tp_obj compiled;
+   tp_obj r = None;
+
+   /* For macro compatibility. */
+   tp_vm* tp = l->vm;
+
+   /* Init the VM and load the code into it. */
+   l->vm = tp_init( 0, NULL );
+   tp_code_str = tp_string_n( bdata( code ), blength( code ) );
+   compiled = tp_compile( l->vm, tp_code_str, tp_string( "<eval>" ) );
+   tp_frame( l->vm, l->vm->builtins, (void*)compiled.string.val, &r );
+   l->vm_cur = l->vm->cur;
+
+   /* Lock the VM and prepare it to run. (tp_run) */
+   if( l->vm->jmp ) {
+      tp_raise( , "tp_run(%d) called recusively", l->vm->cur );
+   }
+   l->vm->jmp = 1;
+   if( setjmp( l->vm->buf ) ) {
+      /* tp_handle( l->vm ); */
+      scaffold_print_error( "Error executing script for channel.\n" );
+   }
+}
+
+void channel_vm_step( struct CHANNEL* l ) {
+   //void tp_run(tp_vm *tp,int cur) {
+   if( l->vm->cur >= l->vm_cur && l->vm_step_ret != -1 ) {
+      l->vm_step_ret = tp_step( l->vm );
+   } else {
+      scaffold_print_error( "Channel VM stopped: %b\n", l->name );
+   }
+}
+
+void channel_vm_end( struct CHANNEL* l ) {
+   l->vm->cur = l->vm_cur - 1;
+   l->vm->jmp = 0;
+   tp_deinit( l->vm );
+   l->vm = NULL;
 }
