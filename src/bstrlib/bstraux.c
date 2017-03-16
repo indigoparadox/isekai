@@ -149,7 +149,7 @@ int ret;
  */
 int bJustifyMargin (bstring b, int width, int space) {
 struct bstrList * sl;
-int i, l, c;
+int i, l, c, bstr_ret;
 
 	if (b == NULL || b->slen < 0 || b->mlen == 0 || b->mlen < b->slen) return -__LINE__;
 	if (NULL == (sl = bsplit (b, (unsigned char) space))) return -__LINE__;
@@ -173,7 +173,8 @@ int i, l, c;
 				bInsertChrs (b, b->slen, s, (unsigned char) space, (unsigned char) space);
 				l += s;
 			}
-			bconcat (b, sl->entry[i]);
+			bstr_ret = bconcat (b, sl->entry[i]);
+			if (bstr_ret < 0) break;
 			c--;
 			if (c <= 0) break;
 		}

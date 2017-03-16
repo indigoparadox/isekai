@@ -286,6 +286,7 @@ struct tagbstring ansi_color_strs[7] = {
     ((type *)((char *)(ptr) - offsetof( type, member )))
 
 struct VECTOR;
+enum GRAPHICS_COLOR;
 
 /* Vector needs some stuff above but is needed for stuff below. */
 #include "vector.h"
@@ -340,6 +341,8 @@ BOOL scaffold_buffer_grow(
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
+BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
+void scaffold_colorize( bstring str, enum GRAPHICS_COLOR color );
 
 #ifdef SCAFFOLD_C
 
@@ -369,8 +372,6 @@ extern struct tagbstring scaffold_space_string;
 extern struct tagbstring scaffold_colon_string;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
-BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
-void scaffold_colorize( bstring str, enum GRAPHICS_COLOR color );
 
 #endif /* SCAFFOLD_C */
 

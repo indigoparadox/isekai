@@ -160,6 +160,7 @@ void graphics_bitmap_load(
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );
+void graphics_setup();
 #endif /* GRAPHICS_C */
 
 #endif /* GRAPHICS_H */
