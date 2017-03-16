@@ -15,10 +15,11 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_BROWN       =  6, */ { 128, 128,   0, 0 },
    /* GRAPHICS_COLOR_GRAY        =  7, */ { 128, 128, 128, 0 },
    /* GRAPHICS_COLOR_DARK_GRAY   =  8, */ {   0,   0,   0, 0 },
-   /* GRAPHICS_COLOR_BLUE        =  9, */ { 255, 255, 255, 0 },
+   /* GRAPHICS_COLOR_BLUE        =  9, */ {   0,   0, 255, 0 },
    /* GRAPHICS_COLOR_GREEN       = 10, */ {   0, 255,   0, 0 },
    /* GRAPHICS_COLOR_CYAN        = 11, */ {   0, 255, 255, 0 },
    /* GRAPHICS_COLOR_RED         = 12, */ { 255,   0,   0, 0 },
+                                          { 255,   0, 255, 0 },
    /* GRAPHICS_COLOR_YELLOW      = 13, */ { 255, 255,   0, 0 },
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
@@ -27,8 +28,15 @@ void graphics_screen_init(
    GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
-   g->surface = SDL_SetVideoMode( w, h, 0, SDL_HWSURFACE | SDL_DOUBLEBUF );
+   SDL_Init( SDL_INIT_EVERYTHING );
+   g->surface = SDL_SetVideoMode( w, h, 0, SDL_SWSURFACE | SDL_DOUBLEBUF );
    scaffold_check_null( g->surface );
+   g->w = w;
+   g->h = h;
+   g->virtual_x = vw;
+   g->virtual_y = vh;
+   g->palette = NULL;
+   g->font = NULL;
 cleanup:
    return;
 }
@@ -38,7 +46,21 @@ void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
 }
 
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   g->surface = SDL_CreateRGBSurface( SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0 );
+   SDL_Surface* screen = NULL;
+
+   screen = SDL_GetVideoSurface();
+   scaffold_check_null( screen );
+
+   g->surface = SDL_CreateRGBSurface(
+      SDL_SWSURFACE,
+      w,
+      h,
+      screen->format->BitsPerPixel,
+      screen->format->Rmask,
+      screen->format->Gmask,
+      screen->format->Bmask,
+      screen->format->Amask
+   );
    scaffold_check_null( g->surface );
    g->color = &(graphics_stock_colors[GRAPHICS_COLOR_BLUE]);
    g->font = NULL;
@@ -92,7 +114,16 @@ void graphics_set_image_data(
    SCAFFOLD_SIZE surface_i = 0,
       y,
       i = 0;
-   SDL_Surface* surface;
+   SDL_Surface* surface,
+      * screen;
+
+   screen = SDL_GetVideoSurface();
+   scaffold_check_null( screen );
+
+   if( NULL != g->surface ) {
+      SDL_FreeSurface( g->surface );
+      g->surface = NULL;
+   }
 
    graphics_bitmap_load( data, length, &bitmap );
    scaffold_check_null( bitmap );
@@ -101,11 +132,11 @@ void graphics_set_image_data(
       SDL_SWSURFACE,
       bitmap->w,
       bitmap->h,
-      16,
-      0,
-      0,
-      0,
-      0
+      screen->format->BitsPerPixel,
+      screen->format->Rmask,
+      screen->format->Gmask,
+      screen->format->Bmask,
+      screen->format->Amask
    );
    scaffold_check_null( g->surface );
    g->w = bitmap->w;
@@ -140,13 +171,21 @@ void graphics_draw_rect(
    SCAFFOLD_SIZE w, SCAFFOLD_SIZE h
 ) {
    SDL_Rect rect;
+   SDL_Color* color = NULL;
+   SDL_Surface* surface = g->surface;
 
    rect.x = x;
    rect.y = y;
    rect.w = w,
    rect.h = h;
 
-   SDL_FillRect( g->surface, &rect, g->color );
+   color = g->color;
+
+   SDL_FillRect(
+      g->surface,
+      &rect,
+      SDL_MapRGB( surface->format, color->r, color->g, color->b )
+   );
 }
 
 void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text ) {
@@ -163,6 +202,20 @@ void graphics_blit(
    SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
    const GRAPHICS* src
 ) {
+   SDL_Rect src_rect,
+      dest_rect;
+
+   src_rect.x = 0;
+   src_rect.y = 0;
+   src_rect.w = s_w;
+   src_rect.h = s_h;
+
+   dest_rect.x = x;
+   dest_rect.y = y;
+   dest_rect.w = s_w;
+   dest_rect.h = s_h;
+
+   SDL_BlitSurface( src->surface, &src_rect, g->surface, &dest_rect );
 }
 
 void graphics_blit_partial(
@@ -186,8 +239,10 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
+   SDL_Delay( milliseconds );
 }
 
 void graphics_wait_for_fps_timer() {
+   SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
 }
 
