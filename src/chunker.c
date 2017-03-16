@@ -21,10 +21,10 @@ static void chunker_cleanup( const struct REF* ref ) {
 
    /* Cleanup tracks. */
    vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
-   vector_free( &(h->tracks) );
+   vector_cleanup( &(h->tracks) );
 
    if( NULL != h->raw_ptr ) {
-      free( h->raw_ptr );
+      scaffold_free( h->raw_ptr );
    }
 
    bdestroy( h->filecache_path );
@@ -42,7 +42,7 @@ static void chunker_cleanup( const struct REF* ref ) {
    }
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
-   free( h );
+   scaffold_free( h );
 }
 
 void chunker_free( struct CHUNKER* h ) {
@@ -95,7 +95,7 @@ static void chunker_chunk_setup_internal(
    }
    h->serverpath = NULL;
    if( NULL != h->raw_ptr ) {
-      free( h->raw_ptr );
+      scaffold_free( h->raw_ptr );
    }
    h->raw_ptr = NULL;
 
@@ -211,7 +211,7 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 cleanup:
 
    if( NULL != hs_buffer ) {
-      free( hs_buffer );
+      scaffold_free( hs_buffer );
    }
    return start_pos;
 }
@@ -403,7 +403,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
       scaffold_assert( tail_output_pos <= tail_output_alloc );
       if( tail_output_pos == tail_output_alloc ) {
          tail_output_alloc *= 2;
-         tail_output_buffer = (uint8_t*)realloc( tail_output_buffer, tail_output_alloc * sizeof( uint8_t ) );
+         tail_output_buffer = scaffold_realloc( tail_output_buffer, tail_output_alloc, BYTE );
       }
    }
 
@@ -417,10 +417,10 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
 
 cleanup:
    if( NULL != mid_buffer ) {
-      free( mid_buffer );
+      scaffold_free( mid_buffer );
    }
    if( NULL != tail_output_buffer ) {
-      free( tail_output_buffer );
+      scaffold_free( tail_output_buffer );
    }
    return;
 }

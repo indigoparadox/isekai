@@ -31,9 +31,9 @@ struct GRAPHICS_BITMAP_HEADER {
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap ) {
    if( NULL != bitmap ) {
       if( NULL != bitmap->pixels ) {
-         free( bitmap->pixels );
+         scaffold_free( bitmap->pixels );
       }
-      free( bitmap );
+      scaffold_free( bitmap );
    }
 }
 

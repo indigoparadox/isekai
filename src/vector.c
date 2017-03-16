@@ -14,15 +14,15 @@ void vector_init( struct VECTOR* v ) {
    v->sentinal = VECTOR_SENTINAL;
 }
 
-void vector_free( struct VECTOR* v ) {
+void vector_cleanup( struct VECTOR* v ) {
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
    scaffold_assert( 0 >= vector_count( v ) );
 
    if( FALSE != v->scalar ) {
-      free( v->scalar_data );
+      scaffold_free( v->scalar_data );
    } else {
-      free( v->data );
+      scaffold_free( v->data );
    }
 
 cleanup:
@@ -31,8 +31,8 @@ cleanup:
 
 SCAFFOLD_INLINE
 static void vector_reset( struct VECTOR* v ) {
-   free( v->scalar_data );
-   free( v->data );
+   scaffold_free( v->scalar_data );
+   scaffold_free( v->data );
    v->scalar_data = NULL;
    v->scalar = FALSE;
    v->count = 0;
@@ -45,8 +45,8 @@ static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    void* new_data = NULL;
 
    v->size = new_size;
-   new_data = (void**)realloc( v->data, sizeof(void*) * v->size );
-   scaffold_check_null( v->data );
+   new_data = scaffold_realloc( v->data, v->size, void* );
+   scaffold_check_null( new_data );
    v->data = new_data;
    for( i = old_size ; i < v->size ; i++ ) {
       v->data[i] = NULL;
@@ -59,10 +59,13 @@ SCAFFOLD_INLINE
 static void vector_grow_scalar( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    SCAFFOLD_SIZE old_size = v->size,
       i;
+   int32_t* new_data;
 
    v->size = new_size;
-   v->scalar_data =
-      (int32_t*)realloc( v->scalar_data, sizeof( int32_t ) * v->size );
+   new_data = scaffold_realloc( v->scalar_data, v->size, int32_t );
+   scaffold_check_null( new_data );
+   v->scalar_data = new_data;
+
    scaffold_check_null( v->scalar_data );
    for( i = old_size ; i < v->size ; i++ ) {
       v->scalar_data[i] = 0;

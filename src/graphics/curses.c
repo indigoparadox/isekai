@@ -18,7 +18,7 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
       g->surface = NULL;
    }
    if( NULL == g->palette ) {
-      free( g->palette );
+      scaffold_free( g->palette );
       g->palette = NULL;
    }
    /* TODO: Free surface. */

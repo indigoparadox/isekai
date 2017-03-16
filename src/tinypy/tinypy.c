@@ -408,7 +408,7 @@ void _tp_list_realloc(_tp_list* self,int len) {
    if (!len) {
       len=1;
    }
-   self->items = tp_realloc(self->items,len*sizeof(tp_obj));
+   self->items = scaffold_realloc(self->items, len, tp_obj);
    self->alloc = len;
 }
 

@@ -364,7 +364,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
                if( (outdata_index += 3) > *outdata_len ) {
                   /* return 1; / buffer overflow */
                   *outdata_len *= 2;
-                  outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+                  outdata = scaffold_realloc( outdata, *outdata_len, BYTE );
                   scaffold_check_null( outdata );
                }
                outdata[outdata_index++] = (buf >> 16) & 255;
@@ -380,7 +380,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
       if( (outdata_index += 2) > *outdata_len ) {
          /* return 1; / buffer overflow */
          *outdata_len *= 2;
-         outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+         outdata = scaffold_realloc( outdata, *outdata_len, BYTE );
          scaffold_check_null( outdata );
       }
       outdata[outdata_index++] = (buf >> 10) & 255;
@@ -389,7 +389,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
       if( ++outdata_index > *outdata_len ) {
          /* return 1; / buffer overflow */
          *outdata_len *= 2;
-         outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+         outdata = scaffold_realloc( outdata, *outdata_len, BYTE );
          scaffold_check_null( outdata );
 
       }
@@ -398,7 +398,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
 
    /* Reality check for size. */
    *outdata_len = outdata_index + 1;
-   outdata = (void*)realloc( outdata, *outdata_len * sizeof( uint8_t ) );
+   outdata = scaffold_realloc( outdata, *outdata_len, BYTE );
    scaffold_check_null( outdata );
 cleanup:
    return outdata;

@@ -254,7 +254,7 @@ cleanup:
    client_free( main_client );
    scaffold_set_server();
    server_free( main_server );
-   free( main_server );
+   scaffold_free( main_server );
    /*graphics_shutdown( &g );*/
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );

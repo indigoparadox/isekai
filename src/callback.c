@@ -543,7 +543,7 @@ BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
 }
 
 BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
-   free( iter );
+   scaffold_free( iter );
    return TRUE;
 }
 
@@ -574,7 +574,7 @@ BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
       bdestroy( line->line );
       bdestroy( line->nick );
       bdestroy( line->display_name );
-      free( line );
+      scaffold_free( line );
       return TRUE;
    }
    return FALSE;
@@ -602,7 +602,7 @@ BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
       animation->frames.count = 0;
-      vector_free( &(animation->frames) );
+      vector_cleanup( &(animation->frames) );
       bdestroy( animation->name );
       return TRUE;
    }

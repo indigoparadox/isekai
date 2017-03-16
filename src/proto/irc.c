@@ -425,8 +425,8 @@ static void irc_server_ison(
 cleanup:
    if( NULL != ison ) {
       vector_remove_cb( ison, callback_free_clients, NULL );
-      vector_free( ison );
-      free( ison );
+      vector_cleanup( ison );
+      scaffold_free( ison );
    }
    bdestroy( response );
    return;
@@ -1010,7 +1010,7 @@ static void irc_command_cleanup( const struct REF* ref ) {
    bstrListDestroy( (struct bstrList*)cmd->args );
    cmd->args = NULL;
 
-   free( cmd );
+   scaffold_free( cmd );
 }
 
 void irc_command_free( IRC_COMMAND* cmd ) {

@@ -31,13 +31,13 @@ static void client_cleanup( const struct REF *ref ) {
 
    client_stop( c );
 
-   vector_free( &(c->command_queue) );
+   vector_cleanup( &(c->command_queue) );
    hashmap_cleanup( &(c->chunkers) );
    hashmap_cleanup( &(c->channels) );
 
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
-   /* free( c ); */
+   /* scaffold_free( c ); */
 }
 
 void client_init( struct CLIENT* c, BOOL client_side ) {
@@ -580,8 +580,8 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 cleanup:
    if( NULL != v_applied ) {
       v_applied->count = 0; /* Force delete. */
-      vector_free( v_applied );
-      free( v_applied );
+      vector_cleanup( v_applied );
+      scaffold_free( v_applied );
    }
    bdestroy( lname );
    bdestroy( img_src );

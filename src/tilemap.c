@@ -59,7 +59,7 @@ void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
 }
 
 void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
-   vector_free( &(layer->tiles ) );
+   vector_cleanup( &(layer->tiles ) );
 }
 
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset ) {

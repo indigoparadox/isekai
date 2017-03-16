@@ -145,11 +145,11 @@ struct TILEMAP {
 
 #define tilemap_layer_free( layer ) \
     tilemap_layer_cleanup( layer ); \
-    free( layer );
+    scaffold_free( layer );
 
 #define tilemap_position_free( position ) \
     tilemap_position_cleanup( position ); \
-    free( position );
+    scaffold_free( position );
 
 void tilemap_init( struct TILEMAP* t, BOOL local_images );
 void tilemap_free( struct TILEMAP* t );
