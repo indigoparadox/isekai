@@ -226,7 +226,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
          "%d (%d)[%d], %d (%d)[%d]",
          o->x, o->prev_x, steps_remaining_x, o->y, o->prev_y, steps_remaining_y
       );
-      graphics_set_color( twindow->g, GRAPHICS_COLOR_MAGENTA );
+      graphics_set_color( twindow->g, GRAPHICS_COLOR_WHITE );
       graphics_draw_text( twindow->g, 10, 30, GRAPHICS_TEXT_ALIGN_LEFT, pos );
    }
 #endif /* DEBUG_TILES */

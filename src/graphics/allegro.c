@@ -592,7 +592,6 @@ void graphics_sleep( uint16_t milliseconds ) {
 }
 
 uint32_t graphics_get_ticks() {
-   scaffold_print_debug( &module, "X: %d\n", allegro_ticks );
    return allegro_ticks;
 }
 

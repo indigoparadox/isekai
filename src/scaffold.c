@@ -118,6 +118,36 @@ BOOL scaffold_string_is_printable( bstring str ) {
    return is_printable;
 }
 
+#include "graphics.h"
+
+static void scaffold_log(
+   FILE* log, const bstring mod_in, enum GRAPHICS_COLOR color,
+   const char* message, va_list varg
+) {
+   int bstr_ret;
+
+   if( NULL == scaffold_print_buffer ) {
+      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
+   }
+   scaffold_assert( NULL != scaffold_print_buffer );
+
+   bstr_ret = btrunc( scaffold_print_buffer, 0 );
+   scaffold_check_nonzero( bstr_ret );
+
+   scaffold_snprintf( scaffold_print_buffer, message, varg );
+
+   binsertch( scaffold_print_buffer, 0, 1, ' ' );
+   binsertch( scaffold_print_buffer, 0, 1, ':' );
+   binsert( scaffold_print_buffer, 0, mod_in, '\0' );
+
+   scaffold_colorize( scaffold_print_buffer, color );
+
+   fprintf( log, "%s", bdata( scaffold_print_buffer ) );
+
+cleanup:
+   return;
+}
+
 void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
@@ -134,27 +164,14 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
       goto cleanup;
    }
 #endif /* HEATSHRINK_DEBUGGING_LOGS */
-
-   if( NULL == scaffold_print_buffer ) {
-      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
-   }
-   scaffold_assert( NULL != scaffold_print_buffer );
-
-   bstr_ret = btrunc( scaffold_print_buffer, 0 );
-   scaffold_check_nonzero( bstr_ret );
-
    va_start( varg, message );
-   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   scaffold_log(
+      scaffold_log_handle_err, mod_in, GRAPHICS_COLOR_YELLOW, message, varg
+   );
    va_end( varg );
-
-   /* TODO: Put newline if missing. */
-
-   fprintf( scaffold_log_handle, "%s: %s",
-      bdata( mod_in ), bdata( scaffold_print_buffer ) );
-
+#endif /* DEBUG */
 cleanup:
    return;
-#endif /* DEBUG */
 }
 
 void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
@@ -183,27 +200,13 @@ cleanup:
 }
 
 void scaffold_print_error( const bstring mod_in, const char* message, ... ) {
-#ifdef DEBUG
    va_list varg;
-   int bstr_ret;
-
-   if( NULL == scaffold_print_buffer ) {
-      scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
-   }
-   scaffold_assert( NULL != scaffold_print_buffer );
-
-   bstr_ret = btrunc( scaffold_print_buffer, 0 );
-   scaffold_check_nonzero( bstr_ret );
-
+#ifdef DEBUG
    va_start( varg, message );
-   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   scaffold_log(
+      scaffold_log_handle_err, mod_in, GRAPHICS_COLOR_RED, message, varg
+   );
    va_end( varg );
-
-   fprintf( scaffold_log_handle_err, "%s: %s",
-      bdata( mod_in ), bdata( scaffold_print_buffer ) );
-
-cleanup:
-   return;
 #endif /* DEBUG */
 }
 
@@ -655,3 +658,42 @@ cleanup:
    }
    return ok;
 }
+
+#ifdef USE_COLORED_CONSOLE
+
+void scaffold_colorize( bstring str, GRAPHICS_COLOR color ) {
+   bstring str_color = NULL;
+   int color_i = (int)color;
+   int bstr_ret;
+
+   if( color_i > 6 ) {
+      color_i -= 9;
+   }
+   if( 0 > color_i || 7 <= color_i ) {
+      goto cleanup;
+   }
+   str_color = &(ansi_color_strs[color_i]);
+
+   volatile int mlen = str_color->mlen;
+   volatile int slen = str_color->slen;
+   volatile const char* data = str_color->data;
+
+   bstr_ret = binsert( str, 0, str_color, '\0' );
+   if( 0 != bstr_ret ) {
+      goto cleanup;
+   }
+   bstr_ret = bconcat( str, &(ansi_color_strs[GRAPHICS_COLOR_WHITE - 9]) );
+   if( 0 != bstr_ret ) {
+      goto cleanup;
+   }
+
+cleanup:
+   return;
+}
+#else
+
+void scaffold_colorize( bstring str, GRAPHICS_COLOR color ) {
+   /* NOOP */
+}
+
+#endif /* USE_COLORED_CONSOLE */

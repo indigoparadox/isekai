@@ -123,8 +123,10 @@ void graphics_wait_for_fps_timer() {
    /*
    scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
    */
+   /*
    if( 0 == ticks % 1000) {
       scaffold_print_debug( &module, "%d\n", (ticks - graphics_time) );
    }
+   */
 #endif /* USE_POSIX_TIMER */
 }
