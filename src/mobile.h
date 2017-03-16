@@ -12,7 +12,8 @@ typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_MOVEUP,
    MOBILE_UPDATE_MOVEDOWN,
    MOBILE_UPDATE_MOVELEFT,
-   MOBILE_UPDATE_MOVERIGHT
+   MOBILE_UPDATE_MOVERIGHT,
+   MOBILE_UPDATE_ATTACK
 } MOBILE_UPDATE;
 
 /*
@@ -149,6 +150,7 @@ mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
 SCAFFOLD_INLINE
 SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
+
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );
