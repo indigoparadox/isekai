@@ -352,6 +352,7 @@ static struct tagbstring module = bsStatic( "scaffold.c" );
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 struct tagbstring scaffold_colon_string = bsStatic( ":" );
+struct tagbstring scaffold_exclamation_string = bsStatic( "!" );
 
 #if defined( _WIN32 ) || defined( WIN16 )
 struct tagbstring scaffold_dirsep_string = bsStatic( "\\" );
@@ -370,6 +371,7 @@ extern SCAFFOLD_TRACE scaffold_trace_path;
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;
 extern struct tagbstring scaffold_colon_string;
+extern struct tagbstring scaffold_exclamation_string;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
 

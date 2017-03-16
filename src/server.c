@@ -59,7 +59,7 @@ void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_
    struct VECTOR* l_clients = NULL;
 
    l_clients =
-      hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip->nick );
+      hashmap_iterate_v( &(l->clients), callback_search_clients_r, NULL );
    scaffold_check_null( l_clients );
 
    vector_iterate( l_clients, callback_send_clients, buffer );
