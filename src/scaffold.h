@@ -151,6 +151,34 @@ void scaffold_print_error( const bstring module, const char* message, ... );
 
 #endif /* DEBUG */
 
+#ifdef USE_COLORED_CONSOLE
+#if defined _WIN32 || defined WIN16
+#error Colored console is not compatible with Windows!
+#endif /* _WIN32 || WIN16 */
+
+#ifdef SCAFFOLD_LOG_FILE
+/* TODO: Colored log output to HTML. */
+#error Colored console is not compatible with log files!
+#endif /* SCAFFOLD_LOG_FILE */
+
+#ifdef SCAFFOLD_C
+
+static
+struct tagbstring ansi_color_strs[7] = {
+   /* GRAPHICS_COLOR_BLUE        =  9, */ bsStatic( "\x1b[34m" ),
+   /* GRAPHICS_COLOR_GREEN       = 10, */ bsStatic( "\x1b[32m" ),
+   /* GRAPHICS_COLOR_CYAN        = 11, */ bsStatic( "\x1b[36m" ),
+   /* GRAPHICS_COLOR_RED         = 12, */ bsStatic( "\x1b[31m" ),
+   /* GRAPHICS_COLOR_MAGENTA     = 13, */ bsStatic( "\x1b[35m" ),
+   /* GRAPHICS_COLOR_YELLOW      = 14, */ bsStatic( "\x1b[33m" ),
+   /* GRAPHICS_COLOR_WHITE       = 15  */ bsStatic( "\x1b[0m" )
+};
+#endif /* SCAFFOLD_C */
+
+#endif /* USE_COLORED_CONSOLE */
+
+/* = Utility Macros = */
+
 #define SCAFFOLD_MODULE( mod_name ) static struct tagbstring module = bsStatic( mod_name )
 
 #define scaffold_static_string( cstr ) \
@@ -331,6 +359,8 @@ struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
 
 #else
 
+enum GRAPHICS_COLOR;
+
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;
 #endif /* DEBUG */
@@ -340,6 +370,7 @@ extern struct tagbstring scaffold_colon_string;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
 BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
+void scaffold_colorize( bstring str, enum GRAPHICS_COLOR color );
 
 #endif /* SCAFFOLD_C */
 

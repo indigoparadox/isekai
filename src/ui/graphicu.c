@@ -75,11 +75,6 @@ void ui_window_init(
 
    graphics_surface_init( win->element, width, height );
 
-   scaffold_print_debug(
-      &module, "Created window with %d controls: %s (%d, %d)\n",
-      hashmap_count( &(win->controls) ), bdata( win->title ), win->x, win->y
-   );
-
 cleanup:
    return;
 }
@@ -135,11 +130,6 @@ void ui_control_init(
    control->self.height = height;
    control->can_focus = can_focus;
    control->self.title = NULL;
-
-   scaffold_print_debug(
-      &module, "Created control: %s (%d, %d)\n",
-      bdata( control->text ), control->self.x, control->self.y
-   );
 }
 
 void ui_control_add(
@@ -158,20 +148,11 @@ void ui_control_add(
 
    hashmap_put( &(win->controls), id, control );
 
-   scaffold_print_debug(
-      &module, "Added control: %s to window: %s\n",
-      bdata( control->text ), bdata( win->title )
-   );
-
    if(
       UI_CONTROL_TYPE_BUTTON == control->type ||
       UI_CONTROL_TYPE_TEXT == control->type
    ) {
       win->active_control = control;
-      scaffold_print_debug(
-         &module, "Set focusable control as focus: %s\n",
-         bdata( control->text ), bdata( win->title )
-      );
    }
 }
 

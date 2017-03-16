@@ -234,6 +234,7 @@ int main( int argc, char** argv ) {
       tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT
+      graphics_set_color( g_screen, GRAPHICS_COLOR_WHITE );
       graphics_draw_text( g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, str_service );
 #endif /* USE_RANDOM_PORT */
 
