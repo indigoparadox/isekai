@@ -49,6 +49,11 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
 void proto_client_stop( struct CLIENT* c );
 void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l );
+#ifdef DEBUG_VM
+void proto_client_debug_vm(
+   struct CLIENT* c, struct CHANNEL* l, const bstring code
+);
+#endif /* DEBUG_VM */
 
 void irc_command_free( IRC_COMMAND* cmd );
 IRC_COMMAND* irc_dispatch(

@@ -579,6 +579,7 @@ void client_poll_input( struct CLIENT* c ) {
       }
 
       /* Handle windows first. */
+#ifdef DEBUG_VM
       if( NULL != ui_window_by_id( ui, &str_client_window_id_repl ) ) {
          if( NULL == client_input_from_ui ) {
             client_input_from_ui = bfromcstralloc( 80, "" );
@@ -596,25 +597,21 @@ void client_poll_input( struct CLIENT* c ) {
              *        once per cycle.
              */
 
-            /*
-            tp_obj fname = tp_string("test");
-            tp_obj text = tp_string("print 2");
-            tp_obj c = tp_compile(tp, text, fname);
-            tp_exec(tp, c, tp->builtins);
-            */
-
             /* code = tp_string_n(
                bdata( client_input_from_ui ),
                blength( client_input_from_ui )
             );
             globals = tp_string( "test" );
             compiled = tp_compile( update.l->vm, code, globals ); */
-            tp_eval( update.l->vm, bdata( client_input_from_ui ), update.l->vm->builtins );
+            //tp_eval( update.l->vm, bdata( client_input_from_ui ), update.l->vm->builtins );
+
+            proto_client_debug_vm( c, update.l, client_input_from_ui );
 
             btrunc( client_input_from_ui, 0 );
          }
          goto cleanup;
       }
+#endif /* DEBUG_VM */
 
       /* If no windows need input, then move on to game input. */
       switch( input.character ) {
@@ -649,6 +646,7 @@ void client_poll_input( struct CLIENT* c ) {
             proto_client_send_update( c, &update );
          }
          break;
+#ifdef DEBUG_VM
       case 'p':
          if(
             NULL ==
@@ -664,6 +662,7 @@ void client_poll_input( struct CLIENT* c ) {
             ui_window_push( ui, win );
          }
          break;
+#endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
       case 't':
          switch( tilemap_dt_state ) {

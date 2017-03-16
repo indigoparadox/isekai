@@ -17,6 +17,8 @@ struct CHANNEL {
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
    struct tp_vm* vm;
+   int vm_cur;
+   int vm_step_ret;
 };
 
 struct CHANNEL_CLIENT {
@@ -46,5 +48,8 @@ struct bstrList* channel_list_clients( struct CHANNEL* l );
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o );
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial );
 void channel_load_tilemap( struct CHANNEL* l );
+void channel_vm_start( struct CHANNEL* l, bstring code );
+void channel_vm_step( struct CHANNEL* l );
+void channel_vm_end( struct CHANNEL* l );
 
 #endif /* CHANNEL_H */

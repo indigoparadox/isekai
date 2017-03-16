@@ -311,6 +311,9 @@ void server_service_clients( SERVER* s ) {
 
 #endif /* USE_CHUNKS */
 
+   /* Run the channel VMs. */
+   hashmap_iterate( &(s->self.channels), callback_proc_channel_vms, NULL );
+
 cleanup:
    return;
 }

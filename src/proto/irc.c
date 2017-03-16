@@ -134,6 +134,16 @@ void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l ) {
    client_printf( c, "WHO %b", l->name );
 }
 
+#ifdef DEBUG_VM
+
+void proto_client_debug_vm(
+   struct CLIENT* c, struct CHANNEL* l, const bstring code
+) {
+   client_printf( c, "DEBUGVM %b %b", l->name, code );
+}
+
+#endif /* DEBUG_VM */
+
 /* This file contains our (possibly limited, slightly incompatible) version *
  * of the IRC protocol, as it interacts with our server and client objects. oopen game datapen game data*/
 
@@ -633,6 +643,35 @@ cleanup:
    return;
 }
 
+#ifdef DEBUG_VM
+
+static void irc_server_debugvm(
+   struct CLIENT* c, SERVER* s, const struct bstrList* args
+) {
+   bstring code = NULL;
+   bstring lname = args->entry[1];
+   int i;
+   struct CHANNEL* l = NULL;
+
+   code = bfromcstr( "" );
+
+   for( i = 2 /* Skip command and channel. */ ; args->qty > i ; i++ ) {
+      bconchar( code, ' ' );
+      bconcat( code, args->entry[i] );
+   }
+
+   l = server_get_channel_by_name( s, lname );
+   scaffold_check_null( l );
+
+   channel_vm_start( l, code );
+
+cleanup:
+   bdestroy( code );
+   return;
+}
+
+#endif /* DEBUG_VM */
+
 static void irc_client_gu(
    struct CLIENT* c, SERVER* s, const struct bstrList* args
 ) {
@@ -865,6 +904,9 @@ IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
 #endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
 IRC_COMMAND_ROW( "NOB", irc_server_mob ),
+#ifdef DEBUG_VM
+IRC_COMMAND_ROW( "DEBUGVM", irc_server_debugvm ),
+#endif /* DEBUGVM */
 IRC_COMMAND_TABLE_END() };
 
 IRC_COMMAND_TABLE_START( client ) = {
