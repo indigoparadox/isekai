@@ -60,11 +60,13 @@ void mobile_init( struct MOBILE* o ) {
 }
 
 void mobile_animate( struct MOBILE* o ) {
+#ifdef USE_MOBILE_FRAME_COUNTER
    if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
    }
-
-   if( NULL != o && 0 == mobile_frame_counter && TRUE == o->initialized ) {
+   if( 0 == mobile_frame_counter ) {
+#endif /* USE_MOBILE_FRAME_COUNTER */
+   if( NULL != o && TRUE == o->initialized ) {
       scaffold_assert( NULL != o->current_animation );
       if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
          o->current_frame = 0;
@@ -72,11 +74,17 @@ void mobile_animate( struct MOBILE* o ) {
          o->current_frame++;
       }
    }
+#ifdef USE_MOBILE_FRAME_COUNTER
+   }
+#endif /* USE_MOBILE_FRAME_COUNTER */
 
+#ifdef USE_MOBILE_MOVE_COUNTER
    if( mobile_move_counter++ > MOBILE_MOVE_DIVISOR ) {
       mobile_move_counter = 0;
    }
-   if( NULL != o && 0 == mobile_move_counter ) {
+   if( 0 == mobile_move_counter ) {
+#endif /* USE_MOBILE_MOVE_COUNTER */
+   if( NULL != o ) {
       /* TODO: Enforce walking speed server-side. */
       if( 0 != o->steps_remaining ) {
          o->steps_remaining += o->steps_inc;
@@ -92,6 +100,9 @@ void mobile_animate( struct MOBILE* o ) {
          o->prev_y = o->y;
       }
    }
+#ifdef USE_MOBILE_MOVE_COUNTER
+   }
+#endif /* USE_MOBILE_MOVE_COUNTER */
 }
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(

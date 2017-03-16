@@ -176,8 +176,7 @@ int main( int argc, char** argv ) {
    twindow.t = NULL;
 
    while( TRUE ) {
-
-      graphics_wait_for_fps_timer();
+      graphics_start_fps_timer();
 
       if( !main_server->self.running ) {
          break;
@@ -204,6 +203,7 @@ int main( int argc, char** argv ) {
             GRAPHICS_TEXT_ALIGN_CENTER, &str_loading
          );
          graphics_flip_screen( g_screen );
+         graphics_wait_for_fps_timer();
          continue;
       } else if( TRUE != post_load_finished ) {
          twindow.t = &(l->tilemap);
@@ -240,6 +240,8 @@ int main( int argc, char** argv ) {
       ui_draw( &ui, g_screen );
 
       graphics_flip_screen( g_screen );
+
+      graphics_wait_for_fps_timer();
    }
 
 cleanup:
