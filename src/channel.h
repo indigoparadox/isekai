@@ -7,7 +7,12 @@
 #include "hashmap.h"
 #include "tilemap.h"
 
+#ifdef USE_TINYPY
 struct tp_vm;
+#endif /* USE_TINYPY */
+#ifdef USE_DUKTAPE
+struct duk_hthread;
+#endif /* USE_DUKTAPE */
 
 struct CHANNEL {
    struct REF refcount;
@@ -16,6 +21,9 @@ struct CHANNEL {
    struct HASHMAP clients;
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
+#ifdef USE_DUKTAPE
+   struct duk_hthread* vm;
+#endif /* USE_DUKTAPE */
 #ifdef USE_TINYPY
    struct tp_vm* vm;
    int vm_cur;
