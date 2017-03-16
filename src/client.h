@@ -59,6 +59,7 @@ struct CLIENT {
     client_init( c, client_side );
 
 struct GAMEDATA;
+struct INPUT;
 
 BOOL cb_client_del_channels( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
