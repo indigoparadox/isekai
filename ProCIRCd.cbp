@@ -227,6 +227,7 @@
 					<Add option="-DUSE_CONNECT_DIALOG" />
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxDEBUG_VM" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -267,11 +268,14 @@
 					<Add option="-DxDEBUG_REF" />
 					<Add option="-DUSE_CONNECT_DIALOG" />
 					<Add option="-DDEBUG_TILES" />
+					<Add option="-DUSE_SDL_IMAGE" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
 					<Add library="ubsan" />
 					<Add library="SDL" />
+					<Add library="SDL_image" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -668,6 +672,10 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 		</Unit>
+		<Unit filename="src/item.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/item.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
