@@ -24,13 +24,26 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
 
+static void graphics_surface_cleanup( const struct REF *ref ) {
+   GRAPHICS* g = scaffold_container_of( ref, GRAPHICS, refcount );
+   if( NULL != g->surface ) {
+      SDL_FreeSurface( g->surface );
+      g->surface = NULL;
+   }
+   if( NULL == g->palette ) {
+      scaffold_free( g->palette );
+      g->palette = NULL;
+   }
+   /* TODO: Free surface. */
+}
+
 void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
    (*g) = scaffold_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
-   (*g)->surface = SDL_SetVideoMode( w, h, 0, SDL_SWSURFACE | SDL_DOUBLEBUF );
+   (*g)->surface = SDL_SetVideoMode( w, h, 16, SDL_SWSURFACE | SDL_DOUBLEBUF );
    scaffold_check_null( (*g)->surface );
    (*g)->w = w;
    (*g)->h = h;
@@ -50,7 +63,8 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    SDL_Surface* screen = NULL;
 
    screen = SDL_GetVideoSurface();
-   scaffold_check_null( screen );
+
+   ref_init( &(g->refcount), graphics_surface_cleanup );
 
    g->surface = SDL_CreateRGBSurface(
       SDL_SWSURFACE,
@@ -111,15 +125,20 @@ void graphics_set_image_data(
    GRAPHICS* g, const BYTE* data, SCAFFOLD_SIZE length
 ) {
    struct GRAPHICS_BITMAP* bitmap = NULL;
-   int sdl_ret;
-   SCAFFOLD_SIZE surface_i = 0,
+   int sdl_ret,
+      bytes_per_pixel;
+   SCAFFOLD_SIZE_SIGNED surface_i = 0,
       y,
       i = 0;
    SDL_Surface* surface,
       * screen;
+   SDL_Color* pixel;
+   SDL_PixelFormat* format;
+   uint16_t temp;
 
    screen = SDL_GetVideoSurface();
    scaffold_check_null( screen );
+   BYTE* holder = NULL;
 
    if( NULL != g->surface ) {
       SDL_FreeSurface( g->surface );
@@ -144,16 +163,39 @@ void graphics_set_image_data(
    g->h = bitmap->h;
    sdl_ret = SDL_LockSurface( g->surface );
    scaffold_check_nonzero( sdl_ret );
-   for( y = bitmap->h - 1 ; 0 <= y ; y-- ) {
-      surface = (SDL_Surface*)g->surface;
+   surface = (SDL_Surface*)g->surface;
+   scaffold_check_null( surface );
+   format = surface->format;
+   scaffold_check_null( format );
+   scaffold_assert( 16 == format->BitsPerPixel );
+   //bytes_per_pixel = format->BitsPerPixel / 8;
+   //holder = scaffold_alloc( bytes_per_pixel, BYTE );
+   for( y = 0 ; surface->h > y ; y++ ) {
       surface_i = (y / bitmap->w) + (y % bitmap->w);
-      /* FIXME: Read and use the bitmap format. */
-      //((uint8_t*)(surface->pixels))[surface_i] =
-      //   graphics_stock_colors[(int)(bitmap->pixels[i++])];
+
+      pixel = &(graphics_stock_colors[(int)(bitmap->pixels[i++])]);
+      ((uint16_t*)surface->pixels)[surface_i] =
+         ((pixel->r >> format->Rshift) << format->Rloss);
+
+      scaffold_assert( ((uint16_t*)surface->pixels)[surface_i] == 0 );
+
+      /*
+      holder =
+         graphics_stock_colors[(int)(bitmap->pixels[i++])].r;
+      holder << format->Rshift;
+      *(surface->pixels + (surface_i * bytes_per_pixel)) &= *holder;
+      */
+
+
+//      /* FIXME: Read and use the bitmap format. */
+//      ((uint8_t*)(surface->pixels))[surface_i] =;
    }
    SDL_UnlockSurface( g->surface );
 
 cleanup:
+   if( NULL != holder ) {
+      free( holder );
+   }
    graphics_free_bitmap( bitmap );
 
 }

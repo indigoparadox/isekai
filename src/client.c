@@ -715,13 +715,12 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    return FALSE;
 }
 
-void client_poll_input( struct CLIENT* c, struct CHANNEL* l ) {
-   struct INPUT input;
+void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
-   input_get_event( &input );
-   if( INPUT_TYPE_KEY == input.type ) {
-      if( !client_poll_ui( c, l, &input ) ) {
-         client_poll_keyboard( c, &input );
+   input_get_event( p );
+   if( INPUT_TYPE_KEY == p->type ) {
+      if( !client_poll_ui( c, l, p ) ) {
+         client_poll_keyboard( c, p );
       }
    }
 
