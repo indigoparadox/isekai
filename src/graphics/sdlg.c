@@ -24,19 +24,20 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
 
-void graphics_screen_init(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+void graphics_screen_new(
+   GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
+   (*g) = scaffold_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
-   g->surface = SDL_SetVideoMode( w, h, 0, SDL_SWSURFACE | SDL_DOUBLEBUF );
-   scaffold_check_null( g->surface );
-   g->w = w;
-   g->h = h;
-   g->virtual_x = vw;
-   g->virtual_y = vh;
-   g->palette = NULL;
-   g->font = NULL;
+   (*g)->surface = SDL_SetVideoMode( w, h, 0, SDL_SWSURFACE | SDL_DOUBLEBUF );
+   scaffold_check_null( (*g)->surface );
+   (*g)->w = w;
+   (*g)->h = h;
+   (*g)->virtual_x = vw;
+   (*g)->virtual_y = vh;
+   (*g)->palette = NULL;
+   (*g)->font = NULL;
 cleanup:
    return;
 }

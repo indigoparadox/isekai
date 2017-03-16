@@ -67,7 +67,7 @@ int main( int argc, char** argv ) {
 #endif /* SCAFFOLD_LOG_FILE */
 
 #ifdef _WIN32
-   graphics_screen_init(
+   graphics_screen_new(
       &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT,
       nShowCmd, hInstance

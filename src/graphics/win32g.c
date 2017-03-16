@@ -25,8 +25,8 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
    return 0;
 }
 
-void graphics_screen_init(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+void graphics_screen_new(
+   GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh,  int32_t arg1, void* arg2
 ) {
    int result;

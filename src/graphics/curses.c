@@ -24,7 +24,10 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
    /* TODO: Free surface. */
 }
 
-void graphics_screen_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_screen_new(
+   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh,  int32_t arg1, void* arg2
+) {
    ref_init( &(g->refcount), graphics_surface_cleanup );
    initscr();
    noecho();
