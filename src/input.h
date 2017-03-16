@@ -5,8 +5,14 @@
 #include "client.h"
 
 typedef enum INPUT_SCANCODE {
+#ifdef USE_ALLEGRO
    INPUT_SCANCODE_BACKSPACE = 63,
    INPUT_SCANCODE_ENTER = 67
+#elif defined( USE_SDL )
+   INPUT_SCANCODE_BACKSPACE = 22,
+   INPUT_SCANCODE_ENTER = 36,
+   INPUT_SCANCODE_ESC = 9
+#endif
 } INPUT_SCANCODE;
 
 typedef enum _INPUT_TYPE {
@@ -24,6 +30,7 @@ struct INPUT {
 
 void input_init( struct INPUT* p );
 void input_get_event( struct INPUT* input );
+void input_shutdown( struct INPUT* input );
 
 #ifdef INPUT_C
 SCAFFOLD_MODULE( "input.c" );

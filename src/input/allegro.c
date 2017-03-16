@@ -42,5 +42,9 @@ void input_get_event( struct INPUT* input ) {
    } else {
       input->type = INPUT_TYPE_NONE;
       input->character = 0;
+      input->scancode = 0;
    }
+}
+
+void input_shutdown( struct INPUT* input ) {
 }
