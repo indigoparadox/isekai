@@ -15,14 +15,14 @@
 #include "duktape/dukhelp.h"
 #endif /* USE_DUKTAPE */
 
-static void channel_cleanup( const struct REF *ref ) {
+static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
    if( channel_vm_can_step( l ) ) {
       channel_vm_end( l );
    }
 
-   /* FIXME: Actually free stuff. */
+   /* Actually free stuff. */
    hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
    hashmap_cleanup( &(l->clients) );
    vector_remove_cb( &(l->mobiles), callback_free_mobiles, NULL );
@@ -33,7 +33,8 @@ static void channel_cleanup( const struct REF *ref ) {
 
    tilemap_free( &(l->tilemap) );
 
-   /* FIXME: Free channel. */
+   /* Free channel. */
+   free( l );
 }
 
 void channel_free( struct CHANNEL* l ) {
@@ -41,7 +42,7 @@ void channel_free( struct CHANNEL* l ) {
 }
 
 void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
-   ref_init( &(l->refcount), channel_cleanup );
+   ref_init( &(l->refcount), channel_free_final );
    hashmap_init( &(l->clients) );
    vector_init( &(l->mobiles ) );
    l->name = bstrcpy( name );

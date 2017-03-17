@@ -46,8 +46,6 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 
    tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
 
-   bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
-
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
    t->lname = bfromcstr( "" );
 }
