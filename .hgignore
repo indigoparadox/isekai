@@ -8,6 +8,7 @@ glob:testchannel.*
 glob:*.swp
 glob:*.tmp
 glob:testdata
+glob:src/tinypy/*.zip
 syntax: glob
 Debug
 .vs
@@ -19,3 +20,6 @@ glob:doxygen
 glob:src/tinypy/*.py
 glob:src/tinypy/*.pyc
 glob:src/tinypy/*.tpc
+glon:PROCIRCD.VCW
+glob:PROCIRCD.WSP
+glob:PROCIRCD.bsc
