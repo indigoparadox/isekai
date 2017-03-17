@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ENABLE_REF_TEST
 #include "ref.h"
 
 #define INITIAL_SIZE (256)

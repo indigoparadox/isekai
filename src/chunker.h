@@ -9,9 +9,6 @@
 #include "b64.h"
 #endif /* USE_B64 */
 
-#include "hs/hsdecode.h"
-#include "hs/hsencode.h"
-
 #define CHUNKER_WINDOW_SIZE 14
 #define CHUNKER_LOOKAHEAD_SIZE 8
 #define CHUNKER_FILENAME_ALLOC 80
@@ -54,14 +51,27 @@ typedef struct _CHUNKER_TRACK {
    SCAFFOLD_SIZE length;
 } CHUNKER_TRACK;
 
+/* If we're using dynamic allocation, then we're using pointers so we don't
+ * need the full struct definition, but if we're using static allocation, the
+ * struct is embedded, so we do. But the C99 stuff is disabled, so we won't
+ * get all of the useless warnings in that case.
+ */
+#if HEATSHRINK_DYNAMIC_ALLOC
+struct heatshrink_decoder;
+struct heatshrink_encoder;
+#else
+#include "hs/hsdecode.h"
+#include "hs/hsencode.h"
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
+
 struct CHUNKER {
    struct REF refcount;
 #if HEATSHRINK_DYNAMIC_ALLOC
-   heatshrink_encoder* encoder;
-   heatshrink_decoder* decoder;
+   struct heatshrink_encoder* encoder;
+   struct heatshrink_decoder* decoder;
 #else
-   heatshrink_encoder encoder;
-   heatshrink_decoder decoder;
+   struct heatshrink_encoder encoder;
+   struct heatshrink_decoder decoder;
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
    SCAFFOLD_SIZE raw_position;
    SCAFFOLD_SIZE raw_length;

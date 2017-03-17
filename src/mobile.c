@@ -8,9 +8,12 @@
 #include "callback.h"
 #include "tinypy/tinypy.h"
 
-/* FIXME: Replace with a proper frame limiter. */
+#ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
+#endif /* USE_MOBILE_FRAME_COUNTER */
+#ifdef USE_MOBILE_MOVE_COUNTER
 static uint8_t mobile_move_counter = 0;
+#endif /* USE_MOBILE_MOVE_COUNTER */
 
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );

@@ -4,6 +4,8 @@
 
 #define VECTOR_C
 #include "vector.h"
+
+#define ENABLE_REF_TEST
 #include "ref.h"
 
 void vector_init( struct VECTOR* v ) {

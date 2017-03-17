@@ -150,7 +150,7 @@ mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
 SCAFFOLD_INLINE
 SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
-
+void mobile_speak( struct MOBILE* o, bstring speech );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

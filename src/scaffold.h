@@ -50,6 +50,9 @@ typedef unsigned char uint8_t;
 #include <stddef.h>
 
 #include "bstrlib/bstrlib.h"
+#include "colors.h"
+
+COLOR_TABLE( SCAFFOLD )
 
 /* = Missing Types = */
 
@@ -286,7 +289,6 @@ struct tagbstring ansi_color_strs[7] = {
     ((type *)((char *)(ptr) - offsetof( type, member )))
 
 struct VECTOR;
-enum GRAPHICS_COLOR;
 
 /* Vector needs some stuff above but is needed for stuff below. */
 #include "vector.h"
@@ -342,7 +344,7 @@ __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
 BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
-void scaffold_colorize( bstring str, enum GRAPHICS_COLOR color );
+void scaffold_colorize( bstring str, SCAFFOLD_COLOR color );
 
 #ifdef SCAFFOLD_C
 
@@ -358,12 +360,10 @@ struct tagbstring scaffold_exclamation_string = bsStatic( "!" );
 struct tagbstring scaffold_dirsep_string = bsStatic( "\\" );
 #else
 struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
-#endif // _WIN32 || WIN16
+#endif /* _WIN32 || WIN16 */
 #define SCAFFOLD_DIRSEP_CHAR scaffold_dirsep_string.data[0]
 
 #else
-
-enum GRAPHICS_COLOR;
 
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;

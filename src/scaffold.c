@@ -664,7 +664,7 @@ cleanup:
 
 #ifdef USE_COLORED_CONSOLE
 
-void scaffold_colorize( bstring str, GRAPHICS_COLOR color ) {
+void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
    bstring str_color = NULL;
    int color_i = (int)color;
    int bstr_ret;
@@ -695,7 +695,7 @@ cleanup:
 }
 #else
 
-void scaffold_colorize( bstring str, GRAPHICS_COLOR color ) {
+void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
    /* NOOP */
 }
 

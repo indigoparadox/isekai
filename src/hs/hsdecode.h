@@ -42,7 +42,7 @@ typedef enum {
     (HEATSHRINK_STATIC_LOOKAHEAD_BITS)
 #endif
 
-typedef struct {
+typedef struct heatshrink_decoder {
     uint16_t input_size;        /* bytes in input buffer */
     uint16_t input_index;       /* offset to next unprocessed input byte */
     uint16_t output_count;      /* how many bytes to output */

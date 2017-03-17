@@ -6,6 +6,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "hs/hsdecode.h"
+#include "hs/hsencode.h"
+
 #include "vector.h"
 #include "scaffold.h"
 #include "b64.h"

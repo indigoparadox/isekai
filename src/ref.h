@@ -64,6 +64,8 @@ static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, co
    return FALSE;
 }
 
+#ifdef ENABLE_REF_TEST
+
 static SCAFFOLD_INLINE BOOL ref_test_inc( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
@@ -80,6 +82,8 @@ static SCAFFOLD_INLINE BOOL ref_test_dec( void* data, const char* func ) {
    }
    return FALSE;
 }
+
+#endif /* ENABLE_REF_TEST */
 
 #endif /* USE_THREADS */
 
