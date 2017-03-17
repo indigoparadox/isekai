@@ -1,20 +1,6 @@
 
+#define SYNCBUFF_C
 #include "syncbuff.h"
-
-#ifdef DEBUG_SYNCBUFF
-#include <assert.h>
-#include <stdio.h>
-
-#define syncbuff_trace( ... ) \
-   fprintf( stderr, __VA_ARGS__ )
-#define syncbuff_assert( expression ) assert( expression )
-
-#else
-
-#define syncbuff_trace( ... )
-#define syncbuff_assert( expression )
-
-#endif /* DEBUG_SYNCBUFF */
 
 #define SYNCBUFF_LINE_DEFAULT 255
 #define SYNCBUFF_LINES_INITIAL 2
@@ -49,7 +35,7 @@ static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
 static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
    SCAFFOLD_SIZE i;
 
-   syncbuff_trace(
+   scaffold_print_debug( &module,
       "Realloc: %d: %d to %d\n", dest, syncbuff_size[dest], new_alloc
    );
 
@@ -57,7 +43,7 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
    syncbuff_lines[dest] = (bstring*)realloc(
       syncbuff_lines[dest], syncbuff_size[dest] * sizeof( bstring )
    );
-   syncbuff_assert( NULL != syncbuff_lines[dest] );
+   scaffold_assert( NULL != syncbuff_lines[dest] );
 
    for( i = syncbuff_count[dest] ; syncbuff_size[dest] > i ; i++ ) {
       syncbuff_lines[dest][i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );
@@ -66,7 +52,7 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
 
 uint8_t syncbuff_listen() {
 #ifdef SYNCBUFF_STRICT
-   syncbuff_assert( 0 == listening );
+   scaffold_assert( 0 == listening );
 #else
    if( 0 != syncbuff_listening ) {
       return 0;
@@ -110,48 +96,48 @@ SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    SCAFFOLD_SIZE_SIGNED i;
    SCAFFOLD_SIZE_SIGNED size_out = -1;
 
-   syncbuff_assert( NULL != line );
+   scaffold_assert( NULL != line );
 
-   syncbuff_trace( "Write: %s\n", bdata( line ) );
+   scaffold_print_debug( &module,  "Write: %s\n", bdata( line ) );
 
    if( syncbuff_count[dest] + 2 >= syncbuff_size[dest] ) {
       syncbuff_realloc( dest, syncbuff_size[dest] * 2 );
    }
 
-   syncbuff_trace( "Count is %d\n", syncbuff_count[dest] );
+   scaffold_print_debug( &module,  "Count is %d\n", syncbuff_count[dest] );
 
    for( i = syncbuff_count[dest] ; 0 <= i ; i-- ) {
-      syncbuff_trace(
+      scaffold_print_debug( &module,
          "Move: %d: %d was: %s\n", dest, (i + 1), bdata( syncbuff_lines[dest][i + 1] )
       );
       bstr_result =
          bassignformat( syncbuff_lines[dest][i + 1], "%s", bdata( syncbuff_lines[dest][i] ) );
-      syncbuff_assert( NULL != syncbuff_lines[dest][i + 1] );
+      scaffold_assert( NULL != syncbuff_lines[dest][i + 1] );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
-      syncbuff_trace(
+      scaffold_print_debug( &module,
          "Move: %d: %d now: %s\n", dest, (i + 1), bdata( syncbuff_lines[dest][i + 1] )
       );
    }
 
-   syncbuff_trace(
+   scaffold_print_debug( &module,
       "Write: %d: %d was: %s\n", dest, 0, bdata( syncbuff_lines[dest][0] )
    );
    bstr_result =
       bassignformat( syncbuff_lines[dest][0], "%s", bdata( line ) );
-   syncbuff_assert( NULL != syncbuff_lines[dest][0] );
-   syncbuff_assert( blength( line ) == blength( syncbuff_lines[dest][0] ) );
+   scaffold_assert( NULL != syncbuff_lines[dest][0] );
+   scaffold_assert( blength( line ) == blength( syncbuff_lines[dest][0] ) );
    if( 0 != bstr_result ) {
       goto cleanup;
    }
-   syncbuff_trace(
+   scaffold_print_debug( &module,
       "Write: %d: %d now: %s\n", dest, 0, bdata( syncbuff_lines[dest][0] )
    );
 
    (syncbuff_count[dest])++;
 
-   syncbuff_assert( bdata( line ) != bdata( syncbuff_lines[dest][0] ) );
+   scaffold_assert( bdata( line ) != bdata( syncbuff_lines[dest][0] ) );
 
    size_out = blength( syncbuff_lines[dest][0] );
 
@@ -164,20 +150,20 @@ SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
    int  bstr_result;
    SCAFFOLD_SIZE_SIGNED size_out = -1;
 
-   syncbuff_assert( NULL != buffer );
+   scaffold_assert( NULL != buffer );
    bstr_result = btrunc( buffer, 0 );
-   syncbuff_assert( 0 == blength( buffer ) );
+   scaffold_assert( 0 == blength( buffer ) );
    if( 0 != bstr_result ) {
-      syncbuff_trace( "btrunc error on line: %d\n", __LINE__ );
+      scaffold_print_debug( &module,  "btrunc error on line: %d\n", __LINE__ );
       goto cleanup;
    }
 
    if( 0 < syncbuff_count[dest] ) {
       (syncbuff_count[dest])--;
-      syncbuff_assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
+      scaffold_assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
       bstr_result =
          bassignformat( buffer, "%s", bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
-      syncbuff_assert( NULL != buffer );
+      scaffold_assert( NULL != buffer );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
@@ -187,7 +173,7 @@ SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
       }
    }
 
-   syncbuff_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
+   scaffold_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
 
    size_out = blength( buffer );
 

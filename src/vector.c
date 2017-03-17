@@ -29,7 +29,8 @@ cleanup:
    return;
 }
 
-inline static void vector_reset( struct VECTOR* v ) {
+SCAFFOLD_INLINE
+static void vector_reset( struct VECTOR* v ) {
    free( v->scalar_data );
    free( v->data );
    v->scalar_data = NULL;
@@ -37,7 +38,8 @@ inline static void vector_reset( struct VECTOR* v ) {
    v->count = 0;
 }
 
-inline static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
+SCAFFOLD_INLINE
+static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    SCAFFOLD_SIZE old_size = v->size,
       i;
    void* new_data = NULL;
@@ -53,7 +55,8 @@ cleanup:
    return;
 }
 
-inline static void vector_grow_scalar( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
+SCAFFOLD_INLINE
+static void vector_grow_scalar( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    SCAFFOLD_SIZE old_size = v->size,
       i;
 

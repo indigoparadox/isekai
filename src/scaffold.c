@@ -7,12 +7,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include "wdirent.h"
 #else
+#ifdef __GNUC__
 #include <dirent.h>
 #include <unistd.h>
-#endif /* _WIN32 */
+#endif /* __GNUC__ */
+#endif /* WIN32 */
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
@@ -135,6 +137,8 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 
    /* How's this for an innovative solution to keeping it C89? */
    if( 0 == strncmp( "hs", mod_in_c, 2 ) ) {
+      goto cleanup;
+   } if( 0 == strncmp( "syncbuff", mod_in_c, 8 ) ) {
       goto cleanup;
    }
 #endif /* HEATSHRINK_DEBUGGING_LOGS */
@@ -334,6 +338,8 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #ifdef WIN32
    GetFileSizeEx( inputfd, &sz_win );
    *len = sz_win.LowPart;
+#elif defined( WIN16 )
+   /* FIXME: WIN16 file size. */
 #else
    if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
@@ -443,6 +449,11 @@ void scaffold_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden
 ) {
+
+   /* FIXME: Detect directories under WIN16 or DOS. */
+
+#ifndef WIN16
+
    bstring child_path = NULL;
    char* path_c = NULL;
    DIR* dir = NULL;
@@ -506,6 +517,7 @@ cleanup:
       closedir( dir );
    }
    return;
+#endif /* WIN16 */
 }
 
 BOOL scaffold_check_directory( const bstring path ) {

@@ -50,26 +50,9 @@ void mobile_init( struct MOBILE* o ) {
 }
 
 void mobile_animate( struct MOBILE* o ) {
-   bstring walk_ani_key = NULL;
    if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
    }
-   /* if( NULL != o && 0 == mobile_frame_counter ) {
-      switch( o->frame ) {
-      case MOBILE_FRAME_NONE:
-         o->frame = MOBILE_FRAME_RIGHT_FORWARD;
-         break;
-      case MOBILE_FRAME_RIGHT_FORWARD:
-         o->frame = MOBILE_FRAME_DEFAULT;
-         break;
-      case MOBILE_FRAME_DEFAULT:
-         o->frame = MOBILE_FRAME_LEFT_FORWARD;
-         break;
-      case MOBILE_FRAME_LEFT_FORWARD:
-         o->frame = MOBILE_FRAME_NONE;
-         break;
-      }
-   } */
 
    if( NULL != o && 0 == mobile_frame_counter && TRUE == o->initialized ) {
       scaffold_assert( NULL != o->current_animation );

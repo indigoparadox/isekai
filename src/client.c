@@ -605,8 +605,8 @@ void client_poll_input( struct CLIENT* c ) {
    struct MOBILE_UPDATE_PACKET update;
    struct MOBILE* puppet = NULL;
    struct UI* ui = NULL;
-   struct UI_WINDOW* win = NULL;
 #ifdef DEBUG_VM
+   struct UI_WINDOW* win = NULL;
    struct TILEMAP* t = NULL;
    int bstr_ret;
 #endif /* DEBUG_VM */
@@ -696,6 +696,9 @@ void client_poll_input( struct CLIENT* c ) {
          if( NULL != puppet ) {
             proto_client_send_update( c, &update );
          }
+         break;
+      case '\\':
+         /* TODO: Implement chat window. */
          break;
 #ifdef DEBUG_VM
       case 'p':

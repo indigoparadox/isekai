@@ -6,12 +6,14 @@
 #include "../src/server.h"
 
 START_TEST( test_client_lifecycle ) {
-   //struct CLIENT* c;
+#if 0
+   struct CLIENT* c;
 
-   //client_new( c, NULL );
+   client_new( c, NULL );
 
-//cleanup:
-//   client_cleanup( c );
+cleanup:
+   client_cleanup( c );
+#endif
 }
 END_TEST
 
