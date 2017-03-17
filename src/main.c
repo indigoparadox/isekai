@@ -26,7 +26,7 @@ struct CLIENT* main_client = NULL;
 
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
-static struct tagbstring str_default_channel = bsStatic( "#testchannel" );
+static struct tagbstring str_default_channel = bsStatic( "#testchan" );
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO

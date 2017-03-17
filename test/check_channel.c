@@ -1,5 +1,4 @@
 
-
 #include <stdlib.h>
 #include <check.h>
 
@@ -12,7 +11,7 @@
 static struct tagbstring module = bsStatic( "check_channel.c" );
 
 static struct tagbstring localhost = bsStatic( "127.0.0.1" );
-static struct tagbstring testchannel = bsStatic( "#testchannel" );
+static struct tagbstring testchannel = bsStatic( "#testchan" );
 
 struct SERVER server;
 struct CLIENT clients[CHECK_CHANNEL_CLIENT_COUNT];
@@ -84,6 +83,8 @@ void check_channel_teardown_checked() {
 
    scaffold_set_server();
    while( TRUE == server_service_clients( &server ) );
+
+   assert( 0 == vector_count( &(server.self.channels) ) );
 }
 
 void check_channel_setup_unchecked() {
@@ -109,23 +110,8 @@ START_TEST( test_channel_server_channel ) {
       scaffold_set_server();
       while( TRUE == server_service_clients( &server ) );
 
-      assert( 1 == vector_count( &(server.self.channels) ) );
+      assert( 1 == hashmap_count( &(server.self.channels) ) );
    }
-
-   /* struct CHANNEL* l = server_add_channel( &server, channel, client );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( 1 == vector_count( &(l->clients) ) );
-   assert( 2 == vector_count( &(server->clients) ) );
-   struct CHANNEL* l_b = server_add_channel( server, channel, client_b );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( l == l_b );
-   assert( 2 == vector_count( &(l->clients) ) );
-   assert( 2 == vector_count( &(l_b->clients) ) );
-   assert( 2 == vector_count( &(server->clients) ) );
-   server_drop_client( server, client_b->nick );
-   assert( 1 == vector_count( &(server->self.channels) ) );
-   assert( l == l_b );
-   assert( 1 == vector_count( &(server->clients) ) ); */
 }
 END_TEST
 
@@ -135,7 +121,6 @@ Suite* channel_suite( void ) {
 
    s = suite_create( "Channel" );
 
-   /* Core test case */
    tc_core = tcase_create( "Core" );
 
    tcase_add_unchecked_fixture(
