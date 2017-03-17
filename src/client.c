@@ -584,6 +584,7 @@ cleanup:
    }
    bdestroy( lname );
    bdestroy( img_src );
+   bdestroy( mob_id );
 #ifdef USE_EZXML
    if( NULL != xml_data ) {
       ezxml_free( xml_data );

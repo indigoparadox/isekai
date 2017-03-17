@@ -85,6 +85,7 @@ cleanup:
 
 void ui_window_cleanup( struct UI_WINDOW* win ) {
    bdestroy( win->title );
+   bdestroy( win->id );
    if( NULL != win->controls.data ) {
       hashmap_remove_cb( &(win->controls), callback_free_controls, NULL );
       hashmap_cleanup( &(win->controls) );
