@@ -161,7 +161,7 @@ const struct tagbstring str_mobile_facing[4] = {
    bsStatic( "left" )
 };
 const struct tagbstring str_mobile_def_path_default =
-   bsStatic( "mobs/maid_black.xml" );
+   bsStatic( "mobs/maidblac.xml" );
 #else
 extern const struct tagbstring str_mobile_default_ani;
 extern const struct tagbstring str_mobile_facing[4];

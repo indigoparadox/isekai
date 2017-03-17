@@ -10,8 +10,8 @@
 
 static struct tagbstring module = bsStatic( "check_chunker.c" );
 
-struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testchannel.tmx" );
-struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain-small.bmp" );
+struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testchan.tmx" );
+struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain.bmp" );
 struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
 struct bstrList* chunker_mapchunks = NULL;
