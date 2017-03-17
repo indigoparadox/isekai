@@ -619,3 +619,28 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );
    scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
 }
+
+void tilemap_toggle_debug_state() {
+   switch( tilemap_dt_state ) {
+   case TILEMAP_DEBUG_TERRAIN_OFF:
+      tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_COORDS;
+      scaffold_print_debug( &module, "Terrain Debug: Coords\n" );
+      break;
+   case TILEMAP_DEBUG_TERRAIN_COORDS:
+      tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
+      scaffold_print_debug( &module, "Terrain Debug: Terrain Names\n" );
+      break;
+   case TILEMAP_DEBUG_TERRAIN_NAMES:
+      tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
+      scaffold_print_debug( &module, "Terrain Debug: Terrain Quarters\n" );
+      break;
+   case TILEMAP_DEBUG_TERRAIN_QUARTERS:
+      tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_DEADZONE;
+      scaffold_print_debug( &module, "Terrain Debug: Window Deadzone\n" );
+      break;
+   case TILEMAP_DEBUG_TERRAIN_DEADZONE:
+      tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
+      scaffold_print_debug( &module, "Terrain Debug: Off\n" );
+      break;
+   }
+}

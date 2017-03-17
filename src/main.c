@@ -6,6 +6,8 @@
 #include "scaffold.h"
 #include "callback.h"
 
+#include "windefs.h"
+
 #include <stdlib.h>
 #include <time.h>
 
@@ -25,10 +27,6 @@ struct CLIENT* main_client = NULL;
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
 static struct tagbstring str_default_channel = bsStatic( "#testchannel" );
-#ifdef USE_CONNECT_DIALOG
-static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
-static struct tagbstring str_cdialog_prompt = bsStatic( "Connect to [address:port]:" );
-#endif /* USE_CONNECT_DIALOG */
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO
@@ -127,16 +125,7 @@ int main( int argc, char** argv ) {
    do {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
-      ui_window_new(
-         win, &ui,
-         UI_WINDOW_TYPE_SIMPLE_TEXT,
-         NULL,
-         &str_cdialog_title,
-         &str_cdialog_prompt,
-         40, 40, 300, 80
-      );
-      scaffold_check_null( win );
-      ui_window_push( &ui, win );
+      windef_show_connect( &ui );
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );

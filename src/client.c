@@ -600,152 +600,106 @@ cleanup:
 
 #endif /* USE_CHUNKS */
 
-void client_poll_input( struct CLIENT* c ) {
-   struct INPUT input;
-   struct MOBILE_UPDATE_PACKET update;
-   struct MOBILE* puppet = NULL;
-   struct UI* ui = NULL;
-#ifdef DEBUG_VM
-   struct UI_WINDOW* win = NULL;
+/** \brief
+ * \param
+ * \param
+ * \return TRUE if input is consumed, or FALSE otherwise.
+ */
+static BOOL client_poll_ui( struct CLIENT* c, struct INPUT* p ) {
    struct TILEMAP* t = NULL;
    int bstr_ret;
+   BOOL retval = FALSE;
+
+   if( NULL != c && NULL != c->puppet && NULL != c->puppet->channel ) {
+      t = &(c->puppet->channel->tilemap);
+   }
+
+   /* Make sure the buffer that all windows share is available. */
+   if( NULL == client_input_from_ui ) {
+      client_input_from_ui = bfromcstralloc( 80, "" );
+      scaffold_check_null( client_input_from_ui );
+   }
+
+#ifdef DEBUG_VM
+   /* Poll window: REPL */
+   if( NULL != ui_window_by_id( ui, &str_client_window_id_repl ) ) {
+      retval = TRUE; /* Whatever the window does, it consumes input. */
+      if( 0 != ui_poll_input(
+         ui, &input, client_input_from_ui, &str_client_window_id_repl
+      ) ) {
+         ui_window_pop( ui );
+         tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
+         /* Process collected input. */
+
+         proto_client_debug_vm( c, update.l, client_input_from_ui );
+
+         goto reset_buffer;
+      }
+      goto cleanup;
+   }
 #endif /* DEBUG_VM */
-#ifdef DEBUG_TILES
-   bstring tilemap_dbg_key = NULL;
-#endif /* DEBUG_TILES */
 
-   scaffold_set_client();
+cleanup:
+   return retval;
 
-   if( NULL != c ) {
+reset_buffer:
+   bstr_ret = btrunc( client_input_from_ui, 0 );
+   scaffold_check_nonzero( bstr_ret );
+   return retval;
+}
+
+#define client_key_update( up_send ) \
+   update.update = up_send; \
+   proto_client_send_update( c, &update )
+
+static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
+   struct MOBILE* puppet = NULL;
+   struct MOBILE_UPDATE_PACKET update;
+   struct UI* ui = NULL;
+
+   if(
+      NULL == c->puppet ||
+      (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
+   ) {
+      /* TODO: Handle limited input while loading. */
+      return FALSE; /* Silently ignore input until animations are done. */
+   } else {
       puppet = c->puppet;
       ui = c->ui;
-   }
-
-   input_get_event( &input );
-   update.o = puppet;
-
-   if( NULL != puppet ) {
+      update.o = puppet;
       update.l = puppet->channel;
       scaffold_check_null( update.l );
+   }
+
+   /* If no windows need input, then move on to game input. */
+   switch( input->character ) {
+   case 'q': proto_client_stop( c ); return TRUE;
+   case 'w': client_key_update( MOBILE_UPDATE_MOVEUP ); return TRUE;
+   case 'a': client_key_update( MOBILE_UPDATE_MOVELEFT ); return TRUE;
+   case 's': client_key_update( MOBILE_UPDATE_MOVEDOWN ); return TRUE;
+   case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
+   case '\\': /* TODO: Implement chat window. */ return TRUE;
 #ifdef DEBUG_VM
-      t = &(c->puppet->channel->tilemap);
+   case 'p': windef_show_repl( ui ); return TRUE;
+#endif /* DEBUG_VM */
+#ifdef DEBUG_TILES
+   case 't': tilemap_toggle_debug_state(); return TRUE;
+   case 'l': tilemap_dt_layer++; return TRUE;
 #endif /* DEBUG_TILES */
    }
 
+   cleanup:
+   return FALSE;
+}
+
+void client_poll_input( struct CLIENT* c ) {
+   struct INPUT input;
+   scaffold_set_client();
+   input_get_event( &input );
    if( INPUT_TYPE_KEY == input.type ) {
-      if(
-         NULL != puppet &&
-         (puppet->steps_remaining < -8 || puppet->steps_remaining > 8)
-      ) {
-         goto cleanup; /* Silently ignore input until animations are done. */
-      }
-
-      /* Handle windows first. */
-#ifdef DEBUG_VM
-      if( NULL != ui_window_by_id( ui, &str_client_window_id_repl ) ) {
-         if( NULL == client_input_from_ui ) {
-            client_input_from_ui = bfromcstralloc( 80, "" );
-            scaffold_check_null( client_input_from_ui );
-         }
-         if( 0 != ui_poll_input(
-            ui, &input, client_input_from_ui, &str_client_window_id_repl
-         ) ) {
-            ui_window_pop( ui );
-            tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
-
-            /* Process collected input. */
-
-            proto_client_debug_vm( c, update.l, client_input_from_ui );
-
-            bstr_ret = btrunc( client_input_from_ui, 0 );
-            scaffold_check_nonzero( bstr_ret );
-         }
-         goto cleanup;
-      }
-#endif /* DEBUG_VM */
-
-      /* If no windows need input, then move on to game input. */
-      switch( input.character ) {
-      case 'q':
-         if( NULL != puppet ) {
-            proto_client_stop( c );
-         } else {
-            /* TODO: Emergency stop. */
-         }
-         break;
-      case 'w':
-         update.update = MOBILE_UPDATE_MOVEUP;
-         if( NULL != puppet ) {
-            proto_client_send_update( c, &update );
-         }
-         break;
-      case 'a':
-         update.update = MOBILE_UPDATE_MOVELEFT;
-         if( NULL != puppet ) {
-            proto_client_send_update( c, &update );
-         }
-         break;
-      case 's':
-         update.update = MOBILE_UPDATE_MOVEDOWN;
-         if( NULL != puppet ) {
-            proto_client_send_update( c, &update );
-         }
-         break;
-      case 'd':
-         update.update = MOBILE_UPDATE_MOVERIGHT;
-         if( NULL != puppet ) {
-            proto_client_send_update( c, &update );
-         }
-         break;
-      case '\\':
-         /* TODO: Implement chat window. */
-         break;
-#ifdef DEBUG_VM
-      case 'p':
-         if(
-            NULL ==
-            ui_window_by_id( ui, &str_client_window_id_repl )
-         ) {
-            ui_window_new(
-               win, ui, UI_WINDOW_TYPE_SIMPLE_TEXT,
-               &str_client_window_id_repl,
-               &str_client_window_title_repl,
-               &str_client_window_prompt_repl,
-               40, 40, 400, 80
-            );
-            ui_window_push( ui, win );
-         }
-         break;
-#endif /* DEBUG_VM */
-#ifdef DEBUG_TILES
-      case 't':
-         switch( tilemap_dt_state ) {
-         case TILEMAP_DEBUG_TERRAIN_OFF:
-            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_COORDS;
-            scaffold_print_debug( &module, "Terrain Debug: Coords\n" );
-            break;
-         case TILEMAP_DEBUG_TERRAIN_COORDS:
-            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
-            scaffold_print_debug( &module, "Terrain Debug: Terrain Names\n" );
-            break;
-         case TILEMAP_DEBUG_TERRAIN_NAMES:
-            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
-            scaffold_print_debug( &module, "Terrain Debug: Terrain Quarters\n" );
-            break;
-         case TILEMAP_DEBUG_TERRAIN_QUARTERS:
-            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_DEADZONE;
-            scaffold_print_debug( &module, "Terrain Debug: Window Deadzone\n" );
-            break;
-         case TILEMAP_DEBUG_TERRAIN_DEADZONE:
-            tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
-            scaffold_print_debug( &module, "Terrain Debug: Off\n" );
-            break;
-         }
-         break;
-      case 'l':
-         tilemap_dt_layer++;
-         break;
-#endif /* DEBUG_TILES */
+      if( !client_poll_ui( c, &input ) ) {
+         client_poll_keyboard( c, &input );
       }
    }
 
