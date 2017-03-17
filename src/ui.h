@@ -50,18 +50,6 @@ struct UI {
    struct VECTOR windows;
 };
 
-#define ui_window_new( win, ui, type, id, title, prompt, x, y, w, h ) \
-   win = (struct UI_WINDOW*)calloc( 1, sizeof( struct UI_WINDOW ) ); \
-   scaffold_check_null( win ); \
-   ui_window_init( win, ui, type, id, title, prompt, x, y, w, h );
-
-#define ui_control_new( \
-      control, win, text, type, can_focus, buffer, x, y, w, h \
-) \
-   control = (struct UI_CONTROL*)calloc( 1, sizeof( struct UI_CONTROL ) ); \
-   scaffold_check_null( control ); \
-   ui_control_init( control, win, text, type, can_focus, buffer, x, y, w, h );
-
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
    const bstring id, const bstring title, const bstring prompt,

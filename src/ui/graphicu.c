@@ -6,6 +6,8 @@
 
 #include "../callback.h"
 
+#include "../windefs.h"
+
 const struct tagbstring str_dialog_control_default_id =
    bsStatic( "dialog_text" );
 const struct tagbstring str_dialog_label_default_id =
@@ -46,9 +48,8 @@ void ui_window_init(
    hashmap_init( &(win->controls) );
 
    if( NULL != prompt ) {
-      ui_control_new(
-         control, win, prompt, UI_CONTROL_TYPE_LABEL,
-         FALSE, NULL, 5, 20, width - 10, 10
+      windef_control(
+         prompt, UI_CONTROL_TYPE_LABEL, FALSE, NULL, 5, 20, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_label_default_id,
@@ -57,9 +58,8 @@ void ui_window_init(
    }
 
    if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
-      ui_control_new(
-         control, win, NULL, UI_CONTROL_TYPE_TEXT,
-         FALSE, NULL, 5, 40, width - 10, 10
+      windef_control(
+         NULL, UI_CONTROL_TYPE_TEXT, FALSE, NULL, 5, 40, width - 10, 10
       );
       ui_control_add(
          win, (const bstring)&str_dialog_control_default_id,
@@ -346,10 +346,14 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
 }
 
 void ui_draw( struct UI* ui, GRAPHICS* g ) {
+#ifdef DEBUG_PALETTE
+   static bstring color_test = NULL;
+   int i;
+#endif /* DEBUG_PALETTE */
+
    vector_iterate_r( &(ui->windows), ui_window_draw_cb, g );
 
-   /* static bstring color_test = NULL;
-   int i;
+#ifdef DEBUG_PALETTE
    if( NULL == color_test ) {
       color_test = bfromcstr( "" );
    }
@@ -357,7 +361,8 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
       graphics_set_color( g, i );
       bassignformat( color_test, "%d", i );
       graphics_draw_text( g, 10, 20 * i, GRAPHICS_TEXT_ALIGN_LEFT, color_test );
-   } */
+   }
+#endif /* DEBUG_PALETTE */
 }
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {

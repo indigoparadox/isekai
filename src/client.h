@@ -97,12 +97,6 @@ BOOL client_connected( struct CLIENT* c );
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
    bsStatic( "testdata/livecache" );
-struct tagbstring str_client_window_id_repl =
-   bsStatic( "repl" );
-struct tagbstring str_client_window_title_repl =
-   bsStatic( "Internal REPL" );
-struct tagbstring str_client_window_prompt_repl =
-   bsStatic( "Enter a line to execute:" );
 SCAFFOLD_MODULE( "client.c" );
 #else
 extern struct tagbstring str_client_cache_path;

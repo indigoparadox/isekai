@@ -189,6 +189,7 @@ void tilemap_add_dirty_tile(
    struct TILEMAP* t, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 );
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
+void tilemap_toggle_debug_state();
 
 
 #ifdef TILEMAP_C
