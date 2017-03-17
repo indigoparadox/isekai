@@ -9,12 +9,10 @@
 
 #ifdef WIN32
 #include "wdirent.h"
-#else
-#ifdef __GNUC__
+#elif defined( __GNUC__ )
 #include <dirent.h>
 #include <unistd.h>
-#endif /* __GNUC__ */
-#endif /* WIN32 */
+#endif /* WIN32 || WIN16 || __GNUC__ */
 
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
@@ -303,9 +301,12 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    struct stat inputstat;
    char* path_c = NULL;
-#ifdef WIN32
+#if defined( WIN32 )
    LARGE_INTEGER sz_win;
    HANDLE inputfd = NULL;
+#elif defined( WIN16 )
+   int sz_win;
+   HFILE inputfd = NULL;
 #else
    int inputfd = -1;
 #endif /* WIN32 */
@@ -323,9 +324,14 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    path_c = bdata( path );
    scaffold_print_debug( &module, "Reading from path: %s\n", path_c );
 
-#ifdef WIN32
-   inputfd = CreateFile( bdata( path ), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+#if defined( WIN32 )
+   inputfd = CreateFile(
+      bdata( path ), GENERIC_READ, 0, NULL,
+      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+   );
    if( NULL == inputfd ) {
+#elif defined( WIN16 )
+   inputfd = OpenFile( bdata( path ), NULL, OF_READ );
 #else
    inputfd = open( path_c, O_RDONLY );
    if( 0 > inputfd ) {
@@ -335,11 +341,11 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    }
 
    /* Allocate enough space to hold the file. */
-#ifdef WIN32
+#if defined( WIN32 )
    GetFileSizeEx( inputfd, &sz_win );
    *len = sz_win.LowPart;
 #elif defined( WIN16 )
-   /* FIXME: WIN16 file size. */
+   sz_win = GetFileSize( inputfd, NULL );
 #else
    if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
@@ -351,7 +357,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    scaffold_check_null( *buffer );
 
    /* Read and close the file. */
-#ifdef WIN32
+#if defined( WIN32 ) || defined( WIN16 )
    ReadFile( inputfd, *buffer, *len, &sz_out,  NULL );
 #else
    sz_out = read( inputfd, *buffer, *len );
@@ -360,7 +366,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    scaffold_assert( sz_out == *len );
 
 cleanup:
-#ifdef WIN32
+#if defined( WIN32 ) || defined( WIN16 )
    CloseHandle( inputfd );
 #else
    if( 0 <= inputfd ) {
