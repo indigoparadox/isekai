@@ -1,16 +1,25 @@
 #ifndef SCAFFOLD_H
 #define SCAFFOLD_H
 
-#ifdef __STDC_VERSION__
-#if __STDC_VERSION__ >= 199901L
+#ifdef WIN16
+
+#include <windows.h>
+
+#elif defined( WIN32 )
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#include <windows.h>
+#include <stdint.h>
+
+#elif defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 199901L
+
 #define C99
 #define _GNU_SOURCE
-#endif /* C99 */
-#endif /* __STDC_VERSION__ */
-
-#ifndef WIN16
 #include <stdint.h>
-#endif /* WIN16 */
+
+#endif /* WIN16 || WIN32 || C99 */
 
 #include <stdio.h>
 #include <stddef.h>
@@ -18,13 +27,6 @@
 #ifdef DEBUG
 #include <assert.h>
 #endif /* DEBUG */
-
-#ifdef WIN32
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#include <windows.h>
-#endif /* WIN32 */
 
 #include "bstrlib/bstrlib.h"
 
@@ -35,9 +37,6 @@
 #ifdef WIN16
 
 typedef unsigned char BYTE;
-typedef unsigned char BOOL;
-#define TRUE 1
-#define FALSE 0
 typedef unsigned long SCAFFOLD_SIZE;
 typedef long SCAFFOLD_SIZE_SIGNED;
 typedef int int16_t;
