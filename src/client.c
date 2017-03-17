@@ -724,8 +724,6 @@ void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
          client_poll_keyboard( c, p );
       }
    }
-
-cleanup:
    return;
 }
 
@@ -749,6 +747,5 @@ void client_set_names(
    scaffold_assert( BSTR_ERR != bstr_result );
    bstr_result = bassign( c->username, rname );
    scaffold_assert( BSTR_ERR != bstr_result );
-cleanup:
    return;
 }

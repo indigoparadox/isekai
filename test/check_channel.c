@@ -5,6 +5,7 @@
 #include "../src/client.h"
 #include "../src/server.h"
 #include "../src/channel.h"
+#include "../src/proto.h"
 
 #define CHECK_CHANNEL_CLIENT_COUNT 3
 #define CHECK_CHANNEL_CLIENT_CONNECT_COUNT 5
@@ -100,7 +101,7 @@ void check_channel_teardown_checked() {
    scaffold_set_server();
    while( TRUE == server_service_clients( &server ) );
 
-   assert( 0 == hashmap_count( &(server.self.channels) ) );
+   ck_assert_int_eq( 0, hashmap_count( &(server.self.channels) ) );
 
    server_stop( &server );
    server_free( &server );
@@ -116,6 +117,7 @@ void check_channel_teardown_unchecked() {
 
 START_TEST( test_channel_server_channel ) {
    int i;
+   struct CHANNEL* l = NULL;
 
    assert( 0 == hashmap_count( &(server.self.channels) ) );
 
@@ -129,7 +131,12 @@ START_TEST( test_channel_server_channel ) {
       scaffold_set_server();
       while( TRUE == server_service_clients( &server ) );
 
-      assert( 1 == hashmap_count( &(server.self.channels) ) );
+      l = server_get_channel_by_name( &server, &testchannel );
+      ck_assert_ptr_ne( NULL, l );
+
+      ck_assert_int_eq( i + 1, hashmap_count( &(l->clients) ) );
+
+      ck_assert_int_eq( 1, hashmap_count( &(server.self.channels) ) );
    }
 }
 END_TEST

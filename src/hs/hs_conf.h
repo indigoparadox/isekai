@@ -10,11 +10,7 @@
 #endif /* C99 */
 #endif
 
-#if HEATSHRINK_DYNAMIC_ALLOC
-    /* Optional replacement of malloc/free */
-    //#define HEATSHRINK_MALLOC(SZ) malloc(SZ)
-    //#define HEATSHRINK_FREE(P, SZ) scaffold_free(P)
-#else
+#ifndef HEATSHRINK_DYNAMIC_ALLOC
     /* Required parameters for static configuration */
     #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 32
     #define HEATSHRINK_STATIC_WINDOW_BITS 8

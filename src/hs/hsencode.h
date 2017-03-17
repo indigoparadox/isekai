@@ -50,7 +50,7 @@ struct hs_index {
 };
 #endif
 
-typedef struct {
+typedef struct heatshrink_encoder {
     uint16_t input_size;        /* bytes in input buffer */
     uint16_t match_scan_index;
     uint16_t match_length;

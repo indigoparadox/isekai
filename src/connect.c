@@ -137,16 +137,11 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
    struct addrinfo hints,
          * result;
    bstring service;
-   const char* server_c,
-      * service_c;
 
    service = bformat( "%d", port );
    memset( &hints, 0, sizeof hints );
    hints.ai_family = AF_UNSPEC;
    hints.ai_socktype = SOCK_STREAM;
-
-   server_c = bdata( server );
-   service_c = bdata( service );
 
    connect_result = getaddrinfo(
       bdata( server ), bdata( service ), &hints, &result

@@ -38,11 +38,11 @@ THE SOFTWARE.
 #include <stdarg.h>
 #include <math.h>
 
-//#define tp_malloc(x) calloc((x),1)
-//#define tp_realloc(x,y) realloc(x,y)
-//#define tp_free(x) free(x)
-
 /*
+#define tp_malloc(x) calloc((x),1)
+#define tp_realloc(x,y) realloc(x,y)
+#define tp_free(x) free(x)
+
 #include <gc/gc.h>
 #define tp_malloc(x) GC_MALLOC(x)
 #define tp_realloc(x,y) GC_REALLOC(x,y)

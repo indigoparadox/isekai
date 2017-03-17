@@ -270,6 +270,7 @@
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DUSE_SDL_IMAGE" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DxDEBUG_PALETTE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -505,6 +506,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
+		<Unit filename="src/colors.h" />
 		<Unit filename="src/connect.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -570,6 +572,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ezxml.h" />
+		<Unit filename="src/font.h" />
 		<Unit filename="src/graphics.c">
 			<Option compilerVar="CC" />
 		</Unit>
