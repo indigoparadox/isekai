@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* FIXME */
-#include <stdbool.h>
-
 #define HEATSHRINK_ENCODER_C
 #include "hsencode.h"
 
@@ -222,6 +219,7 @@ HSE_poll_res heatshrink_encoder_poll(
    oi.output_size = output_size;
 
    while (1) {
+      /* Causes segfaults with scaffold_debug. */
       /* scaffold_print_debug( &module, "-- polling, state %u (%s), flags 0x%02x\n",
           hse->state, state_names[hse->state], hse->flags); */
 
@@ -285,7 +283,7 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
    uint16_t msi = hse->match_scan_index;
    uint16_t match_length;
    uint16_t input_offset;
-   bool fin;
+   BOOL fin;
    uint16_t end;
    uint16_t start;
    uint16_t max_possible;
@@ -480,8 +478,6 @@ static int can_take_byte(output_info* oi) {
  * buf[start] and buf[end-1]. If no match is found, return -1. */
 static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
                                    uint16_t end, const uint16_t maxlen, uint16_t* match_length) {
-   scaffold_print_debug( &module, "-- scanning for match of buf[%u:%u] between buf[%u:%u] (max %u bytes)\n",
-       end, end + maxlen, start, end + maxlen - 1, maxlen);
    uint8_t* buf = hse->buffer;
    int16_t pos;
 
@@ -494,6 +490,9 @@ static uint16_t find_longest_match(heatshrink_encoder* hse, uint16_t start,
    uint8_t* /* const */ pospoint;
 
    /* const */ SCAFFOLD_SIZE break_even_point;
+
+   scaffold_print_debug( &module, "-- scanning for match of buf[%u:%u] between buf[%u:%u] (max %u bytes)\n",
+       end, end + maxlen, start, end + maxlen - 1, maxlen);
 
 #if HEATSHRINK_USE_INDEX
    struct hs_index* hsi = HEATSHRINK_ENCODER_INDEX(hse);
@@ -591,6 +590,8 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi) {
 static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
                       output_info* oi) {
    int i;
+   BOOL bit;
+
    scaffold_assert(count <= 8);
    scaffold_print_debug( &module, "++ push_bits: %d bits, input of 0x%02x\n", count, bits);
 
@@ -600,7 +601,7 @@ static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
       oi->buf[(*oi->output_size)++] = bits;
    } else {
       for (i=count - 1; i>=0; i--) {
-         bool bit = bits & (1 << i);
+         bit = bits & (1 << i);
          if (bit) {
             hse->current_byte |= hse->bit_index;
          }

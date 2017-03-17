@@ -24,9 +24,9 @@
 
 #include "scaffold.h"
 
-#ifdef _GNU_SOURCE
+#ifdef __GNUC__
 #include <unistd.h>
-#endif /* _GNU_SOURCE */
+#endif /* __GNUC__ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -145,12 +145,33 @@ static ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...) {
    int line = 1;
    char *t, fmt[EZXML_ERRL];
 
+#ifndef SNPRINTF_UNAVAILABLE
    for (t = root->s; t < s; t++) if (*t == '\n') line++;
    snprintf(fmt, EZXML_ERRL, "[error near line %d]: %s", line, err);
 
    va_start(ap, err);
    vsnprintf(root->err, EZXML_ERRL, fmt, ap);
    va_end(ap);
+#endif /* SNPRINTF_UNAVAILABLE */
+
+#if 0
+bstring fmt = NULL,
+      err = NULL;
+
+   fmt = bfromcstralloc( EZXML_ERRL, "" );
+   err = bfromcstralloc( EZXML_ERRL, "" );
+   scaffold_check_null( fmt );
+
+   for (t = root->s; t < s; t++) if (*t == '\n') line++;
+   /* snprintf(fmt, EZXML_ERRL, "[error near line %d]: %s", line, err); */
+   bformat( fmt, "[error near line %d]: %s", line, err );
+
+   /* va_start(ap, err); */
+   /* vsnprintf(root->err, EZXML_ERRL, fmt, ap); */
+   bvformata( &bstr_ret, err, bdata( fmt ), err );
+   root->err
+   /* va_end(ap); */
+#endif
 
    return &root->xml;
 }

@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef _GNU_SOURCE
+#ifdef __GNUC__
 #include <unistd.h>
-#endif /* _GNU_SOURCE */
+#endif /* __GNUC__ */
 
 SCAFFOLD_MODULE( "main.c" );
 

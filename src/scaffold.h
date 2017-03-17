@@ -47,6 +47,7 @@ typedef unsigned long uint32_t;
 typedef char int8_t;
 typedef unsigned char uint8_t;
 #define __FUNCTION__ "Unavailable:"
+#define SNPRINTF_UNAVAILABLE
 
 #else
 

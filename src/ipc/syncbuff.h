@@ -23,4 +23,8 @@ uint8_t syncbuff_accept();
 SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest );
 SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest );
 
+#ifdef SYNCBUFF_C
+SCAFFOLD_MODULE( "syncbuff.c" );
+#endif /* SYNCBUFF_C */
+
 #endif /* SYNCBUFF_H */
