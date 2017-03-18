@@ -38,7 +38,7 @@ static void datafile_mobile_parse_sprite_ezxml(
    scaffold_check_null( xml_sprite );
 
    sprite =
-      (struct MOBILE_SPRITE_DEF*)calloc( 1, sizeof( struct MOBILE_SPRITE_DEF* ) );
+      (struct MOBILE_SPRITE_DEF*)calloc( 1, sizeof( struct MOBILE_SPRITE_DEF ) );
 
    /* TODO: Case insensitivity. */
    xml_attr = ezxml_attr( xml_sprite, "id" );
@@ -119,7 +119,7 @@ static void datafile_mobile_parse_animation_ezxml(
    bstr_retval =
       bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
    scaffold_print_debug(
-      &module, "Loaded mobile animation: %b", name_dir
+      &module, "Loaded mobile animation: %b\n", name_dir
    );
    scaffold_check_nonzero( bstr_retval );
 
