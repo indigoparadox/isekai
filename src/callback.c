@@ -567,6 +567,19 @@ BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
    return FALSE;
 }
 
+BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
+   struct CHANNEL_BUFFER_LINE* line = (struct CHANNEL_BUFFER_LINE*)iter;
+   /* TODO: Implement retroactively deleting lines by ID or something. */
+   if( NULL == arg ) {
+      bdestroy( line->line );
+      bdestroy( line->nick );
+      bdestroy( line->display_name );
+      free( line );
+      return TRUE;
+   }
+   return FALSE;
+}
+
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );

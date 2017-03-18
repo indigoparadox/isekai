@@ -7,12 +7,21 @@
 #include "hashmap.h"
 #include "tilemap.h"
 
+#include <time.h>
+
 #ifdef USE_TINYPY
 struct tp_vm;
 #endif /* USE_TINYPY */
 #ifdef USE_DUKTAPE
 struct duk_hthread;
 #endif /* USE_DUKTAPE */
+
+struct CHANNEL_BUFFER_LINE {
+   struct tm time;
+   bstring nick;
+   bstring line;
+   bstring display_name;
+};
 
 struct CHANNEL {
    struct REF refcount;
@@ -29,6 +38,7 @@ struct CHANNEL {
    int vm_cur;
    int vm_step_ret;
 #endif /* USE_TINYPY */
+   struct VECTOR speech_backlog;
 };
 
 struct CHANNEL_CLIENT {

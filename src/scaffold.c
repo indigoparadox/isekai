@@ -14,12 +14,6 @@
 #include <unistd.h>
 #endif /* _WIN32 || __linux */
 
-struct tagbstring scaffold_empty_string = bsStatic( "" );
-struct tagbstring scaffold_space_string = bsStatic( " " );
-struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
-
-#define SCAFFOLD_DIRSEP_CHAR scaffold_dirsep_string.data[0]
-
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */

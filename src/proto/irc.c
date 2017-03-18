@@ -135,6 +135,19 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    );
 }
 
+void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg ) {
+   proto_send_msg( c, ld->name, msg );
+}
+
+void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg ) {
+   proto_send_msg( c, cd->nick, msg );
+}
+
+void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg ) {
+   scaffold_assert_client();
+   client_printf( c, "PRIVMSG %b :%b", dest, msg );
+}
+
 void proto_client_stop( struct CLIENT* c ) {
    scaffold_assert_client();
    client_printf( c, "QUIT" );
@@ -523,12 +536,11 @@ static void irc_server_privmsg(
 
    msg = bjoin( msg_list, &scaffold_space_string );
    btrimws( msg );
-   char* cc = line->data;
 
    c_dest = server_get_client( s, args->entry[1] );
    if( NULL != c_dest ) {
       client_printf(
-         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, cc
+         c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, line
       );
       goto cleanup;
    }
@@ -537,7 +549,7 @@ static void irc_server_privmsg(
    l_dest = client_get_channel_by_name( &(s->self), args->entry[1] );
    if( NULL != l_dest ) {
       server_channel_printf(
-         s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, cc
+         s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, line
       );
       goto cleanup;
    }
@@ -924,9 +936,23 @@ cleanup:
 static void irc_client_privmsg(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
+   bstring msg = NULL;
+
+
+
+   msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
+   scaffold_check_null( msg );
+
+   scaffold_print_info( &module, "Message Incoming: %b\n", msg );
+
+   /*
    scaffold_print_debug( &module, "1: %s 2: %s 3: %s 4: %s",
                         args->entry[0]->data, args->entry[1]->data,
                         args->entry[2]->data, args->entry[2]->data );
+   */
+
+cleanup:
+   return;
 }
 
 IRC_COMMAND_TABLE_START( server ) = {
@@ -973,11 +999,15 @@ static void irc_command_cleanup( const struct REF* ref ) {
    /* server_free( cmd->server ); */
    cmd->server = NULL;
 
+   bdestroy( cmd->line );
+
    for( i = 0 ; cmd->args->qty > i ; i++ ) {
       bwriteallow( *(cmd->args->entry[i]) );
    }
    bstrListDestroy( (struct bstrList*)cmd->args );
    cmd->args = NULL;
+
+   free( cmd );
 }
 
 void irc_command_free( IRC_COMMAND* cmd ) {

@@ -49,6 +49,9 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o );
 void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
+void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg );
+void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg );
+void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg );
 void proto_client_stop( struct CLIENT* c );
 void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l );
 #ifdef DEBUG_VM
