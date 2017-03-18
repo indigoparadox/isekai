@@ -11,6 +11,7 @@
 #include "datafile.h"
 #include "ui.h"
 #include "tinypy/tinypy.h"
+#include "windefs.h"
 
 bstring client_input_from_ui = NULL;
 
@@ -606,7 +607,9 @@ cleanup:
  * \param
  * \return TRUE if input is consumed, or FALSE otherwise.
  */
-static BOOL client_poll_ui( struct CLIENT* c, struct INPUT* p ) {
+static BOOL client_poll_ui(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
+) {
    struct TILEMAP* t = NULL;
    int bstr_ret;
    BOOL retval = FALSE;
@@ -623,23 +626,41 @@ static BOOL client_poll_ui( struct CLIENT* c, struct INPUT* p ) {
 
 #ifdef DEBUG_VM
    /* Poll window: REPL */
-   if( NULL != ui_window_by_id( ui, &str_client_window_id_repl ) ) {
+   if( NULL != ui_window_by_id( c->ui, &str_client_window_id_repl ) ) {
       retval = TRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
-         ui, &input, client_input_from_ui, &str_client_window_id_repl
+         c->ui, &input, client_input_from_ui, &str_client_window_id_repl
       ) ) {
-         ui_window_pop( ui );
+         ui_window_pop( c->ui );
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
          /* Process collected input. */
 
-         proto_client_debug_vm( c, update.l, client_input_from_ui );
+         proto_client_debug_vm( c, l, client_input_from_ui );
+
+         goto reset_buffer;
+      }
+      goto cleanup;
+   } else
+#endif /* DEBUG_VM */
+
+   /* Poll window: Chat */
+   if( NULL != ui_window_by_id( c->ui, &str_client_window_id_chat ) ) {
+      retval = TRUE; /* Whatever the window does, it consumes input. */
+      if( 0 != ui_poll_input(
+         c->ui, p, client_input_from_ui, &str_client_window_id_chat
+      ) ) {
+         ui_window_pop( c->ui );
+         tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
+         /* Process collected input. */
+
+         proto_send_msg_channel( c, l, client_input_from_ui );
 
          goto reset_buffer;
       }
       goto cleanup;
    }
-#endif /* DEBUG_VM */
 
 cleanup:
    return retval;
@@ -680,7 +701,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    case 'a': client_key_update( MOBILE_UPDATE_MOVELEFT ); return TRUE;
    case 's': client_key_update( MOBILE_UPDATE_MOVEDOWN ); return TRUE;
    case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
-   case '\\': /* TODO: Implement chat window. */ return TRUE;
+   case '\\': windef_show_chat( ui, update.l ); return TRUE;
 #ifdef DEBUG_VM
    case 'p': windef_show_repl( ui ); return TRUE;
 #endif /* DEBUG_VM */
@@ -694,12 +715,12 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    return FALSE;
 }
 
-void client_poll_input( struct CLIENT* c ) {
+void client_poll_input( struct CLIENT* c, struct CHANNEL* l ) {
    struct INPUT input;
    scaffold_set_client();
    input_get_event( &input );
    if( INPUT_TYPE_KEY == input.type ) {
-      if( !client_poll_ui( c, &input ) ) {
+      if( !client_poll_ui( c, l, &input ) ) {
          client_poll_keyboard( c, &input );
       }
    }

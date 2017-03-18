@@ -7,11 +7,14 @@
 #include "../src/channel.h"
 
 #define CHECK_CHANNEL_CLIENT_COUNT 3
+#define CHECK_CHANNEL_CLIENT_CONNECT_COUNT 5
 
 static struct tagbstring module = bsStatic( "check_channel.c" );
 
 static struct tagbstring localhost = bsStatic( "127.0.0.1" );
 static struct tagbstring testchannel = bsStatic( "#testchan" );
+static struct tagbstring testmessage = bsStatic( "This is a test message." );
+static struct tagbstring testdest = bsStatic( "TestNick2" );
 
 struct SERVER server;
 struct CLIENT clients[CHECK_CHANNEL_CLIENT_COUNT];
@@ -23,41 +26,54 @@ void check_channel_setup_checked() {
       uname = NULL,
       rname = NULL;
    BOOL connected = FALSE;
+   int attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
 
    nick = bfromcstr( "" );
    uname = bfromcstr( "" );
    rname = bfromcstr( "" );
 
    port = (rand() % 45000) + 20000;
+   printf( "Server Port: %d\n", port );
 
    server_init( &server, &localhost );
    server_listen( &server, port );
 
    for( i = 0 ; CHECK_CHANNEL_CLIENT_COUNT > i ; i++ ) {
+
+      scaffold_print_info( &module, "===== BEGIN CLIENT: %d =====\n", i );
+
       /* Setup the client and connect. */
       scaffold_set_client();
       client_init( &clients[i], TRUE );
-      bassignformat( nick, "Test Nick %d", i );
+      bassignformat( nick, "TestNick%d", i );
       bassignformat( uname, "Test Username %d", i );
       bassignformat( rname, "Test Real Name %d", i );
       client_set_names( &clients[i], nick, uname, rname );
+      attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
       do {
          client_connect( &clients[i], &localhost, port );
-         graphics_sleep( 100 );
+         graphics_sleep( 1000 );
+         attempts--;
+         ck_assert_int_ne( 0, attempts );
       } while( 0 != scaffold_error );
 
       /* Receive the connection. */
       connected = FALSE;
+      attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
       do {
          scaffold_set_server();
          connected = server_poll_new_clients( &server );
+         attempts--;
+         ck_assert_int_ne( 0, attempts );
       } while( FALSE == connected );
       do {
          scaffold_set_server();
          server_service_clients( &server );
          scaffold_set_client();
          client_update( &clients[i], NULL );
-      } while( i + 1 < vector_count( &(server.clients) ) );
+      } while( i + 1 < hashmap_count( &(server.clients) ) );
+
+      scaffold_print_info( &module, "===== END CLIENT: %d =====\n", i );
    }
 
 cleanup:
@@ -78,13 +94,16 @@ void check_channel_teardown_checked() {
          server_service_clients( &server );
          scaffold_set_client();
          client_update( &clients[i], NULL );
-      } while( 0 < i && i <= vector_count( &(server.clients) ) );
+      } while( 0 < i && i <= hashmap_count( &(server.clients) ) );
    }
 
    scaffold_set_server();
    while( TRUE == server_service_clients( &server ) );
 
-   assert( 0 == vector_count( &(server.self.channels) ) );
+   assert( 0 == hashmap_count( &(server.self.channels) ) );
+
+   server_stop( &server );
+   server_free( &server );
 }
 
 void check_channel_setup_unchecked() {
@@ -98,7 +117,7 @@ void check_channel_teardown_unchecked() {
 START_TEST( test_channel_server_channel ) {
    int i;
 
-   assert( 0 == vector_count( &(server.self.channels) ) );
+   assert( 0 == hashmap_count( &(server.self.channels) ) );
 
    for( i = 0 ; CHECK_CHANNEL_CLIENT_COUNT > i ; i++ ) {
 
@@ -115,6 +134,11 @@ START_TEST( test_channel_server_channel ) {
 }
 END_TEST
 
+START_TEST( test_channel_privmsg ) {
+   proto_send_msg( &clients[0], &testdest, &testmessage );
+}
+END_TEST
+
 Suite* channel_suite( void ) {
    Suite* s;
    TCase* tc_core;
@@ -128,6 +152,7 @@ Suite* channel_suite( void ) {
    tcase_add_checked_fixture(
       tc_core, check_channel_setup_checked, check_channel_teardown_checked );
    tcase_add_test( tc_core, test_channel_server_channel );
+   tcase_add_test( tc_core, test_channel_privmsg );
    suite_add_tcase( s, tc_core );
 
    return s;

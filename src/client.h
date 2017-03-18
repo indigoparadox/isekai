@@ -91,7 +91,7 @@ void client_request_file(
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
 #endif /* USE_CHUNKS */
-void client_poll_input( struct CLIENT* c );
+void client_poll_input( struct CLIENT* c, struct CHANNEL* l );
 BOOL client_connected( struct CLIENT* c );
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname

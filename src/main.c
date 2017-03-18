@@ -197,7 +197,7 @@ int main( int argc, char** argv ) {
          NULL == l ||
          NULL == main_client->puppet
       ) {
-         client_poll_input( main_client );
+         client_poll_input( main_client, l );
          graphics_set_color( &g, GRAPHICS_COLOR_WHITE );
          graphics_draw_text(
             &g, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
@@ -230,7 +230,7 @@ int main( int argc, char** argv ) {
       /* If there's no puppet then there should be a load screen. */
       scaffold_assert( NULL != main_client->puppet );
 
-      client_poll_input( main_client );
+      client_poll_input( main_client, l );
       tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
 #ifdef USE_RANDOM_PORT

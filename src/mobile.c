@@ -30,8 +30,8 @@ static void mobile_cleanup( const struct REF* ref ) {
    vector_remove_cb( &(o->sprite_defs), callback_free_generic, NULL );
    vector_free( &(o->sprite_defs) );
 
-   vector_remove_cb( &(o->speech_backlog), callback_free_strings, NULL );
-   vector_free( &(o->speech_backlog) );
+   /* vector_remove_cb( &(o->speech_backlog), callback_free_strings, NULL );
+   vector_free( &(o->speech_backlog) ); */
 
    hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
    hashmap_cleanup( &(o->ani_defs) );
@@ -55,7 +55,6 @@ void mobile_init( struct MOBILE* o ) {
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
 
    vector_init( &(o->sprite_defs) );
-   vector_init( &(o->speech_backlog ) );
    hashmap_init( &(o->ani_defs) );
    hashmap_init( &(o->script_defs) );
 }
@@ -243,6 +242,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->sprites
    );
 
+#if 0
+   /* FIXME */
    pix_y -= o->sprite_height;
 
    if( 0 < vector_count( &(o->speech_backlog) ) ) {
@@ -252,6 +253,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
          (bstring)vector_get( &(o->speech_backlog), 0 )
       );
    }
+#endif
 cleanup:
    return;
 }
@@ -540,6 +542,35 @@ cleanup:
    return update->update;
 }
 
+/** \brief This inserts a line of speech into the local speech buffer.
+ *         It should be called by AI speech routines or the receiver for
+ *         network chat. See the proto_send_msg* family for sending network
+ *         chat.
+ * \param[in] o      The mobile to be associated with the line of speech.
+ * \param[in] speech The line of speech.
+ */
 void mobile_speak( struct MOBILE* o, bstring speech ) {
-   vector_insert( &(o->speech_backlog), 0, bstrcpy( speech ) );
+   struct CHANNEL_BUFFER_LINE* line = NULL;
+   time_t time_now;
+
+   scaffold_check_null_msg(
+      o->channel, "Mobile without channel cannot speak.\n" );
+
+   line = (struct CHANNEL_BUFFER_LINE*)calloc(
+      1, sizeof( struct CHANNEL_BUFFER_LINE)
+   );
+   scaffold_check_null( line );
+
+   if( NULL != o->owner ) {
+      line->nick = bstrcpy( o->owner->nick );
+   }
+   line->display_name = bstrcpy( o->display_name );
+   line->line = bstrcpy( speech );
+   time( &time_now );
+   localtime_r( &time_now, &(line->time) );
+
+   vector_insert( &(o->channel->speech_backlog), 0, line );
+
+cleanup:
+   return;
 }

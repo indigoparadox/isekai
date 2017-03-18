@@ -297,16 +297,32 @@ __attribute__ ((warn_unused_result))
 void scaffold_join_path( bstring path1, const bstring path2 );
 
 #ifdef SCAFFOLD_C
+
 /* SCAFFOLD_MODULE( "scaffold.c" ); */
 static struct tagbstring module = bsStatic( "scaffold.c" );
+
+struct tagbstring scaffold_empty_string = bsStatic( "" );
+struct tagbstring scaffold_space_string = bsStatic( " " );
+struct tagbstring scaffold_colon_string = bsStatic( ":" );
+
+#if defined( _WIN32 ) || defined( WIN16 )
+struct tagbstring scaffold_dirsep_string = bsStatic( "\\" );
 #else
+struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
+#endif // _WIN32 || WIN16
+#define SCAFFOLD_DIRSEP_CHAR scaffold_dirsep_string.data[0]
+
+#else
+
 #ifdef DEBUG
 extern SCAFFOLD_TRACE scaffold_trace_path;
 #endif /* DEBUG */
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;
+extern struct tagbstring scaffold_colon_string;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
+
 #endif /* SCAFFOLD_C */
 
 #endif /* SCAFFOLD_H */

@@ -51,6 +51,7 @@ cleanup:
 }
 
 void server_stop( struct SERVER* s ) {
+   connection_cleanup( &(s->self.link) );
    s->self.running = FALSE;
 }
 

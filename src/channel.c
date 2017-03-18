@@ -45,6 +45,7 @@ void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
    ref_init( &(l->refcount), channel_free_final );
    hashmap_init( &(l->clients) );
    vector_init( &(l->mobiles ) );
+   vector_init( &(l->speech_backlog ) );
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
    scaffold_check_null( l->name );
