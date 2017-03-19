@@ -3,6 +3,9 @@
 #include "../graphics.h"
 
 #include <SDL/SDL.h>
+#ifdef USE_SDL_IMAGE
+#include <SDL/SDL_image.h>
+#endif /* USE_SDL_IMAGE */
 
 static
 SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
@@ -43,7 +46,15 @@ void graphics_screen_new(
 ) {
    (*g) = scaffold_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
-   (*g)->surface = SDL_SetVideoMode( w, h, 16, SDL_SWSURFACE | SDL_DOUBLEBUF );
+   (*g)->surface = SDL_SetVideoMode(
+      w, h, 0,
+#ifdef USE_SDL_IMAGE
+      SDL_HWSURFACE
+#else
+      SDL_SWSURFACE
+#endif /* USE_SDL_IMAGE */
+      | SDL_DOUBLEBUF
+   );
    scaffold_check_null( (*g)->surface );
    (*g)->w = w;
    (*g)->h = h;
@@ -67,7 +78,11 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    ref_init( &(g->refcount), graphics_surface_cleanup );
 
    g->surface = SDL_CreateRGBSurface(
+#ifdef USE_SDL_IMAGE
+      SDL_HWSURFACE,
+#else
       SDL_SWSURFACE,
+#endif /* USE_SDL_IMAGE */
       w,
       h,
       screen->format->BitsPerPixel,
@@ -130,21 +145,49 @@ void graphics_set_image_data(
    SCAFFOLD_SIZE_SIGNED surface_i = 0,
       y,
       i = 0;
-   SDL_Surface* surface,
-      * screen;
-   SDL_Color* pixel;
-   SDL_PixelFormat* format;
+   SDL_Surface* surface = NULL,
+      * screen = NULL,
+      * temp_surface = NULL;
+   SDL_Color* pixel = NULL;
+   SDL_PixelFormat* format = NULL;
+   SDL_RWops* rwop;
    uint16_t temp;
+   uint32_t color_key;
+   BYTE* holder = NULL;
 
    screen = SDL_GetVideoSurface();
    scaffold_check_null( screen );
-   BYTE* holder = NULL;
 
    if( NULL != g->surface ) {
       SDL_FreeSurface( g->surface );
       g->surface = NULL;
    }
 
+#ifdef USE_SDL_IMAGE
+
+   rwop = SDL_RWFromConstMem( data, length );
+
+   temp_surface = IMG_LoadBMP_RW( rwop );
+   scaffold_check_null( temp_surface );
+
+   /* Setup transparency. */
+   color_key = SDL_MapRGB( temp_surface->format, 0, 0, 0 );
+   SDL_SetColorKey( temp_surface, SDL_RLEACCEL | SDL_SRCCOLORKEY, color_key );
+   g->surface = SDL_DisplayFormatAlpha( temp_surface );
+
+   /* Image load. */
+   surface = (SDL_Surface*)g->surface;
+   g->w = surface->w;
+   g->h = surface->h;
+
+   scaffold_check_null( g->surface );
+
+cleanup:
+   if( NULL != temp_surface ) {
+      SDL_FreeSurface( temp_surface );
+   }
+   SDL_FreeRW( rwop );
+#else
    graphics_bitmap_load( data, length, &bitmap );
    scaffold_check_null( bitmap );
    scaffold_check_null( bitmap->pixels );
@@ -168,7 +211,6 @@ void graphics_set_image_data(
    format = surface->format;
    scaffold_check_null( format );
    scaffold_assert( 16 == format->BitsPerPixel );
-   //bytes_per_pixel = format->BitsPerPixel / 8;
    //holder = scaffold_alloc( bytes_per_pixel, BYTE );
    for( y = 0 ; surface->h > y ; y++ ) {
       surface_i = (y / bitmap->w) + (y % bitmap->w);
@@ -197,7 +239,7 @@ cleanup:
       free( holder );
    }
    graphics_free_bitmap( bitmap );
-
+#endif /* USE_SDL_IMAGE */
 }
 
 BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
@@ -286,6 +328,6 @@ void graphics_sleep( uint16_t milliseconds ) {
 }
 
 void graphics_wait_for_fps_timer() {
-   SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
+   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
 }
 
