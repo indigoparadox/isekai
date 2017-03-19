@@ -14,8 +14,6 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 
 #include <allegro.h>
 
-#include "../algif/algif.h"
-
 #ifdef USE_ALLEGRO_PNG
 #include <loadpng.h>
 #endif /* USE_ALLEGRO_PNG */
