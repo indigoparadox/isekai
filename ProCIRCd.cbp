@@ -228,6 +228,7 @@
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxDEBUG_VM" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DDEBUG_FPS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -271,6 +272,7 @@
 					<Add option="-DUSE_SDL_IMAGE" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DxDEBUG_PALETTE" />
+					<Add option="-DDEBUG_FPS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

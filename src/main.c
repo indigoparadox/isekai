@@ -183,6 +183,10 @@ int main( int argc, char** argv ) {
    ui_debug_window( &ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
+#ifdef DEBUG_FPS
+   graphics_debug_fps( &ui );
+#endif /* DEBUG_FPS */
+
    while( TRUE ) {
       graphics_start_fps_timer();
 
