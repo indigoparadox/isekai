@@ -419,9 +419,21 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    win->grid_previous_button = FALSE;
    hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
+   if( 0 > win->x ) {
+      win_x = (g->w / 2) - (win->width / 2);
+   } else {
+      win_x = win->x;
+   }
+
+   if( 0 > win->y ) {
+      win_y = (g->h / 2) - (win->height / 2);
+   } else {
+      win_y = win->y;
+   }
+
    /* Draw the window onto the screen. */
    graphics_blit(
-      g, win->x, win->y, win->width, win->height, win->element
+      g, win_x, win_y, win->width, win->height, win->element
    );
 
    return NULL;
