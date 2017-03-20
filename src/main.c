@@ -4,7 +4,6 @@
 #include "server.h"
 #include "ui.h"
 #include "callback.h"
-#include "windefs.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -14,6 +13,10 @@
 #endif /* __GNUC__ */
 
 SCAFFOLD_MODULE( "main.c" );
+
+static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
+static struct tagbstring str_cdialog_prompt =
+   bsStatic( "Connect to [address:port]:" );
 
 #if defined( USE_CONNECT_DIALOG ) && !defined( USE_NETWORK )
 #error Connect dialog requires network to be enabled!
@@ -107,6 +110,7 @@ int main( int argc, char** argv ) {
    server_new( main_server, &str_localhost );
 
 #ifdef ENABLE_LOCAL_CLIENT
+   scaffold_set_client();
    client_new( main_client, TRUE );
 #endif /* ENABLE_LOCAL_CLIENT */
 
@@ -135,7 +139,12 @@ int main( int argc, char** argv ) {
    do {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
-      windef_show_connect( &ui );
+      ui_window_new(
+         &ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, NULL,
+         &str_cdialog_title, &str_cdialog_prompt,
+         -1, -1, -1, -1
+      );
+      ui_window_push( &ui, win );
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );

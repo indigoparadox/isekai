@@ -46,18 +46,8 @@ cleanup: return;
 
 #ifdef USE_CONNECT_DIALOG
 
-static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
-static struct tagbstring str_cdialog_prompt =
-   bsStatic( "Connect to [address:port]:" );
-
 SCAFFOLD_INLINE
 static void windef_show_connect( struct UI* ui ) {
-   struct UI_WINDOW* win = NULL;
-   windef_window(
-      UI_WINDOW_TYPE_SIMPLE_TEXT, NULL, &str_cdialog_title, &str_cdialog_prompt,
-      -1, -1, -1, -1
-   );
-   ui_window_push( ui, win );
 cleanup: return;
 }
 
