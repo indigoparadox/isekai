@@ -123,6 +123,7 @@ struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );
 
 #ifdef UI_C
 SCAFFOLD_MODULE( "ui.c" );
+static struct tagbstring str_wid_debug = bsStatic( "debug" );
 #endif /* UI_C */
 
 #endif /* CURSES_RPG_H */

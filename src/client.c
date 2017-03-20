@@ -103,6 +103,11 @@ cleanup:
 /* This runs on the local client. */
 void client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
+#ifdef DEBUG_TILES
+   SCAFFOLD_SIZE steps_remaining_x,
+      steps_remaining_y;
+   static bstring pos = NULL;
+#endif /* DEBUG_TILES */
 
    scaffold_set_client();
 
@@ -127,6 +132,24 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
       }
       irc_command_free( cmd );
    }
+
+#ifdef DEBUG_TILES
+   if( NULL == pos ) {
+      pos = bfromcstr( "" );
+   }
+
+   if( NULL != c->puppet ) {
+      steps_remaining_x = mobile_get_steps_remaining_x( c->puppet, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( c->puppet, FALSE );
+
+      bassignformat( pos,
+         "Player: %d (%d)[%d], %d (%d)[%d]",
+         c->puppet->x, c->puppet->prev_x, steps_remaining_x,
+         c->puppet->y, c->puppet->prev_y, steps_remaining_y
+      );
+      ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
+   }
+#endif /* DEBUG_TILES */
 
 /* cleanup: */
    return;

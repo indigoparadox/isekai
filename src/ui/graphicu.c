@@ -285,6 +285,8 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    if( 0 >= control->self.width ) {
       switch( control->type ) {
       case UI_CONTROL_TYPE_LABEL:
+         control_w = control_size.w + (2 * UI_TEXT_MARGIN);
+         break;
       case UI_CONTROL_TYPE_TEXT:
          control_w = 280 + (2 * UI_TEXT_MARGIN);
          break;
@@ -446,4 +448,28 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
    return vector_iterate( &(ui->windows), callback_search_windows, wid );
+}
+
+struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id ) {
+   return hashmap_get( &(win->controls), id );
+}
+
+void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {
+   struct UI_WINDOW* win_debug = NULL;
+   struct UI_CONTROL* control_debug = NULL;
+
+   if( NULL == ui_window_by_id( ui, &str_wid_debug ) ) {
+      ui_window_new( ui, win_debug, UI_WINDOW_TYPE_NONE, &str_wid_debug,
+         &str_wid_debug, NULL, 10, 10, -1, -1 );
+      ui_window_push( ui, win_debug );
+   }
+   win_debug = ui_window_by_id( ui, &str_wid_debug );
+   control_debug = ui_control_by_id( win_debug, id );
+   if( NULL == control_debug ) {
+      ui_control_new( ui, control_debug, NULL,
+         UI_CONTROL_TYPE_LABEL, FALSE, buffer, -1, -1, -1, -1 );
+      ui_control_add( win_debug, id, control_debug );
+   }
+cleanup:
+   return;
 }
