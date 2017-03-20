@@ -71,6 +71,24 @@ struct UI {
    struct VECTOR windows;
 };
 
+#define ui_window_new( ui, win, type, id, title, prompt, x, y, w, h ) \
+   win = (struct UI_WINDOW*)calloc( 1, sizeof( struct UI_WINDOW ) ); \
+   if( NULL == win ) { \
+      scaffold_error = SCAFFOLD_ERROR_NULLPO; \
+      goto cleanup; \
+   } \
+   ui_window_init( win, ui, type, id, title, prompt, x, y, w, h );
+
+#define ui_control_new( \
+      ui, control, text, type, can_focus, buffer, x, y, w, h \
+) \
+   control = (struct UI_CONTROL*)calloc( 1, sizeof( struct UI_CONTROL ) ); \
+   if( NULL == control ) { \
+      scaffold_error = SCAFFOLD_ERROR_NULLPO; \
+      goto cleanup; \
+   } \
+   ui_control_init( control, text, type, can_focus, buffer, x, y, w, h );
+
 void ui_cleanup( struct UI* ui );
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
@@ -81,7 +99,7 @@ void ui_window_init(
 void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
-   struct UI_CONTROL* control, struct UI_WINDOW* win,
+   struct UI_CONTROL* control,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
    SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
    SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
