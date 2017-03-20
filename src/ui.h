@@ -17,7 +17,7 @@
 #define UI_BUTTON_FG       GRAPHICS_COLOR_WHITE
 #define UI_LABEL_FG        GRAPHICS_COLOR_WHITE
 
-#define UI_TEXT_MARGIN     2
+#define UI_TEXT_MARGIN     5
 #define UI_WINDOW_MARGIN   10
 
 #define UI_TEXT_DEF_LENGTH 30
@@ -38,6 +38,9 @@ struct UI_WINDOW {
    SCAFFOLD_SIZE_SIGNED y;
    SCAFFOLD_SIZE_SIGNED width;
    SCAFFOLD_SIZE_SIGNED height;
+   SCAFFOLD_SIZE_SIGNED grid_x;
+   SCAFFOLD_SIZE_SIGNED grid_y;
+   SCAFFOLD_SIZE_SIGNED grid_previous_button;
    bstring id;
 };
 

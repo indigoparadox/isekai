@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 
+#include "../graphics.h"
 #include "../callback.h"
 
 #include "../windefs.h"
@@ -31,6 +32,7 @@ void ui_window_init(
    SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 ) {
    struct UI_CONTROL* control = NULL;
+   GRAPHICS_RECT sizing_rect = { 0 };
 
    win->ui = ui;
    win->x = x;
@@ -65,7 +67,7 @@ void ui_window_init(
 
    if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
       windef_control(
-         NULL, UI_CONTROL_TYPE_TEXT, FALSE, NULL, -1, -1, -1, -1
+         NULL, UI_CONTROL_TYPE_TEXT, FALSE, NULL, -1, -1, sizing_rect.w, -1
       );
       ui_control_add(
          win, (const bstring)&str_dialog_control_default_id,
@@ -263,7 +265,6 @@ cleanup:
    return input_length;
 }
 
-#if 0
 static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
@@ -273,33 +274,35 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    SCAFFOLD_SIZE_SIGNED win_x = win->x,
       win_y = win->y,
       win_w = win->width,
-      win_h = win->height;
+      win_h = win->height,
+      control_w = control->self.width,
+      control_h = control->self.height;
 
    graphics_measure_text( g, &control_size, UI_TEXT_SIZE, control->text );
 
    /* Figure out sizing. */
-   if( 0 > control->self.width ) {
+   if( 0 >= control->self.width ) {
       switch( control->type ) {
       case UI_CONTROL_TYPE_LABEL:
       case UI_CONTROL_TYPE_TEXT:
-         control->self.width = control_size.w;
+         control_w = 280 + (2 * UI_TEXT_MARGIN);
          break;
       case UI_CONTROL_TYPE_BUTTON:
-         control->self.width = control_size.w;
+         control_w = control_size.w + (2 * UI_TEXT_MARGIN);
          break;
       case UI_CONTROL_TYPE_NONE:
          break;
       }
    }
 
-   if( 0 > control->self.height ) {
+   if( 0 >= control->self.height ) {
       switch( control->type ) {
       case UI_CONTROL_TYPE_LABEL:
       case UI_CONTROL_TYPE_TEXT:
-         control->self.height = control_size.h;
+         control_h = UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
          break;
       case UI_CONTROL_TYPE_BUTTON:
-         control->self.height = control_size.h;
+         control_h = UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
          break;
       case UI_CONTROL_TYPE_NONE:
          break;
@@ -308,16 +311,16 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
 
    if(
       0 > win->width ||
-      win->width <= control_size.w + (2 * UI_WINDOW_MARGIN)
+      win->width <= win->grid_x + control_w + UI_WINDOW_MARGIN
    ) {
-      win_w = control_size.w + (2 * UI_WINDOW_MARGIN);
+      win_w = win->grid_x + control_w + UI_WINDOW_MARGIN;
    }
 
    if(
       0 > win->height ||
-      win->height <= control_size.h + (2 * UI_WINDOW_MARGIN)
+      win->height <= win->grid_y + control_h + UI_WINDOW_MARGIN
    ) {
-      win_h = control_size.h + (2 * UI_WINDOW_MARGIN);
+      win_h = win->grid_y + control_h + UI_WINDOW_MARGIN;
    }
 
    /* TODO: Dynamic screen size detection. */
@@ -335,26 +338,22 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
 
    switch( control->type ) {
    case UI_CONTROL_TYPE_LABEL:
+      fg = UI_LABEL_FG;
+      win->grid_previous_button = FALSE;
       break;
    case UI_CONTROL_TYPE_BUTTON:
       graphics_draw_rect(
-         g,
-         0 > control->self.x ? UI_WINDOW_MARGIN : control->self.x,
-         0 > control->self.y ? UI_WINDOW_MARGIN : control->self.y,
-         control->self.width, control->self.height,
-         UI_BUTTON_BG
+         g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG
       );
       fg = UI_BUTTON_FG;
+      win->grid_previous_button = TRUE;
       break;
    case UI_CONTROL_TYPE_TEXT:
       graphics_draw_rect(
-         g,
-         0 > control->self.x ? UI_WINDOW_MARGIN : control->self.x,
-         0 > control->self.y ? UI_WINDOW_MARGIN : control->self.y,
-         control->self.width, control->self.height,
-         UI_TEXT_BG
+         g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG
       );
       fg = UI_TEXT_FG;
+      win->grid_previous_button = FALSE;
       break;
 
    case UI_CONTROL_TYPE_NONE:
@@ -364,14 +363,20 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    /* TODO: Draw the control onto the window. */
    if( NULL != control->text ) {
       graphics_draw_text(
-         g, control->self.x + UI_TEXT_MARGIN, control->self.y + UI_TEXT_MARGIN,
+         g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
          GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, control->text
       );
    }
 
+   if( TRUE == win->grid_previous_button ) {
+      win->grid_x += control_w + UI_WINDOW_MARGIN;
+   } else {
+      win->grid_x = UI_WINDOW_MARGIN;
+      win->grid_y += control_h + UI_WINDOW_MARGIN;
+   }
+
    return NULL;
 }
-#endif // 0
 
 static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)arg;
@@ -391,118 +396,6 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    int i;
    GRAPHICS_COLOR fg, bg;
 
-   vector_lock( &(win->controls), TRUE );
-   for( i = 0 ; vector_count( &(win->controls) ) > i ; i++ ) {
-      control = vector_get( &(win->controls), i );
-
-      if( 0 <= control->self.x ) {
-         grid_x = control->self.x;
-      } else {
-         grid_x += UI_WINDOW_MARGIN;
-      }
-
-      if( 0 <= control->self.y ) {
-         grid_y = control->self.y;
-      } else {
-         grid_y += UI_WINDOW_MARGIN;
-      }
-
-      if( 0 <= control->self.width ) {
-         grid_width = control->self.width;
-      }
-
-      if( 0 <= control->self.height ) {
-         grid_height = control->self.height;
-      }
-
-      switch( control->type ) {
-         case UI_CONTROL_TYPE_LABEL:
-         case UI_CONTROL_TYPE_TEXT:
-            previous_button = FALSE;
-            break;
-
-         case UI_CONTROL_TYPE_BUTTON:
-            previous_button = TRUE;
-            break;
-      }
-
-      /* Make sure this all fits on the window. */
-      if( win->width < grid_x + grid_width + UI_WINDOW_MARGIN ) {
-          win_width = grid_x + grid_width + UI_WINDOW_MARGIN;
-      }
-
-      if( win->height < grid_y + grid_height + UI_WINDOW_MARGIN ) {
-          win_height = grid_y + grid_height + UI_WINDOW_MARGIN;
-      }
-
-      if( TRUE == previous_button ) {
-         grid_x += UI_WINDOW_MARGIN;
-      } else {
-         grid_x = UI_WINDOW_MARGIN;
-         grid_y += UI_WINDOW_MARGIN;
-      }
-   }
-
-   ui_window_transform( win, 0, 0, win_width, win_height );
-
-   grid_x = 0;
-   grid_y = 0;
-   grid_width = 0;
-   grid_height = 0;
-   for( i = 0 ; vector_count( &(win->controls) ) > i ; i++ ) {
-      control = vector_get( &(win->controls), i );
-
-      if( 0 <= control->self.x ) {
-         grid_x = control->self.x;
-      } else {
-         grid_x += UI_WINDOW_MARGIN;
-      }
-
-      if( 0 <= control->self.y ) {
-         grid_y = control->self.y;
-      } else {
-         grid_y += UI_WINDOW_MARGIN;
-      }
-
-      if( 0 <= control->self.width ) {
-         grid_width = control->self.width;
-      }
-
-      if( 0 <= control->self.height ) {
-         grid_height = control->self.height;
-      }
-
-      switch( control->type ) {
-      case UI_CONTROL_TYPE_LABEL:
-         previous_button = FALSE;
-         break;
-      case UI_CONTROL_TYPE_BUTTON:
-         graphics_draw_rect(
-            g, grid_x, grid_y, grid_width, grid_height, UI_BUTTON_BG
-         );
-         fg = UI_BUTTON_FG;
-         previous_button = TRUE;
-         break;
-      case UI_CONTROL_TYPE_TEXT:
-         graphics_draw_rect(
-            g, grid_x, grid_y, grid_width, grid_height, UI_TEXT_BG
-         );
-         fg = UI_TEXT_FG;
-         break;
-
-      case UI_CONTROL_TYPE_NONE:
-         break;
-      }
-
-      if( TRUE == previous_button ) {
-         grid_x += UI_WINDOW_MARGIN;
-      } else {
-         grid_x = UI_WINDOW_MARGIN;
-         grid_y += UI_WINDOW_MARGIN;
-      }
-   }
-   vector_lock( &(win->controls), FALSE );
-
    /* Draw the window. */
    graphics_draw_rect(
       win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE
@@ -518,7 +411,10 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
       UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title
    );
 
-   /* hashmap_iterate( &(win->controls), ui_control_draw_cb, win ); */
+   win->grid_x = UI_WINDOW_MARGIN;
+   win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
+   win->grid_previous_button = FALSE;
+   hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
    /* Draw the window onto the screen. */
    graphics_blit(
