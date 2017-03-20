@@ -22,6 +22,8 @@ SCAFFOLD_MODULE( "main.c" );
 struct SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
+static struct tagbstring str_wid_debug = bsStatic( "debug" );
+static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -53,6 +55,8 @@ int main( int argc, char** argv ) {
    int bstr_result = 0;
    bstring server_address = NULL;
    BOOL post_load_finished = FALSE;
+   struct UI_WINDOW* win_debug = NULL;
+   struct UI_CONTROL* control_debug = NULL;
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
@@ -176,6 +180,23 @@ int main( int argc, char** argv ) {
    twindow.c = main_client;
    twindow.t = NULL;
 
+#ifdef USE_RANDOM_PORT
+   if( NULL == ui_window_by_id( &ui, &str_wid_debug ) ) {
+      ui_window_new( &ui, win_debug, UI_WINDOW_TYPE_NONE, &str_wid_debug,
+         &str_wid_debug, NULL, 10, 10, -1, -1 );
+      ui_window_push( &ui, win_debug );
+   }
+   win_debug = ui_window_by_id( &ui, &str_wid_debug );
+   ui_control_new( &ui, control_debug, str_service,
+      UI_CONTROL_TYPE_LABEL, FALSE, NULL, -1, -1, -1, -1 );
+   ui_control_add( win_debug, &str_wid_debug_ip, control_debug );
+
+   /*graphics_draw_text(
+         g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
+         GRAPHICS_FONT_SIZE_10, str_service );
+   }*/
+#endif /* USE_RANDOM_PORT */
+
    while( TRUE ) {
       graphics_start_fps_timer();
 
@@ -234,11 +255,6 @@ int main( int argc, char** argv ) {
       client_poll_input( main_client, l, &p );
       tilemap_draw_ortho( &twindow );
       vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
-#ifdef USE_RANDOM_PORT
-      graphics_draw_text(
-         g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
-         GRAPHICS_FONT_SIZE_10, str_service );
-#endif /* USE_RANDOM_PORT */
 
       ui_draw( &ui, g_screen );
 

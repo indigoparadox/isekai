@@ -109,12 +109,11 @@ void ui_window_free( struct UI_WINDOW* win ) {
  */
 
 void ui_control_init(
-   struct UI_CONTROL* control, struct UI_WINDOW* win,
+   struct UI_CONTROL* control,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
    SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
    SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 ) {
-   control->owner = win;
    control->type = type;
    if( NULL != text ) {
       scaffold_assert( NULL == buffer );
@@ -139,6 +138,8 @@ void ui_control_add(
 ) {
 #ifdef DEBUG
    struct UI_CONTROL* control_test = NULL;
+
+   control->owner = win;
 
    if( 0 < hashmap_count( &(win->controls) ) ) {
       control_test = (struct UI_CONTROL*)hashmap_get( &(win->controls), id );

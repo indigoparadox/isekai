@@ -14,11 +14,11 @@
       text, type, can_focus, buffer, x, y, w, h \
 ) \
    control = (struct UI_CONTROL*)calloc( 1, sizeof( struct UI_CONTROL ) ); \
-   if( NULL == win ) { \
+   if( NULL == control ) { \
       scaffold_error = SCAFFOLD_ERROR_NULLPO; \
       goto cleanup; \
    } \
-   ui_control_init( control, win, text, type, can_focus, buffer, x, y, w, h );
+   ui_control_init( control, text, type, can_focus, buffer, x, y, w, h );
 
 #ifdef DEBUG_VM
 
