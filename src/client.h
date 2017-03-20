@@ -102,6 +102,7 @@ void client_set_names(
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
    bsStatic( "testdata/livecache" );
+static struct tagbstring str_wid_debug_tiles_pos = bsStatic( "debug_tiles_pos" );
 SCAFFOLD_MODULE( "client.c" );
 #else
 extern struct tagbstring str_client_cache_path;

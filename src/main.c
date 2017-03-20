@@ -22,7 +22,6 @@ SCAFFOLD_MODULE( "main.c" );
 struct SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 
-static struct tagbstring str_wid_debug = bsStatic( "debug" );
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
@@ -181,20 +180,7 @@ int main( int argc, char** argv ) {
    twindow.t = NULL;
 
 #ifdef USE_RANDOM_PORT
-   if( NULL == ui_window_by_id( &ui, &str_wid_debug ) ) {
-      ui_window_new( &ui, win_debug, UI_WINDOW_TYPE_NONE, &str_wid_debug,
-         &str_wid_debug, NULL, 10, 10, -1, -1 );
-      ui_window_push( &ui, win_debug );
-   }
-   win_debug = ui_window_by_id( &ui, &str_wid_debug );
-   ui_control_new( &ui, control_debug, str_service,
-      UI_CONTROL_TYPE_LABEL, FALSE, NULL, -1, -1, -1, -1 );
-   ui_control_add( win_debug, &str_wid_debug_ip, control_debug );
-
-   /*graphics_draw_text(
-         g_screen, 40, 10, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
-         GRAPHICS_FONT_SIZE_10, str_service );
-   }*/
+   ui_debug_window( &ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
    while( TRUE ) {
