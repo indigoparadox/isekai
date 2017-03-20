@@ -18,6 +18,9 @@
 #define UI_LABEL_FG        GRAPHICS_COLOR_WHITE
 
 #define UI_TEXT_MARGIN     2
+#define UI_WINDOW_MARGIN   10
+
+#define UI_TEXT_DEF_LENGTH 30
 
 #define UI_TITLEBAR_SIZE   GRAPHICS_FONT_SIZE_8
 #define UI_TEXT_SIZE       GRAPHICS_FONT_SIZE_10
@@ -31,10 +34,10 @@ struct UI_WINDOW {
    GRAPHICS* element;
    BOOL modal;
    struct UI_CONTROL* active_control;
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
-   SCAFFOLD_SIZE width;
-   SCAFFOLD_SIZE height;
+   SCAFFOLD_SIZE_SIGNED x;
+   SCAFFOLD_SIZE_SIGNED y;
+   SCAFFOLD_SIZE_SIGNED width;
+   SCAFFOLD_SIZE_SIGNED height;
    bstring id;
 };
 
@@ -69,29 +72,29 @@ void ui_cleanup( struct UI* ui );
 void ui_window_init(
    struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
    const bstring id, const bstring title, const bstring prompt,
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
+   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 );
 void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
    struct UI_CONTROL* control, struct UI_WINDOW* win,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
+   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 );
 void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 );
 void ui_control_free( struct UI_CONTROL* control );
 void ui_window_transform(
-   struct UI_WINDOW* win, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE width, SCAFFOLD_SIZE height
+   struct UI_WINDOW* win, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 );
 void ui_init( struct UI* ui, GRAPHICS* screen );
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win );
 void ui_window_pop( struct UI* ui );
-SCAFFOLD_SIZE ui_poll_input(
+SCAFFOLD_SIZE_SIGNED ui_poll_input(
    struct UI* ui, struct INPUT* input, bstring buffer, const bstring id
 );
 void ui_draw( struct UI* ui, GRAPHICS* g );

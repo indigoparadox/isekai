@@ -55,7 +55,7 @@ static void windef_show_connect( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
    windef_window(
       UI_WINDOW_TYPE_SIMPLE_TEXT, NULL, &str_cdialog_title, &str_cdialog_prompt,
-      40, 40, 300, 80
+      -1, -1, -1, -1
    );
    ui_window_push( ui, win );
 cleanup: return;
