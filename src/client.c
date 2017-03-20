@@ -15,6 +15,9 @@
 
 bstring client_input_from_ui = NULL;
 
+static struct tagbstring str_client_window_id_chat = bsStatic( "chat" );
+static struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
+
 static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
       (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
@@ -43,11 +46,14 @@ static void client_cleanup( const struct REF *ref ) {
 void client_init( struct CLIENT* c, BOOL client_side ) {
    ref_init( &(c->link.refcount), client_cleanup );
 
+#ifdef ENABLE_LOCAL_CLIENT
+   c->client_side = client_side;
    if( TRUE == c->client_side ) {
       scaffold_assert_client();
       bdestroy( client_input_from_ui );
       client_input_from_ui = NULL;
    }
+#endif /* ENABLE_LOCAL_CLIENT */
 
    hashmap_init( &(c->channels) );
    vector_init( &(c->command_queue ) );
@@ -60,7 +66,6 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
 
    c->sentinal = CLIENT_SENTINAL;
-   c->client_side = client_side;
    c->running = TRUE;
 }
 
@@ -162,11 +167,16 @@ void client_stop( struct CLIENT* c ) {
 
    scaffold_assert( TRUE == c->running );
 
+#ifdef ENABLE_LOCAL_CLIENT
+
    if( TRUE == c->client_side ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
    }
+
+#endif /* ENABLE_LOCAL_CLIENT */
+
 #endif /* DEBUG */
 
    client_clear_puppet( c );
@@ -212,12 +222,22 @@ void client_stop( struct CLIENT* c ) {
 #endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
-   while( 0 < connection_read_line( &(c->link), buffer, c->client_side ) );
+   while( 0 < connection_read_line(
+      &(c->link),
+      buffer,
+#ifdef ENABLE_LOCAL_CLIENT
+      c->client_side
+#else
+      FALSE
+#endif /* ENABLE_LOCAL_CLIENT */
+   ) );
 
    client_clear_puppet( c );
+#ifdef ENABLE_LOCAL_CLIENT
    if( TRUE == c->client_side ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
+#endif /* ENABLE_LOCAL_CLIENT */
 
    c->running = FALSE;
 
@@ -282,7 +302,15 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
    scaffold_check_nonzero( bstr_retval );
    bstr_retval = bconchar( buffer_copy, '\n' );
    scaffold_check_nonzero( bstr_retval );
-   connection_write_line( &(c->link), buffer_copy, c->client_side );
+   connection_write_line(
+      &(c->link),
+      buffer_copy,
+#ifdef ENABLE_LOCAL_CLIENT
+      c->client_side
+#else
+      FALSE
+#endif /* ENABLE_LOCAL_CLIENT */
+   );
 
 #ifdef DEBUG_NETWORK
    if( TRUE == c->client_side ) {
@@ -299,11 +327,13 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
 
 cleanup:
    bdestroy( buffer_copy );
+#ifdef ENABLE_LOCAL_CLIENT
    if( TRUE == c->client_side ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
    }
+#endif /* ENABLE_LOCAL_CLIENT */
    return;
 }
 
@@ -311,11 +341,13 @@ void client_printf( struct CLIENT* c, const char* message, ... ) {
    bstring buffer = NULL;
    va_list varg;
 
+#ifdef ENABLE_LOCAL_CLIENT
    if( TRUE == c->client_side ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
    }
+#endif /* ENABLE_LOCAL_CLIENT */
 
    buffer = bfromcstralloc( strlen( message ), "" );
    scaffold_check_null( buffer );
@@ -429,6 +461,8 @@ cleanup:
 /* FIXME: No file receiving method implemented! */
 #endif /* USE_CHUNKS */
 }
+
+#ifdef ENABLE_LOCAL_CLIENT
 
 #ifdef USE_CHUNKS
 
@@ -703,6 +737,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
+   struct UI_WINDOW* win = NULL;
 
    if(
       NULL == c->puppet ||
@@ -726,7 +761,13 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    case 's': client_key_update( MOBILE_UPDATE_MOVEDOWN ); return TRUE;
    case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
    case ' ': client_key_update( MOBILE_UPDATE_ATTACK ); return TRUE;
-   case '\\': windef_show_chat( ui, update.l ); return TRUE;
+   case '\\':
+      windef_window(
+         UI_WINDOW_TYPE_SIMPLE_TEXT, &str_client_window_id_chat,
+         &str_client_window_title_chat, NULL, -1, -1, -1, -1
+      );
+      ui_window_push( ui, win );
+      return TRUE;
 #ifdef DEBUG_VM
    case 'p': windef_show_repl( ui ); return TRUE;
 #endif /* DEBUG_VM */
@@ -750,6 +791,8 @@ void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    }
    return;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 BOOL client_connected( struct CLIENT* c ) {
    if( 0 < c->link.socket ) {

@@ -63,7 +63,9 @@ void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
 }
 
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset ) {
+#ifdef ENABLE_LOCAL_CLIENT
    hashmap_remove_cb( &(tileset->images), callback_free_graphics, NULL );
+#endif /* ENABLE_LOCAL_CLIENT */
 }
 
 void tilemap_iterate_screen_row(
@@ -125,6 +127,24 @@ SCAFFOLD_INLINE uint32_t tilemap_get_tile(
    SCAFFOLD_SIZE index = (y * layer->width) + x;
    return vector_get_scalar( &(layer->tiles), index );
 }
+
+void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
+   t->redraw_state = st;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   if( TILEMAP_REDRAW_ALL == st ) {
+#ifdef DEBUG_TILES_VERBOSE
+      scaffold_print_debug( &module, "Initiating full tilemap redraw...\n" );
+#endif /* DEBUG_TILES_VERBOSE */
+   }
+
+   /* Always reset dirty tiles. */
+   vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );
+   scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
+#endif /* ENABLE_LOCAL_CLIENT */
+}
+
+#ifdef ENABLE_LOCAL_CLIENT
 
 #ifdef DEBUG_TILES
 
@@ -606,20 +626,6 @@ cleanup:
    return;
 }
 
-void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
-   t->redraw_state = st;
-
-   if( TILEMAP_REDRAW_ALL == st ) {
-#ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( &module, "Initiating full tilemap redraw...\n" );
-#endif /* DEBUG_TILES_VERBOSE */
-   }
-
-   /* Always reset dirty tiles. */
-   vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );
-   scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
-}
-
 #ifdef DEBUG_TILES
 
 void tilemap_toggle_debug_state() {
@@ -648,3 +654,5 @@ void tilemap_toggle_debug_state() {
 }
 
 #endif /* DEBUG_TILES */
+
+#endif /* ENABLE_LOCAL_CLIENT */

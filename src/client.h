@@ -45,7 +45,9 @@ struct CLIENT {
    struct HASHMAP sprites; /*!< Contains sprites for all mobiles this client
                             *   encounters on client-side. Not used server-side.
                             */
+#ifdef ENABLE_LOCAL_CLIENT
    BOOL client_side; /*!< Are we the server mirror or the real client? */
+#endif /* ENABLE_LOCAL_CLIENT */
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542

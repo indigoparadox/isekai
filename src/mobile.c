@@ -18,9 +18,11 @@ static uint8_t mobile_move_counter = 0;
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
 
+#ifdef ENABLE_LOCAL_CLIENT
    if( NULL != o->sprites ) {
       graphics_surface_free( o->sprites );
    }
+#endif /* ENABLE_LOCAL_CLIENT */
    if( NULL != o->owner ) {
       client_clear_puppet( o->owner );
       o->owner = NULL;
@@ -107,6 +109,8 @@ void mobile_animate( struct MOBILE* o ) {
    }
 #endif /* USE_MOBILE_MOVE_COUNTER */
 }
+
+#ifdef ENABLE_LOCAL_CLIENT
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
@@ -261,6 +265,8 @@ cleanup:
    return;
 }
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    if( NULL != o->channel ) {
       channel_free( o->channel );
@@ -373,6 +379,8 @@ cleanup:
    return steps_inc_out;
 }
 
+#ifdef ENABLE_LOCAL_CLIENT
+
 static SCAFFOLD_SIZE mobile_calculate_terrain_sprite_height(
    struct TILEMAP* t, SCAFFOLD_SIZE sprite_height_in,
    SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
@@ -419,6 +427,8 @@ cleanup:
    }
    return sprite_height_out;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 /** \brief Apply an update received from a remote client to a local mobile.
  * \param[in] update    Packet containing update information.
@@ -536,12 +546,16 @@ MOBILE_UPDATE mobile_apply_update(
       goto cleanup;
    }
 
+#ifdef ENABLE_LOCAL_CLIENT
+
    if( FALSE == instant ) {
       o->sprite_display_height =
          mobile_calculate_terrain_sprite_height(
             &(l->tilemap), o->sprite_height,
             o->x, o->y );
    }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 cleanup:
    bdestroy( animation_key );

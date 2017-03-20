@@ -23,10 +23,13 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    /* TODO: Factor this out. */
    int bstr_result;
 
+#ifdef ENABLE_LOCAL_CLIENT
    /* Figure out if we're being called from a client or server. */
    if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       table = proto_table_client;
-   } else if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
+   } else
+#endif /* ENABLE_LOCAL_CLIENT */
+   if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
       s = (struct SERVER*)arg;
       table = proto_table_server;
    } else {
@@ -43,7 +46,15 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    }
 
    /* Get the next line and clean it up. */
-   last_read_count = connection_read_line( &(c->link), buffer, c->client_side );
+   last_read_count = connection_read_line(
+      &(c->link),
+      buffer,
+#ifdef ENABLE_LOCAL_CLIENT
+      c->client_side
+#else
+      FALSE
+#endif /* ENABLE_LOCAL_CLIENT */
+   );
    btrimws( buffer );
    bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
@@ -124,6 +135,62 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
+   bstring file_iter = (bstring)iter,
+      file_iter_short = NULL,
+      file_search = (bstring)arg;
+
+   file_iter_short = bmidstr(
+      file_iter,
+      str_server_data_path.slen + 1,
+      blength( file_iter ) - str_server_data_path.slen - 1
+   );
+   scaffold_check_null( file_iter_short );
+
+   if( 0 != bstrcmp( file_iter_short, file_search ) ) {
+      /* FIXME: If the files request and one of the files present start    *
+       * with similar names (tilelist.png.tmx requested, tilelist.png      *
+       * exists, eg), then weird stuff happens.                            */
+      /* FIXME: Don't try to send directories. */
+      bdestroy( file_iter_short );
+      file_iter_short = NULL;
+   } else {
+      scaffold_print_debug( &module, "Server: File Found: %s\n", bdata( file_iter ) );
+   }
+
+cleanup:
+   return file_iter_short;
+}
+
+void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
+   struct TILEMAP* t = layer->tilemap;
+   struct TILEMAP_TILESET* set = NULL;
+   uint32_t gid = 0;
+   struct TILEMAP_TILE_DATA* tdata = NULL;
+
+   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+
+   gid = tilemap_get_tile( layer, pos->x, pos->y );
+   set = tilemap_get_tileset( t, gid );
+   if( NULL != set ) {
+      tdata = vector_get( &(set->tiles), gid - 1 );
+   }
+
+/* cleanup: */
+   if( NULL == tdata ) {
+#ifdef DEBUG_TILES
+      /* scaffold_print_debug(
+         "Unable to get tileset for: %d, %d\n", pos->x, pos->y
+      ); */
+#endif /* DEBUG_TILES */
+   }
+   return tdata;
+}
+
+#ifdef ENABLE_LOCAL_CLIENT
+
 void* callback_search_windows( const bstring key, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    bstring wid = (bstring)arg;
@@ -169,16 +236,6 @@ void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, 
    return NULL;
 }
 
-void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) {
-   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-   bstring name = (bstring)arg;
-
-   if( 0 == bstrcmp( key, name ) ) {
-      return set;
-   }
-   return NULL;
-}
-
 void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)iter;
    bstring s_key = (bstring)arg;
@@ -195,32 +252,35 @@ void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
-   bstring file_iter = (bstring)iter,
-      file_iter_short = NULL,
-      file_search = (bstring)arg;
+void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) {
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+   bstring name = (bstring)arg;
 
-   file_iter_short = bmidstr(
-      file_iter,
-      str_server_data_path.slen + 1,
-      blength( file_iter ) - str_server_data_path.slen - 1
-   );
-   scaffold_check_null( file_iter_short );
-
-   if( 0 != bstrcmp( file_iter_short, file_search ) ) {
-      /* FIXME: If the files request and one of the files present start    *
-       * with similar names (tilelist.png.tmx requested, tilelist.png      *
-       * exists, eg), then weird stuff happens.                            */
-      /* FIXME: Don't try to send directories. */
-      bdestroy( file_iter_short );
-      file_iter_short = NULL;
-   } else {
-      scaffold_print_debug( &module, "Server: File Found: %s\n", bdata( file_iter ) );
+   if( 0 == bstrcmp( key, name ) ) {
+      return set;
    }
-
-cleanup:
-   return file_iter_short;
+   return NULL;
 }
+
+#ifdef USE_CHUNKS
+
+void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg ) {
+   struct CHUNKER* h = (struct CHUNKER*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   if( chunker_unchunk_finished( h ) ) {
+      /* Cached file found, so abort transfer. */
+      if( chunker_unchunk_cached( h ) ) {
+         proto_abort_chunker( c, h );
+      }
+
+      client_handle_finished_chunker( c, h );
+   }
+}
+
+#endif /* USE_CHUNKS */
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 #ifdef USE_CHUNKS
 
@@ -241,51 +301,6 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
 cleanup:
    bdestroy( chunk_out );
    return NULL;
-}
-
-#endif /* USE_CHUNKS */
-
-void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
-   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
-   struct TILEMAP* t = layer->tilemap;
-   struct TILEMAP_TILESET* set = NULL;
-   uint32_t gid = 0;
-   struct TILEMAP_TILE_DATA* tdata = NULL;
-
-   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
-
-   gid = tilemap_get_tile( layer, pos->x, pos->y );
-   set = tilemap_get_tileset( t, gid );
-   if( NULL != set ) {
-      tdata = vector_get( &(set->tiles), gid - 1 );
-   }
-
-/* cleanup: */
-   if( NULL == tdata ) {
-#ifdef DEBUG_TILES
-      /* scaffold_print_debug(
-         "Unable to get tileset for: %d, %d\n", pos->x, pos->y
-      ); */
-#endif /* DEBUG_TILES */
-   }
-   return tdata;
-}
-
-#ifdef USE_CHUNKS
-
-void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg ) {
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   if( chunker_unchunk_finished( h ) ) {
-      /* Cached file found, so abort transfer. */
-      if( chunker_unchunk_cached( h ) ) {
-         proto_abort_chunker( c, h );
-      }
-
-      client_handle_finished_chunker( c, h );
-   }
 }
 
 void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
@@ -316,6 +331,19 @@ void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
    return NULL;
 }
 
+void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
+   SCAFFOLD_SIZE gid = (*(SCAFFOLD_SIZE*)arg);
+   struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
+
+   if( tileset->firstgid <= gid ) {
+      return tileset;
+   }
+
+   return NULL;
+}
+
+#ifdef ENABLE_LOCAL_CLIENT
+
 void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 
@@ -333,17 +361,6 @@ void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
    return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, c );
 }
 
-void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
-   SCAFFOLD_SIZE gid = (*(SCAFFOLD_SIZE*)arg);
-   struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
-
-   if( tileset->firstgid <= gid ) {
-      return tileset;
-   }
-
-   return NULL;
-}
-
 void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
@@ -355,6 +372,8 @@ void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
 
    return NULL;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -432,19 +451,6 @@ void* callback_parse_mob_channels( const bstring key, void* iter, void* arg ) {
 #endif /* USE_EZXML */
    return NULL;
 }
-
-#if 0
-BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-   bstring xmit_buffer = (bstring)iter;
-
-   client_send( c, xmit_buffer );
-
-   bdestroy( xmit_buffer );
-
-   return TRUE;
-}
-#endif
 
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
@@ -547,6 +553,8 @@ BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
    return TRUE;
 }
 
+#ifdef ENABLE_LOCAL_CLIENT
+
 BOOL callback_free_controls( const bstring key, void* iter, void* arg ) {
    bstring id = (bstring)key;
    bstring id_search = (bstring)arg;
@@ -558,6 +566,8 @@ BOOL callback_free_controls( const bstring key, void* iter, void* arg ) {
    }
    return FALSE;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
@@ -580,6 +590,8 @@ BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
    return FALSE;
 }
 
+#ifdef ENABLE_LOCAL_CLIENT
+
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
@@ -597,6 +609,8 @@ BOOL callback_free_windows( const bstring res, void* iter, void* arg ) {
    }
    return FALSE;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
