@@ -656,6 +656,7 @@ static BOOL client_poll_ui(
          /* Process collected input. */
 
          proto_send_msg_channel( c, l, client_input_from_ui );
+         mobile_speak( c->puppet, client_input_from_ui );
 
          goto reset_buffer;
       }

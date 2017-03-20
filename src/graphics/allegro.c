@@ -527,7 +527,25 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   /* TODO: Graphical scaling not implemented. */
+   BITMAP* temp = NULL;
+
+   temp = create_bitmap( w, h );
+   scaffold_check_null( temp );
+
+   blit( g->surface, temp, 0, 0, 0, 0, g->w, g->h );
+
+   if( NULL != g->surface ) {
+      destroy_bitmap( g->surface );
+   }
+
+   g->surface = temp;
+   scaffold_check_null( g->surface );
+
+   g->w = w;
+   g->h = h;
+
+cleanup:
+   return;
 }
 
 void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,

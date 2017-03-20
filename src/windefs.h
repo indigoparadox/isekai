@@ -70,7 +70,7 @@ static void windef_show_chat( struct UI* ui, struct CHANNEL* l ) {
    struct UI_WINDOW* win = NULL;
    windef_window(
       UI_WINDOW_TYPE_SIMPLE_TEXT, &str_client_window_id_chat,
-      &str_client_window_title_chat, NULL, 40, 40, 300, 80
+      &str_client_window_title_chat, NULL, -1, -1, -1, -1
    );
    ui_window_push( ui, win );
 cleanup: return;
