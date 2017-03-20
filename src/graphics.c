@@ -8,6 +8,14 @@
 static uint32_t graphics_time = 0;
 static uint32_t graphics_fps_delay = 0;
 
+#ifdef DEBUG_FPS
+
+static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
+
+static bstring graphics_fps = NULL;
+
+#endif /* DEBUG_FPS */
+
 #pragma pack(push,1)
 struct GRAPHICS_BITMAP_FILE_HEADER {
     int8_t type[2];
@@ -126,12 +134,22 @@ void graphics_wait_for_fps_timer() {
       if( rest_time < 0 ) { goto cleanup; }
       graphics_sleep( rest_time );
    }
-#ifdef DEBUG_TICKS
-   scaffold_print_debug( &module, "%d\n", graphics_fps_delay - (ticks - graphics_time) );
-#endif /* DEBUG_TICKS */
+
+#ifdef DEBUG_FPS
+   if( NULL == graphics_fps ) {
+      graphics_fps = bfromcstr( "" );
+   }
+   bassignformat( graphics_fps, "FPS: %d\n", rest_time );
+#endif /* DEBUG_FPS */
 #endif /* USE_POSIX_TIMER */
 cleanup:
    return;
+}
+
+void graphics_debug_fps( struct UI* ui ) {
+   if( NULL != graphics_fps ) {
+      ui_debug_window( ui, &str_wid_debug_fps, graphics_fps );
+   }
 }
 
 void graphics_draw_text(
@@ -166,6 +184,8 @@ void graphics_draw_text(
    }
 }
 
+#ifdef DEBUG_FPS
+
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 ) {
@@ -173,3 +193,5 @@ void graphics_measure_text(
    r->h = size;
    r->w *= blength( text );
 }
+
+#endif /* DEBUG_FPS */
