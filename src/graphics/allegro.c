@@ -226,7 +226,7 @@ void graphics_screen_new(
    LOCK_VARIABLE( allegro_ticks );
    LOCK_FUNCTION( allegro_ticker )
 
-   install_int( allegro_ticker, BPS_TO_TIMER( 1000 ) );
+   install_int( allegro_ticker, BPS_TO_TIMER( 1000000 ) );
 
    graphics_setup();
 
@@ -542,7 +542,7 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
-   rest( 1.0f / milliseconds );
+   rest( milliseconds );
 }
 
 uint32_t graphics_get_ticks() {

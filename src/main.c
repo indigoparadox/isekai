@@ -130,10 +130,11 @@ int main( int argc, char** argv ) {
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );
       do {
+         graphics_start_fps_timer();
          ui_draw( &ui, g_screen );
+         input_get_event( &p );
          graphics_flip_screen( g_screen );
          graphics_wait_for_fps_timer();
-         input_get_event( &p );
       } while( 0 == ui_poll_input( &ui, &p, buffer, NULL ) );
       ui_window_pop( &ui );
 

@@ -6,7 +6,7 @@
 #include <time.h>
 
 static uint32_t graphics_time = 0;
-static int graphics_fps_delay = 0;
+static uint32_t graphics_fps_delay = 0;
 
 #pragma pack(push,1)
 struct GRAPHICS_BITMAP_FILE_HEADER {
@@ -111,24 +111,27 @@ void graphics_wait_for_fps_timer() {
       graphics_sleep( graphics_fps_delay - elapsed );
    }
 #else
-   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
-   uint32_t ticks = graphics_get_ticks();
+   uint32_t ticks;
+   int32_t difference,
+      rest_time;
 
-   if( GRAPHICS_TIMER_FPS > (ticks - graphics_time) ) {
+   ticks = graphics_get_ticks();
+   difference = ticks - graphics_time;
+   rest_time = graphics_fps_delay - (ticks - graphics_time);
+
+   if( GRAPHICS_TIMER_FPS > difference ) {
       /* Subtract the time since graphics_Start_fps_timer() was last called
        * from the nominal delay required to maintain our FPS.
        */
-      graphics_sleep( graphics_fps_delay  - (ticks - graphics_time) );
+      if( rest_time < 0 ) { goto cleanup; }
+      graphics_sleep( rest_time );
    }
-   /*
-   scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
-   */
-   /*
-   if( 0 == ticks % 1000) {
-      scaffold_print_debug( &module, "%d\n", (ticks - graphics_time) );
-   }
-   */
+#ifdef DEBUG_TICKS
+   scaffold_print_debug( &module, "%d\n", graphics_fps_delay - (ticks - graphics_time) );
+#endif /* DEBUG_TICKS */
 #endif /* USE_POSIX_TIMER */
+cleanup:
+   return;
 }
 
 void graphics_draw_text(
@@ -162,7 +165,6 @@ void graphics_draw_text(
       graphics_draw_char( g, x + (size * i), y, color, size, c );
    }
 }
-
 
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
