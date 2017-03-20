@@ -186,7 +186,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    /* TODO: Don't allow dupes. */
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != ui );
-   vector_add( &(ui->windows), win );
+   vector_insert( &(ui->windows), 0, win );
 }
 
 void ui_window_pop( struct UI* ui ) {
