@@ -48,6 +48,7 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
 					<Add option="-DUSE_NETWORK" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -91,6 +92,7 @@
 					<Add option="-DUSE_HEATSHRINK" />
 					<Add option="-DUSE_B64" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -145,6 +147,7 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DSCAFFOLD_LOG_FILE" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -180,12 +183,12 @@
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DxUSE_HEATSHRINK" />
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxUSE_INLINE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DDEBUG_VM" />
 					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -219,7 +222,6 @@
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
-					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DUSE_RANDOM_PORT" />
@@ -229,6 +231,7 @@
 					<Add option="-DxDEBUG_VM" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DDEBUG_FPS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -262,7 +265,6 @@
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
-					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DUSE_RANDOM_PORT" />
@@ -273,6 +275,7 @@
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DxDEBUG_PALETTE" />
 					<Add option="-DDEBUG_FPS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -330,6 +333,7 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -350,6 +354,7 @@
 					<Add option="-DxUSE_ALLEGRO_PNG" />
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -366,6 +371,7 @@
 					<Add option="-DGFX_CURSES" />
 					<Add option="-DSCH_PTHREAD" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add library="curses" />
@@ -399,6 +405,7 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -422,30 +429,23 @@
 					<Add option="-Wmissing-declarations" />
 					<Add option="-pg" />
 					<Add option="-g" />
-					<Add option="-std=gnu99" />
 					<Add option="-Wstack-protector" />
 					<Add option="-fstack-protector-all" />
 					<Add option="-fsanitize=undefined" />
 					<Add option="-ggdb3" />
 					<Add option="-fvar-tracking" />
-					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
-					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
-					<Add option="-DUSE_RANDOM_PORT" />
 					<Add option="-DxDEBUG_REF" />
-					<Add option="-DUSE_CONNECT_DIALOG" />
-					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxDEBUG_VM" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
-					<Add option="-DDEBUG_FPS" />
+					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
-					<Add library="alleg" />
 					<Add library="ubsan" />
 				</Linker>
 			</Target>
@@ -628,6 +628,20 @@
 		<Unit filename="src/font.h" />
 		<Unit filename="src/graphics.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
@@ -639,7 +653,6 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
 		</Unit>
 		<Unit filename="src/graphics/curses.c">
 			<Option compilerVar="CC" />
@@ -682,7 +695,6 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
 		</Unit>
 		<Unit filename="src/input/curses.c">
 			<Option compilerVar="CC" />
@@ -828,7 +840,6 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Server)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
