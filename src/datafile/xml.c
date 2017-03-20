@@ -366,6 +366,8 @@ cleanup:
    return;
 }
 
+#ifdef ENABLE_LOCAL_CLIENT
+
 static void datafile_tilemap_parse_tileset_ezxml_image(
    struct TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
 ) {
@@ -413,6 +415,8 @@ cleanup:
    }
    return;
 }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 static void datafile_tilemap_parse_tileset_ezxml_terrain(
    struct TILEMAP_TILESET* set, ezxml_t xml_terrain, SCAFFOLD_SIZE id
@@ -529,11 +533,15 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
    scaffold_check_nonzero( bstr_retval );
    hashmap_put( &(t->tilesets), buffer, set );
 
+#ifdef ENABLE_LOCAL_CLIENT
+
    while( NULL != xml_image ) {
       datafile_tilemap_parse_tileset_ezxml_image( set, xml_image, local_images );
       scaffold_check_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
    /* Parse the terrain information. */
 

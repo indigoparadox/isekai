@@ -16,6 +16,8 @@ typedef enum _IRC_ERROR {
    ERR_NOMOTD = 422
 } IRC_ERROR;
 
+const struct tagbstring str_gdb = bsStatic( "GDB" );
+const struct tagbstring str_gu = bsStatic( "GU" );
 const struct tagbstring irc_reply_error_text[35] = {
    /*  1 */ bsStatic( "Nick :No such nick/channel" ),
    bsStatic( "" ),
@@ -713,6 +715,8 @@ cleanup:
 
 #endif /* DEBUG_VM */
 
+#ifdef ENABLE_LOCAL_CLIENT
+
 static void irc_client_gu(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
@@ -798,7 +802,11 @@ static void irc_client_error(
    }
 }
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
 #ifdef USE_CHUNKS
+
+#ifdef ENABLE_LOCAL_CLIENT
 
 static void irc_client_gamedatablock(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
@@ -846,6 +854,8 @@ cleanup:
    return;
 }
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
 static void irc_server_gamedataabort(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
@@ -870,15 +880,17 @@ static void irc_server_gamenewsprite(
 ) {
 }
 
-static void irc_client_gamenewsprite(
-   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
-) {
-}
-
 static void irc_server_mob(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
    /* TODO: If the serial matches c's mob, update server. Otherwise send requested mob's details. */
+}
+
+#ifdef ENABLE_LOCAL_CLIENT
+
+static void irc_client_gamenewsprite(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
 }
 
 static void irc_client_mob(
@@ -971,6 +983,8 @@ cleanup:
    return;
 }
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
 IRC_COMMAND_TABLE_START( server ) = {
 IRC_COMMAND_ROW( "USER", irc_server_user ),
 IRC_COMMAND_ROW( "NICK", irc_server_nick ),
@@ -987,11 +1001,13 @@ IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
 #endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
-IRC_COMMAND_ROW( "NOB", irc_server_mob ),
+IRC_COMMAND_ROW( "MOB", irc_server_mob ),
 #ifdef DEBUG_VM
 IRC_COMMAND_ROW( "DEBUGVM", irc_server_debugvm ),
 #endif /* DEBUGVM */
 IRC_COMMAND_TABLE_END() };
+
+#ifdef ENABLE_LOCAL_CLIENT
 
 IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
@@ -1004,6 +1020,8 @@ IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_client_mob ),
 IRC_COMMAND_ROW( "PRIVMSG", irc_client_privmsg ),
 IRC_COMMAND_TABLE_END() };
+
+#endif /* ENABLE_LOCAL_CLIENT */
 
 static void irc_command_cleanup( const struct REF* ref ) {
    IRC_COMMAND* cmd = scaffold_container_of( ref, IRC_COMMAND, refcount );
@@ -1044,8 +1062,10 @@ IRC_COMMAND* irc_dispatch(
 
    if( table == proto_table_server ) {
       scaffold_assert_server();
+#ifdef ENABLE_LOCAL_CLIENT
    } else if( table == proto_table_client ) {
       scaffold_assert_client();
+#endif /* ENABLE_LOCAL_CLIENT */
    }
 
    for( i = 0 ; args->qty > i ; i++ ) {
@@ -1064,8 +1084,8 @@ IRC_COMMAND* irc_dispatch(
          ) ) {
 #ifdef DEBUG
             if(
-               0 != bstrncmp( cmd_test, &(proto_table_client[3].command), 3 ) &&
-               0 != bstrncmp( cmd_test, &(proto_table_client[0].command), 2 )
+               0 != bstrncmp( cmd_test, &str_gdb, 3 ) &&
+               0 != bstrncmp( cmd_test, &str_gu, 2 )
             ) {
                if( table == proto_table_server ) {
                   scaffold_print_debug(
@@ -1102,10 +1122,12 @@ IRC_COMMAND* irc_dispatch(
       scaffold_assert_server();
       scaffold_print_error(
          &module, "Server: Parser unable to interpret: %s\n", bdata( line ) );
+#ifdef ENABLE_LOCAL_CLIENT
    } else if( table == proto_table_client ) {
       scaffold_assert_client();
       scaffold_print_error(
          &module, "Client: Parser unable to interpret: %s\n", bdata( line ) );
+#endif /* ENABLE_LOCAL_CLIENT */
    }
 
 

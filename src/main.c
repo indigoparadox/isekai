@@ -46,21 +46,21 @@ int main( int argc, char** argv ) {
 #endif /* _WIN32 */
    bstring buffer = NULL;
    time_t tm = 0;
+#ifdef ENABLE_LOCAL_CLIENT
    GRAPHICS* g_screen;
    struct INPUT p = { 0 };
    struct UI ui = { 0 };
    struct GRAPHICS_TILE_WINDOW twindow = { 0 };
    struct CHANNEL* l = NULL;
-   int bstr_result = 0;
-   bstring server_address = NULL;
-   BOOL post_load_finished = FALSE;
-   struct UI_WINDOW* win_debug = NULL;
-   struct UI_CONTROL* control_debug = NULL;
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
    struct bstrList* server_tuple = NULL;
 #endif /* USE_CONNECT_DIALOG */
+#endif /* ENABLE_LOCAL_CLIENT */
+   int bstr_result = 0;
+   bstring server_address = NULL;
+   BOOL post_load_finished = FALSE;
 #ifdef USE_RANDOM_PORT
    bstring str_service = NULL;
 #endif /* USE_RANDOM_PORT */
@@ -69,6 +69,7 @@ int main( int argc, char** argv ) {
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
 
+#ifdef ENABLE_LOCAL_CLIENT
 #ifdef _WIN32
    graphics_screen_new(
       &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
@@ -88,6 +89,8 @@ int main( int argc, char** argv ) {
    input_init( &p );
    ui_init( &ui, g_screen );
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
    srand( (unsigned)time( &tm ) );
 
    /*
@@ -102,7 +105,10 @@ int main( int argc, char** argv ) {
 #endif /* USE_RANDOM_PORT */
 
    server_new( main_server, &str_localhost );
+
+#ifdef ENABLE_LOCAL_CLIENT
    client_new( main_client, TRUE );
+#endif /* ENABLE_LOCAL_CLIENT */
 
    do {
 #ifdef USE_RANDOM_PORT
@@ -113,9 +119,10 @@ int main( int argc, char** argv ) {
 #endif /* USE_RANDOM_PORT || USE_CONNECT_DIALOG */
       scaffold_check_nonzero( bstr_result );
       server_listen( main_server, server_port );
-      graphics_sleep( 100 );
+      //graphics_sleep( 100 );
    } while( 0 != scaffold_error );
 
+#ifdef ENABLE_LOCAL_CLIENT
    bstr_result = bassigncstr( main_client->nick, "TestNick" );
    scaffold_check_nonzero( bstr_result );
    bstr_result = bassigncstr( main_client->realname, "Tester Tester" );
@@ -187,20 +194,29 @@ int main( int argc, char** argv ) {
    graphics_debug_fps( &ui );
 #endif /* DEBUG_FPS */
 
+#else
+   scaffold_print_info( &module, "Listening on port: %d\n", server_port );
+#endif /* ENABLE_LOCAL_CLIENT */
+
    while( TRUE ) {
+#ifdef ENABLE_LOCAL_CLIENT
       graphics_start_fps_timer();
+#endif /* ENABLE_LOCAL_CLIENT */
 
       if( !main_server->self.running ) {
          break;
       }
 
+#ifdef ENABLE_LOCAL_CLIENT
       if( !main_client->running ) {
          server_stop( main_server );
       }
+#endif /* ENABLE_LOCAL_CLIENT */
 
       server_poll_new_clients( main_server );
-      client_update( main_client, g_screen );
       server_service_clients( main_server );
+#ifdef ENABLE_LOCAL_CLIENT
+      client_update( main_client, g_screen );
 
       /* Do drawing. */
       l = hashmap_get_first( &(main_client->channels) );
@@ -251,21 +267,26 @@ int main( int argc, char** argv ) {
       graphics_flip_screen( g_screen );
 
       graphics_wait_for_fps_timer();
+#endif /* ENABLE_LOCAL_CLIENT */
    }
 
 cleanup:
+   bdestroy( buffer );
+#ifdef ENABLE_LOCAL_CLIENT
    input_shutdown( &p );
    ui_cleanup( &ui );
-   bdestroy( buffer );
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
    scaffold_set_client();
    client_free( main_client );
+#endif /* ENABLE_LOCAL_CLIENT */
    scaffold_set_server();
    server_free( main_server );
    scaffold_free( main_server );
+#ifdef ENABLE_LOCAL_CLIENT
    graphics_shutdown( g_screen );
+#endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );
    fclose( scaffold_log_handle_err );
