@@ -27,8 +27,7 @@ void input_get_event( struct INPUT* input ) {
       scaffold_print_debug( &module, "Char: %d\n", input->character );
 #endif /* DEBUG_KEYS */
    } else if( SDL_QUIT == event->type ) {
-      input->type = INPUT_TYPE_KEY;
-      input->character = 'q';
+      input->type = INPUT_TYPE_CLOSE;
    } else {
       input->type = INPUT_TYPE_NONE;
       input->character = 0;

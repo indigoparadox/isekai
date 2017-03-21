@@ -11,14 +11,17 @@
 extern struct CLIENT* main_client;
 extern struct SERVER* main_server;
 
+volatile BOOL window_closed = FALSE;
+
 typedef struct {
    int keysym;
    void (*callback)( struct CLIENT* c, void* arg );
 } INPUT_ENTRY;
 
 static void input_close_allegro_window() {
-   scaffold_set_client();
-   proto_client_stop( main_client );
+   /* scaffold_set_client();
+   proto_client_stop( main_client ); */
+   window_closed = TRUE;
 }
 
 void input_init( struct INPUT* p ) {
@@ -31,7 +34,9 @@ void input_get_event( struct INPUT* input ) {
 
    poll_keyboard();
 
-   if( keypressed() ) {
+   if( TRUE == window_closed ) {
+      input->type = INPUT_TYPE_CLOSE;
+   } else if( keypressed() ) {
       key_pressed = readkey();
       input->type = INPUT_TYPE_KEY;
       input->character = key_pressed & 0xff;

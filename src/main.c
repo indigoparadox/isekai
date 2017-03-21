@@ -165,6 +165,16 @@ BOOL loop_connect() {
    ui_draw( ui, g_screen );
    input_get_event( input );
 
+   if(
+      INPUT_TYPE_CLOSE == input->type || (
+         INPUT_TYPE_KEY == input->type &&
+         INPUT_SCANCODE_ESC == input->scancode
+      )
+   ) {
+      /* FIXME */
+      return FALSE;
+   }
+
    if( 0 != ui_poll_input( ui, input, buffer, &str_cdialog_id ) ) {
       /* Dismiss the connect dialog. */
       ui_window_destroy( ui, &str_cdialog_id );

@@ -260,7 +260,7 @@ void client_stop( struct CLIENT* c ) {
 
    client_clear_puppet( c );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( TRUE == c->client_side ) {
+   if( TRUE == c->client_side && HASHMAP_SENTINAL == c->sprites.sentinal ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 #endif /* ENABLE_LOCAL_CLIENT */
