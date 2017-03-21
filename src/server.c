@@ -348,6 +348,9 @@ BOOL server_service_clients( struct SERVER* s ) {
    /* Run the channel VMs. */
    hashmap_iterate( &(s->self.channels), callback_proc_channel_vms, NULL );
 
+   /* Spawn NPC mobiles. */
+   hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, NULL );
+
 cleanup:
    return retval;
 }

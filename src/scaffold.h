@@ -84,6 +84,9 @@ typedef uint32_t SCAFFOLD_SIZE;
 typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
+typedef uint8_t SERIAL;
+#define SERIAL_MAX UCHAR_MAX
+
 /* = Configuration = */
 
 #define SENTINAL 19691
@@ -377,6 +380,7 @@ struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 struct tagbstring scaffold_colon_string = bsStatic( ":" );
 struct tagbstring scaffold_exclamation_string = bsStatic( "!" );
+struct tagbstring scaffold_null = bsStatic( "(null)" );
 
 #if defined( _WIN32 ) || defined( WIN16 )
 struct tagbstring scaffold_dirsep_string = bsStatic( "\\" );
@@ -394,6 +398,7 @@ extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;
 extern struct tagbstring scaffold_colon_string;
 extern struct tagbstring scaffold_exclamation_string;
+extern struct tagbstring scaffold_null;
 extern uint8_t scaffold_error;
 extern BOOL scaffold_error_silent;
 

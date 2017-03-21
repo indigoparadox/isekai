@@ -54,6 +54,27 @@ void tilemap_free( struct TILEMAP* t ) {
    refcount_dec( t, "tilemap" );
 }
 
+void tilemap_spawner_init(
+   struct TILEMAP_SPAWNER* ts, struct TILEMAP* t, TILEMAP_SPAWNER_TYPE type
+) {
+   scaffold_assert( NULL != t );
+   scaffold_assert( NULL != ts );
+   ts->tilemap = t;
+   ts->last_spawned = 0;
+   ts->countdown_remaining = 0;
+   ts->active = TRUE;
+   ts->pos.x = 0;
+   ts->pos.y = 0;
+   ts->type = type;
+   ts->respawn_countdown = 0;
+   ts->id = NULL;
+}
+
+void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
+   bdestroy( ts->id );
+   scaffold_free( ts );
+}
+
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
    vector_init( &(layer->tiles) );
 }
