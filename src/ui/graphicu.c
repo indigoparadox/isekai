@@ -396,8 +396,9 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
       win_height = 0;
    BOOL previous_button = FALSE;
    struct UI_CONTROL* control = NULL;
-   int i;
-   GRAPHICS_COLOR fg, bg;
+   int i = 0;
+   GRAPHICS_COLOR fg = GRAPHICS_COLOR_TRANSPARENT,
+      bg = GRAPHICS_COLOR_TRANSPARENT;
 
    /* Draw the window. */
    graphics_draw_rect(
