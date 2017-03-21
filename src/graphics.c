@@ -119,6 +119,9 @@ void graphics_wait_for_fps_timer() {
       graphics_sleep( graphics_fps_delay - elapsed );
    }
 #else
+#ifdef DEBUG_FPS
+   int bstr_ret;
+#endif /* DEBUG_FPS */
    uint32_t ticks;
    int32_t difference,
       rest_time;
@@ -139,7 +142,8 @@ void graphics_wait_for_fps_timer() {
    if( NULL == graphics_fps ) {
       graphics_fps = bfromcstr( "" );
    }
-   bassignformat( graphics_fps, "FPS: %d\n", rest_time );
+   bstr_ret = bassignformat( graphics_fps, "FPS: %d\n", rest_time );
+   scaffold_check_nonzero( bstr_ret );
 #endif /* DEBUG_FPS */
 #endif /* USE_POSIX_TIMER */
 cleanup:

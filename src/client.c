@@ -113,6 +113,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
 #ifdef DEBUG_TILES
+   int bstr_ret;
    SCAFFOLD_SIZE steps_remaining_x,
       steps_remaining_y;
    static bstring pos = NULL;
@@ -164,16 +165,17 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       steps_remaining_x = mobile_get_steps_remaining_x( c->puppet, FALSE );
       steps_remaining_y = mobile_get_steps_remaining_y( c->puppet, FALSE );
 
-      bassignformat( pos,
+      bstr_ret = bassignformat( pos,
          "Player: %d (%d)[%d], %d (%d)[%d]",
          c->puppet->x, c->puppet->prev_x, steps_remaining_x,
          c->puppet->y, c->puppet->prev_y, steps_remaining_y
       );
+      scaffold_check_nonzero( bstr_ret );
       ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
    }
-#endif /* DEBUG_TILES */
 
-/* cleanup: */
+cleanup:
+#endif /* DEBUG_TILES */
    return retval;
 }
 
