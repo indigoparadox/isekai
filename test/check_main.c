@@ -22,6 +22,8 @@ main_add_test_proto( syncbuff )
 int main( void ) {
    int number_failed = 0;
 
+   srand( time( NULL ) );
+
 #ifdef USE_SYNCBUFF
    main_add_test( syncbuff );
 #endif /* USE_SYNCBUFF */
