@@ -57,6 +57,7 @@ static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
 
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_cid_connect_host = bsStatic( "connect_host" );
+static struct tagbstring str_cid_connect_nick = bsStatic( "connect_nick" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -200,6 +201,10 @@ static BOOL loop_connect() {
          ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer, -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_host, control );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, main_client->nick, -1, -1, -1, -1
+      );
+      ui_control_add( win, &str_cid_connect_nick, control );
       ui_window_push( ui, win );
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
@@ -219,7 +224,7 @@ static BOOL loop_connect() {
       return FALSE;
    }
 
-   if( 0 != ui_poll_input( ui, input, buffer, &str_cdialog_id ) ) {
+   if( 0 != ui_poll_input( ui, input, &str_cdialog_id ) ) {
       /* Dismiss the connect dialog. */
       ui_window_destroy( ui, &str_cdialog_id );
 

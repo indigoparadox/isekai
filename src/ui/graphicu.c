@@ -218,7 +218,7 @@ cleanup:
  *         a length of text for a text input dialog.
  */
 SCAFFOLD_SIZE_SIGNED ui_poll_input(
-   struct UI* ui, struct INPUT* input, bstring buffer, const bstring id
+   struct UI* ui, struct INPUT* input, const bstring id
 ) {
    struct UI_WINDOW* win = NULL;
    SCAFFOLD_SIZE_SIGNED input_length = 0;
@@ -235,6 +235,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    control = win->active_control;
    scaffold_assert( NULL != control );
 
+#if 0
    /* Borrow the given input buffer if we have one and let us know so we don't
     * try to free it, later.
     */
@@ -242,13 +243,14 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
       control->borrowed_text_field = TRUE;
       control->text = buffer;
    }
+#endif // 0
 
    if(
       INPUT_TYPE_KEY == input->type &&
       (scaffold_char_is_printable( input->character ) ||
       ' ' == input->character)
    ) {
-      bstr_result = bconchar( buffer, input->character );
+      bstr_result = bconchar( control->text, input->character );
       scaffold_check_nonzero( bstr_result );
 #ifdef DEBUG_KEYS
       scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
@@ -257,13 +259,13 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_BACKSPACE == input->scancode
    ) {
-      bstr_result = btrunc( buffer, blength( buffer ) - 1 );
+      bstr_result = btrunc( control->text, blength( control->text ) - 1 );
       scaffold_check_nonzero( bstr_result );
    } else if(
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_ENTER == input->scancode
    ) {
-      input_length = blength( buffer );
+      input_length = blength( control->text );
    }
 
 cleanup:

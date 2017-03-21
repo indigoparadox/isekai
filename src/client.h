@@ -106,7 +106,11 @@ void client_set_names(
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
    bsStatic( "testdata/livecache" );
-static struct tagbstring str_wid_debug_tiles_pos = bsStatic( "debug_tiles_pos" );
+static struct tagbstring str_wid_debug_tiles_pos =
+   bsStatic( "debug_tiles_pos" );
+static struct tagbstring str_client_window_id_chat = bsStatic( "chat" );
+static struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
+static struct tagbstring str_client_control_id_chat = bsStatic( "chat" );
 SCAFFOLD_MODULE( "client.c" );
 #else
 extern struct tagbstring str_client_cache_path;
