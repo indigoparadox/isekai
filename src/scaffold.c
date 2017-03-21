@@ -185,7 +185,7 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
    if( SCAFFOLD_TRACE_SERVER == scaffold_trace_path ) {
       color = SCAFFOLD_COLOR_YELLOW;
    } else {
-      color = SCAFFOLD_COLOR_DARK_CYAN;
+      color = SCAFFOLD_COLOR_CYAN;
    }
 
    va_start( varg, message );

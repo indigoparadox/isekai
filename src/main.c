@@ -93,6 +93,7 @@ static BOOL loop_game() {
 #endif /* ENABLE_LOCAL_CLIENT */
 
    server_poll_new_clients( main_server );
+
 #ifdef ENABLE_LOCAL_CLIENT
    client_update( main_client, g_screen );
 
@@ -147,22 +148,22 @@ cleanup:
 
 static BOOL loop_connect() {
    BOOL keep_going = TRUE;
+   bstring server_address = NULL;
+   int bstr_result = 0;
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
    struct bstrList* server_tuple = NULL;
-   int bstr_result = 0;
-   bstring server_address = NULL;
 
    if( NULL == buffer ) {
       buffer = bfromcstr( "" );
    }
 
-#endif /* USE_CONNECT_DIALOG */
 
-#ifdef USE_CONNECT_DIALOG
 
    if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
+#endif /* USE_CONNECT_DIALOG */
+
       /* TODO: Add fields for these to connect dialog. */
       bstr_result = bassigncstr( main_client->nick, "TestNick" );
       scaffold_check_nonzero( bstr_result );
@@ -171,6 +172,7 @@ static BOOL loop_connect() {
       bstr_result = bassigncstr( main_client->username, "TestUser" );
       scaffold_check_nonzero( bstr_result );
 
+#ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
       ui_window_new(
          ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, &str_cdialog_id,
@@ -233,8 +235,8 @@ static BOOL loop_connect() {
       /* Destroy this after, since server_address is a ptr inside of it. */
       bstrListDestroy( server_tuple );
       server_tuple = NULL;
-#endif /* USE_CONNECT_DIALOG */
    }
+#endif /* USE_CONNECT_DIALOG */
 cleanup:
    return keep_going; /* TODO: ESC to quit. */
 #if 0

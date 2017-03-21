@@ -252,7 +252,7 @@ void datafile_parse_mobile_ezxml_t(
    o->sprite_display_height = o->sprite_height;
    o->facing = MOBILE_FACING_DOWN;
    scaffold_print_debug(
-      &module, "Mobile animation defaulting to: %b", walk_ani_key
+      &module, "Mobile animation defaulting to: %b\n", walk_ani_key
    );
    o->current_animation = (struct MOBILE_ANI_DEF*)hashmap_get(
          &(o->ani_defs), walk_ani_key
