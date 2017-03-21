@@ -180,24 +180,24 @@ void channel_set_mobile(
    int bstr_res = 0;
    struct CLIENT* mobile_c = NULL;
 
-#if 0
-#ifdef STRICT_DEBUG
+//#if 0
+//#ifdef STRICT_DEBUG
    const char* nick_c = NULL,
       * lname_c = NULL;
-#endif /* STRICT_DEBUG */
+//#endif /* STRICT_DEBUG */
 
-   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
-   c = channel_get_client_by_name( l, mob_nick );
-#ifdef STRICT_DEBUG
+//   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
+//   c = channel_get_client_by_name( l, mob_nick );
+//#ifdef STRICT_DEBUG
    nick_c = bdata( mob_nick );
    lname_c = bdata( l->name );
    scaffold_assert( NULL != nick_c );
    scaffold_assert( NULL != lname_c );
-   scaffold_assert( NULL != c );
-#else
-   scaffold_check_null( c );
-#endif /* STRICT_DEBUG */
-#endif // 0
+//   scaffold_assert( NULL != c );
+//#else
+//   scaffold_check_null( c );
+//#endif /* STRICT_DEBUG */
+//#endif // 0
 
    o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
