@@ -274,6 +274,8 @@ void graphics_draw_rect(
    SDL_Color* color = &(graphics_stock_colors[color_i]);
    SDL_Surface* surface = g->surface;
 
+   scaffold_check_null( g->surface );
+
    rect.x = x;
    rect.y = y;
    rect.w = w,
@@ -284,6 +286,9 @@ void graphics_draw_rect(
       &rect,
       SDL_MapRGB( surface->format, color->r, color->g, color->b )
    );
+
+cleanup:
+   return;
 }
 
 void graphics_draw_char(
@@ -297,6 +302,8 @@ void graphics_draw_char(
 
    divisor = size / 8.0f;
 
+   scaffold_check_null( g->surface );
+
    color = &(graphics_stock_colors[color_i]);
 
    SDL_LockSurface( g->surface );
@@ -308,12 +315,62 @@ void graphics_draw_char(
       }
    }
    SDL_UnlockSurface( g->surface );
+
+cleanup:
+   return;
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+   SDL_Surface* temp = NULL,
+      * screen;
+   SDL_Rect src_rect,
+      dest_rect;
+
+   screen = SDL_GetVideoSurface();
+
+   temp = SDL_CreateRGBSurface(
+#ifdef USE_SDL_IMAGE
+      SDL_HWSURFACE,
+#else
+      SDL_SWSURFACE,
+#endif /* USE_SDL_IMAGE */
+      w,
+      h,
+      screen->format->BitsPerPixel,
+      screen->format->Rmask,
+      screen->format->Gmask,
+      screen->format->Bmask,
+      screen->format->Amask
+   );
+   scaffold_check_null( temp );
+
+   src_rect.x = 0;
+   src_rect.y = 0;
+   src_rect.w = g->w;
+   src_rect.h = g->h;
+
+   dest_rect.x = 0;
+   dest_rect.y = 0;
+   dest_rect.w = g->w;
+   dest_rect.h = g->h;
+
+   SDL_BlitSurface( g->surface, &src_rect, temp, &dest_rect );
+
+   if( NULL != g->surface ) {
+      SDL_FreeSurface( g->surface );
+   }
+
+   g->surface = temp;
+   scaffold_check_null( g->surface );
+
+   g->w = w;
+   g->h = h;
+
+cleanup:
+   return;
 }
 
 void graphics_blit(
