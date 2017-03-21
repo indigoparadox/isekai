@@ -7,6 +7,9 @@
 #include "hashmap.h"
 #include "callback.h"
 #include "tinypy/tinypy.h"
+#include "datafile.h"
+
+extern struct CLIENT* main_client;
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -281,20 +284,25 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
    if(
-      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
-         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) ||
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_x( o->x - 1, twindow )
+         tilemap_inside_inner_map_x( o->x - 1, twindow )) &&
+      /* TODO: Find a more elegant way of not scrolling mobiles that aren't
+       *       the current local client's puppet.
+       */
+      o->owner == main_client
    ) {
       steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
       pix_x += steps_remaining_x;
    }
 
    if(
-      TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
          tilemap_inside_window_deadzone_y( o->y + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_window_deadzone_y( o->y - 1, twindow )
+         tilemap_inside_window_deadzone_y( o->y - 1, twindow )) &&
+      o->owner == main_client
    ) {
       steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
       pix_y += steps_remaining_y;
