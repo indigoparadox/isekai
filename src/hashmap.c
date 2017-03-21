@@ -599,7 +599,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
-         key_c = m->data[i].key;
+         key_c = bdata( m->data[i].key );
          test = callback( m->data[i].key, data, arg );
          if( NULL != test ) {
             found = test;

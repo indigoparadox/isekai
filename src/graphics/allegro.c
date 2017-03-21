@@ -316,10 +316,19 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
+#ifdef USE_ALLEGRO_PALETTE
    if( NULL == g->palette ) {
       g->palette = (RGB*)calloc( 1, sizeof( RGB ) );
    }
-   g->surface = load_bitmap( bdata( path ), (RGB*)(g->palette) );
+#endif /* USE_ALLEGRO_PALETTE */
+   g->surface = load_bitmap(
+      bdata( path ),
+#ifdef USE_ALLEGRO_PALETTE
+      (RGB*)(g->palette)
+#else
+      NULL
+#endif /* USE_ALLEGRO_PALETTE */
+   );
    if( NULL == g->surface ) {
       scaffold_print_error(
          &module, "Image load error: %s: %s\n", bdata( path ), allegro_error );

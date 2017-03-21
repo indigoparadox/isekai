@@ -264,6 +264,7 @@
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DSTRICT_DEBUG" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

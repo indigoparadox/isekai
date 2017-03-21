@@ -35,6 +35,19 @@ struct CHANNEL* l = NULL;
 bstring buffer = NULL;
 #endif /* ENABLE_LOCAL_CLIENT */
 
+#ifdef USE_RANDOM_PORT
+bstring str_service = NULL;
+#endif /* USE_RANDOM_PORT */
+
+#ifdef DEBUG_FPS
+#define FPS_SAMPLES 50
+int ticksum = 0;
+int tickindex = 0;
+int ticklist[FPS_SAMPLES] = { 0 };
+static bstring graphics_fps = NULL;
+static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
+#endif /* DEBUG_FPS */
+
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
@@ -47,6 +60,20 @@ static uint32_t server_port = 33080;
 void allegro_exit();
 #endif /* USE_ALLEGRO */
 
+#ifdef DEBUG_FPS
+static double calc_fps( int newtick ) {
+   ticksum -= ticklist[tickindex];  /* subtract value falling off */
+   ticksum += newtick;              /* add new value */
+   ticklist[tickindex] = newtick;   /* save new value so it can be subtracted later */
+
+   if( FPS_SAMPLES == ++tickindex ) {
+      tickindex = 0;
+   }
+
+   return ((double)ticksum / FPS_SAMPLES);
+}
+#endif /* DEBUG_FPS */
+
 static BOOL loop_game() {
    BOOL keep_going = TRUE;
 
@@ -56,13 +83,16 @@ static BOOL loop_game() {
    }
 
 #ifdef ENABLE_LOCAL_CLIENT
-   if( !main_client->running ) {
+   if(
+      FALSE == server_service_clients( main_server ) &&
+      !main_client->running &&
+      0 >= vector_count( &(main_server->self.command_queue) )
+   ) {
       server_stop( main_server );
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
    server_poll_new_clients( main_server );
-   server_service_clients( main_server );
 #ifdef ENABLE_LOCAL_CLIENT
    client_update( main_client, g_screen );
 
@@ -115,11 +145,8 @@ cleanup:
    return keep_going;
 }
 
-BOOL loop_connect() {
+static BOOL loop_connect() {
    BOOL keep_going = TRUE;
-#ifdef USE_RANDOM_PORT
-   bstring str_service = NULL;
-#endif /* USE_RANDOM_PORT */
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
@@ -132,12 +159,6 @@ BOOL loop_connect() {
    }
 
 #endif /* USE_CONNECT_DIALOG */
-
-#ifdef USE_RANDOM_PORT
-   if( NULL == str_service ) {
-      str_service = bfromcstralloc( 8, "" );
-   }
-#endif /* USE_RANDOM_PORT */
 
 #ifdef USE_CONNECT_DIALOG
 
@@ -199,8 +220,10 @@ BOOL loop_connect() {
 #endif /* USE_CONNECT_DIALOG */
 
 #ifdef USE_RANDOM_PORT
-      bstr_result = bassignformat( str_service, "Port: %d", server_port );
-      scaffold_check_nonzero( bstr_result );
+      if( NULL == str_service ) {
+         str_service = bformat( "Port: %d", server_port );
+         scaffold_check_null( str_service );
+      }
       ui_debug_window( ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
@@ -213,9 +236,6 @@ BOOL loop_connect() {
 #endif /* USE_CONNECT_DIALOG */
    }
 cleanup:
-#ifdef USE_RANDOM_PORT
-   bdestroy( str_service );
-#endif /* USE_RANDOM_PORT */
    return keep_going; /* TODO: ESC to quit. */
 #if 0
    if( 0 != scaffold_error ) {
@@ -226,10 +246,11 @@ cleanup:
 #endif
 }
 
-BOOL loop_master() {
+static BOOL loop_master() {
    BOOL retval = FALSE;
    BOOL connected = FALSE;
    uint16_t main_client_joined = 0;
+   int bstr_ret;
 
 #ifdef ENABLE_LOCAL_CLIENT
    graphics_start_fps_timer();
@@ -252,7 +273,7 @@ BOOL loop_master() {
       retval = TRUE;
 
 #ifdef DEBUG_FPS
-      graphics_debug_fps( ui );
+      ui_debug_window( ui, &str_wid_debug_fps, graphics_fps );
 #endif /* DEBUG_FPS */
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -264,8 +285,19 @@ BOOL loop_master() {
 
    graphics_wait_for_fps_timer();
 
+#ifdef DEBUG_FPS
+   if( NULL == graphics_fps ) {
+      graphics_fps = bfromcstr( "" );
+   }
+   bstr_ret = bassignformat(
+      graphics_fps, "FPS: %f\n", calc_fps( graphics_sample_fps_timer() )
+   );
+   scaffold_check_nonzero( bstr_ret );
+#endif /* DEBUG_FPS */
+
 #endif /* ENABLE_LOCAL_CLIENT */
 
+cleanup:
    return retval;
 }
 
@@ -287,6 +319,8 @@ int main( int argc, char** argv ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
    g_screen = scaffold_alloc( 1, GRAPHICS );
+   scaffold_check_null( g_screen );
+
 #ifdef _WIN32
    graphics_screen_new(
       g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
@@ -299,13 +333,16 @@ int main( int argc, char** argv ) {
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT, 0, NULL
    );
 #endif /* _WIN32 */
+
    scaffold_check_nonzero( scaffold_error );
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
    input = scaffold_alloc( 1, struct INPUT );
+   scaffold_check_null( input );
    input_init( input );
    ui = scaffold_alloc( 1, struct UI );
+   scaffold_check_null( ui );
    ui_init( ui, g_screen );
 
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -346,8 +383,11 @@ cleanup:
    server_free( main_server );
    scaffold_free( main_server );
 #ifdef ENABLE_LOCAL_CLIENT
+#ifdef USE_RANDOM_PORT
+   bdestroy( str_service );
+#endif /* USE_RANDOM_PORT */
    graphics_shutdown( g_screen );
-   scaffold_free( g_screen );
+   graphics_free_bitmap( g_screen );
 #endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );
