@@ -56,26 +56,20 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
 #endif /* ENABLE_LOCAL_CLIENT */
    );
 
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      goto cleanup;
-   }
-
    /* Everything is fine, so tidy up the buffer. */
    btrimws( buffer );
    bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
 
-   if( 0 == last_read_count ) {
-#ifdef ENABLE_LOCAL_CLIENT
-      //if( TRUE != c->client_side ) {
-#endif /* ENABLE_LOCAL_CLIENT */
-         cmd = scaffold_alloc( 1, IRC_COMMAND );
-         cmd->callback = NULL;
-         cmd->line = bstrcpy( c->nick );
-#ifdef ENABLE_LOCAL_CLIENT
-      //}
-#endif /* ENABLE_LOCAL_CLIENT */
+   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+      /* Return an empty command to force abortion of the iteration. */
+      cmd = scaffold_alloc( 1, IRC_COMMAND );
+      cmd->callback = NULL;
+      cmd->line = bstrcpy( c->nick );
       goto cleanup;
-   } else if( 0 > last_read_count ) {
+   }
+
+   /* The -1 is not bubbled up; the scaffold_error should suffice. */
+   if( 0 >= last_read_count ) {
       goto cleanup;
    }
 
@@ -96,9 +90,6 @@ cleanup:
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      goto cleanup;
-   }
    struct bstrList* list = (struct bstrList*)arg;
    scaffold_list_append_string_cpy( list, c->nick );
    return NULL;

@@ -71,6 +71,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    }
 
    if( TRUE == spawn ) {
+      scaffold_assert_server();
       t = &(l->tilemap);
       spawner = hashmap_get_first( &(t->player_spawns) );
    }
@@ -117,7 +118,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       o->prev_y = spawner->y;
       scaffold_print_info(
          &module,
-         "Spawning %s at: %d, %d\n", bdata( c->nick ), o->x, o->y
+         "Spawning %s (%d) at: %d, %d\n", bdata( c->nick ), o->serial, o->x, o->y
       );
 
       channel_add_mobile( l, o );
@@ -166,16 +167,31 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
 
 void channel_set_mobile(
    struct CHANNEL* l, uint8_t serial, const bstring mob_id,
-   const bstring def_filename, const bstring nick,
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   const bstring def_filename, const bstring mob_nick,
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct CLIENT* local_c
 ) {
    struct MOBILE* o = NULL;
    int bstr_res = 0;
-   struct CLIENT* c = NULL;
+   struct CLIENT* mobile_c = NULL;
+
+#if 0
+#ifdef STRICT_DEBUG
+   const char* nick_c = NULL,
+      * lname_c = NULL;
+#endif /* STRICT_DEBUG */
 
    scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
-   c = channel_get_client_by_name( l, nick );
+   c = channel_get_client_by_name( l, mob_nick );
+#ifdef STRICT_DEBUG
+   nick_c = bdata( mob_nick );
+   lname_c = bdata( l->name );
+   scaffold_assert( NULL != nick_c );
+   scaffold_assert( NULL != lname_c );
+   scaffold_assert( NULL != c );
+#else
    scaffold_check_null( c );
+#endif /* STRICT_DEBUG */
+#endif // 0
 
    o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
@@ -197,16 +213,20 @@ void channel_set_mobile(
       }
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
-      client_request_file( c, CHUNKER_DATA_TYPE_MOBDEF, o->def_filename );
+      if( NULL != local_c && TRUE == local_c->client_side ) {
+         client_request_file(
+            local_c, CHUNKER_DATA_TYPE_MOBDEF, o->def_filename
+         );
+      }
    }
 
    scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
-   c = channel_get_client_by_name( l, nick );
-   if( NULL != c && 0 == bstrcmp( c->nick, nick ) ) {
-      client_set_puppet( c, o );
+   mobile_c = channel_get_client_by_name( l, mob_nick );
+   if( NULL != mobile_c && 0 == bstrcmp( mobile_c->nick, mob_nick ) ) {
+      client_set_puppet( mobile_c, o );
    }
 
-   bstr_res = bassign( o->display_name, nick );
+   bstr_res = bassign( o->display_name, mob_nick );
    scaffold_assert( NULL != o->display_name );
    scaffold_check_nonzero( bstr_res );
 

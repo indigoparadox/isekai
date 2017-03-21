@@ -118,6 +118,11 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    scaffold_assert_server();
+   scaffold_assert( NULL != o );
+   scaffold_assert( NULL != o->owner->nick );
+   scaffold_assert( NULL != o->def_filename );
+   scaffold_assert( NULL != o->channel );
+   scaffold_assert( NULL != o->channel->name );
    client_printf(
       c, "MOB %b %d %b %b %b %d %d",
       o->channel->name, o->serial, o->mob_id, o->def_filename, o->owner->nick, o->x, o->y
@@ -936,7 +941,7 @@ static void irc_client_mob(
    scaffold_check_null( y_c );
    y = atoi( y_c );
 
-   channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y );
+   channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y, c );
    scaffold_assert( 0 == scaffold_error );
 
    scaffold_print_debug(
