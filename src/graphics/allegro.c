@@ -292,6 +292,7 @@ void graphics_surface_free( GRAPHICS* g ) {
 
 
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
+   set_window_title( bdata( title ) );
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
