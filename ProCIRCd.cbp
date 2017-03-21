@@ -182,7 +182,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
-					<Add library="curses" />
+					<Add library="ncurses" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SB-Allegro4)">

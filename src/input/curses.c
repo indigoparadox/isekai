@@ -6,9 +6,6 @@
 #include <ncurses.h>
 
 void input_init( struct INPUT* p ) {
-#ifdef INIT_ZEROES
-   memset( p, '\0', sizeof( INPUT ) );
-#endif /* INIT_ZEROES */
    timeout( 5 );
 }
 
@@ -18,4 +15,7 @@ void input_get_event( struct INPUT* input ) {
    //key = getch();
 
    //return key;
+}
+
+void input_shutdown( struct INPUT* input ) {
 }

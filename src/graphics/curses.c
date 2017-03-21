@@ -13,7 +13,7 @@ static void graphics_translate( SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y ) {
 }
 
 static void graphics_surface_cleanup( const struct REF *ref ) {
-   GRAPHICS* g = scaffold_container_of( ref, struct _GRAPHICS, refcount );
+   GRAPHICS* g = scaffold_container_of( ref, struct GRAPHICS, refcount );
    if( NULL != g->surface ) {
       g->surface = NULL;
    }
@@ -25,20 +25,17 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
 }
 
 void graphics_screen_new(
-   GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
-   SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh,  int32_t arg1, void* arg2
+   GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
-   ref_init( &(g->refcount), graphics_surface_cleanup );
+   ref_init( &((*g)->refcount), graphics_surface_cleanup );
    initscr();
    noecho();
    raw();
 }
 
-void graphics_surface_init(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w,
-   SCAFFOLD_SIZE h
-) {
-   graphics_translate( &x, &y );
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+   graphics_translate( &w, &h );
    g->surface = newwin( w, h, 0, 0 );
    g->w = w;
    g->h = h;
@@ -76,20 +73,31 @@ void graphics_set_image_data(
 ) {
 }
 
-void graphics_draw_text( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, const bstring text ) {
-   graphics_translate( &x, &y );
-   mvprintw( y, x, "%s", bdata( text ) );
+/*
+void graphics_draw_text(
+   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
+   const bstring text
+) {
+   graphics_translate( &x_start, &y_start );
+   mvprintw( y_start, x_start, "%s", bdata( text ) );
+}
+*/
+
+void graphics_draw_rect(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
+) {
 }
 
-void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-
-}
-
-void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r,
-                            const bstring text ) {
+/*
+void graphics_measure_text(
+   GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
+) {
    r->w = blength( text ) * GFX_TEXT_DIVISOR_W;
    r->h = GFX_TEXT_DIVISOR_H;
 }
+*/
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 
@@ -110,4 +118,17 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
+}
+
+uint32_t graphics_get_ticks() {
+   return clock();
+}
+
+void graphics_draw_char(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_COLOR color,
+   GRAPHICS_FONT_SIZE size, char c
+) {
+}
+
+void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
 }

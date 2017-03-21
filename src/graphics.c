@@ -95,11 +95,7 @@ void graphics_setup() {
 }
 
 void graphics_start_fps_timer() {
-#ifdef USE_POSIX_TIMER
-   graphics_time = clock();
-#else
    graphics_time = graphics_get_ticks();
-#endif /* USE_POSIX_TIMER */
 }
 
 int32_t graphics_sample_fps_timer() {
