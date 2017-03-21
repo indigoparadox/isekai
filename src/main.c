@@ -23,7 +23,15 @@ static struct tagbstring str_cdialog_prompt =
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
 
 struct SERVER* main_server = NULL;
+
+#ifdef ENABLE_LOCAL_CLIENT
 struct CLIENT* main_client = NULL;
+GRAPHICS* g_screen = NULL;
+struct INPUT* input = NULL;
+struct UI* ui = NULL;
+struct GRAPHICS_TILE_WINDOW* twindow = NULL;
+struct CHANNEL* l = NULL;
+#endif /* ENABLE_LOCAL_CLIENT */
 
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
@@ -36,6 +44,83 @@ static uint32_t server_port = 33080;
 /* TODO: Is this really defined nowhere? */
 void allegro_exit();
 #endif /* USE_ALLEGRO */
+
+static BOOL loop_game() {
+   BOOL keep_going = TRUE;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   graphics_start_fps_timer();
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   if( !main_server->self.running ) {
+      keep_going = FALSE;
+      goto cleanup;
+   }
+
+#ifdef ENABLE_LOCAL_CLIENT
+   if( !main_client->running ) {
+      server_stop( main_server );
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   server_poll_new_clients( main_server );
+   server_service_clients( main_server );
+#ifdef ENABLE_LOCAL_CLIENT
+   client_update( main_client, g_screen );
+
+   /* Do drawing. */
+   l = hashmap_get_first( &(main_client->channels) );
+   if(
+      NULL == l ||
+      NULL == main_client->puppet
+   ) {
+      client_poll_input( main_client, l, input );
+      graphics_draw_text(
+         g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
+         GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
+         GRAPHICS_FONT_SIZE_16, &str_loading
+      );
+      graphics_flip_screen( g_screen );
+      graphics_wait_for_fps_timer();
+      goto cleanup;
+   } else if( NULL == twindow->t ) {
+      twindow->t = &(l->tilemap);
+      tilemap_update_window_ortho(
+         twindow, main_client->puppet->x, main_client->puppet->y
+      );
+   }
+
+   /* Client drawing stuff after this. */
+   scaffold_set_client();
+
+   /* If we're on the move then update the window frame. */
+   if(
+      0 != main_client->puppet->steps_remaining ||
+      twindow->max_x == twindow->min_x ||
+      TILEMAP_REDRAW_ALL == twindow->t->redraw_state
+   ) {
+      tilemap_update_window_ortho(
+         twindow, main_client->puppet->x, main_client->puppet->y
+      );
+   }
+
+   /* If there's no puppet then there should be a load screen. */
+   scaffold_assert( NULL != main_client->puppet );
+
+   client_poll_input( main_client, l, input );
+   tilemap_draw_ortho( twindow );
+   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+
+   ui_draw( ui, g_screen );
+
+   graphics_flip_screen( g_screen );
+
+   graphics_wait_for_fps_timer();
+#endif /* ENABLE_LOCAL_CLIENT */
+cleanup:
+   return keep_going;
+}
+
 
 #ifdef _WIN32
 int CALLBACK WinMain(
@@ -50,11 +135,6 @@ int main( int argc, char** argv ) {
    bstring buffer = NULL;
    time_t tm = 0;
 #ifdef ENABLE_LOCAL_CLIENT
-   GRAPHICS* g_screen;
-   struct INPUT p = { 0 };
-   struct UI ui = { 0 };
-   struct GRAPHICS_TILE_WINDOW twindow = { 0 };
-   struct CHANNEL* l = NULL;
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
@@ -63,7 +143,6 @@ int main( int argc, char** argv ) {
 #endif /* ENABLE_LOCAL_CLIENT */
    int bstr_result = 0;
    bstring server_address = NULL;
-   BOOL post_load_finished = FALSE;
 #ifdef USE_RANDOM_PORT
    bstring str_service = NULL;
 #endif /* USE_RANDOM_PORT */
@@ -73,9 +152,10 @@ int main( int argc, char** argv ) {
 #endif /* SCAFFOLD_LOG_FILE */
 
 #ifdef ENABLE_LOCAL_CLIENT
+   g_screen = scaffold_alloc( 1, GRAPHICS );
 #ifdef _WIN32
    graphics_screen_new(
-      &g, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
+      g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT,
       nShowCmd, hInstance
    );
@@ -89,8 +169,10 @@ int main( int argc, char** argv ) {
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
-   input_init( &p );
-   ui_init( &ui, g_screen );
+   input = scaffold_alloc( 1, struct INPUT );
+   input_init( input );
+   ui = scaffold_alloc( 1, struct UI );
+   ui_init( ui, g_screen );
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
@@ -134,28 +216,28 @@ int main( int argc, char** argv ) {
    bstr_result = bassigncstr( main_client->username, "TestUser" );
    scaffold_check_nonzero( bstr_result );
 
-   main_client->ui = &ui;
+   main_client->ui = ui;
 
    do {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
       ui_window_new(
-         &ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, NULL,
+         ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, NULL,
          &str_cdialog_title, &str_cdialog_prompt,
          -1, -1, -1, -1
       );
-      ui_window_push( &ui, win );
+      ui_window_push( ui, win );
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );
       do {
          graphics_start_fps_timer();
-         ui_draw( &ui, g_screen );
-         input_get_event( &p );
+         ui_draw( ui, g_screen );
+         input_get_event( input );
          graphics_flip_screen( g_screen );
          graphics_wait_for_fps_timer();
-      } while( 0 == ui_poll_input( &ui, &p, buffer, NULL ) );
-      ui_window_pop( &ui );
+      } while( 0 == ui_poll_input( ui, input, buffer, NULL ) );
+      ui_window_pop( ui );
 
       /* Split up the address and port. */
       server_tuple = bsplit( buffer, ':' );
@@ -189,101 +271,35 @@ int main( int argc, char** argv ) {
 
    client_join_channel( main_client, &str_default_channel );
 
-   twindow.width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
-   twindow.height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
-   twindow.g = g_screen;
-   twindow.c = main_client;
-   twindow.t = NULL;
+   twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
+   twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
+   twindow->height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
+   twindow->g = g_screen;
+   twindow->c = main_client;
+   twindow->t = NULL;
 
 #ifdef USE_RANDOM_PORT
-   ui_debug_window( &ui, &str_wid_debug_ip, str_service );
+   ui_debug_window( ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
 #ifdef DEBUG_FPS
-   graphics_debug_fps( &ui );
+   graphics_debug_fps( ui );
 #endif /* DEBUG_FPS */
 
 #else
    scaffold_print_info( &module, "Listening on port: %d\n", server_port );
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   while( TRUE ) {
-#ifdef ENABLE_LOCAL_CLIENT
-      graphics_start_fps_timer();
-#endif /* ENABLE_LOCAL_CLIENT */
-
-      if( !main_server->self.running ) {
-         break;
-      }
-
-#ifdef ENABLE_LOCAL_CLIENT
-      if( !main_client->running ) {
-         server_stop( main_server );
-      }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-      server_poll_new_clients( main_server );
-      server_service_clients( main_server );
-#ifdef ENABLE_LOCAL_CLIENT
-      client_update( main_client, g_screen );
-
-      /* Do drawing. */
-      l = hashmap_get_first( &(main_client->channels) );
-      if(
-         NULL == l ||
-         NULL == main_client->puppet
-      ) {
-         client_poll_input( main_client, l, &p );
-         graphics_draw_text(
-            g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
-            GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
-            GRAPHICS_FONT_SIZE_16, &str_loading
-         );
-         graphics_flip_screen( g_screen );
-         graphics_wait_for_fps_timer();
-         continue;
-      } else if( TRUE != post_load_finished ) {
-         twindow.t = &(l->tilemap);
-         tilemap_update_window_ortho(
-            &twindow, main_client->puppet->x, main_client->puppet->y
-         );
-         post_load_finished = TRUE;
-      }
-
-      /* Client drawing stuff after this. */
-      scaffold_set_client();
-
-      /* If we're on the move then update the window frame. */
-      if(
-         0 != main_client->puppet->steps_remaining ||
-         twindow.max_x == twindow.min_x ||
-         TILEMAP_REDRAW_ALL == twindow.t->redraw_state
-      ) {
-         tilemap_update_window_ortho(
-            &twindow, main_client->puppet->x, main_client->puppet->y
-         );
-      }
-
-      /* If there's no puppet then there should be a load screen. */
-      scaffold_assert( NULL != main_client->puppet );
-
-      client_poll_input( main_client, l, &p );
-      tilemap_draw_ortho( &twindow );
-      vector_iterate( &(l->mobiles), callback_draw_mobiles, &twindow );
-
-      ui_draw( &ui, g_screen );
-
-      graphics_flip_screen( g_screen );
-
-      graphics_wait_for_fps_timer();
-#endif /* ENABLE_LOCAL_CLIENT */
-   }
+   while( loop_game() );
 
 cleanup:
    bdestroy( buffer );
 #ifdef ENABLE_LOCAL_CLIENT
-   input_shutdown( &p );
-   ui_cleanup( &ui );
+   scaffold_free( twindow );
+   input_shutdown( input );
+   scaffold_free( input );
+   ui_cleanup( ui );
+   scaffold_free( ui );
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
@@ -295,6 +311,7 @@ cleanup:
    scaffold_free( main_server );
 #ifdef ENABLE_LOCAL_CLIENT
    graphics_shutdown( g_screen );
+   scaffold_free( g_screen );
 #endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );
