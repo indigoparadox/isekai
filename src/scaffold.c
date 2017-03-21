@@ -14,6 +14,12 @@
 #include <unistd.h>
 #endif /* _WIN32 || __linux */
 
+static struct tagbstring str_scaffold_trace[3] = {
+   bsStatic( "T_NONE" ),
+   bsStatic( "T_CLIENT" ),
+   bsStatic( "T_SERVER" )
+};
+
 #ifdef DEBUG
 SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */
@@ -125,6 +131,8 @@ static void scaffold_log(
    const char* message, va_list varg
 ) {
    int bstr_ret;
+   int i;
+   bstring prepend_buffer = NULL;
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
@@ -134,14 +142,19 @@ static void scaffold_log(
    bstr_ret = btrunc( scaffold_print_buffer, 0 );
    scaffold_check_nonzero( bstr_ret );
 
-   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   scaffold_snprintf(
+      scaffold_print_buffer, "%b (%b): ",
+      mod_in, &(str_scaffold_trace[scaffold_trace_path])
+   );
+   scaffold_vsnprintf( scaffold_print_buffer, message, varg );
 
-   bstr_ret = binsertch( scaffold_print_buffer, 0, 1, ' ' );
-   if( 0 > bstr_ret ) { goto cleanup; }
-   bstr_ret = binsertch( scaffold_print_buffer, 0, 1, ':' );
-   if( 0 > bstr_ret ) { goto cleanup; }
-   bstr_ret = binsert( scaffold_print_buffer, 0, mod_in, '\0' );
-   if( 0 > bstr_ret ) { goto cleanup; }
+/*
+   for( i = 0 ; blength( prepend_buffer ) > i ; i++ ) {
+      bstr_ret =
+         binsertch( scaffold_print_buffer, 0, 1, bchar( prepend_buffer, i ) );
+      if( 0 > bstr_ret ) { goto cleanup; }
+   }
+*/
 
    scaffold_colorize( scaffold_print_buffer, color );
 
@@ -169,8 +182,21 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #endif /* HEATSHRINK_DEBUGGING_LOGS */
    va_start( varg, message );
    scaffold_log(
-      scaffold_log_handle_err, mod_in, GRAPHICS_COLOR_YELLOW, message, varg
+      scaffold_log_handle_err, mod_in, SCAFFOLD_COLOR_YELLOW, message, varg
    );
+   va_end( varg );
+#endif /* DEBUG */
+cleanup:
+   return;
+}
+
+void scaffold_print_debug_color(
+   const bstring mod_in, SCAFFOLD_COLOR color, const char* message, ...
+) {
+#ifdef DEBUG
+   va_list varg;
+   va_start( varg, message );
+   scaffold_log( scaffold_log_handle_err, mod_in, color, message, varg );
    va_end( varg );
 #endif /* DEBUG */
 cleanup:
@@ -191,7 +217,7 @@ void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
    scaffold_check_nonzero( bstr_ret );
 
    va_start( varg, message );
-   scaffold_snprintf( scaffold_print_buffer, message, varg );
+   scaffold_vsnprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
 
    fprintf( scaffold_log_handle, "%s: %s",
@@ -207,13 +233,20 @@ void scaffold_print_error( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_start( varg, message );
    scaffold_log(
-      scaffold_log_handle_err, mod_in, GRAPHICS_COLOR_RED, message, varg
+      scaffold_log_handle_err, mod_in, SCAFFOLD_COLOR_RED, message, varg
    );
    va_end( varg );
 #endif /* DEBUG */
 }
 
-void scaffold_snprintf( bstring buffer, const char* message, va_list varg ) {
+void scaffold_snprintf( bstring buffer, const char* message, ... ) {
+   va_list varg;
+   va_start( varg, message );
+   scaffold_vsnprintf( buffer, message, varg );
+   va_end( varg );
+}
+
+void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg ) {
    const char* chariter;
    bstring insert = NULL;
    int bstr_res;

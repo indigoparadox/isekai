@@ -100,7 +100,8 @@ typedef enum {
    SCAFFOLD_ERROR_ZERO,
    SCAFFOLD_ERROR_NOT_NULLPO,
    SCAFFOLD_ERROR_DUPLICATE,
-   SCAFFOLD_ERROR_RANDOM
+   SCAFFOLD_ERROR_RANDOM,
+   SCAFFOLD_ERROR_CONNECTION_CLOSED
 } SCAFFOLD_ERROR;
 
 #ifdef DEBUG
@@ -132,6 +133,9 @@ extern FILE* scaffold_log_handle_err;
 void scaffold_print_debug( const bstring module, const char* message, ... );
 void scaffold_print_info( const bstring module, const char* message, ... );
 void scaffold_print_error( const bstring module, const char* message, ... );
+void scaffold_print_debug_color(
+   const bstring mod_in, SCAFFOLD_COLOR color, const char* message, ...
+);
 
 #define scaffold_assert( arg ) assert( arg )
 
@@ -313,7 +317,8 @@ bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str );
 BOOL scaffold_string_is_printable( bstring str );
-void scaffold_snprintf( bstring buffer, const char* message, va_list varg );
+void scaffold_snprintf( bstring buffer, const char* message, ... );
+void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
 #ifdef __GNUC__
