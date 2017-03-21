@@ -27,8 +27,8 @@ static void tilemap_cleanup( const struct REF* ref ) {
 
    hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    hashmap_cleanup( &(t->layers) );
-   hashmap_remove_cb( &(t->player_spawns), callback_free_generic, NULL );
-   hashmap_cleanup( &(t->player_spawns) );
+   vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
+   vector_cleanup( &(t->spawners) );
    hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
    hashmap_cleanup( &(t->tilesets) );
 
@@ -40,7 +40,7 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 
    hashmap_init( &(t->layers) );
    hashmap_init( &(t->tilesets) );
-   hashmap_init( &(t->player_spawns) );
+   vector_init( &(t->spawners) );
 
    vector_init( &(t->dirty_tiles) );
 

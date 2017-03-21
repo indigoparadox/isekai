@@ -933,17 +933,16 @@ int i;
 	return s[i] == '\0';
 }
 
-/*  int biseqcstrcaseless (const_bstring b, const char *s)
- *
- *  Compare the bstring b and char * string s.  The C string s must be '\0'
- *  terminated at exactly the length of the bstring b, and the contents
- *  between the two must be identical except for case with the bstring b with
- *  no '\0' characters for the two contents to be considered equal.  This is
- *  equivalent to the condition that their current contents will be always be
- *  equal ignoring case when comparing them in the same format after
- *  converting one or the other.  If the strings are equal, except for case,
- *  1 is returned, if they are unequal regardless of case 0 is returned and
- *  if there is a detectable error BSTR_ERR is returned.
+/** \brief Compare the bstring b and char * string s.  The C string s must be
+ *         '\0' terminated at exactly the length of the bstring b, and the
+ *         contents between the two must be identical except for case with the
+ *         bstring b with no '\0' characters for the two contents to be
+ *         considered equal.  This is equivalent to the condition that their
+ *         current contents will be always be equal ignoring case when
+ *         comparing them in the same format after converting one or the other.
+ *         If the strings are equal, except for case, 1 is returned, if they
+ *         are unequal regardless of case 0 is returned and if there is a
+ *         detectable error BSTR_ERR is returned.
  */
 int biseqcstrcaseless (const_bstring b, const char * s) {
 int i;

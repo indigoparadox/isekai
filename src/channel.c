@@ -69,6 +69,8 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    BYTE* mobdata_buffer = NULL;
    SCAFFOLD_SIZE mobdata_size = 0;
    bstring mobdata_path = NULL;
+   struct VECTOR* player_spawns = NULL;
+   SCAFFOLD_SIZE v_count = 0;
 
    scaffold_check_null( c );
 
@@ -79,7 +81,12 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    if( TRUE == spawn ) {
       scaffold_assert_server();
       t = &(l->tilemap);
-      spawner = hashmap_get_first( &(t->player_spawns) );
+      player_spawns = vector_iterate_v(
+         &(t->spawners), callback_search_spawners, &str_player
+      );
+      scaffold_check_null_msg( player_spawns, "No player spawns available." );
+      spawner =
+         vector_get( player_spawns, rand() % vector_count( player_spawns ) );
    }
 
    if( NULL != spawner ) {
@@ -140,6 +147,12 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    hashmap_put( &(l->clients), c->nick, c );
 
 cleanup:
+   if( NULL != player_spawns) {
+      /* These don't have garbage refs, so just free the vector forcibly. */
+      player_spawns->count = 0;
+      vector_cleanup( player_spawns );
+      free( player_spawns );
+   }
    if( NULL != mobdata_buffer ) {
       scaffold_free( mobdata_buffer );
    }

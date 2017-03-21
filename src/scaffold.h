@@ -366,6 +366,7 @@ __attribute__ ((warn_unused_result))
 ;
 BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
 void scaffold_colorize( bstring str, SCAFFOLD_COLOR color );
+int scaffold_strcmp_caseless( const char* s0, const char* s1 );
 
 #ifdef SCAFFOLD_C
 

@@ -53,6 +53,9 @@ SCAFFOLD_SIZE vector_count( struct VECTOR* v );
 void vector_lock( struct VECTOR* v, BOOL lock );
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg );
 void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg );
+struct VECTOR* vector_iterate_v(
+   struct VECTOR* v, vector_search_cb callback, void* arg
+);
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb );
 
 #ifdef VECTOR_C

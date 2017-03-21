@@ -741,3 +741,13 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
 }
 
 #endif /* USE_COLORED_CONSOLE */
+
+int scaffold_strcmp_caseless( const char* s0, const char* s1 ) {
+   int difference;
+   for( ;; s0++, s1++ ) {
+      difference = tolower( *s0 ) - tolower( *s1 );
+      if( 0 != difference || !*s0 ) {
+         return difference;
+      }
+   }
+}

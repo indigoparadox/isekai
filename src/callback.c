@@ -129,6 +129,20 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+/** \brief If the iterated spawner is of the ID specified in arg, then return
+ *         it. Otherwise, return NULL.
+ */
+void* callback_search_spawners( const bstring key, void* iter, void* arg ) {
+   bstring spawner_id = (bstring)arg;
+   struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
+
+   if( NULL == arg || 0 == bstrcmp( spawner->id, spawner_id ) ) {
+      return spawner;
+   }
+
+   return NULL;
+}
+
 void* callback_send_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
@@ -425,7 +439,6 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
    const char* mob_id_test = NULL;
-   const char* mob_id_c = NULL;
 
    /* Since the vector index is set by serial, there will be a number of      *
     * NULLs before we find one that isn't.                                    */
@@ -436,8 +449,7 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
    mob_id_test = ezxml_attr( xml_data, "id" );
    scaffold_check_null( mob_id_test );
 
-   mob_id_c = bdata( o->mob_id );
-   if( 0 == strncmp( mob_id_c, mob_id_test, blength( o->mob_id ) ) ) {
+   if( 1 == biseqcstrcaseless( o->mob_id, mob_id_test ) ) {
       scaffold_print_debug(
          &module, "Client: Found mobile with ID: %b\n", o->mob_id
       );
@@ -628,6 +640,15 @@ BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
       animation->frames.count = 0;
       vector_cleanup( &(animation->frames) );
       bdestroy( animation->name );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_spawners( const bstring res, void* iter, void* arg ) {
+   struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
+   if( NULL == arg || 0 == bstrcmp( (bstring)arg, spawner->id ) ) {
+      bdestroy( spawner->id );
       return TRUE;
    }
    return FALSE;

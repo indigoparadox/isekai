@@ -136,13 +136,13 @@ static void datafile_mobile_parse_animation_ezxml(
    /* TODO: Case insensitivity. */
    xml_attr = ezxml_attr( xml_animation, "facing" );
    scaffold_check_null( xml_attr );
-   if( 0 == strncmp( "down", xml_attr, 4 ) ) {
+   if( 0 == scaffold_strcmp_caseless( "down", xml_attr ) ) {
       animation->facing = MOBILE_FACING_DOWN;
-   } else if( 0 == strncmp( "up", xml_attr, 2 ) ) {
+   } else if( 0 == scaffold_strcmp_caseless( "up", xml_attr ) ) {
       animation->facing = MOBILE_FACING_UP;
-   } else if( 0 == strncmp( "left", xml_attr, 4 ) ) {
+   } else if( 0 == scaffold_strcmp_caseless( "left", xml_attr ) ) {
       animation->facing = MOBILE_FACING_LEFT;
-   } else if( 0 == strncmp( "right", xml_attr, 5 ) ) {
+   } else if( 0 == scaffold_strcmp_caseless( "right", xml_attr ) ) {
       animation->facing = MOBILE_FACING_RIGHT;
    } else {
       goto cleanup;
@@ -442,12 +442,12 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    while( NULL != xml_prop_iter ) {
       xml_attr = ezxml_attr( xml_prop_iter, "name" );
 
-      if( 0 == strncmp( "movement", xml_attr, 8 ) ) {
+      if( 0 == scaffold_strcmp_caseless( "movement", xml_attr ) ) {
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
          if( NULL != xml_attr ) {
             terrain_info->movement = atoi( xml_attr );
          }
-      } else if( 0 == strncmp( "cutoff", xml_attr, 6 ) ) {
+      } else if( 0 == scaffold_strcmp_caseless( "cutoff", xml_attr ) ) {
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
          if( NULL != xml_attr ) {
             terrain_info->cutoff = atoi( xml_attr );
@@ -729,54 +729,45 @@ cleanup:
 }
 
 static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_object ) {
-   ezxml_t xml_object_props = NULL,
-      xml_object_prop_iter = NULL;
    const char* xml_attr = NULL;
-   struct TILEMAP_POSITION* obj_out = NULL;
+   struct TILEMAP_SPAWNER* obj_out = NULL;
+   int bstr_res = 0;
 
-   obj_out = (struct TILEMAP_POSITION*)calloc(
-      1, sizeof( struct TILEMAP_POSITION )
-   );
+   obj_out = scaffold_alloc( 1, struct TILEMAP_SPAWNER );
    scaffold_check_null( obj_out );
 
    xml_attr = ezxml_attr( xml_object, "x" );
    /* TODO: _continue versions of the abort macros.*/
    scaffold_check_null( xml_attr );
-   obj_out->x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+   obj_out->pos.x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
 
    xml_attr = ezxml_attr( xml_object, "y" );
    scaffold_check_null( xml_attr );
-   obj_out->y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+   obj_out->pos.y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
 
-   xml_attr = ezxml_attr( xml_object, "name" );
-   scaffold_check_null( xml_attr );
-   bstr_res = bassigncstr( buffer, xml_attr );
-   scaffold_check_nonzero( bstr_res );
    xml_attr = ezxml_attr( xml_object, "type" );
    scaffold_check_null( xml_attr );
-   if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
+   if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
 
-      xml_object_props = ezxml_child( xml_object, "properties" );
-      scaffold_check_null( xml_object_props );
+      xml_attr = ezxml_attr( xml_object, "name" );
+      scaffold_check_null( xml_attr );
 
-      xml_object_prop_iter = ezxml_child( xml_object_props, "property" );
-      while( NULL != xml_object_prop_iter ) {
-         xml_attr = ezxml_attr( xml_object_prop_iter, "name" );
-         scaffold_check_null_continue( xml_attr );
+      obj_out->id = bfromcstr( xml_attr );
+      scaffold_check_null( obj_out->id );
 
-         if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn" ) )
-            xml_attr = ezxml_attr( xml_object_prop_iter, "value" );
-      }
-
+      obj_out->type = TILEMAP_SPAWNER_TYPE_MOBILE;
 
       scaffold_print_debug(
-         &module, "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
+         &module, "Spawner for \"%b\" at: %d, %d\n",
+         obj_out->id, obj_out->pos.x, obj_out->pos.y
       );
-      hashmap_put( &(t->player_spawns), buffer, obj_out );
+
+      vector_add( &(t->spawners), obj_out );
    } else {
       /* We don't know how to handle this yet. */
       scaffold_print_error(
-         &module, "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
+         &module, "Unknown object at: %d, %d\n",
+         obj_out->pos.x, obj_out->pos.y
       );
       scaffold_free( obj_out );
    }
@@ -789,7 +780,6 @@ cleanup:
       scaffold_free( obj_out );
    }
 }
-
 
 static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
    ezxml_t xml_object = NULL,
@@ -807,7 +797,7 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
    scaffold_check_null( xml_object );
    scaffold_print_debug( &module, "Loading object spawns...\n" );
    while( NULL != xml_object ) {
-
+      datafile_tilemap_parse_object_ezxml( t, xml_object );
       xml_object = ezxml_next( xml_object );
    }
 

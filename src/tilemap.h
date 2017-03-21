@@ -12,6 +12,10 @@
 struct CLIENT;
 struct TILEMAP;
 
+typedef enum TILEMAP_SPAWNER_TYPE {
+   TILEMAP_SPAWNER_TYPE_MOBILE
+} TILEMAP_SPAWNER_TYPE;
+
 #ifdef DEBUG_TILES
 typedef enum TILEMAP_DEBUG_TERRAIN_STATE {
    TILEMAP_DEBUG_TERRAIN_OFF,
@@ -77,6 +81,13 @@ struct TILEMAP_POSITION {
    SCAFFOLD_SIZE y;
 };
 
+struct TILEMAP_SPAWNER {
+   struct TILEMAP_POSITION pos;
+   bstring id;
+   TILEMAP_SPAWNER_TYPE type;
+   uint32_t frequency;
+};
+
 struct TILEMAP_LAYER {
    SCAFFOLD_SIZE x;        /*!< Layer left in tiles. */
    SCAFFOLD_SIZE y;        /*!< Layer top in tiles. */
@@ -98,8 +109,7 @@ struct TILEMAP {
    struct VECTOR positions;
    */
    struct HASHMAP tilesets;
-   struct HASHMAP player_spawns;
-   struct HASHMAP npc_spawns;
+   struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
    SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */
