@@ -66,9 +66,6 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct TILEMAP* t = NULL;
    struct TILEMAP_SPAWNER* spawner = NULL;
    SCAFFOLD_SIZE bytes_read = 0;
-   BYTE* mobdata_buffer = NULL;
-   SCAFFOLD_SIZE mobdata_size = 0;
-   bstring mobdata_path = NULL;
    struct VECTOR* player_spawns = NULL;
    SCAFFOLD_SIZE v_count = 0;
 
@@ -81,6 +78,8 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    if( TRUE == spawn ) {
       scaffold_assert_server();
       t = &(l->tilemap);
+
+      /* Make a list of player-capable spawns and pick one at pseudo-random. */
       player_spawns = vector_iterate_v(
          &(t->spawners), callback_search_spawners, &str_player
       );
@@ -95,10 +94,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       mobile_new(
          o, &str_mobile_def_id_default, spawner->pos.x, spawner->pos.y
       );
+      mobile_load_local( o );
 
-      do {
-         o->serial = rand() % SERIAL_MAX;
-      } while( NULL != vector_get( &(l->mobiles), o->serial ) );
+      scaffold_gen_serial( o, &(l->mobiles) );
 
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
@@ -127,10 +125,6 @@ cleanup:
       vector_cleanup( player_spawns );
       free( player_spawns );
    }
-   if( NULL != mobdata_buffer ) {
-      scaffold_free( mobdata_buffer );
-   }
-   bdestroy( mobdata_path );
    return;
 }
 
@@ -155,6 +149,7 @@ struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
 
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
+   assert( 0 != o->serial );
    vector_set( &(l->mobiles), o->serial, o, TRUE );
 }
 
@@ -186,24 +181,21 @@ void channel_set_mobile(
 //#endif /* STRICT_DEBUG */
 //#endif // 0
 
+   scaffold_print_debug(
+      &module, "Adding player mobile to channel: %b (%d)\n", mob_nick, serial
+   );
+
+   scaffold_assert( 0 != serial );
+
    o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
-      mobile_new( o, NULL, 0, 0 );
+      mobile_new( o, mob_id, x, y );
       o->serial = serial;
-      if( NULL == o->def_filename ) {
-         o->def_filename = bstrcpy( def_filename );
-      } else {
-         bstr_res = bassign( o->def_filename, def_filename );
-         scaffold_check_nonzero( bstr_res );
-      }
+      scaffold_print_debug(
+         &module, "Player mobile does not exist. Creating with serial: %d\n",
+         o->serial
+      );
       scaffold_assert( NULL != o->def_filename );
-      o->initialized = FALSE;
-      if( NULL == o->mob_id ) {
-         o->mob_id = bstrcpy( mob_id );
-      } else {
-         bstr_res = bassign( o->mob_id, mob_id );
-         scaffold_check_nonzero( bstr_res );
-      }
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
       if( NULL != local_c && TRUE == local_c->client_side ) {
@@ -211,6 +203,15 @@ void channel_set_mobile(
             local_c, CHUNKER_DATA_TYPE_MOBDEF, o->def_filename
          );
       }
+   } else {
+      scaffold_print_debug(
+         &module, "Resetting position for existing player mobile: %d, %d\n",
+         x, y
+      );
+      o->x = x;
+      o->y = y;
+      o->prev_x = x;
+      o->prev_y = y;
    }
 
    scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
@@ -222,11 +223,6 @@ void channel_set_mobile(
    bstr_res = bassign( o->display_name, mob_nick );
    scaffold_assert( NULL != o->display_name );
    scaffold_check_nonzero( bstr_res );
-
-   o->x = x;
-   o->y = y;
-   o->prev_x = x;
-   o->prev_y = y;
 
    tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
 

@@ -53,13 +53,12 @@ void mobile_init(
    struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 ) {
    int bstr_ret = 0;
-   SCAFFOLD_SIZE bytes_read = 0;
-   BYTE* mobdata_buffer = NULL;
-   SCAFFOLD_SIZE mobdata_size = 0;
 
    ref_init( &(o->refcount), mobile_cleanup );
+
+   scaffold_assert( NULL != mob_id );
+
    o->sprites_filename = NULL;
-      /* bstrcpy( &str_mobile_spritesheet_path_default ); */
    o->serial = 0;
    o->channel = NULL;
    o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -74,40 +73,68 @@ void mobile_init(
    o->prev_x = x;
    o->y = y;
    o->prev_y = y;
+   o->mob_id = bstrcpy( mob_id );
 
-   if( NULL != mob_id ) {
-
-      /* Load data file if applicable. */
-      scaffold_print_info(
-         &module, "Loading mobile definition: %b\n", mob_id
-      );
-      o->def_filename = bstrcpy( &str_server_data_path );
-      scaffold_check_null( o->def_filename );
-      scaffold_join_path( o->def_filename, mob_id );
-      scaffold_check_nonzero( scaffold_error );
+   /* We always need the filename to fetch the file with a chunker. */
+   o->def_filename = bfromcstr( "mobs" );
+   scaffold_check_null( o->def_filename );
+   scaffold_join_path( o->def_filename, o->mob_id );
+   scaffold_check_nonzero( scaffold_error );
 
 #ifdef USE_EZXML
-      bstr_ret = bcatcstr( o->def_filename, ".xml" );
-      scaffold_check_nonzero( bstr_ret );
-
-      /* TODO: Support other mobile formats. */
-      scaffold_print_info(
-         &module, "Loading for XML data in: %s\n", bdata( o->def_filename )
-      );
-      bytes_read = scaffold_read_file_contents(
-         o->def_filename, &mobdata_buffer, &mobdata_size
-      );
-      scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
-      scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
-
-      datafile_parse_mobile_ezxml_string(
-         o, mobdata_buffer, mobdata_size, FALSE
-      );
+   bstr_ret = bcatcstr( o->def_filename, ".xml" );
+   scaffold_check_nonzero( bstr_ret );
 #endif /* USE_EZXML */
 
-   }
+cleanup:
+   return;
+}
+
+void mobile_load_local( struct MOBILE* o ) {
+
+   /* Refactored this out of the init because all mobiles need an ID, but
+    * client-side mobiles don't need to load from the file system.
+    */
+
+   SCAFFOLD_SIZE bytes_read = 0,
+      mobdata_size = 0;
+   BYTE* mobdata_buffer = NULL;
+   bstring mobdata_path = NULL;
+
+   scaffold_assert( NULL != o );
+   scaffold_assert( NULL != o->mob_id );
+   scaffold_assert( NULL != o->def_filename );
+
+   mobdata_path = bstrcpy( &str_server_data_path );
+   scaffold_check_null( mobdata_path );
+   scaffold_join_path( mobdata_path, o->def_filename );
+   scaffold_check_nonzero( scaffold_error );
+
+#ifdef USE_EZXML
+
+   /* TODO: Support other mobile formats. */
+   scaffold_print_info(
+      &module, "Loading for XML data in: %s\n", bdata( mobdata_path )
+   );
+   bytes_read = scaffold_read_file_contents(
+      mobdata_path, &mobdata_buffer, &mobdata_size
+   );
+   scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
+   scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
+
+   datafile_parse_mobile_ezxml_string(
+      o, mobdata_buffer, mobdata_size, FALSE
+   );
+
+#endif /* USE_EZXML */
+
+   o->initialized = TRUE;
 
 cleanup:
+   bdestroy( mobdata_path );
+   if( NULL != mobdata_buffer ) {
+      scaffold_free( mobdata_buffer );
+   }
    return;
 }
 
@@ -118,8 +145,7 @@ void mobile_animate( struct MOBILE* o ) {
    }
    if( 0 == mobile_frame_counter ) {
 #endif /* USE_MOBILE_FRAME_COUNTER */
-   if( NULL != o && TRUE == o->initialized ) {
-      scaffold_assert( NULL != o->current_animation );
+   if( NULL != o && NULL != o->current_animation ) {
       if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
          o->current_frame = 0;
       } else {

@@ -369,6 +369,8 @@ void* callback_proc_channel_spawners(
    if( 0 == ts->countdown_remaining && NULL != ts->id ) {
       /* Perform a spawn. */
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
+      mobile_load_local( o );
+      scaffold_gen_serial( o, &(l->mobiles) );
       channel_add_mobile( l, o );
       ts->countdown_remaining = -1;
    }
@@ -492,6 +494,8 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
 
    mob_id_test = ezxml_attr( xml_data, "id" );
    scaffold_check_null( mob_id_test );
+
+   //scaffold_print_debug( "%b vs %b\n", o->mob_id, mob_id_test);
 
    if( 1 == biseqcstrcaseless( o->mob_id, mob_id_test ) ) {
       scaffold_print_debug(
