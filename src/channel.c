@@ -18,6 +18,12 @@
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
+   scaffold_print_debug(
+      &module,
+      "Destroying channel: %b\n",
+      l->name
+   );
+
    if( channel_vm_can_step( l ) ) {
       channel_vm_end( l );
    }

@@ -55,7 +55,10 @@ void server_stop( struct SERVER* s ) {
       scaffold_print_info( &module, "Server shutting down...\n" );
       connection_cleanup( &(s->self.link) );
    }
-   while( 0 < hashmap_count( &(s->clients) ) ) {
+   while(
+      0 < hashmap_count( &(s->clients) ) &&
+      0 < hashmap_count( &(s->self.channels) )
+   ) {
       server_service_clients( s );
       graphics_sleep( 1000 );
    }
