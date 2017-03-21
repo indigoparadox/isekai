@@ -121,7 +121,13 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
    if( NULL != cmd ) {
-      vector_add( &(c->command_queue), cmd );
+      if( NULL != cmd && NULL != cmd->callback ) {
+         vector_add( &(c->command_queue), cmd );
+      } else if( NULL != cmd && NULL == cmd->callback ) {
+         client_stop( c );
+         bdestroy( cmd->line );
+         free( cmd );
+      }
    }
 
    /* Execute one command per cycle if available. */
@@ -165,7 +171,14 @@ void client_stop( struct CLIENT* c ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
 
-   scaffold_assert( TRUE == c->running );
+   if( 0 < c->link.socket ) {
+      scaffold_print_info( &module, "Client connection stopping...\n" );
+      connection_cleanup( &(c->link) );
+   }
+
+   if( TRUE != c->running ) {
+      goto cleanup;
+   }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -353,7 +366,7 @@ void client_printf( struct CLIENT* c, const char* message, ... ) {
    scaffold_check_null( buffer );
 
    va_start( varg, message );
-   scaffold_snprintf( buffer, message, varg );
+   scaffold_vsnprintf( buffer, message, varg );
    va_end( varg );
 
    if( 0 == scaffold_error ) {

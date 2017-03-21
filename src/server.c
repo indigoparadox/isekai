@@ -51,7 +51,14 @@ cleanup:
 }
 
 void server_stop( struct SERVER* s ) {
-   connection_cleanup( &(s->self.link) );
+   if( 0 < s->self.link.socket) {
+      scaffold_print_info( &module, "Server shutting down...\n" );
+      connection_cleanup( &(s->self.link) );
+   }
+   while( 0 < hashmap_count( &(s->clients) ) ) {
+      server_service_clients( s );
+      graphics_sleep( 1000 );
+   }
    s->self.running = FALSE;
 }
 
@@ -81,7 +88,7 @@ void server_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* 
    scaffold_check_null( buffer );
 
    va_start( varg, message );
-   scaffold_snprintf( buffer, message, varg );
+   scaffold_vsnprintf( buffer, message, varg );
    va_end( varg );
 
    if( 0 == scaffold_error ) {
@@ -294,9 +301,17 @@ BOOL server_service_clients( struct SERVER* s ) {
    if( 0 < hashmap_count( &(s->clients) ) ) {
       cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
    }
-   if( NULL != cmd ) {
+
+   if( NULL != cmd && NULL != cmd->callback ) {
+      /* A presumably real command was returned. */
       vector_add( &(s->self.command_queue), cmd );
       executed = TRUE;
+   } else if( NULL != cmd && NULL == cmd->callback ) {
+      /* A dummy was returned, so the connection closed. */
+      server_drop_client( s, cmd->line );
+      bdestroy( cmd->line );
+      scaffold_free( cmd );
+      cmd = NULL;
    }
 
    /* Execute one command per cycle if available. */

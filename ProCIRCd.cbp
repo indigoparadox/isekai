@@ -27,10 +27,42 @@
 					<Add option="-s" />
 				</Linker>
 			</Target>
-			<Target title="Check (Linux)">
+			<Target title="Check (Linux-C99)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Test/ProCIRCdCheck" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Test" />
+				<Option output="bin/Test/ProCIRCdCheck-C99" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Test-Linux-C99" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Winit-self" />
+					<Add option="-Wundef" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pedantic" />
+					<Add option="-Wall" />
+					<Add option="-std=c99" />
+					<Add option="-g" />
+					<Add option="-DxUSE_SYNCBUFF" />
+					<Add option="-DxDEBUG_SYNCBUFF" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
+					<Add option="-DUSE_NETWORK" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_CRYPTO" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
+				</Compiler>
+				<Linker>
+					<Add library="check_pic" />
+					<Add library="pthread" />
+					<Add library="rt" />
+					<Add library="m" />
+				</Linker>
+			</Target>
+			<Target title="Check (Linux-C89)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Test/ProCIRCdCheck-C89" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Test-Linux-C89" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -43,12 +75,11 @@
 					<Add option="-g" />
 					<Add option="-DxUSE_SYNCBUFF" />
 					<Add option="-DxDEBUG_SYNCBUFF" />
-					<Add option="-DUSE_B64" />
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_FILE_CACHE" />
-					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
 					<Add option="-DUSE_NETWORK" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
 				</Compiler>
 				<Linker>
 					<Add library="check_pic" />
@@ -189,6 +220,7 @@
 					<Add option="-DDEBUG_VM" />
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -463,7 +495,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -472,6 +504,7 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
@@ -479,7 +512,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -488,6 +521,7 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
@@ -525,7 +559,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -534,6 +568,7 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
 			<Option target="Debug" />
@@ -541,7 +576,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
@@ -550,6 +585,7 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
@@ -630,7 +666,7 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32)" />
 			<Option target="Debug (Linux-Curses)" />
@@ -642,6 +678,7 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
@@ -661,7 +698,8 @@
 		</Unit>
 		<Unit filename="src/graphics/null.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/graphics/sdlg.c">
 			<Option compilerVar="CC" />
@@ -703,7 +741,8 @@
 		</Unit>
 		<Unit filename="src/input/null.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/input/sdli.c">
 			<Option compilerVar="CC" />
@@ -717,7 +756,7 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32)" />
 			<Option target="Debug (Linux-Curses)" />
@@ -727,11 +766,12 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.h">
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32)" />
 			<Option target="Debug (Linux-Curses)" />
@@ -741,6 +781,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/item.c">
 			<Option compilerVar="CC" />
@@ -791,7 +832,7 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
@@ -803,11 +844,12 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
@@ -819,17 +861,49 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/tnacl.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
 		</Unit>
-		<Unit filename="src/tnacl.h" />
+		<Unit filename="src/tnacl.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Strict (Linux-Allegro4)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+		</Unit>
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/graphicu.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
@@ -840,6 +914,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
@@ -852,42 +927,52 @@
 		<Unit filename="src/windefs.h" />
 		<Unit filename="test/check_b64.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_channel.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_chunker.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_client.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_data.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_data.h">
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_hashmap.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_main.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_syncbuff.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_vector.c">
 			<Option compilerVar="CC" />
-			<Option target="Check (Linux)" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Extensions>
 			<code_completion />

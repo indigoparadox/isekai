@@ -33,6 +33,7 @@ static void connection_cleanup_socket( CONNECTION* n ) {
 #ifdef USE_NETWORK
    if( 0 < n->socket ) {
       close( n->socket );
+      n->socket = 0;
    }
 #endif /* USE_NETWORK */
    n->socket = 0;
@@ -181,7 +182,8 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
 #ifdef USE_NETWORK
    const char* buffer_chars;
    SCAFFOLD_SIZE dest_socket;
-   SCAFFOLD_SIZE buffer_len;
+   SCAFFOLD_SIZE buffer_len,
+      total_sent = 0;
 #elif defined( USE_SYNCBUFF )
    SCAFFOLD_SIZE syncbuff_previous_size;
 #endif /* USE_NETWORK */
@@ -197,7 +199,16 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
    buffer_len = blength( buffer );
    scaffold_check_zero( dest_socket );
 
-   sent = send( dest_socket, buffer_chars, buffer_len, MSG_NOSIGNAL );
+   do {
+      sent = send(
+         dest_socket,
+         &(buffer_chars[total_sent]),
+         buffer_len - total_sent,
+         MSG_NOSIGNAL
+      );
+      total_sent += sent;
+   } while( total_sent < buffer_len );
+
 #elif defined( USE_SYNCBUFF )
    syncbuff_previous_size =
       syncbuff_get_allocated( client ? SYNCBUFF_DEST_SERVER : SYNCBUFF_DEST_CLIENT );
@@ -230,12 +241,24 @@ SCAFFOLD_SIZE_SIGNED connection_read_line( CONNECTION* n, bstring buffer, BOOL c
    scaffold_check_null( buffer );
    scaffold_check_null( n );
 
+   scaffold_error = 0;
+
 #ifdef USE_NETWORK
    while( '\n' != read_char ) {
       last_read_count = recv( n->socket, &read_char, 1, 0 );
 
-      if( 0 >= last_read_count ) {
-         break;
+      if( 0 == last_read_count ) {
+         scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
+         scaffold_print_info(
+            &module, "Remote connection (%d) has been closed.\n", n->socket
+         );
+         close( n->socket );
+         n->socket = 0;
+         goto cleanup;
+      }
+
+      if( 0 > last_read_count ) {
+         goto cleanup;
       }
 
       /* No error and something was read, so add it to the string. */
