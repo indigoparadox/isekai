@@ -136,6 +136,7 @@ void graphics_blit_partial(
 void graphics_sleep( uint16_t milliseconds );
 uint32_t graphics_get_ticks();
 void graphics_start_fps_timer();
+int32_t graphics_sample_fps_timer();
 void graphics_wait_for_fps_timer();
 
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );

@@ -274,7 +274,7 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS* g = NULL;
-   GRAPHICS_RECT control_size;
+   GRAPHICS_RECT control_size = { 0 };
    GRAPHICS_COLOR fg = UI_LABEL_FG;
    SCAFFOLD_SIZE_SIGNED win_x = win->x,
       win_y = win->y,

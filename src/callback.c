@@ -604,7 +604,7 @@ BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
 #ifdef ENABLE_LOCAL_CLIENT
 
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
-   if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
+   if( NULL == arg || 0 == bstrcmp( (bstring)iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
       return TRUE;
    }

@@ -8,14 +8,6 @@
 static uint32_t graphics_time = 0;
 static uint32_t graphics_fps_delay = 0;
 
-#ifdef DEBUG_FPS
-
-static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
-
-static bstring graphics_fps = NULL;
-
-#endif /* DEBUG_FPS */
-
 #pragma pack(push,1)
 struct GRAPHICS_BITMAP_FILE_HEADER {
     int8_t type[2];
@@ -110,6 +102,12 @@ void graphics_start_fps_timer() {
 #endif /* USE_POSIX_TIMER */
 }
 
+int32_t graphics_sample_fps_timer() {
+   int32_t ticks;
+   ticks = graphics_get_ticks();
+   return ticks - graphics_time;
+}
+
 void graphics_wait_for_fps_timer() {
 #ifdef USE_POSIX_TIMER
    double elapsed;
@@ -122,14 +120,11 @@ void graphics_wait_for_fps_timer() {
 #ifdef DEBUG_FPS
    int bstr_ret;
 #endif /* DEBUG_FPS */
-   uint32_t ticks;
-   int32_t difference,
-      rest_time;
+   int32_t rest_time,
+      difference;
 
-   ticks = graphics_get_ticks();
-   difference = ticks - graphics_time;
-   rest_time = graphics_fps_delay - (ticks - graphics_time);
-
+   difference = graphics_sample_fps_timer();
+   rest_time = graphics_fps_delay - difference;
    if( GRAPHICS_TIMER_FPS > difference ) {
       /* Subtract the time since graphics_Start_fps_timer() was last called
        * from the nominal delay required to maintain our FPS.
@@ -137,26 +132,10 @@ void graphics_wait_for_fps_timer() {
       if( rest_time < 0 ) { goto cleanup; }
       graphics_sleep( rest_time );
    }
-
-#ifdef DEBUG_FPS
-   if( NULL == graphics_fps ) {
-      graphics_fps = bfromcstr( "" );
-   }
-   bstr_ret = bassignformat( graphics_fps, "FPS: %d\n", rest_time );
-   scaffold_check_nonzero( bstr_ret );
-#endif /* DEBUG_FPS */
 #endif /* USE_POSIX_TIMER */
 cleanup:
    return;
 }
-
-#ifdef DEBUG_FPS
-void graphics_debug_fps( struct UI* ui ) {
-   if( NULL != graphics_fps ) {
-      ui_debug_window( ui, &str_wid_debug_fps, graphics_fps );
-   }
-}
-#endif /* DEBUG_FPS */
 
 void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
@@ -193,7 +172,11 @@ void graphics_draw_text(
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 ) {
+   scaffold_check_null( text );
+   scaffold_check_null( r );
    r->w = size;
    r->h = size;
    r->w *= blength( text );
+cleanup:
+   return;
 }
