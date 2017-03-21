@@ -146,11 +146,13 @@ cleanup:
    return;
 }
 
+#ifdef DEBUG_FPS
 void graphics_debug_fps( struct UI* ui ) {
    if( NULL != graphics_fps ) {
       ui_debug_window( ui, &str_wid_debug_fps, graphics_fps );
    }
 }
+#endif /* DEBUG_FPS */
 
 void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
@@ -184,8 +186,6 @@ void graphics_draw_text(
    }
 }
 
-#ifdef DEBUG_FPS
-
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 ) {
@@ -193,5 +193,3 @@ void graphics_measure_text(
    r->h = size;
    r->w *= blength( text );
 }
-
-#endif /* DEBUG_FPS */

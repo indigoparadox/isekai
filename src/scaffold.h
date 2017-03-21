@@ -34,6 +34,10 @@ typedef unsigned char uint8_t;
 #elif defined( __linux )
 
 #define _GNU_SOURCE
+#undef _POSIX_SOURCE
+#define _POSIX_SOURCE 1
+#undef __USE_POSIX
+#define __USE_POSIX 1
 #include <stdint.h>
 
 #endif /* WIN16 || _WIN32 || __linux */

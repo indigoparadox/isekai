@@ -10,6 +10,8 @@
 #endif /* _WIN32 */
 
 #ifdef USE_NETWORK
+#ifdef C99
+#endif /* C99 */
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -17,10 +19,10 @@
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <resolv.h>
+//#include <arpa/nameser.h>
+//#include <resolv.h>
 #endif /* USE_NETWORK */
 
 #ifdef USE_SYNCBUFF
