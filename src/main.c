@@ -14,6 +14,7 @@
 
 SCAFFOLD_MODULE( "main.c" );
 
+static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
    bsStatic( "Connect to [address:port]:" );
@@ -31,6 +32,7 @@ struct INPUT* input = NULL;
 struct UI* ui = NULL;
 struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 struct CHANNEL* l = NULL;
+bstring buffer = NULL;
 #endif /* ENABLE_LOCAL_CLIENT */
 
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
@@ -47,10 +49,6 @@ void allegro_exit();
 
 static BOOL loop_game() {
    BOOL keep_going = TRUE;
-
-#ifdef ENABLE_LOCAL_CLIENT
-   graphics_start_fps_timer();
-#endif /* ENABLE_LOCAL_CLIENT */
 
    if( !main_server->self.running ) {
       keep_going = FALSE;
@@ -112,15 +110,154 @@ static BOOL loop_game() {
    vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
 
    ui_draw( ui, g_screen );
-
-   graphics_flip_screen( g_screen );
-
-   graphics_wait_for_fps_timer();
 #endif /* ENABLE_LOCAL_CLIENT */
 cleanup:
    return keep_going;
 }
 
+BOOL loop_connect() {
+   BOOL keep_going = TRUE;
+#ifdef USE_RANDOM_PORT
+   bstring str_service = NULL;
+#endif /* USE_RANDOM_PORT */
+#ifdef USE_CONNECT_DIALOG
+   struct UI_WINDOW* win = NULL;
+   const char* server_port_c = NULL;
+   struct bstrList* server_tuple = NULL;
+   int bstr_result = 0;
+   bstring server_address = NULL;
+
+   if( NULL == buffer ) {
+      buffer = bfromcstr( "" );
+   }
+
+#endif /* USE_CONNECT_DIALOG */
+
+#ifdef USE_RANDOM_PORT
+   if( NULL == str_service ) {
+      str_service = bfromcstralloc( 8, "" );
+   }
+#endif /* USE_RANDOM_PORT */
+
+#ifdef USE_CONNECT_DIALOG
+
+   if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
+      /* TODO: Add fields for these to connect dialog. */
+      bstr_result = bassigncstr( main_client->nick, "TestNick" );
+      scaffold_check_nonzero( bstr_result );
+      bstr_result = bassigncstr( main_client->realname, "Tester Tester" );
+      scaffold_check_nonzero( bstr_result );
+      bstr_result = bassigncstr( main_client->username, "TestUser" );
+      scaffold_check_nonzero( bstr_result );
+
+      /* Prompt for an address and port. */
+      ui_window_new(
+         ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, &str_cdialog_id,
+         &str_cdialog_title, &str_cdialog_prompt,
+         -1, -1, -1, -1
+      );
+      ui_window_push( ui, win );
+      bstr_result =
+         bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
+      scaffold_check_nonzero( bstr_result );
+   }
+
+   ui_draw( ui, g_screen );
+   input_get_event( input );
+
+   if( 0 != ui_poll_input( ui, input, buffer, &str_cdialog_id ) ) {
+      /* Dismiss the connect dialog. */
+      ui_window_destroy( ui, &str_cdialog_id );
+
+      /* Split up the address and port. */
+      server_tuple = bsplit( buffer, ':' );
+      if( 2 < server_tuple->qty ) {
+         bstrListDestroy( server_tuple );
+         server_tuple = NULL;
+         goto cleanup;
+      }
+      server_address = server_tuple->entry[0];
+      server_port_c = bdata( server_tuple->entry[1] );
+      if( NULL == server_port_c ) {
+         bstrListDestroy( server_tuple );
+         server_tuple = NULL;
+         goto cleanup;
+      }
+      server_port = atoi( server_port_c );
+#else
+      server_address = &str_localhost;
+#endif /* USE_CONNECT_DIALOG */
+
+#ifdef USE_RANDOM_PORT
+      bstr_result = bassignformat( str_service, "Port: %d", server_port );
+      scaffold_check_nonzero( bstr_result );
+      ui_debug_window( ui, &str_wid_debug_ip, str_service );
+#endif /* USE_RANDOM_PORT */
+
+      client_connect( main_client, server_address, server_port );
+
+#ifdef USE_CONNECT_DIALOG
+      /* Destroy this after, since server_address is a ptr inside of it. */
+      bstrListDestroy( server_tuple );
+      server_tuple = NULL;
+#endif /* USE_CONNECT_DIALOG */
+   }
+cleanup:
+#ifdef USE_RANDOM_PORT
+   bdestroy( str_service );
+#endif /* USE_RANDOM_PORT */
+   return keep_going; /* TODO: ESC to quit. */
+#if 0
+   if( 0 != scaffold_error ) {
+      return TRUE; /* Try again! */
+   } else {
+      return FALSE;
+   }
+#endif
+}
+
+BOOL loop_master() {
+   BOOL retval = FALSE;
+   BOOL connected = FALSE;
+   uint16_t main_client_joined = 0;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   graphics_start_fps_timer();
+
+   connected = client_connected( main_client );
+   main_client_joined = main_client->flags & CLIENT_FLAGS_SENT_CHANNEL_JOIN;
+
+   if( !connected ) {
+      retval = loop_connect();
+   } else if( connected && !main_client_joined ) {
+      main_client->ui = ui;
+      twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
+      twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
+      twindow->height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
+      twindow->g = g_screen;
+      twindow->c = main_client;
+      twindow->t = NULL;
+      client_join_channel( main_client, &str_default_channel );
+      main_client->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
+      retval = TRUE;
+
+#ifdef DEBUG_FPS
+      graphics_debug_fps( ui );
+#endif /* DEBUG_FPS */
+   } else {
+#endif /* ENABLE_LOCAL_CLIENT */
+      retval = loop_game();
+#ifdef ENABLE_LOCAL_CLIENT
+   }
+
+   graphics_flip_screen( g_screen );
+
+   graphics_wait_for_fps_timer();
+
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   return retval;
+}
 
 #ifdef _WIN32
 int CALLBACK WinMain(
@@ -132,20 +269,7 @@ int CALLBACK WinMain(
 #else
 int main( int argc, char** argv ) {
 #endif /* _WIN32 */
-   bstring buffer = NULL;
    time_t tm = 0;
-#ifdef ENABLE_LOCAL_CLIENT
-#ifdef USE_CONNECT_DIALOG
-   struct UI_WINDOW* win = NULL;
-   const char* server_port_c = NULL;
-   struct bstrList* server_tuple = NULL;
-#endif /* USE_CONNECT_DIALOG */
-#endif /* ENABLE_LOCAL_CLIENT */
-   int bstr_result = 0;
-   bstring server_address = NULL;
-#ifdef USE_RANDOM_PORT
-   bstring str_service = NULL;
-#endif /* USE_RANDOM_PORT */
 #ifdef SCAFFOLD_LOG_FILE
    scaffold_log_handle = fopen( "stdout.log", "w" );
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
@@ -178,17 +302,6 @@ int main( int argc, char** argv ) {
 
    srand( (unsigned)time( &tm ) );
 
-   /*
-   graphics_set_color_ex( &g, 255, 255, 255, 255 );
-   graphics_draw_text( &g, 20, 20, &str_loading );
-   graphics_flip_screen( &g );
-   */
-
-   buffer = bfromcstr( "" );
-#ifdef USE_RANDOM_PORT
-   str_service = bfromcstralloc( 8, "" );
-#endif /* USE_RANDOM_PORT */
-
    server_new( main_server, &str_localhost );
 
 #ifdef ENABLE_LOCAL_CLIENT
@@ -200,97 +313,13 @@ int main( int argc, char** argv ) {
 #ifdef USE_RANDOM_PORT
       server_port = 30000 + (rand() % 30000);
 #endif /* USE_RANDOM_PORT */
-#if defined( USE_RANDOM_PORT ) || defined( USE_CONNECT_DIALOG )
-      bstr_result = bassignformat( str_service, "Port: %d", server_port );
-#endif /* USE_RANDOM_PORT || USE_CONNECT_DIALOG */
-      scaffold_check_nonzero( bstr_result );
       server_listen( main_server, server_port );
-      //graphics_sleep( 100 );
-   } while( 0 != scaffold_error );
-
-#ifdef ENABLE_LOCAL_CLIENT
-   bstr_result = bassigncstr( main_client->nick, "TestNick" );
-   scaffold_check_nonzero( bstr_result );
-   bstr_result = bassigncstr( main_client->realname, "Tester Tester" );
-   scaffold_check_nonzero( bstr_result );
-   bstr_result = bassigncstr( main_client->username, "TestUser" );
-   scaffold_check_nonzero( bstr_result );
-
-   main_client->ui = ui;
-
-   do {
-#ifdef USE_CONNECT_DIALOG
-      /* Prompt for an address and port. */
-      ui_window_new(
-         ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, NULL,
-         &str_cdialog_title, &str_cdialog_prompt,
-         -1, -1, -1, -1
-      );
-      ui_window_push( ui, win );
-      bstr_result =
-         bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
-      scaffold_check_nonzero( bstr_result );
-      do {
-         graphics_start_fps_timer();
-         ui_draw( ui, g_screen );
-         input_get_event( input );
-         graphics_flip_screen( g_screen );
-         graphics_wait_for_fps_timer();
-      } while( 0 == ui_poll_input( ui, input, buffer, NULL ) );
-      ui_window_pop( ui );
-
-      /* Split up the address and port. */
-      server_tuple = bsplit( buffer, ':' );
-      if( 2 < server_tuple->qty ) {
-         bstrListDestroy( server_tuple );
-         server_tuple = NULL;
-         continue;
-      }
-      server_address = server_tuple->entry[0];
-      server_port_c = bdata( server_tuple->entry[1] );
-      if( NULL == server_port_c ) {
-         bstrListDestroy( server_tuple );
-         server_tuple = NULL;
-         continue;
-      }
-      server_port = atoi( server_port_c );
-#else
-      server_address = &str_localhost;
-#endif /* USE_CONNECT_DIALOG */
-
-      client_connect( main_client, server_address, server_port );
-
-#ifdef USE_CONNECT_DIALOG
-      /* Destroy this after, since server_address is a ptr inside of it. */
-      bstrListDestroy( server_tuple );
-      server_tuple = NULL;
-#endif /* USE_CONNECT_DIALOG */
-
       graphics_sleep( 100 );
    } while( 0 != scaffold_error );
 
-   client_join_channel( main_client, &str_default_channel );
-
-   twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
-   twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
-   twindow->height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
-   twindow->g = g_screen;
-   twindow->c = main_client;
-   twindow->t = NULL;
-
-#ifdef USE_RANDOM_PORT
-   ui_debug_window( ui, &str_wid_debug_ip, str_service );
-#endif /* USE_RANDOM_PORT */
-
-#ifdef DEBUG_FPS
-   graphics_debug_fps( ui );
-#endif /* DEBUG_FPS */
-
-#else
    scaffold_print_info( &module, "Listening on port: %d\n", server_port );
-#endif /* ENABLE_LOCAL_CLIENT */
 
-   while( loop_game() );
+   while( loop_master() );
 
 cleanup:
    bdestroy( buffer );
@@ -300,9 +329,6 @@ cleanup:
    scaffold_free( input );
    ui_cleanup( ui );
    scaffold_free( ui );
-#ifdef USE_RANDOM_PORT
-   bdestroy( str_service );
-#endif /* USE_RANDOM_PORT */
    scaffold_set_client();
    client_free( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */
