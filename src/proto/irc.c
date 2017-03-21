@@ -117,15 +117,26 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
 }
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
+   bstring owner_nick = NULL;
+
    scaffold_assert_server();
    scaffold_assert( NULL != o );
-   scaffold_assert( NULL != o->owner->nick );
+   scaffold_assert( NULL != o->mob_id );
    scaffold_assert( NULL != o->def_filename );
    scaffold_assert( NULL != o->channel );
    scaffold_assert( NULL != o->channel->name );
+
+   if( NULL != o->owner ) {
+      scaffold_assert( NULL != o->owner->nick );
+      owner_nick = o->owner->nick;
+   } else {
+      owner_nick = &scaffold_null;
+   }
+
    client_printf(
       c, "MOB %b %d %b %b %b %d %d",
-      o->channel->name, o->serial, o->mob_id, o->def_filename, o->owner->nick, o->x, o->y
+      o->channel->name, o->serial, o->mob_id, o->def_filename,
+      owner_nick, o->x, o->y
    );
 }
 
@@ -316,6 +327,15 @@ static void irc_server_nick(
 
    if( 2 >= args->qty ) {
       newnick = args->entry[1];
+   }
+
+   /* Disallow system nick "(null)". */
+   if( 0 == bstrcmp( &scaffold_null, newnick ) ) {
+      client_printf(
+         c, ":%b 431 %b :No nickname given",
+         s->self.remote, c->nick
+      );
+      goto cleanup;
    }
 
    server_set_client_nick( s, c, newnick );

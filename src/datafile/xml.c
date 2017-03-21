@@ -730,11 +730,11 @@ cleanup:
 
 static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_object ) {
    const char* xml_attr = NULL;
+   ezxml_t xml_prop_iter = NULL;
    struct TILEMAP_SPAWNER* obj_out = NULL;
    int bstr_res = 0;
 
-   obj_out = scaffold_alloc( 1, struct TILEMAP_SPAWNER );
-   scaffold_check_null( obj_out );
+   tilemap_spawner_new( obj_out, t, TILEMAP_SPAWNER_TYPE_MOBILE );
 
    xml_attr = ezxml_attr( xml_object, "x" );
    /* TODO: _continue versions of the abort macros.*/
@@ -745,13 +745,40 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    scaffold_check_null( xml_attr );
    obj_out->pos.y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
 
+   /* Parse spawner properties. */
+   xml_prop_iter = ezxml_child( xml_object, "properties" );
+   if( NULL != xml_prop_iter ) {
+      xml_prop_iter = ezxml_child( xml_prop_iter, "property" );
+   }
+   while( NULL != xml_prop_iter ) {
+
+      xml_attr = ezxml_attr( xml_prop_iter, "name" );
+      scaffold_check_null_continue( xml_attr );
+
+      if( 0 == strcmp( xml_attr, "countdown" ) ) {
+         xml_attr = ezxml_attr( xml_prop_iter, "value" );
+         scaffold_check_null_continue( xml_attr );
+         obj_out->respawn_countdown = atol( xml_attr );
+
+      } else if( 0 == strcmp( xml_attr, "active" ) ) {
+         xml_attr = ezxml_attr( xml_prop_iter, "value" );
+         scaffold_check_null_continue( xml_attr );
+         if( 0 == scaffold_strcmp_caseless( xml_attr, "false" ) ) {
+            obj_out->active = FALSE;
+         }
+
+      }
+
+      xml_prop_iter = ezxml_next( xml_prop_iter );
+   }
+
+   /* Figure out the spawner type and add it to the correct vector. */
    xml_attr = ezxml_attr( xml_object, "type" );
    scaffold_check_null( xml_attr );
    if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
 
       xml_attr = ezxml_attr( xml_object, "name" );
       scaffold_check_null( xml_attr );
-
       obj_out->id = bfromcstr( xml_attr );
       scaffold_check_null( obj_out->id );
 

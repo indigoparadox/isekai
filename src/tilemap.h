@@ -83,9 +83,13 @@ struct TILEMAP_POSITION {
 
 struct TILEMAP_SPAWNER {
    struct TILEMAP_POSITION pos;
+   struct TILEMAP* tilemap;
    bstring id;
    TILEMAP_SPAWNER_TYPE type;
-   uint32_t frequency;
+   SERIAL last_spawned;
+   SCAFFOLD_SIZE_SIGNED respawn_countdown;
+   SCAFFOLD_SIZE_SIGNED countdown_remaining;
+   BOOL active;
 };
 
 struct TILEMAP_LAYER {
@@ -139,6 +143,11 @@ struct TILEMAP {
  * (y * x) + x
  */
 
+#define tilemap_spawner_new( ts, t, type ) \
+    ts = scaffold_alloc( 1, struct TILEMAP_SPAWNER ); \
+    scaffold_check_null( ts ); \
+    tilemap_spawner_init( ts, t, type );
+
 #define tilemap_new( t, local_images ) \
     t = (struct TILEMAP*)calloc( 1, sizeof( struct TILEMAP ) ); \
     scaffold_check_null( t ); \
@@ -164,6 +173,10 @@ struct TILEMAP {
 
 void tilemap_init( struct TILEMAP* t, BOOL local_images );
 void tilemap_free( struct TILEMAP* t );
+void tilemap_spawner_init(
+   struct TILEMAP_SPAWNER* ts, struct TILEMAP* t, TILEMAP_SPAWNER_TYPE type
+);
+void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts );
 void tilemap_layer_init( struct TILEMAP_LAYER* layer );
 void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer );
 void tilemap_position_init( struct TILEMAP_POSITION* position );

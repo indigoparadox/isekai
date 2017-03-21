@@ -64,7 +64,7 @@ cleanup:
 void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
-   struct TILEMAP_POSITION* spawner = NULL;
+   struct TILEMAP_SPAWNER* spawner = NULL;
    SCAFFOLD_SIZE bytes_read = 0;
    BYTE* mobdata_buffer = NULL;
    SCAFFOLD_SIZE mobdata_size = 0;
@@ -91,50 +91,24 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    if( NULL != spawner ) {
       /* Create a basic mobile for the new client. */
-      mobile_new( o );
+      /* TODO: Get the desired mobile data ID from client. */
+      mobile_new(
+         o, &str_mobile_def_id_default, spawner->pos.x, spawner->pos.y
+      );
+
       do {
-         o->serial = rand() % UCHAR_MAX;
+         o->serial = rand() % SERIAL_MAX;
       } while( NULL != vector_get( &(l->mobiles), o->serial ) );
-
-      if( NULL == o->def_filename ) {
-         o->def_filename = bstrcpy( &str_mobile_def_path_default );
-      }
-
-      scaffold_print_info(
-         &module, "Loading mobile definition: %b\n", o->def_filename
-      );
-      mobdata_path = bstrcpy( &str_server_data_path );
-      scaffold_check_null( mobdata_path );
-      scaffold_join_path( mobdata_path, o->def_filename );
-      scaffold_check_nonzero( scaffold_error );
-
-#ifdef USE_EZXML
-      /* TODO: Support other mobiles. */
-      scaffold_print_info(
-         &module, "Loading for XML data in: %s\n", bdata( mobdata_path )
-      );
-      bytes_read = scaffold_read_file_contents( mobdata_path, &mobdata_buffer, &mobdata_size );
-      scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
-      scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
-
-      datafile_parse_mobile_ezxml_string(
-         o, mobdata_buffer, mobdata_size, FALSE
-      );
-#endif /* USE_EZXML */
 
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
+      channel_add_mobile( l, o );
 
-      o->x = spawner->x;
-      o->prev_x = spawner->x;
-      o->y = spawner->y;
-      o->prev_y = spawner->y;
       scaffold_print_info(
          &module,
-         "Spawning %s (%d) at: %d, %d\n", bdata( c->nick ), o->serial, o->x, o->y
+         "Spawning %s (%d) at: %d, %d\n",
+         bdata( c->nick ), o->serial, o->x, o->y
       );
-
-      channel_add_mobile( l, o );
    } else if( TRUE == spawn ) {
       scaffold_print_error(
          &module,
@@ -214,7 +188,7 @@ void channel_set_mobile(
 
    o = vector_get( &(l->mobiles), serial );
    if( NULL == o ) {
-      mobile_new( o );
+      mobile_new( o, NULL, 0, 0 );
       o->serial = serial;
       if( NULL == o->def_filename ) {
          o->def_filename = bstrcpy( def_filename );

@@ -49,7 +49,14 @@ void mobile_free( struct MOBILE* o ) {
    refcount_dec( o, "mobile" );
 }
 
-void mobile_init( struct MOBILE* o ) {
+void mobile_init(
+   struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+) {
+   int bstr_ret = 0;
+   SCAFFOLD_SIZE bytes_read = 0;
+   BYTE* mobdata_buffer = NULL;
+   SCAFFOLD_SIZE mobdata_size = 0;
+
    ref_init( &(o->refcount), mobile_cleanup );
    o->sprites_filename = NULL;
       /* bstrcpy( &str_mobile_spritesheet_path_default ); */
@@ -62,6 +69,46 @@ void mobile_init( struct MOBILE* o ) {
    vector_init( &(o->sprite_defs) );
    hashmap_init( &(o->ani_defs) );
    hashmap_init( &(o->script_defs) );
+
+   o->x = x;
+   o->prev_x = x;
+   o->y = y;
+   o->prev_y = y;
+
+   if( NULL != mob_id ) {
+
+      /* Load data file if applicable. */
+      scaffold_print_info(
+         &module, "Loading mobile definition: %b\n", mob_id
+      );
+      o->def_filename = bstrcpy( &str_server_data_path );
+      scaffold_check_null( o->def_filename );
+      scaffold_join_path( o->def_filename, mob_id );
+      scaffold_check_nonzero( scaffold_error );
+
+#ifdef USE_EZXML
+      bstr_ret = bcatcstr( o->def_filename, ".xml" );
+      scaffold_check_nonzero( bstr_ret );
+
+      /* TODO: Support other mobile formats. */
+      scaffold_print_info(
+         &module, "Loading for XML data in: %s\n", bdata( o->def_filename )
+      );
+      bytes_read = scaffold_read_file_contents(
+         o->def_filename, &mobdata_buffer, &mobdata_size
+      );
+      scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
+      scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
+
+      datafile_parse_mobile_ezxml_string(
+         o, mobdata_buffer, mobdata_size, FALSE
+      );
+#endif /* USE_EZXML */
+
+   }
+
+cleanup:
+   return;
 }
 
 void mobile_animate( struct MOBILE* o ) {

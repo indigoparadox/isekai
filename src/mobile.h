@@ -66,7 +66,7 @@ struct MOBILE_SPRITE_DEF {
 
 struct MOBILE {
    struct REF refcount;
-   uint8_t serial;
+   SERIAL serial;
    struct CLIENT* owner;
    SCAFFOLD_SIZE x;
    SCAFFOLD_SIZE y;
@@ -111,10 +111,10 @@ struct MOBILE_UPDATE_PACKET {
 #define MOBILE_FRAME_DIVISOR 90
 #define MOBILE_MOVE_DIVISOR 30
 
-#define mobile_new( o ) \
+#define mobile_new( o, mob_id, x, y ) \
     o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
     scaffold_check_null( o ); \
-    mobile_init( o );
+    mobile_init( o, mob_id, x, y );
 
 #define mobile_set_animation_facing( o, buffer, facing ) \
    if( NULL != o->current_animation ) { \
@@ -130,7 +130,9 @@ struct MOBILE_UPDATE_PACKET {
    }
 
 void mobile_free( struct MOBILE* o );
-void mobile_init( struct MOBILE* o );
+void mobile_init(
+   struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+);
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
@@ -162,12 +164,12 @@ const struct tagbstring str_mobile_facing[4] = {
    bsStatic( "right" ),
    bsStatic( "left" )
 };
-const struct tagbstring str_mobile_def_path_default =
-   bsStatic( "mobs/maidblac.xml" );
+const struct tagbstring str_mobile_def_id_default =
+   bsStatic( "maidblac" );
 #else
 extern const struct tagbstring str_mobile_default_ani;
 extern const struct tagbstring str_mobile_facing[4];
-extern const struct tagbstring str_mobile_def_path_default;
+extern const struct tagbstring str_mobile_def_id_default;
 #endif /* MOBILE_C */
 
 #endif /* MOBILE_H */

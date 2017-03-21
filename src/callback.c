@@ -343,7 +343,7 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 #endif /* USE_CHUNKS */
 
-void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
+void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    scaffold_assert_server();
@@ -352,6 +352,50 @@ void* callback_proc_channel_vms( const bstring res, void* iter, void* arg ) {
       channel_vm_step( l );
    }
 
+   return NULL;
+}
+
+void* callback_proc_channel_spawners(
+   const bstring key, void* iter, void* arg
+) {
+   struct TILEMAP_SPAWNER* ts = (struct TILEMAP_SPAWNER*)iter;
+   struct SERVER* s = (struct SERVER*)arg;
+   struct TILEMAP* t = ts->tilemap;
+   struct CHANNEL* l = NULL;
+   struct MOBILE* o = NULL;
+
+   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+
+   if( 0 == ts->countdown_remaining && NULL != ts->id ) {
+      /* Perform a spawn. */
+      mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
+      channel_add_mobile( l, o );
+      ts->countdown_remaining = -1;
+   }
+
+   /* TODO: If the mob has been destroyed, restart the spawner countdown. */
+
+   /* TODO: Decrement the countdown timer in seconds. */
+
+   if( -1 >= ts->countdown_remaining ) {
+      goto cleanup;
+   }
+
+cleanup:
+   return NULL;
+}
+
+void* callback_proc_server_spawners(
+   const bstring key, void* iter, void* arg
+) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   struct SERVER* s = (struct SERVER*)arg;
+
+   scaffold_assert_server();
+
+   vector_iterate( &(l->tilemap.spawners), callback_proc_channel_spawners, s );
+
+cleanup:
    return NULL;
 }
 
