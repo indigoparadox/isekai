@@ -12,6 +12,12 @@ typedef void (*datafile_cb)(
 );
 
 #ifdef USE_EZXML
+void datafile_parse_item_ezxml_t(
+   struct ITEM* e, ezxml_t xml_data, BOOL local_images
+);
+void datafile_parse_item_ezxml_string(
+   struct ITEM* e, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+);
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
 );

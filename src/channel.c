@@ -92,7 +92,8 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       /* Create a basic mobile for the new client. */
       /* TODO: Get the desired mobile data ID from client. */
       mobile_new(
-         o, &str_mobile_def_id_default, spawner->pos.x, spawner->pos.y
+         o, (const bstring)&str_mobile_def_id_default,
+         spawner->pos.x, spawner->pos.y
       );
       mobile_load_local( o );
 
@@ -161,25 +162,13 @@ void channel_set_mobile(
    struct MOBILE* o = NULL;
    int bstr_res = 0;
    struct CLIENT* mobile_c = NULL;
-
-//#if 0
-//#ifdef STRICT_DEBUG
    const char* nick_c = NULL,
       * lname_c = NULL;
-//#endif /* STRICT_DEBUG */
 
-//   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
-//   c = channel_get_client_by_name( l, mob_nick );
-//#ifdef STRICT_DEBUG
    nick_c = bdata( mob_nick );
    lname_c = bdata( l->name );
    scaffold_assert( NULL != nick_c );
    scaffold_assert( NULL != lname_c );
-//   scaffold_assert( NULL != c );
-//#else
-//   scaffold_check_null( c );
-//#endif /* STRICT_DEBUG */
-//#endif // 0
 
    scaffold_print_debug(
       &module, "Adding player mobile to channel: %b (%d)\n", mob_nick, serial
