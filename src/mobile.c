@@ -739,25 +739,109 @@ BOOL mobile_is_local_player( struct MOBILE* o ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+static void mobile_vm_debug( duk_context* vm ) {
+   char* text = duk_to_string( vm, -1 );
+
+   scaffold_print_debug( &module, "%s\n", text  );
+}
+
 void mobile_vm_start( struct MOBILE* o, bstring code ) {
 #ifdef USE_DUKTAPE
-   if( NULL == o->vm ) {
-      o->vm =
-         duk_create_heap( NULL, NULL, NULL, o, duktape_helper_mobile_crash );
-      /* duk_push_c_function( l->vm, dukt ) */
+   const char* code_c = NULL;
+
+   if( NULL != o->vm ) {
+      mobile_vm_end( o );
    }
-   duk_peval_string( o->vm, bdata( code ) );
+
+   scaffold_assert( NULL == o->vm );
+   scaffold_assert( NULL != code );
+
+   o->vm_started = FALSE;
+   o->vm_caddy = scaffold_alloc( 1, struct SCRIPT_CADDY );
+   scaffold_check_null( o->vm_caddy );
+
+   code_c = bdata( code );
+
+   scaffold_print_debug(
+      &module, "Starting script VM for mobile: %d (%b)\n", o->serial, o->mob_id
+   );
+
+   /* Setup the script caddy. */
+   ((struct SCRIPT_CADDY*)o->vm_caddy)->exec_start = 0;
+   ((struct SCRIPT_CADDY*)o->vm_caddy)->caller = o;
+   ((struct SCRIPT_CADDY*)o->vm_caddy)->caller_type = SCRIPT_CALLER_MOBILE;
+
+   /* Setup the VM. */
+   o->vm =
+      duk_create_heap( NULL, NULL, NULL, o->vm_caddy, duktape_helper_mobile_crash );
+
+   /* Setup the VM. */
+   duk_push_global_object( o->vm );
+   duk_push_c_function( o->vm, mobile_vm_debug, 1 );
+   duk_put_prop_string( o->vm, -2, "debug" );
+   duk_pop( o->vm );
+
+   duk_push_lstring( o->vm, code_c, blength( code ) );
+
+cleanup:
+   return;
 #endif /* USE_DUKTAPE */
 }
 
 void mobile_vm_step( struct MOBILE* o ) {
+#ifdef USE_DUKTAPE
+   int duk_result = 0;
+
+   scaffold_assert( NULL != o->vm );
+
+   ((struct SCRIPT_CADDY*)o->vm_caddy)->exec_start = graphics_get_ticks();
+
+   //if( FALSE == o->vm_started ) {
+      //o->vm_started = TRUE;
+      //duk_result = duk_safe_call( o->vm, duktape_eval_line_string, o->vm_caddy, 1, 1 );
+      duk_result = duk_peval( o->vm );
+      if( 1 != duk_result ) {
+         goto cleanup;
+      }
+   /* } else {
+      duk_resume( o->vm,  )
+   } */
+
+   /* An error happened. */
+   duk_get_prop_string( o->vm, 0, "name" );
+   duk_get_prop_string( o->vm, 0, "message" );
+   duk_get_prop_string( o->vm, 0, "fileName" );
+   duk_get_prop_string( o->vm, 0, "lineNumber" );
+   duk_get_prop_string( o->vm, 0, "stack" );
+
+   scaffold_print_error(
+      &module, "Script error: %s: %s (%s:%s)\n",
+      duk_safe_to_string( o->vm, 1 ), duk_safe_to_string( o->vm, 2 ),
+      duk_safe_to_string( o->vm, 3), duk_safe_to_string( o->vm, 4 )
+   );
+   scaffold_print_error(
+      &module, "Script stack: %s\n",
+      duk_safe_to_string( o->vm, 5 )
+   );
+
+cleanup:
+   return;
+#endif /* USE_DUKTAPE */
 }
 
 void mobile_vm_end( struct MOBILE* o ) {
 #ifdef USE_DUKTAPE
+   scaffold_print_debug(
+      &module, "Stopping script VM for mobile: %d (%b)\n", o->serial, o->mob_id
+   );
+
    if( NULL != o->vm ) {
       duk_destroy_heap( o->vm );
       o->vm = NULL;
+   }
+   if( NULL != o->vm_caddy ) {
+      free( o->vm_caddy );
+      o->vm_caddy = NULL;
    }
 #endif /* USE_DUKTAPE */
 }
@@ -766,7 +850,7 @@ BOOL mobile_vm_can_step( struct MOBILE* o ) {
    BOOL retval = FALSE;
 
 #if defined( USE_TINYPY ) || defined( USE_DUKTAPE )
-   if( NULL != o->vm ) {
+   if( NULL != o && NULL != o->vm ) {
       retval = TRUE;
    }
 #endif /* USE_TINYPY || USE_DUKTAPE */

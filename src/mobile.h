@@ -88,8 +88,10 @@ struct MOBILE {
    bstring def_filename;
    bstring mob_id;
    struct CHANNEL* channel;
-   struct tp_vm* vm;
+   struct duk_context* vm;
    bstring vm_script;
+   void* vm_caddy;
+   BOOL vm_started;
    struct VECTOR sprite_defs;
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
