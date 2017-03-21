@@ -55,6 +55,9 @@ struct CLIENT {
 #define CLIENT_NAME_ALLOC 32
 #define CLIENT_BUFFER_ALLOC 256
 
+#define client_connected( c ) \
+   ((c)->link.socket > 0 && TRUE == (c)->running)
+
 #define client_new( c, client_side ) \
     c = (struct CLIENT*)calloc( 1, sizeof( struct CLIENT ) ); \
     scaffold_check_null( c ); \
@@ -73,7 +76,7 @@ void client_add_channel( struct CLIENT* c, struct CHANNEL* l );
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
 void client_connect( struct CLIENT* c, const bstring server, int port );
 void client_remove_all_channels( struct CLIENT* c );
-void client_update( struct CLIENT* c, GRAPHICS* g );
+BOOL client_update( struct CLIENT* c, GRAPHICS* g );
 void client_join_channel( struct CLIENT* c, const bstring name );
 void client_leave_channel( struct CLIENT* c, const bstring lname );
 void client_send( struct CLIENT* c, const bstring buffer );
@@ -96,7 +99,6 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
 #endif /* USE_CHUNKS */
 void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
-BOOL client_connected( struct CLIENT* c );
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 );

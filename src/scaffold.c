@@ -168,6 +168,7 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
    int bstr_ret;
+   SCAFFOLD_COLOR color;
 #ifndef HEATSHRINK_DEBUGGING_LOGS
    const char* mod_in_c = NULL;
 
@@ -180,9 +181,16 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
       goto cleanup;
    }
 #endif /* HEATSHRINK_DEBUGGING_LOGS */
+
+   if( SCAFFOLD_TRACE_SERVER == scaffold_trace_path ) {
+      color = SCAFFOLD_COLOR_YELLOW;
+   } else {
+      color = SCAFFOLD_COLOR_DARK_CYAN;
+   }
+
    va_start( varg, message );
    scaffold_log(
-      scaffold_log_handle_err, mod_in, SCAFFOLD_COLOR_YELLOW, message, varg
+      scaffold_log_handle_err, mod_in, color, message, varg
    );
    va_end( varg );
 #endif /* DEBUG */

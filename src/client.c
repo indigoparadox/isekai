@@ -46,6 +46,9 @@ static void client_cleanup( const struct REF *ref ) {
 void client_init( struct CLIENT* c, BOOL client_side ) {
    ref_init( &(c->link.refcount), client_cleanup );
 
+   scaffold_assert( FALSE == c->running );
+   scaffold_assert( 0 == c->link.socket );
+
 #ifdef ENABLE_LOCAL_CLIENT
    c->client_side = client_side;
    if( TRUE == c->client_side ) {
@@ -106,8 +109,9 @@ cleanup:
 }
 
 /* This runs on the local client. */
-void client_update( struct CLIENT* c, GRAPHICS* g ) {
+BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
+   BOOL retval = FALSE;
 #ifdef DEBUG_TILES
    SCAFFOLD_SIZE steps_remaining_x,
       steps_remaining_y;
@@ -120,14 +124,20 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
 
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
+
+   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+      scaffold_print_info(
+         &module, "Remote server disconnected.\n"
+      );
+      client_stop( c );
+      bdestroy( cmd->line );
+      free( cmd );
+      cmd = NULL;
+   }
+
    if( NULL != cmd ) {
-      if( NULL != cmd && NULL != cmd->callback ) {
-         vector_add( &(c->command_queue), cmd );
-      } else if( NULL != cmd && NULL == cmd->callback ) {
-         client_stop( c );
-         bdestroy( cmd->line );
-         free( cmd );
-      }
+      vector_add( &(c->command_queue), cmd );
+      retval = TRUE;
    }
 
    /* Execute one command per cycle if available. */
@@ -142,6 +152,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
          );
       }
       irc_command_free( cmd );
+      retval = TRUE;
    }
 
 #ifdef DEBUG_TILES
@@ -163,7 +174,7 @@ void client_update( struct CLIENT* c, GRAPHICS* g ) {
 #endif /* DEBUG_TILES */
 
 /* cleanup: */
-   return;
+   return retval;
 }
 
 void client_stop( struct CLIENT* c ) {
@@ -252,6 +263,7 @@ void client_stop( struct CLIENT* c ) {
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
+   scaffold_assert( 0 == c->link.socket );
    c->running = FALSE;
 
 cleanup:
@@ -807,20 +819,24 @@ void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+/*
 BOOL client_connected( struct CLIENT* c ) {
    if( 0 < c->link.socket ) {
+      scaffold_assert( TRUE == c->running );
       return TRUE;
    } else {
+      scaffold_assert( FALSE == c->running );
       return FALSE;
    }
 }
+*/
 
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 ) {
    int bstr_result;
    /* TODO: Handle this if we're connected. */
-   scaffold_assert( FALSE == client_connected( c ) );
+   scaffold_assert( !client_connected( c ) );
    bstr_result = bassign( c->nick, nick );
    scaffold_assert( BSTR_ERR != bstr_result );
    bstr_result = bassign( c->realname, uname );

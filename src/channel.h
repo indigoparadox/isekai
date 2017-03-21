@@ -61,7 +61,8 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn );
 void channel_set_mobile(
    struct CHANNEL* l, uint8_t serial,
    const bstring mob_id, const bstring sprites_filename,
-   const bstring nick, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   const bstring nick, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   struct CLIENT* local_c
 );
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c );
 struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick );

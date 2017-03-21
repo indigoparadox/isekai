@@ -28,7 +28,9 @@ void check_channel_setup_checked() {
    bstring nick = NULL,
       uname = NULL,
       rname = NULL;
-   BOOL connected = FALSE;
+   BOOL connected = FALSE,
+      server_ret = FALSE,
+      client_ret = FALSE;
    int attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
 
    nick = bfromcstr( "" );
@@ -53,6 +55,7 @@ void check_channel_setup_checked() {
       );
 
       /* Setup the client and connect. */
+      memset( &clients[i], '\0', sizeof( struct CLIENT ) );
       scaffold_set_client();
       client_init( &clients[i], TRUE );
       bassignformat( nick, "TestNick%d", i );
@@ -69,6 +72,7 @@ void check_channel_setup_checked() {
       );
       do {
          client_connect( &clients[i], &localhost, port );
+         ck_assert_int_ne( 0, &clients[i].link.socket );
          graphics_sleep( 1000 );
          attempts--;
          ck_assert_int_ne( 0, attempts );
@@ -85,10 +89,11 @@ void check_channel_setup_checked() {
       } while( FALSE == connected );
       do {
          scaffold_set_server();
-         server_service_clients( &server );
+         server_ret = server_service_clients( &server ) ? TRUE : server_ret;
          scaffold_set_client();
-         client_update( &clients[i], NULL );
-      } while( i + 1 < hashmap_count( &(server.clients) ) );
+         client_ret = client_update( &clients[i], NULL ) ? TRUE : client_ret;
+      } while( !server_ret && !client_ret );
+      ck_assert( i + 1 == hashmap_count( &(server.clients) ) );
 
       scaffold_print_debug_color(
          &module, CHECK_BEGIN_END_COLOR,
@@ -105,6 +110,8 @@ cleanup:
 
 void check_channel_teardown_checked() {
    int i;
+   BOOL server_ret = FALSE,
+      client_ret = FALSE;
 
    for( i = CHECK_CHANNEL_CLIENT_COUNT - 1 ; 0 <= i ; i-- ) {
       scaffold_print_debug_color(
@@ -116,10 +123,11 @@ void check_channel_teardown_checked() {
       proto_client_stop( &clients[i] );
       do {
          scaffold_set_server();
-         server_service_clients( &server );
+         server_ret = server_service_clients( &server ) ? TRUE : server_ret;
          scaffold_set_client();
-         client_update( &clients[i], NULL );
-      } while( 0 < i && clients[i].running );
+         client_ret = client_update( &clients[i], NULL ) ? TRUE : client_ret;
+      } while( !server_ret && !client_ret );
+      ck_assert( client_connected( &(clients[i]) ) );
       scaffold_print_debug_color(
          &module, CHECK_BEGIN_END_COLOR,
          "===== END CLIENT DISCONNECT: %d =====\n", i

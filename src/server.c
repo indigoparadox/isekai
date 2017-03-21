@@ -262,7 +262,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
    /* Check for new clients. */
    connection_register_incoming( &(s->self.link), &(c->link) );
-   if( TRUE != client_connected( c ) ) {
+   if( !client_connected( c ) ) {
       goto cleanup;
    } else {
 
@@ -289,7 +289,7 @@ cleanup:
 
 BOOL server_service_clients( struct SERVER* s ) {
    IRC_COMMAND* cmd = NULL;
-   BOOL executed = FALSE;
+   BOOL retval = FALSE;
 
 #ifdef DEBUG
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
@@ -299,19 +299,25 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    /* Check for commands from existing clients. */
    if( 0 < hashmap_count( &(s->clients) ) ) {
+      /* TODO: Make sure hashmap_iterate can't overwrite scaffold errors. */
       cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
    }
 
-   if( NULL != cmd && NULL != cmd->callback ) {
-      /* A presumably real command was returned. */
-      vector_add( &(s->self.command_queue), cmd );
-      executed = TRUE;
-   } else if( NULL != cmd && NULL == cmd->callback ) {
+   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
       /* A dummy was returned, so the connection closed. */
+      scaffold_print_info(
+         &module, "Remote client disconnected: %n\n", cmd->line
+      );
       server_drop_client( s, cmd->line );
       bdestroy( cmd->line );
       scaffold_free( cmd );
       cmd = NULL;
+   }
+
+   if( NULL != cmd ) {
+      /* A presumably real command was returned. */
+      vector_add( &(s->self.command_queue), cmd );
+      retval = TRUE;
    }
 
    /* Execute one command per cycle if available. */
@@ -326,7 +332,7 @@ BOOL server_service_clients( struct SERVER* s ) {
          );
       }
       irc_command_free( cmd );
-      executed = TRUE;
+      retval = TRUE;
    }
 
 #ifdef USE_CHUNKS
@@ -340,7 +346,7 @@ BOOL server_service_clients( struct SERVER* s ) {
    hashmap_iterate( &(s->self.channels), callback_proc_channel_vms, NULL );
 
 cleanup:
-   return executed;
+   return retval;
 }
 
 /* Scaffold errors if unsuccessful:
