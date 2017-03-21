@@ -10,6 +10,7 @@ void* callback_concat_clients( const bstring key, void* iter, void* arg );
 void* callback_search_clients( const bstring key, void* iter, void* arg );
 void* callback_search_clients_r( const bstring key, void* iter, void* arg );
 void* callback_search_clients_l( const bstring key, void* iter, void* arg );
+void* callback_search_spawners( const bstring key, void* iter, void* arg );
 void* callback_send_clients( const bstring key, void* iter, void* arg );
 void* callback_search_channels( const bstring key, void* iter, void* arg );
 void* callback_search_windows( const bstring key, void* iter, void* arg );
@@ -60,6 +61,7 @@ BOOL callback_free_backlog( const bstring res, void* iter, void* arg );
 BOOL callback_free_graphics( const bstring res, void* iter, void* arg );
 BOOL callback_free_windows( const bstring res, void* iter, void* arg );
 BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg );
+BOOL callback_free_spawners( const bstring res, void* iter, void* arg );
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );
 
 #ifdef CALLBACKS_C

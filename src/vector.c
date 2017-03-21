@@ -561,6 +561,40 @@ cleanup:
    return cb_return;
 }
 
+struct VECTOR* vector_iterate_v(
+   struct VECTOR* v, vector_search_cb callback, void* arg
+) {
+   struct VECTOR* found = NULL;
+   void* current_iter = NULL;
+   void* cb_return = NULL;
+   BOOL ok = FALSE;
+   int i;
+
+   scaffold_check_null( v );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+
+   vector_lock( v, TRUE );
+   ok = TRUE;
+
+   /* Linear probing */
+   for( i = 0 ; vector_count( v ) > i ; i++ ) {
+      current_iter = vector_get( v, i );
+      cb_return = callback( NULL, current_iter, arg );
+      if( NULL != cb_return ) {
+         if( NULL == found ) {
+            vector_new( found );
+         }
+         vector_add( found, cb_return );
+      }
+   }
+
+cleanup:
+   if( TRUE == ok ) {
+      vector_lock( v, FALSE );
+   }
+   return found;
+}
+
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    void* previous_iter = NULL;
    void* current_iter = NULL;

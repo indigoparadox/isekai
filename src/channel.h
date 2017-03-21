@@ -77,6 +77,7 @@ BOOL channel_vm_can_step( struct CHANNEL* l );
 
 #ifdef CHANNEL_C
 SCAFFOLD_MODULE( "channel.c" );
+static struct tagbstring str_player = bsStatic( "player" );
 #endif /* CHANNEL_C */
 
 #endif /* CHANNEL_H */
