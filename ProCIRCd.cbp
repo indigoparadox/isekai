@@ -712,6 +712,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
+		<Unit filename="src/duktape/duktype.h" />
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
 		</Unit>

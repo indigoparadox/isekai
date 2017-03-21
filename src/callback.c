@@ -343,6 +343,18 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 #endif /* USE_CHUNKS */
 
+void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+
+   scaffold_assert_server();
+
+   if( mobile_vm_can_step( o ) ) {
+      mobile_vm_step( o );
+   }
+
+   return NULL;
+}
+
 void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
@@ -351,6 +363,8 @@ void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
    if( channel_vm_can_step( l ) ) {
       channel_vm_step( l );
    }
+
+   vector_iterate( &(l->mobiles), callback_proc_mobile_vms, NULL );
 
    return NULL;
 }
@@ -370,12 +384,12 @@ void* callback_proc_channel_spawners(
       /* Perform a spawn. */
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
+      scaffold_gen_serial( o, &(l->mobiles) );
+      channel_add_mobile( l, o );
       if( NULL != o->vm_script ) {
          /* If it's an NPC, start its script. */
          mobile_vm_start( o, o->vm_script );
       }
-      scaffold_gen_serial( o, &(l->mobiles) );
-      channel_add_mobile( l, o );
       ts->countdown_remaining = -1;
    }
 
