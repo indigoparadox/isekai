@@ -83,7 +83,9 @@ cleanup:
 
 void ui_window_cleanup( struct UI_WINDOW* win ) {
    bdestroy( win->title );
+   win->title = NULL;
    bdestroy( win->id );
+   win->id = NULL;
    if( NULL != win->controls.data ) {
       hashmap_remove_cb( &(win->controls), callback_free_controls, NULL );
       hashmap_cleanup( &(win->controls) );
@@ -91,6 +93,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
    if( NULL != win->element && NULL != win->element->surface ) {
       graphics_surface_free( win->element );
       free( win->element );
+      win->element = NULL;
    }
 }
 
@@ -163,6 +166,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
    ui_window_cleanup( &(control->self) );
    if( FALSE == control->borrowed_text_field ) {
       bdestroy( control->text );
+      control->text = NULL;
    }
    scaffold_free( control );
 }
@@ -278,6 +282,10 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
       win_h = win->height,
       control_w = control->self.width,
       control_h = control->self.height;
+#ifdef DEBUG
+   const char* win_id_c = bdata( win->id ),
+      * control_id_c = bdata( control->self.id );
+#endif /* DEBUG */
 
    graphics_measure_text( g, &control_size, UI_TEXT_SIZE, control->text );
 
@@ -378,6 +386,7 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
       win->grid_y += control_h + UI_WINDOW_MARGIN;
    }
 
+cleanup:
    return NULL;
 }
 
@@ -461,6 +470,22 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
    return vector_iterate( &(ui->windows), callback_search_windows, wid );
+}
+
+BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
+   /*
+   struct UI_WINDOW*
+
+   vector_lock( &(ui->windows), TRUE );
+   for( i = 0 ; vector_count( &(ui->windows) ) > i ; i++ ) {
+      win_iter =
+      if( 0 == bstrcmp( wid,  ))
+   }
+
+
+   vector_lock( &(ui->windows), FALSE );
+   */
+   return vector_remove_cb( &(ui->windows), callback_free_windows, wid );
 }
 
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id ) {

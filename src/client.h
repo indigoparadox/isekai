@@ -19,7 +19,8 @@ typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_HAVE_USER = 0x01,
    CLIENT_FLAGS_HAVE_WELCOME = 0x02,
    CLIENT_FLAGS_HAVE_MOTD = 0x04,
-   CLIENT_FLAGS_HAVE_NICK = 0x08
+   CLIENT_FLAGS_HAVE_NICK = 0x08,
+   CLIENT_FLAGS_SENT_CHANNEL_JOIN = 0x16
 } CLIENT_FLAGS;
 
 struct CLIENT {
@@ -34,7 +35,7 @@ struct CLIENT {
    bstring away;
    bstring mobile_sprite;
    uint8_t mode;
-   uint8_t flags;
+   uint16_t flags;
    struct UI* ui;
    struct HASHMAP channels; /*!< All channels the client is in now, or all
                              *   channels available if this is a server.

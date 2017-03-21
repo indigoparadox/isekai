@@ -584,6 +584,9 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    void* data = NULL;
    void* test = NULL;
    BOOL ok = FALSE;
+#ifdef DEBUG
+   const char* key_c = NULL;
+#endif /* DEBUG */
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -596,6 +599,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
+         key_c = m->data[i].key;
          test = callback( m->data[i].key, data, arg );
          if( NULL != test ) {
             found = test;
