@@ -268,25 +268,53 @@ static void ezxml_open_tag(ezxml_root_t root, char *name, char **attr) {
 /* called when parser finds character content between open and closing tag */
 static void ezxml_char_content(ezxml_root_t root, char *s, SCAFFOLD_SIZE len, char t) {
    ezxml_t xml = root->cur;
-   char *m = s;
+   char *m = s,
+      * tmp = NULL;
    SCAFFOLD_SIZE l;
 
-   if (! xml || ! xml->name || ! len) return; /* sanity check */
-
-   s[len] = '\0'; /* null terminate text (calling functions anticipate this) */
-   len = strlen(s = ezxml_decode(s, root->ent, t)) + 1;
-
-   if (! *(xml->txt)) xml->txt = s; /* initial character content */
-   else { /* allocate our own memory and make a copy */
-      xml->txt = (xml->flags & EZXML_TXTM) /* allocate some space */
-               /* FIXME: Soft realloc. */
-               ? scaffold_realloc(xml->txt, (l = strlen(xml->txt)) + len, char)
-               : strcpy(calloc((l = strlen(xml->txt)) + len, sizeof(char)), xml->txt);
-      strcpy(xml->txt + l, s); /* add new char content */
-      if (s != m) scaffold_free(s); /* free s if it was malloced by ezxml_decode() */
+   /* sanity check */
+   if( NULL == xml || NULL == xml->name || 0 == len ) {
+      goto cleanup;
    }
 
-   if (xml->txt != m) ezxml_set_flag(xml, EZXML_TXTM);
+   /* null terminate text (calling functions anticipate this) */
+   s[len] = '\0';
+   s = ezxml_decode( s, root->ent, t );
+   len = strlen( s ) + 1;
+
+   if( NULL == *(xml->txt) ) {
+      /* initial character content */
+      xml->txt = s;
+   } else {
+      /* allocate our own memory and make a copy */
+      if( 0 != (xml->flags & EZXML_TXTM) ) {
+         /* allocate some space */
+         l = strlen( xml->txt );
+         tmp = scaffold_realloc( xml->txt, (l + len), char );
+         scaffold_check_null( tmp );
+      } else {
+         l = strlen( xml->txt );
+         tmp = scaffold_alloc( (l + len), char );
+         scaffold_check_null( tmp );
+         strcpy( tmp, xml->txt );
+      }
+      xml->txt = tmp;
+
+      /* add new char content */
+      strcpy( xml->txt + l, s );
+
+      /* free s if it was malloced by ezxml_decode() */
+      if( s != m ) {
+         scaffold_free( s );
+      }
+   }
+
+   if( xml->txt != m ) {
+      ezxml_set_flag( xml, EZXML_TXTM );
+   }
+
+cleanup:
+   return;
 }
 
 /* called when parser finds closing tag */
