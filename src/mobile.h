@@ -133,6 +133,7 @@ void mobile_free( struct MOBILE* o );
 void mobile_init(
    struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 );
+void mobile_load_local( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,

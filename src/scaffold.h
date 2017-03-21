@@ -85,7 +85,8 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
 typedef uint8_t SERIAL;
-#define SERIAL_MAX UCHAR_MAX
+#define SERIAL_MIN 1
+#define SERIAL_MAX UCHAR_MAX - SERIAL_MIN
 
 /* = Configuration = */
 
@@ -194,6 +195,11 @@ struct tagbstring ansi_color_strs[7] = {
 /* = Utility Macros = */
 
 #define SCAFFOLD_MODULE( mod_name ) static struct tagbstring module = bsStatic( mod_name )
+
+#define scaffold_gen_serial( object, vector ) \
+   do { \
+      object->serial = SERIAL_MIN + (rand() % SERIAL_MAX); \
+   } while( NULL != vector_get( vector, object->serial ) );
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
