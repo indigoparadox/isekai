@@ -116,7 +116,7 @@ void ui_init( struct UI* ui, GRAPHICS* screen );
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win );
 void ui_window_pop( struct UI* ui );
 SCAFFOLD_SIZE_SIGNED ui_poll_input(
-   struct UI* ui, struct INPUT* input, bstring buffer, const bstring id
+   struct UI* ui, struct INPUT* input, const bstring id
 );
 void ui_draw( struct UI* ui, GRAPHICS* g );
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );

@@ -15,9 +15,6 @@
 
 bstring client_input_from_ui = NULL;
 
-static struct tagbstring str_client_window_id_chat = bsStatic( "chat" );
-static struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
-
 static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
       (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
@@ -692,12 +689,6 @@ static BOOL client_poll_ui(
       t = &(c->puppet->channel->tilemap);
    }
 
-   /* Make sure the buffer that all windows share is available. */
-   if( NULL == client_input_from_ui ) {
-      client_input_from_ui = bfromcstralloc( 80, "" );
-      scaffold_check_null( client_input_from_ui );
-   }
-
 #ifdef DEBUG_VM
    /* Poll window: REPL */
    if( NULL != ui_window_by_id( c->ui, &str_client_window_id_repl ) ) {
@@ -722,7 +713,7 @@ static BOOL client_poll_ui(
    if( NULL != ui_window_by_id( c->ui, &str_client_window_id_chat ) ) {
       retval = TRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
-         c->ui, p, client_input_from_ui, &str_client_window_id_chat
+         c->ui, p, &str_client_window_id_chat
       ) ) {
          ui_window_pop( c->ui );
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -755,7 +746,9 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
+   struct UI_CONTROL* control = NULL;
 
+   /* Make sure the buffer that all windows share is available. */
    if(
       NULL == c->puppet ||
       (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
@@ -779,10 +772,19 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
    case ' ': client_key_update( MOBILE_UPDATE_ATTACK ); return TRUE;
    case '\\':
-      windef_window(
-         UI_WINDOW_TYPE_SIMPLE_TEXT, &str_client_window_id_chat,
+      if( NULL == client_input_from_ui ) {
+         client_input_from_ui = bfromcstralloc( 80, "" );
+         scaffold_check_null( client_input_from_ui );
+      }
+      ui_window_new(
+         ui, win, UI_WINDOW_TYPE_NONE, &str_client_window_id_chat,
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, client_input_from_ui,
+         -1, -1, -1, -1
+      );
+      ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );
       return TRUE;
 #ifdef DEBUG_VM
