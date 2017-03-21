@@ -497,38 +497,89 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, SCAFFOLD_SIZE len) {
 }
 #endif /* EZXML_RISKY_DTD */
 
-/* Converts a UTF-16 string to UTF-8. Returns a new string that must be freed */
-/* or NULL if no conversion was needed. */
-static char *ezxml_str2utf8(char **s, SCAFFOLD_SIZE *len) {
-   char *u;
-   SCAFFOLD_SIZE l = 0, sl, max = *len;
+/** \brief Converts a UTF-16 string to UTF-8. Returns a new string that must
+ *         be freed or NULL if no conversion was needed.
+ */
+static char *ezxml_str2utf8( char **s, SCAFFOLD_SIZE *len ) {
+   /* TODO: Make this a wrapper for one of the bstring functions. */
+   char *u,
+      * retval = NULL,
+      * u_tmp;
+   SCAFFOLD_SIZE l = 0,
+      sl,
+      max = *len;
    long c, d;
-   int b, be = (**s == '\xFE') ? 1 : (**s == '\xFF') ? 0 : -1;
+   int b,
+      be = -1;
 
-   if (be == -1) return NULL; /* not UTF-16 */
+   if( '\xFE' == **s ) {
+      be = 1;
+   } else if( '\xFF' == **s ) {
+      be = 0;
+   } else {
+      /* not UTF-16 */
+      goto cleanup;
+   }
 
-   u = calloc(max,sizeof(char));
-   for (sl = 2; sl < *len - 1; sl += 2) {
-      c = (be) ? (((*s)[sl] & 0xFF) << 8) | ((*s)[sl + 1] & 0xFF)  /*UTF-16BE */
-         : (((*s)[sl + 1] & 0xFF) << 8) | ((*s)[sl] & 0xFF); /*UTF-16LE */
-      if (c >= 0xD800 && c <= 0xDFFF && (sl += 2) < *len - 1) { /* high-half */
-         d = (be) ? (((*s)[sl] & 0xFF) << 8) | ((*s)[sl + 1] & 0xFF)
-            : (((*s)[sl + 1] & 0xFF) << 8) | ((*s)[sl] & 0xFF);
+   u = scaffold_alloc( max, char );
+   scaffold_check_null( u );
+
+   for( sl = 2 ; sl < *len - 1 ; sl += 2 ) {
+      if( 0 != be ) {
+         /*UTF-16BE */
+         c = (((*s)[sl] & 0xFF) << 8) | ((*s)[sl + 1] & 0xFF);
+      } else {
+         /*UTF-16LE */
+         c = (((*s)[sl + 1] & 0xFF) << 8) | ((*s)[sl] & 0xFF);
+      }
+
+      if( 0xD800 <= c && 0xDFFF >= c && *len - 1 > (sl += 2) ) {
+         /* high-half */
+         if( 0 != be ) {
+            d = (((*s)[sl] & 0xFF) << 8) | ((*s)[sl + 1] & 0xFF);
+         } else {
+            d = (((*s)[sl + 1] & 0xFF) << 8) | ((*s)[sl] & 0xFF);
+         }
          c = (((c & 0x3FF) << 10) | (d & 0x3FF)) + 0x10000;
       }
 
-      /* FIXME: Soft realloc. */
-      while (l + 6 > max) u = scaffold_realloc(u, (max += EZXML_BUFSIZE), char);
-      if (c < 0x80) u[l++] = c; /* US-ASCII subset */
-      else { /* multi-byte UTF-8 sequence */
-         for (b = 0, d = c; d; d /= 2) b++; /* bits in c */
-         b = (b - 2) / 5; /* bytes in payload */
-         u[l++] = (0xFF << (7 - b)) | (c >> (6 * b)); /* head */
-         while (b) u[l++] = 0x80 | ((c >> (6 * --b)) & 0x3F); /* payload */
+      while( l + 6 > max ) {
+         u_tmp = scaffold_realloc( u, (max += EZXML_BUFSIZE), char );
+         scaffold_check_null( u_tmp );
+         u = u_tmp;
+      }
+
+      if( 0x80 > c ) {
+         /* US-ASCII subset */
+         u[l++] = c;
+      } else {
+         /* multi-byte UTF-8 sequence */
+         for( b = 0, d = c ; d ; d /= 2 ) {
+            /* bits in c */
+            b++;
+         }
+
+         /* bytes in payload */
+         b = (b - 2) / 5;
+
+         /* head */
+         u[l++] = (0xFF << (7 - b)) | (c >> (6 * b));
+
+         while( b ) {
+            /* payload */
+            u[l++] = 0x80 | ((c >> (6 * --b)) & 0x3F);
+         }
       }
    }
-   /* FIXME: Soft realloc. */
-   return *s = scaffold_realloc(u, (*len = l), char);
+
+   u_tmp = scaffold_realloc( u, l, char );
+   scaffold_check_null( u_tmp );
+   *len = l;
+   *s = u_tmp;
+   retval = u_tmp;
+
+cleanup:
+   return retval;
 }
 
 /* frees a tag attribute list */
