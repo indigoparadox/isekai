@@ -512,10 +512,10 @@ void graphics_draw_rect(
 }
 
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 ) {
-   SCAFFOLD_SIZE x, y, bit;
+   SCAFFOLD_SIZE_SIGNED x, y, bit;
    uint8_t* font_char;
    float divisor;
 
