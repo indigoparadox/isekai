@@ -126,7 +126,7 @@ static BOOL loop_game() {
       graphics_draw_text(
          g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
          GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
-         GRAPHICS_FONT_SIZE_16, &str_loading
+         GRAPHICS_FONT_SIZE_16, &str_loading, FALSE
       );
       graphics_flip_screen( g_screen );
       graphics_wait_for_fps_timer();

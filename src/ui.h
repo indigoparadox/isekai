@@ -42,6 +42,7 @@ struct UI_WINDOW {
    SCAFFOLD_SIZE_SIGNED grid_y;
    SCAFFOLD_SIZE_SIGNED grid_previous_button;
    bstring id;
+   struct VECTOR controls_active;
 };
 
 typedef enum {

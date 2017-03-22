@@ -109,7 +109,7 @@ __attribute__ ((warn_unused_result))
 void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
    GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
-   const bstring text
+   const bstring text, BOOL cursor
 );
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,

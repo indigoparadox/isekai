@@ -211,13 +211,13 @@ static void tilemap_layer_draw_tile_debug(
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
          );
          bstr_result = bassignformat( bnum, "%d", tile_y );
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
          );
          bdestroy( bnum );
       }
@@ -234,7 +234,7 @@ static void tilemap_layer_draw_tile_debug(
          graphics_draw_text(
             g, pix_x + 16, pix_y + (10 * layer->z),
             GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
          );
       }
       break;
@@ -256,7 +256,8 @@ static void tilemap_layer_draw_tile_debug(
             pix_y + ((td_i / 2) * 16),
             GRAPHICS_TEXT_ALIGN_CENTER,
             td_i + 4, GRAPHICS_FONT_SIZE_8,
-            bnum
+            bnum,
+            FALSE
          );
       }
       break;
