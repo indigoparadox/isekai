@@ -592,6 +592,7 @@ BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+      client_stop( c );
       client_free( c );
       return TRUE;
    }

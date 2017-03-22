@@ -29,7 +29,7 @@ static void client_cleanup( const struct REF *ref ) {
    bdestroy( c->username );
    hashmap_cleanup( &(c->sprites) );
 
-   client_stop( c );
+   /* client_stop( c ); */
 
    hashmap_cleanup( &(c->chunkers) );
    hashmap_cleanup( &(c->channels) );
@@ -118,11 +118,10 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 
    scaffold_set_client();
 
-   /* FIXME: Merge the next two loops. */
-
    /* Check for commands from the server. */
    cmd = callback_ingest_commands( NULL, c, NULL );
 
+   /* TODO: Is this ever called? */
    if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
       scaffold_print_info(
          &module, "Remote server disconnected.\n"
@@ -174,38 +173,10 @@ cleanup:
    return retval;
 }
 
-void client_stop( struct CLIENT* c ) {
-   bstring buffer = NULL;
+void client_free_channels( struct CLIENT* c ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
 
-   if( 0 < c->link.socket ) {
-      scaffold_print_info( &module, "Client connection stopping...\n" );
-      connection_cleanup( &(c->link) );
-   }
-
-   if( TRUE != c->running ) {
-      goto cleanup;
-   }
-
-#ifdef ENABLE_LOCAL_CLIENT
-
-   if( TRUE == c->client_side ) {
-      scaffold_assert_client();
-   } else {
-      scaffold_assert_server();
-   }
-
-#endif /* ENABLE_LOCAL_CLIENT */
-
-#endif /* DEBUG */
-
-   client_clear_puppet( c );
-
-   buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
-   scaffold_check_null( buffer );
-
-#ifdef DEBUG
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
@@ -216,9 +187,15 @@ void client_stop( struct CLIENT* c ) {
    );
    scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
 
-#ifdef USE_CHUNKS
+cleanup:
+   return;
+}
 
+#ifdef USE_CHUNKS
+void client_free_chunkers( struct CLIENT* c ) {
 #ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
+
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
@@ -228,8 +205,51 @@ void client_stop( struct CLIENT* c ) {
       deleted, hashmap_count( &(c->chunkers) )
    );
    scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
-
+cleanup:
+   return;
+}
 #endif /* USE_CHUNKS */
+
+void client_stop( struct CLIENT* c ) {
+   bstring buffer = NULL;
+
+   scaffold_assert( CLIENT_SENTINAL == c->sentinal );
+
+#ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
+
+   if( 0 < c->link.socket ) {
+      scaffold_print_info( &module, "Client connection stopping...\n" );
+      connection_cleanup( &(c->link) );
+   }
+
+   /*
+   if( TRUE != c->running ) {
+      goto cleanup;
+   }
+   */
+
+#ifdef ENABLE_LOCAL_CLIENT
+
+   if( TRUE == c->client_side ) {
+      scaffold_assert_client();
+   } else {
+      scaffold_assert_server();
+   }
+
+   c->flags = 0;
+
+#endif /* ENABLE_LOCAL_CLIENT */
+
+#endif /* DEBUG */
+
+   client_clear_puppet( c );
+
+   buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
+   scaffold_check_null( buffer );
+
+   client_free_channels( c );
+   client_free_chunkers( c );
 
    /* Empty receiving buffer. */
    while( 0 < connection_read_line(

@@ -87,22 +87,13 @@ static BOOL loop_game() {
    BOOL keep_going = TRUE;
    int i;
 
+   for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
+      server_service_clients( main_server );
+   }
+
    if( !main_server->self.running ) {
       keep_going = FALSE;
       goto cleanup;
-   }
-
-   for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
-      if(
-         FALSE == server_service_clients( main_server ) &&
-#ifdef ENABLE_LOCAL_CLIENT
-         !main_client->running &&
-#endif /* ENABLE_LOCAL_CLIENT */
-         TRUE
-      ) {
-         server_stop( main_server );
-         break;
-      }
    }
 
    /* Run the channel VMs. */
@@ -117,23 +108,28 @@ static BOOL loop_game() {
    server_poll_new_clients( main_server );
 
 #ifdef ENABLE_LOCAL_CLIENT
+   client_poll_input( main_client, l, input );
    client_update( main_client, g_screen );
 
    /* Do drawing. */
    l = hashmap_get_first( &(main_client->channels) );
    if(
-      NULL == l ||
-      NULL == main_client->puppet
+      (NULL == l ||
+      NULL == main_client->puppet) &&
+      TRUE == main_client->running /* We're starting, not stopping. */
    ) {
-      client_poll_input( main_client, l, input );
       graphics_draw_text(
          g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
          GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
          GRAPHICS_FONT_SIZE_16, &str_loading, FALSE
       );
-      graphics_flip_screen( g_screen );
-      graphics_wait_for_fps_timer();
       goto cleanup;
+
+   } else if( TRUE != main_client->running ) {
+      /* We're stopping, not starting. */
+      server_stop( main_server );
+      goto cleanup;
+
    } else if( NULL == twindow->t ) {
       twindow->t = &(l->tilemap);
       tilemap_update_window_ortho(
@@ -158,7 +154,6 @@ static BOOL loop_game() {
    /* If there's no puppet then there should be a load screen. */
    scaffold_assert( NULL != main_client->puppet );
 
-   client_poll_input( main_client, l, input );
    tilemap_draw_ortho( twindow );
    vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
 
