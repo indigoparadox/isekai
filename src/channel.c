@@ -43,6 +43,7 @@ static void channel_free_final( const struct REF *ref ) {
 }
 
 void channel_free( struct CHANNEL* l ) {
+   /* FIXME: Things still holding open channel refs. */
    refcount_dec( l, "channel" );
 }
 

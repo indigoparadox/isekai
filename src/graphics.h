@@ -66,7 +66,7 @@ typedef struct {
 } GRAPHICS_RECT;
 
 struct GRAPHICS_TILE_WINDOW {
-   struct CLIENT* c;
+   struct CLIENT* local_client;
    GRAPHICS* g;            /*!< Graphics element to draw on. */
    struct TILEMAP* t;
    SCAFFOLD_SIZE x;        /*!< Window left in tiles. */

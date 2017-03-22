@@ -301,10 +301,9 @@ static BOOL loop_master() {
       twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
       twindow->height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
       twindow->g = g_screen;
-      twindow->c = main_client;
+      twindow->local_client = main_client;
       twindow->t = NULL;
       client_join_channel( main_client, &str_default_channel );
-      main_client->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
       retval = TRUE;
 
 #ifdef DEBUG_FPS

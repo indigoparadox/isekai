@@ -8,10 +8,10 @@ void graphics_screen_new(
 ) {
 }
 
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_surface_cleanup( GRAPHICS* g ) {
 }
 
-void graphics_surface_free( GRAPHICS* g ) {
+void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
@@ -38,8 +38,8 @@ void graphics_draw_rect(
 }
 
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_COLOR color,
-   GRAPHICS_FONT_SIZE size, char c
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 ) {
 }
 

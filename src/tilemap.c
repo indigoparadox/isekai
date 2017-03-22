@@ -2,8 +2,6 @@
 #define TILEMAP_C
 #include "tilemap.h"
 
-extern struct CLIENT* main_client;
-
 #include <memory.h>
 #include <string.h>
 
@@ -22,8 +20,14 @@ static BOOL tilemap_tileset_free_cb( bstring res, void* iter, void* arg ) {
 
 static void tilemap_cleanup( const struct REF* ref ) {
    struct TILEMAP* t;
+   struct CHANNEL* l;
 
    t = scaffold_container_of( ref, struct TILEMAP, refcount );
+   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+
+   scaffold_print_debug(
+      &module, "Destroying tilemap for channel: %b\n", l->name
+   );
 
    hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    hashmap_cleanup( &(t->layers) );
@@ -298,10 +302,9 @@ static void* tilemap_layer_draw_tile(
       pix_x = 0,
       pix_y = 0;
    struct TILEMAP* t = twindow->t;
-   const struct MOBILE* o = twindow->c->puppet;
+   struct CLIENT* local_client = twindow->local_client;
+   const struct MOBILE* o = local_client->puppet;
    GRAPHICS* g_tileset = NULL;
-
-   assert( mobile_is_local_player( o ) );
 
    set = tilemap_get_tileset( t, gid );
    if( NULL == set ) {
@@ -324,7 +327,7 @@ static void* tilemap_layer_draw_tile(
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
 #endif
    /* If the current tileset doesn't exist, then load it. */
-   g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, twindow->c );
+   g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, local_client );
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;
@@ -344,7 +347,7 @@ static void* tilemap_layer_draw_tile(
          tilemap_inside_inner_map_x( o->x, twindow )
       )
    ) {
-      pix_x += mobile_get_steps_remaining_x( twindow->c->puppet, TRUE );
+      pix_x += mobile_get_steps_remaining_x( o, TRUE );
    }
 
    if(
@@ -359,7 +362,7 @@ static void* tilemap_layer_draw_tile(
          tilemap_inside_inner_map_y( o->y, twindow )
       )
    ) {
-      pix_y += mobile_get_steps_remaining_y( twindow->c->puppet, TRUE );
+      pix_y += mobile_get_steps_remaining_y( o, TRUE );
    }
 
    graphics_blit_partial(
@@ -431,6 +434,9 @@ cleanup:
 }
 
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
+   struct CLIENT* local_client = twindow->local_client;
+   struct MOBILE* o = local_client->puppet;
+
    if( NULL == twindow->t ) {
       return;
    }
@@ -454,12 +460,12 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    /* If we've done a full redraw as requested then switch back to just dirty *
     * tiles.                                                                  */
    if(
-      0 != twindow->c->puppet->steps_remaining &&
+      0 != o->steps_remaining &&
       TILEMAP_REDRAW_ALL != twindow->t->redraw_state
    ) {
       tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_ALL );
    } else if(
-      0 == twindow->c->puppet->steps_remaining &&
+      0 == o->steps_remaining &&
       TILEMAP_REDRAW_DIRTY != twindow->t->redraw_state
    ) {
       tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );

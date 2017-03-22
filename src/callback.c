@@ -357,6 +357,8 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 #endif /* USE_CHUNKS */
 
+#ifdef USE_VM
+
 void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 
@@ -393,6 +395,8 @@ void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
 
    return NULL;
 }
+
+#endif /* USE_VM */
 
 void* callback_proc_channel_spawners(
    const bstring key, void* iter, void* arg

@@ -249,7 +249,9 @@ void client_stop( struct CLIENT* c ) {
    scaffold_check_null( buffer );
 
    client_free_channels( c );
+#ifdef USE_CHUNKS
    client_free_chunkers( c );
+#endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
    while( 0 < connection_read_line(
@@ -294,6 +296,8 @@ void client_join_channel( struct CLIENT* c, const bstring name ) {
    scaffold_check_nonzero( bstr_retval );
 
    client_send( c, buffer );
+
+   c->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
 
 cleanup:
    bdestroy( buffer );
