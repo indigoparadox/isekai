@@ -185,6 +185,10 @@ static BOOL loop_connect() {
    if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
 #endif /* USE_CONNECT_DIALOG */
 
+#ifdef USE_RANDOM_PORT
+      server_port = 30000 + (rand() % 30000);
+#endif /* USE_RANDOM_PORT */
+
       /* TODO: Add fields for these to connect dialog. */
       bstr_result = bassigncstr( main_client->nick, "TestNick" );
       scaffold_check_nonzero( bstr_result );
@@ -249,6 +253,11 @@ static BOOL loop_connect() {
 #else
       server_address = &str_localhost;
 #endif /* USE_CONNECT_DIALOG */
+
+      server_listen( main_server, server_port );
+      scaffold_check_nonzero( scaffold_error );
+
+      scaffold_print_info( &module, "Listening on port: %d\n", server_port );
 
 #ifdef USE_RANDOM_PORT
       if( NULL == str_service ) {
@@ -389,16 +398,6 @@ int main( int argc, char** argv ) {
    scaffold_set_client();
    client_new( main_client, TRUE );
 #endif /* ENABLE_LOCAL_CLIENT */
-
-   do {
-#ifdef USE_RANDOM_PORT
-      server_port = 30000 + (rand() % 30000);
-#endif /* USE_RANDOM_PORT */
-      server_listen( main_server, server_port );
-      graphics_sleep( 100 );
-   } while( 0 != scaffold_error );
-
-   scaffold_print_info( &module, "Listening on port: %d\n", server_port );
 
    while( loop_master() );
 

@@ -1,12 +1,12 @@
 
 /* Need to include winsock stuff before windows.h in scaffold. */
-#ifdef _WIN32
+#if defined( _WIN32 ) && defined( USE_NETWORK )
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment( lib, "Ws2_32.lib" )
 #pragma comment( lib, "Mswsock.lib" )
 #pragma comment( lib, "AdvApi32.lib" )
-#endif /* _WIN32 */
+#endif /* _WIN32 && USE_NETWORK */
 
 #define CONNECTION_C
 #include "connect.h"
@@ -43,7 +43,7 @@
 /** \brief Perform any system-wide initialization required by connections.
  */
 void connection_init() {
-#ifdef _WIN32
+#if defined( _WIN32 ) && defined( USE_NETWORK )
    int result = 0;
    WSADATA wsa_data = { 0 };
 
@@ -55,7 +55,7 @@ void connection_init() {
       );
       scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
    }
-#endif /* _WIN32 */
+#endif /* _WIN32 && USE_NETWORK */
 }
 
 static void connection_cleanup_socket( CONNECTION* n ) {

@@ -96,6 +96,8 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
    connection_connect( &(c->link), server , port );
    scaffold_check_nonzero( scaffold_error );
 
+   c->running = TRUE;
+
    proto_register( c );
 
 cleanup:
@@ -694,7 +696,7 @@ static BOOL client_poll_ui(
    if( NULL != ui_window_by_id( c->ui, &str_client_window_id_repl ) ) {
       retval = TRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
-         c->ui, p, client_input_from_ui, &str_client_window_id_repl
+         c->ui, p, &str_client_window_id_repl
       ) ) {
          ui_window_pop( c->ui );
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );

@@ -41,8 +41,6 @@ void server_init( struct SERVER* s, const bstring myhost ) {
    client_init( &(s->self), FALSE );
    s->self.link.refcount.gc_free = server_cleanup;
    hashmap_init( &(s->clients) );
-
-   /* Setup the jobs mailbox. */
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
    scaffold_check_nonzero( bstr_result );
@@ -246,6 +244,7 @@ void server_listen( struct SERVER* s, int port ) {
       scaffold_print_error(
          &module, "Server: Unable to bind to specified port. Exiting.\n" );
    }
+   s->self.running = TRUE;
 }
 
 BOOL server_poll_new_clients( struct SERVER* s ) {
