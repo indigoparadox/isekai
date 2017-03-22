@@ -208,6 +208,14 @@ struct tagbstring ansi_color_strs[7] = {
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
+#define scaffold_assign_or_cpy_c( target, source, retval ) \
+   if( NULL == target ) { \
+      target = bfromcstr( source ); \
+   } else { \
+      retval = bassigncstr( target, source ); \
+      scaffold_check_nonzero( retval ); \
+   }
+
 #define scaffold_check_silence() scaffold_error_silent = TRUE;
 #define scaffold_check_unsilence() scaffold_error_silent = FALSE;
 

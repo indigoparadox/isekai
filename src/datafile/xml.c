@@ -5,6 +5,19 @@
 #include "../hashmap.h"
 #include "../vm.h"
 
+#define ezxml_node( target, parent, id ) \
+   target = ezxml_child( parent, id ); \
+   scaffold_check_null( target );
+
+#define ezxml_int( target, string, parent, attr ) \
+   string = ezxml_attr( parent, attr ); \
+   scaffold_check_null( string ); \
+   target = atoi( string );
+
+#define ezxml_string( target, parent, attr ) \
+   target = ezxml_attr( parent, attr ); \
+   scaffold_check_null( target );
+
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, BOOL local_images
 ) {
@@ -81,21 +94,14 @@ static void datafile_mobile_parse_animation_ezxml(
    animation =
       (struct MOBILE_ANI_DEF*)calloc( 1, sizeof( struct MOBILE_ANI_DEF ) );
 
-   xml_attr = ezxml_attr( xml_animation, "name" );
-   scaffold_check_null( xml_attr );
-   animation->name = bfromcstr( xml_attr );
-
-   xml_attr = ezxml_attr( xml_animation, "speed" );
-   scaffold_check_null( xml_attr );
-   animation->speed = atoi( xml_attr );
+   ezxml_string( xml_attr, xml_animation, "name" );
+   scaffold_assign_or_cpy_c( animation->name, xml_attr, bstr_retval );
+   ezxml_int( animation->speed, xml_attr, xml_animation, "speed" );
 
    vector_init( &(animation->frames) );
-
    xml_frame_iter = ezxml_child( xml_animation, "frame" );
    while( NULL != xml_frame_iter ) {
-      xml_attr = ezxml_attr( xml_frame_iter, "id" );
-      scaffold_check_null( xml_attr );
-      frame_id = atoi( xml_attr );
+      ezxml_int( frame_id, xml_attr, xml_frame_iter, "id" );
 
       sprite = vector_get( &(o->sprite_defs), frame_id );
       if( NULL == sprite ) {
@@ -125,10 +131,10 @@ static void datafile_mobile_parse_animation_ezxml(
    }
    bstr_retval =
       bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
+   scaffold_check_nonzero( bstr_retval );
    scaffold_print_debug(
       &module, "Loaded mobile animation: %b\n", name_dir
    );
-   scaffold_check_nonzero( bstr_retval );
 
    hashmap_put( &(o->ani_defs), name_dir, animation );
    animation = NULL;
@@ -159,30 +165,15 @@ void datafile_parse_mobile_ezxml_t(
 
    scaffold_check_null( xml_data );
 
-
    vm_val_buffer = bfromcstr( "" );
    vm_key_buffer = bfromcstr( "" );
 
-   xml_attr = ezxml_attr( xml_data, "id" );
-   scaffold_check_null( xml_attr );
-   if( NULL == o->mob_id ) {
-      o->mob_id = bfromcstr( xml_attr );
-   } else {
-      bstr_retval = bassigncstr( o->mob_id, xml_attr );
-      scaffold_check_nonzero( bstr_retval );
-   }
+   ezxml_string( xml_attr, xml_data, "id" );
+   scaffold_assign_or_cpy_c( o->mob_id, xml_attr, bstr_retval );
+   ezxml_int( o->sprite_width, xml_attr, xml_data, "spritewidth" );
+   ezxml_int( o->sprite_height, xml_attr, xml_data, "spriteheight" );
 
-   xml_attr = ezxml_attr( xml_data, "spritewidth" );
-   scaffold_check_null( xml_attr );
-   o->sprite_width = atoi( xml_attr );
-
-   xml_attr = ezxml_attr( xml_data, "spriteheight" );
-   scaffold_check_null( xml_attr );
-   o->sprite_height = atoi( xml_attr );
-
-   xml_sprites = ezxml_child( xml_data, "sprites" );
-   scaffold_check_null( xml_sprites );
-
+   ezxml_node( xml_sprites, xml_data, "sprites" );
    xml_sprite_iter = ezxml_child( xml_sprites, "sprite" );
    while( NULL != xml_sprite_iter ) {
       datafile_mobile_parse_sprite_ezxml( o, xml_sprite_iter, local_images );
@@ -198,7 +189,6 @@ void datafile_parse_mobile_ezxml_t(
       xml_animation_iter = ezxml_next( xml_animation_iter );
    }
 
-   /* TODO: Verify script type, etc. */
    xml_scripts = ezxml_child( xml_data, "scripts" );
 
    /* Store script globals. */
@@ -266,6 +256,7 @@ next_global:
          goto next_script;
       }
 
+#ifdef USE_DUKTAPE
       /* Load the script into the hashmap. */
       if(
          0 == scaffold_strcmp_caseless(
@@ -278,6 +269,8 @@ next_global:
             vm_key_buffer, o->serial
          );
       }
+#endif /* USE_DUKTAPE */
+
 next_script:
       xml_script_iter = ezxml_next( xml_script_iter );
    }
@@ -288,16 +281,9 @@ next_script:
    }
 #endif /* USE_VM */
 
-   xml_image = ezxml_child( xml_data, "image" );
-   scaffold_check_null( xml_image );
-   xml_attr = ezxml_attr( xml_image, "src" );
-   scaffold_check_null( xml_attr );
-   if( NULL == o->sprites_filename ) {
-      o->sprites_filename = bfromcstr( xml_attr );
-   } else {
-      bstr_retval = bassigncstr( o->sprites_filename, xml_attr );
-      scaffold_check_nonzero( bstr_retval );
-   }
+   ezxml_node( xml_image, xml_data, "image" );
+   ezxml_string( xml_attr, xml_image, "src" );
+   scaffold_assign_or_cpy_c( o->sprites_filename, xml_attr, bstr_retval );
 
    walk_ani_key = bformat(
       "%s-%s",
