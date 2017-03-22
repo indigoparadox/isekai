@@ -414,7 +414,6 @@ cleanup:
 #endif /* ENABLE_LOCAL_CLIENT */
    scaffold_set_server();
    server_free( main_server );
-   scaffold_free( main_server );
 #ifdef ENABLE_LOCAL_CLIENT
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );
@@ -426,6 +425,10 @@ cleanup:
    fclose( scaffold_log_handle );
    fclose( scaffold_log_handle_err );
 #endif /* SCAFFOLD_LOG_FILE */
+
+#if defined( _WIN32 ) && defined( DEBUG )
+   _CrtDumpMemoryLeaks();
+#endif /* _WIN32 && DEBUG */
 
    return 0;
 }

@@ -180,3 +180,10 @@ void graphics_measure_text(
 cleanup:
    return;
 }
+
+void graphics_surface_free( GRAPHICS* g ) {
+   graphics_surface_cleanup( g );
+   scaffold_assert( NULL == g->palette );
+   scaffold_assert( NULL == g->surface );
+   scaffold_free( g );
+}
