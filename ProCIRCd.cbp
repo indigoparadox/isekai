@@ -133,8 +133,43 @@
 			</Target>
 			<Target title="Debug (MingW32)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd.exe" prefix_auto="1" extension_auto="0" />
-				<Option object_output="obj/Debug-MingW32/" />
+				<Option output="bin/Debug-MingW32/ProCIRCd-NET.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output="obj/Debug-MingW32-NET/" />
+				<Option type="0" />
+				<Option compiler="mingw32_gnu_gcc_compiler" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-std=gnu99" />
+					<Add option="-DDEBUG" />
+					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DEZXML_NOMMAP" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DUSE_TURNS" />
+					<Add option="-DUSE_CONNECT_DIALOG" />
+					<Add option="-DUSE_NETWORK" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add option="-static" />
+					<Add library="gdi32" />
+				</Linker>
+			</Target>
+			<Target title="Debug (MingW32-SB)">
+				<Option platforms="Windows;Unix;" />
+				<Option output="bin/Debug-MingW32/ProCIRCd-SB.exe" prefix_auto="1" extension_auto="0" />
+				<Option object_output="obj/Debug-MingW32-SB/" />
 				<Option type="0" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
 				<Compiler>
@@ -156,6 +191,8 @@
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DEZXML_NOMMAP" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DUSE_TURNS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -554,6 +591,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
@@ -572,6 +610,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
@@ -620,6 +659,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
 			<Option target="Debug" />
@@ -638,6 +678,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
@@ -666,6 +707,8 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.c">
 			<Option compilerVar="CC" />
@@ -682,6 +725,8 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.h">
 			<Option target="Debug" />
@@ -697,6 +742,8 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/duktape/duktype.h" />
 		<Unit filename="src/ezxml.c">
@@ -722,6 +769,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
@@ -752,6 +800,7 @@
 		<Unit filename="src/graphics/win32g.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/hashmap.c">
 			<Option compilerVar="CC" />
@@ -796,6 +845,7 @@
 		<Unit filename="src/input/win32i.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.c">
 			<Option compilerVar="CC" />
@@ -812,6 +862,7 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/ipc/syncbuff.h">
 			<Option target="Debug" />
@@ -827,6 +878,7 @@
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/item.c">
 			<Option compilerVar="CC" />
@@ -849,6 +901,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
@@ -929,6 +982,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/tnacl.h">
 			<Option target="Debug" />
@@ -947,6 +1001,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/cursesu.c">
@@ -969,10 +1024,12 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (MingW32)" />
+			<Option target="Debug (MingW32-SB)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (MingW32)" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/vector.c">
 			<Option compilerVar="CC" />

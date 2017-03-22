@@ -10,3 +10,6 @@ void input_get_event( struct INPUT* input ) {
 
 
 }
+
+void input_shutdown( struct INPUT* input ) {
+}

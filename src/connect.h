@@ -15,6 +15,7 @@ typedef struct _CONNECTION {
    void* arg;
 } CONNECTION;
 
+void connection_init();
 BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n );
 BOOL connection_listen( CONNECTION* n, uint16_t port );
 BOOL connection_connect( CONNECTION* c, const bstring server, uint16_t port );

@@ -376,6 +376,9 @@ int main( int argc, char** argv ) {
    scaffold_check_null( ui );
    ui_init( ui, g_screen );
 
+   connection_init();
+   scaffold_check_nonzero( scaffold_error );
+
 #endif /* ENABLE_LOCAL_CLIENT */
 
    srand( (unsigned)time( &tm ) );

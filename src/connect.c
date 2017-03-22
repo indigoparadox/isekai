@@ -1,4 +1,13 @@
 
+/* Need to include winsock stuff before windows.h in scaffold. */
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment( lib, "Ws2_32.lib" )
+#pragma comment( lib, "Mswsock.lib" )
+#pragma comment( lib, "AdvApi32.lib" )
+#endif /* _WIN32 */
+
 #define CONNECTION_C
 #include "connect.h"
 
@@ -16,18 +25,38 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef _WIN32
 #include <netdb.h>
+#endif /* _WIN32 */
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-//#include <arpa/nameser.h>
-//#include <resolv.h>
+#endif /* _WIN32 */
 #endif /* USE_NETWORK */
 
 #ifdef USE_SYNCBUFF
 #include "ipc/syncbuff.h"
 #endif /* USE_SYNCBUFF */
+
+/** \brief Perform any system-wide initialization required by connections.
+ */
+void connection_init() {
+#ifdef _WIN32
+   int result = 0;
+   WSADATA wsa_data = { 0 };
+
+   result = WSAStartup( MAKEWORD(2,2), &wsa_data );
+   if( 0 != result ) {
+      scaffold_print_error(
+         &module,
+         "WSAStartup failed with error: %d\n", result
+      );
+      scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
+   }
+#endif /* _WIN32 */
+}
 
 static void connection_cleanup_socket( CONNECTION* n ) {
 #ifdef USE_NETWORK
@@ -44,6 +73,9 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
 #ifdef USE_NETWORK
    unsigned int address_length;
    struct sockaddr_in address;
+   #ifdef _WIN32
+   u_long mode = 0;
+   #endif /* _WIN32 */
 
    /* Accept and verify the client. */
    address_length = sizeof( address );
@@ -57,7 +89,12 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
       goto cleanup;
    }
 
+   /* TODO: Check for error. */
+#ifdef _WIN32
+   ioctlsocket( n->socket, FIONBIO, &mode );
+#else
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
+#endif /* _WIN32 */
 
    if( 0 > n->socket ) {
       scaffold_print_error(
@@ -94,11 +131,19 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
 #ifdef USE_NETWORK
    int result;
    struct sockaddr_in address;
+   #ifdef _WIN32
+   u_long mode = 0;
+   #endif /* _WIN32 */
 
    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
    scaffold_check_negative( n->socket );
 
+   /* TODO: Check for error. */
+#ifdef _WIN32
+   ioctlsocket( n->socket, FIONBIO, &mode );
+#else
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
+#endif /* _WIN32 */
 
    /* Setup and bind the port, first. */
    address.sin_family = AF_INET;
@@ -106,8 +151,8 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    address.sin_addr.s_addr = INADDR_ANY;
 
    result = bind(
-               n->socket, (struct sockaddr*)&address, sizeof( address )
-            );
+      n->socket, (struct sockaddr*)&address, sizeof( address )
+   );
    scaffold_check_negative( result );
 
    /* If we could bind the port, then launch the serving connection. */
@@ -137,27 +182,42 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
    BOOL connected = FALSE;
 #ifdef USE_NETWORK
    int connect_result;
-   struct addrinfo hints,
-         * result;
    bstring service;
+   #ifdef _WIN32
+   u_long mode = 0;
+   #endif /* _WIN32 */
+   struct addrinfo hints = { 0 },
+         * result;
 
-   service = bformat( "%d", port );
-   memset( &hints, 0, sizeof hints );
    hints.ai_family = AF_UNSPEC;
    hints.ai_socktype = SOCK_STREAM;
+
+   service = bformat( "%d", port );
 
    connect_result = getaddrinfo(
       bdata( server ), bdata( service ), &hints, &result
    );
    scaffold_check_nonzero( connect_result );
 
-   n->socket =
-      socket( result->ai_family, result->ai_socktype, result->ai_protocol );
+   n->socket = socket(
+      result->ai_family,
+      result->ai_socktype,
+      result->ai_protocol
+   );
 
-   connect_result = connect( n->socket, result->ai_addr, result->ai_addrlen);
+   connect_result = connect(
+      n->socket,
+      result->ai_addr,
+      result->ai_addrlen
+   );
    scaffold_check_negative( connect_result );
 
+   /* TODO: Check for error. */
+#ifdef _WIN32
+   ioctlsocket( n->socket, FIONBIO, &mode );
+#else
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
+#endif /* _WIN32 */
    connected = TRUE;
 cleanup:
 
@@ -204,7 +264,11 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
          dest_socket,
          &(buffer_chars[total_sent]),
          buffer_len - total_sent,
+#ifdef _WIN32
+         0
+#else
          MSG_NOSIGNAL
+#endif /* _WIN32 */
       );
       total_sent += sent;
    } while( total_sent < buffer_len );

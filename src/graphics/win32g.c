@@ -134,18 +134,10 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 
 }
 
-void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_TEXT_ALIGN align,
-   const bstring text
+void graphics_draw_rect(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
 ) {
-
-}
-
-void graphics_draw_rect( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-
-}
-
-void graphics_measure_text( GRAPHICS* g, GRAPHICS_RECT* r, const bstring text ) {
 
 }
 
@@ -198,6 +190,14 @@ void graphics_colors_to_surface(
 
 }
 
-void graphics_wait_for_fps_timer() {
+void graphics_draw_char(
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
+) {
+}
 
+void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
+}
+
+uint32_t graphics_get_ticks() {
 }
