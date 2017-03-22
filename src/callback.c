@@ -592,21 +592,35 @@ void* callback_parse_mob_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
+void* callback_stop_clients( const bstring key, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   bstring nick = (bstring)arg;
+   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+      scaffold_print_debug( &module, "Stopping client: %d\n", c->link.socket );
+      client_stop( c );
+      return NULL;
+   }
+   return NULL;
+}
+
 BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
-      client_stop( c );
+      scaffold_print_debug( &module, "Freeing client: %d\n", c->link.socket );
       client_free( c );
       return TRUE;
    }
    return FALSE;
 }
 
+/** \brief Kick and free clients on all channels in the given list.
+ **/
 void* callback_remove_clients( const bstring res, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring nick = (bstring)arg;
 
+   hashmap_iterate( &(l->clients), callback_stop_clients, nick );
    hashmap_remove_cb( &(l->clients), callback_free_clients, nick );
 
    return NULL;

@@ -150,6 +150,9 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       client_add_channel( &(s->self), l );
       scaffold_print_info(
          &module, "Server: Channel created: %s\n", bdata( l->name ) );
+
+      channel_load_tilemap( l );
+      scaffold_check_nonzero( scaffold_error );
    } else {
       scaffold_print_info(
          &module, "Server: Channel found on server: %s\n", bdata( l->name ) );
@@ -168,9 +171,6 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 
    scaffold_assert( 0 < c_first->link.refcount.count );
    scaffold_assert( 0 < l->refcount.count );
-
-   channel_load_tilemap( l );
-   scaffold_check_nonzero( scaffold_error );
 
 #ifdef DEBUG
    old_count = c_first->link.refcount.count;

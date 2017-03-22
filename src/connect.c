@@ -306,7 +306,7 @@ SCAFFOLD_SIZE_SIGNED connection_write_line( CONNECTION* n, const bstring buffer,
 
    dest_socket = n->socket;
    buffer_len = blength( buffer );
-   scaffold_check_zero( dest_socket );
+   scaffold_check_zero( dest_socket, "Invalid destination socket." );
 
    do {
       sent = send(
