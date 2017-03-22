@@ -96,6 +96,7 @@ static BOOL loop_game() {
       goto cleanup;
    }
 
+#ifdef USE_VM
    /* Run the channel VMs. */
    hashmap_iterate( &(main_server->self.channels), callback_proc_channel_vms, NULL );
 
@@ -104,6 +105,7 @@ static BOOL loop_game() {
     * state updates. */
    vm_tick();
 #endif /* USE_TURNS */
+#endif /* USE_VM */
 
    server_poll_new_clients( main_server );
 

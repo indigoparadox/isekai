@@ -745,6 +745,7 @@ MOBILE_UPDATE mobile_apply_update(
       goto cleanup;
    }
 
+#ifdef USE_VM
 #ifdef USE_TURNS
    if(
       NULL != o->owner
@@ -755,6 +756,7 @@ MOBILE_UPDATE mobile_apply_update(
       vm_tick();
    }
 #endif /* USE_TURNS */
+#endif /* USE_VM */
 
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == instant ) {

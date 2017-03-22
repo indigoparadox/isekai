@@ -36,7 +36,7 @@ void server_free_final( const struct REF* ref ) {
    struct SERVER* s =
       scaffold_container_of( ref, struct SERVER, self.link.refcount );
 
-   server_cleanup( &(s->self.link) );
+   server_cleanup( s );
 
    scaffold_free( s );
 }
