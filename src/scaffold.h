@@ -220,6 +220,18 @@ struct tagbstring ansi_color_strs[7] = {
         scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
 
+#define scaffold_check_null_continue( pointer ) \
+    if( NULL == pointer ) { \
+        scaffold_error = SCAFFOLD_ERROR_NULLPO; \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( &module, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+            scaffold_print_debug( &module, "Continuing loop..." ); \
+        } \
+        continue; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
+    }
+
 #define scaffold_check_not_null( pointer ) \
     if( NULL != pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \

@@ -728,8 +728,72 @@ cleanup:
    return;
 }
 
+static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_object ) {
+   ezxml_t xml_object_props = NULL,
+      xml_object_prop_iter = NULL;
+   const char* xml_attr = NULL;
+   struct TILEMAP_POSITION* obj_out = NULL;
+
+   obj_out = (struct TILEMAP_POSITION*)calloc(
+      1, sizeof( struct TILEMAP_POSITION )
+   );
+   scaffold_check_null( obj_out );
+
+   xml_attr = ezxml_attr( xml_object, "x" );
+   /* TODO: _continue versions of the abort macros.*/
+   scaffold_check_null( xml_attr );
+   obj_out->x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+
+   xml_attr = ezxml_attr( xml_object, "y" );
+   scaffold_check_null( xml_attr );
+   obj_out->y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
+
+   xml_attr = ezxml_attr( xml_object, "name" );
+   scaffold_check_null( xml_attr );
+   bstr_res = bassigncstr( buffer, xml_attr );
+   scaffold_check_nonzero( bstr_res );
+   xml_attr = ezxml_attr( xml_object, "type" );
+   scaffold_check_null( xml_attr );
+   if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
+
+      xml_object_props = ezxml_child( xml_object, "properties" );
+      scaffold_check_null( xml_object_props );
+
+      xml_object_prop_iter = ezxml_child( xml_object_props, "property" );
+      while( NULL != xml_object_prop_iter ) {
+         xml_attr = ezxml_attr( xml_object_prop_iter, "name" );
+         scaffold_check_null_continue( xml_attr );
+
+         if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn" ) )
+            xml_attr = ezxml_attr( xml_object_prop_iter, "value" );
+      }
+
+
+      scaffold_print_debug(
+         &module, "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
+      );
+      hashmap_put( &(t->player_spawns), buffer, obj_out );
+   } else {
+      /* We don't know how to handle this yet. */
+      scaffold_print_error(
+         &module, "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
+      );
+      scaffold_free( obj_out );
+   }
+
+   obj_out = NULL;
+
+cleanup:
+   if( NULL != obj_out ) {
+      /* Something went wrong. */
+      scaffold_free( obj_out );
+   }
+}
+
+
 static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
-   ezxml_t xml_object = NULL;
+   ezxml_t xml_object = NULL,
+      xml_object_props = NULL;
    bstring buffer = NULL;
    const char* xml_attr = NULL;
    struct TILEMAP_POSITION* obj_out = NULL;
@@ -743,48 +807,11 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
    scaffold_check_null( xml_object );
    scaffold_print_debug( &module, "Loading object spawns...\n" );
    while( NULL != xml_object ) {
-      obj_out = (struct TILEMAP_POSITION*)calloc(
-         1, sizeof( struct TILEMAP_POSITION )
-      );
-      scaffold_check_null( obj_out );
 
-      xml_attr = ezxml_attr( xml_object, "x" );
-      /* TODO: _continue versions of the abort macros.*/
-      scaffold_check_null( xml_attr );
-      obj_out->x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
-
-      xml_attr = ezxml_attr( xml_object, "y" );
-      scaffold_check_null( xml_attr );
-      obj_out->y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
-
-      xml_attr = ezxml_attr( xml_object, "name" );
-      scaffold_check_null( xml_attr );
-      bstr_res = bassigncstr( buffer, xml_attr );
-      scaffold_check_nonzero( bstr_res );
-      xml_attr = ezxml_attr( xml_object, "type" );
-      scaffold_check_null( xml_attr );
-      if( 0 == strncmp( xml_attr, "spawn", 5 ) ) {
-         scaffold_print_debug(
-            &module, "Player spawn at: %d, %d\n", obj_out->x, obj_out->y
-         );
-         hashmap_put( &(t->player_spawns), buffer, obj_out );
-      } else {
-         /* We don't know how to handle this yet. */
-         scaffold_print_error(
-            &module, "Unknown object at: %d, %d\n", obj_out->x, obj_out->y
-         );
-         scaffold_free( obj_out );
-      }
-
-      obj_out = NULL;
       xml_object = ezxml_next( xml_object );
    }
 
 cleanup:
-   if( NULL != obj_out ) {
-      /* Something went wrong. */
-      scaffold_free( obj_out );
-   }
    bdestroy( buffer );
    return;
 }

@@ -243,6 +243,8 @@ int crypto_onetimeauth_verify(const u8 *h,const u8 *m,u64 n,const u8 *k)
   return crypto_verify_16(h,x);
 }
 
+/** \brief Encrypt the input given the other parameters.
+ */
 int crypto_secretbox(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *k)
 {
   int i;
@@ -253,6 +255,8 @@ int crypto_secretbox(u8 *c,const u8 *m,u64 d,const u8 *n,const u8 *k)
   return 0;
 }
 
+/** \brief Encrypt the input given the other parameters.
+ */
 int crypto_secretbox_open(u8 *m,const u8 *c,u64 d,const u8 *n,const u8 *k)
 {
   int i;

@@ -5,6 +5,10 @@
 #include "ui.h"
 #include "callback.h"
 
+#ifdef USE_CRYPTO
+#include "tnacl.h"
+#endif /* USE_CRYPTO */
+
 #include <stdlib.h>
 #include <time.h>
 

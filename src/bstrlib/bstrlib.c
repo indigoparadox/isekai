@@ -722,14 +722,13 @@ int i, v, m;
 	return - (int) (UCHAR_MAX + 1);
 }
 
-/*  int biseqcaselessblk (const_bstring b, const void * blk, int len)
- *
- *  Compare content of b and the array of bytes in blk for length len for
- *  equality without differentiating between character case.  If the content
- *  differs other than in case, 0 is returned, if, ignoring case, the content
- *  is the same, 1 is returned, if there is an error, -1 is returned.  If the
- *  length of the strings are different, this function is O(1).  '\0'
- *  characters are not treated in any special way.
+/** \brief Compare content of b and the array of bytes in blk for length len
+ *         for equality without differentiating between character case.  If
+ *         the content differs other than in case, 0 is returned, if, ignoring
+ *         case, the content is the same, 1 is returned, if there is an error,
+ *         -1 is returned.  If the length of the strings are different, this
+ *         function is O(1).  '\0' characters are not treated in any special
+ *         way.
  */
 int biseqcaselessblk (const_bstring b, const void * blk, int len) {
 int i;
