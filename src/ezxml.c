@@ -282,7 +282,7 @@ static void ezxml_char_content(ezxml_root_t root, char *s, SCAFFOLD_SIZE len, ch
    s = ezxml_decode( s, root->ent, t );
    len = strlen( s ) + 1;
 
-   if( NULL == *(xml->txt) ) {
+   if( NULL == xml->txt ) {
       /* initial character content */
       xml->txt = s;
    } else {

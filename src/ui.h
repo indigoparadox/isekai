@@ -122,6 +122,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g );
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id );
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer );
+BOOL ui_window_destroy( struct UI* ui, const bstring wid );
 
 #ifdef UI_C
 SCAFFOLD_MODULE( "ui.c" );

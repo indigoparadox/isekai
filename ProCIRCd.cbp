@@ -155,6 +155,7 @@
 					<Add option="-DUSE_FILE_CACHE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DEZXML_NOMMAP" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -482,6 +483,49 @@
 					<Add library="ubsan" />
 				</Linker>
 			</Target>
+			<Target title="Debug (Emscripten-NET-SDL)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd-SDL-NET" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-Emscripten-NET-SDL/" />
+				<Option type="1" />
+				<Option compiler="emscripten_gcc_compiler" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-std=gnu99" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-DUSE_SDL" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DUSE_RANDOM_PORT" />
+					<Add option="-DxDEBUG_REF" />
+					<Add option="-DUSE_CONNECT_DIALOG" />
+					<Add option="-DDEBUG_TILES" />
+					<Add option="-DUSE_SDL_IMAGE" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DxDEBUG_PALETTE" />
+					<Add option="-DDEBUG_FPS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="ubsan" />
+					<Add library="SDL" />
+					<Add library="SDL_image" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-DEZXML_CSTR" />
@@ -506,6 +550,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
@@ -523,6 +568,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
@@ -570,6 +616,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
 			<Option target="Debug" />
@@ -587,6 +634,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
@@ -614,6 +662,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/dukhelp.h">
 			<Option target="Debug" />
@@ -628,6 +677,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.c">
 			<Option compilerVar="CC" />
@@ -643,6 +693,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.h">
 			<Option target="Debug" />
@@ -657,6 +708,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
@@ -680,6 +732,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegro.c">
@@ -705,6 +758,7 @@
 		<Unit filename="src/graphics/sdlg.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/graphics/win32g.c">
 			<Option compilerVar="CC" />
@@ -748,6 +802,7 @@
 		<Unit filename="src/input/sdli.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/input/win32i.c">
 			<Option compilerVar="CC" />
@@ -804,6 +859,7 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
@@ -846,6 +902,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
 			<Option target="Debug" />
@@ -863,6 +920,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/tnacl.c">
 			<Option compilerVar="CC" />
@@ -881,6 +939,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/tnacl.h">
 			<Option target="Debug" />
@@ -898,15 +957,19 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ui.h" />
+		<Unit filename="src/ui/cursesu.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Linux-Curses)" />
+		</Unit>
 		<Unit filename="src/ui/graphicu.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Check (Linux-C99)" />
 			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
@@ -916,6 +979,7 @@
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
