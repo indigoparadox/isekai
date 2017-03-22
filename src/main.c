@@ -389,7 +389,7 @@ cleanup:
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
    graphics_shutdown( g_screen );
-   graphics_free_bitmap( g_screen );
+   scaffold_free( g_screen );
 #endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );

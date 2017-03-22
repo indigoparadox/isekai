@@ -75,6 +75,8 @@ void tilemap_iterate_screen_row(
 
 }
 
+#ifndef USE_CURSES
+
 /** \brief Given a tile GID, get the tileset it belongs to.
  * \param[in] t   The tilemap on which the tile resides.
  * \param[in] gid The GID of the tile information to fetch.
@@ -114,6 +116,8 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 cleanup:
    return;
 }
+
+#endif /* USE_CURSES */
 
 /** \brief Get the GID of the tile at the given position on the given layer.
  * \param[in] layer  Layer from which to fetch the tile.
@@ -292,7 +296,6 @@ static void* tilemap_layer_draw_tile(
    }
 
    /* Figure out the graphical tile to draw from. */
-   /* TODO: Support multiple images. */
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
@@ -592,7 +595,7 @@ void tilemap_update_window_ortho(
       twindow->y = 0;
    }
 
-   /* TODO: Only calculate these when window moves and store them. */
+   /* Only calculate these when window moves and store them. */
    twindow->max_x = twindow->x + twindow->width + border_x < t->width ?
       twindow->x + twindow->width + border_x : twindow->t->width;
    twindow->max_y = twindow->y + twindow->height + border_y < t->height ?

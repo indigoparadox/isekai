@@ -473,18 +473,6 @@ struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
 }
 
 BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
-   /*
-   struct UI_WINDOW*
-
-   vector_lock( &(ui->windows), TRUE );
-   for( i = 0 ; vector_count( &(ui->windows) ) > i ; i++ ) {
-      win_iter =
-      if( 0 == bstrcmp( wid,  ))
-   }
-
-
-   vector_lock( &(ui->windows), FALSE );
-   */
    return vector_remove_cb( &(ui->windows), callback_free_windows, wid );
 }
 
