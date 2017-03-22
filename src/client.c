@@ -105,7 +105,9 @@ cleanup:
    return;
 }
 
-/* This runs on the local client. */
+/** \brief This runs on the local client.
+ * \return TRUE if a command was executed, or FALSE otherwise.
+ */
 BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
