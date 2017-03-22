@@ -105,6 +105,9 @@ static BOOL loop_game() {
       }
    }
 
+   /* Run the channel VMs. */
+   hashmap_iterate( &(main_server->self.channels), callback_proc_channel_vms, NULL );
+
 #ifndef USE_TURNS
    /* If we're doing real-time, then do a VM tick for every full cycle of
     * state updates. */
