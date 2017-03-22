@@ -75,6 +75,8 @@ void ui_window_init(
       );
    }
 
+   vector_init( &(win->controls_active) );
+
    graphics_surface_init( win->element, width, height );
 
 cleanup:
@@ -95,6 +97,8 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
       free( win->element );
       win->element = NULL;
    }
+   win->controls_active.count = 0; /* Force remove. */
+   vector_cleanup( &(win->controls_active) );
 }
 
 void ui_window_free( struct UI_WINDOW* win ) {
@@ -134,6 +138,7 @@ void ui_control_init(
    control->self.height = height;
    control->can_focus = can_focus;
    control->self.title = NULL;
+   vector_init( &(control->self.controls_active) );
 }
 
 void ui_control_add(
@@ -154,11 +159,11 @@ void ui_control_add(
 
    hashmap_put( &(win->controls), id, control );
 
-   if(
-      UI_CONTROL_TYPE_BUTTON == control->type ||
-      UI_CONTROL_TYPE_TEXT == control->type
-   ) {
-      win->active_control = control;
+   if( TRUE == control->can_focus ) {
+      vector_add( &(win->controls_active), control );
+      if( NULL == win->active_control ) {
+         win->active_control = control;
+      }
    }
 }
 
@@ -245,6 +250,10 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
 #endif // 0
 
+   if( 0 < input->repeat ) {
+      goto cleanup;
+   }
+
    if(
       INPUT_TYPE_KEY == input->type &&
       (scaffold_char_is_printable( input->character ) ||
@@ -266,6 +275,11 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
       INPUT_SCANCODE_ENTER == input->scancode
    ) {
       input_length = blength( control->text );
+   } else if(
+      INPUT_TYPE_KEY == input->type &&
+      INPUT_SCANCODE_TAB == input->scancode
+   ) {
+      ui_window_next_active_control( win );
    }
 
 cleanup:
@@ -377,7 +391,8 @@ static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
    if( NULL != control->text ) {
       graphics_draw_text(
          g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
-         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, control->text
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, control->text,
+         control == win->active_control ? TRUE : FALSE
       );
    }
 
@@ -423,7 +438,7 @@ static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
    );
    graphics_draw_text(
       win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
-      UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title
+      UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title, FALSE
    );
 
    win->grid_x = UI_WINDOW_MARGIN;
@@ -480,6 +495,28 @@ BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
 
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id ) {
    return hashmap_get( &(win->controls), id );
+}
+
+void ui_window_next_active_control( struct UI_WINDOW* win ) {
+   int i, active_controls_count;
+   active_controls_count = vector_count( &(win->controls_active) );
+   for( i = 0 ; active_controls_count > i ; i++ ) {
+      if(
+         vector_get( &(win->controls_active), i ) == win->active_control &&
+         i + 1 < active_controls_count
+      ) {
+         win->active_control = vector_get( &(win->controls_active), i + 1 );
+         goto cleanup;
+      }
+   }
+
+   /* Reached the end of the list. */
+   if( 0 < active_controls_count ) {
+      win->active_control = vector_get( &(win->controls_active), 0 );
+   }
+
+cleanup:
+   return;
 }
 
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {

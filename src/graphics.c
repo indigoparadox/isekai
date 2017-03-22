@@ -136,7 +136,7 @@ cleanup:
 void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
    GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
-   const bstring text
+   const bstring text, BOOL cursor
 ) {
    SCAFFOLD_SIZE x = x_start,
       y = y_start;
@@ -162,6 +162,10 @@ void graphics_draw_text(
    for( i = 0 ; text->slen > i ; i++ ) {
       c = text->data[i];
       graphics_draw_char( g, x + (size * i), y, color, size, c );
+   }
+
+   if( TRUE == cursor ) {
+      graphics_draw_char( g, x + (size * i), y, color, size, '_' );
    }
 }
 

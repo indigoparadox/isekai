@@ -19,6 +19,16 @@ void input_get_event( struct INPUT* input ) {
    SDL_PollEvent( event );
 
    if( SDL_KEYDOWN == event->type ) {
+      /* Detect repeats. */
+      if(
+         INPUT_TYPE_KEY == input->type &&
+         event->key.keysym.scancode == input->scancode
+      ) {
+         input->repeat++;
+      } else {
+         input->repeat = 0;
+      }
+
       input->type = INPUT_TYPE_KEY;
       input->character = event->key.keysym.unicode & 0x00ff;
       input->scancode = event->key.keysym.scancode;

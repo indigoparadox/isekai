@@ -9,15 +9,18 @@ typedef enum INPUT_SCANCODE {
 #ifdef USE_ALLEGRO
    INPUT_SCANCODE_ESC = 59,
    INPUT_SCANCODE_BACKSPACE = 63,
-   INPUT_SCANCODE_ENTER = 67
+   INPUT_SCANCODE_ENTER = 67,
+   INPUT_SCANCODE_TAB = KEY_TAB
 #elif defined( USE_SDL )
    INPUT_SCANCODE_BACKSPACE = 22,
    INPUT_SCANCODE_ENTER = 36,
-   INPUT_SCANCODE_ESC = 9
+   INPUT_SCANCODE_ESC = 9,
+   INPUT_SCANCODE_TAB = 23
 #else
    INPUT_SCANCODE_BACKSPACE = 0,
    INPUT_SCANCODE_ENTER = 0,
-   INPUT_SCANCODE_ESC = 0
+   INPUT_SCANCODE_ESC = 0,
+   INPUT_SCANCODE_TAB = 0
 #endif
 } INPUT_SCANCODE;
 
@@ -33,6 +36,7 @@ struct INPUT {
    uint16_t character;
    uint16_t scancode;
    INPUT_TYPE type;
+   uint16_t repeat;
 };
 
 void input_init( struct INPUT* p );
