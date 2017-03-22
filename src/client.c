@@ -791,8 +791,18 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    case 'p': windef_show_repl( ui ); return TRUE;
 #endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
-   case 't': tilemap_toggle_debug_state(); return TRUE;
-   case 'l': tilemap_dt_layer++; return TRUE;
+   case 't':
+      if( 0 == input->repeat ) {
+         tilemap_toggle_debug_state();
+         return TRUE;
+      }
+      break;
+   case 'l':
+      if( 0 == input->repeat ) {
+         tilemap_dt_layer++;
+         return TRUE;
+      }
+      break;
 #endif /* DEBUG_TILES */
    }
 

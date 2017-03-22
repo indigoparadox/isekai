@@ -28,35 +28,42 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
 
-static void SDL_PutPixel( SDL_Surface *surface, int x, int y, uint32_t pixel ) {
-    int bpp = surface->format->BytesPerPixel;
-    uint8_t* p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
+static void SDL_PutPixel(
+   SDL_Surface *surface, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   uint32_t pixel
+) {
+   int bpp = surface->format->BytesPerPixel;
+   uint8_t* p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
+   if( 0 > x || 0 > y || surface->w <= x || surface->h <= y ) {
+      return;
+   }
 
-    case 2:
-        *(uint16_t*)p = pixel;
-        break;
+   switch( bpp ) {
+   case 1:
+      *p = pixel;
+      break;
 
-    case 3:
-        if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
+   case 2:
+      *(uint16_t*)p = pixel;
+      break;
 
-    case 4:
-        *(uint32_t*)p = pixel;
-        break;
-    }
+   case 3:
+      if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
+         p[0] = (pixel >> 16) & 0xff;
+         p[1] = (pixel >> 8) & 0xff;
+         p[2] = pixel & 0xff;
+      } else {
+         p[0] = pixel & 0xff;
+         p[1] = (pixel >> 8) & 0xff;
+         p[2] = (pixel >> 16) & 0xff;
+      }
+      break;
+
+   case 4:
+      *(uint32_t*)p = pixel;
+      break;
+   }
 }
 
 static void graphics_surface_cleanup( const struct REF *ref ) {
@@ -292,7 +299,7 @@ cleanup:
 }
 
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
    GRAPHICS_COLOR color_i, GRAPHICS_FONT_SIZE size, char c
 ) {
    SCAFFOLD_SIZE x, y, bit;

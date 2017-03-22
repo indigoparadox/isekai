@@ -134,11 +134,11 @@ cleanup:
 }
 
 void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
    GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
    const bstring text, BOOL cursor
 ) {
-   SCAFFOLD_SIZE x = x_start,
+   SCAFFOLD_SIZE_SIGNED x = x_start,
       y = y_start;
    char c;
    int i;
