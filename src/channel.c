@@ -263,8 +263,8 @@ void channel_load_tilemap( struct CHANNEL* l ) {
       mapdata_buffer, "Unable to load tilemap data." );
    scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
 
-   datafile_parse_tilemap_ezxml_string(
-      &(l->tilemap), mapdata_buffer, mapdata_size, FALSE
+   datafile_parse_ezxml_string(
+      &(l->tilemap), mapdata_buffer, mapdata_size, FALSE, DATAFILE_TYPE_TILEMAP
    );
 #endif /* USE_EZXML */
 

@@ -119,7 +119,7 @@ static void vm_update( duk_context* vm ) {
    }
 }
 
-static BOOL vm_global_set_cb( bstring key, void* iter, void* arg ) {
+static void* vm_global_set_cb( bstring key, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)arg;
    bstring value = (bstring)iter;
    duk_idx_t idx;
@@ -132,7 +132,7 @@ static BOOL vm_global_set_cb( bstring key, void* iter, void* arg ) {
    duk_put_prop_string( OBJECT_VM( o ), -2, bdata( key ) );
    duk_pop( OBJECT_VM( o ) );
 
-   return FALSE;
+   return NULL;
 }
 
 /*

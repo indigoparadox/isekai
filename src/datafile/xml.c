@@ -10,32 +10,7 @@ void datafile_parse_item_ezxml_t(
 ) {
 }
 
-void datafile_parse_item_ezxml_string(
-   struct ITEM* e, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
-) {
-   ezxml_t xml_data = NULL;
-#ifdef EZXML_STRICT
-   SCAFFOLD_SIZE datasize_check = 0;
-#endif /* EZXML_STRICT */
-
-   scaffold_check_null( tmdata );
-
-#ifdef EZXML_STRICT
-   datasize_check = strlen( (const char*)o );
-   scaffold_assert( datasize_check == datasize );
-#endif /* EZXML_STRICT */
-
-   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
-
-   datafile_parse_item_ezxml_t( e, xml_data, local_images );
-
-cleanup:
-   if( NULL != xml_data ) {
-      ezxml_free( xml_data );
-   }
-   return;
-}
+/* = Mobiles = */
 
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
@@ -349,32 +324,7 @@ cleanup:
    return;
 }
 
-void datafile_parse_mobile_ezxml_string(
-   struct MOBILE* o, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
-) {
-   ezxml_t xml_data = NULL;
-#ifdef EZXML_STRICT
-   SCAFFOLD_SIZE datasize_check = 0;
-#endif /* EZXML_STRICT */
-
-   scaffold_check_null( tmdata );
-
-#ifdef EZXML_STRICT
-   datasize_check = strlen( (const char*)o );
-   scafmobile_initfold_assert( datasize_check == datasize );
-#endif /* EZXML_STRICT */
-
-   xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
-
-   datafile_parse_mobile_ezxml_t( o, xml_data, local_images );
-
-cleanup:
-   if( NULL != xml_data ) {
-      ezxml_free( xml_data );
-   }
-   return;
-}
+/* = Tilemaps */
 
 ezxml_t datafile_tilemap_ezxml_peek_lname(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
@@ -397,7 +347,10 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
    xml_prop_iter = ezxml_child( xml_props, "property" );
 
    while( NULL != xml_prop_iter ) {
-      if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "channel" ) ) {
+      if(
+         0 == scaffold_strcmp_caseless(
+         ezxml_attr( xml_prop_iter, "name" ), "channel"
+      ) ) {
          channel_c = ezxml_attr( xml_prop_iter, "value" );
          scaffold_check_null( channel_c );
          bstr_retval = bassigncstr( lname_buffer, channel_c );
@@ -633,15 +586,6 @@ static void datafile_tilemap_parse_tileset_ezxml( struct TILEMAP* t, ezxml_t xml
       vector_init( &(set->terrain) );
    }
 
-   /*
-   terrain_info = (struct TILEMAP_TERRAIN_DATA*)
-      calloc( 1, sizeof( struct TILEMAP_TERRAIN_DATA ) );
-   terrain_info->movement = TILEMAP_MOVEMENT_NORMAL;
-   terrain_info->name = bfromcstr( "Blank" );
-   vector_add( &(set->terrain), terrain_info );
-   terrain_info = NULL;
-   */
-
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
@@ -785,12 +729,8 @@ static void datafile_tilemap_parse_layer_ezxml(
    hashmap_put( &(t->layers), buffer, layer );
 
    /* The map is as large as the largest layer. */
-   if( layer->width > t->width ) {
-      t->width = layer->width;
-   }
-   if( layer->height > t->height ) {
-      t->height = layer->height;
-   }
+   if( layer->width > t->width ) { t->width = layer->width; }
+   if( layer->height > t->height ) { t->height = layer->height; }
 
    /* Add to the layers linked list. */
    if( NULL == t->first_layer ) {
@@ -959,8 +899,9 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap_ezxml_string(
-   struct TILEMAP* t, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+void datafile_parse_ezxml_string(
+   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images,
+   DATAFILE_TYPE type
 ) {
    ezxml_t xml_data = NULL;
 #ifdef EZXML_STRICT
@@ -977,7 +918,17 @@ void datafile_parse_tilemap_ezxml_string(
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
    scaffold_check_null( xml_data );
 
-   datafile_parse_tilemap_ezxml_t( t, xml_data, local_images );
+   switch( type ) {
+   case DATAFILE_TYPE_TILEMAP:
+      datafile_parse_tilemap_ezxml_t( object, xml_data, local_images );
+      break;
+   case DATAFILE_TYPE_MOBILE:
+      datafile_parse_mobile_ezxml_t( object, xml_data, local_images );
+      break;
+   case DATAFILE_TYPE_ITEM:
+      datafile_parse_item_ezxml_t( object, xml_data, local_images );
+      break;
+   }
 
 cleanup:
    if( NULL != xml_data ) {
