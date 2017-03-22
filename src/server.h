@@ -26,6 +26,7 @@ struct SERVER {
     s = (struct SERVER*)calloc( 1, sizeof( struct SERVER ) ); \
     server_init( s, myhost );
 
+void server_free_clients( struct SERVER* s );
 void server_init( struct SERVER* s, const bstring myhost );
 #ifdef USE_INLINES
 inline

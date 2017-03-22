@@ -664,6 +664,7 @@
 		</Unit>
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/bstrlib/bsafe.h" />
 		<Unit filename="src/bstrlib/bstraux.c">
@@ -979,9 +980,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/server.h" />
-		<Unit filename="src/stb/stb_image.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/tilemap.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1112,7 +1110,6 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
@@ -1132,7 +1129,6 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-SHM-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-Server)" />
