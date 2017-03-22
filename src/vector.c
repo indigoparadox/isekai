@@ -530,6 +530,28 @@ cleanup:
    return cb_return;
 }
 
+void* vector_iterate_nolock( struct VECTOR* v, vector_search_cb callback, void* arg ) {
+   void* cb_return = NULL;
+   void* current_iter = NULL;
+   SCAFFOLD_SIZE i;
+
+   scaffold_check_null( v );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   /* TODO: This can work for scalars too, can't it? */
+   scaffold_assert( FALSE == v->scalar );
+
+   for( i = 0 ; vector_count( v ) > i ; i++ ) {
+      current_iter = vector_get( v, i );
+      cb_return = callback( NULL, current_iter, arg );
+      if( NULL != cb_return ) {
+         break;
+      }
+   }
+
+cleanup:
+   return cb_return;
+}
+
 /** \brief Iterate through the given vector with the given callback in reverse.
  * \param[in] v         The vector through which to iterate.
  * \param[in] callback  The callback to run on each item.
