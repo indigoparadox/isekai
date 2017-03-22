@@ -9,15 +9,19 @@
 #include "proto.h"
 
 static void server_cleanup( struct SERVER* s ) {
-#ifdef DEBUG
-   SCAFFOLD_SIZE deleted = 0;
-#endif /* DEBUG */
-
    /* Infinite circle. server_free > client_free > ref_dec > server_free */
    client_free_from_server( &(s->self) );
 
    /* Remove clients. */
+   server_free_clients( s );
+
+   scaffold_assert( 0 == s->self.link.refcount.count );
+}
+
+void server_free_clients( struct SERVER* s ) {
 #ifdef DEBUG
+   SCAFFOLD_SIZE deleted = 0;
+
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
@@ -26,8 +30,6 @@ static void server_cleanup( struct SERVER* s ) {
       deleted, hashmap_count( &(s->clients) )
    );
    hashmap_cleanup( &(s->clients) );
-
-   scaffold_assert( 0 == s->self.link.refcount.count );
 }
 
 void server_free_final( const struct REF* ref ) {
@@ -70,6 +72,12 @@ void server_stop( struct SERVER* s ) {
       server_service_clients( s );
       graphics_sleep( 1000 );
    }
+   /*
+   client_free_channels( &(s->self) );
+   server_free_clients( s );
+   */
+   scaffold_assert( 0 == hashmap_count( &(s->self.channels) ) );
+   scaffold_assert( 0 == hashmap_count( &(s->clients) ) );
    s->self.running = FALSE;
 }
 
@@ -205,7 +213,7 @@ struct CHANNEL* server_get_channel_by_name( struct SERVER* s, const bstring nick
    return client_get_channel_by_name( &(s->self), (bstring)nick );
 }
 
-void server_drop_client( struct SERVER* s, bstring nick ) {
+void server_drop_client( struct SERVER* s, const bstring nick ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -221,8 +229,8 @@ void server_drop_client( struct SERVER* s, bstring nick ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
    scaffold_print_debug(
-      &module, "Server: Removed %d clients. %d remaining.\n",
-      deleted, hashmap_count( &(s->clients) )
+      &module, "Server: Removed %d clients (%b). %d remaining.\n",
+      deleted, nick, hashmap_count( &(s->clients) )
    );
 
    hashmap_iterate( &(s->self.channels), callback_remove_clients, nick );
