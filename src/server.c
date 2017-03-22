@@ -307,6 +307,9 @@ cleanup:
    return new_clients;
 }
 
+/**
+ * \return TRUE if a command was executed, or FALSE otherwise.
+ */
 BOOL server_service_clients( struct SERVER* s ) {
    IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
