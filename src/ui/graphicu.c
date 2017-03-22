@@ -94,7 +94,6 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
    }
    if( NULL != win->element && NULL != win->element->surface ) {
       graphics_surface_free( win->element );
-      free( win->element );
       win->element = NULL;
    }
    win->controls_active.count = 0; /* Force remove. */

@@ -49,7 +49,6 @@ struct GRAPHICS_BITMAP {
 };
 
 typedef struct GRAPHICS {
-   struct REF refcount;
    SCAFFOLD_SIZE w;
    SCAFFOLD_SIZE h;
    void* surface;

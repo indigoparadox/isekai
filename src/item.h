@@ -39,7 +39,6 @@ typedef enum ITEM_TYPE {
    ITEM_TYPE_FOOD
 } ITEM_TYPE;
 
-
 union ITEM_CONTENT {
    bstring book_text;
    struct VECTOR* container;

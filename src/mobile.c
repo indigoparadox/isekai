@@ -32,6 +32,11 @@ static void mobile_cleanup( const struct REF* ref ) {
    }
    if( NULL != o->channel ) {
       channel_free( o->channel );
+      scaffold_print_debug(
+         &module,
+         "Mobile %d decreased refcount of channel %b to: %d\n",
+         o->serial, o->channel->name, o->channel->refcount.count
+      );
       o->channel = NULL;
    }
 
@@ -49,6 +54,12 @@ static void mobile_cleanup( const struct REF* ref ) {
 
    hashmap_remove_cb( &(o->vm_globals), callback_free_strings, NULL );
    hashmap_cleanup( &(o->vm_globals) );
+
+   scaffold_print_debug(
+      &module,
+      "Mobile %b (%d) destroyed.\n",
+      o->display_name, o->serial
+   );
 
    bdestroy( o->display_name );
    scaffold_free( o );
@@ -285,7 +296,6 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       goto cleanup;
    } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
       o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
-      refcount_inc( o->sprites, "spritesheet" );
    } else if( NULL == o->sprites ) {
       /* Sprites must not be ready yet. */
       goto cleanup;
@@ -399,10 +409,20 @@ cleanup:
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    if( NULL != o->channel ) {
       channel_free( o->channel );
+      scaffold_print_debug(
+         &module,
+         "Mobile %d decreased refcount of channel %b to: %d\n",
+         o->serial, l->name, l->refcount.count
+      );
    }
    o->channel = l;
    if( NULL != o->channel ) {
       refcount_inc( l, "channel" );
+      scaffold_print_debug(
+         &module,
+         "Mobile %d increased refcount of channel %b to: %d\n",
+         o->serial, l->name, l->refcount.count
+      );
    }
 }
 

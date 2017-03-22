@@ -8,8 +8,7 @@
 #include "hashmap.h"
 #include "proto.h"
 
-static void server_cleanup( const struct REF* ref ) {
-   struct SERVER* s = scaffold_container_of( ref, struct SERVER, self.link.refcount );
+static void server_cleanup( struct SERVER* s ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted = 0;
 #endif /* DEBUG */
@@ -27,6 +26,17 @@ static void server_cleanup( const struct REF* ref ) {
       deleted, hashmap_count( &(s->clients) )
    );
    hashmap_cleanup( &(s->clients) );
+
+   scaffold_assert( 0 == s->self.link.refcount.count );
+}
+
+void server_free_final( const struct REF* ref ) {
+   struct SERVER* s =
+      scaffold_container_of( ref, struct SERVER, self.link.refcount );
+
+   server_cleanup( &(s->self.link) );
+
+   scaffold_free( s );
 }
 
 BOOL server_free( struct SERVER* s ) {
@@ -39,7 +49,7 @@ BOOL server_free( struct SERVER* s ) {
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
    client_init( &(s->self), FALSE );
-   s->self.link.refcount.gc_free = server_cleanup;
+   s->self.link.refcount.gc_free = server_free_final;
    hashmap_init( &(s->clients) );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );

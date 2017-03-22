@@ -66,8 +66,7 @@ static void SDL_PutPixel(
    }
 }
 
-static void graphics_surface_cleanup( const struct REF *ref ) {
-   GRAPHICS* g = scaffold_container_of( ref, GRAPHICS, refcount );
+void graphics_surface_cleanup( GRAPHICS* g ) {
    if( NULL != g->surface ) {
       SDL_FreeSurface( g->surface );
       g->surface = NULL;
@@ -76,7 +75,6 @@ static void graphics_surface_cleanup( const struct REF *ref ) {
       scaffold_free( g->palette );
       g->palette = NULL;
    }
-   /* TODO: Free surface. */
 }
 
 void graphics_screen_new(
@@ -117,8 +115,6 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
 
    screen = SDL_GetVideoSurface();
 
-   ref_init( &(g->refcount), graphics_surface_cleanup );
-
    g->surface = SDL_CreateRGBSurface(
 #ifdef USE_SDL_IMAGE
       SDL_HWSURFACE,
@@ -140,12 +136,6 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    g->h = h;
 cleanup:
    return;
-}
-
-void graphics_surface_free( GRAPHICS* g ) {
-   if( NULL != g->surface ) {
-      SDL_FreeSurface( g->surface );
-   }
 }
 
 void graphics_flip_screen( GRAPHICS* g ) {
