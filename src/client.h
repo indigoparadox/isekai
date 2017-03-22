@@ -77,6 +77,10 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
 void client_connect( struct CLIENT* c, const bstring server, int port );
 void client_remove_all_channels( struct CLIENT* c );
 BOOL client_update( struct CLIENT* c, GRAPHICS* g );
+void client_free_channels( struct CLIENT* c );
+#ifdef USE_CHUNKS
+void client_free_chunkers( struct CLIENT* c );
+#endif /* USE_CHUNKS */
 void client_join_channel( struct CLIENT* c, const bstring name );
 void client_leave_channel( struct CLIENT* c, const bstring lname );
 void client_send( struct CLIENT* c, const bstring buffer );

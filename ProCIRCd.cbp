@@ -742,6 +742,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/connect.h" />
+		<Unit filename="src/datafile.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/datafile.h" />
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />

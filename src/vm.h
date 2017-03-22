@@ -15,7 +15,7 @@ BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev );
 void vm_mobile_start( struct MOBILE* o );
 void vm_mobile_do_event( struct MOBILE* o, const char* event );
 void vm_mobile_end( struct MOBILE* o );
-BOOL mobile_has_event( struct MOBILE* o, const char* event );
+BOOL vm_mobile_has_event( struct MOBILE* o, const char* event );
 #endif /* USE_VM */
 
 #ifdef VM_C

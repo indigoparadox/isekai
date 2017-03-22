@@ -48,6 +48,7 @@ void* callback_proc_channel_spawners(
 void* callback_proc_server_spawners( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg );
 void* callback_draw_mobiles( const bstring res, void* iter, void* arg );
+void* callback_stop_clients( const bstring key, void* iter, void* arg );
 BOOL callback_free_clients( const bstring key, void* iter, void* arg );
 void* callback_remove_clients( const bstring res, void* iter, void* arg );
 BOOL callback_free_channels( const bstring key, void* iter, void* arg );

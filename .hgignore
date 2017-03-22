@@ -1,4 +1,5 @@
 relre:.*\.o$
+glob:deps
 glob:obj
 glob:bin
 glob:*.layout

@@ -7,6 +7,13 @@
 #include "mobile.h"
 #include "item.h"
 
+typedef enum DATAFILE_TYPE {
+   DATAFILE_TYPE_NONE,
+   DATAFILE_TYPE_TILEMAP,
+   DATAFILE_TYPE_MOBILE,
+   DATAFILE_TYPE_ITEM
+} DATAFILE_TYPE;
+
 typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize
 );
@@ -15,17 +22,11 @@ typedef void (*datafile_cb)(
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, BOOL local_images
 );
-void datafile_parse_item_ezxml_string(
-   struct ITEM* e, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
-);
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
 );
 void datafile_parse_mobile_ezxml_t(
    struct MOBILE* o, ezxml_t xml_data, BOOL local_images
-);
-void datafile_parse_mobile_ezxml_string(
-   struct MOBILE* o, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
 );
 ezxml_t datafile_tilemap_ezxml_peek_lname(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
@@ -33,8 +34,9 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
 void datafile_parse_tilemap_ezxml_t(
    struct TILEMAP* t, ezxml_t xml_data, BOOL local_images
 );
-void datafile_parse_tilemap_ezxml_string(
-   struct TILEMAP* t, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images
+void datafile_parse_ezxml_string(
+   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images,
+   DATAFILE_TYPE type
 );
 #endif /* USE_EZXML */
 
