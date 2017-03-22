@@ -425,6 +425,11 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
    int8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
 
+   if( MOBILE_UPDATE_NONE == update_in ) {
+      update_out = MOBILE_UPDATE_NONE;
+      goto cleanup;
+   }
+
    if( x_2 >= t->width || y_2 >= t->height || x_2 < 0 || y_2 < 0 ) {
       update_out = MOBILE_UPDATE_NONE;
       goto cleanup;
@@ -460,6 +465,42 @@ cleanup:
       vector_cleanup( tiles_end );
       scaffold_free( tiles_end );
    }
+   return update_out;
+}
+
+/** \brief Calculate the movement success between two tiles on the given
+ *         mobile's present tilemap based on neighboring mobiles.
+ * \param[in] x_1 Starting X.
+ * \param[in] y_1 Starting Y.
+ * \param[in] x_2 Finishing X.
+ * \param[in] y_2 Finishing Y.
+ * \return A MOBILE_UPDATE indicating action resulting.
+ */
+static MOBILE_UPDATE mobile_calculate_mobile_result(
+   struct CHANNEL* l, MOBILE_UPDATE update_in,
+   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+) {
+   struct TILEMAP_POSITION pos;
+   struct MOBILE* o_test = NULL;
+   MOBILE_UPDATE update_out = update_in;
+
+   if( MOBILE_UPDATE_NONE == update_in ) {
+      update_out = MOBILE_UPDATE_NONE;
+      goto cleanup;
+   }
+
+   pos.x = x_2;
+   pos.y = y_2;
+
+   o_test =
+      vector_iterate_nolock( &(l->mobiles), callback_search_mobs_by_pos, &pos );
+
+   if( NULL != o_test ) {
+      /* TODO: Default to something else for friendlies? */
+      update_out = MOBILE_UPDATE_ATTACK;
+   }
+
+cleanup:
    return update_out;
 }
 
@@ -600,6 +641,10 @@ MOBILE_UPDATE mobile_apply_update(
 
       update->update =
          mobile_calculate_terrain_result( &(l->tilemap), update->update,
+            o->x, o->y, update->x, update->y );
+
+      update->update =
+         mobile_calculate_mobile_result( l, update->update,
             o->x, o->y, update->x, update->y );
    }
 

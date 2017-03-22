@@ -214,6 +214,19 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    return tdata;
 }
 
+void* callback_search_mobs_by_pos( const bstring res, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
+   struct MOBILE* o_out = NULL;
+
+   if( NULL != o && o->x == pos->x && o->y == pos->y ) {
+      o_out = o;
+   }
+
+cleanup:
+   return o_out;
+}
+
 #ifdef ENABLE_LOCAL_CLIENT
 
 void* callback_search_windows( const bstring key, void* iter, void* arg ) {
