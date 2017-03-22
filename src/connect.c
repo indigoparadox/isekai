@@ -128,12 +128,16 @@ cleanup:
 
 BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    BOOL listening = FALSE;
-#ifdef USE_NETWORK
-   int result;
-   struct sockaddr_in address;
-   #ifdef _WIN32
+
+#if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
+   int connect_result;
+#ifdef _WIN32
    u_long mode = 0;
-   #endif /* _WIN32 */
+#endif /* _WIN32 */
+#endif /* USE_NETWORK || USE_LEGACY_NETWORK */
+
+#ifdef USE_NETWORK
+   struct sockaddr_in address;
 
    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
    scaffold_check_negative( n->socket );
@@ -150,14 +154,14 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    address.sin_port = htons( port );
    address.sin_addr.s_addr = INADDR_ANY;
 
-   result = bind(
+   connect_result = bind(
       n->socket, (struct sockaddr*)&address, sizeof( address )
    );
-   scaffold_check_negative( result );
+   scaffold_check_negative( connect_result );
 
    /* If we could bind the port, then launch the serving connection. */
-   result = listen( n->socket, 5 );
-   scaffold_check_negative( result );
+   connect_result = listen( n->socket, 5 );
+   scaffold_check_negative( connect_result );
    listening = TRUE;
    scaffold_print_info( &module, "Now listening for connections...\n" );
 
@@ -180,12 +184,53 @@ cleanup:
 
 BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
    BOOL connected = FALSE;
-#ifdef USE_NETWORK
+
+#if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
    int connect_result;
-   bstring service;
-   #ifdef _WIN32
+#ifdef _WIN32
    u_long mode = 0;
-   #endif /* _WIN32 */
+#endif /* _WIN32 */
+#endif /* USE_NETWORK || USE_LEGACY_NETWORK */
+
+#ifdef USE_LEGACY_NETWORK
+   unsigned long ul_addr;
+   struct sockaddr_in dest = { 0 };
+
+   ul_addr = inet_addr( bdata( server ) );
+
+   n->socket = socket(
+      AF_INET,
+      SOCK_STREAM,
+      0
+   );
+
+   dest.sin_family = AF_INET;
+   dest.sin_addr.s_addr = ul_addr;
+   dest.sin_port = htons( port );
+
+   connect_result = connect(
+      n->socket,
+      &dest,
+      sizeof( struct sockaddr_in )
+   );
+
+   scaffold_check_negative( connect_result );
+
+   /* TODO: Check for error. */
+#ifdef _WIN32
+   ioctlsocket( n->socket, FIONBIO, &mode );
+#else
+   fcntl( n->socket, F_SETFL, O_NONBLOCK );
+#endif /* _WIN32 */
+
+cleanup:
+
+   if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+      connection_cleanup_socket( n );
+   }
+
+#elif defined( USE_NETWORK )
+   bstring service;
    struct addrinfo hints = { 0 },
          * result;
 
@@ -210,6 +255,7 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
       result->ai_addr,
       result->ai_addrlen
    );
+
    scaffold_check_negative( connect_result );
 
    /* TODO: Check for error. */
@@ -218,7 +264,9 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
 #else
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
 #endif /* _WIN32 */
+
    connected = TRUE;
+
 cleanup:
 
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
@@ -227,6 +275,7 @@ cleanup:
 
    bdestroy( service );
    freeaddrinfo( result );
+
 #elif defined( USE_SYNCBUFF )
    connected = syncbuff_connect();
    n->socket = 1;
