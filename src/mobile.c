@@ -9,8 +9,6 @@
 #include "datafile.h"
 #include "vm.h"
 
-extern struct CLIENT* main_client;
-
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
 #endif /* USE_MOBILE_FRAME_COUNTER */
@@ -268,6 +266,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       steps_remaining_y;
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
    struct MOBILE* o_player = NULL;
+   struct CLIENT* local_client = twindow->local_client;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -290,12 +289,18 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    }
 
    /* If the current mobile spritesheet doesn't exist, then load it. */
-   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
+   if(
+      NULL == o->sprites &&
+      NULL == hashmap_get( &(local_client->sprites), o->sprites_filename )
+   ) {
       /* No sprites and no request yet, so make one! */
-      client_request_file( twindow->c, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
+      client_request_file( local_client, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
       goto cleanup;
-   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
+   } else if(
+      NULL == o->sprites &&
+      NULL != hashmap_get( &(local_client->sprites), o->sprites_filename )
+   ) {
+      o->sprites = (GRAPHICS*)hashmap_get( &(local_client->sprites), o->sprites_filename );
    } else if( NULL == o->sprites ) {
       /* Sprites must not be ready yet. */
       goto cleanup;
@@ -307,10 +312,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
-   o_player = twindow->c->puppet;
+   o_player = local_client->puppet;
 
    if(
-      mobile_is_local_player( o ) &&
+      mobile_is_local_player( o, local_client ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
          tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
@@ -318,13 +323,13 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    ) {
       steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
       pix_x += steps_remaining_x;
-   } else if( !mobile_is_local_player( o ) ) {
+   } else if( !mobile_is_local_player( o, local_client ) ) {
       steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
       pix_x += steps_remaining_x;
    }
 
    if(
-      mobile_is_local_player( o ) &&
+      mobile_is_local_player( o, local_client ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
          tilemap_inside_window_deadzone_y( o->y + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
@@ -332,14 +337,14 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    ) {
       steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
       pix_y += steps_remaining_y;
-   } else if( !mobile_is_local_player( o ) ) {
+   } else if( !mobile_is_local_player( o, local_client ) ) {
       steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
       pix_y += steps_remaining_y;
    }
 
    /* Offset the player's  movement. */
    if(
-      !mobile_is_local_player( o ) &&
+      !mobile_is_local_player( o, local_client ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
          tilemap_inside_window_deadzone_x( o_player->x + 1, twindow ) ||
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
@@ -350,7 +355,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    }
 
    if(
-      !mobile_is_local_player( o ) &&
+      !mobile_is_local_player( o, local_client ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
          tilemap_inside_window_deadzone_y( o_player->y + 1, twindow ) ||
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
@@ -813,11 +818,9 @@ cleanup:
 /** \return TRUE if the mobile is owned by the client that is currently
  *          locally connected in a hosted coop or single-player instance.
  */
-BOOL mobile_is_local_player( struct MOBILE* o ) {
-   /*
-   if( NULL != o->owner && 0 == bstrcmp( o->owner.nick, main_client->nick ) ) {
-   */
-   if( NULL != o->owner && o->owner == main_client ) {
+SCAFFOLD_INLINE
+BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c ) {
+   if( NULL != o->owner && 0 == bstrcmp( o->owner->nick, c->nick ) ) {
       return TRUE;
    }
    return FALSE;

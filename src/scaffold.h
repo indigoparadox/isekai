@@ -94,6 +94,10 @@ typedef uint8_t SERIAL;
 
 #define SCAFFOLD_PRINT_BUFFER_ALLOC 110
 
+#if defined( USE_DUKTAPE ) || defined( USE_TINYPY )
+#define USE_VM
+#endif /* USE_DUKTAPE || USE_TINYPY */
+
 typedef enum {
    SCAFFOLD_ERROR_NONE,
    SCAFFOLD_ERROR_MISC,

@@ -307,9 +307,11 @@ next_script:
       xml_script_iter = ezxml_next( xml_script_iter );
    }
 
+#ifdef USE_VM
    if( 0 != hashmap_count( &(o->vm_scripts) ) ) {
       vm_mobile_start( o );
    }
+#endif /* USE_VM */
 
    xml_image = ezxml_child( xml_data, "image" );
    scaffold_check_null( xml_image );

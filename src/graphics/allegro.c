@@ -260,8 +260,7 @@ cleanup:
    return;
 }
 
-static void graphics_surface_cleanup( const struct REF *ref ) {
-   GRAPHICS* g = scaffold_container_of( ref, GRAPHICS, refcount );
+void graphics_surface_cleanup( GRAPHICS* g ) {
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;
@@ -281,15 +280,9 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    }
    g->w = w;
    g->h = h;
-   ref_init( &(g->refcount), graphics_surface_cleanup );
    g->palette = NULL;
    return;
 }
-
-void graphics_surface_free( GRAPHICS* g ) {
-   graphics_surface_cleanup( &(g->refcount) );
-}
-
 
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
    set_window_title( bdata( title ) );
