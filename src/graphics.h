@@ -107,7 +107,7 @@ __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
 void graphics_draw_text(
-   GRAPHICS* g, SCAFFOLD_SIZE x_start, SCAFFOLD_SIZE y_start,
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
    GRAPHICS_TEXT_ALIGN align, GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size,
    const bstring text, BOOL cursor
 );
@@ -119,8 +119,8 @@ void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 );
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, GRAPHICS_COLOR color,
-   GRAPHICS_FONT_SIZE size, char c
+   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 );
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
