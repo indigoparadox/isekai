@@ -12,7 +12,7 @@
 #ifdef USE_TURNS
 #define VM_TICK_FREQUENCY 1
 #else
-#define VM_TICK_FREQUENCY 10
+#define VM_TICK_FREQUENCY 20
 #endif /* USE_TURNS */
 
 #include "../duktape/duktape.h"
@@ -308,6 +308,10 @@ BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
 #ifdef USE_TURNS
    return vm_tick_count != vm_tick_prev;
 #else
-   return 0 == vm_tick_count % VM_TICK_FREQUENCY;
+   if( 0 == vm_tick_count % VM_TICK_FREQUENCY ) {
+      /* scaffold_print_debug( &module, "%d\n", vm_tick_count % VM_TICK_FREQUENCY ); */
+      return TRUE;
+   }
+   return FALSE;
 #endif /* USE_TURNS */
 }
