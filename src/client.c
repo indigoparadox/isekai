@@ -19,7 +19,6 @@ static void client_cleanup( const struct REF *ref ) {
    CONNECTION* n =
       (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
    struct CLIENT* c = scaffold_container_of( n, struct CLIENT, link );
-   scaffold_assert( NULL != c );
 
    connection_cleanup( &(c->link) );
 
@@ -93,11 +92,17 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
 void client_connect( struct CLIENT* c, const bstring server, int port ) {
    scaffold_set_client();
 
+   scaffold_print_info(
+      &module, "Client connecting to: %b:%d\n", server, port
+   );
+
    connection_connect( &(c->link), server , port );
    scaffold_check_nonzero( scaffold_error );
 
+   scaffold_print_info( &module, "Client connected and running.\n" );
    c->running = TRUE;
 
+   scaffold_print_info( &module, "Client sending registration...\n" );
    proto_register( c );
 
 cleanup:
@@ -125,9 +130,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 
    /* TODO: Is this ever called? */
    if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      scaffold_print_info(
-         &module, "Remote server disconnected.\n"
-      );
+      scaffold_print_info( &module, "Remote server disconnected.\n" );
       client_stop( c );
       bdestroy( cmd->line );
       free( cmd );
@@ -592,7 +595,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
 
 #ifdef USE_EZXML
+      scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
       datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, TRUE );
+      scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */

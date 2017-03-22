@@ -195,8 +195,8 @@ static void tilemap_layer_draw_tile_debug(
 
    set = tilemap_get_tileset( t, gid );
    scaffold_check_null( set );
-   scaffold_check_zero( set->tilewidth );
-   scaffold_check_zero( set->tileheight );
+   scaffold_check_zero( set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero( set->tileheight, "Tile height is zero." );
 
    if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
@@ -311,8 +311,8 @@ static void* tilemap_layer_draw_tile(
       goto cleanup; /* Silently. */
    }
 
-   scaffold_check_zero( set->tilewidth );
-   scaffold_check_zero( set->tileheight );
+   scaffold_check_zero( set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero( set->tileheight, "Tile height is zero." );
 
    /* Figure out the window position to draw to. */
    pix_x = set->tilewidth * (x - twindow->x);

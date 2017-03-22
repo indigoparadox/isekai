@@ -203,7 +203,7 @@ struct tagbstring ansi_color_strs[7] = {
 #define scaffold_gen_serial( object, vector ) \
    do { \
       object->serial = SERIAL_MIN + (rand() % SERIAL_MAX); \
-   } while( 0 !=object->serial && NULL != vector_get( vector, object->serial ) );
+   } while( 0 == object->serial || NULL != vector_get( vector, object->serial ) );
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
@@ -301,19 +301,19 @@ struct tagbstring ansi_color_strs[7] = {
     }
 
 
-#define scaffold_check_zero_against( last, value ) \
+#define scaffold_check_zero_against( last, value, msg ) \
     if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
-            scaffold_print_error( &module, "Scaffold: Zero error on line: %d\n", __LINE__ ); \
+            scaffold_print_error( &module, "Scaffold: Zero error on line: %d: %s\n", __LINE__, msg ); \
         } \
         goto cleanup; \
     } else if( SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_NONE; \
     }
 
-#define scaffold_check_zero( value ) \
-   scaffold_check_zero_against( scaffold_error, value )
+#define scaffold_check_zero( value, msg ) \
+   scaffold_check_zero_against( scaffold_error, value, msg )
 
 #define scaffold_char_is_printable( c ) \
     (0x7f > (c) && 0x20 < (c))

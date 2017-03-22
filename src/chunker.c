@@ -144,7 +144,7 @@ void chunker_chunk_start_file(
 
    bytes_read =
       scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
-   scaffold_check_zero( bytes_read );
+   scaffold_check_zero( bytes_read, "Zero bytes read from input file." );
 
 cleanup:
    bdestroy( full_file_path );

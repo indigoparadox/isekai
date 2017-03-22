@@ -818,7 +818,9 @@ b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len ) {
 			scaffold_check_bounds( i, src->slen );
 			c = (unsigned char)(src->data[i] - 64);
 		} else {
-		   scaffold_check_zero( c );
+		   if( 0 == c ) {
+            goto cleanup;
+		   }
 
 			/* Extraneous CR/LFs are to be ignored. */
 			if( '\r' == c || '\n' == c ) {

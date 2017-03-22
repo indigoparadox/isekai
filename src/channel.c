@@ -89,6 +89,10 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    }
 
    if( NULL != spawner ) {
+      scaffold_print_debug(
+         &module, "Creating player mobile for client: %d\n", c->link.socket
+      );
+
       /* Create a basic mobile for the new client. */
       /* TODO: Get the desired mobile data ID from client. */
       mobile_new(

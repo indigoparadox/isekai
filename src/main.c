@@ -227,12 +227,17 @@ static BOOL loop_connect() {
    }
 
    if( 0 != ui_poll_input( ui, input, &str_cdialog_id ) ) {
+      scaffold_print_info(
+         &module, "Closing connect dialog and connecting to: %b\n",
+         buffer
+      );
       /* Dismiss the connect dialog. */
       ui_window_destroy( ui, &str_cdialog_id );
 
       /* Split up the address and port. */
       server_tuple = bsplit( buffer, ':' );
       if( 2 < server_tuple->qty ) {
+         scaffold_print_error( &module, "Invalid host string.\n" );
          bstrListDestroy( server_tuple );
          server_tuple = NULL;
          goto cleanup;
@@ -240,6 +245,7 @@ static BOOL loop_connect() {
       server_address = server_tuple->entry[0];
       server_port_c = bdata( server_tuple->entry[1] );
       if( NULL == server_port_c ) {
+         scaffold_print_error( &module, "Invalid port string.\n" );
          bstrListDestroy( server_tuple );
          server_tuple = NULL;
          goto cleanup;
@@ -296,6 +302,9 @@ static BOOL loop_master() {
    if( !connected ) {
       retval = loop_connect();
    } else if( connected && !main_client_joined ) {
+      scaffold_print_debug(
+         &module, "Server connected; joining client to channel...\n"
+      );
       main_client->ui = ui;
       twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
       twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;

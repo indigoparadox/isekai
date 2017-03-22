@@ -351,6 +351,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #else
    int inputfd = -1;
 #endif /* _WIN32 */
+   bstring zero_error = NULL;
 
    if( NULL != *buffer ) {
       scaffold_free( *buffer );
@@ -358,6 +359,8 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 
    *buffer = NULL;
    *len = 0;
+
+   zero_error = bformat( "Zero bytes read from file: %s", bdata( path ) );
 
    /* TODO: Implement mmap() */
 
@@ -403,10 +406,11 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
 #else
    sz_out = read( inputfd, *buffer, *len );
 #endif /* _WIN32 || WIN16 */
-   scaffold_check_zero( sz_out );
+   scaffold_check_zero( sz_out, bdata( zero_error ) );
    scaffold_assert( sz_out == *len );
 
 cleanup:
+   bdestroy( zero_error );
 #if defined( _WIN32 ) || defined( WIN16 )
    CloseHandle( inputfd );
 #else
@@ -426,9 +430,12 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
    struct stat test_path_stat = { 0 };
    int stat_res;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
+   bstring zero_error = NULL;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
+
+   zero_error = bformat( "Zero bytes written to: %s", bdata( path ) );
 
    /* Make sure the parent directory exists. */
    path_dirs = bsplit( path, '/' );
@@ -480,10 +487,11 @@ write_file:
    scaffold_check_null( outputfile );
 
    sz_out = fwrite( data, sizeof( BYTE ), len, outputfile );
-   scaffold_check_zero( sz_out );
+   scaffold_check_zero( sz_out, bdata( zero_error ) );
    scaffold_assert( sz_out == len );
 
 cleanup:
+   bdestroy( zero_error );
    bdestroy( test_path );
    bstrListDestroy( path_dirs );
    if( NULL != outputfile ) {
@@ -570,8 +578,11 @@ cleanup:
 BOOL scaffold_check_directory( const bstring path ) {
    struct stat dir_info = { 0 };
    char* path_c = NULL;
+   bstring zero_error = NULL;
 
    scaffold_assert( NULL != path );
+
+   zero_error = bformat( "Not a directory: %s", bdata( path ) );
 
    scaffold_error = 0;
    scaffold_check_silence();
@@ -579,10 +590,10 @@ BOOL scaffold_check_directory( const bstring path ) {
    path_c = bdata( path );
    scaffold_assert( NULL != path_c );
    scaffold_check_nonzero( stat( path_c, &dir_info ) );
-   scaffold_check_zero( (dir_info.st_mode & S_IFDIR) );
+   scaffold_check_zero( (dir_info.st_mode & S_IFDIR), bdata( zero_error ) );
 
 cleanup:
-
+   bdestroy( zero_error );
    scaffold_check_unsilence();
    switch( scaffold_error ) {
    case SCAFFOLD_ERROR_NONZERO:

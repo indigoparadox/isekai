@@ -789,6 +789,14 @@ static void irc_client_join(
       scaffold_print_info(
          &module, "Client created local channel mirror: %s\n", bdata( l_name )
       );
+
+      /* Strip off the #. */
+      l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );
+      bstr_res = bcatcstr( l_filename, ".tmx" );
+      scaffold_check_nonzero( bstr_res );
+      scaffold_check_null( l_filename );
+
+      client_request_file( c, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
    }
 
    scaffold_print_info(
@@ -796,14 +804,6 @@ static void irc_client_join(
    );
 
    scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
-
-   /* Strip off the #. */
-   l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );
-   bstr_res = bcatcstr( l_filename, ".tmx" );
-   scaffold_check_nonzero( bstr_res );
-   scaffold_check_null( l_filename );
-
-   client_request_file( c, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
 
 cleanup:
    bdestroy( l_filename );
@@ -819,6 +819,7 @@ static void irc_client_error(
       2 <= args->qty &&
       0 == bstrcmp( &str_closing, args->entry[1] )
    ) {
+      scaffold_print_debug( &module, "IRC Error received from server.\n" );
       client_stop( c );
    }
 }
