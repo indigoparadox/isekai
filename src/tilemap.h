@@ -99,6 +99,7 @@ struct TILEMAP {
    */
    struct HASHMAP tilesets;
    struct HASHMAP player_spawns;
+   struct HASHMAP npc_spawns;
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
    SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */

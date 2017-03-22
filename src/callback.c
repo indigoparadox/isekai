@@ -20,7 +20,6 @@ void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = NULL;
-   /* TODO: Factor this out. */
    int bstr_result;
 
 #ifdef ENABLE_LOCAL_CLIENT
