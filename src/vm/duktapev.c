@@ -90,11 +90,13 @@ static duk_ret_t vm_debug( duk_context* vm ) {
    text = duk_to_string( vm, -1 );
 
    scaffold_print_debug( &module, "%s\n", text  );
+
+   return 0;
 }
 
 static duk_ret_t vm_random( duk_context* vm ) {
    duk_push_int( vm, rand() );
-   return 1;
+   return 0;
 }
 
 static duk_ret_t vm_update( duk_context* vm ) {
@@ -119,6 +121,8 @@ static duk_ret_t vm_update( duk_context* vm ) {
       break;
 
    }
+
+   return 0;
 }
 
 static void* vm_global_set_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -205,8 +209,9 @@ static void vm_mobile_run( struct MOBILE* o, const bstring code ) {
    duk_get_prop_string( OBJECT_VM( o ), 0, "stack" );
 
    scaffold_print_error(
-      &module, "Script error: %s: %s (%s:%s)\n",
-      duk_safe_to_string( OBJECT_VM( o ), 1 ), duk_safe_to_string( OBJECT_VM( o ), 2 ),
+      &module, "Script error: %s: %b: %s (%s:%s)\n",
+      duk_safe_to_string( OBJECT_VM( o ), 1 ), o->mob_id,
+      duk_safe_to_string( OBJECT_VM( o ), 2 ),
       duk_safe_to_string( OBJECT_VM( o ), 3 ), duk_safe_to_string( OBJECT_VM( o ), 4 )
    );
    scaffold_print_error(
