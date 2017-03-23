@@ -311,14 +311,16 @@ static void tilemap_layer_draw_tile_debug(
          !tilemap_inside_inner_map_x( tile_x, twin ) &&
          !tilemap_inside_inner_map_y( tile_y, twin )
       ) {
-         graphics_draw_rect( g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED );
+         graphics_draw_rect(
+            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED, TRUE
+         );
       }
       if(
          !tilemap_inside_window_deadzone_x( tile_x, twin ) &&
          !tilemap_inside_window_deadzone_y( tile_y, twin )
       ) {
          graphics_draw_rect(
-            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN
+            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN, TRUE
          );
       }
       break;
@@ -607,6 +609,8 @@ void tilemap_update_window_ortho(
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
    struct TILEMAP* t = twindow->t;
    TILEMAP_EXCLUSION exclusion;
+   struct TILEMAP_TILESET* smallest_tileset = NULL;
+   struct TILEMAP_POSITION temp = { 0 };
 
    if( NULL == t ) {
       return;
@@ -618,6 +622,16 @@ void tilemap_update_window_ortho(
    }
    if( focal_y < twindow->y || focal_y > twindow->y + twindow->height ) {
       twindow->y = focal_y - (twindow->height / 2);
+   }
+
+   smallest_tileset =
+      vector_iterate( &(t->tilesets), callback_search_tilesets_small, &temp );
+   if( NULL != smallest_tileset ) {
+      twindow->grid_w = smallest_tileset->tilewidth;
+      twindow->grid_h = smallest_tileset->tileheight;
+   } else {
+      twindow->grid_w = 0;
+      twindow->grid_h = 0;
    }
 
    /* Scroll the window to follow the focal point. */

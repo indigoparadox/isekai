@@ -369,14 +369,14 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
       break;
    case UI_CONTROL_TYPE_BUTTON:
       graphics_draw_rect(
-         g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG
+         g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG, FALSE
       );
       fg = UI_BUTTON_FG;
       win->grid_previous_button = TRUE;
       break;
    case UI_CONTROL_TYPE_TEXT:
       graphics_draw_rect(
-         g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG
+         g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG, TRUE
       );
       fg = UI_TEXT_FG;
       win->grid_previous_button = FALSE;
@@ -427,13 +427,13 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
 
    /* Draw the window. */
    graphics_draw_rect(
-      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE
+      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
    );
 
    /* Draw the title bar. */
    graphics_draw_rect(
       win->element, 2, 2, win->width - 4, UI_TITLEBAR_SIZE + 4,
-      UI_TITLEBAR_BG
+      UI_TITLEBAR_BG, TRUE
    );
    graphics_draw_text(
       win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
@@ -480,6 +480,15 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
       graphics_draw_text( g, 10, 20 * i, GRAPHICS_TEXT_ALIGN_LEFT, i, GRAPHICS_FONT_SIZE_12, color_test );
    }
 #endif /* DEBUG_PALETTE */
+}
+
+void ui_window_draw_grid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow ) {
+   SCAFFOLD_SIZE grid_x = 0,
+      grid_y = 0;
+
+   for( grid_x = 0 ; twindow->max_x > grid_x ; grid_x++ ) {
+
+   }
 }
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {

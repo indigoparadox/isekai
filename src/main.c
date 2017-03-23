@@ -159,6 +159,9 @@ static BOOL loop_game() {
    tilemap_draw_ortho( twindow );
    vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
 
+   if( NULL != twindow ) {
+      ui_window_draw_grid( ui, twindow );
+   }
    ui_draw( ui, g_screen );
 #endif /* ENABLE_LOCAL_CLIENT */
 cleanup:

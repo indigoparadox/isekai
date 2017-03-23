@@ -89,7 +89,15 @@ cleanup:
 }
 
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-
+   if( 0 < w && 0 < h) {
+      g->surface =
+   } else {
+      g->surface = NULL;
+   }
+   g->w = w;
+   g->h = h;
+   g->palette = NULL;
+   return;
 }
 
 void graphics_surface_cleanup( GRAPHICS* g ) {

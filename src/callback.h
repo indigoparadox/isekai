@@ -17,6 +17,9 @@ void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* ar
 void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_tilesets_small(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+);
 void* callback_search_tileset_img_gid( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
