@@ -84,8 +84,10 @@ const duk_number_list_entry mobile_update_enum[] = {
    { NULL, 0.0 }
 };
 
-static void vm_debug( duk_context* vm ) {
-   char* text = duk_to_string( vm, -1 );
+static duk_ret_t vm_debug( duk_context* vm ) {
+   const char* text = NULL;
+
+   text = duk_to_string( vm, -1 );
 
    scaffold_print_debug( &module, "%s\n", text  );
 }
@@ -95,7 +97,7 @@ static duk_ret_t vm_random( duk_context* vm ) {
    return 1;
 }
 
-static void vm_update( duk_context* vm ) {
+static duk_ret_t vm_update( duk_context* vm ) {
    MOBILE_UPDATE action = (MOBILE_UPDATE)duk_to_int( vm, -1 );
    struct MOBILE_UPDATE_PACKET update = { 0 };
    struct VM_CADDY* caddy = NULL;
@@ -163,7 +165,7 @@ static duk_ret_t vm_unsafe( duk_context* vm, void* udata ) {
 }
 
 static void vm_mobile_run( struct MOBILE* o, const bstring code ) {
-   const char* code_c = bdata( code );
+   char* code_c = bdata( code );
    int duk_result = 0;
 
    scaffold_assert( NULL != code_c );

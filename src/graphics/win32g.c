@@ -4,7 +4,7 @@
 
 extern GRAPHICS* g_screen;
 
-LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam ) {
+static LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam ) {
    PAINTSTRUCT ps;
    HDC hdcScreen;
    HDC hdcBuffer;
@@ -73,7 +73,7 @@ void graphics_screen_new(
    }
 
    hWnd = CreateWindowEx(
-      NULL, "IPWindowClass", "ProIRCd",
+      0, "IPWindowClass", "ProIRCd",
       WS_OVERLAPPED | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU,
       0, 0, w, h, NULL, NULL, arg2, NULL
    );
@@ -116,7 +116,7 @@ void graphics_set_image_data(
                                  sizeof( BITMAPFILEHEADER ) +
                                  sizeof( BITMAPINFOHEADER ));
    BITMAPINFO bi;
-   BYTE* pPixels = NULL;
+   const BYTE* pPixels = NULL;
    BYTE* ppvBits = NULL;
 
    bi.bmiColors[0] = rgb;

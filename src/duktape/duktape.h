@@ -446,8 +446,8 @@ DUK_API_NORETURN(DUK_EXTERNAL_DECL void duk_fatal_raw(duk_context *ctx, const ch
 #define duk_fatal(ctx,err_msg) \
 	(duk_fatal_raw((ctx), (err_msg)), (duk_ret_t) 0)
 
-#if defined(DUK_API_VARIADIC_MACROS)
 DUK_API_NORETURN(DUK_EXTERNAL_DECL void duk_error_raw(duk_context *ctx, duk_errcode_t err_code, const char *filename, duk_int_t line, const char *fmt, ...));
+#if defined(DUK_API_VARIADIC_MACROS)
 #define duk_error(ctx,err_code,...)  \
 	(duk_error_raw((ctx), (duk_errcode_t) (err_code), (const char *) (DUK_FILE_MACRO), (duk_int_t) (DUK_LINE_MACRO), __VA_ARGS__), (duk_ret_t) 0)
 #define duk_generic_error(ctx,...)  \

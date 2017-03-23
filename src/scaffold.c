@@ -339,16 +339,18 @@ cleanup:
  * \return The number of bytes read, or -1 on failure.
  */
 SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
-   SCAFFOLD_SIZE_SIGNED sz_out = -1;
    struct stat inputstat;
    char* path_c = NULL;
 #if defined( _WIN32 )
+   DWORD sz_out = -1;
    LARGE_INTEGER sz_win;
    HANDLE inputfd = NULL;
 #elif defined( WIN16 )
+   SCAFFOLD_SIZE_SIGNED sz_out = -1;
    int sz_win;
    HFILE inputfd = NULL;
 #else
+   SCAFFOLD_SIZE_SIGNED sz_out = -1;
    int inputfd = -1;
 #endif /* _WIN32 */
    bstring zero_error = NULL;
@@ -497,7 +499,7 @@ cleanup:
    if( NULL != outputfile ) {
       fclose( outputfile );
    }
-   return sz_out;
+   return (SCAFFOLD_SIZE_SIGNED)sz_out;
 }
 
 void scaffold_list_dir(

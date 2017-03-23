@@ -210,7 +210,7 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
 
    connect_result = connect(
       n->socket,
-      &dest,
+      (const struct sockaddr*)&dest,
       sizeof( struct sockaddr_in )
    );
 
@@ -347,7 +347,7 @@ SCAFFOLD_SIZE_SIGNED connection_read_line( CONNECTION* n, bstring buffer, BOOL c
 	SCAFFOLD_SIZE_SIGNED total_read_count = 0;
 #ifdef USE_NETWORK
 	int bstr_res;
-   SCAFFOLD_SIZE last_read_count = 0;
+   SCAFFOLD_SIZE_SIGNED last_read_count = 0;
    char read_char = '\0';
 #endif /* USE_NETWORK */
 
