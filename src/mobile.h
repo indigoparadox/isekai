@@ -155,6 +155,7 @@ SCAFFOLD_INLINE
 SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 void mobile_speak( struct MOBILE* o, bstring speech );
+BOOL mobile_is_local_player( struct MOBILE* o );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

@@ -243,6 +243,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       steps_remaining_x,
       steps_remaining_y;
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
+   struct MOBILE* o_player = NULL;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -283,28 +284,56 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
+   o_player = twindow->c->puppet;
+
    if(
+      mobile_is_local_player( o ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
          tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_x( o->x - 1, twindow )) &&
-      /* TODO: Find a more elegant way of not scrolling mobiles that aren't
-       *       the current local client's puppet.
-       */
-      o->owner == main_client
+         tilemap_inside_inner_map_x( o->x - 1, twindow ))
    ) {
+      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      pix_x += steps_remaining_x;
+   } else if( !mobile_is_local_player( o ) ) {
       steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
       pix_x += steps_remaining_x;
    }
 
    if(
+      mobile_is_local_player( o ) &&
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
          tilemap_inside_window_deadzone_y( o->y + 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_window_deadzone_y( o->y - 1, twindow )) &&
-      o->owner == main_client
+         tilemap_inside_window_deadzone_y( o->y - 1, twindow ))
    ) {
       steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      pix_y += steps_remaining_y;
+   } else if( !mobile_is_local_player( o ) ) {
+      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      pix_y += steps_remaining_y;
+   }
+
+   /* Offset the player's  movement. */
+   if(
+      !mobile_is_local_player( o ) &&
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
+         tilemap_inside_window_deadzone_x( o_player->x + 1, twindow ) ||
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
+         tilemap_inside_inner_map_x( o_player->x - 1, twindow ))
+   ) {
+      steps_remaining_x = mobile_get_steps_remaining_x( o_player, TRUE );
+      pix_x += steps_remaining_x;
+   }
+
+   if(
+      !mobile_is_local_player( o ) &&
+      (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
+         tilemap_inside_window_deadzone_y( o_player->y + 1, twindow ) ||
+      TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
+         tilemap_inside_window_deadzone_y( o_player->y - 1, twindow ))
+   ) {
+      steps_remaining_y = mobile_get_steps_remaining_y( o_player, TRUE );
       pix_y += steps_remaining_y;
    }
 
@@ -329,6 +358,12 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->sprite_width, o->sprite_display_height,
       o->sprites
    );
+
+   /*
+   if( mobile_is_local_player( o ) ) {
+      graphics_draw_rect( twindow->g, pix_x, pix_y, o->sprite_width, o->sprite_height, GRAPHICS_COLOR_BLUE );
+   }
+   */
 
 #if 0
    /* FIXME */
@@ -679,3 +714,17 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
 cleanup:
    return;
 }
+
+#ifdef ENABLE_LOCAL_CLIENT
+
+BOOL mobile_is_local_player( struct MOBILE* o ) {
+   /*
+   if( NULL != o->owner && 0 == bstrcmp( o->owner.nick, main_client->nick ) ) {
+   */
+   if( NULL != o->owner && o->owner == main_client ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+#endif /* ENABLE_LOCAL_CLIENT */
