@@ -6,8 +6,11 @@
 #include "chunker.h"
 #include "hashmap.h"
 #include "callback.h"
-#include "tinypy/tinypy.h"
 #include "datafile.h"
+#ifdef USE_DUKTAPE
+#include "duktape/duktape.h"
+#include "duktape/dukhelp.h"
+#endif /* USE_DUKTAPE */
 
 extern struct CLIENT* main_client;
 
@@ -67,6 +70,8 @@ void mobile_init(
    o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    o->current_frame = 0;
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
+   o->vm_script = NULL;
+   o->vm = NULL;
 
    vector_init( &(o->sprite_defs) );
    hashmap_init( &(o->ani_defs) );
@@ -142,6 +147,11 @@ cleanup:
 }
 
 void mobile_animate( struct MOBILE* o ) {
+
+   if( mobile_vm_can_step( o ) ) {
+      mobile_vm_step( o );
+   }
+
 #ifdef USE_MOBILE_FRAME_COUNTER
    if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
       mobile_frame_counter = 0;
@@ -728,3 +738,38 @@ BOOL mobile_is_local_player( struct MOBILE* o ) {
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */
+
+void mobile_vm_start( struct MOBILE* o, bstring code ) {
+#ifdef USE_DUKTAPE
+   if( NULL == o->vm ) {
+      o->vm =
+         duk_create_heap( NULL, NULL, NULL, o, duktape_helper_mobile_crash );
+      /* duk_push_c_function( l->vm, dukt ) */
+   }
+   duk_peval_string( o->vm, bdata( code ) );
+#endif /* USE_DUKTAPE */
+}
+
+void mobile_vm_step( struct MOBILE* o ) {
+}
+
+void mobile_vm_end( struct MOBILE* o ) {
+#ifdef USE_DUKTAPE
+   if( NULL != o->vm ) {
+      duk_destroy_heap( o->vm );
+      o->vm = NULL;
+   }
+#endif /* USE_DUKTAPE */
+}
+
+BOOL mobile_vm_can_step( struct MOBILE* o ) {
+   BOOL retval = FALSE;
+
+#if defined( USE_TINYPY ) || defined( USE_DUKTAPE )
+   if( NULL != o->vm ) {
+      retval = TRUE;
+   }
+#endif /* USE_TINYPY || USE_DUKTAPE */
+
+   return retval;
+}
