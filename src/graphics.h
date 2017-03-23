@@ -90,6 +90,7 @@ void graphics_screen_new(
 );
 void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
 void graphics_surface_free( GRAPHICS* g );
+void graphics_surface_cleanup( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );

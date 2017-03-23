@@ -285,7 +285,7 @@ cleanup:
    return input_length;
 }
 
-static void* ui_control_draw_cb( const bstring res, void* iter, void* arg ) {
+static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS* g = NULL;
@@ -406,7 +406,7 @@ cleanup:
    return NULL;
 }
 
-static void* ui_window_draw_cb( const bstring res, void* iter, void* arg ) {
+static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    SCAFFOLD_SIZE_SIGNED win_x = win->x,

@@ -14,7 +14,7 @@
 #include "ezxml.h"
 #endif /* USE_EZXML */
 
-void* callback_ingest_commands( const bstring key, void* iter, void* arg ) {
+void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
    struct SERVER* s = NULL;
    static bstring buffer = NULL;
@@ -88,7 +88,7 @@ cleanup:
 }
 
 /* Append all clients to the bstrlist arg. */
-void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
+void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct bstrList* list = (struct bstrList*)arg;
    scaffold_list_append_string_cpy( list, c->nick );
@@ -96,7 +96,7 @@ void* callback_concat_clients( const bstring key, void* iter, void* arg ) {
 }
 
 /* Return only the client arg if present. */
-void* callback_search_clients( const bstring key, void* iter, void* arg ) {
+void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
@@ -106,7 +106,7 @@ void* callback_search_clients( const bstring key, void* iter, void* arg ) {
 }
 
 /* Return all clients EXCEPT the client arg. */
-void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
+void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( 0 != bstrcmp( nick, c->nick ) ) {
@@ -116,7 +116,7 @@ void* callback_search_clients_r( const bstring key, void* iter, void* arg ) {
 }
 
 /* Return any client that is in the bstrlist arg. */
-void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
+void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    const struct bstrList* list = (const struct bstrList*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
    int i;
@@ -133,7 +133,7 @@ void* callback_search_clients_l( const bstring key, void* iter, void* arg ) {
 /** \brief If the iterated spawner is of the ID specified in arg, then return
  *         it. Otherwise, return NULL.
  */
-void* callback_search_spawners( const bstring key, void* iter, void* arg ) {
+void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    bstring spawner_id = (bstring)arg;
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
 
@@ -144,14 +144,14 @@ void* callback_search_spawners( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_send_clients( const bstring key, void* iter, void* arg ) {
+void* callback_send_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
    client_send( c, buffer );
    return NULL;
 }
 
-void* callback_search_channels( const bstring key, void* iter, void* arg ) {
+void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
    if( 0 == bstrcmp( l->name, name ) ) {
@@ -160,7 +160,7 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_search_servefiles( const bstring res, void* iter, void* arg ) {
+void* callback_search_servefiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    bstring file_iter = (bstring)iter,
       file_iter_short = NULL,
       file_search = (bstring)arg;
@@ -187,7 +187,7 @@ cleanup:
    return file_iter_short;
 }
 
-void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
+void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP* t = layer->tilemap;
@@ -198,7 +198,7 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
 
    gid = tilemap_get_tile( layer, pos->x, pos->y );
-   set = tilemap_get_tileset( t, gid );
+   set = tilemap_get_tileset( t, gid, NULL );
    if( NULL != set ) {
       tdata = vector_get( &(set->tiles), gid - 1 );
    }
@@ -214,7 +214,8 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
    return tdata;
 }
 
-void* callback_get_tileset( const bstring key, void* iter, void* arg ) {
+#if 0
+void* callback_get_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
@@ -224,8 +225,9 @@ void* callback_get_tileset( const bstring key, void* iter, void* arg ) {
 cleanup:
    return NULL;
 }
+#endif // 0
 
-void* callback_search_mobs_by_pos( const bstring res, void* iter, void* arg ) {
+void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct MOBILE* o_out = NULL;
@@ -240,7 +242,7 @@ cleanup:
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-void* callback_search_windows( const bstring key, void* iter, void* arg ) {
+void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    bstring wid = (bstring)arg;
    if( 0 == bstrcmp( win->id, wid ) ) {
@@ -258,7 +260,7 @@ void* callback_search_windows( const bstring key, void* iter, void* arg ) {
  *
  */
 
-void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg ) {
+void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg ) ) {
       /* This is the tileset that contains this image. */
@@ -275,16 +277,17 @@ void* callback_search_tilesets_img_name( const bstring key, void* iter, void* ar
  * \return The channel with the map containing the specified image.
  *
  */
-void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg ) {
+void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct TILEMAP* t = &(l->tilemap);
-   if( NULL != hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
+   if( NULL != vector_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
       return l;
    }
    return NULL;
 }
 
-void* callback_search_channels_tileset_path( const bstring key, void* iter, void* arg ) {
+#if 0
+void* callback_search_channels_tileset_path( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct TILEMAP* t = &(l->tilemap);
    if( TRUE == hashmap_contains_key( &(t->tilesets), (bstring)arg ) ) {
@@ -292,12 +295,15 @@ void* callback_search_channels_tileset_path( const bstring key, void* iter, void
    }
    return NULL;
 }
+#endif // 0
 
-void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
+void* callback_search_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)iter;
    bstring s_key = (bstring)arg;
 
-   if( 0 == bstrcmp( key, s_key ) ) {
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
+   if( 0 == bstrcmp( idx->value.key, s_key ) ) {
       if( NULL == g ) {
          /* This image hasn't been set yet, so return a blank.*/
          /* graphics_surface_new( g, 0, 0, 0, 0 ); */
@@ -309,11 +315,13 @@ void* callback_search_graphics( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) {
+void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    bstring name = (bstring)arg;
 
-   if( 0 == bstrcmp( key, name ) ) {
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
+   if( 0 == bstrcmp( idx->value.key, name ) ) {
       return set;
    }
    return NULL;
@@ -321,7 +329,7 @@ void* callback_search_tilesets_name( const bstring key, void* iter, void* arg ) 
 
 #ifdef USE_CHUNKS
 
-void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg ) {
+void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
@@ -341,11 +349,13 @@ void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg ) 
 
 #ifdef USE_CHUNKS
 
-void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
+void* callback_send_chunkers_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
    bstring chunk_out = NULL;
    SCAFFOLD_SIZE start_pos = 0;
+
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
    if( chunker_chunk_finished( h ) ) {
       goto cleanup;
@@ -353,14 +363,14 @@ void* callback_send_chunkers_l( const bstring key, void* iter, void* arg ) {
 
    chunk_out = bfromcstralloc( CHUNKER_DEFAULT_CHUNK_SIZE, "" );
    start_pos = chunker_chunk_pass( h, chunk_out );
-   proto_send_chunk( c, h, start_pos, key, chunk_out );
+   proto_send_chunk( c, h, start_pos, idx->value.key, chunk_out );
 
 cleanup:
    bdestroy( chunk_out );
    return NULL;
 }
 
-void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
+void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 
    /* Process some compression chunks. */
@@ -378,7 +388,7 @@ void* callback_proc_chunkers( const bstring key, void* iter, void* arg ) {
 
 #ifdef USE_VM
 
-void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
+void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 
    scaffold_assert_server();
@@ -401,7 +411,7 @@ void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
+void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    scaffold_assert_server();
@@ -418,7 +428,7 @@ void* callback_proc_channel_vms( const bstring key, void* iter, void* arg ) {
 #endif /* USE_VM */
 
 void* callback_proc_channel_spawners(
-   const bstring key, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct TILEMAP_SPAWNER* ts = (struct TILEMAP_SPAWNER*)iter;
    struct SERVER* s = (struct SERVER*)arg;
@@ -450,7 +460,7 @@ cleanup:
 }
 
 void* callback_proc_server_spawners(
-   const bstring key, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct SERVER* s = (struct SERVER*)arg;
@@ -463,12 +473,15 @@ cleanup:
    return NULL;
 }
 
-void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
-   SCAFFOLD_SIZE gid = (*(SCAFFOLD_SIZE*)arg);
-   struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
+void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   SCAFFOLD_SIZE* gid = (SCAFFOLD_SIZE*)arg;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
-   if( NULL != tileset && tileset->firstgid <= gid ) {
-      return tileset;
+   scaffold_assert( CONTAINER_IDX_NUMBER == idx->type );
+
+   if( NULL != set && idx->value.index <= *gid ) {
+      *gid = idx->value.index;
+      return set;
    }
 
    return NULL;
@@ -476,12 +489,19 @@ void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-void* callback_search_tileset_img_gid( const bstring key, void* iter, void* arg ) {
+void* callback_search_tileset_img_gif(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
    struct CLIENT* c = (struct CLIENT*)arg;
    GRAPHICS* g_tileset = (GRAPHICS*)iter;
 
-   if( NULL == iter && NULL == hashmap_get( &(c->chunkers), key ) ) {
-      client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
+   if(
+      NULL == iter &&
+      NULL == hashmap_get( &(c->chunkers), idx->value.key )
+   ) {
+      client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
    } else if( NULL != iter ) {
       return iter;
    }
@@ -503,24 +523,28 @@ void* callback_search_tileset_img_gid( const bstring key, void* iter, void* arg 
 #endif
 }
 
-void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg ) {
+void* callback_proc_tileset_img_gs(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   scaffold_assert( NULL == iter );
+   scaffold_check_not_null( iter );
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
-   client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
+   client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
 
+cleanup:
    return NULL;
 }
 
-void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg ) {
+void* callback_proc_tileset_imgs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
    return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, c );
 }
 
-void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
+void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
 
@@ -534,7 +558,7 @@ void* callback_draw_mobiles( const bstring res, void* iter, void* arg ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
+void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct MOBILE* o = (struct MOBILE*)iter;
 
@@ -547,7 +571,7 @@ void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) {
+void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
 
@@ -556,7 +580,7 @@ void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg ) 
    return NULL;
 }
 
-void* callback_send_updates_to_client( const bstring res, void* iter, void* arg ) {
+void* callback_send_updates_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct MOBILE_UPDATE_PACKET* update = (struct MOBILE_UPDATE_PACKET*)arg;
 
@@ -569,7 +593,7 @@ void* callback_send_updates_to_client( const bstring res, void* iter, void* arg 
    return NULL;
 }
 
-void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
+void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
@@ -599,7 +623,7 @@ cleanup:
    return NULL;
 }
 
-void* callback_parse_mob_channels( const bstring key, void* iter, void* arg ) {
+void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
@@ -611,7 +635,7 @@ void* callback_parse_mob_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_stop_clients( const bstring key, void* iter, void* arg ) {
+void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
@@ -622,7 +646,7 @@ void* callback_stop_clients( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
@@ -635,7 +659,7 @@ BOOL callback_free_clients( const bstring key, void* iter, void* arg ) {
 
 /** \brief Kick and free clients on all channels in the given list.
  **/
-void* callback_remove_clients( const bstring res, void* iter, void* arg ) {
+void* callback_remove_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring nick = (bstring)arg;
 
@@ -645,7 +669,7 @@ void* callback_remove_clients( const bstring res, void* iter, void* arg ) {
    return NULL;
 }
 
-BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
 
@@ -657,7 +681,7 @@ BOOL callback_free_channels( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    if( 0 >= hashmap_count( &(l->clients) ) ) {
@@ -668,7 +692,7 @@ BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
    if( NULL == arg || *serial == o->serial ) {
@@ -680,9 +704,12 @@ BOOL callback_free_mobiles( const bstring res, void* iter, void* arg ) {
 
 #ifdef USE_CHUNKS
 
-BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_chunkers(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
    bstring filename = (bstring)arg;
-   if( NULL == filename || 0 == bstrcmp( key, filename ) ) {
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+   if( NULL == filename || 0 == bstrcmp( idx->value.key, filename ) ) {
       struct CHUNKER* h = (struct CHUNKER*)iter;
       chunker_free( h );
       return TRUE;
@@ -690,23 +717,17 @@ BOOL callback_free_chunkers( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_finished_chunkers( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_finished_chunkers(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
+
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
    if( chunker_chunk_finished( h ) ) {
       scaffold_print_debug(
-         &module, "Chunker for %s has finished. Removing...\n", bdata( key )
-      );
-      chunker_free( h );
-      return TRUE;
-   }
-   return FALSE;
-}
-
-BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg ) {
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-   if( chunker_unchunk_finished( h ) ) {
-      scaffold_print_debug(
-         &module, "Unchunker for %s has finished. Removing...\n", bdata( key )
+         &module, "(Un)chunker for %s has finished. Removing...\n",
+         bdata( idx->value.key )
       );
       chunker_free( h );
       return TRUE;
@@ -716,25 +737,33 @@ BOOL callback_free_finished_unchunkers( const bstring key, void* iter, void* arg
 
 #endif /* USE_CHUNKS */
 
-BOOL callback_free_commands( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
    irc_command_free( cmd );
    return TRUE;
 }
 
-BOOL callback_free_generic( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    scaffold_free( iter );
    return TRUE;
 }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-BOOL callback_free_controls( const bstring key, void* iter, void* arg ) {
-   bstring id = (bstring)key;
-   bstring id_search = (bstring)arg;
+BOOL callback_free_controls( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring key_search = (bstring)arg;
+   SCAFFOLD_SIZE* idx_search = (SCAFFOLD_SIZE*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
 
-   if( NULL == arg || 0 == bstrcmp( id_search, id ) ) {
+   /* scaffold_assert( CONTAINER_IDX_STRING == idx->type ); */
+
+   if(
+      NULL == arg ||
+      (CONTAINER_IDX_STRING == idx->type &&
+         0 == bstrcmp( key_search, idx->value.key )) ||
+      (CONTAINER_IDX_NUMBER == idx->type &&
+         idx->value.index == *idx_search)
+   ) {
       ui_control_free( control );
       return TRUE;
    }
@@ -743,7 +772,7 @@ BOOL callback_free_controls( const bstring key, void* iter, void* arg ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       bdestroy( (bstring)iter );
       return TRUE;
@@ -751,7 +780,7 @@ BOOL callback_free_strings( const bstring res, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL_BUFFER_LINE* line = (struct CHANNEL_BUFFER_LINE*)iter;
    /* TODO: Implement retroactively deleting lines by ID or something. */
    if( NULL == arg ) {
@@ -766,7 +795,7 @@ BOOL callback_free_backlog( const bstring res, void* iter, void* arg ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( (bstring)iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
       return TRUE;
@@ -774,7 +803,7 @@ BOOL callback_free_graphics( const bstring res, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_windows( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    if( NULL == arg || 0 == bstrcmp( wid, win->id ) ) {
@@ -786,7 +815,7 @@ BOOL callback_free_windows( const bstring res, void* iter, void* arg ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
+BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
       animation->frames.count = 0;
@@ -797,7 +826,7 @@ BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_spawners( const bstring res, void* iter, void* arg ) {
+BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, spawner->id ) ) {
       bdestroy( spawner->id );

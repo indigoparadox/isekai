@@ -227,7 +227,7 @@ struct IRC_WHO_REPLY {
    struct SERVER* s;
 };
 
-static void* irc_callback_reply_who( bstring key, void* iter, void* arg ) {
+static void* irc_callback_reply_who( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
    client_printf(
@@ -783,7 +783,8 @@ static void irc_client_join(
    /* Get the channel, or create it if it does not exist. */
    l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
-      channel_new( l, l_name, FALSE );
+      /* Create a new client-side channel mirror. */
+      channel_new( l, l_name, FALSE, c );
       client_add_channel( c, l );
       channel_add_client( l, c, FALSE );
       scaffold_print_info(

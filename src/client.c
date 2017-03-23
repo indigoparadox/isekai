@@ -32,6 +32,7 @@ static void client_cleanup( const struct REF *ref ) {
 
    hashmap_cleanup( &(c->chunkers) );
    hashmap_cleanup( &(c->channels) );
+   hashmap_cleanup( &(c->tilesets) );
 
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
@@ -56,6 +57,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
+   hashmap_init( &(c->tilesets) );
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -585,20 +587,10 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    switch( h->type ) {
    case CHUNKER_DATA_TYPE_TILESET:
 
-      l = hashmap_iterate(
-         &(c->channels),
-         callback_search_channels_tileset_path,
-         h->filename
-      );
-      scaffold_assert( NULL != l );
-
-      scaffold_assert( TRUE == hashmap_contains_key( &(l->tilemap.tilesets), h->filename ) );
-
       /* TODO: Fetch this tileset from other tilemaps, too. */
-      tilemap_tileset_new( set );
-      //datafile_tilemap_parse_tileset_ezxml( &(l->tilemap), set, h->filename, TRUE );
-      tilemap_add_tileset( &(l->tilemap), h->filename, set );
-      datafile_parse_ezxml_string( &(l->tilemap), h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET, h->filename );
+      set = hashmap_get( &(c->tilesets), h->filename );
+      scaffold_assert( NULL != set );
+      datafile_parse_ezxml_string( set, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET, h->filename );
       break;
 
    case CHUNKER_DATA_TYPE_TILEMAP:
@@ -645,7 +637,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
 
-      set = hashmap_iterate(
+      set = vector_iterate(
          &(l->tilemap.tilesets), callback_search_tilesets_img_name, h->filename
       );
       scaffold_check_null( set );

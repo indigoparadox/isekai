@@ -631,6 +631,7 @@ void* hashmap_iterate_nolock(
    void* data = NULL;
    void* test = NULL;
    BOOL ok = FALSE;
+   struct CONTAINER_IDX idx = { 0 };
 #ifdef DEBUG
    const char* key_c = NULL;
 #endif /* DEBUG */
@@ -640,12 +641,15 @@ void* hashmap_iterate_nolock(
    scaffold_check_zero_against(
       m->last_error, hashmap_count( m ), "Hashmap empty during iteration." );
 
+   idx.type = CONTAINER_IDX_STRING;
+
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
          key_c = bdata( m->data[i].key );
-         test = callback( m->data[i].key, data, arg );
+         idx.value.key = m->data[i].key;
+         test = callback( &idx, data, arg );
          if( NULL != test ) {
             found = test;
             goto cleanup;
@@ -670,6 +674,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    void* test = NULL;
    BOOL ok = FALSE;
    int i;
+   struct CONTAINER_IDX idx = { 0 };
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -680,11 +685,14 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    hashmap_lock( m, TRUE );
    ok = TRUE;
 
+   idx.type = CONTAINER_IDX_STRING;
+
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
-         test = callback( m->data[i].key, data, arg );
+         idx.value.key = m->data[i].key;
+         test = callback( &idx, data, arg );
          if( NULL != test ) {
             if( NULL == found ) {
                vector_new( found );
@@ -715,6 +723,7 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
    SCAFFOLD_SIZE removed = 0;
    void* data;
    BOOL locked = FALSE;
+   struct CONTAINER_IDX idx = { 0 };
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -730,11 +739,14 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
       goto cleanup; /* Quietly. */
    }
 
+   idx.type = CONTAINER_IDX_STRING;
+
    /* Linear probing */
    for( i = 0 ; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
-         if( FALSE != callback( m->data[i].key, data, arg ) ) {
+         idx.value.key = m->data[i].key;
+         if( FALSE != callback( &idx, data, arg ) ) {
             /* Blank out the fields */
             m->data[i].in_use = 0;
             m->data[i].data = NULL;

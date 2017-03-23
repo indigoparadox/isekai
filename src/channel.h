@@ -46,15 +46,18 @@ struct CHANNEL_CLIENT {
    struct CLIENT* c;
 };
 
-#define channel_new( l, name, local_graphics ) \
+#define channel_new( l, name, local_graphics, server ) \
     scaffold_check_null( name ); \
     l = (struct CHANNEL*)calloc( 1, sizeof( struct CHANNEL ) ); \
     scaffold_check_null( l ); \
-    channel_init( l, name, local_graphics );
+    channel_init( l, name, local_graphics, server );
 
 struct MOBILE;
 
-void channel_init( struct CHANNEL* l, const bstring name, BOOL local_graphics );
+void channel_init(
+   struct CHANNEL* l, const bstring name, BOOL local_graphics,
+   struct CLIENT* server
+);
 void channel_free( struct CHANNEL* l );
 struct CLIENT* channel_client_present( struct CHANNEL* l, struct CLIENT* c );
 void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn );
