@@ -368,7 +368,7 @@ int main( int argc, char** argv ) {
 
 #ifdef _WIN32
    graphics_screen_new(
-      g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
+      &g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
       GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT,
       nShowCmd, hInstance
    );
