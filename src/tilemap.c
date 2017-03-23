@@ -300,6 +300,8 @@ static void* tilemap_layer_draw_tile(
    const struct MOBILE* o = twindow->c->puppet;
    GRAPHICS* g_tileset = NULL;
 
+   assert( mobile_is_local_player( o ) );
+
    set = tilemap_get_tileset( t, gid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
