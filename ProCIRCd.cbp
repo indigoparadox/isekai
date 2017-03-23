@@ -266,6 +266,7 @@
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DSTRICT_DEBUG" />
+					<Add option="-DUSE_DUKTAPE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -310,6 +311,7 @@
 					<Add option="-DxDEBUG_PALETTE" />
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_DUKTAPE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

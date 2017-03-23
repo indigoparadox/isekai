@@ -370,6 +370,10 @@ void* callback_proc_channel_spawners(
       /* Perform a spawn. */
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
+      if( NULL != o->vm_script ) {
+         /* If it's an NPC, start its script. */
+         mobile_vm_start( o, o->vm_script );
+      }
       scaffold_gen_serial( o, &(l->mobiles) );
       channel_add_mobile( l, o );
       ts->countdown_remaining = -1;

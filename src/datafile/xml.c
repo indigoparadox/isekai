@@ -165,12 +165,6 @@ cleanup:
    return;
 }
 
-static void datafile_mobile_parse_script_ezxml(
-   struct MOBILE* o, ezxml_t xml_script
-) {
-   /* TODO */
-}
-
 void datafile_parse_mobile_ezxml_t(
    struct MOBILE* o, ezxml_t xml_data, BOOL local_images
 ) {
@@ -178,8 +172,7 @@ void datafile_parse_mobile_ezxml_t(
       xml_sprite_iter = NULL,
       xml_animations = NULL,
       xml_animation_iter = NULL,
-      xml_scripts = NULL,
-      xml_script_iter = NULL,
+      xml_script = NULL,
       xml_image = NULL;
    const char* xml_attr = NULL;
    int bstr_retval;
@@ -222,13 +215,14 @@ void datafile_parse_mobile_ezxml_t(
       xml_animation_iter = ezxml_next( xml_animation_iter );
    }
 
-   xml_scripts = ezxml_child( xml_data, "scripts" );
-   scaffold_check_null( xml_scripts );
-
-   xml_script_iter = ezxml_child( xml_scripts, "script" );
-   while( NULL != xml_script_iter ) {
-      datafile_mobile_parse_script_ezxml( o, xml_script_iter );
-      xml_script_iter = ezxml_next( xml_script_iter );
+   /* TODO: Verify script type, etc. */
+   xml_script = ezxml_child( xml_data, "script" );
+   if( NULL != xml_script ) {
+      xml_attr = ezxml_txt( xml_script );
+      if( NULL != xml_attr ) {
+         o->vm_script = bfromcstr( xml_attr );
+         scaffold_check_null( o->vm_script );
+      }
    }
 
    xml_image = ezxml_child( xml_data, "image" );
