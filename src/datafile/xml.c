@@ -505,16 +505,14 @@ cleanup:
 #define TERRAIN_ID_C_BUFFER_LENGTH 4
 
 void datafile_tilemap_parse_tileset_ezxml(
-   struct TILEMAP* t, ezxml_t xml_tileset, bstring def_path, BOOL local_images
+   struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path, BOOL local_images
 ) {
-   struct TILEMAP_TILESET* set = NULL;
    ezxml_t
       xml_image,
       xml_tile,
       xml_terraintypes,
       xml_terrain;
    const char* xml_attr;
-   //bstring tileset_name = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
    int i,
       terrain_id_c_i,
@@ -535,12 +533,6 @@ void datafile_tilemap_parse_tileset_ezxml(
    scaffold_check_null( xml_tileset );
 
    xml_attr = ezxml_attr( xml_tileset, "source" );
-#if 0
-   if( NULL != xml_attr && NULL != set->def_path ) {
-      bstr_retval = bassigncstr( set->def_path, xml_attr );
-      scaffold_check_nonzero( bstr_retval );
-   } else
-#endif
    if( NULL != xml_attr && NULL == def_path ) {
       first_pass = TRUE;
       def_path = bfromcstr( xml_attr );
@@ -548,14 +540,8 @@ void datafile_tilemap_parse_tileset_ezxml(
          &module, "Loading external tileset: %s\n", xml_attr );
       scaffold_check_null( def_path );
    }
-#if 0
-    else {
-      /* If there is no source trait, then there must be a name trait. */
-      //ezxml_string( xml_attr, xml_tileset, "name" );
-      //scaffold_assign_or_cpy_c( set-> )
-   }
-#endif
 
+#if 0
    /* Try the definition path stored in the structure. */
    set = hashmap_get( &(t->tilesets), def_path );
    if( NULL == set ) {
@@ -564,19 +550,11 @@ void datafile_tilemap_parse_tileset_ezxml(
          &module, "Stub placed for tileset: %b\n", def_path );
       goto cleanup;
    }
+#endif // 0
 
    /* Try to grab the image list early. If it's missing, just get out. */
    xml_image = ezxml_child( xml_tileset, "image" );
    scaffold_check_null( xml_image );
-
-   /*
-   bstr_retval = bassigncstr( tileset_name, ezxml_attr( xml_tileset, "name" ) );
-   scaffold_check_nonzero( bstr_retval );
-   */
-
-   if( TRUE == first_pass ) {
-      ezxml_int( set->firstgid, xml_attr, xml_tileset, "firstgid" );
-   }
 
    ezxml_int( set->tilewidth, xml_attr, xml_tileset, "tilewidth" );
    ezxml_int( set->tileheight, xml_attr, xml_tileset, "tileheight" );
@@ -592,11 +570,6 @@ void datafile_tilemap_parse_tileset_ezxml(
 #endif /* ENABLE_LOCAL_CLIENT */
 
    /* Parse the terrain information. */
-
-   if( !vector_ready( &(set->terrain) ) ) {
-      vector_init( &(set->terrain) );
-   }
-
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
    scaffold_check_null( xml_terraintypes );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
@@ -876,6 +849,8 @@ void datafile_parse_tilemap_ezxml_t(
    const char* xml_attr = NULL;
    bstring tileset_id = NULL;
    int bstr_retval = 0;
+   SCAFFOLD_SIZE firstgid = 0;
+   struct TILEMAP_TILESET* set = NULL;
 
    SCAFFOLD_SIZE z = 0;
    tileset_id = bfromcstr( "" );
@@ -883,6 +858,10 @@ void datafile_parse_tilemap_ezxml_t(
    xml_tileset = ezxml_child( xml_data, "tileset" );
    scaffold_check_null( xml_tileset );
    while( NULL != xml_tileset ) {
+      bstr_retval = btrunc( tileset_id, 0 );
+      scaffold_check_nonzero( bstr_retval );
+
+      /* Try to grab the string that uniquely identifies this tileset. */
       xml_attr = ezxml_attr( xml_tileset, "source" );
       if( NULL == xml_attr ) {
          /* This must be an internal tileset. */
@@ -891,11 +870,39 @@ void datafile_parse_tilemap_ezxml_t(
          scaffold_print_debug(
             &module, "Found internal tileset definition: %s\n", xml_attr
          );
+
+         /* Prevent collisions in the server-wide tileset list by creating a
+          * "namespace" for this particular tilemap. This could be defeated by
+          * having two different tilemaps with the same name, but just don't do
+          * that, OK?
+          */
+         bstr_retval = bassign( tileset_id, t->lname );
+         scaffold_check_nonzero( bstr_retval );
+         bstr_retval = bconchar( tileset_id, ':' );
+         scaffold_check_nonzero( bstr_retval );
       }
-      bstr_retval = bassigncstr( tileset_id, xml_attr );
+      bstr_retval = bcatcstr( tileset_id, xml_attr );
       scaffold_check_nonzero( bstr_retval );
-      datafile_tilemap_parse_tileset_ezxml(
-         t, xml_tileset, tileset_id, local_images );
+
+      set = hashmap_get( t->server_tilesets, tileset_id );
+      if( NULL == set ) {
+         scaffold_print_debug(
+            &module, "New tileset found server-wide: %b\n", tileset_id
+         );
+         tilemap_tileset_new( set, tileset_id );
+         hashmap_put( t->server_tilesets, tileset_id, set );
+
+         datafile_tilemap_parse_tileset_ezxml(
+            set, xml_tileset, tileset_id, local_images );
+      }
+
+      ezxml_int( firstgid, xml_attr, xml_tileset, "firstgid" );
+      vector_set( &(t->tilesets), firstgid, set, TRUE );
+      scaffold_print_debug(
+         &module, "Tileset %b assigned to tilemap %b with first GID: %d\n",
+         tileset_id, t->lname, firstgid
+      );
+
       xml_tileset = ezxml_next( xml_tileset );
    }
 

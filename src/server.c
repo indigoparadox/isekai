@@ -32,7 +32,7 @@ void server_free_clients( struct SERVER* s ) {
    hashmap_cleanup( &(s->clients) );
 }
 
-void server_free_final( const struct REF* ref ) {
+static void server_free_final( const struct REF* ref ) {
    struct SERVER* s =
       scaffold_container_of( ref, struct SERVER, self.link.refcount );
 
@@ -146,7 +146,8 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
    l = server_get_channel_by_name( s, l_name );
 
    if( NULL == l ) {
-      channel_new( l, l_name, FALSE );
+      /* Create a new channel on the server. */
+      channel_new( l, l_name, FALSE, &(s->self) );
       client_add_channel( &(s->self), l );
       scaffold_print_info(
          &module, "Server: Channel created: %s\n", bdata( l->name ) );

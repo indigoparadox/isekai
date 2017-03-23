@@ -23,8 +23,8 @@ struct VECTOR {
 
 #define VECTOR_SENTINAL 12121
 
-typedef void* (*vector_search_cb)( const bstring res, void* iter, void* arg );
-typedef BOOL (*vector_delete_cb)( const bstring res, void* iter, void* arg );
+typedef void* (*vector_search_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
+typedef BOOL (*vector_delete_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
 typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
 
 #define vector_ready( v ) \

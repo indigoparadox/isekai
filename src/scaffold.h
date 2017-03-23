@@ -196,6 +196,21 @@ struct tagbstring ansi_color_strs[7] = {
 
 #endif /* USE_COLORED_CONSOLE */
 
+typedef union CONTAINER_IDX_VALUE {
+   SCAFFOLD_SIZE index;
+   bstring key;
+} CONTAINER_IDX_VALUE;
+
+typedef enum CONTAINER_IDX_TYPE {
+   CONTAINER_IDX_NUMBER,
+   CONTAINER_IDX_STRING
+} CONTAINER_IDX_TYPE;
+
+struct CONTAINER_IDX {
+   CONTAINER_IDX_TYPE type;
+   CONTAINER_IDX_VALUE value;
+};
+
 /* = Utility Macros = */
 
 #define SCAFFOLD_MODULE( mod_name ) static struct tagbstring module = bsStatic( mod_name )

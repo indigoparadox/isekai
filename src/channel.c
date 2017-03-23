@@ -47,7 +47,14 @@ void channel_free( struct CHANNEL* l ) {
    refcount_dec( l, "channel" );
 }
 
-void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
+/**
+ * \param[in] server The server (or local client, if this is a local client
+ *                   mirror of a server-side channel.)
+ */
+void channel_init(
+   struct CHANNEL* l, const bstring name, BOOL local_images,
+   struct CLIENT* server
+) {
    ref_init( &(l->refcount), channel_free_final );
    hashmap_init( &(l->clients) );
    vector_init( &(l->mobiles ) );
@@ -56,7 +63,7 @@ void channel_init( struct CHANNEL* l, const bstring name, BOOL local_images ) {
    l->topic = bfromcstr( "No topic" );
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
-   tilemap_init( &(l->tilemap), local_images );
+   tilemap_init( &(l->tilemap), local_images, server );
 cleanup:
    return;
 }

@@ -5,75 +5,75 @@
 #include "vector.h"
 #include "hashmap.h"
 
-void* callback_ingest_commands( const bstring key, void* iter, void* arg );
-void* callback_concat_clients( const bstring key, void* iter, void* arg );
-void* callback_search_clients( const bstring key, void* iter, void* arg );
-void* callback_search_clients_r( const bstring key, void* iter, void* arg );
-void* callback_search_clients_l( const bstring key, void* iter, void* arg );
-void* callback_search_spawners( const bstring key, void* iter, void* arg );
-void* callback_send_clients( const bstring key, void* iter, void* arg );
-void* callback_search_channels( const bstring key, void* iter, void* arg );
-void* callback_get_tileset( const bstring key, void* iter, void* arg );
-void* callback_search_mobs_by_pos( const bstring res, void* iter, void* arg );
-void* callback_search_windows( const bstring key, void* iter, void* arg );
-void* callback_search_tileset_img_gid( const bstring key, void* iter, void* arg );
-void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg );
-void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg );
-void* callback_search_channels_tileset_path( const bstring key, void* iter, void* arg );
-void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
-void* callback_search_graphics( const bstring key, void* iter, void* arg );
-void* callback_search_servefiles( const bstring res, void* iter, void* arg );
+void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_send_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_get_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_tileset_img_gid( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_channels_tileset_path( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_servefiles( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #ifdef USE_CHUNKS
-void* callback_send_chunkers_l( const bstring key, void* iter, void* arg );
+void* callback_send_chunkers_l( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #endif /* USE_CHUNKS */
-void* callback_send_mobs_to_client( const bstring res, void* iter, void* arg );
-void* callback_send_mobs_to_channel( const bstring res, void* iter, void* arg );
-void* callback_send_updates_to_client( const bstring res, void* iter, void* arg );
-void* callback_parse_mobs( const bstring res, void* iter, void* arg );
-void* callback_parse_mob_channels( const bstring key, void* iter, void* arg );
-BOOL callback_send_list_to_client( const bstring res, void* iter, void* arg );
-void* callback_get_tile_stack_l( bstring key, void* iter, void* arg );
-void* callback_get_tile_blocker( bstring res, void* iter, void* arg );
+void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_send_updates_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_send_list_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_get_tile_blocker( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #ifdef USE_CHUNKS
-void* callback_proc_client_chunkers( const bstring key, void* iter, void* arg );
-void* callback_proc_chunkers( const bstring key, void* iter, void* arg );
+void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #endif /* USE_CHUNKS */
 #ifdef USE_VM
-void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg );
-void* callback_proc_channel_vms( const bstring res, void* iter, void* arg );
+void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #endif /* USE_VM */
-void* callback_proc_tileset_img_gs( const bstring key, void* iter, void* arg );
-void* callback_proc_tileset_imgs( const bstring key, void* iter, void* arg );
+void* callback_proc_tileset_img_gs( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_proc_tileset_imgs( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_proc_channel_spawners(
-   const bstring key, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* iter, void* arg
 );
-void* callback_proc_server_spawners( const bstring key, void* iter, void* arg );
-void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg );
-void* callback_draw_mobiles( const bstring res, void* iter, void* arg );
-void* callback_stop_clients( const bstring key, void* iter, void* arg );
-BOOL callback_free_clients( const bstring key, void* iter, void* arg );
-void* callback_remove_clients( const bstring res, void* iter, void* arg );
-BOOL callback_free_channels( const bstring key, void* iter, void* arg );
-BOOL callback_free_empty_channels( const bstring key, void* iter, void* arg );
-BOOL callback_free_mobiles( const bstring key, void* iter, void* arg );
+void* callback_proc_server_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_remove_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #ifdef USE_CHUNKS
-BOOL callback_free_chunkers( const bstring key, void* iter, void* arg );
+BOOL callback_free_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_finished_chunkers(
-   const bstring key, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* iter, void* arg
 );
 BOOL callback_free_finished_unchunkers(
-   const bstring key, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* iter, void* arg
 );
 #endif /* USE_CHUNKS */
-BOOL callback_free_commands( const bstring res, void* iter, void* arg );
-BOOL callback_free_generic( const bstring res, void* iter, void* arg );
-BOOL callback_free_controls( const bstring res, void* iter, void* arg );
-BOOL callback_free_strings( const bstring res, void* iter, void* arg );
-BOOL callback_free_backlog( const bstring res, void* iter, void* arg );
-BOOL callback_free_graphics( const bstring res, void* iter, void* arg );
-BOOL callback_free_windows( const bstring res, void* iter, void* arg );
-BOOL callback_free_ani_defs( const bstring key, void* iter, void* arg );
-BOOL callback_free_spawners( const bstring res, void* iter, void* arg );
+BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_controls( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg );
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );
 
 #ifdef CALLBACKS_C

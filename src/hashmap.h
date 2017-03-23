@@ -13,8 +13,8 @@
 #include "scaffold.h"
 #include "vector.h"
 
-typedef void* (*hashmap_search_cb)( const bstring key, void* iter, void* arg );
-typedef BOOL (*hashmap_delete_cb)( const bstring key, void* iter, void* arg );
+typedef void* (*hashmap_search_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
+typedef BOOL (*hashmap_delete_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
 
 /* We need to keep keys and values */
 struct HASHMAP_ELEMENT {

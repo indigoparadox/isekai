@@ -69,12 +69,12 @@ struct TILEMAP_TILE_DATA {
 
 struct TILEMAP_TILESET {
    struct REF refcount;
-   SCAFFOLD_SIZE firstgid;
    SCAFFOLD_SIZE tileheight;  /*!< Height of tiles in pixels. */
    SCAFFOLD_SIZE tilewidth;   /*!< Width of tiles in pixels. */
    struct HASHMAP images;     /*!< Graphics indexed by filename. */
    struct VECTOR terrain;     /*!< Terrains in file order. */
    struct VECTOR tiles;       /*!< Tile data in file order. */
+   bstring def_path;
 };
 
 struct TILEMAP_POSITION {
@@ -110,10 +110,8 @@ struct TILEMAP {
    SCAFFOLD_SIZE width;
    SCAFFOLD_SIZE height;
    struct HASHMAP layers;
-   /*
-   struct VECTOR positions;
-   */
-   struct HASHMAP tilesets;
+   struct VECTOR tilesets;
+   struct HASHMAP* server_tilesets; /*!< All tilesets on server. */
    struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
    SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
@@ -145,20 +143,20 @@ struct TILEMAP {
  * (y * x) + x
  */
 
-#define tilemap_tileset_new( set ) \
+#define tilemap_tileset_new( set, def_path ) \
     set = scaffold_alloc( 1, struct TILEMAP_TILESET ); \
     scaffold_check_null( set ); \
-    tilemap_tileset_init( set );
+    tilemap_tileset_init( set, def_path );
 
 #define tilemap_spawner_new( ts, t, type ) \
     ts = scaffold_alloc( 1, struct TILEMAP_SPAWNER ); \
     scaffold_check_null( ts ); \
     tilemap_spawner_init( ts, t, type );
 
-#define tilemap_new( t, local_images ) \
+#define tilemap_new( t, local_images, server ) \
     t = (struct TILEMAP*)calloc( 1, sizeof( struct TILEMAP ) ); \
     scaffold_check_null( t ); \
-    tilemap_init( t, local_images );
+    tilemap_init( t, local_images, server );
 
 #define tilemap_layer_new( t ) \
     t = (struct TILEMAP_LAYER*)calloc( 1, sizeof( struct TILEMAP_LAYER ) ); \
@@ -178,7 +176,9 @@ struct TILEMAP {
     tilemap_position_cleanup( position ); \
     scaffold_free( position );
 
-void tilemap_init( struct TILEMAP* t, BOOL local_images );
+void tilemap_init(
+   struct TILEMAP* t, BOOL local_images, struct CLIENT* server
+);
 void tilemap_free( struct TILEMAP* t );
 void tilemap_spawner_init(
    struct TILEMAP_SPAWNER* ts, struct TILEMAP* t, TILEMAP_SPAWNER_TYPE type
@@ -190,9 +190,13 @@ void tilemap_position_init( struct TILEMAP_POSITION* position );
 void tilemap_position_cleanup( struct TILEMAP_POSITION* position );
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, SCAFFOLD_SIZE gid );
+void tilemap_tileset_init( struct TILEMAP_TILESET* tileset, bstring def_path );
+SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
+   struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
+);
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
-   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
+   SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 );
 SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y );
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );

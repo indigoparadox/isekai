@@ -8,12 +8,12 @@
 #include "callback.h"
 #include "mobile.h"
 
-static BOOL tilemap_layer_free_cb( bstring res, void* iter, void* arg ) {
+static BOOL tilemap_layer_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    tilemap_layer_free( (struct TILEMAP_LAYER*)iter );
    return TRUE;
 }
 
-static BOOL tilemap_tileset_free_cb( bstring res, void* iter, void* arg ) {
+static BOOL tilemap_tileset_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    tilemap_tileset_free( (struct TILEMAP_TILESET*)iter );
    return TRUE;
 }
@@ -33,17 +33,19 @@ static void tilemap_cleanup( const struct REF* ref ) {
    hashmap_cleanup( &(t->layers) );
    vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
    vector_cleanup( &(t->spawners) );
-   hashmap_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
-   hashmap_cleanup( &(t->tilesets) );
+   vector_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
+   vector_cleanup( &(t->tilesets) );
 
    /* TODO: Free tilemap. */
 }
 
-void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
+void tilemap_init(
+   struct TILEMAP* t, BOOL local_images, struct CLIENT* server
+) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
    hashmap_init( &(t->layers) );
-   hashmap_init( &(t->tilesets) );
+   vector_init( &(t->tilesets) );
    vector_init( &(t->spawners) );
 
    vector_init( &(t->dirty_tiles) );
@@ -52,6 +54,8 @@ void tilemap_init( struct TILEMAP* t, BOOL local_images ) {
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
    t->lname = bfromcstr( "" );
+
+   t->server_tilesets = &(server->tilesets);
 }
 
 void tilemap_free( struct TILEMAP* t ) {
@@ -87,9 +91,10 @@ void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
    vector_cleanup( &(layer->tiles ) );
 }
 
-void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset ) {
+void tilemap_tileset_cleanup( struct TILEMAP_TILESET* set ) {
 #ifdef ENABLE_LOCAL_CLIENT
-   hashmap_remove_cb( &(tileset->images), callback_free_graphics, NULL );
+   hashmap_remove_cb( &(set->images), callback_free_graphics, NULL );
+   bdestroy( set->def_path );
 #endif /* ENABLE_LOCAL_CLIENT */
 }
 
@@ -106,13 +111,14 @@ void tilemap_tileset_free( struct TILEMAP_TILESET* set ) {
    refcount_dec( set, "tileset" );
 }
 
-void tilemap_tileset_init( struct TILEMAP_TILESET* set ) {
+void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
    ref_init( &(set->refcount), tilemap_tileset_free_final );
    /* We exist only to be in lists. */
    /* TODO: Right now, this seems somewhat useless because firstgid can be
     *       different for every tilemap this set belongs to.
     */
    set->refcount.count = 0;
+   set->def_path = bstrcpy( def_path );
 
    hashmap_init( &(set->images) );
 
@@ -123,14 +129,25 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set ) {
 #ifndef USE_CURSES
 
 /** \brief Given a tile GID, get the tileset it belongs to.
- * \param[in] t   The tilemap on which the tile resides.
- * \param[in] gid The GID of the tile information to fetch.
+ * \param[in]  t            The tilemap on which the tile resides.
+ * \param[in]  gid          The GID of the tile information to fetch.
+ * \param[out] set_firstgid The first GID contained in this set for the given
+ *                          tilemap.
  * \return The tileset containing the tile with the requested GID.
  */
 SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
-   struct TILEMAP* t, SCAFFOLD_SIZE gid
+   struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
 ) {
-   return hashmap_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
+   struct TILEMAP_TILESET* set = NULL;
+   /* The gid variable does double-duty, here. It provides a GID to search for,
+    * and a place to keep the first GID of the found tileset for this tilemap
+    * when the tileset is found.
+    */
+   set = vector_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
+   if( NULL != set && NULL != set_firstgid ) {
+      *set_firstgid = gid;
+   }
+   return set;
 }
 
 /** \brief Get the tileset position for the given tile GID.
@@ -142,8 +159,8 @@ SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
  * \return
  */
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
-   struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid,
-   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
+   SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
 ) {
    SCAFFOLD_SIZE tiles_wide = 0;
 
@@ -151,7 +168,7 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 
    tiles_wide = g_set->w / set->tilewidth;
 
-   gid -= set->firstgid - 1;
+   gid -= set_firstgid - 1;
 
    *y = ((gid - 1) / tiles_wide) * set->tileheight;
    *x = ((gid - 1) % tiles_wide) * set->tilewidth;
@@ -209,11 +226,13 @@ static void tilemap_layer_draw_tile_debug(
    SCAFFOLD_SIZE td_i;
    int bstr_result;
    struct TILEMAP* t = layer->tilemap;
+   SCAFFOLD_SIZE set_firstgid = 0;
 
    bnum = bfromcstralloc( 10, "" );
    scaffold_check_null( bnum );
 
-   set = tilemap_get_tileset( t, gid );
+   /* FIXME: How does gid resolve in a tileset that can have a variable firstgid? */
+   set = tilemap_get_tileset( t, gid, &set_firstgid );
    scaffold_check_null( set );
    scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
    scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
@@ -325,18 +344,25 @@ static void* tilemap_layer_draw_tile(
    struct CLIENT* local_client = twindow->local_client;
    const struct MOBILE* o = local_client->puppet;
    GRAPHICS* g_tileset = NULL;
+   SCAFFOLD_SIZE set_firstgid = 0;
 
-   set = tilemap_get_tileset( t, gid );
+   set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
+# if 0
+/* FIXME */
       /* Try loading the tileset. */
-      hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
+
+      hashmap_get( &(t->tilesets), , twindow->local_client );
+#endif // 0
       goto cleanup; /* Silently. */
    }
 
    scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
    scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
+#if 0
       hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
+#endif // 0
       goto cleanup;
    }
 
@@ -348,18 +374,20 @@ static void* tilemap_layer_draw_tile(
       goto cleanup; /* Silently. */
    }
 
-#if 0
    /* Figure out the graphical tile to draw from. */
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
-#endif
+#if 0
+   /* FIXME */
    /* If the current tileset doesn't exist, then load it. */
    g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, local_client );
+#endif
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;
    }
 
-   tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
+   tilemap_get_tile_tileset_pos(
+      set, set_firstgid, g_tileset, gid, &tileset_x, &tileset_y );
 
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
@@ -409,7 +437,7 @@ cleanup:
    return NULL;
 }
 
-static void* tilemap_layer_draw_dirty_cb( bstring key, void* iter, void* arg ) {
+static void* tilemap_layer_draw_dirty_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = twindow->t;
@@ -429,7 +457,7 @@ cleanup:
    return NULL;
 }
 
-static void* tilemap_layer_draw_cb( bstring key, void* iter, void* arg ) {
+static void* tilemap_layer_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    SCAFFOLD_SIZE_SIGNED
@@ -718,11 +746,5 @@ void tilemap_toggle_debug_state() {
 }
 
 #endif /* DEBUG_TILES */
-
-void tilemap_add_tileset(
-   struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
-) {
-   hashmap_put( &(t->tilesets), key, set );
-}
 
 #endif /* ENABLE_LOCAL_CLIENT */

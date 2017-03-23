@@ -119,17 +119,17 @@ static void vm_update( duk_context* vm ) {
    }
 }
 
-static void* vm_global_set_cb( bstring key, void* iter, void* arg ) {
+static void* vm_global_set_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)arg;
    bstring value = (bstring)iter;
-   duk_idx_t idx;
 
    scaffold_assert( NULL != value );
    scaffold_assert( NULL != arg );
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
    duk_push_global_object( OBJECT_VM( o ) );
    duk_push_string( OBJECT_VM( o ), bdata( value ) );
-   duk_put_prop_string( OBJECT_VM( o ), -2, bdata( key ) );
+   duk_put_prop_string( OBJECT_VM( o ), -2, bdata( idx->value.key ) );
    duk_pop( OBJECT_VM( o ) );
 
    return NULL;
