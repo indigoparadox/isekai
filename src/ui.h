@@ -49,7 +49,9 @@ typedef enum {
    UI_CONTROL_TYPE_NONE,
    UI_CONTROL_TYPE_TEXT,
    UI_CONTROL_TYPE_BUTTON,
-   UI_CONTROL_TYPE_LABEL
+   UI_CONTROL_TYPE_LABEL,
+   UI_CONTROL_TYPE_CHECKBOX,
+   UI_CONTROL_TYPE_TILEGRID
 } UI_CONTROL_TYPE;
 
 typedef enum UI_WINDOW_TYPE {
@@ -125,6 +127,7 @@ struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id );
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer );
 BOOL ui_window_destroy( struct UI* ui, const bstring wid );
 void ui_window_next_active_control( struct UI_WINDOW* win );
+void ui_window_draw_grid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow );
 
 #ifdef UI_C
 SCAFFOLD_MODULE( "ui.c" );

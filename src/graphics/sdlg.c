@@ -265,7 +265,7 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color_i
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color_i, BOOL filled
 ) {
    SDL_Rect rect;
    SDL_Color* color = &(graphics_stock_colors[color_i]);
@@ -278,14 +278,42 @@ void graphics_draw_rect(
    rect.w = w,
    rect.h = h;
 
-   SDL_FillRect(
-      g->surface,
-      &rect,
-      SDL_MapRGB( surface->format, color->r, color->g, color->b )
-   );
+   if( FALSE != filled ) {
+      SDL_FillRect(
+         g->surface,
+         &rect,
+         SDL_MapRGB( surface->format, color->r, color->g, color->b )
+      );
+   } else {
+      /* TODO */
+   }
 
 cleanup:
    return;
+}
+
+void graphics_draw_line(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
+) {
+   /* TODO */
+}
+
+void graphics_draw_triangle(
+   GRAPHICS* g,
+   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
+   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GRAPHICS_COLOR color, BOOL filled
+) {
+   /* TODO */
+}
+
+void graphics_draw_circle(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
+) {
+   /* TODO */
 }
 
 void graphics_draw_char(

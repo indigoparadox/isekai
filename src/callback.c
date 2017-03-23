@@ -558,6 +558,23 @@ void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void*
 
 #ifdef ENABLE_LOCAL_CLIENT
 
+void* callback_search_tilesets_small(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct TILEMAP_POSITION* temp = (struct TILEMAP_POSITION*)arg;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+
+   if( NULL != iter && temp->x < set->tilewidth ) {
+      temp->x = set->tilewidth;
+   }
+
+   if( NULL != iter && temp->y < set->tileheight ) {
+      temp->y = set->tileheight;
+   }
+
+   return NULL;
+}
+
 void* callback_search_tileset_img_gid(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {

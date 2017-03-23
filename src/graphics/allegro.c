@@ -499,9 +499,47 @@ cleanup:
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
-   GRAPHICS_COLOR color
+   GRAPHICS_COLOR color, BOOL filled
 ) {
-   rectfill( g->surface, x, y, x + w, y + h, color );
+   if( FALSE != filled ) {
+      rectfill( g->surface, x, y, x + w, y + h, color );
+   } else {
+      rect( g->surface, x, y, x + w, y + h, color );
+   }
+}
+
+void graphics_draw_line(
+   GRAPHICS* g, SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2, GRAPHICS_COLOR color
+) {
+   line( g->surface, x1, y1, x2, y2, color );
+}
+
+void graphics_draw_triangle(
+   GRAPHICS* g,
+   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
+   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GRAPHICS_COLOR color, BOOL filled
+) {
+   if( FALSE != filled ) {
+      triangle( g->surface, x1, y1, x2, y2, x3, y3, color );
+   } else {
+      graphics_draw_line( g->surface, x1, y1, x2, y2, color );
+      graphics_draw_line( g->surface, x2, y2, x3, y3, color );
+      graphics_draw_line( g->surface, x3, y3, x1, y1, color );
+   }
+}
+
+void graphics_draw_circle(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
+) {
+   if( FALSE != filled ){
+      circlefill( g->surface, x, y, radius, color );
+   } else {
+      circle( g->surface, x, y, radius, color );
+   }
 }
 
 void graphics_draw_char(

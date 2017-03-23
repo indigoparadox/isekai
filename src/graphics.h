@@ -77,6 +77,8 @@ struct GRAPHICS_TILE_WINDOW {
    SCAFFOLD_SIZE_SIGNED max_y;
    SCAFFOLD_SIZE_SIGNED min_x;
    SCAFFOLD_SIZE_SIGNED min_y;
+   uint8_t grid_w;
+   uint8_t grid_h;
 };
 
 #define graphics_surface_new( g, x, y, w, h ) \
@@ -113,7 +115,22 @@ void graphics_draw_text(
 );
 void graphics_draw_rect(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color, BOOL filled
+);
+void graphics_draw_line(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
+);
+void graphics_draw_triangle(
+   GRAPHICS* g,
+   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
+   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GRAPHICS_COLOR color, BOOL filled
+);
+void graphics_draw_circle(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
 );
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
