@@ -348,8 +348,8 @@ void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
 
    scaffold_assert_server();
 
-   if( mobile_vm_can_step( o ) ) {
-      mobile_vm_step( o );
+   if( mobile_has_event( o, "tick" ) ) {
+      mobile_vm_tick( o );
    }
 
    return NULL;
@@ -386,10 +386,6 @@ void* callback_proc_channel_spawners(
       mobile_load_local( o );
       scaffold_gen_serial( o, &(l->mobiles) );
       channel_add_mobile( l, o );
-      if( NULL != o->vm_script ) {
-         /* If it's an NPC, start its script. */
-         mobile_vm_start( o, o->vm_script );
-      }
       ts->countdown_remaining = -1;
    }
 

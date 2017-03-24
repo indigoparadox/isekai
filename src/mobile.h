@@ -89,9 +89,10 @@ struct MOBILE {
    bstring mob_id;
    struct CHANNEL* channel;
    struct duk_context* vm;
-   bstring vm_script;
    void* vm_caddy;
    BOOL vm_started;
+   struct HASHMAP vm_scripts;
+   struct HASHMAP vm_globals;
    struct VECTOR sprite_defs;
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
@@ -159,10 +160,10 @@ SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 void mobile_speak( struct MOBILE* o, bstring speech );
 BOOL mobile_is_local_player( struct MOBILE* o );
-void mobile_vm_start( struct MOBILE* o, bstring code );
-void mobile_vm_step( struct MOBILE* o );
+void mobile_vm_start( struct MOBILE* o );
+void mobile_vm_tick( struct MOBILE* o );
 void mobile_vm_end( struct MOBILE* o );
-BOOL mobile_vm_can_step( struct MOBILE* o );
+BOOL mobile_has_event( struct MOBILE* o, const char* event );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

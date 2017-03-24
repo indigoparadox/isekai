@@ -86,7 +86,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 
 typedef uint8_t SERIAL;
 #define SERIAL_MIN 1
-#define SERIAL_MAX UCHAR_MAX - SERIAL_MIN
+#define SERIAL_MAX UCHAR_MAX - SERIAL_MIN - 1
 
 /* = Configuration = */
 

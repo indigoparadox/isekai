@@ -172,13 +172,20 @@ void datafile_parse_mobile_ezxml_t(
       xml_sprite_iter = NULL,
       xml_animations = NULL,
       xml_animation_iter = NULL,
-      xml_script = NULL,
+      xml_scripts = NULL,
+      xml_script_iter = NULL,
       xml_image = NULL;
    const char* xml_attr = NULL;
    int bstr_retval;
-   bstring walk_ani_key = NULL;
+   bstring walk_ani_key = NULL,
+      vm_val_buffer = NULL,
+      vm_key_buffer = NULL;
 
    scaffold_check_null( xml_data );
+
+
+   vm_val_buffer = bfromcstr( "" );
+   vm_key_buffer = bfromcstr( "" );
 
    xml_attr = ezxml_attr( xml_data, "id" );
    scaffold_check_null( xml_attr );
@@ -216,13 +223,91 @@ void datafile_parse_mobile_ezxml_t(
    }
 
    /* TODO: Verify script type, etc. */
-   xml_script = ezxml_child( xml_data, "script" );
-   if( NULL != xml_script ) {
-      xml_attr = ezxml_txt( xml_script );
-      if( NULL != xml_attr ) {
-         o->vm_script = bfromcstr( xml_attr );
-         scaffold_check_null( o->vm_script );
+   xml_scripts = ezxml_child( xml_data, "scripts" );
+
+   /* Store script globals. */
+   xml_script_iter = ezxml_child( xml_scripts, "global" );
+   while( NULL != xml_script_iter ) {
+
+      /* Prepare by grabbing the key/val to be stored. */
+      bstr_retval = bassigncstr(
+         vm_val_buffer, ezxml_attr( xml_script_iter, "value" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         scaffold_print_error(
+            &module, "Error parsing script component value attribute."
+         );
+         goto next_global;
       }
+
+      bstr_retval = bassigncstr(
+         vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         scaffold_print_error(
+            &module, "Error parsing script component with value: %b",
+            vm_val_buffer
+         );
+         goto next_global;
+      }
+
+      /* Load the script into the hashmap. */
+      if(
+         0 == scaffold_strcmp_caseless( "global", xml_script_iter->name )
+      ) {
+         hashmap_put( &(o->vm_globals), vm_key_buffer, bstrcpy( vm_val_buffer ) );
+         scaffold_print_debug(
+            &module, "Stored global \"%b\" for mobile: %d\n",
+            vm_key_buffer, o->serial
+         );
+      }
+
+next_global:
+      xml_script_iter = ezxml_next( xml_script_iter );
+   }
+
+   xml_script_iter = ezxml_child( xml_scripts, "script" );
+   while( NULL != xml_script_iter ) {
+
+      /* Prepare by grabbing the key/val to be stored. */
+      xml_attr = ezxml_txt( xml_script_iter );
+      bstr_retval = bassigncstr( vm_val_buffer, xml_attr );
+      if( BSTR_ERR == bstr_retval ) {
+         scaffold_print_error(
+            &module, "Error parsing script component value text."
+         );
+         goto next_script;
+      }
+
+      bstr_retval = bassigncstr(
+         vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         scaffold_print_error(
+            &module, "Error parsing script component with value: %b",
+            vm_val_buffer
+         );
+         goto next_script;
+      }
+
+      /* Load the script into the hashmap. */
+      if(
+         0 == scaffold_strcmp_caseless(
+            "text/javascript", ezxml_attr( xml_script_iter, "type" )
+         )
+      ) {
+         hashmap_put( &(o->vm_scripts), vm_key_buffer, bstrcpy( vm_val_buffer ) );
+         scaffold_print_debug(
+            &module, "Stored \"%b\" script for mobile: %d\n",
+            vm_key_buffer, o->serial
+         );
+      }
+next_script:
+      xml_script_iter = ezxml_next( xml_script_iter );
+   }
+
+   if( 0 != hashmap_count( &(o->vm_scripts) ) ) {
+      mobile_vm_start( o );
    }
 
    xml_image = ezxml_child( xml_data, "image" );
@@ -249,13 +334,15 @@ void datafile_parse_mobile_ezxml_t(
       &module, "Mobile animation defaulting to: %b\n", walk_ani_key
    );
    o->current_animation = (struct MOBILE_ANI_DEF*)hashmap_get(
-         &(o->ani_defs), walk_ani_key
+      &(o->ani_defs), walk_ani_key
    );
    /* TODO: Don't die if this fails. */
    scaffold_assert( NULL != o->current_animation );
 
 cleanup:
    bdestroy( walk_ani_key );
+   bdestroy( vm_key_buffer );
+   bdestroy( vm_val_buffer );
    return;
 }
 

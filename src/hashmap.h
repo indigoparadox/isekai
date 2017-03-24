@@ -92,6 +92,7 @@ void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value );
  * Get an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
 void* hashmap_get( struct HASHMAP* m, const bstring key );
+void* hashmap_get_c( struct HASHMAP* m, const char* key_c );
 void* hashmap_get_nolock( struct HASHMAP* m, const bstring key );
 
 void* hashmap_get_first( struct HASHMAP* m );

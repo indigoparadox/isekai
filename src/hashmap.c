@@ -410,6 +410,20 @@ void* hashmap_get( struct HASHMAP* m, const bstring key ) {
    return hashmap_get_internal( m, key, TRUE );
 }
 
+void* hashmap_get_c( struct HASHMAP* m, const char* key_c ) {
+   bstring key = NULL;
+   void* val = NULL;
+
+   key = bfromcstr( key_c );
+   scaffold_check_null( key );
+
+   val = hashmap_get_internal( m, key, TRUE );
+
+cleanup:
+   bdestroy( key );
+   return val;
+}
+
 void* hashmap_get_nolock( struct HASHMAP* m, const bstring key ) {
    return hashmap_get_internal( m, key, FALSE );
 }
