@@ -4,7 +4,7 @@
 
 #include "../scaffold.h"
 
-#define JS_EXEC_TIMEOUT_MS 500 /* 10 seconds */
+#define JS_EXEC_TIMEOUT_MS 5000
 
 struct MOBILE;
 struct CHANNEL;
