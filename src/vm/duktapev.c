@@ -1,13 +1,19 @@
 
 #define VM_C
+
 #include "../vm.h"
 
 #include "../graphics.h"
 #include "../mobile.h"
 
-#define VM duk_context
 #define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
+#define OBJECT_VM( o ) (duk_context*)( o->vm )
+
+#ifdef USE_TURNS
+#define VM_TICK_FREQUENCY 1
+#else
 #define VM_TICK_FREQUENCY 10
+#endif /* USE_TURNS */
 
 #include "../duktape/duktape.h"
 
@@ -116,10 +122,10 @@ static BOOL vm_global_set_cb( bstring key, void* iter, void* arg ) {
    scaffold_assert( NULL != value );
    scaffold_assert( NULL != arg );
 
-   duk_push_global_object( o->vm );
-   duk_push_string( o->vm, bdata( value ) );
-   duk_put_prop_string( o->vm, -2, bdata( key ) );
-   duk_pop( o->vm );
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_string( OBJECT_VM( o ), bdata( value ) );
+   duk_put_prop_string( OBJECT_VM( o ), -2, bdata( key ) );
+   duk_pop( OBJECT_VM( o ) );
 
    return FALSE;
 }
@@ -133,7 +139,7 @@ static void mobile_vm_global_get_cb( bstring key, void* iter, void* arg ) {
    scaffold_assert( NULL != value );
    scaffold_assert( NULL != arg );
 
-   //new_value = duk_require_string( o->vm, 0 );
+   //new_value = duk_require_string( OBJECT_VM( o ), 0 );
 
 
 
@@ -157,46 +163,46 @@ static void vm_mobile_run( struct MOBILE* o, const bstring code ) {
 
    scaffold_assert( NULL != code_c );
 
-   duk_push_global_object( o->vm );
-   duk_push_object( o->vm );
-   duk_put_number_list( o->vm, -1, mobile_update_enum );
-   duk_put_prop_string( o->vm, -2, "MobileUpdate" );
-   duk_pop( o->vm );
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_object( OBJECT_VM( o ) );
+   duk_put_number_list( OBJECT_VM( o ), -1, mobile_update_enum );
+   duk_put_prop_string( OBJECT_VM( o ), -2, "MobileUpdate" );
+   duk_pop( OBJECT_VM( o ) );
 
-   duk_push_global_object( o->vm );
-   duk_push_c_function( o->vm,vm_debug, 1 );
-   duk_put_prop_string( o->vm, -2, "debug" );
-   duk_pop( o->vm );
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_c_function( OBJECT_VM( o ), vm_debug, 1 );
+   duk_put_prop_string( OBJECT_VM( o ), -2, "debug" );
+   duk_pop( OBJECT_VM( o ) );
 
-   duk_push_global_object( o->vm );
-   duk_push_c_function( o->vm, vm_update, 1 );
-   duk_put_prop_string( o->vm, -2, "update" );
-   duk_pop( o->vm );
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_c_function( OBJECT_VM( o ), vm_update, 1 );
+   duk_put_prop_string( OBJECT_VM( o ), -2, "update" );
+   duk_pop( OBJECT_VM( o ) );
 
-   duk_result = duk_safe_call( o->vm, vm_unsafe, code_c, 0, 1 );
+   duk_result = duk_safe_call( OBJECT_VM( o ), vm_unsafe, code_c, 0, 1 );
 
    if( 0 == duk_result ) {
       goto cleanup;
    }
 
    /* An error happened. */
-   duk_get_prop_string( o->vm, 0, "name" );
-   duk_get_prop_string( o->vm, 0, "message" );
-   duk_get_prop_string( o->vm, 0, "fileName" );
-   duk_get_prop_string( o->vm, 0, "lineNumber" );
-   duk_get_prop_string( o->vm, 0, "stack" );
+   duk_get_prop_string( OBJECT_VM( o ), 0, "name" );
+   duk_get_prop_string( OBJECT_VM( o ), 0, "message" );
+   duk_get_prop_string( OBJECT_VM( o ), 0, "fileName" );
+   duk_get_prop_string( OBJECT_VM( o ), 0, "lineNumber" );
+   duk_get_prop_string( OBJECT_VM( o ), 0, "stack" );
 
    scaffold_print_error(
       &module, "Script error: %s: %s (%s:%s)\n",
-      duk_safe_to_string( o->vm, 1 ), duk_safe_to_string( o->vm, 2 ),
-      duk_safe_to_string( o->vm, 3 ), duk_safe_to_string( o->vm, 4 )
+      duk_safe_to_string( OBJECT_VM( o ), 1 ), duk_safe_to_string( OBJECT_VM( o ), 2 ),
+      duk_safe_to_string( OBJECT_VM( o ), 3 ), duk_safe_to_string( OBJECT_VM( o ), 4 )
    );
    scaffold_print_error(
       &module, "Script stack: %s\n",
-      duk_safe_to_string( o->vm, 5 )
+      duk_safe_to_string( OBJECT_VM( o ), 5 )
    );
 
-   duk_pop( o->vm );
+   duk_pop( OBJECT_VM( o ) );
 
 cleanup:
    return;
@@ -206,7 +212,7 @@ void vm_mobile_start( struct MOBILE* o ) {
    const char* code_c = NULL;
    int duk_result = 0;
 
-   scaffold_check_not_null( o->vm );
+   scaffold_check_not_null( OBJECT_VM( o ) );
 
    o->vm_started = FALSE;
    o->vm_caddy = scaffold_alloc( 1, struct VM_CADDY );
@@ -239,7 +245,7 @@ void vm_mobile_do_event( struct MOBILE* o, const char* event ) {
    int duk_result = 0;
    bstring tick_script = NULL;
 
-   if( NULL == o->vm ) {
+   if( NULL == OBJECT_VM( o ) ) {
       goto cleanup; /* Silently. Not all mobs have scripts. */
    }
 
@@ -260,8 +266,8 @@ void vm_mobile_end( struct MOBILE* o ) {
       &module, "Stopping script VM for mobile: %d (%b)\n", o->serial, o->mob_id
    );
 
-   if( NULL != o->vm ) {
-      duk_destroy_heap( o->vm );
+   if( NULL != OBJECT_VM( o ) ) {
+      duk_destroy_heap( OBJECT_VM( o ) );
       o->vm = NULL;
    }
    if( NULL != o->vm_caddy ) {
@@ -288,6 +294,10 @@ void vm_tick() {
 
 /** \brief Returns TRUE if mobiles should be acting.
  */
-BOOL vm_get_tick() {
+BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
+#ifdef USE_TURNS
+   return vm_tick_count != vm_tick_prev;
+#else
    return 0 == vm_tick_count % VM_TICK_FREQUENCY;
+#endif /* USE_TURNS */
 }

@@ -10,7 +10,7 @@ struct VM;
 struct MOBILE;
 
 void vm_tick();
-BOOL vm_get_tick();
+BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev );
 void vm_mobile_start( struct MOBILE* o );
 void vm_mobile_do_event( struct MOBILE* o, const char* event );
 void vm_mobile_end( struct MOBILE* o );

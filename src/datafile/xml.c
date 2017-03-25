@@ -3,6 +3,7 @@
 #include "../datafile.h"
 
 #include "../hashmap.h"
+#include "../vm.h"
 
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, BOOL local_images

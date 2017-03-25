@@ -7,6 +7,7 @@
 #include "hashmap.h"
 #include "callback.h"
 #include "datafile.h"
+#include "vm.h"
 
 extern struct CLIENT* main_client;
 
@@ -73,6 +74,10 @@ void mobile_init(
    o->current_frame = 0;
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
    o->vm = NULL;
+   o->owner = NULL;
+#ifdef USE_TURNS
+   o->vm_tick_prev = 0;
+#endif /* USE_TURNS */
 
    vector_init( &(o->sprite_defs) );
    hashmap_init( &(o->ani_defs) );
@@ -670,6 +675,17 @@ MOBILE_UPDATE mobile_apply_update(
       goto cleanup;
    }
 
+#ifdef USE_TURNS
+   if(
+      NULL != o->owner
+#ifdef ENABLE_LOCAL_CLIENT
+      && TRUE != o->owner->client_side
+#endif /* ENABLE_LOCAL_CLIENT */
+   ) {
+      vm_tick();
+   }
+#endif /* USE_TURNS */
+
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == instant ) {
       /* Local Client */
@@ -729,6 +745,9 @@ cleanup:
 
 #ifdef ENABLE_LOCAL_CLIENT
 
+/** \return TRUE if the mobile is owned by the client that is currently
+ *          locally connected in a hosted coop or single-player instance.
+ */
 BOOL mobile_is_local_player( struct MOBILE* o ) {
    /*
    if( NULL != o->owner && 0 == bstrcmp( o->owner.nick, main_client->nick ) ) {
@@ -739,6 +758,8 @@ BOOL mobile_is_local_player( struct MOBILE* o ) {
    return FALSE;
 }
 
+/** \return TRUE if the mobile is currently doing something (moving, etc).
+ */
 BOOL mobile_is_occupied( struct MOBILE* o ) {
    return NULL != o && o->steps_remaining > 0;
 }
