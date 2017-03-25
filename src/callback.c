@@ -8,6 +8,7 @@
 #include "chunker.h"
 #include "tilemap.h"
 #include "ui.h"
+#include "vm.h"
 #ifdef USE_EZXML
 #include "datafile.h"
 #include "ezxml.h"
@@ -348,7 +349,11 @@ void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
 
    scaffold_assert_server();
 
-   if( vm_mobile_has_event( o, "tick" ) ) {
+   if(
+      !mobile_is_occupied( o ) &&
+      vm_mobile_has_event( o, "tick" ) &&
+      vm_get_tick()
+   ) {
       vm_mobile_do_event( o, "tick" );
    }
 

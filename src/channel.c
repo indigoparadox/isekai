@@ -12,7 +12,6 @@
 #endif /* USE_TINYPY */
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
-#include "duktape/dukhelp.h"
 #endif /* USE_DUKTAPE */
 
 static void channel_free_final( const struct REF *ref ) {

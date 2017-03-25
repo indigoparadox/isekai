@@ -7,10 +7,6 @@
 #include "hashmap.h"
 #include "callback.h"
 #include "datafile.h"
-#ifdef USE_DUKTAPE
-#include "duktape/duktape.h"
-#include "duktape/dukhelp.h"
-#endif /* USE_DUKTAPE */
 
 extern struct CLIENT* main_client;
 
@@ -741,6 +737,10 @@ BOOL mobile_is_local_player( struct MOBILE* o ) {
       return TRUE;
    }
    return FALSE;
+}
+
+BOOL mobile_is_occupied( struct MOBILE* o ) {
+   return NULL != o && o->steps_remaining > 0;
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */

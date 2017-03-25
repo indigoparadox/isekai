@@ -4,6 +4,7 @@
 #include "server.h"
 #include "ui.h"
 #include "callback.h"
+#include "vm.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -86,16 +87,17 @@ static BOOL loop_game() {
       goto cleanup;
    }
 
-#ifdef ENABLE_LOCAL_CLIENT
    if(
       FALSE == server_service_clients( main_server ) &&
+#ifdef ENABLE_LOCAL_CLIENT
       !main_client->running &&
+#endif /* ENABLE_LOCAL_CLIENT */
       0 >= vector_count( &(main_server->self.command_queue) )
    ) {
       server_stop( main_server );
    }
-#endif /* ENABLE_LOCAL_CLIENT */
 
+   vm_tick();
    server_poll_new_clients( main_server );
 
 #ifdef ENABLE_LOCAL_CLIENT
