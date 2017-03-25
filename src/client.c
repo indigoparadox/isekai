@@ -165,6 +165,11 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
    }
 
+   /* Deal with chunkers that will never receive blocks that are finished via
+    * their cache.
+    */
+   hashmap_iterate( &(c->chunkers), callback_proc_client_chunkers, c );
+
 cleanup:
 #endif /* DEBUG_TILES */
    return retval;
@@ -436,6 +441,7 @@ void client_request_file(
 ) {
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
+   BOOL force_finished = FALSE;
 
    hashmap_lock( &(c->chunkers), TRUE );
 
@@ -458,7 +464,10 @@ void client_request_file(
       hashmap_put_nolock( &(c->chunkers), filename, h );
       scaffold_check_nonzero( scaffold_error );
 
-      proto_request_file( c, filename, type );
+      if( !chunker_unchunk_finished( h ) ) {
+         /* File not in cache. */
+         proto_request_file( c, filename, type );
+      }
    }
 
 cleanup:
@@ -562,7 +571,8 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
-      hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
+      //hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
+      proto_client_request_mobs( c, l );
 
       scaffold_print_info(
          &module,

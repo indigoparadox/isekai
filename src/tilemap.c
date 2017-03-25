@@ -318,12 +318,17 @@ static void* tilemap_layer_draw_tile(
       goto cleanup; /* Silently. */
    }
 
+#if 0
    /* Figure out the graphical tile to draw from. */
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
+#endif
+   /* If the current tileset doesn't exist, then load it. */
+   g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, twindow->c );
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;
    }
+
    tilemap_get_tile_tileset_pos( set, g_tileset, gid, &tileset_x, &tileset_y );
 
    if(

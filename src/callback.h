@@ -14,6 +14,7 @@ void* callback_search_spawners( const bstring key, void* iter, void* arg );
 void* callback_send_clients( const bstring key, void* iter, void* arg );
 void* callback_search_channels( const bstring key, void* iter, void* arg );
 void* callback_search_windows( const bstring key, void* iter, void* arg );
+void* callback_search_tileset_img_gid( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg );
 void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
