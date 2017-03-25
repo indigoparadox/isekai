@@ -5,7 +5,8 @@
 #include "ref.h"
 #include "client.h"
 
-struct tp_vm;
+struct VM_CADDY;
+struct VM;
 
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,
@@ -88,8 +89,8 @@ struct MOBILE {
    bstring def_filename;
    bstring mob_id;
    struct CHANNEL* channel;
-   struct duk_context* vm;
-   void* vm_caddy;
+   struct VM* vm;
+   struct VM_CADDY* vm_caddy;
    BOOL vm_started;
    struct HASHMAP vm_scripts;
    struct HASHMAP vm_globals;
@@ -160,10 +161,6 @@ SCAFFOLD_SIZE_SIGNED
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 void mobile_speak( struct MOBILE* o, bstring speech );
 BOOL mobile_is_local_player( struct MOBILE* o );
-void mobile_vm_start( struct MOBILE* o );
-void mobile_vm_tick( struct MOBILE* o );
-void mobile_vm_end( struct MOBILE* o );
-BOOL mobile_has_event( struct MOBILE* o, const char* event );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

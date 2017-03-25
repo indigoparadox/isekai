@@ -698,11 +698,7 @@ static void irc_server_gameupdate(
          "Client %s attempted to modify mobile %d to %d without permission.\n",
          bdata( c->nick ), update.o->serial, update.update
       );
-      /* Cancel the update. */
-      update.update = MOBILE_UPDATE_NONE;
    }
-
-   hashmap_iterate( &(update.l->clients), callback_send_updates_to_client, &update );
 
 cleanup:
    return;

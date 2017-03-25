@@ -9,11 +9,11 @@
 
 #ifndef USE_THREADS
 
-typedef struct REF {
+struct REF {
    uint8_t sentinal;
    void (*gc_free )( const struct REF* );
    int count;
-} REF;
+};
 
 static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
    ref->count = 1;

@@ -992,6 +992,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/vector.h" />
+		<Unit filename="src/vm.h" />
+		<Unit filename="src/vm/duktapev.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/windefs.h" />
 		<Unit filename="test/check_b64.c">
 			<Option compilerVar="CC" />

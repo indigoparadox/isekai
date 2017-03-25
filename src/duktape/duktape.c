@@ -7963,6 +7963,10 @@ struct duk_heap {
  *  Prototypes
  */
 
+void* duk_heap_udata( duk_context* ctx ) {
+   return ctx->heap->heap_udata;
+}
+
 DUK_INTERNAL_DECL
 duk_heap *duk_heap_alloc(duk_alloc_function alloc_func,
                          duk_realloc_function realloc_func,
