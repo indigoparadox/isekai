@@ -307,7 +307,7 @@ next_script:
    }
 
    if( 0 != hashmap_count( &(o->vm_scripts) ) ) {
-      mobile_vm_start( o );
+      vm_mobile_start( o );
    }
 
    xml_image = ezxml_child( xml_data, "image" );

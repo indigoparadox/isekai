@@ -1658,7 +1658,6 @@ typedef union duk_double_union duk_double_union;
 
 #endif  /* DUK_DBLUNION_H_INCLUDED */
 
-#define DUKTAPE_C
-#include "dukhelp.h"
+void* duk_heap_udata( duk_context* ctx );
 
 #endif  /* DUKTAPE_H_INCLUDED */

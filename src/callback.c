@@ -348,8 +348,8 @@ void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
 
    scaffold_assert_server();
 
-   if( mobile_has_event( o, "tick" ) ) {
-      mobile_vm_tick( o );
+   if( vm_mobile_has_event( o, "tick" ) ) {
+      vm_mobile_do_event( o, "tick" );
    }
 
    return NULL;

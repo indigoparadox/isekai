@@ -274,7 +274,7 @@ cleanup:
 }
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {
-#ifdef USE_DUKTAPE
+#ifdef USE_DUKTAPEx
    if( NULL == l->vm ) {
       l->vm =
          duk_create_heap( NULL, NULL, NULL, l, duktape_helper_channel_crash );
@@ -323,7 +323,7 @@ void channel_vm_step( struct CHANNEL* l ) {
 }
 
 void channel_vm_end( struct CHANNEL* l ) {
-#ifdef USE_DUKTAPE
+#ifdef USE_DUKTAPEx
    if( NULL != l->vm ) {
       duk_destroy_heap( l->vm );
       l->vm = NULL;
