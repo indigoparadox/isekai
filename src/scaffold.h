@@ -199,7 +199,7 @@ struct tagbstring ansi_color_strs[7] = {
 #define scaffold_gen_serial( object, vector ) \
    do { \
       object->serial = SERIAL_MIN + (rand() % SERIAL_MAX); \
-   } while( NULL != vector_get( vector, object->serial ) );
+   } while( 0 !=object->serial && NULL != vector_get( vector, object->serial ) );
 
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
