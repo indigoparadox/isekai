@@ -56,6 +56,7 @@ static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
 #endif /* DEBUG_FPS */
 
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
+static struct tagbstring str_cid_connect_host = bsStatic( "connect_host" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -171,12 +172,11 @@ static BOOL loop_connect() {
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
    struct bstrList* server_tuple = NULL;
+   struct UI_CONTROL* control = NULL;
 
    if( NULL == buffer ) {
       buffer = bfromcstr( "" );
    }
-
-
 
    if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
 #endif /* USE_CONNECT_DIALOG */
@@ -192,10 +192,14 @@ static BOOL loop_connect() {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
       ui_window_new(
-         ui, win, UI_WINDOW_TYPE_SIMPLE_TEXT, &str_cdialog_id,
+         ui, win, UI_WINDOW_TYPE_NONE, &str_cdialog_id,
          &str_cdialog_title, &str_cdialog_prompt,
          -1, -1, -1, -1
       );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer, -1, -1, -1, -1
+      );
+      ui_control_add( win, &str_cid_connect_host, control );
       ui_window_push( ui, win );
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
