@@ -97,7 +97,12 @@ static BOOL loop_game() {
       server_stop( main_server );
    }
 
+#ifndef USE_TURNS
+   /* If we're doing real-time, then do a VM tick for every full cycle of
+    * state updates. */
    vm_tick();
+#endif /* USE_TURNS */
+
    server_poll_new_clients( main_server );
 
 #ifdef ENABLE_LOCAL_CLIENT

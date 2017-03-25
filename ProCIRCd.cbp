@@ -312,6 +312,7 @@
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DUSE_TURNS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -652,21 +653,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/duktape/duk_config.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
-			<Option target="Debug (Linux-Curses)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-		</Unit>
-		<Unit filename="src/duktape/dukhelp.h">
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Strict (Linux-Allegro4)" />

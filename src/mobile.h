@@ -99,6 +99,9 @@ struct MOBILE {
    struct HASHMAP script_defs;
    struct MOBILE_ANI_DEF* current_animation;
    BOOL initialized;
+#ifdef USE_TURNS
+   SCAFFOLD_SIZE vm_tick_prev;
+#endif /* USE_TURNS */
 };
 
 struct MOBILE_UPDATE_PACKET {

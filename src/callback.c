@@ -352,9 +352,16 @@ void* callback_proc_mobile_vms( const bstring res, void* iter, void* arg ) {
    if(
       !mobile_is_occupied( o ) &&
       vm_mobile_has_event( o, "tick" ) &&
-      vm_get_tick()
+#ifdef USE_TURNS
+      vm_get_tick( o->vm_tick_prev )
+#else
+      vm_get_tick( 0 )
+#endif /* USE_TURNS */
    ) {
       vm_mobile_do_event( o, "tick" );
+#ifdef USE_TURNS
+      o->vm_tick_prev++;
+#endif /* USE_TURNS */
    }
 
    return NULL;
