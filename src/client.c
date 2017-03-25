@@ -34,7 +34,6 @@ static void client_cleanup( const struct REF *ref ) {
 
    client_stop( c );
 
-   vector_cleanup( &(c->command_queue) );
    hashmap_cleanup( &(c->chunkers) );
    hashmap_cleanup( &(c->channels) );
 
@@ -59,7 +58,6 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
 #endif /* ENABLE_LOCAL_CLIENT */
 
    hashmap_init( &(c->channels) );
-   vector_init( &(c->command_queue ) );
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
 
@@ -137,14 +135,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    }
 
    if( NULL != cmd ) {
-      vector_add( &(c->command_queue), cmd );
       retval = TRUE;
-   }
-
-   /* Execute one command per cycle if available. */
-   if( 1 <= vector_count( &(c->command_queue) ) ) {
-      cmd = vector_get( &(c->command_queue), 0 );
-      vector_remove( &(c->command_queue), 0 );
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
       } else {
@@ -220,17 +211,6 @@ void client_stop( struct CLIENT* c ) {
       deleted, hashmap_count( &(c->channels) )
    );
    scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
-
-#ifdef DEBUG
-   deleted =
-#endif /* DEBUG */
-      vector_remove_cb( &(c->command_queue), callback_free_commands, NULL );
-   scaffold_print_debug(
-      &module,
-      "Removed %d commands. %d remaining.\n",
-      deleted, vector_count( &(c->command_queue) )
-   );
-   scaffold_assert( 0 == vector_count( &(c->command_queue) ) );
 
 #ifdef USE_CHUNKS
 
