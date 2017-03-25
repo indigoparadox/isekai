@@ -17,6 +17,8 @@
 #include <unistd.h>
 #endif /* __GNUC__ */
 
+#define SERVER_LOOPS_PER_CYCLE 5
+
 SCAFFOLD_MODULE( "main.c" );
 
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
@@ -81,20 +83,24 @@ static double calc_fps( int newtick ) {
 
 static BOOL loop_game() {
    BOOL keep_going = TRUE;
+   int i;
 
    if( !main_server->self.running ) {
       keep_going = FALSE;
       goto cleanup;
    }
 
-   if(
-      FALSE == server_service_clients( main_server ) &&
+   for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
+      if(
+         FALSE == server_service_clients( main_server ) &&
 #ifdef ENABLE_LOCAL_CLIENT
-      !main_client->running &&
+         !main_client->running &&
 #endif /* ENABLE_LOCAL_CLIENT */
-      0 >= vector_count( &(main_server->self.command_queue) )
-   ) {
-      server_stop( main_server );
+         TRUE
+      ) {
+         server_stop( main_server );
+         break;
+      }
    }
 
 #ifndef USE_TURNS

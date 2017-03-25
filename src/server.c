@@ -319,14 +319,7 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    if( NULL != cmd ) {
       /* A presumably real command was returned. */
-      vector_add( &(s->self.command_queue), cmd );
       retval = TRUE;
-   }
-
-   /* Execute one command per cycle if available. */
-   if( 1 <= vector_count( &(s->self.command_queue) ) ) {
-      cmd = vector_get( &(s->self.command_queue), 0 );
-      vector_remove( &(s->self.command_queue), 0 );
       if( NULL != cmd->callback ) {
          cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
       } else {
