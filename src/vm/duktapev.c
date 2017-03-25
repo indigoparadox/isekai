@@ -90,6 +90,11 @@ static void vm_debug( duk_context* vm ) {
    scaffold_print_debug( &module, "%s\n", text  );
 }
 
+static duk_ret_t vm_random( duk_context* vm ) {
+   duk_push_int( vm, rand() );
+   return 1;
+}
+
 static void vm_update( duk_context* vm ) {
    MOBILE_UPDATE action = (MOBILE_UPDATE)duk_to_int( vm, -1 );
    struct MOBILE_UPDATE_PACKET update = { 0 };
@@ -172,6 +177,11 @@ static void vm_mobile_run( struct MOBILE* o, const bstring code ) {
    duk_push_global_object( OBJECT_VM( o ) );
    duk_push_c_function( OBJECT_VM( o ), vm_debug, 1 );
    duk_put_prop_string( OBJECT_VM( o ), -2, "debug" );
+   duk_pop( OBJECT_VM( o ) );
+
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_c_function( OBJECT_VM( o ), vm_random, 0 );
+   duk_put_prop_string( OBJECT_VM( o ), -2, "random" );
    duk_pop( OBJECT_VM( o ) );
 
    duk_push_global_object( OBJECT_VM( o ) );

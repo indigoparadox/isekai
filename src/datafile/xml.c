@@ -359,7 +359,7 @@ void datafile_parse_mobile_ezxml_string(
 
 #ifdef EZXML_STRICT
    datasize_check = strlen( (const char*)o );
-   scaffold_assert( datasize_check == datasize );
+   scafmobile_initfold_assert( datasize_check == datasize );
 #endif /* EZXML_STRICT */
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
