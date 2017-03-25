@@ -7,8 +7,11 @@
 
 #define VM duk_context
 #define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
+#define VM_TICK_FREQUENCY 10
 
 #include "../duktape/duktape.h"
+
+static SCAFFOLD_SIZE vm_tick_count = 0;
 
 typedef enum VM_CALLER_TYPE {
    VM_CALLER_NONE,
@@ -277,4 +280,14 @@ BOOL vm_mobile_has_event( struct MOBILE* o, const char* event ) {
    } else {
       return FALSE;
    }
+}
+
+void vm_tick() {
+   vm_tick_count++;
+}
+
+/** \brief Returns TRUE if mobiles should be acting.
+ */
+BOOL vm_get_tick() {
+   return 0 == vm_tick_count % VM_TICK_FREQUENCY;
 }
