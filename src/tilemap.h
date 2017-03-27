@@ -75,7 +75,6 @@ struct TILEMAP_TILESET {
    struct HASHMAP images;     /*!< Graphics indexed by filename. */
    struct VECTOR terrain;     /*!< Terrains in file order. */
    struct VECTOR tiles;       /*!< Tile data in file order. */
-   BOOL loaded;
 };
 
 struct TILEMAP_POSITION {
@@ -146,6 +145,11 @@ struct TILEMAP {
  * (y * x) + x
  */
 
+#define tilemap_tileset_new( set ) \
+    set = scaffold_alloc( 1, struct TILEMAP_TILESET ); \
+    scaffold_check_null( set ); \
+    tilemap_tileset_init( set );
+
 #define tilemap_spawner_new( ts, t, type ) \
     ts = scaffold_alloc( 1, struct TILEMAP_SPAWNER ); \
     scaffold_check_null( ts ); \
@@ -213,7 +217,9 @@ void tilemap_add_dirty_tile(
 );
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
 void tilemap_toggle_debug_state();
-
+void tilemap_add_tileset(
+   struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
+);
 
 #ifdef TILEMAP_C
 

@@ -148,7 +148,7 @@ void mobile_load_local( struct MOBILE* o ) {
    scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
 
    datafile_parse_ezxml_string(
-      o, mobdata_buffer, mobdata_size, FALSE, DATAFILE_TYPE_MOBILE
+      o, mobdata_buffer, mobdata_size, FALSE, DATAFILE_TYPE_MOBILE, mobdata_path
    );
 
 #endif /* USE_EZXML */

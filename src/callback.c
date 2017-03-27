@@ -275,11 +275,19 @@ void* callback_search_tilesets_img_name( const bstring key, void* iter, void* ar
  * \return The channel with the map containing the specified image.
  *
  */
-/*  */
 void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct TILEMAP* t = &(l->tilemap);
    if( NULL != hashmap_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
+      return l;
+   }
+   return NULL;
+}
+
+void* callback_search_channels_tileset_path( const bstring key, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   struct TILEMAP* t = &(l->tilemap);
+   if( TRUE == hashmap_contains_key( &(t->tilesets), (bstring)arg ) ) {
       return l;
    }
    return NULL;
@@ -459,7 +467,7 @@ void* callback_search_tilesets_gid( const bstring res, void* iter, void* arg ) {
    SCAFFOLD_SIZE gid = (*(SCAFFOLD_SIZE*)arg);
    struct TILEMAP_TILESET* tileset = (struct TILEMAP_TILESET*)iter;
 
-   if( tileset->firstgid <= gid ) {
+   if( NULL != tileset && tileset->firstgid <= gid ) {
       return tileset;
    }
 
@@ -582,7 +590,7 @@ void* callback_parse_mobs( const bstring res, void* iter, void* arg ) {
       scaffold_print_debug(
          &module, "Client: Found mobile with ID: %b\n", o->mob_id
       );
-      datafile_parse_mobile_ezxml_t( o, xml_data, TRUE );
+      datafile_parse_mobile_ezxml_t( o, xml_data, NULL, TRUE );
       return o;
    }
 
