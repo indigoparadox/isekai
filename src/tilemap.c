@@ -87,17 +87,32 @@ void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
    vector_cleanup( &(layer->tiles ) );
 }
 
-void tilemap_tileset_free( struct TILEMAP_TILESET* tileset ) {
+void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset ) {
 #ifdef ENABLE_LOCAL_CLIENT
    hashmap_remove_cb( &(tileset->images), callback_free_graphics, NULL );
 #endif /* ENABLE_LOCAL_CLIENT */
 }
 
-void tilemap_iterate_screen_row(
-   struct TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-   void (*callback)( struct TILEMAP* t, uint32_t x, uint32_t y )
-) {
+static void tilemap_tileset_free_final( const struct REF* ref ) {
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)scaffold_container_of(
+      ref, struct TILEMAP_TILESET, refcount );
 
+   tilemap_tileset_cleanup( set );
+
+   scaffold_free( set );
+}
+
+void tilemap_tileset_free( struct TILEMAP_TILESET* set ) {
+   refcount_dec( set, "tileset" );
+}
+
+void tilemap_tileset_init( struct TILEMAP_TILESET* set ) {
+   ref_init( &(set->refcount), tilemap_tileset_free_final );
+
+   hashmap_init( &(set->images) );
+
+   vector_init( &(set->terrain) );
+   vector_init( &(set->tiles) );
 }
 
 #ifndef USE_CURSES
@@ -195,8 +210,8 @@ static void tilemap_layer_draw_tile_debug(
 
    set = tilemap_get_tileset( t, gid );
    scaffold_check_null( set );
-   scaffold_check_zero( set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero( set->tileheight, "Tile height is zero." );
+   scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
 
    if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
@@ -308,11 +323,17 @@ static void* tilemap_layer_draw_tile(
 
    set = tilemap_get_tileset( t, gid );
    if( NULL == set ) {
+      /* Try loading the tileset. */
+      hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
       goto cleanup; /* Silently. */
    }
 
-   scaffold_check_zero( set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero( set->tileheight, "Tile height is zero." );
+   scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
+   if( 0 == set->tilewidth || 0 == set->tileheight ) {
+      hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
+      goto cleanup;
+   }
 
    /* Figure out the window position to draw to. */
    pix_x = set->tilewidth * (x - twindow->x);
@@ -692,5 +713,8 @@ void tilemap_toggle_debug_state() {
 }
 
 #endif /* DEBUG_TILES */
+
+void tilemap_add_tileset( struct TILEMAP* t, struct TILEMAP_TILESET* set ) {
+}
 
 #endif /* ENABLE_LOCAL_CLIENT */

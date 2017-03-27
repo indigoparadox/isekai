@@ -583,6 +583,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    assert( TRUE == chunker_unchunk_finished( h ) );
 
    switch( h->type ) {
+   case CHUNKER_DATA_TYPE_TILESET:
+      break;
+
    case CHUNKER_DATA_TYPE_TILEMAP:
       lname = bfromcstr( "" );
 #ifdef USE_EZXML
@@ -598,6 +601,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
       datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, TRUE );
       scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
+
+      //hashmap_iterate( &(l->tilemap.tilesets), callback_get_tileset, c );
+
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
@@ -627,7 +633,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       set = hashmap_iterate(
          &(l->tilemap.tilesets), callback_search_tilesets_img_name, h->filename
       );
-      scaffold_check_null( set )
+      scaffold_check_null( set );
 
       hashmap_put( &(set->images), h->filename, g );
       scaffold_print_info(
