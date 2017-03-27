@@ -19,7 +19,7 @@
    scaffold_check_null( target );
 
 void datafile_parse_item_ezxml_t(
-   struct ITEM* e, ezxml_t xml_data, BOOL local_images
+   struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
 }
 
@@ -148,7 +148,7 @@ cleanup:
 }
 
 void datafile_parse_mobile_ezxml_t(
-   struct MOBILE* o, ezxml_t xml_data, BOOL local_images
+   struct MOBILE* o, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
    ezxml_t xml_sprites = NULL,
       xml_sprite_iter = NULL,
@@ -504,7 +504,7 @@ cleanup:
 
 #define TERRAIN_ID_C_BUFFER_LENGTH 4
 
-static void datafile_tilemap_parse_tileset_ezxml(
+void datafile_tilemap_parse_tileset_ezxml(
    struct TILEMAP* t, ezxml_t xml_tileset, bstring def_path, BOOL local_images
 ) {
    struct TILEMAP_TILESET* set = NULL;
@@ -524,6 +524,7 @@ static void datafile_tilemap_parse_tileset_ezxml(
    const char* terrain_c = NULL;
    char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1] = { 0 };
    BOOL tileset_put = TRUE;
+   BOOL first_pass = FALSE;
 #ifdef DEBUG_TILES_VERBOSE
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
@@ -533,7 +534,7 @@ static void datafile_tilemap_parse_tileset_ezxml(
 
    scaffold_check_null( xml_tileset );
 
-   ezxml_string( xml_attr, xml_tileset, "source" );
+   xml_attr = ezxml_attr( xml_tileset, "source" );
 #if 0
    if( NULL != xml_attr && NULL != set->def_path ) {
       bstr_retval = bassigncstr( set->def_path, xml_attr );
@@ -541,6 +542,7 @@ static void datafile_tilemap_parse_tileset_ezxml(
    } else
 #endif
    if( NULL != xml_attr && NULL == def_path ) {
+      first_pass = TRUE;
       def_path = bfromcstr( xml_attr );
       scaffold_print_debug(
          &module, "Loading external tileset: %s\n", xml_attr );
@@ -557,9 +559,10 @@ static void datafile_tilemap_parse_tileset_ezxml(
    /* Try the definition path stored in the structure. */
    set = hashmap_get( &(t->tilesets), def_path );
    if( NULL == set ) {
-      set = (struct TILEMAP_TILESET*)calloc( 1, sizeof( struct TILEMAP_TILESET ) );
-      scaffold_check_null( set );
-      hashmap_put( &(t->tilesets), def_path, set );
+      hashmap_put( &(t->tilesets), def_path, NULL );
+      scaffold_print_debug(
+         &module, "Stub placed for tileset: %b\n", def_path );
+      goto cleanup;
    }
 
    /* Try to grab the image list early. If it's missing, just get out. */
@@ -571,7 +574,10 @@ static void datafile_tilemap_parse_tileset_ezxml(
    scaffold_check_nonzero( bstr_retval );
    */
 
-   ezxml_int( set->firstgid, xml_attr, xml_tileset, "firstgid" );
+   if( TRUE == first_pass ) {
+      ezxml_int( set->firstgid, xml_attr, xml_tileset, "firstgid" );
+   }
+
    ezxml_int( set->tilewidth, xml_attr, xml_tileset, "tilewidth" );
    ezxml_int( set->tileheight, xml_attr, xml_tileset, "tileheight" );
 
@@ -862,7 +868,7 @@ cleanup:
 }
 
 void datafile_parse_tilemap_ezxml_t(
-   struct TILEMAP* t, ezxml_t xml_data, BOOL local_images
+   struct TILEMAP* t, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
@@ -922,7 +928,7 @@ cleanup:
 
 void datafile_parse_ezxml_string(
    void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images,
-   DATAFILE_TYPE type
+   DATAFILE_TYPE type, bstring def_path
 ) {
    ezxml_t xml_data = NULL;
 #ifdef EZXML_STRICT
@@ -940,14 +946,17 @@ void datafile_parse_ezxml_string(
    scaffold_check_null( xml_data );
 
    switch( type ) {
+   case DATAFILE_TYPE_TILESET:
+      datafile_tilemap_parse_tileset_ezxml( object, xml_data, def_path, local_images );
+      break;
    case DATAFILE_TYPE_TILEMAP:
-      datafile_parse_tilemap_ezxml_t( object, xml_data, local_images );
+      datafile_parse_tilemap_ezxml_t( object, xml_data, def_path, local_images );
       break;
    case DATAFILE_TYPE_MOBILE:
-      datafile_parse_mobile_ezxml_t( object, xml_data, local_images );
+      datafile_parse_mobile_ezxml_t( object, xml_data, def_path, local_images );
       break;
    case DATAFILE_TYPE_ITEM:
-      datafile_parse_item_ezxml_t( object, xml_data, local_images );
+      datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );
       break;
    }
 

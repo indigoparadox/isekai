@@ -108,6 +108,11 @@ void tilemap_tileset_free( struct TILEMAP_TILESET* set ) {
 
 void tilemap_tileset_init( struct TILEMAP_TILESET* set ) {
    ref_init( &(set->refcount), tilemap_tileset_free_final );
+   /* We exist only to be in lists. */
+   /* TODO: Right now, this seems somewhat useless because firstgid can be
+    *       different for every tilemap this set belongs to.
+    */
+   set->refcount.count = 0;
 
    hashmap_init( &(set->images) );
 
@@ -714,7 +719,10 @@ void tilemap_toggle_debug_state() {
 
 #endif /* DEBUG_TILES */
 
-void tilemap_add_tileset( struct TILEMAP* t, struct TILEMAP_TILESET* set ) {
+void tilemap_add_tileset(
+   struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
+) {
+   hashmap_put( &(t->tilesets), key, set );
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */

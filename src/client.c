@@ -584,6 +584,21 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
    switch( h->type ) {
    case CHUNKER_DATA_TYPE_TILESET:
+
+      l = hashmap_iterate(
+         &(c->channels),
+         callback_search_channels_tileset_path,
+         h->filename
+      );
+      scaffold_assert( NULL != l );
+
+      scaffold_assert( TRUE == hashmap_contains_key( &(l->tilemap.tilesets), h->filename ) );
+
+      /* TODO: Fetch this tileset from other tilemaps, too. */
+      tilemap_tileset_new( set );
+      //datafile_tilemap_parse_tileset_ezxml( &(l->tilemap), set, h->filename, TRUE );
+      tilemap_add_tileset( &(l->tilemap), h->filename, set );
+      datafile_parse_ezxml_string( &(l->tilemap), h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET, h->filename );
       break;
 
    case CHUNKER_DATA_TYPE_TILEMAP:
@@ -599,7 +614,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
 #ifdef USE_EZXML
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
-      datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, TRUE );
+      datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, h->filename, TRUE );
       scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
 
       //hashmap_iterate( &(l->tilemap.tilesets), callback_get_tileset, c );

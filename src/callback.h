@@ -19,6 +19,7 @@ void* callback_search_windows( const bstring key, void* iter, void* arg );
 void* callback_search_tileset_img_gid( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_img_name( const bstring key, void* iter, void* arg );
 void* callback_search_channels_tilemap_img_name( const bstring key, void* iter, void* arg );
+void* callback_search_channels_tileset_path( const bstring key, void* iter, void* arg );
 void* callback_search_tilesets_name( const bstring key, void* iter, void* arg );
 void* callback_search_graphics( const bstring key, void* iter, void* arg );
 void* callback_search_servefiles( const bstring res, void* iter, void* arg );
