@@ -590,11 +590,7 @@ BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key ) {
    return hashmap_contains_key_internal( m, key, FALSE );
 }
 
-/*
- * Iterate the function parameter over each element in the hashmap.  The
- * additional any_t argument is passed to the function as its first
- * argument and the hashmap element is the second.
- */
+
 void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
    SCAFFOLD_SIZE i;
    void* found = NULL;
@@ -613,6 +609,37 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    hashmap_lock( m, TRUE );
    ok = TRUE;
 
+   found = hashmap_iterate_nolock( m, callback, arg );
+
+cleanup:
+   if( TRUE == ok ) {
+      hashmap_lock( m, FALSE );
+   }
+   return found;
+}
+
+/*
+ * Iterate the function parameter over each element in the hashmap.  The
+ * additional any_t argument is passed to the function as its first
+ * argument and the hashmap element is the second.
+ */
+void* hashmap_iterate_nolock(
+   struct HASHMAP* m, hashmap_search_cb callback, void* arg
+) {
+   SCAFFOLD_SIZE i;
+   void* found = NULL;
+   void* data = NULL;
+   void* test = NULL;
+   BOOL ok = FALSE;
+#ifdef DEBUG
+   const char* key_c = NULL;
+#endif /* DEBUG */
+
+   scaffold_check_null( m );
+   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   scaffold_check_zero_against(
+      m->last_error, hashmap_count( m ), "Hashmap empty during iteration." );
+
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
@@ -627,9 +654,6 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
    }
 
 cleanup:
-   if( TRUE == ok ) {
-      hashmap_lock( m, FALSE );
-   }
    return found;
 }
 

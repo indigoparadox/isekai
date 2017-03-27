@@ -160,7 +160,7 @@ void* callback_search_channels( const bstring key, void* iter, void* arg ) {
    return NULL;
 }
 
-void * callback_search_servefiles( const bstring res, void* iter, void* arg ) {
+void* callback_search_servefiles( const bstring res, void* iter, void* arg ) {
    bstring file_iter = (bstring)iter,
       file_iter_short = NULL,
       file_search = (bstring)arg;
@@ -212,6 +212,17 @@ void* callback_get_tile_stack_l( bstring key, void* iter, void* arg ) {
 #endif /* DEBUG_TILES */
    }
    return tdata;
+}
+
+void* callback_get_tileset( const bstring key, void* iter, void* arg ) {
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   scaffold_check_null_msg( key, "Invalid tileset key provided." );
+   client_request_file( c, CHUNKER_DATA_TYPE_TILESET, key );
+
+cleanup:
+   return NULL;
 }
 
 void* callback_search_mobs_by_pos( const bstring res, void* iter, void* arg ) {

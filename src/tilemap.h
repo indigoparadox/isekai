@@ -68,12 +68,14 @@ struct TILEMAP_TILE_DATA {
 };
 
 struct TILEMAP_TILESET {
+   struct REF refcount;
    SCAFFOLD_SIZE firstgid;
    SCAFFOLD_SIZE tileheight;  /*!< Height of tiles in pixels. */
    SCAFFOLD_SIZE tilewidth;   /*!< Width of tiles in pixels. */
    struct HASHMAP images;     /*!< Graphics indexed by filename. */
    struct VECTOR terrain;     /*!< Terrains in file order. */
    struct VECTOR tiles;       /*!< Tile data in file order. */
+   BOOL loaded;
 };
 
 struct TILEMAP_POSITION {
@@ -121,6 +123,7 @@ struct TILEMAP {
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
    struct TILEMAP_LAYER* first_layer;
+   SCAFFOLD_ERROR scaffold_error;
 #ifdef DEBUG
    uint16_t sentinal;
 #endif /* DEBUG */
@@ -183,10 +186,6 @@ void tilemap_position_init( struct TILEMAP_POSITION* position );
 void tilemap_position_cleanup( struct TILEMAP_POSITION* position );
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
-void tilemap_iterate_screen_row(
-   struct TILEMAP* t, uint32_t x, uint32_t y, uint32_t screen_w, uint32_t screen_h,
-   void (*callback)( struct TILEMAP* t, uint32_t x, uint32_t y )
-);
 SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset( struct TILEMAP* t, SCAFFOLD_SIZE gid );
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, GRAPHICS* g_set, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y

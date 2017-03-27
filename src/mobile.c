@@ -466,6 +466,12 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
    /* Fetch the source tile on all layers. */
    tiles_end =
       hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+   if( NULL == tiles_end ) {
+      scaffold_print_error(
+         &module, "No tileset loaded; unable to process move.\n" );
+      update_out = MOBILE_UPDATE_NONE;
+      goto cleanup;
+   }
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
