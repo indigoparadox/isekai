@@ -153,6 +153,11 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          &module, "Server: Channel created: %s\n", bdata( l->name ) );
 
       channel_load_tilemap( l );
+      hashmap_iterate(
+         &(s->self.tilesets),
+         callback_load_local_tilesets,
+         &(s->self)
+      );
       scaffold_check_nonzero( scaffold_error );
    } else {
       scaffold_print_info(

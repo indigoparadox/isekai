@@ -263,7 +263,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_nonzero( bstr_retval );
 
    scaffold_print_info(
-      &module, "Loading for XML data in: %s\n", bdata( mapdata_path ) );
+      &module, "Loading tilemap XML data from: %s\n", bdata( mapdata_path ) );
    bytes_read = scaffold_read_file_contents(
       mapdata_path, &mapdata_buffer, &mapdata_size );
    scaffold_check_null_msg(

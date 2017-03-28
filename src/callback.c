@@ -214,18 +214,84 @@ void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* ar
    return tdata;
 }
 
-#if 0
-void* callback_get_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+/** \brief Try to download any tilesets that have not yet been downloaded.
+ */
+void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   scaffold_check_null_msg( key, "Invalid tileset key provided." );
-   client_request_file( c, CHUNKER_DATA_TYPE_TILESET, key );
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
+   scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
+   if( 0 == set->tileheight && 0 == set->tilewidth ) {
+      client_request_file( c, CHUNKER_DATA_TYPE_TILESET, idx->value.key );
+   }
 
 cleanup:
    return NULL;
 }
-#endif // 0
+
+/** \brief Same idea as callback_download_tileset(), but server-side.
+ */
+void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+   SCAFFOLD_SIZE bytes_read = 0,
+      setdata_size = 0;
+   BYTE* setdata_buffer = NULL;
+   bstring setdata_path = NULL;
+
+   #if 0
+   {
+   BYTE* mapdata_buffer = NULL;
+   int bstr_retval;
+   SCAFFOLD_SIZE_SIGNED bytes_read = 0;
+   SCAFFOLD_SIZE mapdata_size = 0;
+
+   scaffold_print_info(
+      &module, "Loading tilemap for channel: %s\n", bdata( l->name )
+   );
+   mapdata_filename = bstrcpy( l->name );
+   scaffold_check_null( mapdata_filename );
+   bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
+
+   mapdata_path = bstrcpy( &str_server_data_path );
+   scaffold_check_null( mapdata_path );
+
+   scaffold_join_path( mapdata_path, mapdata_filename );
+   scaffold_check_nonzero( scaffold_error );
+
+   #endif // 0
+
+   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+
+   scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
+   if( 0 == set->tileheight && 0 == set->tilewidth ) {
+
+      setdata_path = bstrcpy( &str_server_data_path );
+      scaffold_check_null( setdata_path );
+      scaffold_join_path( setdata_path, idx->value.key );
+      scaffold_check_nonzero( scaffold_error );
+
+      scaffold_print_info(
+         &module, "Loading tileset XML data from: %s\n",
+         bdata( setdata_path )
+      );
+      bytes_read = scaffold_read_file_contents(
+         setdata_path, &setdata_buffer, &setdata_size );
+      scaffold_check_null_msg(
+         setdata_buffer, "Unable to load tileset data." );
+      scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
+
+      datafile_parse_ezxml_string(
+         set, setdata_buffer, setdata_size, FALSE,
+         DATAFILE_TYPE_TILESET, idx->value.key
+      );
+   }
+
+cleanup:
+   return NULL;
+}
 
 void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -262,7 +328,10 @@ void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg 
 
 void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-   if( NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg ) ) {
+   if(
+      NULL != set &&
+      NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg )
+   ) {
       /* This is the tileset that contains this image. */
       return set;
    }
@@ -489,7 +558,7 @@ void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void*
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-void* callback_search_tileset_img_gif(
+void* callback_search_tileset_img_gid(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)arg;
