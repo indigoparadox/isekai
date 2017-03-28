@@ -239,7 +239,7 @@ void vm_mobile_start( struct MOBILE* o ) {
    ((struct VM_CADDY*)o->vm_caddy)->caller_type = VM_CALLER_MOBILE;
 
    /* Setup the VM. */
-   o->vm = duk_create_heap(
+   o->vm = (struct VM*)duk_create_heap(
       NULL, NULL, NULL,
       o->vm_caddy,
       duktape_helper_mobile_crash

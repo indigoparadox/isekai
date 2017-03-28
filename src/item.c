@@ -1,4 +1,5 @@
 
+#define ITEM_C
 #include "item.h"
 
 void item_init( struct ITEM* e ) {
