@@ -771,6 +771,15 @@ BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    return FALSE;
 }
 
+BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+   if( NULL == arg ) {
+      tilemap_tileset_free( set );
+      return TRUE;
+   }
+   return FALSE;
+}
+
 #ifdef USE_CHUNKS
 
 BOOL callback_free_chunkers(
