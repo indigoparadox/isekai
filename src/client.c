@@ -32,6 +32,8 @@ static void client_cleanup( const struct REF *ref ) {
 
    hashmap_cleanup( &(c->chunkers) );
    hashmap_cleanup( &(c->channels) );
+
+   hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
    hashmap_cleanup( &(c->tilesets) );
 
    c->sentinal = 0;
