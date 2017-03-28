@@ -234,8 +234,10 @@ static void tilemap_layer_draw_tile_debug(
    /* FIXME: How does gid resolve in a tileset that can have a variable firstgid? */
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    scaffold_check_null( set );
-   scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
+   scaffold_check_zero_against(
+      t->scaffold_error, set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero_against(
+      t->scaffold_error, set->tileheight, "Tile height is zero." );
 
    if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
@@ -348,17 +350,19 @@ static void* tilemap_layer_draw_tile(
 
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
-# if 0
-/* FIXME */
-      /* Try loading the tileset. */
-
-      hashmap_get( &(t->tilesets), , twindow->local_client );
-#endif // 0
+      /* Download missing tilesets. */
+      hashmap_iterate(
+         &(twindow->local_client->tilesets),
+         callback_download_tileset,
+         twindow->local_client
+      );
       goto cleanup; /* Silently. */
    }
 
-   scaffold_check_zero_against( t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero_against( t->scaffold_error, set->tileheight, "Tile height is zero." );
+   scaffold_check_zero_against(
+      t->scaffold_error, set->tilewidth, "Tile width is zero." );
+   scaffold_check_zero_against(
+      t->scaffold_error, set->tileheight, "Tile height is zero." );
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
 #if 0
       hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
@@ -376,11 +380,9 @@ static void* tilemap_layer_draw_tile(
 
    /* Figure out the graphical tile to draw from. */
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
-#if 0
    /* FIXME */
    /* If the current tileset doesn't exist, then load it. */
    g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, local_client );
-#endif
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;

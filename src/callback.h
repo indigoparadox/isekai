@@ -13,7 +13,8 @@ void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* ar
 void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_send_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
-void* callback_get_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_tileset_img_gid( struct CONTAINER_IDX* idx, void* iter, void* arg );
