@@ -187,3 +187,10 @@ void graphics_surface_free( GRAPHICS* g ) {
    scaffold_assert( NULL == g->surface );
    scaffold_free( g );
 }
+
+void graphics_blit(
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   const GRAPHICS* src
+) {
+   graphics_blit_partial( g, x, y, 0, 0, src->w, src->h, src );
+}

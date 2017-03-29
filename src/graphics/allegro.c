@@ -551,11 +551,6 @@ cleanup:
    return;
 }
 
-void graphics_blit( GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
-                    const GRAPHICS* src ) {
-   masked_blit( src->surface, g->surface, 0, 0, x, y, src->w, src->h );
-}
-
 void graphics_blit_partial(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
