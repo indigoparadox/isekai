@@ -370,27 +370,6 @@ cleanup:
    return;
 }
 
-void graphics_blit(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
-   const GRAPHICS* src
-) {
-   SDL_Rect src_rect,
-      dest_rect;
-
-   src_rect.x = 0;
-   src_rect.y = 0;
-   src_rect.w = s_w;
-   src_rect.h = s_h;
-
-   dest_rect.x = x;
-   dest_rect.y = y;
-   dest_rect.w = s_w;
-   dest_rect.h = s_h;
-
-   SDL_BlitSurface( src->surface, &src_rect, g->surface, &dest_rect );
-}
-
 void graphics_blit_partial(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x,
    SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src

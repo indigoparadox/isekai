@@ -458,9 +458,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
    }
 
    /* Draw the window onto the screen. */
-   graphics_blit(
-      g, win_x, win_y, win->width, win->height, win->element
-   );
+   graphics_blit( g, win_x, win_y, win->element );
 
    return NULL;
 }
