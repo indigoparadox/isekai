@@ -74,7 +74,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>USE_WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HEATSHRINK_DYNAMIC_ALLOC;USE_NETWORK;USE_FILE_CACHE;ENABLE_LOCAL_CLIENT;USE_CHUNKS;USE_EZXML;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -86,7 +86,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>USE_WIN32;WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HEATSHRINK_DYNAMIC_ALLOC;USE_NETWORK;USE_FILE_CACHE;ENABLE_LOCAL_CLIENT;USE_CHUNKS;USE_EZXML;WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -100,7 +100,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>USE_WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HEATSHRINK_DYNAMIC_ALLOC;USE_NETWORK;USE_FILE_CACHE;ENABLE_LOCAL_CLIENT;USE_CHUNKS;USE_EZXML;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -116,7 +116,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>USE_WIN32;WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HEATSHRINK_DYNAMIC_ALLOC;USE_NETWORK;USE_FILE_CACHE;ENABLE_LOCAL_CLIENT;USE_CHUNKS;USE_EZXML;WIN32;USE_SYNCBUFF;USE_FILE_CACHE;EZXML_NOMMAP;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -135,20 +135,21 @@
     <ClCompile Include="src\connect.c" />
     <ClCompile Include="src\datafile\xml.c" />
     <ClCompile Include="src\ezxml.c" />
+    <ClCompile Include="src\graphics.c" />
     <ClCompile Include="src\graphics\win32g.c" />
     <ClCompile Include="src\hashmap.c" />
     <ClCompile Include="src\hs\hsdecode.c" />
     <ClCompile Include="src\hs\hsencode.c" />
     <ClCompile Include="src\input\win32i.c" />
     <ClCompile Include="src\ipc\syncbuff.c" />
+    <ClCompile Include="src\item.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\mobile.c" />
-    <ClCompile Include="src\proto.c" />
     <ClCompile Include="src\proto\irc.c" />
     <ClCompile Include="src\scaffold.c" />
     <ClCompile Include="src\server.c" />
     <ClCompile Include="src\tilemap.c" />
-    <ClCompile Include="src\ui.c" />
+    <ClCompile Include="src\ui\graphicu.c" />
     <ClCompile Include="src\vector.c" />
     <ClCompile Include="src\wdirent.c" />
   </ItemGroup>
@@ -159,9 +160,11 @@
     <ClInclude Include="src\channel.h" />
     <ClInclude Include="src\chunker.h" />
     <ClInclude Include="src\client.h" />
+    <ClInclude Include="src\colors.h" />
     <ClInclude Include="src\connect.h" />
     <ClInclude Include="src\datafile.h" />
     <ClInclude Include="src\ezxml.h" />
+    <ClInclude Include="src\font.h" />
     <ClInclude Include="src\graphics.h" />
     <ClInclude Include="src\hashmap.h" />
     <ClInclude Include="src\hs\hsdecode.h" />

@@ -157,10 +157,10 @@ void graphics_blit_partial(
    SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y,
    SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
 ) {
-   HDC hdcDest;
-   HDC hdcSrc;
+   HDC hdcDest = NULL;
+   HDC hdcSrc = NULL;
    BITMAP srcBitmap;
-   HBITMAP srcHbm;
+   HBITMAP srcHbm = NULL;
 
    hdcSrc = CreateCompatibleDC( hdcDest );
    srcHbm = SelectObject( hdcSrc, src->surface );
