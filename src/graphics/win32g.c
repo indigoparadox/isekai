@@ -2,15 +2,32 @@
 #define GRAPHICS_C
 #include "../graphics.h"
 
-LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
+extern GRAPHICS* g_screen;
+
+LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam ) {
    PAINTSTRUCT ps;
-   HDC hdc;
+   HDC hdcScreen;
+   HDC hdcBuffer;
+   BITMAP srcBitmap;
+   HBITMAP srcHbm;
 
    switch( message )
    {
       case WM_PAINT:
-         hdc = BeginPaint( hWnd, &ps );
+         hdcScreen = BeginPaint( hWnd, &ps );
+         hdcBuffer = CreateCompatibleDC( hdcScreen );
+         srcHbm = SelectObject( hdcBuffer, g_screen->surface );
+
+         GetObject( g_screen->surface, sizeof( BITMAP ), &srcBitmap );
+
+         BitBlt(
+            hdcScreen, 0, 0, srcBitmap.bmWidth, srcBitmap.bmHeight, hdcBuffer, 0, 0,
+            SRCCOPY
+         );
+
+         SelectObject( hdcScreen, srcHbm );
+
+         DeleteDC( hdcBuffer );
 
          EndPaint( hWnd, &ps );
          break;
@@ -85,18 +102,6 @@ void graphics_shutdown( GRAPHICS* g ) {
 
 }
 
-void graphics_set_font( GRAPHICS* g, bstring name ) {
-
-}
-
-void graphics_set_color( GRAPHICS* g, GRAPHICS_COLOR color ) {
-
-}
-
-void graphics_set_color_ex( GRAPHICS* gr, uint8_t r, uint8_t g, uint8_t b, uint8_t a ) {
-
-}
-
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 
 }
@@ -142,7 +147,6 @@ void graphics_draw_rect(
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
-
 }
 
 void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
@@ -175,12 +179,6 @@ void graphics_blit_partial(
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
-
-}
-
-void graphics_colors_to_surface(
-   GRAPHICS* g, GRAPHICS_COLOR* colors, SCAFFOLD_SIZE colors_sz
-) {
 
 }
 
