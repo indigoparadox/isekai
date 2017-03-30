@@ -529,30 +529,10 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
    /* TODO: Graphical transitions not implemented. */
 }
 
-void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   BITMAP* temp = NULL;
-
-   temp = create_bitmap( w, h );
-   scaffold_check_null( temp );
-
-   blit( g->surface, temp, 0, 0, 0, 0, g->w, g->h );
-
-   if( NULL != g->surface ) {
-      destroy_bitmap( g->surface );
-   }
-
-   g->surface = temp;
-   scaffold_check_null( g->surface );
-
-   g->w = w;
-   g->h = h;
-
-cleanup:
-   return;
-}
-
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
+   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
+   const GRAPHICS* src
 ) {
    masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
 }

@@ -194,3 +194,31 @@ void graphics_blit(
 ) {
    graphics_blit_partial( g, x, y, 0, 0, src->w, src->h, src );
 }
+
+void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+   GRAPHICS* temp = NULL;
+   void* bmp_tmp = NULL;
+
+   scaffold_assert( w != 0 );
+   scaffold_assert( h != 0 );
+
+   temp = graphics_surface_new( temp, 0, 0, w, h );
+   scaffold_check_null( temp );
+   scaffold_assert( NULL != temp->surface );
+
+   graphics_blit( temp, 0, 0, g );
+
+   /* Switch the surfaces so temp can be disposed below. */
+   bmp_tmp = g->surface;
+   g->surface = temp->surface;
+   temp->surface = bmp_tmp;
+
+   g->w = temp->w;
+   g->h = temp->h;
+
+cleanup:
+   if( NULL != temp ) {
+      graphics_surface_cleanup( temp );
+   }
+   return;
+}

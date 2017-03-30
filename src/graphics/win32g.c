@@ -149,9 +149,6 @@ void graphics_draw_rect(
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
-void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-}
-
 void graphics_blit_partial(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
    SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y,

@@ -320,56 +320,6 @@ cleanup:
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
-void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
-   SDL_Surface* temp = NULL,
-      * screen;
-   SDL_Rect src_rect,
-      dest_rect;
-
-   screen = SDL_GetVideoSurface();
-
-   temp = SDL_CreateRGBSurface(
-#ifdef USE_SDL_IMAGE
-      SDL_HWSURFACE,
-#else
-      SDL_SWSURFACE,
-#endif /* USE_SDL_IMAGE */
-      w,
-      h,
-      screen->format->BitsPerPixel,
-      screen->format->Rmask,
-      screen->format->Gmask,
-      screen->format->Bmask,
-      screen->format->Amask
-   );
-   scaffold_check_null( temp );
-
-   src_rect.x = 0;
-   src_rect.y = 0;
-   src_rect.w = g->w;
-   src_rect.h = g->h;
-
-   dest_rect.x = 0;
-   dest_rect.y = 0;
-   dest_rect.w = g->w;
-   dest_rect.h = g->h;
-
-   SDL_BlitSurface( g->surface, &src_rect, temp, &dest_rect );
-
-   if( NULL != g->surface ) {
-      SDL_FreeSurface( g->surface );
-   }
-
-   g->surface = temp;
-   scaffold_check_null( g->surface );
-
-   g->w = w;
-   g->h = h;
-
-cleanup:
-   return;
-}
-
 void graphics_blit_partial(
    GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x,
    SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
