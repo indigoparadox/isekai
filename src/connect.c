@@ -74,7 +74,7 @@ BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
    unsigned int address_length;
    struct sockaddr_in address;
    #ifdef _WIN32
-   u_long mode = 0;
+   u_long mode = 1;
    #endif /* _WIN32 */
 
    /* Accept and verify the client. */
@@ -132,7 +132,7 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
 #if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
    int connect_result;
 #ifdef _WIN32
-   u_long mode = 0;
+   u_long mode = 1;
 #endif /* _WIN32 */
 #endif /* USE_NETWORK || USE_LEGACY_NETWORK */
 
@@ -188,7 +188,7 @@ BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
 #if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
    int connect_result;
 #ifdef _WIN32
-   u_long mode = 0;
+   u_long mode = 1;
 #endif /* _WIN32 */
 #endif /* USE_NETWORK || USE_LEGACY_NETWORK */
 
