@@ -86,6 +86,9 @@ cleanup:
 void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
+#ifdef DEBUG
+   SCAFFOLD_SIZE old_size = 0;
+#endif /* DEBUG */
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -97,7 +100,7 @@ void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
 
    if( 0 == v->size ) {
       v->size = 10;
-      v->data = (void**)calloc( v->size, sizeof(void*) );
+      v->data = scaffold_alloc( v->size, void* );
       scaffold_check_null( v->data );
    }
 
@@ -106,8 +109,8 @@ void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
       scaffold_check_nonzero( scaffold_error );
    }
 
-   for( i = index ; v->size - 1 > i ; i++ ) {
-      v->data[i + 1] = v->data[i];
+   for( i = v->count ; index < i ; i-- ) {
+      v->data[i] = v->data[i - 1];
    }
    v->data[index] = data;
    v->count++;
