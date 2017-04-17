@@ -25,7 +25,14 @@ void ui_cleanup( struct UI* ui ) {
    ui_debug_stack( ui );
    #endif /* DEBUG */
    scaffold_assert( last_ui == ui );
+   /*
    vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
+   */
+
+   while( 0 < vector_count( &(ui->windows) ) ) {
+      ui_window_pop( ui );
+   }
+
    vector_cleanup( &(ui->windows) );
 }
 
@@ -208,9 +215,13 @@ void ui_window_transform(
    scaffold_assert( last_ui == win->ui );
    win->x = x;
    win->y = y;
-   win->width = width;
-   win->height = height;
-   graphics_scale( win->element, width, height );
+   if( 0 < width ) {
+      win->width = width;
+   }
+   if( 0 < height ) {
+      win->height = height;
+   }
+   graphics_scale( win->element, win->width, win->height );
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
@@ -335,82 +346,76 @@ cleanup:
    return input_length;
 }
 
+static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control ) {
+   SCAFFOLD_SIZE control_w = 0;
+   GRAPHICS_RECT control_size = { 0 };
+   if( UI_CONTROL_TYPE_TEXT == control->type ) {
+      /* Text boxes are wider than their input. */
+      control_w = UI_TEXT_DEF_CONTROL_SIZE + (2 * UI_TEXT_MARGIN);
+   } else {
+      graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, control->text );
+      control_w = control_size.w + (2 * UI_TEXT_MARGIN);
+   }
+   return control_w;
+}
+
+static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* control ) {
+   return UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
+}
+
+static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
+   const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
+   GRAPHICS_RECT* largest = NULL;
+   SCAFFOLD_SIZE_SIGNED
+      control_w = control->self.width,
+      control_h = control->self.height;
+   GRAPHICS* g = NULL;
+
+   control_w = ui_control_get_draw_width( control );
+   control_h = ui_control_get_draw_height( control );
+
+   if(
+      0 > win->width ||
+      win->width < win->grid_x + control_w + UI_WINDOW_MARGIN
+   ) {
+      largest = scaffold_alloc( 1, GRAPHICS_RECT );
+      largest->w = win->grid_x + control_w + UI_WINDOW_MARGIN;
+   }
+
+   if(
+      0 > win->height ||
+      win->height < win->grid_y + control_h + UI_WINDOW_MARGIN
+   ) {
+      if( NULL == largest ) {
+         largest = scaffold_alloc( 1, GRAPHICS_RECT );
+      }
+      largest->h = win->grid_y + control_h + UI_WINDOW_MARGIN;
+   }
+
+   return largest;
+}
+
 static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS* g = NULL;
-   GRAPHICS_RECT control_size = { 0 };
    GRAPHICS_COLOR fg = UI_LABEL_FG;
    SCAFFOLD_SIZE_SIGNED win_x = win->x,
       win_y = win->y,
-      win_w = win->width,
-      win_h = win->height,
-      control_w = control->self.width,
-      control_h = control->self.height;
+      control_w = 0,
+      control_h = 0;
 #ifdef DEBUG
    const char* win_id_c = bdata( win->id ),
       * control_id_c = bdata( control->self.id );
 #endif /* DEBUG */
 
-   graphics_measure_text( g, &control_size, UI_TEXT_SIZE, control->text );
+   /* TODO: Dynamic screen size detectgion. */
 
-   /* Figure out sizing. */
-   if( 0 >= control->self.width ) {
-      switch( control->type ) {
-      case UI_CONTROL_TYPE_LABEL:
-         control_w = control_size.w + (2 * UI_TEXT_MARGIN);
-         break;
-      case UI_CONTROL_TYPE_TEXT:
-         control_w = 280 + (2 * UI_TEXT_MARGIN);
-         break;
-      case UI_CONTROL_TYPE_BUTTON:
-         control_w = control_size.w + (2 * UI_TEXT_MARGIN);
-         break;
-      case UI_CONTROL_TYPE_NONE:
-         break;
-      }
-   }
-
-   if( 0 >= control->self.height ) {
-      switch( control->type ) {
-      case UI_CONTROL_TYPE_LABEL:
-      case UI_CONTROL_TYPE_TEXT:
-         control_h = UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
-         break;
-      case UI_CONTROL_TYPE_BUTTON:
-         control_h = UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
-         break;
-      case UI_CONTROL_TYPE_NONE:
-         break;
-      }
-   }
-
-   if(
-      0 > win->width ||
-      win->width <= win->grid_x + control_w + UI_WINDOW_MARGIN
-   ) {
-      win_w = win->grid_x + control_w + UI_WINDOW_MARGIN;
-   }
-
-   if(
-      0 > win->height ||
-      win->height <= win->grid_y + control_h + UI_WINDOW_MARGIN
-   ) {
-      win_h = win->grid_y + control_h + UI_WINDOW_MARGIN;
-   }
-
-   /* TODO: Dynamic screen size detection. */
-
-   ui_window_transform( win, win_x, win_y, win_w, win_h );
+   // XXX
+   control_w = ui_control_get_draw_width( control );
+   control_h = ui_control_get_draw_height( control );
    g = win->element;
-
-   if( 0 > win->x ) {
-      win_x = (GRAPHICS_SCREEN_WIDTH / 2) + (win->width / 2);
-   }
-
-   if( 0 > win->y ) {
-      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) + (win->height / 2);
-   }
 
    switch( control->type ) {
    case UI_CONTROL_TYPE_LABEL:
@@ -456,38 +461,47 @@ cleanup:
    return NULL;
 }
 
-static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   GRAPHICS* g = (GRAPHICS*)arg;
-   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
-   SCAFFOLD_SIZE_SIGNED win_x = win->x,
+static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
+   GRAPHICS_RECT* largest_control = NULL;
+   SCAFFOLD_SIZE_SIGNED
+      win_x = win->x,
       win_y = win->y,
-      win_w = win->width,
-      win_h = win->height,
-      grid_x = 0,
-      grid_y = 0,
-      grid_width = 0,
-      grid_height = 0,
-      win_width = 0,
-      win_height = 0;
-   BOOL previous_button = FALSE;
-   struct UI_CONTROL* control = NULL;
-   int i = 0;
-   GRAPHICS_COLOR fg = GRAPHICS_COLOR_TRANSPARENT,
-      bg = GRAPHICS_COLOR_TRANSPARENT;
+      win_new_w = win->width,
+      win_new_h = win->height;
+
+   /* Make sure the window can contain its largest control. */
+   largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
+   largest_control->w = win->width;
+   largest_control->h = win->height;
+   do {
+      /* A pointer was returned, so update. */
+      win_new_w = largest_control->w;
+      win_new_h = largest_control->h;
+      if( largest_control->w != win->width || largest_control->h != win->height ) {
+         ui_window_transform( win, win_x, win_y, win_new_w, win_new_h );
+      }
+      scaffold_free( largest_control );
+   } while( NULL != (largest_control = hashmap_iterate( &(win->controls), ui_control_window_size_cb, win )) );
+   assert( NULL == largest_control );
+
+   if( 0 > win->x ) {
+      win_x = (GRAPHICS_SCREEN_WIDTH / 2) + (win_new_w / 2);
+   }
+
+   if( 0 > win->y ) {
+      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) + (win_new_h / 2);
+   }
 
    if( 0 >= win->width ) {
-      win->width = 10;
+      win->width = UI_WINDOW_MIN_WIDTH;
    }
    if( 0 >= win->height ) {
-      win->height = 10;
+      win->height = UI_WINDOW_MIN_HEIGHT;
    }
 
-   /* Draw the window. */
-   graphics_draw_rect(
-      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
-   );
+}
 
-   /* Draw the title bar. */
+static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
    graphics_draw_rect(
       win->element, 2, 2, win->width - 4, UI_TITLEBAR_SIZE + 4,
       UI_TITLEBAR_BG, TRUE
@@ -496,31 +510,37 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
       win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
       UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title, FALSE
    );
+}
+
+static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   GRAPHICS* g = (GRAPHICS*)arg;
+   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
+   SCAFFOLD_SIZE_SIGNED
+      win_x = win->x,
+      win_y = win->y,
+      grid_x = 0,
+      grid_y = 0;
+   BOOL previous_button = FALSE;
+   struct UI_CONTROL* control = NULL;
+   int i = 0;
+   GRAPHICS_COLOR fg = GRAPHICS_COLOR_TRANSPARENT,
+      bg = GRAPHICS_COLOR_TRANSPARENT;
+
+   ui_window_enforce_minimum_size( win );
+
+   /* Draw the window. */
+   graphics_draw_rect(
+      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
+   );
+
+   /* Draw the title bar. */
+   ui_window_draw_furniture( win );
 
    win->grid_x = UI_WINDOW_MARGIN;
    win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
    win->grid_previous_button = FALSE;
 
-   switch( win->type ) {
-   case UI_WINDOW_TYPE_BACKLOG:
-      /* TODO: Draw backlog. */
-      break;
-   default:
-      hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
-      break;
-   }
-
-   if( 0 > win->x ) {
-      win_x = (g->w / 2) - (win->width / 2);
-   } else {
-      win_x = win->x;
-   }
-
-   if( 0 > win->y ) {
-      win_y = (g->h / 2) - (win->height / 2);
-   } else {
-      win_y = win->y;
-   }
+   hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
    /* Draw the window onto the screen. */
    graphics_blit( g, win_x, win_y, win->element );

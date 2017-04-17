@@ -222,7 +222,7 @@ static BOOL loop_connect() {
 
    if( NULL == ui_window_by_id( ui, &str_backlog_id ) ) {
       ui_window_new(
-         ui, win, UI_WINDOW_TYPE_NONE, &str_backlog_id,
+         ui, win, UI_WINDOW_TYPE_BACKLOG, &str_backlog_id,
          &str_backlog_title, NULL,
          10, 400, 260, 70
       );
@@ -426,7 +426,7 @@ cleanup:
    scaffold_free( twindow );
    input_shutdown( input );
    scaffold_free( input );
-   //ui_cleanup( ui );
+   ui_cleanup( ui );
    scaffold_free( ui );
    scaffold_set_client();
    client_free( main_client );
