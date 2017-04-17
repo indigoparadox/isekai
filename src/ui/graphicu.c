@@ -57,6 +57,7 @@ void ui_window_init(
    win->width = width;
    win->height = height;
    win->element = scaffold_alloc( 1, GRAPHICS );
+   win->dirty = TRUE; /* Draw at least once. */
 
    if( NULL != id ) {
       win->id = bstrcpy( id );
@@ -342,6 +343,9 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
       ui_window_next_active_control( win );
    }
 
+   /* Assume the window will react to this input. */
+   win->dirty = TRUE;
+
 cleanup:
    return input_length;
 }
@@ -361,6 +365,34 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
 
 static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* control ) {
    return UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
+}
+
+static void ui_window_advance_grid( struct UI_WINDOW* win, struct UI_CONTROL* control ) {
+   SCAFFOLD_SIZE_SIGNED
+      control_w = control->self.width,
+      control_h = control->self.height;
+
+   control_w = ui_control_get_draw_width( control );
+   control_h = ui_control_get_draw_height( control );
+
+   if( UI_CONTROL_TYPE_BUTTON == control->type ) {
+      win->grid_previous_button = TRUE;
+   } else {
+      win->grid_previous_button = FALSE;
+   }
+
+   if( TRUE == win->grid_previous_button ) {
+      win->grid_x += control_w + UI_WINDOW_MARGIN;
+   } else {
+      win->grid_x = UI_WINDOW_MARGIN;
+      win->grid_y += control_h + UI_WINDOW_MARGIN;
+   }
+}
+
+static void ui_window_reset_grid( struct UI_WINDOW* win ) {
+   win->grid_x = UI_WINDOW_MARGIN;
+   win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
+   win->grid_previous_button = FALSE;
 }
 
 static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -393,12 +425,14 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, v
       largest->h = win->grid_y + control_h + UI_WINDOW_MARGIN;
    }
 
+   ui_window_advance_grid( (struct UI_WINDOW*)win, control );
+
    return largest;
 }
 
 static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
-   struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
+   const struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
+   const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS* g = NULL;
    GRAPHICS_COLOR fg = UI_LABEL_FG;
    SCAFFOLD_SIZE_SIGNED win_x = win->x,
@@ -410,9 +444,6 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
       * control_id_c = bdata( control->self.id );
 #endif /* DEBUG */
 
-   /* TODO: Dynamic screen size detectgion. */
-
-   // XXX
    control_w = ui_control_get_draw_width( control );
    control_h = ui_control_get_draw_height( control );
    g = win->element;
@@ -420,21 +451,18 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
    switch( control->type ) {
    case UI_CONTROL_TYPE_LABEL:
       fg = UI_LABEL_FG;
-      win->grid_previous_button = FALSE;
       break;
    case UI_CONTROL_TYPE_BUTTON:
       graphics_draw_rect(
          g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG, FALSE
       );
       fg = UI_BUTTON_FG;
-      win->grid_previous_button = TRUE;
       break;
    case UI_CONTROL_TYPE_TEXT:
       graphics_draw_rect(
          g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG, TRUE
       );
       fg = UI_TEXT_FG;
-      win->grid_previous_button = FALSE;
       break;
 
    case UI_CONTROL_TYPE_NONE:
@@ -450,12 +478,7 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
       );
    }
 
-   if( TRUE == win->grid_previous_button ) {
-      win->grid_x += control_w + UI_WINDOW_MARGIN;
-   } else {
-      win->grid_x = UI_WINDOW_MARGIN;
-      win->grid_y += control_h + UI_WINDOW_MARGIN;
-   }
+   ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
 cleanup:
    return NULL;
@@ -481,16 +504,9 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
          ui_window_transform( win, win_x, win_y, win_new_w, win_new_h );
       }
       scaffold_free( largest_control );
+      ui_window_reset_grid( win );
    } while( NULL != (largest_control = hashmap_iterate( &(win->controls), ui_control_window_size_cb, win )) );
    assert( NULL == largest_control );
-
-   if( 0 > win->x ) {
-      win_x = (GRAPHICS_SCREEN_WIDTH / 2) + (win_new_w / 2);
-   }
-
-   if( 0 > win->y ) {
-      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) + (win_new_h / 2);
-   }
 
    if( 0 >= win->width ) {
       win->width = UI_WINDOW_MIN_WIDTH;
@@ -522,29 +538,33 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
       grid_y = 0;
    BOOL previous_button = FALSE;
    struct UI_CONTROL* control = NULL;
-   int i = 0;
-   GRAPHICS_COLOR fg = GRAPHICS_COLOR_TRANSPARENT,
-      bg = GRAPHICS_COLOR_TRANSPARENT;
 
-   ui_window_enforce_minimum_size( win );
+   if( FALSE != win->dirty ) {
+      ui_window_enforce_minimum_size( win );
 
-   /* Draw the window. */
-   graphics_draw_rect(
-      win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
-   );
+      /* Draw the window. */
+      graphics_draw_rect(
+         win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
+      );
 
-   /* Draw the title bar. */
-   ui_window_draw_furniture( win );
+      /* Draw the controls on to the window surface. */
+      ui_window_draw_furniture( win );
+      ui_window_reset_grid( win );
+      hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
-   win->grid_x = UI_WINDOW_MARGIN;
-   win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
-   win->grid_previous_button = FALSE;
-
-   hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
+      win->dirty = FALSE;
+   }
 
    /* Draw the window onto the screen. */
+   if( 0 > win->x ) {
+      win_x = (GRAPHICS_SCREEN_WIDTH / 2) - (win->width / 2);
+   }
+   if( 0 > win->y ) {
+      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) - (win->height / 2);
+   }
    graphics_blit( g, win_x, win_y, win->element );
 
+cleanup:
    return NULL;
 }
 
@@ -567,7 +587,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 #endif /* DEBUG_PALETTE */
 }
 
-void ui_window_draw_grid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow ) {
+void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow ) {
    SCAFFOLD_SIZE grid_x = 0,
       grid_y = 0;
 

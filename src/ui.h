@@ -66,6 +66,7 @@ struct UI_WINDOW {
    struct VECTOR controls_active;
    void* attachmnent;
    UI_WINDOW_TYPE type;
+   BOOL dirty;
 };
 
 struct UI_CONTROL {
