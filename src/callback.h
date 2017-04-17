@@ -77,6 +77,9 @@ BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
+#ifdef DEBUG
+void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg );
+#endif /* DEBUG */
 BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg );
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );

@@ -21,6 +21,8 @@
 
 SCAFFOLD_MODULE( "main.c" );
 
+static struct tagbstring str_backlog_title = bsStatic( "Log" );
+static struct tagbstring str_backlog_id = bsStatic( "backlog" );
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
@@ -216,6 +218,15 @@ static BOOL loop_connect() {
       bstr_result =
          bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
       scaffold_check_nonzero( bstr_result );
+   }
+
+   if( NULL == ui_window_by_id( ui, &str_backlog_id ) ) {
+      ui_window_new(
+         ui, win, UI_WINDOW_TYPE_NONE, &str_backlog_id,
+         &str_backlog_title, NULL,
+         10, 400, 260, 70
+      );
+      ui_window_push( ui, win );
    }
 
    ui_draw( ui, g_screen );
@@ -415,7 +426,7 @@ cleanup:
    scaffold_free( twindow );
    input_shutdown( input );
    scaffold_free( input );
-   ui_cleanup( ui );
+   //ui_cleanup( ui );
    scaffold_free( ui );
    scaffold_set_client();
    client_free( main_client );
