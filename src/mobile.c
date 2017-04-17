@@ -792,30 +792,20 @@ cleanup:
  * \param[in] speech The line of speech.
  */
 void mobile_speak( struct MOBILE* o, bstring speech ) {
-   struct CHANNEL_BUFFER_LINE* line = NULL;
-   time_t time_now;
-   struct tm* time_temp = NULL;
+   bstring line_nick = NULL;
 
    scaffold_check_null_msg(
-      o->channel, "Mobile without channel cannot speak.\n" );
-
-   line = (struct CHANNEL_BUFFER_LINE*)calloc(
-      1, sizeof( struct CHANNEL_BUFFER_LINE)
+      o->channel, "Mobile without channel cannot speak.\n"
    );
-   scaffold_check_null( line );
 
    if( NULL != o->owner ) {
-      line->nick = bstrcpy( o->owner->nick );
+      line_nick = o->owner->nick;
+   } else {
+      line_nick = o->display_name;
    }
-   line->display_name = bstrcpy( o->display_name );
-   line->line = bstrcpy( speech );
+   scaffold_assert( NULL != line_nick );
 
-   /* Grab the time in a platform-agnostic way. */
-   time( &time_now );
-   time_temp = localtime( &time_now );
-   memcpy( &(line->time), time_temp, sizeof( struct tm ) );
-
-   vector_insert( &(o->channel->speech_backlog), 0, line );
+   channel_speak( o->channel, line_nick, speech );
 
 cleanup:
    return;

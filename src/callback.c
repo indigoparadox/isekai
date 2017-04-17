@@ -113,7 +113,7 @@ void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg 
 void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
-   if( 0 != bstrcmp( nick, c->nick ) ) {
+   if( NULL == nick || 0 != bstrcmp( nick, c->nick ) ) {
       return c;
    }
    return NULL;
@@ -885,7 +885,6 @@ BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    if( NULL == arg ) {
       bdestroy( line->line );
       bdestroy( line->nick );
-      bdestroy( line->display_name );
       scaffold_free( line );
       return TRUE;
    }

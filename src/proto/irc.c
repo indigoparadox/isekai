@@ -157,16 +157,31 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
 }
 
 void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg ) {
+   scaffold_assert_client();
    proto_send_msg( c, ld->name, msg );
 }
 
 void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg ) {
+   scaffold_assert_client();
    proto_send_msg( c, cd->nick, msg );
 }
 
 void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg ) {
    scaffold_assert_client();
    client_printf( c, "PRIVMSG %b :%b", dest, msg );
+}
+
+
+void proto_server_send_msg_channel(
+   struct SERVER* s, struct CHANNEL* l, const bstring nick, const bstring msg
+) {
+   scaffold_assert_server();
+   scaffold_check_null_msg( l, "Invalid channel to send message." );
+   server_channel_printf(
+      s, l, NULL, ":%b!%b@%b PRIVMSG %b :%b", nick, nick, s->self.remote, l->name, msg
+   );
+cleanup:
+   return;
 }
 
 void proto_client_stop( struct CLIENT* c ) {
@@ -987,7 +1002,7 @@ static void irc_client_privmsg(
    msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
    scaffold_check_null( msg );
 
-   scaffold_print_info( &module, "Message Incoming: %b\n", msg );
+   scaffold_print_info( &module, "Message Incoming (%b): %b\n", args->entry[2], msg );
 
    l = client_get_channel_by_name( c, args->entry[2] );
    scaffold_check_null( l );
@@ -995,12 +1010,14 @@ static void irc_client_privmsg(
    nick = /* Start at 1 to filter the : */
       bmidstr( line, 1, binchr( line, 0, &scaffold_exclamation_string ) - 1 );
    c_sender = channel_get_client_by_name( l, nick );
-   scaffold_check_null_msg( c_sender, bdata( nick ) );
+   if( NULL != c_sender ) {
+      o = c_sender->puppet;
+      scaffold_check_null( o );
 
-   o = c_sender->puppet;
-   scaffold_check_null( o );
-
-   mobile_speak( o, msg );
+      mobile_speak( o, msg );
+   } else {
+      channel_speak( l, nick, msg );
+   }
 
 cleanup:
    return;

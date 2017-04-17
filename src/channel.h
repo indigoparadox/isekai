@@ -20,7 +20,6 @@ struct CHANNEL_BUFFER_LINE {
    struct tm time;
    bstring nick;
    bstring line;
-   bstring display_name;
 };
 
 struct CHANNEL {
@@ -73,6 +72,8 @@ struct bstrList* channel_list_clients( struct CHANNEL* l );
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o );
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial );
 void channel_load_tilemap( struct CHANNEL* l );
+void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg );
+void* channel_backlog_iter( struct CHANNEL* l, vector_search_cb cb, void* arg );
 void channel_vm_start( struct CHANNEL* l, bstring code );
 void channel_vm_step( struct CHANNEL* l );
 void channel_vm_end( struct CHANNEL* l );

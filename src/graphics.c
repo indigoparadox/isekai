@@ -172,11 +172,12 @@ void graphics_draw_text(
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 ) {
-   scaffold_check_null( text );
    scaffold_check_null( r );
    r->w = size;
    r->h = size;
-   r->w *= blength( text );
+   if( NULL != text ) {
+      r->w *= blength( text );
+   }
 cleanup:
    return;
 }

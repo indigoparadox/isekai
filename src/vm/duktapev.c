@@ -17,6 +17,8 @@
 
 #include "../duktape/duktape.h"
 
+extern struct SERVER* main_server;
+
 static SCAFFOLD_SIZE vm_tick_count = 0;
 
 typedef enum VM_CALLER_TYPE {
@@ -91,6 +93,34 @@ static duk_ret_t vm_debug( duk_context* vm ) {
 
    scaffold_print_debug( &module, "%s\n", text  );
 
+   return 0;
+}
+
+static duk_ret_t vm_speak( duk_context* vm ) {
+   const char* text = NULL;
+   struct VM_CADDY* caddy = NULL;
+   bstring b_text = NULL;
+   struct MOBILE* o = NULL;
+
+   caddy = (struct VM_CADDY*)duk_heap_udata( vm );
+
+   text = duk_to_string( vm, -1 );
+
+   switch( caddy->caller_type ) {
+   case VM_CALLER_MOBILE:
+      o = (struct MOBILE*)caddy->caller;
+
+      //mobile_speak( o, b_text );
+
+      /* TODO: This assumes all scripts are server-side, sort of... */
+
+      b_text = bfromcstr( text );
+      proto_server_send_msg_channel( main_server, o->channel, o->display_name, b_text );
+      break;
+   }
+
+cleanup:
+   bdestroy( b_text );
    return 0;
 }
 
@@ -193,6 +223,11 @@ static void vm_mobile_run( struct MOBILE* o, const bstring code ) {
    duk_push_global_object( OBJECT_VM( o ) );
    duk_push_c_function( OBJECT_VM( o ), vm_update, 1 );
    duk_put_prop_string( OBJECT_VM( o ), -2, "update" );
+   duk_pop( OBJECT_VM( o ) );
+
+   duk_push_global_object( OBJECT_VM( o ) );
+   duk_push_c_function( OBJECT_VM( o ), vm_speak, 1 );
+   duk_put_prop_string( OBJECT_VM( o ), -2, "speak" );
    duk_pop( OBJECT_VM( o ) );
 
    duk_result = duk_safe_call( OBJECT_VM( o ), vm_unsafe, code_c, 0, 1 );
