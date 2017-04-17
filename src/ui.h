@@ -18,14 +18,31 @@
 #define UI_LABEL_FG        GRAPHICS_COLOR_WHITE
 
 #define UI_TEXT_MARGIN     5
-#define UI_WINDOW_MARGIN   10
+#define UI_WINDOW_MARGIN   5
 
 #define UI_TEXT_DEF_LENGTH 30
 
 #define UI_TITLEBAR_SIZE   GRAPHICS_FONT_SIZE_8
-#define UI_TEXT_SIZE       GRAPHICS_FONT_SIZE_10
+#define UI_TEXT_SIZE       GRAPHICS_FONT_SIZE_8
 
 struct UI;
+
+typedef enum {
+   UI_CONTROL_TYPE_NONE,
+   UI_CONTROL_TYPE_TEXT,
+   UI_CONTROL_TYPE_BUTTON,
+   UI_CONTROL_TYPE_LABEL,
+   UI_CONTROL_TYPE_CHECKBOX,
+   UI_CONTROL_TYPE_TILEGRID
+} UI_CONTROL_TYPE;
+
+typedef enum UI_WINDOW_TYPE {
+   UI_WINDOW_TYPE_NONE,
+   UI_WINDOW_TYPE_OK,
+   UI_WINDOW_TYPE_YN,
+   UI_WINDOW_TYPE_SIMPLE_TEXT,
+   UI_WINDOW_TYPE_BACKLOG
+} UI_WINDOW_TYPE;
 
 struct UI_WINDOW {
    struct UI* ui;
@@ -43,23 +60,9 @@ struct UI_WINDOW {
    SCAFFOLD_SIZE_SIGNED grid_previous_button;
    bstring id;
    struct VECTOR controls_active;
+   void* attachmnent;
+   UI_WINDOW_TYPE type;
 };
-
-typedef enum {
-   UI_CONTROL_TYPE_NONE,
-   UI_CONTROL_TYPE_TEXT,
-   UI_CONTROL_TYPE_BUTTON,
-   UI_CONTROL_TYPE_LABEL,
-   UI_CONTROL_TYPE_CHECKBOX,
-   UI_CONTROL_TYPE_TILEGRID
-} UI_CONTROL_TYPE;
-
-typedef enum UI_WINDOW_TYPE {
-   UI_WINDOW_TYPE_NONE,
-   UI_WINDOW_TYPE_OK,
-   UI_WINDOW_TYPE_YN,
-   UI_WINDOW_TYPE_SIMPLE_TEXT
-} UI_WINDOW_TYPE;
 
 struct UI_CONTROL {
    struct UI_WINDOW self; /* Parent Class */
@@ -128,6 +131,10 @@ void ui_debug_window( struct UI* ui, const bstring id, bstring buffer );
 BOOL ui_window_destroy( struct UI* ui, const bstring wid );
 void ui_window_next_active_control( struct UI_WINDOW* win );
 void ui_window_draw_grid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow );
+
+#ifdef DEBUG
+void ui_debug_stack( struct UI* ui );
+#endif /* DEBUG */
 
 #ifdef UI_C
 SCAFFOLD_MODULE( "ui.c" );

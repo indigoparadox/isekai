@@ -501,11 +501,16 @@ void graphics_draw_rect(
    SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    GRAPHICS_COLOR color, BOOL filled
 ) {
+   if( NULL == g->surface ) {
+      goto cleanup;
+   }
    if( FALSE != filled ) {
       rectfill( g->surface, x, y, x + w, y + h, color );
    } else {
       rect( g->surface, x, y, x + w, y + h, color );
    }
+cleanup:
+   return;
 }
 
 void graphics_draw_line(
@@ -550,6 +555,10 @@ void graphics_draw_char(
    uint8_t* font_char;
    float divisor;
 
+   if( NULL == g->surface ) {
+      goto cleanup;
+   }
+
    divisor = size / 8.0f;
 
    lock_bitmap( g->surface );
@@ -561,6 +570,9 @@ void graphics_draw_char(
       }
    }
    release_bitmap( g->surface );
+
+cleanup:
+   return;
 }
 
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
@@ -572,7 +584,9 @@ void graphics_blit_partial(
    SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
    const GRAPHICS* src
 ) {
-   masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
+   if( NULL != g->surface && NULL != src->surface ) {
+      masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
+   }
 }
 
 void graphics_sleep( uint16_t milliseconds ) {

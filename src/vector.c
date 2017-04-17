@@ -46,10 +46,10 @@ static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
       i;
    void* new_data = NULL;
 
-   v->size = new_size;
-   new_data = scaffold_realloc( v->data, v->size, void* );
+   new_data = scaffold_realloc( v->data, new_size, void* );
    scaffold_check_null( new_data );
    v->data = new_data;
+   v->size = new_size;
    for( i = old_size ; i < v->size ; i++ ) {
       v->data[i] = NULL;
    }
@@ -350,8 +350,8 @@ cleanup:
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
 SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg ) {
-   SCAFFOLD_SIZE i;
-   SCAFFOLD_SIZE backshift = 0;
+   SCAFFOLD_SIZE_SIGNED i, j;
+   SCAFFOLD_SIZE removed = 0;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -367,22 +367,27 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
        * which decreases its refcount naturally. So there's no need to do it  *
        * manually here.                                                       */
       if( FALSE != callback( NULL, v->data[i], arg ) ) {
-         backshift++;
-      }
-
-      if( v->count - backshift > i && 0 < backshift ) {
-         /* The callback found a match, so start deleting! */
-         v->data[i] = v->data[i + backshift];
+         removed++;
+         for( j = i ; v->count - 1 > j ; j++ ) {
+            v->data[j] = v->data[j + 1];
+            v->data[j + 1] = NULL;
+         }
+         i--;
+         v->count--;
       }
    }
 
-   v->count -= backshift;
+#ifdef DEBUG
+   if( NULL == arg ) {
+      assert( 0 == v->count );
+   }
+#endif /* DEBUG */
 
    vector_lock( v, FALSE );
 
 cleanup:
    scaffold_assert( 0 == v->lock_count );
-   return backshift;
+   return removed;
 }
 
 void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
@@ -405,6 +410,7 @@ void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
 
    for( i = index; v->count - 1 > i ; i++ ) {
       v->data[i] = v->data[i + 1];
+      v->data[i + 1] = NULL;
    }
 
    v->count--;

@@ -118,8 +118,8 @@ void graphics_draw_rect(
    SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color, BOOL filled
 );
 void graphics_draw_line(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
+   GRAPHICS* g, SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2, GRAPHICS_COLOR color
 );
 void graphics_draw_triangle(
    GRAPHICS* g,
@@ -163,6 +163,32 @@ void graphics_bitmap_load(
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );
 void graphics_setup();
+#ifdef GRAPHICS_SLOW_LINE
+
+static SCAFFOLD_INLINE void graphics_draw_line_slow(
+   GRAPHICS* g, SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
+   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2, GRAPHICS_COLOR color
+) {
+
+   /*
+   if( x1 > x2 ) {
+      x = x1;
+      x1 = x2;
+
+   }
+   */
+
+   /* FIXME */
+
+   graphics_lock( g->surface );
+   for( x = x1 ; x2 > x ; x++ ) {
+     graphics_draw_pixel( g->surface, x, y, graphics_get_color( color ) );
+
+   }
+   graphics_unlock( g->surface );
+}
+
+#endif /* GRAPHICS_SLOW_LINE */
 #endif /* GRAPHICS_C */
 
 #endif /* GRAPHICS_H */

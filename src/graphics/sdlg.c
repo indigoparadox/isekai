@@ -1,7 +1,5 @@
 
-#define GRAPHICS_C
-#include "../graphics.h"
-
+#include "../scaffold.h"
 #include <SDL/SDL.h>
 #ifdef USE_SDL_IMAGE
 #include <SDL/SDL_image.h>
@@ -65,6 +63,14 @@ static void SDL_PutPixel(
       break;
    }
 }
+
+#define GRAPHICS_C
+#define graphics_get_color( color_i ) (graphics_stock_colors[color_i])
+#define graphics_lock( surface ) SDL_LockSurface( surface )
+#define graphics_unlock( surface ) SDL_UnlockSurface( surface )
+#define graphics_put_pixel( surface, x, y, color ) \
+   SDL_PutPixel( surface, x, y, color )
+#include "../graphics.h"
 
 void graphics_surface_cleanup( GRAPHICS* g ) {
    if( NULL != g->surface ) {
@@ -329,7 +335,7 @@ void graphics_draw_char(
 
    scaffold_check_null( g->surface );
 
-   color = &(graphics_stock_colors[color_i]);
+   color = &(graphics_get_color( color_i ));
 
    SDL_LockSurface( g->surface );
    for( y = 0 ; size > y ; y++ ) {

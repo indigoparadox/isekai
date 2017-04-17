@@ -14,6 +14,10 @@
 #include "ezxml.h"
 #endif /* USE_EZXML */
 
+#ifdef DEBUG
+extern struct UI* last_ui;
+#endif /* DEBUG */
+
 void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
    struct SERVER* s = NULL;
@@ -901,12 +905,24 @@ BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
+   scaffold_assert( NULL != iter );
+   scaffold_assert( last_ui == win->ui );
    if( NULL == arg || 0 == bstrcmp( wid, win->id ) ) {
       ui_window_free( win );
       return TRUE;
    }
    return FALSE;
 }
+
+#ifdef DEBUG
+void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring wid = (bstring)arg;
+   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
+   scaffold_assert( NULL != iter );
+   scaffold_assert( last_ui == win->ui );
+   return FALSE;
+}
+#endif /* DEBUG */
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
