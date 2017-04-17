@@ -177,6 +177,7 @@ void ui_control_add(
 #endif /* DEBUG */
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != control );
+   scaffold_assert( last_ui == win->ui );
 
    hashmap_put( &(win->controls), id, control );
 
@@ -189,6 +190,9 @@ void ui_control_add(
 }
 
 void ui_control_free( struct UI_CONTROL* control ) {
+
+   scaffold_assert( last_ui == control->self.ui );
+
    ui_window_cleanup( &(control->self) );
    if( FALSE == control->borrowed_text_field ) {
       bdestroy( control->text );
@@ -246,7 +250,6 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
 void ui_window_pop( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
 
-   scaffold_assert( last_ui == win->ui );
    scaffold_assert( last_ui == ui );
 
    #ifdef DEBUG
@@ -255,6 +258,8 @@ void ui_window_pop( struct UI* ui ) {
 
    win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
    scaffold_check_null( win );
+
+   scaffold_assert( last_ui == win->ui );
 
    ui_window_free( win );
    vector_remove( &(ui->windows), 0);
@@ -298,6 +303,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
    if( NULL == win ) { goto cleanup; }
 
+   assert( win->ui == last_ui );
    control = win->active_control;
    scaffold_assert( NULL != control );
 
@@ -344,9 +350,11 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
 
    /* Assume the window will react to this input. */
+   assert( win->ui == last_ui );
    win->dirty = TRUE;
 
 cleanup:
+   assert( win->ui == last_ui );
    return input_length;
 }
 
@@ -372,6 +380,8 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, struct UI_CONTROL* co
       control_w = control->self.width,
       control_h = control->self.height;
 
+   assert( win->ui == last_ui );
+
    control_w = ui_control_get_draw_width( control );
    control_h = ui_control_get_draw_height( control );
 
@@ -387,12 +397,16 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, struct UI_CONTROL* co
       win->grid_x = UI_WINDOW_MARGIN;
       win->grid_y += control_h + UI_WINDOW_MARGIN;
    }
+
+   assert( win->ui == last_ui );
 }
 
 static void ui_window_reset_grid( struct UI_WINDOW* win ) {
+   assert( win->ui == last_ui );
    win->grid_x = UI_WINDOW_MARGIN;
    win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
    win->grid_previous_button = FALSE;
+   assert( win->ui == last_ui );
 }
 
 static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -515,6 +529,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
       win->height = UI_WINDOW_MIN_HEIGHT;
    }
 
+   assert( win->ui == last_ui );
 }
 
 static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
@@ -553,6 +568,8 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
       hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
 
       win->dirty = FALSE;
+
+      assert( win->ui == last_ui );
    }
 
    /* Draw the window onto the screen. */
@@ -562,6 +579,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
    if( 0 > win->y ) {
       win_y = (GRAPHICS_SCREEN_HEIGHT / 2) - (win->height / 2);
    }
+   assert( win->ui == last_ui );
    graphics_blit( g, win_x, win_y, win->element );
 
 cleanup:
@@ -635,7 +653,7 @@ void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {
    struct UI_CONTROL* control_debug = NULL;
 
    if( NULL == ui_window_by_id( ui, &str_wid_debug ) ) {
-      ui_window_new( ui, win_debug, UI_WINDOW_TYPE_NONE, &str_wid_debug,
+      ui_window_new( ui, win_debug, UI_WINDOW_TYPE_DEBUG, &str_wid_debug,
          &str_wid_debug, NULL, 10, 10, -1, -1 );
       ui_window_push( ui, win_debug );
    }
