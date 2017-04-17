@@ -83,9 +83,14 @@ void server_stop( struct SERVER* s ) {
 
 void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
    struct VECTOR* l_clients = NULL;
+   bstring skip_nick = NULL;
+
+   if( NULL != c_skip ) {
+      skip_nick = c_skip->nick;
+   }
 
    l_clients =
-      hashmap_iterate_v( &(l->clients), callback_search_clients_r, c_skip->nick );
+      hashmap_iterate_v( &(l->clients), callback_search_clients_r, skip_nick );
    scaffold_check_null( l_clients );
 
    vector_iterate( l_clients, callback_send_clients, buffer );

@@ -22,7 +22,7 @@
 SCAFFOLD_MODULE( "main.c" );
 
 static struct tagbstring str_backlog_title = bsStatic( "Log" );
-static struct tagbstring str_backlog_id = bsStatic( "backlog" );
+struct tagbstring str_backlog_id = bsStatic( "backlog" );
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
@@ -226,6 +226,11 @@ static BOOL loop_connect() {
          &str_backlog_title, NULL,
          10, 400, 260, 70
       );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, FALSE, NULL,
+         0, 0, 260, 70 - UI_TITLEBAR_SIZE - UI_WINDOW_MARGIN
+      );
+      ui_control_add( win, &str_backlog_id, control );
       ui_window_push( ui, win );
    }
 
@@ -438,7 +443,7 @@ cleanup:
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
    graphics_shutdown( g_screen );
-   scaffold_free( g_screen );
+   /* scaffold_free( g_screen ); */
 #endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );

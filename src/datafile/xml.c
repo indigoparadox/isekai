@@ -173,6 +173,9 @@ void datafile_parse_mobile_ezxml_t(
    ezxml_int( o->sprite_width, xml_attr, xml_data, "spritewidth" );
    ezxml_int( o->sprite_height, xml_attr, xml_data, "spriteheight" );
 
+   ezxml_string( xml_attr, xml_data, "display" );
+   scaffold_assign_or_cpy_c( o->display_name, xml_attr, bstr_retval );
+
    ezxml_node( xml_sprites, xml_data, "sprites" );
    xml_sprite_iter = ezxml_child( xml_sprites, "sprite" );
    while( NULL != xml_sprite_iter ) {

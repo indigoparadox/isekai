@@ -2,6 +2,7 @@
 #define CHANNEL_C
 #include "channel.h"
 
+#include "ui.h"
 #include "callback.h"
 #include "tilemap.h"
 #include "datafile.h"
@@ -13,6 +14,9 @@
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
 #endif /* USE_DUKTAPE */
+
+extern struct tagbstring str_backlog_id;
+extern struct CLIENT* main_client;
 
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -283,6 +287,43 @@ cleanup:
       scaffold_free( mapdata_buffer );
    }
    return;
+}
+
+void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg ) {
+   struct CHANNEL_BUFFER_LINE* line = NULL;
+   time_t time_now;
+   struct tm* time_temp = NULL;
+   struct UI_WINDOW* bl = NULL;
+
+   line = (struct CHANNEL_BUFFER_LINE*)calloc(
+      1, sizeof( struct CHANNEL_BUFFER_LINE)
+   );
+   scaffold_check_null( line );
+
+   line->nick = bstrcpy( nick );
+   line->line = bstrcpy( msg );
+
+   /* Grab the time in a platform-agnostic way. */
+   time( &time_now );
+   time_temp = localtime( &time_now );
+   memcpy( &(line->time), time_temp, sizeof( struct tm ) );
+
+   vector_insert( &(l->speech_backlog), 0, line );
+
+   /* TODO: A more elegant method of marking the backlog window dirty. */
+   if( NULL != main_client ) {
+      bl = ui_window_by_id( &(main_client->ui->windows), &str_backlog_id );
+      if( NULL != bl ) {
+         bl->dirty = TRUE;
+      }
+   }
+
+cleanup:
+   return;
+}
+
+void* channel_backlog_iter( struct CHANNEL* l, vector_search_cb cb, void* arg ) {
+   return vector_iterate( &(l->speech_backlog), cb, arg );
 }
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {

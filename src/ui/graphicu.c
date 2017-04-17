@@ -9,6 +9,8 @@
 
 #include "../windefs.h"
 
+extern struct CLIENT* main_client;
+
 #ifdef DEBUG
 struct UI* last_ui = NULL;
 #endif /* DEBUG */
@@ -377,15 +379,22 @@ static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* contro
 
 static void ui_window_advance_grid( struct UI_WINDOW* win, struct UI_CONTROL* control ) {
    SCAFFOLD_SIZE_SIGNED
-      control_w = control->self.width,
-      control_h = control->self.height;
+      control_w = -1,
+      control_h = -1;
+   GRAPHICS_RECT text;
 
    assert( win->ui == last_ui );
 
-   control_w = ui_control_get_draw_width( control );
-   control_h = ui_control_get_draw_height( control );
+   if( NULL != control ) {
+      control_w = ui_control_get_draw_width( control );
+      control_h = ui_control_get_draw_height( control );
+   } else {
+      graphics_measure_text( NULL, &text, UI_TEXT_SIZE, NULL );
+      control_w = 0;
+      control_h = text.h;
+   }
 
-   if( UI_CONTROL_TYPE_BUTTON == control->type ) {
+   if( NULL != control && UI_CONTROL_TYPE_BUTTON == control->type ) {
       win->grid_previous_button = TRUE;
    } else {
       win->grid_previous_button = FALSE;
@@ -444,55 +453,142 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, v
    return largest;
 }
 
+static void* ui_control_draw_backlog_line(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   GRAPHICS_COLOR fg = UI_TEXT_FG;
+   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
+   struct CHANNEL_BUFFER_LINE* line = (struct CHANNEL_BUFFER_LINE*)iter;
+   bstring nick_decorated = NULL;
+   GRAPHICS_RECT nick_size;
+
+   /* TODO: Divide multiline lines. */
+
+   nick_decorated = bformat( "%s: ", bdata( line->nick ) );
+
+   graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
+
+   graphics_draw_text(
+      win->element, win->grid_x + UI_TEXT_MARGIN, win->grid_y,
+      GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE
+   );
+
+   graphics_draw_text(
+      win->element, win->grid_x + UI_TEXT_MARGIN + nick_size.w, win->grid_y,
+      GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, line->line, FALSE
+   );
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, NULL );
+
+   bdestroy( nick_decorated );
+   return NULL;
+}
+
+static void ui_control_draw_backlog(
+   struct UI_WINDOW* win, struct UI_CONTROL* backlog
+) {
+   GRAPHICS_COLOR fg = UI_TEXT_FG;
+   GRAPHICS* g = win->element;
+   SCAFFOLD_SIZE_SIGNED control_w;
+   SCAFFOLD_SIZE_SIGNED control_h;
+   struct CHANNEL* l = NULL;
+
+   control_w = ui_control_get_draw_width( backlog );
+   control_h = ui_control_get_draw_height( backlog );
+
+   /* TODO: A slightly more elegant way of getting the current channel. */
+   l = hashmap_get_first( &(main_client->channels) );
+   if( NULL == l ) { goto cleanup; /* Silently. */ }
+
+   channel_backlog_iter( l, ui_control_draw_backlog_line, win );
+
+cleanup:
+   return;
+}
+
+static void ui_control_draw_textfield(
+   struct UI_WINDOW* win, struct UI_CONTROL* textfield
+) {
+   GRAPHICS_COLOR fg = UI_TEXT_FG;
+   GRAPHICS* g = win->element;
+   SCAFFOLD_SIZE_SIGNED control_w;
+   SCAFFOLD_SIZE_SIGNED control_h;
+
+   control_w = ui_control_get_draw_width( textfield );
+   control_h = ui_control_get_draw_height( textfield );
+
+   graphics_draw_rect(
+      g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG, TRUE
+   );
+
+   if( NULL != textfield->text ) {
+      graphics_draw_text(
+         g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, textfield->text,
+         textfield == win->active_control ? TRUE : FALSE
+      );
+   }
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, textfield );
+}
+
+static void ui_control_draw_label(
+   struct UI_WINDOW* win, struct UI_CONTROL* label
+) {
+   GRAPHICS_COLOR fg = UI_LABEL_FG;
+   GRAPHICS* g = win->element;
+
+   if( NULL != label->text ) {
+      graphics_draw_text(
+         g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, label->text,
+         label == win->active_control ? TRUE : FALSE
+      );
+   }
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, label );
+}
+
+static void ui_control_draw_button(
+   struct UI_WINDOW* win, struct UI_CONTROL* button
+) {
+   GRAPHICS_COLOR fg = UI_BUTTON_FG;
+   GRAPHICS* g = win->element;
+   SCAFFOLD_SIZE_SIGNED control_w;
+   SCAFFOLD_SIZE_SIGNED control_h;
+
+   control_w = ui_control_get_draw_width( button );
+   control_h = ui_control_get_draw_height( button );
+
+   graphics_draw_rect(
+      g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG, FALSE
+   );
+
+   if( NULL != button->text ) {
+      graphics_draw_text(
+         g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, button->text,
+         button == win->active_control ? TRUE : FALSE
+      );
+   }
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, button );
+}
+
 static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    const struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
-   GRAPHICS* g = NULL;
-   GRAPHICS_COLOR fg = UI_LABEL_FG;
-   SCAFFOLD_SIZE_SIGNED win_x = win->x,
-      win_y = win->y,
-      control_w = 0,
-      control_h = 0;
 #ifdef DEBUG
    const char* win_id_c = bdata( win->id ),
       * control_id_c = bdata( control->self.id );
 #endif /* DEBUG */
 
-   control_w = ui_control_get_draw_width( control );
-   control_h = ui_control_get_draw_height( control );
-   g = win->element;
-
    switch( control->type ) {
-   case UI_CONTROL_TYPE_LABEL:
-      fg = UI_LABEL_FG;
-      break;
-   case UI_CONTROL_TYPE_BUTTON:
-      graphics_draw_rect(
-         g, win->grid_x, win->grid_y, control_w, control_h, UI_BUTTON_BG, FALSE
-      );
-      fg = UI_BUTTON_FG;
-      break;
-   case UI_CONTROL_TYPE_TEXT:
-      graphics_draw_rect(
-         g, win->grid_x, win->grid_y, control_w, control_h, UI_TEXT_BG, TRUE
-      );
-      fg = UI_TEXT_FG;
-      break;
-
-   case UI_CONTROL_TYPE_NONE:
-      break;
+      case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
+      case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
+      case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
+      case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
    }
-
-   /* TODO: Draw the control onto the window. */
-   if( NULL != control->text ) {
-      graphics_draw_text(
-         g, win->grid_x + UI_TEXT_MARGIN, win->grid_y + UI_TEXT_MARGIN,
-         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, control->text,
-         control == win->active_control ? TRUE : FALSE
-      );
-   }
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
 cleanup:
    return NULL;
