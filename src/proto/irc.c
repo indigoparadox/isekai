@@ -801,7 +801,7 @@ static void irc_client_join(
       channel_new( l, l_name, FALSE, c );
       client_add_channel( c, l );
       channel_add_client( l, c, FALSE );
-      scaffold_print_info(
+      scaffold_print_debug(
          &module, "Client created local channel mirror: %s\n", bdata( l_name )
       );
 
@@ -898,7 +898,7 @@ static void irc_server_gamedataabort(
 ) {
    irc_detect_malformed( 2, "GDA", line );
 
-   scaffold_print_info(
+   scaffold_print_debug(
       &module,
       "Server: Terminating transfer of %s at request of client: %d\n",
       bdata( args->entry[1] ), c->link.socket
@@ -1001,13 +1001,15 @@ static void irc_client_privmsg(
    msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
    scaffold_check_null( msg );
 
-   scaffold_print_info( &module, "Message Incoming (%b): %b\n", args->entry[2], msg );
+   scaffold_print_debug( &module, "Message Incoming (%b): %b\n", args->entry[2], msg );
 
    l = client_get_channel_by_name( c, args->entry[2] );
    scaffold_check_null( l );
 
+   /* TODO: Authentication. */
    nick = /* Start at 1 to filter the : */
       bmidstr( line, 1, binchr( line, 0, &scaffold_exclamation_string ) - 1 );
+/*
    c_sender = channel_get_client_by_name( l, nick );
    if( NULL != c_sender ) {
       o = c_sender->puppet;
@@ -1015,8 +1017,9 @@ static void irc_client_privmsg(
 
       mobile_speak( o, msg );
    } else {
-      channel_speak( l, nick, msg );
-   }
+*/
+      backlog_speak( nick, msg );
+/*   } */
 
 cleanup:
    return;

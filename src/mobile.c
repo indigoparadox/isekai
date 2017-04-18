@@ -8,6 +8,7 @@
 #include "callback.h"
 #include "datafile.h"
 #include "vm.h"
+#include "backlog.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -138,8 +139,8 @@ void mobile_load_local( struct MOBILE* o ) {
 #ifdef USE_EZXML
 
    /* TODO: Support other mobile formats. */
-   scaffold_print_info(
-      &module, "Loading for XML data in: %s\n", bdata( mobdata_path )
+   scaffold_print_debug(
+      &module, "Looking for XML data in: %s\n", bdata( mobdata_path )
    );
    bytes_read = scaffold_read_file_contents(
       mobdata_path, &mobdata_buffer, &mobdata_size
@@ -802,7 +803,7 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
    }
    scaffold_assert( NULL != line_nick );
 
-   channel_speak( o->channel, line_nick, speech );
+   backlog_speak( line_nick, speech );
 
 cleanup:
    return;

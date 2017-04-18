@@ -8,15 +8,13 @@
 #include "datafile.h"
 #include "server.h"
 #include "proto.h"
+#include "backlog.h"
 #ifdef USE_TINYPY
 #include "tinypy/tinypy.h"
 #endif /* USE_TINYPY */
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
 #endif /* USE_DUKTAPE */
-
-extern struct tagbstring str_backlog_id;
-extern struct CLIENT* main_client;
 
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -62,7 +60,6 @@ void channel_init(
    ref_init( &(l->refcount), channel_free_final );
    hashmap_init( &(l->clients) );
    vector_init( &(l->mobiles ) );
-   vector_init( &(l->speech_backlog ) );
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
    scaffold_check_null( l->name );
@@ -118,7 +115,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       mobile_set_channel( o, l );
       channel_add_mobile( l, o );
 
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Spawning %s (%d) at: %d, %d\n",
          bdata( c->nick ), o->serial, o->x, o->y
@@ -246,7 +243,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    SCAFFOLD_SIZE_SIGNED bytes_read = 0;
    SCAFFOLD_SIZE mapdata_size = 0;
 
-   scaffold_print_info(
+   scaffold_print_debug(
       &module, "Loading tilemap for channel: %s\n", bdata( l->name )
    );
    mapdata_filename = bstrcpy( l->name );
@@ -266,7 +263,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    bstr_retval = bcatcstr( mapdata_path, ".tmx" );
    scaffold_check_nonzero( bstr_retval );
 
-   scaffold_print_info(
+   scaffold_print_debug(
       &module, "Loading tilemap XML data from: %s\n", bdata( mapdata_path ) );
    bytes_read = scaffold_read_file_contents(
       mapdata_path, &mapdata_buffer, &mapdata_size );
@@ -287,43 +284,6 @@ cleanup:
       scaffold_free( mapdata_buffer );
    }
    return;
-}
-
-void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg ) {
-   struct CHANNEL_BUFFER_LINE* line = NULL;
-   time_t time_now;
-   struct tm* time_temp = NULL;
-   struct UI_WINDOW* bl = NULL;
-
-   line = (struct CHANNEL_BUFFER_LINE*)calloc(
-      1, sizeof( struct CHANNEL_BUFFER_LINE)
-   );
-   scaffold_check_null( line );
-
-   line->nick = bstrcpy( nick );
-   line->line = bstrcpy( msg );
-
-   /* Grab the time in a platform-agnostic way. */
-   time( &time_now );
-   time_temp = localtime( &time_now );
-   memcpy( &(line->time), time_temp, sizeof( struct tm ) );
-
-   vector_insert( &(l->speech_backlog), 0, line );
-
-   /* TODO: A more elegant method of marking the backlog window dirty. */
-   if( NULL != main_client ) {
-      bl = ui_window_by_id( main_client->ui, &str_backlog_id );
-      if( NULL != bl ) {
-         bl->dirty = TRUE;
-      }
-   }
-
-cleanup:
-   return;
-}
-
-void* channel_backlog_iter( struct CHANNEL* l, vector_search_cb cb, void* arg ) {
-   return vector_iterate( &(l->speech_backlog), cb, arg );
 }
 
 void channel_vm_start( struct CHANNEL* l, bstring code ) {

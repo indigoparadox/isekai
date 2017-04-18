@@ -708,6 +708,10 @@
 			<Option target="Debug (MingW32-NET-SDL)" />
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 		</Unit>
+		<Unit filename="src/backlog.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/backlog.h" />
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />

@@ -84,6 +84,9 @@ struct GRAPHICS_TILE_WINDOW {
    uint8_t grid_h;
 };
 
+#define graphics_clear_screen( g, color ) \
+   graphics_draw_rect( g, 0, 0, g->w, g->h, color, TRUE )
+
 #define graphics_surface_new( g, x, y, w, h ) \
     g = (GRAPHICS*)calloc( 1, sizeof( GRAPHICS ) ); \
     scaffold_check_null( g ); \

@@ -106,7 +106,7 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
    scaffold_print_info( &module, "Client connected and running.\n" );
    c->running = TRUE;
 
-   scaffold_print_info( &module, "Client sending registration...\n" );
+   scaffold_print_debug( &module, "Client sending registration...\n" );
    proto_register( c );
 
 cleanup:
@@ -615,7 +615,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       //hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
       proto_client_request_mobs( c, l );
 
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
       );
@@ -641,7 +641,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_check_null( set );
 
       hashmap_put( &(set->images), h->filename, g );
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Client: Tilemap image %s successfully loaded into tileset cache.\n",
          bdata( h->filename )
@@ -670,7 +670,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       );
 #endif /* USE_EZXML */
 
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Client: Mobile def for %s successfully attached to channel.\n",
          bdata( mob_id )
@@ -684,7 +684,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null( g->surface );
       hashmap_put( &(c->sprites), h->filename, g );
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Client: Mobile spritesheet %s successfully loaded into cache.\n",
          bdata( h->filename )

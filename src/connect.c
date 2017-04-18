@@ -163,7 +163,7 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    connect_result = listen( n->socket, 5 );
    scaffold_check_negative( connect_result );
    listening = TRUE;
-   scaffold_print_info( &module, "Now listening for connections...\n" );
+   scaffold_print_debug( &module, "Now listening for connections...\n" );
 
 cleanup:
 #elif defined ( USE_SYNCBUFF )
