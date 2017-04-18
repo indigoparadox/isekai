@@ -695,7 +695,7 @@ void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
-      scaffold_print_debug( &module, "Stopping client: %d\n", c->link.socket );
+      scaffold_print_debug( &module, "Stopping client: %p\n", c );
       client_stop( c );
       return NULL;
    }
@@ -706,7 +706,7 @@ BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
-      scaffold_print_debug( &module, "Freeing client: %d\n", c->link.socket );
+      scaffold_print_debug( &module, "Freeing client: %p\n", c );
       client_free( c );
       return TRUE;
    }

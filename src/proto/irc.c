@@ -5,6 +5,7 @@
 #include "../callback.h"
 #include "../chunker.h"
 #include "../datafile.h"
+#include "../backlog.h"
 
 #include <ctype.h>
 #include <stdlib.h>
