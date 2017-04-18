@@ -9,6 +9,7 @@
 #include "tilemap.h"
 #include "ui.h"
 #include "vm.h"
+#include "backlog.h"
 #ifdef USE_EZXML
 #include "datafile.h"
 #include "ezxml.h"
@@ -255,7 +256,7 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
       scaffold_join_path( setdata_path, idx->value.key );
       scaffold_check_nonzero( scaffold_error );
 
-      scaffold_print_info(
+      scaffold_print_debug(
          &module, "Loading tileset XML data from: %s\n",
          bdata( setdata_path )
       );
@@ -847,7 +848,7 @@ BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 }
 
 BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct CHANNEL_BUFFER_LINE* line = (struct CHANNEL_BUFFER_LINE*)iter;
+   struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
    /* TODO: Implement retroactively deleting lines by ID or something. */
    if( NULL == arg ) {
       bdestroy( line->line );
@@ -872,7 +873,7 @@ BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
-   scaffold_assert( last_ui == win->ui );
+   scaffold_assert( ui_get_local() == win->ui );
    if( NULL == arg || 0 == bstrcmp( wid, win->id ) ) {
       ui_window_free( win );
       return TRUE;
@@ -885,7 +886,7 @@ void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg 
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
-   scaffold_assert( last_ui == win->ui );
+   scaffold_assert( ui_get_local() == win->ui );
    return FALSE;
 }
 #endif /* DEBUG */

@@ -154,7 +154,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       /* Create a new channel on the server. */
       channel_new( l, l_name, FALSE, &(s->self) );
       client_add_channel( &(s->self), l );
-      scaffold_print_info(
+      scaffold_print_debug(
          &module, "Server: Channel created: %s\n", bdata( l->name ) );
 
       channel_load_tilemap( l );
@@ -165,7 +165,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       );
       scaffold_check_nonzero( scaffold_error );
    } else {
-      scaffold_print_info(
+      scaffold_print_debug(
          &module, "Server: Channel found on server: %s\n", bdata( l->name ) );
    }
 

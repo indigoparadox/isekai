@@ -16,12 +16,6 @@ struct tp_vm;
 struct duk_hthread;
 #endif /* USE_DUKTAPE */
 
-struct CHANNEL_BUFFER_LINE {
-   struct tm time;
-   bstring nick;
-   bstring line;
-};
-
 struct CHANNEL {
    struct REF refcount;
    bstring name;
@@ -37,7 +31,6 @@ struct CHANNEL {
    int vm_cur;
    int vm_step_ret;
 #endif /* USE_TINYPY */
-   struct VECTOR speech_backlog;
 };
 
 struct CHANNEL_CLIENT {

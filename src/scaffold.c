@@ -212,7 +212,6 @@ cleanup:
 }
 
 void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
-#ifdef DEBUG
    va_list varg;
    int bstr_ret;
 
@@ -228,12 +227,15 @@ void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
    scaffold_vsnprintf( scaffold_print_buffer, message, varg );
    va_end( varg );
 
+#ifdef DEBUG
    fprintf( scaffold_log_handle, "%s: %s",
       bdata( mod_in ), bdata( scaffold_print_buffer ) );
+#endif /* DEBUG */
+
+   backlog_system( scaffold_print_buffer );
 
 cleanup:
    return;
-#endif /* DEBUG */
 }
 
 void scaffold_print_error( const bstring mod_in, const char* message, ... ) {
@@ -466,7 +468,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZ
 
       if( 0 != stat_res  ) {
          /* Directory does not exist, so create it. */
-         scaffold_print_info(
+         scaffold_print_debug(
             &module, "Creating missing directory: %s\n", path_c
          );
 #ifdef _WIN32

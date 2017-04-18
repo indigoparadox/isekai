@@ -21,8 +21,6 @@
 
 SCAFFOLD_MODULE( "main.c" );
 
-static struct tagbstring str_backlog_title = bsStatic( "Log" );
-struct tagbstring str_backlog_id = bsStatic( "backlog" );
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
@@ -122,11 +120,13 @@ static BOOL loop_game() {
       NULL == main_client->puppet) &&
       TRUE == main_client->running /* We're starting, not stopping. */
    ) {
+      graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
       graphics_draw_text(
          g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
          GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
          GRAPHICS_FONT_SIZE_16, &str_loading, FALSE
       );
+      ui_draw( ui, g_screen );
       goto cleanup;
 
    } else if( TRUE != main_client->running ) {
@@ -180,6 +180,8 @@ static BOOL loop_connect() {
    struct bstrList* server_tuple = NULL;
    struct UI_CONTROL* control = NULL;
 
+   graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
+
    if( NULL == buffer ) {
       buffer = bfromcstr( "" );
    }
@@ -220,20 +222,7 @@ static BOOL loop_connect() {
       scaffold_check_nonzero( bstr_result );
    }
 
-   if( NULL == ui_window_by_id( ui, &str_backlog_id ) ) {
-      ui_window_new(
-         ui, win, UI_WINDOW_TYPE_BACKLOG, &str_backlog_id,
-         &str_backlog_title, NULL,
-         10, 400, 260, 70
-      );
-      ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, FALSE, NULL,
-         0, 0, 260, 70 - UI_TITLEBAR_SIZE - UI_WINDOW_MARGIN
-      );
-      ui_control_add( win, &str_backlog_id, control );
-      ui_window_push( ui, win );
-   }
-
+   backlog_ensure_window( ui );
    ui_draw( ui, g_screen );
    input_get_event( input );
 
@@ -249,7 +238,7 @@ static BOOL loop_connect() {
 
    if( 0 != ui_poll_input( ui, input, &str_cdialog_id ) ) {
       scaffold_print_info(
-         &module, "Closing connect dialog and connecting to: %b\n",
+         &module, "Connecting to: %b\n",
          buffer
       );
       /* Dismiss the connect dialog. */
@@ -279,7 +268,7 @@ static BOOL loop_connect() {
       server_listen( main_server, server_port );
       scaffold_check_nonzero( scaffold_error );
 
-      scaffold_print_info( &module, "Listening on port: %d\n", server_port );
+      scaffold_print_debug( &module, "Listening on port: %d\n", server_port );
 
 #ifdef USE_RANDOM_PORT
       if( NULL == str_service ) {
@@ -405,9 +394,9 @@ int main( int argc, char** argv ) {
    input = scaffold_alloc( 1, struct INPUT );
    scaffold_check_null( input );
    input_init( input );
-   ui = scaffold_alloc( 1, struct UI );
-   scaffold_check_null( ui );
-   ui_init( ui, g_screen );
+   ui_init( g_screen );
+   ui = ui_get_local();
+   backlog_init();
 
    connection_init();
    scaffold_check_nonzero( scaffold_error );
@@ -431,8 +420,8 @@ cleanup:
    scaffold_free( twindow );
    input_shutdown( input );
    scaffold_free( input );
+   backlog_shutdown();
    ui_cleanup( ui );
-   scaffold_free( ui );
    scaffold_set_client();
    client_free( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */

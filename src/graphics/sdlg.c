@@ -116,7 +116,7 @@ void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
    SDL_WM_SetCaption( bdata( title ), icon );
 }
 
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) {
    SDL_Surface* screen = NULL;
 
    screen = SDL_GetVideoSurface();
@@ -153,7 +153,7 @@ void graphics_shutdown( GRAPHICS* g ) {
 }
 
 void graphics_screen_scroll(
-   GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
+   GRAPHICS* g, GFX_COORD_PIXEL offset_x, GFX_COORD_PIXEL offset_y
 ) {
 }
 
@@ -270,8 +270,8 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 }
 
 void graphics_draw_rect(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color_i, BOOL filled
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, GRAPHICS_COLOR color_i, BOOL filled
 ) {
    SDL_Rect rect;
    SDL_Color* color = &(graphics_stock_colors[color_i]);
@@ -299,34 +299,34 @@ cleanup:
 }
 
 void graphics_draw_line(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, GRAPHICS_COLOR color
 ) {
    /* TODO */
 }
 
 void graphics_draw_triangle(
    GRAPHICS* g,
-   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
-   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
-   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2,
+   GFX_COORD_PIXEL x3, GFX_COORD_PIXEL y3,
    GRAPHICS_COLOR color, BOOL filled
 ) {
    /* TODO */
 }
 
 void graphics_draw_circle(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL radius, GRAPHICS_COLOR color, BOOL filled
 ) {
    /* TODO */
 }
 
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
+   GRAPHICS* g, GFX_COORD_PIXEL x_start, GFX_COORD_PIXEL y_start,
    GRAPHICS_COLOR color_i, GRAPHICS_FONT_SIZE size, char c
 ) {
-   SCAFFOLD_SIZE x, y, bit;
+   GFX_COORD_PIXEL x, y, bit;
    uint8_t* font_char;
    float divisor;
    SDL_Color* color;
@@ -355,8 +355,8 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x,
-   SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GFX_COORD_PIXEL s_x,
+   GFX_COORD_PIXEL s_y, GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h, const GRAPHICS* src
 ) {
    SDL_Rect src_rect,
       dest_rect;

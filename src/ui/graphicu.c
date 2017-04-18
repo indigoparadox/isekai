@@ -6,14 +6,11 @@
 
 #include "../graphics.h"
 #include "../callback.h"
+#include "../backlog.h"
 
 #include "../windefs.h"
 
-extern struct CLIENT* main_client;
-
-#ifdef DEBUG
-struct UI* last_ui = NULL;
-#endif /* DEBUG */
+static struct UI global_ui;
 
 const struct tagbstring str_dialog_control_default_id =
    bsStatic( "dialog_text" );
@@ -26,7 +23,7 @@ void ui_cleanup( struct UI* ui ) {
    #ifdef DEBUG
    ui_debug_stack( ui );
    #endif /* DEBUG */
-   scaffold_assert( last_ui == ui );
+   scaffold_assert( &global_ui == ui );
    /*
    vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
    */
@@ -51,7 +48,7 @@ void ui_window_init(
    struct UI_CONTROL* control = NULL;
    GRAPHICS_RECT sizing_rect = { 0 };
 
-   scaffold_assert( last_ui == ui );
+   scaffold_assert( &global_ui == ui );
 
    win->ui = ui;
    win->x = x;
@@ -105,7 +102,7 @@ cleanup:
 }
 
 void ui_window_cleanup( struct UI_WINDOW* win ) {
-   scaffold_assert( win->ui == last_ui );
+   scaffold_assert( win->ui == &global_ui );
    bdestroy( win->title );
    win->title = NULL;
    bdestroy( win->id );
@@ -123,7 +120,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
 }
 
 void ui_window_free( struct UI_WINDOW* win ) {
-   scaffold_assert( win->ui == last_ui );
+   scaffold_assert( win->ui == &global_ui );
    ui_window_cleanup( win );
    scaffold_free( win );
 }
@@ -179,7 +176,7 @@ void ui_control_add(
 #endif /* DEBUG */
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != control );
-   scaffold_assert( last_ui == win->ui );
+   scaffold_assert( &global_ui == win->ui );
 
    hashmap_put( &(win->controls), id, control );
 
@@ -193,7 +190,7 @@ void ui_control_add(
 
 void ui_control_free( struct UI_CONTROL* control ) {
 
-   scaffold_assert( last_ui == control->self.ui );
+   scaffold_assert( &global_ui == control->self.ui );
 
    ui_window_cleanup( &(control->self) );
    if( FALSE == control->borrowed_text_field ) {
@@ -203,13 +200,12 @@ void ui_control_free( struct UI_CONTROL* control ) {
    scaffold_free( control );
 }
 
-void ui_init( struct UI* ui, GRAPHICS* screen ) {
-#ifdef DEBUG
-   if( NULL == last_ui ) {
-      last_ui = ui;
-   }
-#endif /* DEBUG */
-   vector_init( &(ui->windows) );
+void ui_init( GRAPHICS* screen ) {
+   vector_init( &(global_ui.windows) );
+}
+
+struct UI* ui_get_local() {
+   return &global_ui;
 }
 
 void ui_window_transform(
@@ -219,7 +215,7 @@ void ui_window_transform(
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
-   scaffold_assert( last_ui == win->ui );
+   scaffold_assert( &global_ui == win->ui );
    win->x = x;
    win->y = y;
    if( 0 < width ) {
@@ -241,8 +237,8 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    /* TODO: Don't allow dupes. */
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != ui );
-   scaffold_assert( last_ui == win->ui );
-   scaffold_assert( last_ui == ui );
+   scaffold_assert( &global_ui == win->ui );
+   scaffold_assert( &global_ui == ui );
    vector_insert( &(ui->windows), 0, win );
    #ifdef DEBUG
    ui_debug_stack( ui );
@@ -252,7 +248,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
 void ui_window_pop( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
 
-   scaffold_assert( last_ui == ui );
+   scaffold_assert( &global_ui == ui );
 
    #ifdef DEBUG
    ui_debug_stack( ui );
@@ -261,7 +257,7 @@ void ui_window_pop( struct UI* ui ) {
    win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
    scaffold_check_null( win );
 
-   scaffold_assert( last_ui == win->ui );
+   scaffold_assert( &global_ui == win->ui );
 
    ui_window_free( win );
    vector_remove( &(ui->windows), 0);
@@ -294,7 +290,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 
 #ifdef DEBUG
    if( NULL != win ) {
-      scaffold_assert( last_ui == win->ui );
+      scaffold_assert( &global_ui == win->ui );
    }
 #endif /* DEBUG */
 
@@ -305,7 +301,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
    if( NULL == win ) { goto cleanup; }
 
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
    control = win->active_control;
    scaffold_assert( NULL != control );
 
@@ -342,11 +338,11 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
 
    /* Assume the window will react to this input. */
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
    win->dirty = TRUE;
 
 cleanup:
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
    return input_length;
 }
 
@@ -373,7 +369,7 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       control_h = -1;
    GRAPHICS_RECT text;
 
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
 
    if( NULL != control ) {
       control_w = ui_control_get_draw_width( control );
@@ -397,15 +393,15 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       win->grid_y += control_h + UI_WINDOW_MARGIN;
    }
 
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
 }
 
 static void ui_window_reset_grid( struct UI_WINDOW* win ) {
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
    win->grid_x = UI_WINDOW_MARGIN;
    win->grid_y = UI_TITLEBAR_SIZE + 4 + UI_WINDOW_MARGIN;
    win->grid_previous_button = FALSE;
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
 }
 
 static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -446,26 +442,31 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, v
 static void* ui_control_draw_backlog_line(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
-   GRAPHICS_COLOR fg = UI_TEXT_FG;
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
-   struct CHANNEL_BUFFER_LINE* line = (struct CHANNEL_BUFFER_LINE*)iter;
+   struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
    bstring nick_decorated = NULL;
-   GRAPHICS_RECT nick_size;
+   GRAPHICS_RECT nick_size = { 0, 0, 0, 0 };
+   GRAPHICS_COLOR msg_fg = UI_TEXT_FG;
 
    /* TODO: Divide multiline lines. */
 
-   nick_decorated = bformat( "%s: ", bdata( line->nick ) );
+   if( NULL != line->nick ) {
+      /* Draw the nick, first. */
+      nick_decorated = bformat( "%s: ", bdata( line->nick ) );
 
-   graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
+      graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
 
-   graphics_draw_text(
-      win->element, win->grid_x + UI_TEXT_MARGIN, win->grid_y,
-      GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE
-   );
+      graphics_draw_text(
+         win->element, win->grid_x + UI_TEXT_MARGIN, win->grid_y,
+         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE
+      );
+   } else {
+      msg_fg = GRAPHICS_COLOR_MAGENTA;
+   }
 
    graphics_draw_text(
       win->element, win->grid_x + UI_TEXT_MARGIN + nick_size.w, win->grid_y,
-      GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, line->line, FALSE
+      GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, FALSE
    );
 
    ui_window_advance_grid( (struct UI_WINDOW*)win, NULL );
@@ -486,11 +487,7 @@ static void ui_control_draw_backlog(
    control_w = ui_control_get_draw_width( backlog );
    control_h = ui_control_get_draw_height( backlog );
 
-   /* TODO: A slightly more elegant way of getting the current channel. */
-   l = hashmap_get_first( &(main_client->channels) );
-   if( NULL == l ) { goto cleanup; /* Silently. */ }
-
-   channel_backlog_iter( l, ui_control_draw_backlog_line, win );
+   backlog_iter( ui_control_draw_backlog_line, win );
 
 cleanup:
    return;
@@ -615,7 +612,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
       win->height = UI_WINDOW_MIN_HEIGHT;
    }
 
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
 }
 
 static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
@@ -655,7 +652,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
 
       win->dirty = FALSE;
 
-      assert( win->ui == last_ui );
+      assert( win->ui == &global_ui );
    }
 
    /* Draw the window onto the screen. */
@@ -665,7 +662,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
    if( 0 > win->y ) {
       win_y = (GRAPHICS_SCREEN_HEIGHT / 2) - (win->height / 2);
    }
-   assert( win->ui == last_ui );
+   assert( win->ui == &global_ui );
    graphics_blit( g, win_x, win_y, win->element );
 
 cleanup:
@@ -695,20 +692,25 @@ void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindo
    SCAFFOLD_SIZE_SIGNED grid_x = 0,
       grid_y = 0;
 
+   scaffold_assert( &global_ui == ui );
+
    for( grid_x = 0 ; twindow->max_x > grid_x ; grid_x++ ) {
 
    }
 }
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
+   scaffold_assert( &global_ui == ui );
    return vector_iterate( &(ui->windows), callback_search_windows, wid );
 }
 
 BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
+   scaffold_assert( &global_ui == ui );
    return vector_remove_cb( &(ui->windows), callback_free_windows, wid );
 }
 
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id ) {
+   scaffold_assert( &global_ui == win->ui );
    return hashmap_get( &(win->controls), id );
 }
 

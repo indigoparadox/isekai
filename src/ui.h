@@ -127,7 +127,8 @@ void ui_window_transform(
    struct UI_WINDOW* win, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
    SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 );
-void ui_init( struct UI* ui, GRAPHICS* screen );
+void ui_init( GRAPHICS* screen );
+struct UI* ui_get_local();
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win );
 void ui_window_pop( struct UI* ui );
 SCAFFOLD_SIZE_SIGNED ui_poll_input(

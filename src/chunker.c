@@ -478,7 +478,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    }
    scaffold_check_negative( sz_read );
 
-   scaffold_print_info(
+   scaffold_print_debug(
       &module, "Chunker: Cached copy read: %s\n",
       bdata( cache_filename )
    );
@@ -515,7 +515,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 #ifdef USE_FILE_CACHE
    if( TRUE == h->force_finish ) {
       /* Force finish, probably due to cache. */
-      scaffold_print_info(
+      scaffold_print_debug(
          &module, "Chunker: Assuming cached file finished: %s\n",
          bdata( h->filename )
       );
@@ -549,7 +549,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 #ifdef USE_FILE_CACHE
    /* If the file is complete and the cache is enabled, then do that. */
    if( TRUE == finished ) {
-      scaffold_print_info(
+      scaffold_print_debug(
          &module,
          "Chunker: Saving cached copy of finished file: %s\n",
          bdata( h->filename )
