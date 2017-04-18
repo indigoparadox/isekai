@@ -666,8 +666,6 @@ void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    mob_id_test = ezxml_attr( xml_data, "id" );
    scaffold_check_null( mob_id_test );
 
-   //scaffold_print_debug( "%b vs %b\n", o->mob_id, mob_id_test);
-
    if( 1 == biseqcstrcaseless( o->mob_id, mob_id_test ) ) {
       scaffold_print_debug(
          &module, "Client: Found mobile with ID: %b\n", o->mob_id

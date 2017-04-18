@@ -5,6 +5,7 @@
 #include "ui.h"
 #include "callback.h"
 #include "vm.h"
+#include "backlog.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"

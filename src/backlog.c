@@ -3,7 +3,6 @@
 #include "backlog.h"
 
 #include "vector.h"
-#include "ui.h"
 #include "callback.h"
 
 static struct VECTOR global_backlog;
