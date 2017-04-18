@@ -221,11 +221,10 @@ cleanup:
 
 void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
-
-   scaffold_assert( CLIENT_SENTINAL == c->sentinal );
-
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
+
+   scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
    if( 0 < c->link.socket ) {
       scaffold_print_info( &module, "Client connection stopping...\n" );
@@ -610,9 +609,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
       datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, h->filename, TRUE );
       scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
-
-      //hashmap_iterate( &(l->tilemap.tilesets), callback_get_tileset, c );
-
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */

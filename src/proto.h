@@ -20,9 +20,9 @@ typedef struct _IRC_COMMAND {
 #define IRC_COMMAND_TABLE_START( name ) \
    const IRC_COMMAND proto_table_ ## name []
 #define IRC_COMMAND_ROW( command, callback ) \
-   {REF_DISABLED, bsStatic( command ), callback, NULL, NULL, NULL}
+   {REF_DISABLED, bsStatic( command ), callback, NULL, NULL, NULL, NULL}
 #define IRC_COMMAND_TABLE_END() \
-   {REF_DISABLED, bsStatic( "" ), NULL, NULL, NULL, NULL}
+   {REF_DISABLED, bsStatic( "" ), NULL, NULL, NULL, NULL, NULL}
 
 #ifndef IRC_C
 extern IRC_COMMAND_TABLE_START( server );
@@ -54,6 +54,9 @@ void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg );
 void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg );
 void proto_client_stop( struct CLIENT* c );
 void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l );
+void proto_server_send_msg_channel(
+   struct SERVER* s, struct CHANNEL* l, const bstring nick, const bstring msg
+);
 #ifdef DEBUG_VM
 void proto_client_debug_vm(
    struct CLIENT* c, struct CHANNEL* l, const bstring code

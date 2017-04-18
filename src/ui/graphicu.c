@@ -309,16 +309,6 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    control = win->active_control;
    scaffold_assert( NULL != control );
 
-#if 0
-   /* Borrow the given input buffer if we have one and let us know so we don't
-    * try to free it, later.
-    */
-   if( NULL == control->text ) {
-      control->borrowed_text_field = TRUE;
-      control->text = buffer;
-   }
-#endif // 0
-
    if( 0 < input->repeat ) {
       goto cleanup;
    }
@@ -377,7 +367,7 @@ static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* contro
    return UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
 }
 
-static void ui_window_advance_grid( struct UI_WINDOW* win, struct UI_CONTROL* control ) {
+static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTROL* control ) {
    SCAFFOLD_SIZE_SIGNED
       control_w = -1,
       control_h = -1;
@@ -576,8 +566,8 @@ static void ui_control_draw_button(
 }
 
 static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   const struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
-   const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
+   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
+   struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
 #ifdef DEBUG
    const char* win_id_c = bdata( win->id ),
       * control_id_c = bdata( control->self.id );
@@ -702,7 +692,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 }
 
 void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow ) {
-   SCAFFOLD_SIZE grid_x = 0,
+   SCAFFOLD_SIZE_SIGNED grid_x = 0,
       grid_y = 0;
 
    for( grid_x = 0 ; twindow->max_x > grid_x ; grid_x++ ) {

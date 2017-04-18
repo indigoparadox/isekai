@@ -481,10 +481,8 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
          /* TODO: Implement terrain slow-down. */
          terrain_iter = tile_iter->terrain[j];
          if( NULL == terrain_iter ) { continue; }
-         switch( terrain_iter->movement ) {
-         case TILEMAP_MOVEMENT_BLOCK:
+         if( TILEMAP_MOVEMENT_BLOCK == terrain_iter->movement ) {
             update_out = MOBILE_UPDATE_NONE;
-            break;
          }
       }
    }

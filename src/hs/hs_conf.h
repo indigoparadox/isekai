@@ -10,7 +10,7 @@
 #endif /* C99 */
 #endif
 
-#ifndef HEATSHRINK_DYNAMIC_ALLOC
+#if !HEATSHRINK_DYNAMIC_ALLOC
     /* Required parameters for static configuration */
     #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 32
     #define HEATSHRINK_STATIC_WINDOW_BITS 8

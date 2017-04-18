@@ -544,17 +544,6 @@ void datafile_tilemap_parse_tileset_ezxml(
       scaffold_check_null( def_path );
    }
 
-#if 0
-   /* Try the definition path stored in the structure. */
-   set = hashmap_get( &(t->tilesets), def_path );
-   if( NULL == set ) {
-      hashmap_put( &(t->tilesets), def_path, NULL );
-      scaffold_print_debug(
-         &module, "Stub placed for tileset: %b\n", def_path );
-      goto cleanup;
-   }
-#endif // 0
-
    /* Try to grab the image list early. If it's missing, just get out. */
    xml_image = ezxml_child( xml_tileset, "image" );
    scaffold_check_null( xml_image );

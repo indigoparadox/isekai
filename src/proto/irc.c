@@ -171,7 +171,6 @@ void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg ) {
    client_printf( c, "PRIVMSG %b :%b", dest, msg );
 }
 
-
 void proto_server_send_msg_channel(
    struct SERVER* s, struct CHANNEL* l, const bstring nick, const bstring msg
 ) {

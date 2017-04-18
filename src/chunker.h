@@ -5,6 +5,9 @@
 #include "ref.h"
 #include "vector.h"
 
+#include "hs/hs_com.h"
+#include "hs/hs_conf.h"
+
 #ifdef USE_B64
 #include "b64.h"
 #endif /* USE_B64 */
