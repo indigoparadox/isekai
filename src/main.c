@@ -318,7 +318,7 @@ static BOOL loop_master() {
       main_client->ui = ui;
       twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
       twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
-      twindow->height = GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT;
+      twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
       twindow->g = g_screen;
       twindow->local_client = main_client;
       twindow->t = NULL;

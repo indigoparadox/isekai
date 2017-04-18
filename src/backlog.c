@@ -28,7 +28,7 @@ void backlog_ensure_window( struct UI* ui ) {
       ui_window_new(
          ui, win, UI_WINDOW_TYPE_BACKLOG, &str_backlog_id,
          &str_backlog_title, NULL,
-         10, 400, 260, 70
+         0, GRAPHICS_SCREEN_HEIGHT - (3 * GRAPHICS_SPRITE_HEIGHT), 460, 3 * GRAPHICS_SPRITE_HEIGHT
       );
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, FALSE, NULL,
