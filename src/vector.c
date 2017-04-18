@@ -326,7 +326,7 @@ cleanup:
    return retval;
 }
 
-int32_t vector_get_scalar_value( struct VECTOR* v, SCAFFOLD_SIZE value ) {
+int32_t vector_get_scalar_value( struct VECTOR* v, int32_t value ) {
    int32_t retval = -1;
    int i;
 
@@ -601,7 +601,7 @@ struct VECTOR* vector_iterate_v(
    void* current_iter = NULL;
    void* cb_return = NULL;
    BOOL ok = FALSE;
-   int i;
+   SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
 
    scaffold_check_null( v );
@@ -611,7 +611,6 @@ struct VECTOR* vector_iterate_v(
    ok = TRUE;
 
    idx.type = CONTAINER_IDX_NUMBER;
-
    /* Linear probing */
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
       current_iter = vector_get( v, i );

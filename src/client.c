@@ -612,7 +612,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
-      //hashmap_iterate( &(l->tilemap.tilesets), callback_proc_tileset_imgs, c );
       proto_client_request_mobs( c, l );
 
       scaffold_print_debug(

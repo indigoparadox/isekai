@@ -44,7 +44,7 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
 void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value );
 void* vector_get( struct VECTOR* v, SCAFFOLD_SIZE index );
 int32_t vector_get_scalar( struct VECTOR* v, SCAFFOLD_SIZE index );
-int32_t vector_get_scalar_value( struct VECTOR* v, SCAFFOLD_SIZE value );
+int32_t vector_get_scalar_value( struct VECTOR* v, int32_t value );
 SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg );
 void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index );
 void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index );

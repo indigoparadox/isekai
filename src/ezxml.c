@@ -50,7 +50,7 @@ struct ezxml_root {      /* additional data for the root tag */
    struct ezxml xml;    /*!< A super-struct built on top of ezxml struct. */
    ezxml_t cur;         /*!< Current xml tree insertion point. */
    char *m;             /*!< Original xml string. */
-   SCAFFOLD_SIZE len;   /*!< Length of memory for mmap, -1 for malloc. */
+   SCAFFOLD_SIZE_SIGNED len;   /*!< Length of memory for mmap, -1 for malloc. */
    char *u;             /*!< UTF-8 conversion of string if orig was UTF-16. */
    char *s;             /*!< Start of work area. */
    char *e;             /*!< End of work area. */
