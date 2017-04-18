@@ -69,8 +69,8 @@ struct TILEMAP_TILE_DATA {
 
 struct TILEMAP_TILESET {
    struct REF refcount;
-   SCAFFOLD_SIZE tileheight;  /*!< Height of tiles in pixels. */
-   SCAFFOLD_SIZE tilewidth;   /*!< Width of tiles in pixels. */
+   GFX_COORD_PIXEL tileheight;  /*!< Height of tiles in pixels. */
+   GFX_COORD_PIXEL tilewidth;   /*!< Width of tiles in pixels. */
    struct HASHMAP images;     /*!< Graphics indexed by filename. */
    struct VECTOR terrain;     /*!< Terrains in file order. */
    struct VECTOR tiles;       /*!< Tile data in file order. */
@@ -78,8 +78,8 @@ struct TILEMAP_TILESET {
 };
 
 struct TILEMAP_POSITION {
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
 };
 
 struct TILEMAP_SPAWNER {
@@ -94,11 +94,11 @@ struct TILEMAP_SPAWNER {
 };
 
 struct TILEMAP_LAYER {
-   SCAFFOLD_SIZE x;        /*!< Layer left in tiles. */
-   SCAFFOLD_SIZE y;        /*!< Layer top in tiles. */
-   SCAFFOLD_SIZE z;
-   SCAFFOLD_SIZE width;    /*!< Layer width in tiles. */
-   SCAFFOLD_SIZE height;   /*!< Layer height in tiles. */
+   GFX_COORD_TILE x;        /*!< Layer left in tiles. */
+   GFX_COORD_TILE y;        /*!< Layer top in tiles. */
+   GFX_COORD_TILE z;
+   GFX_COORD_TILE width;    /*!< Layer width in tiles. */
+   GFX_COORD_TILE height;   /*!< Layer height in tiles. */
    struct VECTOR tiles;
    struct TILEMAP* tilemap;
    struct TILEMAP_LAYER* next_layer;
@@ -107,15 +107,15 @@ struct TILEMAP_LAYER {
 struct TILEMAP {
    struct REF refcount; /*!< Parent "class". */
 
-   SCAFFOLD_SIZE width;
-   SCAFFOLD_SIZE height;
+   GFX_COORD_TILE width;
+   GFX_COORD_TILE height;
    struct HASHMAP layers;
    struct VECTOR tilesets;
    struct HASHMAP* server_tilesets; /*!< All tilesets on server. */
    struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
-   SCAFFOLD_SIZE window_step_width;    /*!< For dungeons. */
-   SCAFFOLD_SIZE window_step_height;   /*!< For dungeons. */
+   GFX_COORD_PIXEL window_step_width;    /*!< For dungeons. */
+   GFX_COORD_PIXEL window_step_height;   /*!< For dungeons. */
    bstring lname;
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
@@ -196,28 +196,28 @@ SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
 );
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
-   SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   SCAFFOLD_SIZE gid, GFX_COORD_TILE* x, GFX_COORD_TILE* y
 );
-SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y );
+SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y );
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );
 void tilemap_update_window_ortho(
    struct GRAPHICS_TILE_WINDOW* twindow,
-   SCAFFOLD_SIZE focal_x, SCAFFOLD_SIZE focal_y
+   GFX_COORD_TILE focal_x, GFX_COORD_TILE focal_y
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
-   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
+   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
-   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
-   SCAFFOLD_SIZE x, struct GRAPHICS_TILE_WINDOW* twindow
+   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
-   SCAFFOLD_SIZE y, struct GRAPHICS_TILE_WINDOW* twindow
+   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
 );
 void tilemap_add_dirty_tile(
-   struct TILEMAP* t, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y
 );
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
 void tilemap_toggle_debug_state();

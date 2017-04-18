@@ -790,9 +790,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/connect.h" />
-		<Unit filename="src/datafile.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/datafile.h" />
 		<Unit filename="src/datafile/xml.c">
 			<Option compilerVar="CC" />
@@ -800,7 +797,6 @@
 		<Unit filename="src/duktape/duk_config.h">
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
@@ -820,7 +816,6 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
@@ -839,7 +834,6 @@
 		<Unit filename="src/duktape/duktape.h">
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
@@ -855,7 +849,27 @@
 			<Option target="Debug (MingW32-NET-SDL)" />
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 		</Unit>
-		<Unit filename="src/duktape/duktype.h" />
+		<Unit filename="src/duktape/duktype.h">
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
+		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1047,7 +1061,6 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
@@ -1067,7 +1080,6 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
@@ -1088,7 +1100,6 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32-NET)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
@@ -1109,7 +1120,6 @@
 			<Option target="Debug" />
 			<Option target="Release" />
 			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32-NET)" />
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-SB-Allegro4)" />
@@ -1163,7 +1173,6 @@
 		<Unit filename="src/vm.h">
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32-NET)" />
 			<Option target="Debug (MingW32-NET-SDL)" />
 			<Option target="Debug (MingW32-SB)" />
@@ -1183,7 +1192,6 @@
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 			<Option target="Release" />
-			<Option target="Strict (Linux-Allegro4)" />
 			<Option target="Debug (MingW32-NET)" />
 			<Option target="Debug (MingW32-NET-SDL)" />
 			<Option target="Debug (MingW32-SB)" />

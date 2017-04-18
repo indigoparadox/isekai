@@ -410,8 +410,8 @@ int b64_decode( bstring indata, unsigned char *out, SCAFFOLD_SIZE *outLen ) {
     /* char *end = in + inLen; */
     char iter = 0;
     uint32_t buf = 0;
-    SCAFFOLD_SIZE len = 0;
-    SCAFFOLD_SIZE indata_index = 0;
+    SCAFFOLD_SIZE_SIGNED len = 0,
+        indata_index = 0;
 
     /* while (in < end) { */
     /* while( indata_index < inLen ) { */

@@ -17,6 +17,9 @@
 
 COLOR_TABLE( GRAPHICS )
 
+typedef int GFX_COORD_TILE;
+typedef long GFX_COORD_PIXEL;
+
 typedef enum GRAPHICS_TIMER {
    GRAPHICS_TIMER_FPS = 15
 } GRAPHICS_TIMER;
@@ -42,41 +45,41 @@ typedef enum GRAPHICS_FONT_SIZE {
 } GRAPHICS_FONT_SIZE;
 
 struct GRAPHICS_BITMAP {
-   SCAFFOLD_SIZE w;
-   SCAFFOLD_SIZE h;
+   GFX_COORD_PIXEL w;
+   GFX_COORD_PIXEL h;
    SCAFFOLD_SIZE pixels_sz;
    GRAPHICS_COLOR* pixels;
 };
 
 typedef struct GRAPHICS {
-   SCAFFOLD_SIZE w;
-   SCAFFOLD_SIZE h;
+   GFX_COORD_PIXEL w;
+   GFX_COORD_PIXEL h;
    void* surface;
    void* palette;
    void* font;
-   SCAFFOLD_SIZE virtual_x;
-   SCAFFOLD_SIZE virtual_y;
+   GFX_COORD_PIXEL virtual_x;
+   GFX_COORD_PIXEL virtual_y;
 } GRAPHICS;
 
 typedef struct {
-   SCAFFOLD_SIZE_SIGNED x;
-   SCAFFOLD_SIZE_SIGNED y;
-   SCAFFOLD_SIZE_SIGNED w;
-   SCAFFOLD_SIZE_SIGNED h;
+   GFX_COORD_PIXEL x;
+   GFX_COORD_PIXEL y;
+   GFX_COORD_PIXEL w;
+   GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
 
 struct GRAPHICS_TILE_WINDOW {
    struct CLIENT* local_client;
    GRAPHICS* g;            /*!< Graphics element to draw on. */
    struct TILEMAP* t;
-   SCAFFOLD_SIZE x;        /*!< Window left in tiles. */
-   SCAFFOLD_SIZE y;        /*!< Window top in tiles. */
-   SCAFFOLD_SIZE width;    /*!< Window width in tiles. */
-   SCAFFOLD_SIZE height;   /*!< Window height in tiles. */
-   SCAFFOLD_SIZE_SIGNED max_x;
-   SCAFFOLD_SIZE_SIGNED max_y;
-   SCAFFOLD_SIZE_SIGNED min_x;
-   SCAFFOLD_SIZE_SIGNED min_y;
+   GFX_COORD_TILE x;        /*!< Window left in tiles. */
+   GFX_COORD_TILE y;        /*!< Window top in tiles. */
+   GFX_COORD_TILE width;    /*!< Window width in tiles. */
+   GFX_COORD_TILE height;   /*!< Window height in tiles. */
+   GFX_COORD_TILE max_x;
+   GFX_COORD_TILE max_y;
+   GFX_COORD_TILE min_x;
+   GFX_COORD_TILE min_y;
    uint8_t grid_w;
    uint8_t grid_h;
 };
@@ -90,14 +93,14 @@ void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 );
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
+void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_surface_cleanup( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
 void graphics_screen_scroll(
-   GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
+   GRAPHICS* g, GFX_COORD_PIXEL offset_x, GFX_COORD_PIXEL offset_y
 );
 void graphics_set_image_path( GRAPHICS* g, const bstring path );
 void graphics_set_image_data(
@@ -114,40 +117,40 @@ void graphics_draw_text(
    const bstring text, BOOL cursor
 );
 void graphics_draw_rect(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h, GRAPHICS_COLOR color, BOOL filled
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, GRAPHICS_COLOR color, BOOL filled
 );
 void graphics_draw_line(
-   GRAPHICS* g, SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
-   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2, GRAPHICS_COLOR color
+   GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
 );
 void graphics_draw_triangle(
    GRAPHICS* g,
-   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
-   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
-   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2,
+   GFX_COORD_PIXEL x3, GFX_COORD_PIXEL y3,
    GRAPHICS_COLOR color, BOOL filled
 );
 void graphics_draw_circle(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL radius, GRAPHICS_COLOR color, BOOL filled
 );
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 );
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 );
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
-void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h );
+void graphics_scale( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h );
 void graphics_blit(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    const GRAPHICS* src
 );
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, SCAFFOLD_SIZE s_x,
-   SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h, const GRAPHICS* src
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GFX_COORD_PIXEL s_x,
+   GFX_COORD_PIXEL s_y, GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
 uint32_t graphics_get_ticks();

@@ -18,29 +18,6 @@ typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_DIG
 } MOBILE_UPDATE;
 
-/*
-typedef enum _MOBILE_FACING {
-   MOBILE_FACING_DOWN = 0,
-   MOBILE_FACING_UP = 1,
-   MOBILE_FACING_RIGHT = 2,
-   MOBILE_FACING_LEFT = 3
-} MOBILE_FACING;
-
-typedef enum _MOBILE_FRAME {
-   MOBILE_FRAME_NONE = -1,
-   MOBILE_FRAME_DEFAULT = 0,
-   MOBILE_FRAME_LEFT_FORWARD = 1,
-   MOBILE_FRAME_RIGHT_FORWARD = 2
-} MOBILE_FRAME;
-
-typedef enum _MOBILE_FRAME_ALT {
-   MOBILE_FRAME_ALT_NONE = -1,
-   MOBILE_FRAME_ALT_ATTACK1 = 0,
-   MOBILE_FRAME_ALT_ATTACK2 = 1,
-   MOBILE_FRAME_ALT_KNOCKBACK = 2
-} MOBILE_FRAME_ALT;
-*/
-
 typedef enum MOBILE_ANI_TYPE {
    MOBILE_ANI_TYPE_WALK,
    MOBILE_ANI_TYPE_ATTACK,
@@ -69,16 +46,16 @@ struct MOBILE {
    struct REF refcount;
    SERIAL serial;
    struct CLIENT* owner;
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
-   SCAFFOLD_SIZE prev_x;
-   SCAFFOLD_SIZE prev_y;
-   SCAFFOLD_SIZE sprite_width;
-   SCAFFOLD_SIZE sprite_height;
-   SCAFFOLD_SIZE sprite_display_height;
-   SCAFFOLD_SIZE_SIGNED steps_inc;
-   SCAFFOLD_SIZE_SIGNED steps_inc_default;
-   SCAFFOLD_SIZE_SIGNED steps_remaining;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
+   GFX_COORD_TILE prev_x;
+   GFX_COORD_TILE prev_y;
+   GFX_COORD_PIXEL sprite_width;
+   GFX_COORD_PIXEL sprite_height;
+   GFX_COORD_PIXEL sprite_display_height;
+   GFX_COORD_PIXEL steps_inc;
+   GFX_COORD_PIXEL steps_inc_default;
+   GFX_COORD_PIXEL steps_remaining;
    bstring sprites_filename;
    GRAPHICS* sprites;
    /* MOBILE_FRAME_ALT frame_alt;
@@ -108,8 +85,8 @@ struct MOBILE_UPDATE_PACKET {
    struct MOBILE* o;
    struct CHANNEL* l;
    MOBILE_UPDATE update;
-   SCAFFOLD_SIZE x;
-   SCAFFOLD_SIZE y;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
 };
 
 #define MOBILE_RANDOM_SERIAL_LEN 64
@@ -139,13 +116,13 @@ struct MOBILE_UPDATE_PACKET {
 
 void mobile_free( struct MOBILE* o );
 void mobile_init(
-   struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
 );
 void mobile_load_local( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
-   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   GFX_COORD_PIXEL* x, GFX_COORD_PIXEL* y
 );
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
@@ -157,10 +134,10 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
 MOBILE_UPDATE
 mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE_SIGNED
+GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE_SIGNED
+GFX_COORD_PIXEL
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
 void mobile_speak( struct MOBILE* o, bstring speech );
 SCAFFOLD_INLINE

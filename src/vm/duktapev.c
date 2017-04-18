@@ -5,6 +5,7 @@
 
 #include "../graphics.h"
 #include "../mobile.h"
+#include "../proto.h"
 
 #define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
 #define OBJECT_VM( o ) (duk_context*)( o->vm )
