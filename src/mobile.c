@@ -68,7 +68,7 @@ void mobile_free( struct MOBILE* o ) {
 }
 
 void mobile_init(
-   struct MOBILE* o, const bstring mob_id, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
+   struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    int bstr_ret = 0;
 
@@ -212,9 +212,9 @@ void mobile_animate( struct MOBILE* o ) {
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
-   SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y
+   GFX_COORD_PIXEL* x, GFX_COORD_PIXEL* y
 ) {
-   SCAFFOLD_SIZE tiles_wide = 0;
+   GFX_COORD_TILE tiles_wide = 0;
 
    scaffold_check_null( o->sprites );
 
@@ -228,9 +228,9 @@ cleanup:
 }
 
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE_SIGNED
+GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
-   SCAFFOLD_SIZE_SIGNED steps_out = 0;
+   GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_x != o->x ) {
       if( TRUE != reverse ) {
          steps_out = o->steps_remaining;
@@ -242,9 +242,9 @@ mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
 }
 
 SCAFFOLD_INLINE
-SCAFFOLD_SIZE_SIGNED
+GFX_COORD_PIXEL
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
-   SCAFFOLD_SIZE_SIGNED steps_out = 0;
+   GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_y != o->y ) {
       if( TRUE != reverse ) {
          steps_out = o->steps_remaining;
@@ -256,12 +256,11 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
 }
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
-   SCAFFOLD_SIZE
+   GFX_COORD_PIXEL
       sprite_x,
       sprite_y,
       pix_x,
-      pix_y;
-   SCAFFOLD_SIZE_SIGNED
+      pix_y,
       steps_remaining_x,
       steps_remaining_y;
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
@@ -441,13 +440,13 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
  */
 static MOBILE_UPDATE mobile_calculate_terrain_result(
    struct TILEMAP* t, MOBILE_UPDATE update_in,
-   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+   GFX_COORD_TILE x_1, GFX_COORD_TILE y_1, GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
    MOBILE_UPDATE update_out = update_in;
    struct TILEMAP_TILE_DATA* tile_iter = NULL;
-   int8_t i, j;
+   uint8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
 
    if( MOBILE_UPDATE_NONE == update_in ) {
@@ -533,16 +532,16 @@ cleanup:
    return update_out;
 }
 
-static SCAFFOLD_SIZE mobile_calculate_terrain_steps_inc(
-   struct TILEMAP* t, SCAFFOLD_SIZE steps_inc_in,
-   SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
+   struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_in,
+   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
    struct TILEMAP_TILE_DATA* tile_iter = NULL;
-   int8_t i, j;
+   uint8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
-   SCAFFOLD_SIZE steps_inc_out = steps_inc_in;
+   GFX_COORD_PIXEL steps_inc_out = steps_inc_in;
 
    pos_end.x = x_2;
    pos_end.y = y_2;
@@ -580,14 +579,14 @@ cleanup:
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-static SCAFFOLD_SIZE mobile_calculate_terrain_sprite_height(
-   struct TILEMAP* t, SCAFFOLD_SIZE sprite_height_in,
-   SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
+   struct TILEMAP* t, GFX_COORD_PIXEL sprite_height_in,
+   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
    struct TILEMAP_TILE_DATA* tile_iter = NULL;
-   int8_t i, j;
+   uint8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
    SCAFFOLD_SIZE sprite_height_out = sprite_height_in;
 

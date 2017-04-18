@@ -136,7 +136,7 @@ static unsigned long crc32_tab[] = {
 /* Return a 32-bit CRC of the contents of the buffer. */
 
 static uint32_t hashmap_crc32( bstring string ) {
-   unsigned int i = 0;
+   SCAFFOLD_SIZE i = 0;
    uint32_t crc32val = 0;
    const unsigned char* s = NULL;
 
@@ -228,8 +228,8 @@ cleanup:
 #ifdef DEBUG
 
 static void hashmap_verify_size( struct HASHMAP* m ) {
-   SCAFFOLD_SIZE size_check = 0;
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED size_check = 0,
+      i;
 
    for( i = 0 ; i < m->table_size ; i++ ) {
       if( 0 == m->data[i].in_use ) {

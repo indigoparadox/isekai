@@ -272,7 +272,7 @@ void graphics_surface_cleanup( GRAPHICS* g ) {
    /* TODO: Free surface. */
 }
 
-void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) {
    if( 0 < w && 0 < h) {
       g->surface = create_bitmap( w, h );
    } else {
@@ -299,7 +299,7 @@ void graphics_shutdown( GRAPHICS* g ) {
 }
 
 void graphics_screen_scroll(
-   GRAPHICS* g, SCAFFOLD_SIZE offset_x, SCAFFOLD_SIZE offset_y
+   GRAPHICS* g, GFX_COORD_PIXEL offset_x, GFX_COORD_PIXEL offset_y
 ) {
    g->virtual_x += offset_x;
    g->virtual_y += offset_y;
@@ -497,8 +497,8 @@ cleanup:
 }
 
 void graphics_draw_rect(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h,
    GRAPHICS_COLOR color, BOOL filled
 ) {
    if( NULL == g->surface ) {
@@ -514,17 +514,17 @@ cleanup:
 }
 
 void graphics_draw_line(
-   GRAPHICS* g, SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
-   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2, GRAPHICS_COLOR color
+   GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
 ) {
    line( g->surface, x1, y1, x2, y2, color );
 }
 
 void graphics_draw_triangle(
    GRAPHICS* g,
-   SCAFFOLD_SIZE x1, SCAFFOLD_SIZE y1,
-   SCAFFOLD_SIZE x2, SCAFFOLD_SIZE y2,
-   SCAFFOLD_SIZE x3, SCAFFOLD_SIZE y3,
+   GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2,
+   GFX_COORD_PIXEL x3, GFX_COORD_PIXEL y3,
    GRAPHICS_COLOR color, BOOL filled
 ) {
    if( FALSE != filled ) {
@@ -537,8 +537,8 @@ void graphics_draw_triangle(
 }
 
 void graphics_draw_circle(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE radius, GRAPHICS_COLOR color, BOOL filled
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL radius, GRAPHICS_COLOR color, BOOL filled
 ) {
    if( FALSE != filled ){
       circlefill( g->surface, x, y, radius, color );
@@ -548,10 +548,10 @@ void graphics_draw_circle(
 }
 
 void graphics_draw_char(
-   GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,
+   GRAPHICS* g, GFX_COORD_PIXEL x_start, GFX_COORD_PIXEL y_start,
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 ) {
-   SCAFFOLD_SIZE_SIGNED x, y, bit;
+   GFX_COORD_PIXEL x, y, bit;
    uint8_t* font_char;
    float divisor;
 
@@ -580,8 +580,9 @@ void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx ) {
 }
 
 void graphics_blit_partial(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
-   SCAFFOLD_SIZE s_x, SCAFFOLD_SIZE s_y, SCAFFOLD_SIZE s_w, SCAFFOLD_SIZE s_h,
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL s_x, GFX_COORD_PIXEL s_y,
+   GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h,
    const GRAPHICS* src
 ) {
    if( NULL != g->surface && NULL != src->surface ) {

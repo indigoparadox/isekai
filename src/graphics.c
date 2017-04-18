@@ -190,13 +190,13 @@ void graphics_surface_free( GRAPHICS* g ) {
 }
 
 void graphics_blit(
-   GRAPHICS* g, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y,
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    const GRAPHICS* src
 ) {
    graphics_blit_partial( g, x, y, 0, 0, src->w, src->h, src );
 }
 
-void graphics_scale( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
+void graphics_scale( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) {
    GRAPHICS* temp = NULL;
    void* bmp_tmp = NULL;
 

@@ -312,7 +312,7 @@ void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg ) {
 
    /* TODO: A more elegant method of marking the backlog window dirty. */
    if( NULL != main_client ) {
-      bl = ui_window_by_id( &(main_client->ui->windows), &str_backlog_id );
+      bl = ui_window_by_id( main_client->ui, &str_backlog_id );
       if( NULL != bl ) {
          bl->dirty = TRUE;
       }

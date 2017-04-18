@@ -337,17 +337,6 @@ void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void
    return NULL;
 }
 
-#if 0
-void* callback_search_channels_tileset_path( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct CHANNEL* l = (struct CHANNEL*)iter;
-   struct TILEMAP* t = &(l->tilemap);
-   if( TRUE == hashmap_contains_key( &(t->tilesets), (bstring)arg ) ) {
-      return l;
-   }
-   return NULL;
-}
-#endif // 0
-
 void* callback_search_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)iter;
    bstring s_key = (bstring)arg;
