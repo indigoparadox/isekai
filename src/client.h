@@ -57,7 +57,7 @@ struct CLIENT {
 #define CLIENT_BUFFER_ALLOC 256
 
 #define client_connected( c ) \
-   ((c)->link.socket > 0 && TRUE == (c)->running)
+   (connection_connected( &(c->link) ) && TRUE == (c)->running)
 
 #define client_new( c, client_side ) \
     c = (struct CLIENT*)calloc( 1, sizeof( struct CLIENT ) ); \

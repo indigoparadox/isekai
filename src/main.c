@@ -399,7 +399,7 @@ int main( int argc, char** argv ) {
    ui = ui_get_local();
    backlog_init();
 
-   connection_init();
+   connection_setup();
    scaffold_check_nonzero( scaffold_error );
 
 #endif /* ENABLE_LOCAL_CLIENT */

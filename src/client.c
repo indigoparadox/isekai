@@ -45,7 +45,8 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    ref_init( &(c->link.refcount), client_cleanup );
 
    scaffold_assert( FALSE == c->running );
-   scaffold_assert( 0 == c->link.socket );
+
+   connection_init( &(c->link) );
 
 #ifdef ENABLE_LOCAL_CLIENT
    c->client_side = client_side;
@@ -226,7 +227,7 @@ void client_stop( struct CLIENT* c ) {
 
    scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
-   if( 0 < c->link.socket ) {
+   if( FALSE != connection_connected( &(c->link) ) ) {
       scaffold_print_info( &module, "Client connection stopping...\n" );
       connection_cleanup( &(c->link) );
    }
@@ -279,7 +280,7 @@ void client_stop( struct CLIENT* c ) {
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   scaffold_assert( 0 == c->link.socket );
+   scaffold_assert( FALSE == connection_connected( &(c->link) ) );
    c->running = FALSE;
 
 cleanup:
@@ -417,8 +418,7 @@ void client_send_file(
    struct CHUNKER* h = NULL;
 
    scaffold_print_debug(
-      &module, "Sending file to client %d: %s\n",
-      c->link.socket, bdata( filepath )
+      &module, "Sending file to client %p: %s\n", c, bdata( filepath )
    );
 
    /* Begin transmitting tilemap. */

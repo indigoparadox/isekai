@@ -40,9 +40,18 @@
 #include "ipc/syncbuff.h"
 #endif /* USE_SYNCBUFF */
 
+#ifdef USE_MBED_TLS
+mbedtls_entropy_context entropy;
+mbedtls_ctr_drbg_context ctr_drbg;
+#endif /* USE_MBED_TLS */
+
 /** \brief Perform any system-wide initialization required by connections.
  */
-void connection_init() {
+void connection_setup() {
+#ifdef USE_MBED_TLS
+   int mbed_tls_ret;
+   unsigned char* pers = NULL;
+#endif /* USE_MBED_TLS */
 #if defined( _WIN32 ) && defined( USE_NETWORK )
    int result = 0;
    WSADATA wsa_data = { 0 };
@@ -56,16 +65,57 @@ void connection_init() {
       scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
    }
 #endif /* _WIN32 && USE_NETWORK */
+
+cleanup:
+   return;
+}
+
+void connection_init( CONNECTION* n ) {
+#ifdef USE_MBED_TLS
+   mbedtls_net_init( &(n->ssl_net) );
+   mbedtls_ssl_init( &(n->ssl) );
+   mbedtls_ssl_config_init( &(n->ssl_conf) );
+   /* mbedtls_x509_crt_init( &cacert );
+   mbedtls_ctr_drbg_init( &ctr_drbg ); */
+
+   /*
+   mbedtls_entropy_init( &entropy );
+   if( (mbed_tls_ret = mbedtls_ctr_drbg_seed(
+      &ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char*)pers,
+      strlen( pers ) ) ) != 0
+   ) {
+      scaffold_print_error(
+         &module, "mbedtls_ctr_drbg_seed returned: %d\n", mbed_tls_ret
+      );
+      goto cleanup;
+   }
+   */
+#endif /* USE_MBED_TLS */
 }
 
 static void connection_cleanup_socket( CONNECTION* n ) {
 #ifdef USE_NETWORK
-   if( 0 < n->socket ) {
+   if( FALSE != connection_connected( n ) ) {
+#ifdef USE_MBED_TLS
+      mbedtls_net_free( &(n->ssl_net) );
+#else
       close( n->socket );
       n->socket = 0;
+#endif /* USE_MBED_TLS */
    }
 #endif /* USE_NETWORK */
-   n->socket = 0;
+}
+
+BOOL connection_connected( CONNECTION* n ) {
+#ifdef USE_MBED_TLS
+#error TODO
+#else
+   if( 0 < n->socket ) {
+      return TRUE;
+   } else {
+      return FALSE;
+   }
+#endif /* USE_MBED_TLS */
 }
 
 BOOL connection_register_incoming( CONNECTION* n_server, CONNECTION* n ) {
@@ -128,7 +178,6 @@ cleanup:
 
 BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    BOOL listening = FALSE;
-
 #if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
    int connect_result;
 #ifdef _WIN32
@@ -137,6 +186,14 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
 #endif /* USE_NETWORK || USE_LEGACY_NETWORK */
 
 #ifdef USE_NETWORK
+#ifdef USE_MBED_TLS
+   bstring b_port = NULL;
+
+   b_port = bformat( "%d", port );
+   scaffold_check_null( b_port );
+
+   mbedtls_net_bind( &(n->ssl_net), "0.0.0.0", bdata( b_port ), MBEDTLS_NET_PROTO_TCP )
+#else
    struct sockaddr_in address;
 
    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
@@ -157,6 +214,7 @@ BOOL connection_listen( CONNECTION* n, uint16_t port ) {
    connect_result = bind(
       n->socket, (struct sockaddr*)&address, sizeof( address )
    );
+#endif /* USE_MBED_TLS */
    scaffold_check_negative( connect_result );
 
    /* If we could bind the port, then launch the serving connection. */
@@ -184,6 +242,22 @@ cleanup:
 
 BOOL connection_connect( CONNECTION* n, const bstring server, uint16_t port ) {
    BOOL connected = FALSE;
+#ifdef USE_MBED_TLS
+   int mbed_tls_ret;
+   bstring b_port = NULL;
+
+   b_port = bformat( "%d", port );
+
+   if( (mbed_tls_ret = mbedtls_net_connect(
+      &(n->ssl_net), bdata( server ), bdata( b_port ), MBEDTLS_NET_PROTO_TCP
+   )) != 0 ) {
+      scaffold_print_error( &module, "mbedtls_net_connect returned: %d", mbed_tls_ret );
+      goto cleanup;
+   }
+
+cleanup:
+   bdestroy( b_port );
+#else
 
 #if defined( USE_NETWORK ) || defined( USE_LEGACY_NETWORK )
    int connect_result;
@@ -282,6 +356,8 @@ cleanup:
 #else
 #error No IPC defined!
 #endif /* USE_NETWORK */
+
+#endif /* USE_MBED_TLS */
 
    return connected;
 }
