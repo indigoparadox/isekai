@@ -525,6 +525,33 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    ) {
       tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
    }
+
+
+   /* Draw masks. */
+   if( twindow->width < (GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) ) {
+      graphics_draw_rect(
+         twindow->g,
+         twindow->width * GRAPHICS_SPRITE_WIDTH,
+         0,
+         ((GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) - twindow->width)
+            * GRAPHICS_SPRITE_WIDTH,
+         GRAPHICS_SCREEN_HEIGHT,
+         GRAPHICS_COLOR_CHARCOAL,
+         TRUE
+      );
+   }
+   if( twindow->height < (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) ) {
+      graphics_draw_rect(
+         twindow->g,
+         0,
+         twindow->height * GRAPHICS_SPRITE_HEIGHT,
+         GRAPHICS_SCREEN_WIDTH,
+         ((GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - twindow->height)
+            * GRAPHICS_SPRITE_HEIGHT,
+         GRAPHICS_COLOR_CHARCOAL,
+         TRUE
+      );
+   }
 }
 
 /** \brief Determine if the following coordinate is inside the area that can be
