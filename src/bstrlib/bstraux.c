@@ -764,13 +764,13 @@ bstring bYEncode (const_bstring src) {
  */
 SCAFFOLD_SIZE
 b_yencode_raw( BYTE* src, SCAFFOLD_SIZE src_len, bstring out ) {
-   int i;
+   SCAFFOLD_SIZE i;
    unsigned char c;
    int bstr_ret;
 
 	scaffold_check_null( out );
    scaffold_check_null( src );
-   if( 0 > src_len ) {
+   if( 0 == src_len ) {
       goto cleanup;
 	}
 

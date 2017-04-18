@@ -245,28 +245,6 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
    BYTE* setdata_buffer = NULL;
    bstring setdata_path = NULL;
 
-   #if 0
-   {
-   BYTE* mapdata_buffer = NULL;
-   int bstr_retval;
-   SCAFFOLD_SIZE_SIGNED bytes_read = 0;
-   SCAFFOLD_SIZE mapdata_size = 0;
-
-   scaffold_print_info(
-      &module, "Loading tilemap for channel: %s\n", bdata( l->name )
-   );
-   mapdata_filename = bstrcpy( l->name );
-   scaffold_check_null( mapdata_filename );
-   bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
-
-   mapdata_path = bstrcpy( &str_server_data_path );
-   scaffold_check_null( mapdata_path );
-
-   scaffold_join_path( mapdata_path, mapdata_filename );
-   scaffold_check_nonzero( scaffold_error );
-
-   #endif // 0
-
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
    scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );

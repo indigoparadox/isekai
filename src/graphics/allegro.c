@@ -596,18 +596,3 @@ void graphics_sleep( uint16_t milliseconds ) {
 uint32_t graphics_get_ticks() {
    return allegro_ticks;
 }
-
-#if 0
-void graphics_wait_for_fps_timer() {
-   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
-   if( GRAPHICS_TIMER_FPS > (allegro_ticks - graphics_time) ) {
-      /* Subtract the time since graphics_Start_fps_timer() was last called
-       * from the nominal delay required to maintain our FPS.
-       */
-      //SDL_Delay( graphics_fps_delay  - (SDL_GetTicks() - graphics_time) );
-      rest( 10000.0f / ((graphics_fps_delay) - (allegro_ticks - graphics_time)) );
-   }
-   scaffold_print_debug( &module, "%d\n", (allegro_ticks - graphics_time) );
-
-}
-#endif

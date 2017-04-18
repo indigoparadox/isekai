@@ -366,9 +366,6 @@ static void* tilemap_layer_draw_tile(
    scaffold_check_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
-#if 0
-      hashmap_iterate( &(t->tilesets), callback_get_tileset, twindow->local_client );
-#endif // 0
       goto cleanup;
    }
 
