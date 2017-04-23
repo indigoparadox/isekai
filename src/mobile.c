@@ -94,6 +94,7 @@ void mobile_init(
    hashmap_init( &(o->script_defs) );
    hashmap_init( &(o->vm_scripts) );
    hashmap_init( &(o->vm_globals) );
+   vector_init( &(o->items) );
 
    o->x = x;
    o->prev_x = x;
@@ -829,3 +830,7 @@ BOOL mobile_is_occupied( struct MOBILE* o ) {
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */
+
+void mobile_add_item( struct MOBILE* o, struct ITEM* e ) {
+   vector_add( &(o->items), e );
+}
