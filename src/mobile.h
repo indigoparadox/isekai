@@ -75,6 +75,7 @@ struct MOBILE {
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
    struct MOBILE_ANI_DEF* current_animation;
+   struct VECTOR items;
    BOOL initialized;
 #ifdef USE_TURNS
    SCAFFOLD_SIZE vm_tick_prev;
