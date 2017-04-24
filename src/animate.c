@@ -45,17 +45,21 @@ static struct ANIMATION_FRAME* animate_new_last_frame(
 
    new_frame = scaffold_alloc( 1, struct ANIMATION_FRAME );
    new_frame->next_frame = NULL;
-   new_frame->x = target->virtual_x;
-   new_frame->y = target->virtual_y;
    new_frame->duration = ms_per_frame;
-   new_frame->width = target->w;
-   new_frame->height = target->h;
 
    last_frame = animate_get_last_frame( a, target );
 
    if( NULL != last_frame ) {
+      new_frame->x = last_frame->x;
+      new_frame->y = last_frame->y;
+      new_frame->width = last_frame->width;
+      new_frame->height = last_frame->height;
       last_frame->next_frame = new_frame;
    } else {
+      new_frame->x = target->virtual_x;
+      new_frame->y = target->virtual_y;
+      new_frame->width = target->w;
+      new_frame->height = target->h;
       a->first_frame = new_frame;
       a->current_frame = new_frame;
    }
@@ -75,6 +79,7 @@ void animate_create_movement(
    /* TODO: Copy graphic target. */
 
    a->blocking = block;
+   a->indefinite = FALSE;
 
    last_frame = animate_get_last_frame( a, target );
    new_frame = animate_new_last_frame( a, target, ms_per_frame );
@@ -129,6 +134,7 @@ void animate_create_resize(
    a->target = graphics_copy( target );
 
    a->blocking = block;
+   a->indefinite = FALSE;
 
    last_frame = animate_get_last_frame( a, target );
    new_frame = animate_new_last_frame( a, target, ms_per_frame );
@@ -142,17 +148,17 @@ void animate_create_resize(
    }
 
    if( last_frame->width < end_w ) {
-      last_frame->next_frame->width += inc;
+      new_frame->width += inc;
    } else if( last_frame->width > end_w ) {
-      last_frame->next_frame->width -= inc;
+      new_frame->width -= inc;
    } else {
       width_adjusted = FALSE;
    }
 
    if( last_frame->height < end_h ) {
-      last_frame->next_frame->height += inc;
+      new_frame->height += inc;
    } else if( last_frame->height > end_h ) {
-      last_frame->next_frame->height -= inc;
+      new_frame->height -= inc;
    } else {
       if( FALSE == width_adjusted ) {
          /* If neither width nor height was adjusted, this is pointless. */
@@ -175,17 +181,46 @@ void animate_add_animation( struct ANIMATION* a, bstring key ) {
    hashmap_put( &animations, key, a );
 }
 
-void animate_cancel_animation( struct ANIMATION** a, bstring key ) {
+struct ANIMATION* animate_get_animation( bstring key ) {
+   return hashmap_get( &animations, key );
+}
+
+void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
    BOOL removed;
-   *a = hashmap_get( &animations, key );
-   if( NULL != *a ) {
+   struct ANIMATION* a = NULL;
+
+   a = hashmap_get( &animations, key );
+
+   if( NULL != a ) {
       removed = hashmap_remove( &animations, key );
       scaffold_assert( TRUE == removed );
+      if( NULL != a_out ) {
+         *a_out = a;
+      } else {
+         /* Just free it. */
+         animate_free_animation( &a );
+      }
    }
+}
+
+static void animate_free_animation_frame( struct ANIMATION_FRAME** frame ) {
+   struct ANIMATION_FRAME* next_frame = (*frame)->next_frame;
+
+   scaffold_free( *frame );
+
+   if( NULL != next_frame ) {
+      animate_free_animation_frame( &next_frame );
+   }
+
+cleanup:
+   next_frame = NULL;
+   return;
 }
 
 void animate_free_animation( struct ANIMATION** a ) {
    if( NULL != *a ) {
+      graphics_surface_free( (*a)->target );
+      animate_free_animation_frame( &((*a)->first_frame) );
       scaffold_free( *a );
       *a = NULL;
    }
@@ -196,24 +231,32 @@ BOOL animate_cyc_ani_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    BOOL remove = FALSE;
+   struct ANIMATION_FRAME* current_frame = NULL;
 
    if( TRUE == a->global ) {
       /* Leave this for the global cycler. */
       goto cleanup;
    }
 
-   if( NULL == a->current_frame ) {
-      /* The animation has expired. */
-      remove = TRUE;
-      goto cleanup;
-   }
+   current_frame = a->current_frame;
 
    /* TODO: Use actual milliseconds. */
-   if( a->current_frame->current < a->current_frame->duration ) {
-      a->current_frame->current++;
+   if( current_frame->current < current_frame->duration ) {
+      current_frame->current++;
    } else {
       /* The frame has expired. */
-      a->current_frame = a->current_frame->next_frame;
+      a->current_frame = current_frame->next_frame;
+   }
+
+   if( NULL == a->current_frame && FALSE == a->indefinite ) {
+      /* The animation has expired. */
+      scaffold_print_debug(
+         &module, "Animation finished: %b", idx->value.key
+      );
+      remove = TRUE;
+      goto cleanup;
+   } else if( NULL == a->current_frame && FALSE != a->indefinite ) {
+      a->current_frame = a->first_frame;
    }
 
 cleanup:
@@ -228,11 +271,24 @@ static
 void* animate_draw_ani_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   GFX_COORD_PIXEL
+      centered_x,
+      centered_y,
+      x_adjustment,
+      y_adjustment,
+      target_w = a->target->w,
+      target_h = a->target->h;
+
+   x_adjustment = (target_w / 2) - (a->current_frame->width / 2);
+   y_adjustment = (target_h / 2) - (a->current_frame->height / 2);
+
+   centered_x = a->current_frame->x + x_adjustment;
+   centered_y = a->current_frame->y + y_adjustment;
 
    graphics_blit_stretch(
       twindow->g,
-      a->current_frame->x,
-      a->current_frame->y,
+      centered_x,
+      centered_y,
       a->current_frame->width,
       a->current_frame->height,
       a->target

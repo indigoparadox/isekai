@@ -88,6 +88,9 @@ static double calc_fps( int newtick ) {
 static BOOL loop_game() {
    BOOL keep_going = TRUE;
    int i;
+   struct ANIMATION* a = NULL;
+   GRAPHICS* throbber = NULL;
+   GRAPHICS_RECT r;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
@@ -124,6 +127,27 @@ static BOOL loop_game() {
       NULL == main_client->puppet) &&
       TRUE == main_client->running /* We're starting, not stopping. */
    ) {
+      /* Make sure the loading animation is running. */
+      if( NULL == animate_get_animation( &str_loading ) ) {
+         scaffold_print_debug( &module, "Creating loading animation...\n" );
+         graphics_surface_new( throbber, 0, 0, 32, 32 );
+         graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_PURPLE, TRUE );
+
+         graphics_measure_text( g_screen, &r, GRAPHICS_FONT_SIZE_16, &str_loading );
+
+         throbber->virtual_x = (GRAPHICS_SCREEN_WIDTH / 2) - (r.w / 2) - 40;
+         throbber->virtual_y = (GRAPHICS_SCREEN_HEIGHT / 2) - 8;
+
+         a = scaffold_alloc( 1, struct ANIMATION );
+         animate_create_resize( a, throbber, 16, 16, 1, 1, FALSE );
+         a->indefinite = TRUE;
+
+         graphics_surface_free( throbber );
+         throbber = NULL;
+
+         animate_add_animation( a, &str_loading );
+      }
+
       graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
       graphics_draw_text(
          g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
@@ -131,6 +155,11 @@ static BOOL loop_game() {
          GRAPHICS_FONT_SIZE_16, &str_loading, FALSE
       );
       ui_draw( ui, g_screen );
+
+      /* Animations are drawn on top of everything. */
+      animate_cycle_animations( twindow );
+      animate_draw_animations( twindow );
+
       goto cleanup;
 
    } else if( TRUE != main_client->running ) {
@@ -144,6 +173,9 @@ static BOOL loop_game() {
          twindow, main_client->puppet->x, main_client->puppet->y
       );
    }
+
+   /* If we're this far, we must be done loading! */
+   animate_cancel_animation( NULL, &str_loading );
 
    /* Client drawing stuff after this. */
    scaffold_set_client();
