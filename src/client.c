@@ -793,7 +793,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
       (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
    ) {
       /* TODO: Handle limited input while loading. */
-      clear_keybuf();
+      input_clear_buffer( input );
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
       puppet = c->puppet;
