@@ -374,6 +374,36 @@ void graphics_blit_partial(
    SDL_BlitSurface( src->surface, &src_rect, g->surface, &dest_rect );
 }
 
+void graphics_blit_stretch(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
+) {
+   SDL_Rect src_rect, dest_rect;
+
+   if( w == 0 || h == 0 ) {
+      goto cleanup;
+   }
+
+   /* Switch the surfaces so temp can be disposed below. */
+   if( NULL != g->surface && NULL != src->surface ) {
+
+      src_rect.w = src->w;
+      src_rect.h = src->h;
+      src_rect.x = 0;
+      src_rect.y = 0;
+
+      dest_rect.w = w;
+      dest_rect.h = h;
+      dest_rect.x = x;
+      dest_rect.y = y;
+
+      SDL_SoftStretch( src->surface, &src_rect, g->surface, &dest_rect );
+   }
+
+cleanup:
+   return;
+}
+
 void graphics_sleep( uint16_t milliseconds ) {
    SDL_Delay( milliseconds );
 }

@@ -51,5 +51,9 @@ void input_get_event( struct INPUT* input ) {
    }
 }
 
+void input_clear_buffer( struct INPUT* input ) {
+   clear_keybuf();
+}
+
 void input_shutdown( struct INPUT* input ) {
 }
