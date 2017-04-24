@@ -142,18 +142,26 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
 }
 
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+   SCAFFOLD_SIZE serial = 0;
    scaffold_assert_client();
+   if( NULL != update->target ) {
+      serial = update->target->serial;
+   }
    client_printf(
-      c, "GU %b %d %d",
-      update->l->name, update->o->serial, update->update
+      c, "GU %b %d %d %d %d %d",
+      update->l->name, update->o->serial, update->update, update->x, update->y, serial
    );
 }
 
 void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+   SCAFFOLD_SIZE serial = 0;
    scaffold_assert_server();
+   if( NULL != update->target ) {
+      serial = update->target->serial;
+   }
    client_printf(
-      c, "GU %b %d %d",
-      update->l->name, update->o->serial, update->update
+      c, "GU %b %d %d %d %d %d",
+      update->l->name, update->o->serial, update->update, update->x, update->y, serial
    );
 }
 
@@ -687,8 +695,12 @@ static void irc_server_gameupdate(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* serial_c,
-      * update_c;
-   SCAFFOLD_SIZE serial;
+      * target_c,
+      * update_c,
+      * x_c,
+      * y_c;
+   SCAFFOLD_SIZE serial,
+      target_serial;
    struct MOBILE_UPDATE_PACKET update;
 
    update.l = client_get_channel_by_name( c, args->entry[1] );
@@ -704,6 +716,22 @@ static void irc_server_gameupdate(
    update_c = bdata( args->entry[3] );
    scaffold_check_null( update_c );
    update.update = (MOBILE_UPDATE)atoi( update_c );
+
+   x_c = bdata( args->entry[4] );
+   scaffold_check_null( x_c );
+   update.x = atoi( x_c );
+
+   y_c = bdata( args->entry[5] );
+   scaffold_check_null( y_c );
+   update.y = atoi( y_c );
+
+   target_c = bdata( args->entry[6] );
+   scaffold_check_null( target_c );
+   target_serial = atoi( target_c );
+
+   update.target =
+      (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
+   /* No NULL check. If it's NULL, it's NULL. */
 
    if( c == update.o->owner ) {
       update.update = mobile_apply_update( &update, TRUE );
@@ -757,8 +785,12 @@ static void irc_client_gu(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* serial_c,
-      * update_c;
-   SCAFFOLD_SIZE serial;
+      * target_c,
+      * update_c,
+      * x_c,
+      * y_c;
+   SCAFFOLD_SIZE serial,
+      target_serial;
    struct MOBILE_UPDATE_PACKET update;
 
    update.l = client_get_channel_by_name( c, args->entry[1] );
@@ -774,6 +806,22 @@ static void irc_client_gu(
    update_c = bdata( args->entry[3] );
    scaffold_check_null( update_c );
    update.update = (MOBILE_UPDATE)atoi( update_c );
+
+   x_c = bdata( args->entry[4] );
+   scaffold_check_null( x_c );
+   update.x = atoi( x_c );
+
+   y_c = bdata( args->entry[5] );
+   scaffold_check_null( y_c );
+   update.y = atoi( y_c );
+
+   target_c = bdata( args->entry[6] );
+   scaffold_check_null( target_c );
+   target_serial = atoi( target_c );
+
+   update.target =
+      (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
+   /* No NULL check. If it's NULL, it's NULL. */
 
    /* The client always trusts the server. */
    update.update = mobile_apply_update( &update, FALSE );

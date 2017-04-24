@@ -780,10 +780,6 @@ reset_buffer:
    return retval;
 }
 
-#define client_key_update( up_send ) \
-   update.update = up_send; \
-   proto_client_send_update( c, &update )
-
 static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
@@ -797,6 +793,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
       (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
    ) {
       /* TODO: Handle limited input while loading. */
+      clear_keybuf();
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
       puppet = c->puppet;
@@ -809,11 +806,39 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    /* If no windows need input, then move on to game input. */
    switch( input->character ) {
    case 'q': proto_client_stop( c ); return TRUE;
-   case 'w': client_key_update( MOBILE_UPDATE_MOVEUP ); return TRUE;
-   case 'a': client_key_update( MOBILE_UPDATE_MOVELEFT ); return TRUE;
-   case 's': client_key_update( MOBILE_UPDATE_MOVEDOWN ); return TRUE;
-   case 'd': client_key_update( MOBILE_UPDATE_MOVERIGHT ); return TRUE;
-   case ' ': client_key_update( MOBILE_UPDATE_ATTACK ); return TRUE;
+   case 'w':
+      update.update = MOBILE_UPDATE_MOVEUP;
+      update.x = c->puppet->x;
+      update.y = c->puppet->y - 1;
+      proto_client_send_update( c, &update );
+      return TRUE;
+
+   case 'a':
+      update.update = MOBILE_UPDATE_MOVELEFT;
+      update.x = c->puppet->x - 1;
+      update.y = c->puppet->y;
+      proto_client_send_update( c, &update );
+      return TRUE;
+
+   case 's':
+      update.update = MOBILE_UPDATE_MOVEDOWN;
+      update.x = c->puppet->x;
+      update.y = c->puppet->y + 1;
+      proto_client_send_update( c, &update );
+      return TRUE;
+
+   case 'd':
+      update.update = MOBILE_UPDATE_MOVERIGHT;
+      update.x = c->puppet->x + 1;
+      update.y = c->puppet->y;
+      proto_client_send_update( c, &update );
+      return TRUE;
+
+   case ' ':
+      update.update = MOBILE_UPDATE_ATTACK;
+      /* TODO: Get attack target. */
+      proto_client_send_update( c, &update );
+      return TRUE;
    case '\\':
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
