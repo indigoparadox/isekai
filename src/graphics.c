@@ -199,7 +199,7 @@ void graphics_blit(
 GRAPHICS* graphics_copy( GRAPHICS* g ) {
    GRAPHICS* g_out = NULL;
 
-   graphics_surface_new( g, g->virtual_x, g->virtual_y, g->w, g->h );
+   graphics_surface_new( g_out, g->virtual_x, g->virtual_y, g->w, g->h );
 
    graphics_blit( g_out, 0, 0, g );
 

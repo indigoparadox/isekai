@@ -20,6 +20,7 @@ struct ANIMATION {
    struct ANIMATION_FRAME* first_frame;
    struct ANIMATION_FRAME* current_frame;
    BOOL blocking;
+   BOOL indefinite;
    GRAPHICS* target;
    BOOL global; /* If TRUE, update frame current centrally. */
 };
@@ -44,6 +45,7 @@ void animate_draw_animations( struct GRAPHICS_TILE_WINDOW* twindow );
 BOOL animate_is_blocking();
 
 #ifdef ANIMATE_C
+SCAFFOLD_MODULE( "animate.c" );
 static struct HASHMAP animations;
 #else
 
