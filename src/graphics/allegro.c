@@ -590,6 +590,25 @@ void graphics_blit_partial(
    }
 }
 
+void graphics_blit_stretch(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
+) {
+   if( w == 0 || h == 0 ) {
+      goto cleanup;
+   }
+
+   /* Switch the surfaces so temp can be disposed below. */
+   if( NULL != g->surface && NULL != src->surface ) {
+      masked_stretch_blit(
+         src->surface, g->surface, 0, 0, src->w, src->h, x, y, w, h
+      );
+   }
+
+cleanup:
+   return;
+}
+
 void graphics_sleep( uint16_t milliseconds ) {
    rest( milliseconds );
 }

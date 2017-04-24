@@ -146,7 +146,7 @@ void graphics_draw_char(
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 );
 void graphics_transition( GRAPHICS* g, GRAPHICS_TRANSIT_FX fx );
-void graphics_scale( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h );
+GRAPHICS* graphics_copy( GRAPHICS* g );
 void graphics_blit(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    const GRAPHICS* src
@@ -154,6 +154,10 @@ void graphics_blit(
 void graphics_blit_partial(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GFX_COORD_PIXEL s_x,
    GFX_COORD_PIXEL s_y, GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h, const GRAPHICS* src
+);
+void graphics_blit_stretch(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
 );
 void graphics_sleep( uint16_t milliseconds );
 uint32_t graphics_get_ticks();
