@@ -46,6 +46,7 @@ static struct ANIMATION_FRAME* animate_new_last_frame(
    new_frame = scaffold_alloc( 1, struct ANIMATION_FRAME );
    new_frame->next_frame = NULL;
    new_frame->duration = ms_per_frame;
+   new_frame->flood_color = GRAPHICS_COLOR_TRANSPARENT;
 
    last_frame = animate_get_last_frame( a, target );
 
@@ -176,6 +177,46 @@ cleanup:
    return;
 }
 
+void animate_create_blink_color(
+   struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
+   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, BOOL block
+) {
+   struct ANIMATION_FRAME* last_frame = NULL,
+      * new_frame = NULL;
+
+   /* TODO: Copy graphic target. */
+
+   a->blocking = block;
+   a->indefinite = FALSE;
+
+   last_frame = animate_get_last_frame( a, target );
+   new_frame = animate_new_last_frame( a, target, ms_per_frame );
+
+   if( NULL == last_frame ) {
+      /* This must be the first frame. Assume a rep is a cycle of 1 on/1 off. */
+      reps *= 2;
+
+      /* We need at least two frames, so recurse and finish. */
+      animate_create_blink_color(
+         a, target, end_color, ms_per_frame, reps, inc, block
+      );
+      goto cleanup;
+   }
+
+   if( 0 != reps % 2 ) {
+      last_frame->flood_color = end_color;
+   }
+
+   if( 0 < reps ) {
+      animate_create_blink_color(
+         a, target, end_color, ms_per_frame, reps, inc, block
+      );
+   }
+
+cleanup:
+   return;
+}
+
 void animate_add_animation( struct ANIMATION* a, bstring key ) {
    /* TODO: What if key exists? */
    hashmap_put( &animations, key, a );
@@ -284,6 +325,8 @@ void* animate_draw_ani_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 
    centered_x = a->current_frame->x + x_adjustment;
    centered_y = a->current_frame->y + y_adjustment;
+
+   /* TODO: Blit fill color masked with shape. */
 
    graphics_blit_stretch(
       twindow->g,
