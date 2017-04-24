@@ -131,7 +131,7 @@ static BOOL loop_game() {
       if( NULL == animate_get_animation( &str_loading ) ) {
          scaffold_print_debug( &module, "Creating loading animation...\n" );
          graphics_surface_new( throbber, 0, 0, 32, 32 );
-         graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_PURPLE, TRUE );
+         graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_WHITE, TRUE );
 
          graphics_measure_text( g_screen, &r, GRAPHICS_FONT_SIZE_16, &str_loading );
 
