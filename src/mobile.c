@@ -527,7 +527,8 @@ static MOBILE_UPDATE mobile_calculate_mobile_result(
 
    if( NULL != o_test ) {
       /* TODO: Default to something else for friendlies? */
-      update_out = MOBILE_UPDATE_ATTACK;
+      /* update_out = MOBILE_UPDATE_ATTACK; */
+      update_out = MOBILE_UPDATE_NONE;
    }
 
 cleanup:
@@ -644,44 +645,21 @@ MOBILE_UPDATE mobile_apply_update(
    struct CHANNEL* l = update->l;
    bstring animation_key = NULL;
 
-   /* TODO: Collision detection. */
-   if( TRUE == instant ) {
-      /* Figure out the desired coordinates given the given update. */
-      switch( update->update ) {
-      case MOBILE_UPDATE_MOVEUP:
-         update->x = o->x;
-         update->y = o->y - 1;
-         break;
-      case MOBILE_UPDATE_MOVEDOWN:
-         update->x = o->x;
-         update->y = o->y + 1;
-         break;
-      case MOBILE_UPDATE_MOVELEFT:
-         update->x = o->x - 1;
-         update->y = o->y;
-         break;
-      case MOBILE_UPDATE_MOVERIGHT:
-         update->x = o->x + 1;
-         update->y = o->y;
-         break;
-
-      case MOBILE_UPDATE_NONE:
-         break;
-      }
-
-      update->update =
-         mobile_calculate_terrain_result( &(l->tilemap), update->update,
-            o->x, o->y, update->x, update->y );
-
-      update->update =
-         mobile_calculate_mobile_result( l, update->update,
-            o->x, o->y, update->x, update->y );
-   }
-
    switch( update->update ) {
    case MOBILE_UPDATE_MOVEUP:
+      if( (update->x != o->x || update->y != o->y - 1) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
       o->prev_x = o->x; /* Forceful reset. */
-      o->y--;
+      o->y = update->y;
+      o->x = update->x;
       o->facing = MOBILE_FACING_UP;
       mobile_set_animation_facing( o, animation_key, MOBILE_FACING_UP );
       o->steps_inc =
@@ -696,8 +674,19 @@ MOBILE_UPDATE mobile_apply_update(
       break;
 
    case MOBILE_UPDATE_MOVEDOWN:
+      if( (update->x != o->x || update->y != o->y + 1) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
       o->prev_x = o->x; /* Forceful reset. */
-      o->y++;
+      o->y = update->y;
+      o->x = update->x;
       o->facing = MOBILE_FACING_DOWN;
       mobile_set_animation_facing( o, animation_key, MOBILE_FACING_DOWN );
       o->steps_inc =
@@ -712,8 +701,20 @@ MOBILE_UPDATE mobile_apply_update(
       break;
 
    case MOBILE_UPDATE_MOVELEFT:
+      if(
+         (update->x != o->x - 1 || update->y != o->y) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
       o->prev_y = o->y; /* Forceful reset. */
-      o->x--;
+      o->y = update->y;
+      o->x = update->x;
       o->facing = MOBILE_FACING_LEFT;
       mobile_set_animation_facing( o, animation_key, MOBILE_FACING_LEFT );
       o->steps_inc =
@@ -728,8 +729,20 @@ MOBILE_UPDATE mobile_apply_update(
       break;
 
    case MOBILE_UPDATE_MOVERIGHT:
+      if(
+         (update->x != o->x + 1 || update->y != o->y) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
       o->prev_y = o->y; /* Forceful reset. */
-      o->x++;
+      o->y = update->y;
+      o->x = update->x;
       o->facing = MOBILE_FACING_RIGHT;
       mobile_set_animation_facing( o, animation_key, MOBILE_FACING_RIGHT );
       o->steps_inc =

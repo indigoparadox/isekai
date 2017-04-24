@@ -88,6 +88,7 @@ struct MOBILE_UPDATE_PACKET {
    MOBILE_UPDATE update;
    GFX_COORD_TILE x;
    GFX_COORD_TILE y;
+   struct MOBILE* target;
 };
 
 #define MOBILE_RANDOM_SERIAL_LEN 64

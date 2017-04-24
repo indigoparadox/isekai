@@ -145,6 +145,29 @@ static duk_ret_t vm_update( duk_context* vm ) {
       /* TODO: Call mobile_walk(); */
       /* TODO: Verification that script has permission? */
       update.update = action;
+
+      switch( action ) {
+      case MOBILE_UPDATE_MOVEUP:
+         update.x = o->x;
+         update.y = o->y - 1;
+         break;
+
+      case MOBILE_UPDATE_MOVEDOWN:
+         update.x = o->x;
+         update.y = o->y + 1;
+         break;
+
+      case MOBILE_UPDATE_MOVELEFT:
+         update.x = o->x - 1;
+         update.y = o->y;
+         break;
+
+      case MOBILE_UPDATE_MOVERIGHT:
+         update.x = o->x + 1;
+         update.y = o->y;
+         break;
+      }
+
       update.l = o->channel;
       update.o = o;
 
