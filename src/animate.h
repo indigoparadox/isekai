@@ -13,6 +13,7 @@ struct ANIMATION_FRAME {
    GFX_COORD_PIXEL y;
    GFX_COORD_PIXEL width;
    GFX_COORD_PIXEL height;
+   GRAPHICS_COLOR flood_color;
    struct ANIMATION_FRAME* next_frame;
 };
 
@@ -37,7 +38,12 @@ void animate_create_resize(
    GFX_COORD_PIXEL end_w, GFX_COORD_PIXEL end_h,
    INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, BOOL block
 );
+void animate_create_blink_color(
+   struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
+   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, BOOL block
+);
 void animate_add_animation( struct ANIMATION* a, bstring key );
+struct ANIMATION* animate_get_animation( bstring key );
 void animate_cancel_animation( struct ANIMATION** a, bstring key );
 void animate_free_animation( struct ANIMATION** a );
 void animate_cycle_animations( struct GRAPHICS_TILE_WINDOW* twindow );
