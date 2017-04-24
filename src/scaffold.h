@@ -52,6 +52,8 @@ typedef unsigned char uint8_t;
 
 #include <stdio.h>
 #include <stddef.h>
+#include <memory.h>
+#include <stdlib.h>
 
 #include "bstrlib/bstrlib.h"
 #include "colors.h"
@@ -84,6 +86,7 @@ typedef uint32_t SCAFFOLD_SIZE;
 typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #endif /* USE_SIZET */
 
+typedef int32_t INTERVAL;
 typedef uint8_t SERIAL;
 #define SERIAL_MIN 1
 #define SERIAL_MAX UCHAR_MAX - SERIAL_MIN - 1

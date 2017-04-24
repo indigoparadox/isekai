@@ -713,6 +713,10 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 		</Compiler>
+		<Unit filename="src/animate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/animate.h" />
 		<Unit filename="src/b64.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />

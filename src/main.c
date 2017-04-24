@@ -6,6 +6,7 @@
 #include "callback.h"
 #include "vm.h"
 #include "backlog.h"
+#include "animate.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -111,8 +112,10 @@ static BOOL loop_game() {
    server_poll_new_clients( main_server );
 
 #ifdef ENABLE_LOCAL_CLIENT
-   client_poll_input( main_client, l, input );
-   client_update( main_client, g_screen );
+   if( FALSE == animate_is_blocking() ) {
+      client_poll_input( main_client, l, input );
+      client_update( main_client, g_screen );
+   }
 
    /* Do drawing. */
    l = hashmap_get_first( &(main_client->channels) );
@@ -156,6 +159,8 @@ static BOOL loop_game() {
       );
    }
 
+   animate_cycle_animations( twindow );
+
    /* If there's no puppet then there should be a load screen. */
    scaffold_assert( NULL != main_client->puppet );
 
@@ -166,6 +171,9 @@ static BOOL loop_game() {
       ui_window_draw_tilegrid( ui, twindow );
    }
    ui_draw( ui, g_screen );
+
+   /* Animations are drawn on top of everything. */
+   animate_draw_animations( twindow );
 #endif /* ENABLE_LOCAL_CLIENT */
 cleanup:
    return keep_going;
@@ -398,6 +406,7 @@ int main( int argc, char** argv ) {
    ui_init( g_screen );
    ui = ui_get_local();
    backlog_init();
+   animate_init();
 
    connection_setup();
    scaffold_check_nonzero( scaffold_error );
@@ -416,6 +425,7 @@ int main( int argc, char** argv ) {
    while( loop_master() );
 
 cleanup:
+   animate_shutdown();
    bdestroy( buffer );
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_free( twindow );

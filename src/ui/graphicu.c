@@ -212,6 +212,7 @@ void ui_window_transform(
    struct UI_WINDOW* win, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
    SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
 ) {
+   GRAPHICS* old_element = NULL;
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
@@ -224,10 +225,16 @@ void ui_window_transform(
    if( 0 < height ) {
       win->height = height;
    }
-   graphics_scale( win->element, win->width, win->height );
+   old_element = win->element;
+   win->element = NULL;
+   graphics_surface_new( win->element, 0, 0, win->width, win->height );
+   graphics_blit_stretch( win->element, 0, 0, win->width, win->width, old_element );
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
+cleanup:
+   graphics_surface_free( old_element );
+   return;
 }
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
