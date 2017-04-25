@@ -165,52 +165,98 @@ cleanup:
    return;
 }
 
-void mobile_animate( struct MOBILE* o ) {
-#ifdef USE_MOBILE_FRAME_COUNTER
-   if( mobile_frame_counter++ > MOBILE_FRAME_DIVISOR ) {
-      mobile_frame_counter = 0;
-   }
-   if( 0 == mobile_frame_counter ) {
-#endif /* USE_MOBILE_FRAME_COUNTER */
-   if( NULL != o && NULL != o->current_animation ) {
-      if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
-         o->current_frame = 0;
-      } else {
-         o->current_frame++;
+#ifdef ENABLE_LOCAL_CLIENT
+
+static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
+   struct TILEMAP* t, GFX_COORD_PIXEL sprite_height_in,
+   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
+) {
+   struct VECTOR* tiles_end = NULL;
+   struct TILEMAP_POSITION pos_end;
+   struct TILEMAP_TILE_DATA* tile_iter = NULL;
+   uint8_t i, j;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   SCAFFOLD_SIZE sprite_height_out = sprite_height_in;
+
+   pos_end.x = x_2;
+   pos_end.y = y_2;
+
+   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+
+   /* Fetch the destination tile on all layers. */
+   tiles_end =
+      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+
+   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
+      tile_iter = vector_get( tiles_end, i );
+      scaffold_check_null( tile_iter );
+
+      for( j = 0 ; 4 > j ; j++ ) {
+         /* TODO: Implement terrain slow-down. */
+         terrain_iter = tile_iter->terrain[j];
+         if( NULL == terrain_iter ) { continue; }
+         if(
+            terrain_iter->cutoff != 0 &&
+            sprite_height_in / terrain_iter->cutoff < sprite_height_out
+         ) {
+            sprite_height_out = sprite_height_in / terrain_iter->cutoff;
+         }
       }
    }
-#ifdef USE_MOBILE_FRAME_COUNTER
-   }
-#endif /* USE_MOBILE_FRAME_COUNTER */
 
-#ifdef USE_MOBILE_MOVE_COUNTER
-   if( mobile_move_counter++ > MOBILE_MOVE_DIVISOR ) {
-      mobile_move_counter = 0;
+cleanup:
+   if( NULL != tiles_end ) {
+      /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
+      tiles_end->count = 0;
+      vector_cleanup( tiles_end );
+      scaffold_free( tiles_end );
    }
-   if( 0 == mobile_move_counter ) {
-#endif /* USE_MOBILE_MOVE_COUNTER */
-   if( NULL != o ) {
-      /* TODO: Enforce walking speed server-side. */
-      if( 0 != o->steps_remaining ) {
-         o->steps_remaining += o->steps_inc;
-         /* Clamp to zero for odd increments. */
-         if(
-            (0 < o->steps_inc && 0 < o->steps_remaining) ||
-            (0 > o->steps_inc && 0 > o->steps_remaining)
-         ) {
-            o->steps_remaining = 0;
-         }
-      } else {
+   return sprite_height_out;
+}
+
+void mobile_animate( struct MOBILE* o ) {
+
+   if( NULL == o || NULL == o->current_animation ) {
+      goto cleanup;
+   }
+
+   if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
+      o->current_frame = 0;
+   } else {
+      o->current_frame++;
+   }
+
+   /* TODO: Enforce walking speed server-side. */
+   if( 0 != o->steps_remaining ) {
+      o->steps_remaining += o->steps_inc;
+      /* Clamp to zero for odd increments. */
+      if(
+         (0 < o->steps_inc && 0 < o->steps_remaining) ||
+         (0 > o->steps_inc && 0 > o->steps_remaining)
+      ) {
+         o->steps_remaining = 0;
+      }
+
+      if(
+         (0 < o->steps_inc && MOBILE_STEPS_HALF > o->steps_remaining) ||
+         (0 > o->steps_inc && (-1 * MOBILE_STEPS_HALF) < o->steps_remaining)
+      ) {
+         o->sprite_display_height =
+            mobile_calculate_terrain_sprite_height(
+               &(o->channel->tilemap), o->sprite_height,
+               o->x, o->y );
+      }
+
+      if( 0 == o->steps_remaining ) {
+         /* This could have been set to zero by the increment above. */
          o->prev_x = o->x;
          o->prev_y = o->y;
       }
    }
-#ifdef USE_MOBILE_MOVE_COUNTER
-   }
-#endif /* USE_MOBILE_MOVE_COUNTER */
-}
 
-#ifdef ENABLE_LOCAL_CLIENT
+cleanup:
+   return;
+}
 
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
    struct MOBILE* o, SCAFFOLD_SIZE gid,
@@ -580,57 +626,6 @@ cleanup:
    return steps_inc_out;
 }
 
-#ifdef ENABLE_LOCAL_CLIENT
-
-static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
-   struct TILEMAP* t, GFX_COORD_PIXEL sprite_height_in,
-   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
-) {
-   struct VECTOR* tiles_end = NULL;
-   struct TILEMAP_POSITION pos_end;
-   struct TILEMAP_TILE_DATA* tile_iter = NULL;
-   uint8_t i, j;
-   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
-   SCAFFOLD_SIZE sprite_height_out = sprite_height_in;
-
-   pos_end.x = x_2;
-   pos_end.y = y_2;
-
-   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
-
-   /* Fetch the destination tile on all layers. */
-   tiles_end =
-      hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
-
-   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
-      tile_iter = vector_get( tiles_end, i );
-      scaffold_check_null( tile_iter );
-
-      for( j = 0 ; 4 > j ; j++ ) {
-         /* TODO: Implement terrain slow-down. */
-         terrain_iter = tile_iter->terrain[j];
-         if( NULL == terrain_iter ) { continue; }
-         if(
-            terrain_iter->cutoff != 0 &&
-            sprite_height_in / terrain_iter->cutoff < sprite_height_out
-         ) {
-            sprite_height_out = sprite_height_in / terrain_iter->cutoff;
-         }
-      }
-   }
-
-cleanup:
-   if( NULL != tiles_end ) {
-      /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
-      tiles_end->count = 0;
-      vector_cleanup( tiles_end );
-      scaffold_free( tiles_end );
-   }
-   return sprite_height_out;
-}
-
-#endif /* ENABLE_LOCAL_CLIENT */
-
 /** \brief Apply an update received from a remote client to a local mobile.
  * \param[in] update    Packet containing update information.
  * \param[in] instant   A BOOL indicating whether to force the update instantly
@@ -779,10 +774,10 @@ MOBILE_UPDATE mobile_apply_update(
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == instant ) {
       /* Local Client */
-      o->sprite_display_height =
+      /* o->sprite_display_height =
          mobile_calculate_terrain_sprite_height(
             &(l->tilemap), o->sprite_height,
-            o->x, o->y );
+            o->x, o->y ); */
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
       /* Server */
