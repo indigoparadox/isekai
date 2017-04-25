@@ -22,13 +22,18 @@ typedef enum ITEM_TYPE {
    ITEM_TYPE_WEAPON_WAND,
    ITEM_TYPE_WEAPON_KNIFE,
    ITEM_TYPE_WEAPON_HAMMER,
+   ITEM_TYPE_WEAPON_GAUNTLET,
    ITEM_TYPE_WEAPON_MAX,
    ITEM_TYPE_RANGED_MIN,
    ITEM_TYPE_RANGED_BOW,
    ITEM_TYPE_RANGED_PISTOL,
    ITEM_TYPE_RANGED_RIFLE,
-   ITEM_TYPE_RANGED_SHURIKEN,
    ITEM_TYPE_RANGED_MAX,
+   ITEM_TYPE_AMMO_ARROW,
+   ITEM_TYPE_AMMO_TOMAHAWK,
+   ITEM_TYPE_AMMO_SHURIKEN,
+   ITEM_TYPE_AMMO_KUNAI,
+   ITEM_TYPE_AMMO_MAX,
    ITEM_TYPE_SHIELD,
    ITEM_TYPE_CONTAINER,
    ITEM_TYPE_POTION_BOTTLE_SMALL,
@@ -52,12 +57,23 @@ union ITEM_CONTENT {
    struct VECTOR* container;
 };
 
+struct ITEM_SPRITE {
+   bstring display_name;
+   ITEM_TYPE type;
+};
+
+struct ITEM_SPRITESHEET {
+   GRAPHICS* sprites_image;
+   bstring filename;
+   GFX_COORD_PIXEL spritewidth;
+   GFX_COORD_PIXEL spriteheight;
+   struct VECTOR sprites;
+};
+
 struct ITEM {
    SCAFFOLD_SIZE serial;
    bstring display_name;
    bstring def_filename;
-   bstring sprites_filename;
-   GRAPHICS* sprites;
    ITEM_TYPE type;
    union ITEM_CONTENT content;
 };
