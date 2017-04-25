@@ -93,10 +93,9 @@ struct MOBILE_UPDATE_PACKET {
 
 #define MOBILE_RANDOM_SERIAL_LEN 64
 #define MOBILE_STEPS_MAX 32
+#define MOBILE_STEPS_HALF (MOBILE_STEPS_MAX / 2)
 #define MOBILE_STEPS_INCREMENT 8
 #define MOBILE_SPRITE_SIZE 32
-#define MOBILE_FRAME_DIVISOR 90
-#define MOBILE_MOVE_DIVISOR 30
 
 #define mobile_new( o, mob_id, x, y ) \
     o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
