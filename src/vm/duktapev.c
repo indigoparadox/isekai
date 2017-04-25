@@ -284,6 +284,56 @@ cleanup:
    return;
 }
 
+void vm_channel_start( struct CHANNEL* l ) {
+   const char* code_c = NULL;
+   int duk_result = 0;
+
+   scaffold_check_not_null( OBJECT_VM( l ) );
+
+   l->vm_started = FALSE;
+   l->vm_caddy = scaffold_alloc( 1, struct VM_CADDY );
+   scaffold_check_null( l->vm_caddy );
+
+   scaffold_print_debug(
+      &module, "Starting script VM for channel: %b\n", l->name
+   );
+
+   /* Setup the script caddy. */
+   ((struct VM_CADDY*)l->vm_caddy)->exec_start = 0;
+   ((struct VM_CADDY*)l->vm_caddy)->caller = l;
+   ((struct VM_CADDY*)l->vm_caddy)->caller_type = VM_CALLER_CHANNEL;
+
+   /* Setup the VM. */
+   l->vm = (struct VM*)duk_create_heap(
+      NULL, NULL, NULL,
+      l->vm_caddy,
+      duktape_helper_channel_crash
+   );
+
+   /* hashmap_iterate( &(l->vm_globals), vm_global_set_cb, l ); */
+
+cleanup:
+   return;
+}
+
+void vm_channel_exec( struct CHANNEL* l, bstring code ) {
+}
+
+void vm_channel_end( struct CHANNEL* l ) {
+   scaffold_print_debug(
+      &module, "Stopping script VM for channel: %b\n", l->name
+   );
+
+   if( NULL != OBJECT_VM( l ) ) {
+      duk_destroy_heap( OBJECT_VM( l ) );
+      l->vm = NULL;
+   }
+   if( NULL != l->vm_caddy ) {
+      free( l->vm_caddy );
+      l->vm_caddy = NULL;
+   }
+}
+
 void vm_mobile_start( struct MOBILE* o ) {
    const char* code_c = NULL;
    int duk_result = 0;

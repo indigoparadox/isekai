@@ -457,9 +457,11 @@ void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* ar
 
    scaffold_assert_server();
 
+   /*
    if( channel_vm_can_step( l ) ) {
       channel_vm_step( l );
    }
+   */
 
    vector_iterate( &(l->mobiles), callback_proc_mobile_vms, NULL );
 
