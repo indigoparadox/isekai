@@ -18,6 +18,52 @@
    target = ezxml_attr( parent, attr ); \
    scaffold_check_null( target );
 
+void datafile_parse_item_sprites_ezxml_t(
+   struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
+   bstring def_path, BOOL local_images
+) {
+   ezxml_t xml_sprite;
+   const char* xml_attr;
+   SCAFFOLD_SIZE gid;
+   struct ITEM_SPRITE* sprite = NULL;
+
+   scaffold_check_null( xml_sprites );
+
+   assert( NULL == spritesheet->filename );
+   xml_attr = ezxml_attr( xml_sprites, "image" );
+   scaffold_check_null( xml_attr );
+   spritesheet->filename = bfromcstr( xml_attr );
+
+   assert( NULL == spritesheet->sprites_image );
+   graphics_set_image_path( spritesheet->sprites_image, spritesheet->filename );
+   scaffold_check_null( spritesheet->sprites_image );
+
+   ezxml_int( spritesheet->spritewidth, xml_attr, xml_sprites, "spritewidth" );
+   ezxml_int( spritesheet->spriteheight, xml_attr, xml_sprites, "spriteheight" );
+
+   vector_init( &(spritesheet->sprites) );
+
+   xml_sprite = ezxml_child( xml_sprites, "sprite" );
+   while( NULL != xml_sprite ) {
+      ezxml_int( gid, xml_attr, xml_sprite, "id" );
+
+      sprite = scaffold_alloc( 1, struct ITEM_SPRITE );
+
+      ezxml_string( xml_attr, xml_sprite, "display" );
+      sprite->display_name = bfromcstr( xml_attr );
+      scaffold_check_null( sprite->display_name );
+
+      /* TODO: Parse item type. */
+
+      scaffold_assert( NULL == vector_get( &(spritesheet->sprites), gid ) );
+      vector_set( &(spritesheet->sprites), gid, sprite, TRUE );
+      sprite = NULL;
+   }
+
+cleanup:
+   return;
+}
+
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
@@ -953,6 +999,9 @@ void datafile_parse_ezxml_string(
       break;
    case DATAFILE_TYPE_MOBILE:
       datafile_parse_mobile_ezxml_t( object, xml_data, def_path, local_images );
+      break;
+   case DATAFILE_TYPE_ITEM_SPRITES:
+      datafile_parse_item_sprites_ezxml_t( object, xml_data, def_path, local_images );
       break;
    case DATAFILE_TYPE_ITEM:
       datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );

@@ -395,7 +395,6 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DSTRICT_DEBUG" />
 					<Add option="-DUSE_DUKTAPE" />
-					<Add option="-DUSE_TURNS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -489,7 +488,6 @@
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_DUKTAPE" />
-					<Add option="-DUSE_TURNS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

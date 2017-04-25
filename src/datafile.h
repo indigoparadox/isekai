@@ -12,6 +12,7 @@ typedef enum DATAFILE_TYPE {
    DATAFILE_TYPE_TILEMAP,
    DATAFILE_TYPE_MOBILE,
    DATAFILE_TYPE_ITEM,
+   DATAFILE_TYPE_ITEM_SPRITES,
    DATAFILE_TYPE_TILESET
 } DATAFILE_TYPE;
 
@@ -20,6 +21,10 @@ typedef void (*datafile_cb)(
 );
 
 #ifdef USE_EZXML
+void datafile_parse_item_sprites_ezxml_t(
+   struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
+   bstring def_path, BOOL local_images
+);
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
 );
