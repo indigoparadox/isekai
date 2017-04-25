@@ -23,9 +23,10 @@ struct CHANNEL {
    struct HASHMAP clients;
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
-#ifdef USE_DUKTAPE
-   struct duk_hthread* vm;
-#endif /* USE_DUKTAPE */
+   struct VM* vm;
+   struct VM_CADDY* vm_caddy;
+   BOOL vm_started;
+   struct HASHMAP vm_globals;
 #ifdef USE_TINYPY
    struct tp_vm* vm;
    int vm_cur;
