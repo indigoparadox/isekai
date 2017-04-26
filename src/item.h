@@ -29,6 +29,7 @@ typedef enum ITEM_TYPE {
    ITEM_TYPE_RANGED_PISTOL,
    ITEM_TYPE_RANGED_RIFLE,
    ITEM_TYPE_RANGED_MAX,
+   ITEM_TYPE_AMMO_MIN,
    ITEM_TYPE_AMMO_ARROW,
    ITEM_TYPE_AMMO_TOMAHAWK,
    ITEM_TYPE_AMMO_SHURIKEN,
@@ -78,7 +79,18 @@ struct ITEM {
    union ITEM_CONTENT content;
 };
 
+#define item_random_new( e, type, item_catalog ) \
+    e = scaffold_alloc( 1, struct ITEM ); \
+    scaffold_check_null( e ); \
+    item_random_init( e, type, item_catalog );
+
 void item_init( struct ITEM* e );
+void item_random_init(
+   struct ITEM* e, ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
+);
+void item_sprite_free( struct ITEM_SPRITE* sprite );
+void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog );
+ITEM_TYPE item_type_from_c( const char* c_string );
 void item_set_contents( struct ITEM* t, union ITEM_CONTENT content );
 
 #ifdef ITEM_C
@@ -100,12 +112,18 @@ const struct tagbstring item_type_strings[ITEM_TYPE_MAX] = {
    bsStatic( "weapon_wand" ),
    bsStatic( "weapon_knife" ),
    bsStatic( "weapon_hammer" ),
+   bsStatic( "weapon_gauntlet" ),
    bsStatic( "" ),
    bsStatic( "" ),
    bsStatic( "ranged_bow" ),
    bsStatic( "ranged_pistol" ),
    bsStatic( "ranged_rifle" ),
-   bsStatic( "ranged_shuriken" ),
+   bsStatic( "" ),
+   bsStatic( "" ),
+   bsStatic( "ammo_arrow" ),
+   bsStatic( "ammo_tomahawk" ),
+   bsStatic( "ammo_shuriken" ),
+   bsStatic( "ammo_kunai" ),
    bsStatic( "" ),
    bsStatic( "shield" ),
    bsStatic( "container" ),

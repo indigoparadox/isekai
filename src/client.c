@@ -36,6 +36,9 @@ static void client_cleanup( const struct REF *ref ) {
    hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
    hashmap_cleanup( &(c->tilesets) );
 
+   hashmap_remove_cb( &(c->item_catalogs), callback_free_catalogs, NULL );
+   hashmap_cleanup( &(c->item_catalogs) );
+
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
    /* scaffold_free( c ); */
@@ -61,6 +64,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
    hashmap_init( &(c->tilesets) );
+   hashmap_init( &(c->item_catalogs) );
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );

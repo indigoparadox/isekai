@@ -61,6 +61,8 @@ BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* iter, void* arg );
+BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg );
 #ifdef USE_CHUNKS
 BOOL callback_free_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
 BOOL callback_free_finished_chunkers(

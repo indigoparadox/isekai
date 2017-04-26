@@ -478,25 +478,45 @@ void* callback_proc_channel_spawners(
    struct TILEMAP* t = ts->tilemap;
    struct CHANNEL* l = NULL;
    struct MOBILE* o = NULL;
+   struct ITEM* e = NULL;
+   struct ITEM_SPRITESHEET* catalog = NULL;
 
    l = scaffold_container_of( t, struct CHANNEL, tilemap );
 
-   if( 0 == ts->countdown_remaining && NULL != ts->id ) {
-      /* Perform a spawn. */
+   if( -1 >= ts->countdown_remaining ) {
+      /* Spawner has been disabled. */
+      /* TODO: If the mob has been destroyed, restart the spawner countdown. */
+      goto cleanup;
+   }
+
+   if( 0 < ts->countdown_remaining && NULL != ts->id ) {
+      /* TODO: Decrement the countdown timer in seconds. */
+      goto cleanup;
+   }
+
+   /* By process of elimination, we must be at zero, so perform a spawn! */
+   ts->countdown_remaining = -1;
+   switch( ts->type ) {
+   case TILEMAP_SPAWNER_TYPE_MOBILE:
+      scaffold_print_debug( &module, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
       scaffold_gen_serial( o, &(l->mobiles) );
       channel_add_mobile( l, o );
-      ts->countdown_remaining = -1;
+      break;
+
+   case TILEMAP_SPAWNER_TYPE_ITEM:
+      scaffold_print_debug(
+         &module, "Spawning item: %b, Catalog: %b\n", ts->id, ts->catalog
+      );
+      catalog = hashmap_get( &(s->self.item_catalogs), ts->catalog );
+      /* Catalog should be loaded by tilemap datafile loader. */
+      scaffold_check_null( catalog );
+      item_random_new( e, item_type_from_c( bdata( ts->id ) ), catalog );
+      break;
    }
 
-   /* TODO: If the mob has been destroyed, restart the spawner countdown. */
-
-   /* TODO: Decrement the countdown timer in seconds. */
-
-   if( -1 >= ts->countdown_remaining ) {
-      goto cleanup;
-   }
+   /* TODO: We didn't get shunted to cleanup, so reset the timer if needed. */
 
 cleanup:
    return NULL;
@@ -707,8 +727,16 @@ void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
+
+   /* Since this is a refdec, it should be called anywhere clients are added
+    * to a list and then the list is disposed of.
+    */
+
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+#ifdef DEBUG_VERBOSE
       scaffold_print_debug( &module, "Freeing client: %p\n", c );
+#endif /* DEBUG_VERBOSE */
+      /* This is just a refdec. */
       client_free( c );
       return TRUE;
    }
@@ -764,6 +792,24 @@ BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL == arg ) {
       tilemap_tileset_free( set );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
+   if( NULL == arg ) {
+      item_sprite_free( sprite );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
+   if( NULL == arg ) {
+      item_spritesheet_free( cat );
       return TRUE;
    }
    return FALSE;

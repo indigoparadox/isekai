@@ -13,7 +13,8 @@ struct CLIENT;
 struct TILEMAP;
 
 typedef enum TILEMAP_SPAWNER_TYPE {
-   TILEMAP_SPAWNER_TYPE_MOBILE
+   TILEMAP_SPAWNER_TYPE_MOBILE,
+   TILEMAP_SPAWNER_TYPE_ITEM
 } TILEMAP_SPAWNER_TYPE;
 
 #ifdef DEBUG_TILES
@@ -86,6 +87,7 @@ struct TILEMAP_SPAWNER {
    struct TILEMAP_POSITION pos;
    struct TILEMAP* tilemap;
    bstring id;
+   bstring catalog;
    TILEMAP_SPAWNER_TYPE type;
    SERIAL last_spawned;
    SCAFFOLD_SIZE_SIGNED respawn_countdown;
@@ -112,6 +114,7 @@ struct TILEMAP {
    struct HASHMAP layers;
    struct VECTOR tilesets;
    struct HASHMAP* server_tilesets; /*!< All tilesets on server. */
+   struct HASHMAP* server_catalogs; /*!< All catalogs on server. */
    struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
    GFX_COORD_PIXEL window_step_width;    /*!< For dungeons. */

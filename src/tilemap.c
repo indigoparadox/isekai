@@ -56,6 +56,7 @@ void tilemap_init(
    t->lname = bfromcstr( "" );
 
    t->server_tilesets = &(server->tilesets);
+   t->server_catalogs = &(server->item_catalogs);
 }
 
 void tilemap_free( struct TILEMAP* t ) {
