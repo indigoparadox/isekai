@@ -46,6 +46,7 @@ struct CLIENT {
                             *   encounters on client-side. Not used server-side.
                             */
    struct HASHMAP tilesets;
+   struct HASHMAP item_catalogs;
 #ifdef ENABLE_LOCAL_CLIENT
    BOOL client_side; /*!< Are we the server mirror or the real client? */
 #endif /* ENABLE_LOCAL_CLIENT */

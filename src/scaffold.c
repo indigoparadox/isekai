@@ -261,6 +261,7 @@ void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg ) {
    bstring insert = NULL;
    int bstr_res;
    int i;
+   void* p;
 
    scaffold_error = 0;
 
@@ -300,6 +301,16 @@ void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg ) {
       case 'b':
          insert = va_arg( varg, bstring );
          bstr_res = bconcat( buffer, insert );
+         insert = NULL;
+         scaffold_check_nonzero( bstr_res );
+         break;
+
+      case 'p':
+         p = va_arg( varg, void* );
+         insert = bformat( "%p", p );
+         scaffold_check_null( insert );
+         bstr_res = bconcat( buffer, insert );
+         bdestroy( insert );
          insert = NULL;
          scaffold_check_nonzero( bstr_res );
          break;

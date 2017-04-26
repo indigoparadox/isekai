@@ -1050,7 +1050,9 @@ static void irc_client_privmsg(
    msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
    scaffold_check_null( msg );
 
+#ifdef DEBUG_VERBOSE
    scaffold_print_debug( &module, "Message Incoming (%b): %b\n", args->entry[2], msg );
+#endif /* DEBUG_VERBOSE */
 
    l = client_get_channel_by_name( c, args->entry[2] );
    scaffold_check_null( l );
@@ -1173,7 +1175,7 @@ IRC_COMMAND* irc_dispatch(
          if( 0 == bstrncmp(
             cmd_test, &(command->command), blength( &(command->command) )
          ) ) {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
             if(
                0 != bstrncmp( cmd_test, &str_gdb, 3 ) &&
                0 != bstrncmp( cmd_test, &str_gu, 2 )
@@ -1186,7 +1188,7 @@ IRC_COMMAND* irc_dispatch(
                      &module, "Client Parse: %s\n", bdata( line ) );
                }
             }
-#endif /* DEBUG */
+#endif /* DEBUG_VERBOSE */
 
             out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
             scaffold_check_null( out );

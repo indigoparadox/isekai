@@ -26,6 +26,7 @@ void datafile_parse_item_sprites_ezxml_t(
    const char* xml_attr;
    SCAFFOLD_SIZE gid;
    struct ITEM_SPRITE* sprite = NULL;
+   SCAFFOLD_SIZE_SIGNED i;
 
    scaffold_check_null( xml_sprites );
 
@@ -54,6 +55,9 @@ void datafile_parse_item_sprites_ezxml_t(
       scaffold_check_null( sprite->display_name );
 
       /* TODO: Parse item type. */
+      xml_attr = ezxml_attr( xml_sprite, "type" );
+      scaffold_check_null_continue( xml_attr );
+      sprite->type = item_type_from_c( xml_attr );
 
       scaffold_assert( NULL == vector_get( &(spritesheet->sprites), gid ) );
       vector_set( &(spritesheet->sprites), gid, sprite, TRUE );
@@ -805,7 +809,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
          scaffold_check_null_continue( xml_attr );
          obj_out->respawn_countdown = atol( xml_attr );
 
-      } else if( 0 == strcmp( xml_attr, "active" ) ) {
+      } else if( 0 == scaffold_strcmp_caseless( xml_attr, "active" ) ) {
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
          scaffold_check_null_continue( xml_attr );
          if( 0 == scaffold_strcmp_caseless( xml_attr, "false" ) ) {
@@ -817,33 +821,46 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
       xml_prop_iter = ezxml_next( xml_prop_iter );
    }
 
-   /* Figure out the spawner type and add it to the correct vector. */
+   xml_attr = ezxml_attr( xml_object, "name" );
+   scaffold_check_null( xml_attr );
+   obj_out->id = bfromcstr( xml_attr );
+   scaffold_check_null( obj_out->id );
+
+   xml_attr = ezxml_attr( xml_object, "spritesheet" );
+   if( NULL != xml_attr ) {
+      obj_out->catalog = bfromcstr( xml_attr );
+      scaffold_check_null( obj_out->id );
+   } else {
+      obj_out->catalog = NULL;
+   }
+
+   /* Figure out the spawner type. */
    xml_attr = ezxml_attr( xml_object, "type" );
    scaffold_check_null( xml_attr );
    if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
-
-      xml_attr = ezxml_attr( xml_object, "name" );
-      scaffold_check_null( xml_attr );
-      obj_out->id = bfromcstr( xml_attr );
-      scaffold_check_null( obj_out->id );
-
       obj_out->type = TILEMAP_SPAWNER_TYPE_MOBILE;
+   } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_item_random" ) ) {
+      scaffold_check_null( obj_out->catalog );
+      obj_out->type = TILEMAP_SPAWNER_TYPE_ITEM;
 
-      scaffold_print_debug(
-         &module, "Spawner for \"%b\" at: %d, %d\n",
-         obj_out->id, obj_out->pos.x, obj_out->pos.y
-      );
-
-      vector_add( &(t->spawners), obj_out );
+      if( NULL == hashmap_get( t->server_catalogs, obj_out->catalog ) ) {
+         /* TODO: Load catalog. */
+      }
    } else {
       /* We don't know how to handle this yet. */
       scaffold_print_error(
          &module, "Unknown object at: %d, %d\n",
          obj_out->pos.x, obj_out->pos.y
       );
-      scaffold_free( obj_out );
+      goto cleanup;
    }
 
+   scaffold_print_debug(
+      &module, "Spawner for \"%b\" at: %d, %d\n",
+      obj_out->id, obj_out->pos.x, obj_out->pos.y
+   );
+
+   vector_add( &(t->spawners), obj_out );
    obj_out = NULL;
 
 cleanup:

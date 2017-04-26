@@ -370,7 +370,7 @@ BOOL server_service_clients( struct SERVER* s ) {
 #endif /* USE_CHUNKS */
 
    /* Spawn NPC mobiles. */
-   hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, NULL );
+   hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, s );
 
 cleanup:
    return retval;
