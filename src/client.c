@@ -31,6 +31,7 @@ static void client_cleanup( const struct REF *ref ) {
    /* client_stop( c ); */
 
    hashmap_cleanup( &(c->chunkers) );
+   vector_cleanup( &(c->chunker_files_delayed) );
    hashmap_cleanup( &(c->channels) );
 
    hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
@@ -63,6 +64,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
+   vector_init( &(c->chunker_files_delayed) );
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
 
@@ -181,6 +183,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
     * their cache.
     */
    hashmap_iterate( &(c->chunkers), callback_proc_client_chunkers, c );
+   vector_remove_cb( &(c->chunker_files_delayed), callback_proc_client_delayed_chunkers, c );
 
 cleanup:
 #endif /* DEBUG_TILES */
@@ -471,6 +474,23 @@ void client_clear_puppet( struct CLIENT* c ) {
    client_set_puppet( c, NULL );
 }
 
+void client_request_file_later(
+   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+) {
+   struct CLIENT_DELAYED_REQUEST* request = NULL;
+
+   request = scaffold_alloc( 1, struct CLIENT_DELAYED_REQUEST );
+   scaffold_check_null( request );
+
+   request->filename = bstrcpy( filename );
+   request->type = type;
+
+   vector_add( &(c->chunker_files_delayed), request );
+
+cleanup:
+   return;
+}
+
 void client_request_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 ) {
@@ -586,6 +606,8 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
    BOOL ok_to_remove = FALSE;
    struct VECTOR* v_applied = NULL;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+   struct MOBILE* o = NULL;
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
@@ -595,7 +617,10 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       /* TODO: Fetch this tileset from other tilemaps, too. */
       set = hashmap_get( &(c->tilesets), h->filename );
       scaffold_assert( NULL != set );
-      datafile_parse_ezxml_string( set, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET, h->filename );
+      datafile_parse_ezxml_string(
+         set, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET,
+         h->filename
+      );
       break;
 
    case CHUNKER_DATA_TYPE_TILEMAP:
@@ -607,12 +632,20 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
 
       l = client_get_channel_by_name( c, lname );
-      scaffold_check_null_msg( l, "Unable to find channel to attach loaded tileset." );
+      scaffold_check_null_msg(
+         l, "Unable to find channel to attach loaded tileset."
+      );
 
 #ifdef USE_EZXML
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
-      datafile_parse_tilemap_ezxml_t( &(l->tilemap), xml_data, h->filename, TRUE );
+      datafile_parse_tilemap_ezxml_t(
+         &(l->tilemap), xml_data, h->filename, TRUE
+      );
       scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
+
+      /* Download missing tilesets. */
+      hashmap_iterate( &(c->tilesets), callback_download_tileset, c );
+
 #endif /* USE_EZXML */
 
       /* Go through the parsed tilemap and load graphics. */
@@ -620,7 +653,8 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
       scaffold_print_debug(
          &module,
-         "Client: Tilemap for %s successfully attached to channel.\n", bdata( l->name )
+         "Client: Tilemap for %s successfully attached to channel.\n",
+         bdata( l->name )
       );
       break;
 
@@ -663,23 +697,28 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          (BYTE*)h->raw_ptr, h->raw_length, mob_id
       );
       scaffold_check_null( xml_data );
-      /* xml_image = ezxml_child( xml_data, "image" );
-      scaffold_check_null( xml_image );
-      img_src_c = ezxml_attr( xml_image, "src" );
-      img_src = bfromcstr( img_src_c ); */
 
-      hashmap_iterate(
+      o = hashmap_iterate(
          &(c->channels), callback_parse_mob_channels, xml_data
       );
+      if( NULL != o ) {
+         /* TODO: Make sure we never create receiving chunkers server-side (not strictly relevant here, but still). */
+         g = hashmap_get( &(c->sprites), o->sprites_filename );
+         if( NULL == g ) {
+            client_request_file_later( c, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
+         } else {
+            o->sprites = g;
+         }
+
+         scaffold_print_debug(
+            &module,
+            "Client: Mobile def for %s successfully attached to channel.\n",
+            bdata( mob_id )
+         );
+      }
+
 #endif /* USE_EZXML */
-
-      scaffold_print_debug(
-         &module,
-         "Client: Mobile def for %s successfully attached to channel.\n",
-         bdata( mob_id )
-      );
       break;
-
 
    case CHUNKER_DATA_TYPE_MOBSPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
@@ -687,11 +726,28 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null( g->surface );
       hashmap_put( &(c->sprites), h->filename, g );
+      hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
       scaffold_print_debug(
          &module,
          "Client: Mobile spritesheet %s successfully loaded into cache.\n",
          bdata( h->filename )
       );
+      break;
+
+   case CHUNKER_DATA_TYPE_ITEM_CATALOG:
+#ifdef USE_EZXML
+      datafile_parse_ezxml_string(
+         catalog, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_ITEM_SPRITES,
+         h->filename
+      );
+      hashmap_put( l->tilemap.server_catalogs, h->filename, catalog );
+
+      client_request_file_later(
+         c, CHUNKER_DATA_TYPE_ITEM_CATALOG,
+         catalog->sprites_filename
+      );
+      goto cleanup;
+#endif /* USE_EZXML */
       break;
    }
 

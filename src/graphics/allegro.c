@@ -24,6 +24,7 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 #define GRAPHICS_COLOR_DEPTH 8
 
 static volatile uint32_t allegro_ticks = 0;
+static GRAPHICS* graphics_screen = NULL;
 
 static void allegro_ticker() {
    allegro_ticks++;
@@ -256,11 +257,18 @@ void graphics_screen_new(
 
    clear_bitmap( (*g)->surface );
 
+   graphics_screen = *g;
+
 cleanup:
    return;
 }
 
+GRAPHICS* graphics_get_screen() {
+   return graphics_screen;
+}
+
 void graphics_surface_cleanup( GRAPHICS* g ) {
+   scaffold_check_null( g );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;
@@ -270,6 +278,8 @@ void graphics_surface_cleanup( GRAPHICS* g ) {
       g->palette = NULL;
    }
    /* TODO: Free surface. */
+cleanup:
+   return;
 }
 
 void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) {
@@ -326,6 +336,7 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    if( NULL == g->surface ) {
       scaffold_print_error(
          &module, "Image load error: %s: %s\n", bdata( path ), allegro_error );
+      goto cleanup;
    }
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;

@@ -149,6 +149,37 @@ void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg
    return NULL;
 }
 
+void* callback_search_item_caches(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
+   struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
+
+   if(
+      NULL == arg || (
+         pos->x == cache->position.x &&
+         pos->y == cache->position.y
+      )
+   ) {
+      return cache;
+   }
+
+   return NULL;
+}
+
+void* callback_search_items(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct ITEM* e_search = (struct ITEM*)arg;
+   struct ITEM* e_iter = (struct ITEM*)iter;
+
+   if( NULL == arg || e_search == e_iter ) {
+      return e_iter;
+   }
+
+   return NULL;
+}
+
 void* callback_send_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
@@ -229,7 +260,7 @@ void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* ar
 
    scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
    if( 0 == set->tileheight && 0 == set->tilewidth ) {
-      client_request_file( c, CHUNKER_DATA_TYPE_TILESET, idx->value.key );
+      client_request_file_later( c, CHUNKER_DATA_TYPE_TILESET, idx->value.key );
    }
 
 cleanup:
@@ -273,6 +304,52 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
    }
 
 cleanup:
+   return NULL;
+}
+
+void* callback_load_spawner_catalogs(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
+   struct HASHMAP* m_catalogs = (struct HASHMAP*)arg;
+   bstring catdata_path = NULL;
+   BYTE* catdata = NULL;
+   SCAFFOLD_SIZE catdata_length = 0;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+
+   if(
+      TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&
+      NULL == hashmap_get( m_catalogs, spawner->catalog )
+   ) {
+      scaffold_print_debug(
+         &module, "Loading item catalog: %b\n", spawner->catalog
+      );
+
+      scaffold_check_null_msg( spawner->catalog, "Invalid catalog provided." );
+      catdata_path = bstrcpy( &str_server_data_path );
+      scaffold_check_null( catdata_path );
+      scaffold_join_path( catdata_path, spawner->catalog );
+      scaffold_check_nonzero( scaffold_error );
+      scaffold_read_file_contents( catdata_path, &catdata, &catdata_length );
+
+      catalog = scaffold_alloc( 1, struct ITEM_SPRITESHEET );
+
+#ifdef USE_EZXML
+
+      datafile_parse_ezxml_string(
+         catalog, catdata, catdata_length, FALSE, DATAFILE_TYPE_ITEM_SPRITES,
+         catdata_path
+      );
+
+      hashmap_put( m_catalogs, spawner->catalog, catalog );
+
+#endif /* USE_EZXML */
+
+      /* TODO: Load catalog. */
+   }
+
+cleanup:
+   scaffold_free( catdata );
    return NULL;
 }
 
@@ -383,6 +460,23 @@ void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void
       client_handle_finished_chunker( c, h );
    }
 }
+
+BOOL callback_proc_client_delayed_chunkers(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   scaffold_print_debug(
+      &module, "Processing delayed request: %b\n", req->filename
+   );
+   client_request_file( c, req->type, req->filename );
+
+   bdestroy( req->filename );
+   scaffold_free( req );
+   return TRUE;
+}
+
 
 #endif /* USE_CHUNKS */
 
@@ -569,6 +663,21 @@ void* callback_search_tilesets_small(
    return NULL;
 }
 
+/*
+void* callback_load_delayed_tilesets(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+   GRAPHICS* g_tileset = (GRAPHICS*)iter;
+
+   if(
+      NULL == iter &&
+      NULL == hashmap_get( &(c->chunkers), idx->value.key )
+   ) {
+      client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
+}
+*/
+
 void* callback_search_tileset_img_gid(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
@@ -693,8 +802,10 @@ void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
          &module, "Client: Found mobile with ID: %b\n", o->mob_id
       );
       datafile_parse_mobile_ezxml_t( o, xml_data, NULL, TRUE );
+
       return o;
    }
+
 
 #endif /* USE_EZXML */
 cleanup:
@@ -711,6 +822,35 @@ void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* iter, void* 
    return vector_iterate( &(l->mobiles), callback_parse_mobs, xml_data );
 #endif /* USE_EZXML */
    return NULL;
+}
+
+void* callback_attach_mob_sprites(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+   struct GRAPHICS* g = NULL;
+
+   /* Since the vector index is set by serial, there will be a number of      *
+    * NULLs before we find one that isn't.                                    */
+   if( NULL == o || NULL != o->sprites || NULL == o->sprites_filename ) {
+      goto cleanup;
+   }
+
+   g = hashmap_get( &(c->sprites), o->sprites_filename );
+   o->sprites = g;
+
+cleanup:
+   return NULL;
+}
+
+void* callback_attach_channel_mob_sprites(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   return vector_iterate( &(l->mobiles), callback_attach_mob_sprites, c );
 }
 
 void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -810,6 +950,17 @@ BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
       item_spritesheet_free( cat );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_item_caches(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
+   if( NULL == arg ) {
+      tilemap_item_cache_free( cache );
       return TRUE;
    }
    return FALSE;

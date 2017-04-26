@@ -321,7 +321,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
 
    scaffold_assert_client();
 
-   if( NULL == o || NULL == o->sprites_filename ) {
+   if( NULL == o || NULL == o->sprites_filename || NULL == o->sprites ) {
       return;
    }
 
@@ -335,6 +335,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       goto cleanup;
    }
 
+#if 0
    /* If the current mobile spritesheet doesn't exist, then load it. */
    if(
       NULL == o->sprites &&
@@ -352,6 +353,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       /* Sprites must not be ready yet. */
       goto cleanup;
    }
+#endif
 
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
@@ -514,8 +516,10 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
    tiles_end =
       hashmap_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
    if( NULL == tiles_end ) {
+#ifdef DEBUG_VERBOSE
       scaffold_print_error(
          &module, "No tileset loaded; unable to process move.\n" );
+#endif /* DEBUG_VERBOSE */
       update_out = MOBILE_UPDATE_NONE;
       goto cleanup;
    }
