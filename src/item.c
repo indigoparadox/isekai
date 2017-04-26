@@ -3,11 +3,12 @@
 #include "item.h"
 
 #include "callback.h"
+#include "chunker.h"
 
 void item_init( struct ITEM* e ) {
    e->display_name = NULL;
    e->serial = 0;
-   e->type = ITEM_TYPE_GENERIC;
+   e->sprite = NULL;
 }
 
 void item_random_init(
@@ -30,7 +31,7 @@ void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog ) {
 
       graphics_surface_free( catalog->sprites_image );
 
-      bdestroy( catalog->filename );
+      bdestroy( catalog->sprites_filename );
 
       scaffold_free( catalog );
    }
@@ -50,6 +51,61 @@ ITEM_TYPE item_type_from_c( const char* c_string ) {
    }
 
    return type_out;
+}
+
+void item_draw_ortho(
+   struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
+) {
+   GFX_COORD_PIXEL
+      sprite_x,
+      sprite_y;
+   struct MOBILE* o_player = NULL;
+   //struct CLIENT* local_client = twindow->local_client;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+
+   scaffold_assert_client();
+
+   if( NULL == e || NULL == e->catalog || NULL == e->sprite || NULL == g ) {
+      return;
+   }
+
+   catalog = e->catalog;
+
+   /*
+   if(
+      x > twindow->max_x ||
+      y > twindow->max_y ||
+      x < twindow->min_x ||
+      y < twindow->min_y
+   ) {
+      goto cleanup;
+   }
+   */
+
+   /* Figure out the window position to draw to. */
+
+   /* TODO: Support variable sprite size. */
+
+   /* TODO: Figure out the graphical sprite to draw from. */
+   /* mobile_get_spritesheet_pos_ortho(
+      o, current_frame->id, &sprite_x, &sprite_y
+   ); */
+
+   /* Add dirty tiles to list before drawing. */
+   /* TODO: This goes in tilemap function if that's calling us. */
+   /* tilemap_add_dirty_tile( twindow->t, o->x, o->y );
+   tilemap_add_dirty_tile( twindow->t, o->prev_x, o->prev_y ); */
+
+   graphics_blit_partial(
+      g,
+      x, y,
+      sprite_x, sprite_y,
+      catalog->spritewidth, catalog->spriteheight,
+      catalog->sprites_image
+   );
+
+cleanup:
+   return;
 }
 
 void item_set_contents( struct ITEM* e, union ITEM_CONTENT content ) {

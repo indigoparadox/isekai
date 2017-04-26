@@ -30,14 +30,10 @@ void datafile_parse_item_sprites_ezxml_t(
 
    scaffold_check_null( xml_sprites );
 
-   assert( NULL == spritesheet->filename );
+   assert( NULL == spritesheet->sprites_filename );
    xml_attr = ezxml_attr( xml_sprites, "image" );
    scaffold_check_null( xml_attr );
-   spritesheet->filename = bfromcstr( xml_attr );
-
-   assert( NULL == spritesheet->sprites_image );
-   graphics_set_image_path( spritesheet->sprites_image, spritesheet->filename );
-   scaffold_check_null( spritesheet->sprites_image );
+   spritesheet->sprites_filename = bfromcstr( xml_attr );
 
    ezxml_int( spritesheet->spritewidth, xml_attr, xml_sprites, "spritewidth" );
    ezxml_int( spritesheet->spriteheight, xml_attr, xml_sprites, "spriteheight" );
@@ -59,9 +55,15 @@ void datafile_parse_item_sprites_ezxml_t(
       scaffold_check_null_continue( xml_attr );
       sprite->type = item_type_from_c( xml_attr );
 
+      scaffold_print_debug(
+         &module, "Loading proto-item: %b\n", sprite->display_name
+      );
+
       scaffold_assert( NULL == vector_get( &(spritesheet->sprites), gid ) );
       vector_set( &(spritesheet->sprites), gid, sprite, TRUE );
       sprite = NULL;
+
+      xml_sprite = ezxml_next( xml_sprite );
    }
 
 cleanup:
@@ -836,16 +838,14 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
 
    /* Figure out the spawner type. */
    xml_attr = ezxml_attr( xml_object, "type" );
-   scaffold_check_null( xml_attr );
+   scaffold_check_null_msg( xml_attr, "Invalid or no type specified." );
    if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
       obj_out->type = TILEMAP_SPAWNER_TYPE_MOBILE;
    } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_item_random" ) ) {
-      scaffold_check_null( obj_out->catalog );
+      scaffold_check_null_msg(
+         obj_out->catalog, "Invalid or no catalog specified."
+      );
       obj_out->type = TILEMAP_SPAWNER_TYPE_ITEM;
-
-      if( NULL == hashmap_get( t->server_catalogs, obj_out->catalog ) ) {
-         /* TODO: Load catalog. */
-      }
    } else {
       /* We don't know how to handle this yet. */
       scaffold_print_error(

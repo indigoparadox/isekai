@@ -183,10 +183,13 @@ cleanup:
 }
 
 void graphics_surface_free( GRAPHICS* g ) {
+   scaffold_check_null( g );
    graphics_surface_cleanup( g );
    scaffold_assert( NULL == g->palette );
    scaffold_assert( NULL == g->surface );
    scaffold_free( g );
+cleanup:
+   return;
 }
 
 void graphics_blit(

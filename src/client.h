@@ -23,6 +23,11 @@ typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_SENT_CHANNEL_JOIN = 0x16
 } CLIENT_FLAGS;
 
+struct CLIENT_DELAYED_REQUEST {
+   bstring filename;
+   CHUNKER_DATA_TYPE type;
+};
+
 struct CLIENT {
    CONNECTION link;  /*!< Parent "class". The "root" class is REF. */
 
@@ -41,6 +46,7 @@ struct CLIENT {
                              *   channels available if this is a server.
                              */
    struct HASHMAP chunkers;
+   struct VECTOR chunker_files_delayed;
    struct MOBILE* puppet;
    struct HASHMAP sprites; /*!< Contains sprites for all mobiles this client
                             *   encounters on client-side. Not used server-side.
@@ -97,6 +103,9 @@ void client_send_file(
 #endif /* USE_CHUNKS */
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o );
 void client_clear_puppet( struct CLIENT* c );
+void client_request_file_later(
+   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+);
 void client_request_file(
    struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 );

@@ -65,7 +65,8 @@ struct ITEM_SPRITE {
 
 struct ITEM_SPRITESHEET {
    GRAPHICS* sprites_image;
-   bstring filename;
+   bstring sprites_filename;
+   BOOL sprites_requested;
    GFX_COORD_PIXEL spritewidth;
    GFX_COORD_PIXEL spriteheight;
    struct VECTOR sprites;
@@ -73,9 +74,10 @@ struct ITEM_SPRITESHEET {
 
 struct ITEM {
    SCAFFOLD_SIZE serial;
+   struct ITEM_SPRITE* sprite;
+   struct ITEM_SPRITESHEET* catalog;
+   SCAFFOLD_SIZE catalog_index;
    bstring display_name;
-   bstring def_filename;
-   ITEM_TYPE type;
    union ITEM_CONTENT content;
 };
 
@@ -91,6 +93,9 @@ void item_random_init(
 void item_sprite_free( struct ITEM_SPRITE* sprite );
 void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog );
 ITEM_TYPE item_type_from_c( const char* c_string );
+void item_draw_ortho(
+   struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
+);
 void item_set_contents( struct ITEM* t, union ITEM_CONTENT content );
 
 #ifdef ITEM_C

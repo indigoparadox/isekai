@@ -102,6 +102,7 @@ void graphics_surface_cleanup( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
+GRAPHICS* graphics_get_screen();
 void graphics_screen_scroll(
    GRAPHICS* g, GFX_COORD_PIXEL offset_x, GFX_COORD_PIXEL offset_y
 );

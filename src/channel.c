@@ -274,6 +274,11 @@ void channel_load_tilemap( struct CHANNEL* l ) {
       &(l->tilemap), mapdata_buffer, mapdata_size, FALSE,
       DATAFILE_TYPE_TILEMAP, mapdata_path
    );
+
+   vector_iterate(
+      &(l->tilemap.spawners), callback_load_spawner_catalogs,
+      l->tilemap.server_catalogs
+   );
 #endif /* USE_EZXML */
 
 cleanup:

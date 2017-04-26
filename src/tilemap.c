@@ -31,6 +31,8 @@ static void tilemap_cleanup( const struct REF* ref ) {
 
    hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    hashmap_cleanup( &(t->layers) );
+   vector_remove_cb( &(t->item_caches), callback_free_item_caches, NULL );
+   vector_cleanup( &(t->item_caches) );
    vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
    vector_cleanup( &(t->spawners) );
    vector_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
@@ -45,6 +47,7 @@ void tilemap_init(
    ref_init( &(t->refcount), tilemap_cleanup );
 
    hashmap_init( &(t->layers) );
+   vector_init( &(t->item_caches) );
    vector_init( &(t->tilesets) );
    vector_init( &(t->spawners) );
 
@@ -82,6 +85,20 @@ void tilemap_spawner_init(
 void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
    bdestroy( ts->id );
    scaffold_free( ts );
+}
+
+void tilemap_item_cache_init(
+   struct TILEMAP_ITEM_CACHE* cache,
+   GFX_COORD_TILE x,
+   GFX_COORD_TILE y
+) {
+   vector_init( &(cache->items) );
+   cache->position.x = x;
+   cache->position.y = y;
+}
+
+void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
+   vector_cleanup( &(cache->items) );
 }
 
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
@@ -161,7 +178,7 @@ SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
  */
 SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
-   SCAFFOLD_SIZE gid, GFX_COORD_TILE* x, GFX_COORD_TILE* y
+   SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 ) {
    GFX_COORD_TILE tiles_wide = 0;
 
@@ -171,8 +188,8 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 
    gid -= set_firstgid - 1;
 
-   *y = ((gid - 1) / tiles_wide) * set->tileheight;
-   *x = ((gid - 1) % tiles_wide) * set->tilewidth;
+   tile_screen_rect->y = ((gid - 1) / tiles_wide) * set->tileheight;
+   tile_screen_rect->x = ((gid - 1) % tiles_wide) * set->tilewidth;
 
    /* scaffold_assert( *y < (set->tileheight * tiles_high) );
    scaffold_assert( *x < (set->tilewidth * tiles_wide) ); */
@@ -334,31 +351,35 @@ cleanup:
 
 #endif /* DEBUG_TILES */
 
+static void* tilemap_layer_draw_tile_items_cb(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   GRAPHICS_RECT* rect = (GRAPHICS_RECT*)arg;
+   struct ITEM* e = (struct ITEM*)iter;
+   struct GRAPHICS* g_screen = NULL;
+
+   g_screen = graphics_get_screen();
+
+   item_draw_ortho( e, rect->x, rect->y, g_screen );
+}
+
 static void* tilemap_layer_draw_tile(
    struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
    GFX_COORD_TILE x, GFX_COORD_TILE y, SCAFFOLD_SIZE gid
 ) {
    struct TILEMAP_TILESET* set = NULL;
-   GFX_COORD_TILE
-      tileset_x = 0,
-      tileset_y = 0;
-   GFX_COORD_PIXEL
-      pix_x = 0,
-      pix_y = 0;
+   GRAPHICS_RECT tile_tilesheet_pos;
+   struct TILEMAP_POSITION tile_map_pos;
+   GRAPHICS_RECT tile_screen_rect;
    struct TILEMAP* t = twindow->t;
    struct CLIENT* local_client = twindow->local_client;
    const struct MOBILE* o = local_client->puppet;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
 
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
-      /* Download missing tilesets. */
-      hashmap_iterate(
-         &(twindow->local_client->tilesets),
-         callback_download_tileset,
-         twindow->local_client
-      );
       goto cleanup; /* Silently. */
    }
 
@@ -370,11 +391,14 @@ static void* tilemap_layer_draw_tile(
       goto cleanup;
    }
 
-   /* Figure out the window position to draw to. */
-   pix_x = set->tilewidth * (x - twindow->x);
-   pix_y = set->tileheight * (y - twindow->y);
+   tile_map_pos.x = x;
+   tile_map_pos.y = y;
 
-   if( 0 > pix_x || 0 > pix_y ) {
+   /* Figure out the window position to draw to. */
+   tile_screen_rect.x = set->tilewidth * (x - twindow->x);
+   tile_screen_rect.y = set->tileheight * (y - twindow->y);
+
+   if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
       goto cleanup; /* Silently. */
    }
 
@@ -389,7 +413,7 @@ static void* tilemap_layer_draw_tile(
    }
 
    tilemap_get_tile_tileset_pos(
-      set, set_firstgid, g_tileset, gid, &tileset_x, &tileset_y );
+      set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
 
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
@@ -403,7 +427,7 @@ static void* tilemap_layer_draw_tile(
          tilemap_inside_inner_map_x( o->x, twindow )
       )
    ) {
-      pix_x += mobile_get_steps_remaining_x( o, TRUE );
+      tile_screen_rect.x += mobile_get_steps_remaining_x( o, TRUE );
    }
 
    if(
@@ -418,20 +442,29 @@ static void* tilemap_layer_draw_tile(
          tilemap_inside_inner_map_y( o->y, twindow )
       )
    ) {
-      pix_y += mobile_get_steps_remaining_y( o, TRUE );
+      tile_screen_rect.y += mobile_get_steps_remaining_y( o, TRUE );
    }
 
    graphics_blit_partial(
       twindow->g,
-      pix_x, pix_y,
-      tileset_x, tileset_y,
+      tile_screen_rect.x, tile_screen_rect.y,
+      tile_tilesheet_pos.x, tile_tilesheet_pos.y,
       set->tilewidth, set->tileheight,
       g_tileset
    );
 
+   cache = vector_iterate(
+      &(t->item_caches), callback_search_item_caches, &tile_map_pos
+   );
+   if( NULL != cache ) {
+      vector_iterate(
+         &(cache->items), tilemap_layer_draw_tile_items_cb, &tile_screen_rect
+      );
+   }
+
 #ifdef DEBUG_TILES
    tilemap_layer_draw_tile_debug(
-      layer, twindow->g, twindow, x, y, pix_x, pix_y, gid
+      layer, twindow->g, twindow, x, y, tile_screen_rect.x, tile_screen_rect.y, gid
    );
 #endif /* DEBUG_TILES */
 
@@ -526,7 +559,6 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    ) {
       tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
    }
-
 
    /* Draw masks. */
    if( twindow->width < (GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) ) {
@@ -784,6 +816,35 @@ void tilemap_toggle_debug_state() {
       scaffold_print_debug( &module, "Terrain Debug: Off\n" );
       break;
    }
+}
+
+void tilemap_drop_item(
+   struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
+) {
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
+   struct TILEMAP_POSITION pos;
+
+   pos.x = x;
+   pos.y = y;
+
+   cache =
+      vector_iterate( &(t->item_caches), callback_search_item_caches, &pos );
+   if( NULL == cache ) {
+      tilemap_item_cache_new( cache, x, y );
+      vector_add( &(t->item_caches), cache );
+   }
+
+   /* Prevent the item from being double-dropped. */
+   if(
+      NULL != vector_iterate( &(cache->items), callback_search_items, e )
+   ) {
+      goto cleanup;
+   }
+
+   vector_add( &(cache->items), e );
+
+cleanup:
+   return;
 }
 
 #endif /* DEBUG_TILES */
