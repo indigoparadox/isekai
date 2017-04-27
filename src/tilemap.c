@@ -57,9 +57,6 @@ void tilemap_init(
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
    t->lname = bfromcstr( "" );
-
-   t->server_tilesets = &(server->tilesets);
-   t->server_catalogs = &(server->item_catalogs);
 }
 
 void tilemap_free( struct TILEMAP* t ) {
@@ -842,6 +839,8 @@ void tilemap_drop_item(
    }
 
    vector_add( &(cache->items), e );
+
+   tilemap_add_dirty_tile( t, x, y );
 
 cleanup:
    return;

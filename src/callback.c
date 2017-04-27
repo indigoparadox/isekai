@@ -607,6 +607,8 @@ void* callback_proc_channel_spawners(
       /* Catalog should be loaded by tilemap datafile loader. */
       scaffold_check_null( catalog );
       item_random_new( e, item_type_from_c( bdata( ts->id ) ), catalog );
+      tilemap_drop_item( &(l->tilemap), e, ts->pos.x, ts->pos.y );
+      e = NULL;
       break;
    }
 
@@ -627,6 +629,19 @@ void* callback_proc_server_spawners(
    vector_iterate( &(l->tilemap.spawners), callback_proc_channel_spawners, s );
 
 cleanup:
+   return NULL;
+}
+
+void* callback_search_item_type(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   ITEM_TYPE type = *((ITEM_TYPE*)arg);
+   struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
+
+   if( NULL != sprite && type == sprite->type ) {
+      return sprite;
+   }
+
    return NULL;
 }
 

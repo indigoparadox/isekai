@@ -112,7 +112,8 @@ typedef enum {
    SCAFFOLD_ERROR_NOT_NULLPO,
    SCAFFOLD_ERROR_DUPLICATE,
    SCAFFOLD_ERROR_RANDOM,
-   SCAFFOLD_ERROR_CONNECTION_CLOSED
+   SCAFFOLD_ERROR_CONNECTION_CLOSED,
+   SCAFFOLD_ERROR_UNEQUAL
 } SCAFFOLD_ERROR;
 
 #ifdef DEBUG
@@ -336,6 +337,17 @@ struct CONTAINER_IDX {
         goto cleanup; \
     } else if( SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_NONE; \
+    }
+
+#define scaffold_check_equal( value1, value2 ) \
+    if( value1 != value2 ) { \
+        scaffold_error = SCAFFOLD_ERROR_UNEQUAL; \
+        if( TRUE != scaffold_error_silent ) { \
+            scaffold_print_error( &module, "Values not equal: %d and %d: error on line: %d\n", value1, value2, __LINE__ ); \
+        } \
+        goto cleanup; \
+    } else { \
+        scaffold_error = SCAFFOLD_ERROR_NONE; \
     }
 
 #define scaffold_check_zero( value, msg ) \

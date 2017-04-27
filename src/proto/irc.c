@@ -141,6 +141,43 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    );
 }
 
+static void proto_send_tile_cache_iter_cb(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct ITEM* e = (struct ITEM*)iter;
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   scaffold_assert_server();
+
+   client_printf(
+      c, "ITEM %p %b %d %d",
+      e, e->display_name
+   );
+}
+
+void proto_send_tile_cache(
+   struct CLIENT* c, struct TILEMAP* t, struct TILEMAP_ITEM_CACHE* cache
+) {
+   struct CHANNEL* l = NULL;
+
+   scaffold_assert_server();
+
+   l = scaffold_container_of( l, struct CHANNEL, tilemap );
+   scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
+
+   client_printf(
+      c, "ITEM_CACHE_START %b %d %d",
+      l->name, cache->position.x, cache->position.y
+   );
+
+   vector_iterate( &(cache->items), proto_send_tile_cache_iter_cb, c );
+
+   client_printf( c, "ITEM_CACHE_END" );
+
+cleanup:
+   return;
+}
+
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
    SCAFFOLD_SIZE serial = 0;
    scaffold_assert_client();

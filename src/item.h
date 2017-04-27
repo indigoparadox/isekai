@@ -76,9 +76,9 @@ struct ITEM {
    SCAFFOLD_SIZE serial;
    struct ITEM_SPRITE* sprite;
    struct ITEM_SPRITESHEET* catalog;
-   SCAFFOLD_SIZE catalog_index;
    bstring display_name;
    union ITEM_CONTENT content;
+   SCAFFOLD_SIZE count;
 };
 
 #define item_random_new( e, type, item_catalog ) \
@@ -93,6 +93,9 @@ void item_random_init(
 void item_sprite_free( struct ITEM_SPRITE* sprite );
 void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog );
 ITEM_TYPE item_type_from_c( const char* c_string );
+struct ITEM_SPRITE* item_random_sprite_of_type(
+   ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
+);
 void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 );
@@ -146,6 +149,9 @@ const struct tagbstring item_type_strings[ITEM_TYPE_MAX] = {
    bsStatic( "food_meat" ),
    bsStatic( "food_misc" )
 };
+
+SCAFFOLD_MODULE( "item.c" );
+
 #else
 
 extern const struct tagbstring item_type_strings[ITEM_TYPE_MAX];

@@ -9,6 +9,8 @@
 
 #include <time.h>
 
+#define CHANNEL_SENTINAL 888
+
 #ifdef USE_TINYPY
 struct tp_vm;
 #endif /* USE_TINYPY */
@@ -18,9 +20,11 @@ struct duk_hthread;
 
 struct CHANNEL {
    struct REF refcount;
+   uint16_t sentinal;
    bstring name;
    bstring topic;
    struct HASHMAP clients;
+   struct CLIENT* client_or_server;
    struct VECTOR mobiles;
    struct TILEMAP tilemap;
    struct VM* vm;
