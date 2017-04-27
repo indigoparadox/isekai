@@ -906,9 +906,13 @@ void datafile_parse_tilemap_ezxml_t(
    int bstr_retval = 0;
    SCAFFOLD_SIZE firstgid = 0;
    struct TILEMAP_TILESET* set = NULL;
+   struct CHANNEL* l = NULL;
 
    SCAFFOLD_SIZE z = 0;
    tileset_id = bfromcstr( "" );
+
+   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+   scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
 
    xml_tileset = ezxml_child( xml_data, "tileset" );
    scaffold_check_null( xml_tileset );
@@ -939,13 +943,13 @@ void datafile_parse_tilemap_ezxml_t(
       bstr_retval = bcatcstr( tileset_id, xml_attr );
       scaffold_check_nonzero( bstr_retval );
 
-      set = hashmap_get( t->server_tilesets, tileset_id );
+      set = hashmap_get( &(l->client_or_server->tilesets), tileset_id );
       if( NULL == set ) {
          scaffold_print_debug(
             &module, "New tileset found server-wide: %b\n", tileset_id
          );
          tilemap_tileset_new( set, tileset_id );
-         hashmap_put( t->server_tilesets, tileset_id, set );
+         hashmap_put( &(l->client_or_server->tilesets), tileset_id, set );
 
          datafile_tilemap_parse_tileset_ezxml(
             set, xml_tileset, tileset_id, local_images );

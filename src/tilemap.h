@@ -119,8 +119,6 @@ struct TILEMAP {
    struct VECTOR item_caches;
    struct HASHMAP layers;
    struct VECTOR tilesets;
-   struct HASHMAP* server_tilesets; /*!< All tilesets on server. */
-   struct HASHMAP* server_catalogs; /*!< All catalogs on server. */
    struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
    GFX_COORD_PIXEL window_step_width;    /*!< For dungeons. */

@@ -31,6 +31,9 @@ void* callback_search_item_caches(
 void* callback_search_items(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 );
+void* callback_search_item_type(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+);
 void* callback_search_tileset_img_gid( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg );

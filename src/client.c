@@ -740,7 +740,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
          catalog, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_ITEM_SPRITES,
          h->filename
       );
-      hashmap_put( l->tilemap.server_catalogs, h->filename, catalog );
+      hashmap_put( &(l->client_or_server->item_catalogs), h->filename, catalog );
 
       client_request_file_later(
          c, CHUNKER_DATA_TYPE_ITEM_CATALOG,

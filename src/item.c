@@ -14,7 +14,20 @@ void item_init( struct ITEM* e ) {
 void item_random_init(
    struct ITEM* e, ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
 ) {
+   struct ITEM_SPRITE* sprite = NULL;
 
+
+
+   sprite = item_random_sprite_of_type( type, catalog );
+   scaffold_check_null_msg( sprite, "Unable to create random item." );
+
+   e->display_name = sprite->display_name;
+   e->serial = rand();
+   e->catalog = catalog;
+   e->sprite = sprite;
+
+cleanup:
+   return;
 }
 
 void item_sprite_free( struct ITEM_SPRITE* sprite ) {
@@ -51,6 +64,31 @@ ITEM_TYPE item_type_from_c( const char* c_string ) {
    }
 
    return type_out;
+}
+
+struct ITEM_SPRITE* item_random_sprite_of_type(
+   ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
+) {
+   struct ITEM_SPRITE* sprite_out = NULL;
+   struct VECTOR* candidates = NULL;
+   SCAFFOLD_SIZE selection = 0;
+
+   candidates = vector_iterate_v(
+      &(catalog->sprites), callback_search_item_type, &type
+   );
+   scaffold_check_null_msg( candidates, "No sprite candidates found." );
+
+   selection = rand() % vector_count( candidates );
+   sprite_out = vector_get( candidates, selection );
+
+cleanup:
+   if( NULL != candidates ) {
+      /* Sprites are not garbage collected. */
+      candidates->count = 0;
+      vector_cleanup( candidates );
+      scaffold_free( candidates );
+   }
+   return sprite_out;
 }
 
 void item_draw_ortho(

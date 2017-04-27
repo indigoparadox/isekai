@@ -60,6 +60,8 @@ void channel_init(
    vector_init( &(l->mobiles ) );
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
+   l->sentinal = CHANNEL_SENTINAL;
+   l->client_or_server = server;
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images, server );
@@ -277,7 +279,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
 
    vector_iterate(
       &(l->tilemap.spawners), callback_load_spawner_catalogs,
-      l->tilemap.server_catalogs
+      &(l->client_or_server->item_catalogs)
    );
 #endif /* USE_EZXML */
 
