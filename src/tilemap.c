@@ -86,16 +86,20 @@ void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
 
 void tilemap_item_cache_init(
    struct TILEMAP_ITEM_CACHE* cache,
+   struct TILEMAP* t,
    GFX_COORD_TILE x,
    GFX_COORD_TILE y
 ) {
    vector_init( &(cache->items) );
    cache->position.x = x;
    cache->position.y = y;
+   cache->tilemap = t;
 }
 
 void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
+   vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
    vector_cleanup( &(cache->items) );
+   scaffold_free( cache );
 }
 
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
@@ -366,7 +370,6 @@ static void* tilemap_layer_draw_tile(
 ) {
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS_RECT tile_tilesheet_pos;
-   struct TILEMAP_POSITION tile_map_pos;
    GRAPHICS_RECT tile_screen_rect;
    struct TILEMAP* t = twindow->t;
    struct CLIENT* local_client = twindow->local_client;
@@ -387,9 +390,6 @@ static void* tilemap_layer_draw_tile(
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
       goto cleanup;
    }
-
-   tile_map_pos.x = x;
-   tile_map_pos.y = y;
 
    /* Figure out the window position to draw to. */
    tile_screen_rect.x = set->tilewidth * (x - twindow->x);
@@ -450,9 +450,7 @@ static void* tilemap_layer_draw_tile(
       g_tileset
    );
 
-   cache = vector_iterate(
-      &(t->item_caches), callback_search_item_caches, &tile_map_pos
-   );
+   cache = tilemap_get_item_cache( t, x, y, FALSE );
    if( NULL != cache ) {
       vector_iterate(
          &(cache->items), tilemap_layer_draw_tile_items_cb, &tile_screen_rect
@@ -670,6 +668,8 @@ void tilemap_update_window_ortho(
       return;
    }
 
+   /* TODO: Request item caches for tiles scrolling into view. */
+
    /* Find the focal point if we're not centered on it. */
    if( focal_x < twindow->x || focal_x > twindow->x + twindow->width ) {
       twindow->x = focal_x - (twindow->width / 2);
@@ -815,7 +815,7 @@ void tilemap_toggle_debug_state() {
    }
 }
 
-void tilemap_drop_item(
+struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    struct TILEMAP_ITEM_CACHE* cache = NULL;
@@ -827,7 +827,8 @@ void tilemap_drop_item(
    cache =
       vector_iterate( &(t->item_caches), callback_search_item_caches, &pos );
    if( NULL == cache ) {
-      tilemap_item_cache_new( cache, x, y );
+      tilemap_item_cache_new( cache, t, x, y );
+      scaffold_check_null( cache );
       vector_add( &(t->item_caches), cache );
    }
 
@@ -843,7 +844,39 @@ void tilemap_drop_item(
    tilemap_add_dirty_tile( t, x, y );
 
 cleanup:
-   return;
+   return cache;
+}
+
+void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e ) {
+   tilemap_drop_item( cache->tilemap, e, cache->position.x, cache->position.y );
+}
+
+/** \brief
+ * \param
+ * \param
+ * \return The cache for the given tile or a new, empty cache if none exists.
+ */
+struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
+   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y, BOOL force
+) {
+   struct TILEMAP_POSITION tile_map_pos;
+   struct TILEMAP_ITEM_CACHE* cache_out = NULL;
+
+   tile_map_pos.x = x;
+   tile_map_pos.y = y;
+
+   cache_out = vector_iterate(
+      &(t->item_caches), callback_search_item_caches, &tile_map_pos
+   );
+
+   if( NULL == cache_out && FALSE != force ) {
+      tilemap_item_cache_new( cache_out, t, x, y );
+      scaffold_check_null( cache_out );
+      vector_add( &(t->item_caches), cache_out );
+   }
+
+cleanup:
+   return cache_out;
 }
 
 #endif /* DEBUG_TILES */

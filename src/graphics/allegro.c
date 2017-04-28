@@ -596,7 +596,7 @@ void graphics_blit_partial(
    GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h,
    const GRAPHICS* src
 ) {
-   if( NULL != g->surface && NULL != src->surface ) {
+   if( NULL != g && NULL != src && NULL != g->surface && NULL != src->surface ) {
       masked_blit( src->surface, g->surface, s_x, s_y, x, y, s_w, s_h );
    }
 }

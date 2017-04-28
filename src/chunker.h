@@ -34,12 +34,14 @@
 #endif /* USE_SHM && USE_FILE_CACHE */
 
 typedef enum _CHUNKER_DATA_TYPE {
+   CHUNKER_DATA_TYPE_MISC = 0,
    CHUNKER_DATA_TYPE_TILEMAP,
    CHUNKER_DATA_TYPE_TILESET,
    CHUNKER_DATA_TYPE_TILESET_IMG,
    CHUNKER_DATA_TYPE_MOBSPRITES,
    CHUNKER_DATA_TYPE_MOBDEF,
-   CHUNKER_DATA_TYPE_ITEM_CATALOG
+   CHUNKER_DATA_TYPE_ITEM_CATALOG,
+   CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES
 } CHUNKER_DATA_TYPE;
 
 struct CHUNKER_PROGRESS {
@@ -127,7 +129,20 @@ int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
 BOOL chunker_unchunk_cached( struct CHUNKER* h );
 
 #ifdef CHUNKER_C
+struct tagbstring chunker_type_names[] = {
+   bsStatic( "no type" ),
+   bsStatic( "tilemap definiton" ),
+   bsStatic( "tileset definition" ),
+   bsStatic( "tileset sprites" ),
+   bsStatic( "mobile sprites" ),
+   bsStatic( "mobile definition" ),
+   bsStatic( "item catalog" ),
+   bsStatic( "item catalog sprites" )
+};
+
 SCAFFOLD_MODULE( "chunker.c" );
+#else
+extern struct tagbstring chunker_type_names[];
 #endif /* CHUNKER_C */
 
 #endif /* CHUNKER_H */

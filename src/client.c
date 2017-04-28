@@ -67,6 +67,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    vector_init( &(c->chunker_files_delayed) );
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
+   vector_init( &(c->unique_items) );
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -608,6 +609,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    struct VECTOR* v_applied = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct MOBILE* o = NULL;
+   struct ITEM_SPRITE* sprite = NULL;
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
@@ -720,30 +722,34 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 #endif /* USE_EZXML */
       break;
 
+   case CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES: /* Fall through. */
    case CHUNKER_DATA_TYPE_MOBSPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
-      scaffold_check_null( g );
+      scaffold_check_null_msg( g, "Unable to interpret spritesheet image." );
       graphics_set_image_data( g, h->raw_ptr, h->raw_length );
       scaffold_check_null( g->surface );
       hashmap_put( &(c->sprites), h->filename, g );
       hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
       scaffold_print_debug(
          &module,
-         "Client: Mobile spritesheet %s successfully loaded into cache.\n",
-         bdata( h->filename )
+         "Client: Spritesheet %b successfully loaded into cache.\n",
+         h->filename
       );
       break;
 
    case CHUNKER_DATA_TYPE_ITEM_CATALOG:
+
+      item_spritesheet_new( catalog, h->filename, c );
+
 #ifdef USE_EZXML
       datafile_parse_ezxml_string(
          catalog, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_ITEM_SPRITES,
          h->filename
       );
-      hashmap_put( &(l->client_or_server->item_catalogs), h->filename, catalog );
+      hashmap_put( &(c->item_catalogs), h->filename, catalog );
 
       client_request_file_later(
-         c, CHUNKER_DATA_TYPE_ITEM_CATALOG,
+         c, CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES,
          catalog->sprites_filename
       );
       goto cleanup;
@@ -975,5 +981,40 @@ void client_set_names(
    scaffold_assert( BSTR_ERR != bstr_result );
    bstr_result = bassign( c->username, rname );
    scaffold_assert( BSTR_ERR != bstr_result );
+   return;
+}
+
+struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial ) {
+   return vector_get( &(c->unique_items), serial );
+}
+
+struct ITEM_SPRITESHEET* client_get_catalog(
+   struct CLIENT* c, const bstring name
+) {
+   return hashmap_get( &(c->item_catalogs), name );
+}
+
+void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
+   struct ITEM* c_e = NULL;
+   int retval = 0;
+
+   c_e = vector_get( &(c->unique_items), serial );
+
+   if( c_e == e ) {
+      goto cleanup;
+   } else if( NULL != c_e ) {
+      c_e->count = e->count;
+      bassign( c_e->catalog_name, e->catalog_name );
+      scaffold_assign_or_cpy_c( c_e->display_name, bdata( e->display_name ), retval );
+      c_e->sprite_id = e->sprite_id;
+
+      /* Don't overwrite contents. */
+
+      item_free( e );
+   } else {
+      vector_set( &(c->unique_items), serial, e, TRUE );
+   }
+
+cleanup:
    return;
 }
