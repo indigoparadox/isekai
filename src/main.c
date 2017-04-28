@@ -245,7 +245,7 @@ static BOOL loop_connect() {
 #ifdef USE_CONNECT_DIALOG
       /* Prompt for an address and port. */
       ui_window_new(
-         ui, win, UI_WINDOW_TYPE_XXX, &str_cdialog_id,
+         ui, win, &str_cdialog_id,
          &str_cdialog_title, &str_cdialog_prompt,
          -1, -1, -1, -1
       );

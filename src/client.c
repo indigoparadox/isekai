@@ -824,7 +824,7 @@ static BOOL client_poll_ui(
       if( 0 != ui_poll_input(
          c->ui, p, &str_client_window_id_chat
       ) ) {
-         ui_window_pop( c->ui );
+         //ui_window_destroy( c->ui, &str_client_window_id_chat );
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
          /* Process collected input. */
@@ -833,6 +833,24 @@ static BOOL client_poll_ui(
          mobile_speak( c->puppet, client_input_from_ui );
 
          goto reset_buffer;
+      }
+      goto cleanup;
+   }
+
+   /* Poll window: Chat */
+   if( NULL != ui_window_by_id( c->ui, &str_client_window_id_inv ) ) {
+      retval = TRUE; /* Whatever the window does, it consumes input. */
+      if( 0 != ui_poll_input(
+         c->ui, p, &str_client_window_id_inv
+      ) ) {
+         tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
+         /* Process collected input. */
+
+         //proto_send_msg_channel( c, l, client_input_from_ui );
+         //mobile_speak( c->puppet, client_input_from_ui );
+
+         //goto reset_buffer;
       }
       goto cleanup;
    }
@@ -905,13 +923,35 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
       /* TODO: Get attack target. */
       proto_client_send_update( c, &update );
       return TRUE;
+
+   case 'e':
+      if( NULL == client_input_from_ui ) {
+         client_input_from_ui = bfromcstralloc( 80, "" );
+         scaffold_check_null( client_input_from_ui );
+      }
+      ui_window_new(
+         ui, win, &str_client_window_id_inv,
+         &str_client_window_title_inv, NULL, -1, -1, 600, 380
+      );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
+         0, 0, 300, 380
+      );
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
+         300, 0, 300, 380
+      );
+      //ui_control_add( win, &str_client_control_id_chat, control );
+      ui_window_push( ui, win );
+      return TRUE;
+
    case '\\':
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
          scaffold_check_null( client_input_from_ui );
       }
       ui_window_new(
-         ui, win, UI_WINDOW_TYPE_NONE, &str_client_window_id_chat,
+         ui, win, &str_client_window_id_chat,
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
       ui_control_new(

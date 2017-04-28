@@ -23,9 +23,10 @@ void backlog_ensure_window( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
 
-   if( NULL == ui_window_by_id( ui, &str_backlog_id ) ) {
+   win = ui_window_by_id( ui, &str_backlog_id );
+   if( NULL == win ) {
       ui_window_new(
-         ui, win, UI_WINDOW_TYPE_BACKLOG, &str_backlog_id,
+         ui, win, &str_backlog_id,
          &str_backlog_title, NULL,
          0, GRAPHICS_SCREEN_HEIGHT - (3 * GRAPHICS_SPRITE_HEIGHT), 460, 3 * GRAPHICS_SPRITE_HEIGHT
       );
