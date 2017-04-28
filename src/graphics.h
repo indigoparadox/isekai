@@ -170,6 +170,9 @@ void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap );
 void graphics_bitmap_load(
    const BYTE* data, SCAFFOLD_SIZE data_sz, struct GRAPHICS_BITMAP** bitmap_out
 );
+SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
+   GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
+);
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );

@@ -258,23 +258,6 @@ cleanup:
    return;
 }
 
-SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
-   struct MOBILE* o, SCAFFOLD_SIZE gid,
-   GFX_COORD_PIXEL* x, GFX_COORD_PIXEL* y
-) {
-   GFX_COORD_TILE tiles_wide = 0;
-
-   scaffold_check_null( o->sprites );
-
-   tiles_wide = o->sprites->w / o->sprite_width;
-
-   *y = ((gid) / tiles_wide) * o->sprite_height;
-   *x = ((gid) % tiles_wide) * o->sprite_width;
-
-cleanup:
-   return;
-}
-
 SCAFFOLD_INLINE
 GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
@@ -305,8 +288,6 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
 
 void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
    GFX_COORD_PIXEL
-      sprite_x,
-      sprite_y,
       pix_x,
       pix_y,
       steps_remaining_x,
@@ -314,6 +295,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
    struct MOBILE* o_player = NULL;
    struct CLIENT* local_client = twindow->local_client;
+   GRAPHICS_RECT sprite_rect;
 
 #ifdef DEBUG_TILES
    bstring bnum = NULL;
@@ -420,8 +402,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       vector_get( &(o->current_animation->frames), o->current_frame );
    scaffold_check_null( current_frame );
 
-   mobile_get_spritesheet_pos_ortho(
-      o, current_frame->id, &sprite_x, &sprite_y
+   sprite_rect.w = o->sprite_width;
+   sprite_rect.h = o->sprite_height;
+   graphics_get_spritesheet_pos_ortho(
+      o->sprites, &sprite_rect, current_frame->id
    );
 
    /* Add dirty tiles to list before drawing. */
@@ -431,7 +415,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    graphics_blit_partial(
       twindow->g,
       pix_x, pix_y,
-      sprite_x, sprite_y,
+      sprite_rect.x, sprite_rect.y,
       o->sprite_width, o->sprite_display_height,
       o->sprites
    );

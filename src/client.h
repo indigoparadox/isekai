@@ -48,8 +48,9 @@ struct CLIENT {
    struct HASHMAP chunkers;
    struct VECTOR chunker_files_delayed;
    struct MOBILE* puppet;
-   struct HASHMAP sprites; /*!< Contains sprites for all mobiles this client
-                            *   encounters on client-side. Not used server-side.
+   struct HASHMAP sprites; /*!< Contains sprites for all mobiles/items this
+                            *   client encounters on client-side. Not used
+                            *   server-side.
                             */
    struct HASHMAP tilesets;
    struct HASHMAP item_catalogs;
