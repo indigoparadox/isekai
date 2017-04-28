@@ -163,12 +163,10 @@ cleanup:
 void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 ) {
-   GFX_COORD_PIXEL
-      sprite_x,
-      sprite_y;
    struct MOBILE* o_player = NULL;
-   //struct CLIENT* local_client = twindow->local_client;
    struct ITEM_SPRITESHEET* catalog = NULL;
+   GRAPHICS_RECT sprite_rect;
+   struct ITEM_SPRITE* sprite = NULL;
 
    scaffold_assert_client();
 
@@ -178,6 +176,11 @@ void item_draw_ortho(
 
    catalog = client_get_catalog( e->client_or_server, e->catalog_name );
    if( NULL == catalog ) {
+      return;
+   }
+
+   sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
+   if( NULL == sprite ) {
       return;
    }
 
@@ -195,21 +198,30 @@ void item_draw_ortho(
    /* Figure out the window position to draw to. */
 
    /* TODO: Support variable sprite size. */
+   sprite_rect.w = catalog->spritewidth;
+   sprite_rect.h = catalog->spriteheight;
 
    /* TODO: Figure out the graphical sprite to draw from. */
-   /* mobile_get_spritesheet_pos_ortho(
-      o, current_frame->id, &sprite_x, &sprite_y
-   ); */
+   graphics_get_spritesheet_pos_ortho(
+      catalog->sprites_image, &sprite_rect, e->sprite_id
+   );
 
    /* Add dirty tiles to list before drawing. */
    /* TODO: This goes in tilemap function if that's calling us. */
    /* tilemap_add_dirty_tile( twindow->t, o->x, o->y );
    tilemap_add_dirty_tile( twindow->t, o->prev_x, o->prev_y ); */
+   if(
+      NULL == catalog->sprites_image &&
+      NULL != hashmap_get( &(e->client_or_server->sprites), catalog->sprites_filename )
+   ) {
+      catalog->sprites_image =
+         (GRAPHICS*)hashmap_get( &(e->client_or_server->sprites), catalog->sprites_filename );
+   }
 
    graphics_blit_partial(
       g,
       x, y,
-      sprite_x, sprite_y,
+      sprite_rect.x, sprite_rect.y,
       catalog->spritewidth, catalog->spriteheight,
       catalog->sprites_image
    );

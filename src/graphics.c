@@ -209,3 +209,25 @@ GRAPHICS* graphics_copy( GRAPHICS* g ) {
 cleanup:
    return g_out;
 }
+
+/** \brief Put the spritesheet position for gid on the spritesheet g_sprites in
+ *         the rectangle sprite_frame. The rectangle must already have the
+ *         correct sprite width and height set when passed.
+ * \param
+ * \param
+ */
+SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
+   GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
+) {
+   GFX_COORD_TILE tiles_wide = 0;
+
+   scaffold_check_null( g_sprites );
+
+   tiles_wide = g_sprites->w / sprite_frame->w;
+
+   sprite_frame->y = ((gid) / tiles_wide) * sprite_frame->h;
+   sprite_frame->x = ((gid) % tiles_wide) * sprite_frame->w;
+
+cleanup:
+   return;
+}
