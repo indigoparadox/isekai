@@ -87,6 +87,7 @@ struct TILEMAP_POSITION {
 struct TILEMAP_ITEM_CACHE {
    struct TILEMAP_POSITION position;
    struct VECTOR items;
+   struct TILEMAP* tilemap;
 };
 
 struct TILEMAP_SPAWNER {
@@ -170,10 +171,10 @@ struct TILEMAP {
     scaffold_check_null( t ); \
     tilemap_layer_init( t );
 
-#define tilemap_item_cache_new( cache, x, y ) \
+#define tilemap_item_cache_new( cache, t, x, y ) \
     cache = scaffold_alloc( 1, struct TILEMAP_ITEM_CACHE ); \
     scaffold_check_null( cache ); \
-    tilemap_item_cache_init( cache, x, y );
+    tilemap_item_cache_init( cache, t, x, y );
 
 #define tilemap_position_new( t ) \
     t = (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) ); \
@@ -198,6 +199,7 @@ void tilemap_spawner_init(
 void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts );
 void tilemap_item_cache_init(
    struct TILEMAP_ITEM_CACHE* cache,
+   struct TILEMAP* t,
    GFX_COORD_TILE x,
    GFX_COORD_TILE y
 );
@@ -242,8 +244,12 @@ void tilemap_toggle_debug_state();
 void tilemap_add_tileset(
    struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
 );
-void tilemap_drop_item(
+struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
+);
+void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e );
+struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
+   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y, BOOL force
 );
 
 #ifdef TILEMAP_C

@@ -84,12 +84,17 @@ typedef ssize_t SCAFFOLD_SIZE_SIGNED;
 #else
 typedef uint32_t SCAFFOLD_SIZE;
 typedef int32_t SCAFFOLD_SIZE_SIGNED;
+#define SCAFFOLD_SIZE_MAX UINT_MAX
 #endif /* USE_SIZET */
 
 typedef int32_t INTERVAL;
 typedef uint8_t SERIAL;
 #define SERIAL_MIN 1
 #define SERIAL_MAX UCHAR_MAX - SERIAL_MIN - 1
+
+typedef uint16_t BIG_SERIAL;
+#define BIG_SERIAL_MIN 1
+#define BIG_SERIAL_MAX UINT_MAX - BIG_SERIAL_MIN - 1
 
 /* = Configuration = */
 

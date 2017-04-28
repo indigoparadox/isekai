@@ -24,9 +24,9 @@ void datafile_parse_item_sprites_ezxml_t(
 ) {
    ezxml_t xml_sprite;
    const char* xml_attr;
-   SCAFFOLD_SIZE gid;
    struct ITEM_SPRITE* sprite = NULL;
    SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE sprite_id;
 
    scaffold_check_null( xml_sprites );
 
@@ -42,9 +42,9 @@ void datafile_parse_item_sprites_ezxml_t(
 
    xml_sprite = ezxml_child( xml_sprites, "sprite" );
    while( NULL != xml_sprite ) {
-      ezxml_int( gid, xml_attr, xml_sprite, "id" );
-
       sprite = scaffold_alloc( 1, struct ITEM_SPRITE );
+
+      ezxml_int( sprite_id, xml_attr, xml_sprite, "id" );
 
       ezxml_string( xml_attr, xml_sprite, "display" );
       sprite->display_name = bfromcstr( xml_attr );
@@ -59,8 +59,8 @@ void datafile_parse_item_sprites_ezxml_t(
          &module, "Loading proto-item: %b\n", sprite->display_name
       );
 
-      scaffold_assert( NULL == vector_get( &(spritesheet->sprites), gid ) );
-      vector_set( &(spritesheet->sprites), gid, sprite, TRUE );
+      scaffold_assert( NULL == vector_get( &(spritesheet->sprites), sprite_id ) );
+      vector_set( &(spritesheet->sprites), sprite_id, sprite, TRUE );
       sprite = NULL;
 
       xml_sprite = ezxml_next( xml_sprite );

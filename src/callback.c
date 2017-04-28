@@ -311,7 +311,7 @@ void* callback_load_spawner_catalogs(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
-   struct HASHMAP* m_catalogs = (struct HASHMAP*)arg;
+   struct CLIENT* client_or_server = (struct CLIENT*)arg;
    bstring catdata_path = NULL;
    BYTE* catdata = NULL;
    SCAFFOLD_SIZE catdata_length = 0;
@@ -319,7 +319,7 @@ void* callback_load_spawner_catalogs(
 
    if(
       TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&
-      NULL == hashmap_get( m_catalogs, spawner->catalog )
+      NULL == hashmap_get( &(client_or_server->item_catalogs), spawner->catalog )
    ) {
       scaffold_print_debug(
          &module, "Loading item catalog: %b\n", spawner->catalog
@@ -332,7 +332,7 @@ void* callback_load_spawner_catalogs(
       scaffold_check_nonzero( scaffold_error );
       scaffold_read_file_contents( catdata_path, &catdata, &catdata_length );
 
-      catalog = scaffold_alloc( 1, struct ITEM_SPRITESHEET );
+      item_spritesheet_new( catalog, spawner->catalog, client_or_server );
 
 #ifdef USE_EZXML
 
@@ -341,7 +341,7 @@ void* callback_load_spawner_catalogs(
          catdata_path
       );
 
-      hashmap_put( m_catalogs, spawner->catalog, catalog );
+      hashmap_put( &(client_or_server->item_catalogs), spawner->catalog, catalog );
 
 #endif /* USE_EZXML */
 
@@ -574,8 +574,10 @@ void* callback_proc_channel_spawners(
    struct MOBILE* o = NULL;
    struct ITEM* e = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
 
    l = scaffold_container_of( t, struct CHANNEL, tilemap );
+   scaffold_assert( CHANNEL_SENTINAL == l->sentinal );
 
    if( -1 >= ts->countdown_remaining ) {
       /* Spawner has been disabled. */
@@ -606,8 +608,19 @@ void* callback_proc_channel_spawners(
       catalog = hashmap_get( &(s->self.item_catalogs), ts->catalog );
       /* Catalog should be loaded by tilemap datafile loader. */
       scaffold_check_null( catalog );
-      item_random_new( e, item_type_from_c( bdata( ts->id ) ), catalog );
-      tilemap_drop_item( &(l->tilemap), e, ts->pos.x, ts->pos.y );
+      while( NULL == e || 0 == e->sprite_id ) {
+         item_random_new(
+            e, item_type_from_c( bdata( ts->id ) ), ts->catalog, &(s->self)
+         );
+      }
+      scaffold_assert( 0 != e->sprite_id );
+      scaffold_assert( 0 < blength( e->catalog_name ) );
+      cache = tilemap_drop_item( &(l->tilemap), e, ts->pos.x, ts->pos.y );
+      scaffold_assert( NULL != cache );
+      /* TODO: Only send item updates to those nearby. */
+      if( NULL != cache ) {
+         proto_send_tile_cache_channel( l, cache );
+      }
       e = NULL;
       break;
    }
@@ -868,6 +881,7 @@ void* callback_attach_channel_mob_sprites(
    return vector_iterate( &(l->mobiles), callback_attach_mob_sprites, c );
 }
 
+
 void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
@@ -965,6 +979,18 @@ BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
       item_spritesheet_free( cat );
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL callback_free_item_cache_items(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct ITEM* e = (struct ITEM*)iter;
+   SCAFFOLD_SIZE serial = *((SCAFFOLD_SIZE*)arg);
+   if( NULL == arg || serial == e->serial ) {
+      item_free( e );
       return TRUE;
    }
    return FALSE;

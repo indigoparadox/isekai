@@ -64,42 +64,75 @@ struct ITEM_SPRITE {
 };
 
 struct ITEM_SPRITESHEET {
+   struct REF refcount;
+   /* bstring name; */
    GRAPHICS* sprites_image;
    bstring sprites_filename;
    BOOL sprites_requested;
    GFX_COORD_PIXEL spritewidth;
    GFX_COORD_PIXEL spriteheight;
+   struct CLIENT* client_or_server;
    struct VECTOR sprites;
 };
 
 struct ITEM {
-   SCAFFOLD_SIZE serial;
-   struct ITEM_SPRITE* sprite;
-   struct ITEM_SPRITESHEET* catalog;
+   struct REF refcount;
+   BIG_SERIAL serial;
+   /* struct ITEM_SPRITE* sprite;
+   struct ITEM_SPRITESHEET* catalog; */
+   bstring catalog_name;
+   SCAFFOLD_SIZE sprite_id;
    bstring display_name;
    union ITEM_CONTENT content;
    SCAFFOLD_SIZE count;
+   struct CLIENT* client_or_server;
 };
 
-#define item_random_new( e, type, item_catalog ) \
+#define item_new( e, serial, display_name, count, catalog, sprite, c ) \
     e = scaffold_alloc( 1, struct ITEM ); \
     scaffold_check_null( e ); \
-    item_random_init( e, type, item_catalog );
+    item_init( e, serial, display_name, count, catalog, sprite, c );
 
-void item_init( struct ITEM* e );
-void item_random_init(
-   struct ITEM* e, ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
+#define item_random_new( e, type, item_catalog, c ) \
+    e = scaffold_alloc( 1, struct ITEM ); \
+    scaffold_check_null( e ); \
+    item_random_init( e, type, item_catalog, c );
+
+#define item_spritesheet_new( catalog, name, client_or_server ) \
+    catalog = scaffold_alloc( 1, struct ITEM_SPRITESHEET ); \
+    scaffold_check_null( catalog ); \
+    item_spritesheet_init( catalog, name, client_or_server );
+
+void item_init(
+   struct ITEM* e, BIG_SERIAL serial, const bstring display_name,
+   SCAFFOLD_SIZE count, bstring catalog_name,
+   SCAFFOLD_SIZE sprite_id, struct CLIENT* c
 );
+void item_random_init(
+   struct ITEM* e, ITEM_TYPE type, const bstring catalog_name,
+   struct CLIENT* c
+);
+void item_free( struct ITEM* e );
 void item_sprite_free( struct ITEM_SPRITE* sprite );
+void item_spritesheet_init(
+   struct ITEM_SPRITESHEET* catalog,
+   const bstring name,
+   struct CLIENT* client_or_server
+);
 void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog );
+struct ITEM_SPRITE* item_spritesheet_get_sprite(
+   struct ITEM_SPRITESHEET* catalog,
+   SCAFFOLD_SIZE sprite_id
+);
 ITEM_TYPE item_type_from_c( const char* c_string );
-struct ITEM_SPRITE* item_random_sprite_of_type(
+SCAFFOLD_SIZE item_random_sprite_id_of_type(
    ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
 );
 void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 );
-void item_set_contents( struct ITEM* t, union ITEM_CONTENT content );
+void item_set_contents( struct ITEM* e, union ITEM_CONTENT content );
+BOOL item_is_container( struct ITEM* e );
 
 #ifdef ITEM_C
 

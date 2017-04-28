@@ -4,30 +4,71 @@
 
 #include "callback.h"
 #include "chunker.h"
+#include "client.h"
 
-void item_init( struct ITEM* e ) {
-   e->display_name = NULL;
-   e->serial = 0;
-   e->sprite = NULL;
+static void item_free_final( const struct REF* ref ) {
+   struct ITEM* e = scaffold_container_of( ref, struct ITEM, refcount );
+
+   bdestroy( e->display_name );
+   //item_spritesheet_free( e->catalog );
+   bdestroy( e->catalog_name );
+
 }
 
-void item_random_init(
-   struct ITEM* e, ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
+void item_init(
+   struct ITEM* e, BIG_SERIAL serial, const bstring display_name,
+   SCAFFOLD_SIZE count, const bstring catalog_name,
+   SCAFFOLD_SIZE sprite_id, struct CLIENT* c
 ) {
-   struct ITEM_SPRITE* sprite = NULL;
+   int retval;
 
+   ref_init( &(e->refcount), item_free_final );
 
+   e->serial = serial;
 
-   sprite = item_random_sprite_of_type( type, catalog );
-   scaffold_check_null_msg( sprite, "Unable to create random item." );
+   client_set_item( c, e->serial, e );
 
-   e->display_name = sprite->display_name;
-   e->serial = rand();
-   e->catalog = catalog;
-   e->sprite = sprite;
+   e->client_or_server = c;
+   e->sprite_id = sprite_id;
+   e->catalog_name = bstrcpy( catalog_name );
+   e->content.container = NULL;
+   e->count = count;
+
+   scaffold_assign_or_cpy_c( e->display_name, bdata( display_name ), retval );
 
 cleanup:
    return;
+}
+
+void item_random_init(
+   struct ITEM* e, ITEM_TYPE type, const bstring catalog_name,
+   struct CLIENT* c
+) {
+   SCAFFOLD_SIZE sprite_id = 0;
+   BIG_SERIAL serial;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+   struct ITEM_SPRITE* sprite = NULL;
+
+   catalog = client_get_catalog( c, catalog_name );
+   scaffold_check_null_msg( catalog, "Unable to find catalog." );
+
+   sprite_id = item_random_sprite_id_of_type( type, catalog );
+   /* TODO: Sprite 0 should be reserved. */
+   sprite = item_spritesheet_get_sprite( catalog, sprite_id );
+   scaffold_check_null_msg( sprite, "Unable to find item sprite." );
+
+   serial = rand() % BIG_SERIAL_MAX;
+   while( NULL != client_get_item( catalog->client_or_server, serial ) ) {
+      serial = rand() % BIG_SERIAL_MAX;
+   }
+   item_init( e, serial, sprite->display_name, 1, catalog_name, sprite_id, c );
+
+cleanup:
+   return;
+}
+
+void item_free( struct ITEM* e ) {
+   refcount_dec( e, "item" );
 }
 
 void item_sprite_free( struct ITEM_SPRITE* sprite ) {
@@ -37,17 +78,45 @@ void item_sprite_free( struct ITEM_SPRITE* sprite ) {
    }
 }
 
-void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog ) {
+static void item_spritesheet_free_final( const struct REF* ref ) {
+   struct ITEM_SPRITESHEET* catalog =
+      scaffold_container_of( ref, struct ITEM_SPRITESHEET, refcount );
    if( NULL != catalog ) {
       vector_remove_cb( &(catalog->sprites), callback_free_sprites, NULL );
       vector_cleanup( &(catalog->sprites) );
 
       graphics_surface_free( catalog->sprites_image );
 
+      //bdestroy( catalog->name );
       bdestroy( catalog->sprites_filename );
 
       scaffold_free( catalog );
    }
+}
+
+void item_spritesheet_init(
+   struct ITEM_SPRITESHEET* catalog,
+   const bstring name,
+   struct CLIENT* client_or_server
+) {
+   ref_init( &(catalog->refcount), item_spritesheet_free_final );
+   //catalog->name = bstrcpy( name );
+   catalog->client_or_server = client_or_server;
+}
+
+void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog ) {
+   refcount_dec( catalog, "catalog" );
+}
+
+struct ITEM_SPRITE* item_spritesheet_get_sprite(
+   struct ITEM_SPRITESHEET* catalog,
+   SCAFFOLD_SIZE sprite_id
+) {
+   struct ITEM_SPRITE* sprite_out = NULL;
+
+   sprite_out = vector_get(  &(catalog->sprites), sprite_id );
+
+   return sprite_out;
 }
 
 ITEM_TYPE item_type_from_c( const char* c_string ) {
@@ -66,7 +135,7 @@ ITEM_TYPE item_type_from_c( const char* c_string ) {
    return type_out;
 }
 
-struct ITEM_SPRITE* item_random_sprite_of_type(
+SCAFFOLD_SIZE item_random_sprite_id_of_type(
    ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
 ) {
    struct ITEM_SPRITE* sprite_out = NULL;
@@ -79,7 +148,7 @@ struct ITEM_SPRITE* item_random_sprite_of_type(
    scaffold_check_null_msg( candidates, "No sprite candidates found." );
 
    selection = rand() % vector_count( candidates );
-   sprite_out = vector_get( candidates, selection );
+   /* sprite_out = vector_get( candidates, selection ); */
 
 cleanup:
    if( NULL != candidates ) {
@@ -88,7 +157,7 @@ cleanup:
       vector_cleanup( candidates );
       scaffold_free( candidates );
    }
-   return sprite_out;
+   return selection;
 }
 
 void item_draw_ortho(
@@ -103,11 +172,14 @@ void item_draw_ortho(
 
    scaffold_assert_client();
 
-   if( NULL == e || NULL == e->catalog || NULL == e->sprite || NULL == g ) {
+   if( NULL == e || NULL == g ) {
       return;
    }
 
-   catalog = e->catalog;
+   catalog = client_get_catalog( e->client_or_server, e->catalog_name );
+   if( NULL == catalog ) {
+      return;
+   }
 
    /*
    if(
@@ -148,4 +220,21 @@ cleanup:
 
 void item_set_contents( struct ITEM* e, union ITEM_CONTENT content ) {
    e->content = content;
+}
+
+BOOL item_is_container( struct ITEM* e ) {
+   struct ITEM_SPRITE* sprite;
+   struct ITEM_SPRITESHEET* catalog;
+
+   if( NULL == e ) {
+      return FALSE;
+   }
+
+   catalog = client_get_catalog( e->client_or_server, e->catalog_name );
+   if( NULL == catalog ) { return FALSE; }
+   sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
+   if( NULL == sprite ) { return FALSE; }
+
+   return ITEM_TYPE_CONTAINER == sprite->type &&
+      NULL != e->content.container;
 }

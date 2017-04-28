@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct TILEMAP_ITEM_CACHE* last_item_cache = NULL;
+
 typedef enum _IRC_ERROR {
    ERR_NONICKNAMEGIVEN = 431,
    ERR_NICKNAMEINUSE = 433,
@@ -105,16 +107,48 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
 /** \brief This should ONLY be called by client_request_file(). All requests for
  *         files should go through that function.
- * \param
- * \param
- * \return
+ * \param c          Local client object.
+ * \param filename   Name/path of the file (relative to the server root).
+ * \param type       Type of file requested. Used in return processing.
  */
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
    scaffold_assert_client();
+   scaffold_assert( 0 < blength( filename ) );
    scaffold_print_debug(
-      &module, "Client: Requesting file: %s\n", bdata( filename )
+      &module, "Client: Requesting %b file: %s\n",
+      chunker_type_names[type].data, bdata( filename )
    );
    client_printf( c, "GRF %d %b", type, filename );
+}
+
+/** \brief Request spritesheet file name for the resource with the provided
+ *         name.
+ * \param c    Local client object.
+ * \param type Resource type to request (e.g. CDT_ITEM_CATALOG_SPRITES)
+ * \param name Name of the object (catalog/mobile type/etc) requesting for.
+ */
+void proto_client_request_spritesheet(
+   struct CLIENT* c, bstring name, CHUNKER_DATA_TYPE type
+) {
+   scaffold_assert_client();
+   scaffold_assert( 0 < blength( name ) );
+   scaffold_print_debug(
+      &module, "Client: Requesting %b: %b\n",
+      &(chunker_type_names[type]), name
+   );
+   client_printf( c, "CREQ %d %b", type, name );
+}
+
+void proto_server_name_spritesheet(
+   struct CLIENT* c, bstring filename, CHUNKER_DATA_TYPE type
+) {
+   scaffold_assert_client();
+   scaffold_assert( 0 < blength( filename ) );
+   scaffold_print_debug(
+      &module, "Server: Naming %b: %s\n",
+      chunker_type_names[type].data, filename
+   );
+   client_printf( c, "CRES %d %b", type, filename );
 }
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
@@ -141,7 +175,7 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    );
 }
 
-static void proto_send_tile_cache_iter_cb(
+static void* proto_send_item_cb(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
@@ -149,33 +183,70 @@ static void proto_send_tile_cache_iter_cb(
 
    scaffold_assert_server();
 
+   scaffold_assert( 0 < blength( e->catalog_name ) );
+
    client_printf(
-      c, "ITEM %p %b %d %d",
-      e, e->display_name
+      c, "ITEM %d %b %d %b %d",
+      e->serial, e->display_name, e->count, e->catalog_name, e->sprite_id
    );
+
+   return NULL;
+}
+
+void proto_send_container( struct CLIENT* c, struct ITEM* e ) {
+   if( FALSE != item_is_container( e ) ) {
+
+      client_printf(
+         c, "CONTAINER_START %d",
+         e->serial
+      );
+
+      vector_iterate( e->content.container, proto_send_item_cb, c );
+
+      client_printf( c, "CONTAINER_END" );
+   }
 }
 
 void proto_send_tile_cache(
-   struct CLIENT* c, struct TILEMAP* t, struct TILEMAP_ITEM_CACHE* cache
+   struct CLIENT* c, struct TILEMAP_ITEM_CACHE* cache
 ) {
    struct CHANNEL* l = NULL;
 
    scaffold_assert_server();
 
-   l = scaffold_container_of( l, struct CHANNEL, tilemap );
+   l = scaffold_container_of( cache->tilemap, struct CHANNEL, tilemap );
    scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
 
    client_printf(
-      c, "ITEM_CACHE_START %b %d %d",
+      c, "IC_S %b %d %d",
       l->name, cache->position.x, cache->position.y
    );
 
-   vector_iterate( &(cache->items), proto_send_tile_cache_iter_cb, c );
+   vector_iterate( &(cache->items), proto_send_item_cb, c );
 
-   client_printf( c, "ITEM_CACHE_END" );
+   client_printf( c, "IC_E" );
 
 cleanup:
    return;
+}
+
+static void* proto_send_tile_cache_channel_cb(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)arg;
+
+   proto_send_tile_cache( c, cache );
+}
+
+void proto_send_tile_cache_channel(
+   struct CHANNEL* l, struct TILEMAP_ITEM_CACHE* cache
+) {
+   hashmap_iterate(
+      &(l->clients),
+      proto_send_tile_cache_channel_cb,
+      cache
+   );
 }
 
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
@@ -784,6 +855,56 @@ cleanup:
    return;
 }
 
+static void irc_server_resource_request(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   const char* type_c;
+   struct CHUNKER_PROGRESS progress;
+   CHUNKER_DATA_TYPE type;
+   bstring object_name = NULL;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+
+   irc_detect_malformed( 3, "CREQ", line );
+
+   type_c = bdata( args->entry[1] );
+   type = (CHUNKER_DATA_TYPE)atoi( type_c );
+
+   object_name = args->entry[2];
+
+   switch( type ) {
+   case CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES:
+      catalog = hashmap_get( &(s->self.item_catalogs), object_name );
+      scaffold_check_null_msg( catalog, "Item catalog not found." );
+      proto_server_name_spritesheet( c, catalog->sprites_filename, type );
+      break;
+   }
+
+cleanup:
+   return;
+}
+
+static void irc_client_resource_response(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   const char* type_c;
+   struct CHUNKER_PROGRESS progress;
+   CHUNKER_DATA_TYPE type;
+   bstring filename = NULL;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+
+   irc_detect_malformed( 3, "CRES", line );
+
+   type_c = bdata( args->entry[1] );
+   type = (CHUNKER_DATA_TYPE)atoi( type_c );
+
+   filename = args->entry[2];
+
+   client_request_file( c, type, filename );
+
+cleanup:
+   return;
+}
+
 #ifdef DEBUG_VM
 
 static void irc_server_debugvm(
@@ -977,6 +1098,117 @@ cleanup:
    return;
 }
 
+static void irc_client_item_cache_start(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   struct CHANNEL* l = NULL;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
+   const char* c_iter;
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
+
+   irc_detect_malformed( 4, "IC_S", line );
+
+   l = client_get_channel_by_name( c, args->entry[1] );
+   scaffold_check_null_msg( l, "Channel not found." );
+
+   c_iter = bdata( args->entry[2] );
+   x = atoi( c_iter );
+
+   c_iter = bdata( args->entry[3] );
+   y = atoi( c_iter );
+
+   if( NULL != cache ) {
+      scaffold_print_error(
+         &module, "New item cache opened without closing previous: %b (%d, %d)",
+         l->name, x, y
+      );
+   }
+
+   cache = tilemap_get_item_cache( &(l->tilemap), x, y, TRUE );
+
+   /* Empty the cache in preparation for a refresh. */
+   vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
+   last_item_cache = cache;
+
+cleanup:
+   return;
+}
+
+static void irc_client_item(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   SCAFFOLD_SIZE serial,
+      count,
+      sprite_id;
+   struct ITEM* e = NULL;
+   const char* c_iter;
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
+   int retval;
+   bstring display_name;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+   bstring catalog_name = NULL;
+   //struct ITEM_SPRITE* sprite = NULL;
+
+   irc_detect_malformed( 6, "ITEM", line );
+
+   c_iter = bdata( args->entry[1] );
+   serial = atoi( c_iter );
+
+   display_name = args->entry[2];
+
+   c_iter = bdata( args->entry[3] );
+   count = atoi( c_iter );
+
+   catalog_name = args->entry[4];
+   catalog = client_get_catalog( c, catalog_name );
+   //scaffold_check_null_msg( catalog, "Catalog not found on client." );
+   if( NULL == catalog ) {
+      scaffold_print_debug(
+         &module, "Client: Catalog not present in cache: %b\n", catalog_name
+      );
+      /*
+      proto_client_request_spritesheet(
+         c, catalog_name, CHUNKER_DATA_TYPE_ITEM_CATALOG
+      );
+      */
+      client_request_file( c, CHUNKER_DATA_TYPE_ITEM_CATALOG, catalog_name );
+   }
+
+   c_iter = bdata( args->entry[5] );
+   sprite_id = atoi( c_iter );
+
+   /*
+   sprite = item_spritesheet_get_sprite( catalog, sprite_id );
+   scaffold_check_null_msg( sprite, "Sprite not found on client." );
+   */
+
+   item_new( e, serial, display_name, count, args->entry[4], sprite_id, c );
+
+   tilemap_drop_item_in_cache( last_item_cache, e );
+
+   /*
+   scaffold_assert( NULL != catalog->sprites_filename );
+   client_request_file(
+      c, CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES, catalog->sprites_filename
+   );
+   */
+
+   scaffold_print_debug(
+      &module, "Client: Local instance of item updated: %b (%d, %b, %d)\n",
+      e->display_name, e->serial, e->catalog_name, e->sprite_id
+   );
+
+cleanup:
+   return;
+}
+
+static void irc_client_item_cache_end(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   last_item_cache = NULL;
+}
+
 #endif /* ENABLE_LOCAL_CLIENT */
 
 static void irc_server_gamedataabort(
@@ -1126,9 +1358,11 @@ IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
 IRC_COMMAND_ROW( "WHO", irc_server_who ),
 IRC_COMMAND_ROW( "PING", irc_server_ping ),
 IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
+IRC_COMMAND_ROW( "CREQ", irc_server_resource_request ),
 #ifdef USE_CHUNKS
 IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
+IRC_COMMAND_ROW( "CREQ", irc_server_gamerequestfile ),
 #endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_server_mob ),
@@ -1149,6 +1383,10 @@ IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
 IRC_COMMAND_ROW( "GNS", irc_client_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_client_mob ),
 IRC_COMMAND_ROW( "PRIVMSG", irc_client_privmsg ),
+IRC_COMMAND_ROW( "IC_S", irc_client_item_cache_start ),
+IRC_COMMAND_ROW( "ITEM", irc_client_item ),
+IRC_COMMAND_ROW( "IC_E", irc_client_item_cache_end ),
+IRC_COMMAND_ROW( "CRES", irc_client_resource_response ),
 IRC_COMMAND_TABLE_END() };
 
 #endif /* ENABLE_LOCAL_CLIENT */

@@ -279,7 +279,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
 
    vector_iterate(
       &(l->tilemap.spawners), callback_load_spawner_catalogs,
-      &(l->client_or_server->item_catalogs)
+      l->client_or_server
    );
 #endif /* USE_EZXML */
 

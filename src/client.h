@@ -53,6 +53,7 @@ struct CLIENT {
                             */
    struct HASHMAP tilesets;
    struct HASHMAP item_catalogs;
+   struct VECTOR unique_items;
 #ifdef ENABLE_LOCAL_CLIENT
    BOOL client_side; /*!< Are we the server mirror or the real client? */
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -117,6 +118,11 @@ void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 );
+struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial );
+struct ITEM_SPRITESHEET* client_get_catalog(
+   struct CLIENT* c, const bstring name
+);
+void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
