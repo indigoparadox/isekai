@@ -39,18 +39,9 @@ typedef enum {
    UI_CONTROL_TYPE_LABEL,
    UI_CONTROL_TYPE_CHECKBOX,
    UI_CONTROL_TYPE_TILEGRID,
-   UI_CONTROL_TYPE_BACKLOG
+   UI_CONTROL_TYPE_BACKLOG,
+   UI_CONTROL_TYPE_INVENTORY
 } UI_CONTROL_TYPE;
-
-typedef enum UI_WINDOW_TYPE {
-   UI_WINDOW_TYPE_NONE,
-   UI_WINDOW_TYPE_OK,
-   UI_WINDOW_TYPE_YN,
-   UI_WINDOW_TYPE_SIMPLE_TEXT,
-   UI_WINDOW_TYPE_BACKLOG,
-   UI_WINDOW_TYPE_DEBUG,
-   UI_WINDOW_TYPE_XXX
-} UI_WINDOW_TYPE;
 
 struct UI_WINDOW {
    struct UI* ui;
@@ -59,17 +50,13 @@ struct UI_WINDOW {
    GRAPHICS* element;
    BOOL modal;
    struct UI_CONTROL* active_control;
-   SCAFFOLD_SIZE_SIGNED x;
-   SCAFFOLD_SIZE_SIGNED y;
-   SCAFFOLD_SIZE_SIGNED width;
-   SCAFFOLD_SIZE_SIGNED height;
+   GRAPHICS_RECT area;
    SCAFFOLD_SIZE_SIGNED grid_x;
    SCAFFOLD_SIZE_SIGNED grid_y;
    SCAFFOLD_SIZE_SIGNED grid_previous_button;
    bstring id;
    struct VECTOR controls_active;
-   void* attachmnent;
-   UI_WINDOW_TYPE type;
+   void* attachment;
    BOOL dirty;
 };
 
@@ -86,13 +73,13 @@ struct UI {
    struct VECTOR windows;
 };
 
-#define ui_window_new( ui, win, type, id, title, prompt, x, y, w, h ) \
+#define ui_window_new( ui, win, id, title, prompt, x, y, w, h ) \
    win = (struct UI_WINDOW*)calloc( 1, sizeof( struct UI_WINDOW ) ); \
    if( NULL == win ) { \
       scaffold_error = SCAFFOLD_ERROR_NULLPO; \
       goto cleanup; \
    } \
-   ui_window_init( win, ui, type, id, title, prompt, x, y, w, h );
+   ui_window_init( win, ui, id, title, prompt, x, y, w, h );
 
 #define ui_control_new( \
       ui, control, text, type, can_focus, buffer, x, y, w, h \
@@ -106,26 +93,25 @@ struct UI {
 
 void ui_cleanup( struct UI* ui );
 void ui_window_init(
-   struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
+   struct UI_WINDOW* win, struct UI* ui,
    const bstring id, const bstring title, const bstring prompt,
-   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 );
 void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
    struct UI_CONTROL* control,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
-   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 );
 void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 );
 void ui_control_free( struct UI_CONTROL* control );
 void ui_window_transform(
-   struct UI_WINDOW* win, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   struct UI_WINDOW* win, const GRAPHICS_RECT* new_area
 );
 void ui_init( GRAPHICS* screen );
 struct UI* ui_get_local();

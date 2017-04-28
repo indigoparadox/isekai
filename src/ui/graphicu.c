@@ -40,10 +40,10 @@ void ui_cleanup( struct UI* ui ) {
  * \param
  */
 void ui_window_init(
-   struct UI_WINDOW* win, struct UI* ui, UI_WINDOW_TYPE type,
+   struct UI_WINDOW* win, struct UI* ui,
    const bstring id, const bstring title, const bstring prompt,
-   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 ) {
    struct UI_CONTROL* control = NULL;
    GRAPHICS_RECT sizing_rect = { 0 };
@@ -51,10 +51,10 @@ void ui_window_init(
    scaffold_assert( &global_ui == ui );
 
    win->ui = ui;
-   win->x = x;
-   win->y = y;
-   win->width = width;
-   win->height = height;
+   win->area.x = x;
+   win->area.y = y;
+   win->area.w = width;
+   win->area.h = height;
    win->element = scaffold_alloc( 1, GRAPHICS );
    win->dirty = TRUE; /* Draw at least once. */
 
@@ -78,17 +78,6 @@ void ui_window_init(
       );
       ui_control_add(
          win, (const bstring)&str_dialog_label_default_id,
-         control
-      );
-   }
-
-   win->type = type;
-   if( UI_WINDOW_TYPE_SIMPLE_TEXT == type ) {
-      windef_control(
-         NULL, UI_CONTROL_TYPE_TEXT, FALSE, NULL, -1, -1, sizing_rect.w, -1
-      );
-      ui_control_add(
-         win, (const bstring)&str_dialog_control_default_id,
          control
       );
    }
@@ -137,8 +126,8 @@ void ui_window_free( struct UI_WINDOW* win ) {
 void ui_control_init(
    struct UI_CONTROL* control,
    const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
-   SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 ) {
    control->type = type;
    if( NULL != text ) {
@@ -151,12 +140,13 @@ void ui_control_init(
    } else {
       control->text = NULL;
    }
-   control->self.x = x;
-   control->self.y = y;
-   control->self.width = width;
-   control->self.height = height;
+   control->self.area.x = x;
+   control->self.area.y = y;
+   control->self.area.w = width;
+   control->self.area.h = height;
    control->can_focus = can_focus;
    control->self.title = NULL;
+   control->self.attachment = NULL;
    vector_init( &(control->self.controls_active) );
 }
 
@@ -209,26 +199,18 @@ struct UI* ui_get_local() {
 }
 
 void ui_window_transform(
-   struct UI_WINDOW* win, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   SCAFFOLD_SIZE_SIGNED width, SCAFFOLD_SIZE_SIGNED height
+   struct UI_WINDOW* win, const GRAPHICS_RECT* new_area
 ) {
    GRAPHICS* old_element = NULL;
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
    scaffold_assert( &global_ui == win->ui );
-   win->x = x;
-   win->y = y;
-   if( 0 < width ) {
-      win->width = width;
-   }
-   if( 0 < height ) {
-      win->height = height;
-   }
+   memcpy( &(win->area), new_area, sizeof( GRAPHICS_RECT ) );
    old_element = win->element;
    win->element = NULL;
-   graphics_surface_new( win->element, 0, 0, win->width, win->height );
-   graphics_blit_stretch( win->element, 0, 0, win->width, win->width, old_element );
+   graphics_surface_new( win->element, 0, 0, win->area.w, win->area.h );
+   graphics_blit_stretch( win->element, 0, 0, win->area.w, win->area.h, old_element );
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
@@ -310,46 +292,55 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 
    assert( win->ui == &global_ui );
    control = win->active_control;
-   scaffold_assert( NULL != control );
 
    if( 0 < input->repeat ) {
       goto cleanup;
    }
 
    if(
+      NULL != control &&
       INPUT_TYPE_KEY == input->type &&
       (scaffold_char_is_printable( input->character ) ||
       ' ' == input->character)
    ) {
       bstr_result = bconchar( control->text, input->character );
+      win->dirty = TRUE;
       scaffold_check_nonzero( bstr_result );
 #ifdef DEBUG_KEYS
       scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
 #endif /* DEBUG_KEYS */
    } else if(
+      NULL != control &&
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_BACKSPACE == input->scancode
    ) {
       bstr_result = btrunc( control->text, blength( control->text ) - 1 );
+      win->dirty = TRUE;
       scaffold_check_nonzero( bstr_result );
    } else if(
+      NULL != control &&
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_ENTER == input->scancode
    ) {
       input_length = blength( control->text );
+      ui_window_destroy( win->ui, id );
    } else if(
+      NULL != control &&
       INPUT_TYPE_KEY == input->type &&
       INPUT_SCANCODE_TAB == input->scancode
    ) {
       ui_window_next_active_control( win );
+      win->dirty = TRUE;
+   } else if(
+      INPUT_TYPE_KEY == input->type &&
+      INPUT_SCANCODE_ESC == input->scancode
+   ) {
+      input_length = -1;
+      ui_window_destroy( win->ui, id );
+      goto cleanup;
    }
 
-   /* Assume the window will react to this input. */
-   assert( win->ui == &global_ui );
-   win->dirty = TRUE;
-
 cleanup:
-   assert( win->ui == &global_ui );
    return input_length;
 }
 
@@ -414,36 +405,36 @@ static void ui_window_reset_grid( struct UI_WINDOW* win ) {
 static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
-   GRAPHICS_RECT* largest = NULL;
+   GRAPHICS_RECT* largest_control = NULL;
    SCAFFOLD_SIZE_SIGNED
-      control_w = control->self.width,
-      control_h = control->self.height;
+      control_w = control->self.area.w,
+      control_h = control->self.area.h;
    GRAPHICS* g = NULL;
 
    control_w = ui_control_get_draw_width( control );
    control_h = ui_control_get_draw_height( control );
 
    if(
-      0 > win->width ||
-      win->width < win->grid_x + control_w + UI_WINDOW_MARGIN
+      0 >= win->area.w ||
+      win->area.w < win->grid_x + control_w + UI_WINDOW_MARGIN
    ) {
-      largest = scaffold_alloc( 1, GRAPHICS_RECT );
-      largest->w = win->grid_x + control_w + UI_WINDOW_MARGIN;
+      largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
+      largest_control->w = win->grid_x + control_w + UI_WINDOW_MARGIN;
    }
 
    if(
-      0 > win->height ||
-      win->height < win->grid_y + control_h + UI_WINDOW_MARGIN
+      0 >= win->area.h ||
+      win->area.h < win->grid_y + control_h + UI_WINDOW_MARGIN
    ) {
-      if( NULL == largest ) {
-         largest = scaffold_alloc( 1, GRAPHICS_RECT );
+      if( NULL == largest_control ) {
+         largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
       }
-      largest->h = win->grid_y + control_h + UI_WINDOW_MARGIN;
+      largest_control->h = win->grid_y + control_h + UI_WINDOW_MARGIN;
    }
 
    ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
-   return largest;
+   return largest_control;
 }
 
 static void* ui_control_draw_backlog_line(
@@ -495,6 +486,24 @@ static void ui_control_draw_backlog(
    control_h = ui_control_get_draw_height( backlog );
 
    backlog_iter( ui_control_draw_backlog_line, win );
+
+cleanup:
+   return;
+}
+
+static void ui_control_draw_inventory(
+   struct UI_WINDOW* win, struct UI_CONTROL* inv_pane
+) {
+   GRAPHICS_COLOR fg = UI_TEXT_FG;
+   GRAPHICS* g = win->element;
+   SCAFFOLD_SIZE_SIGNED control_w;
+   SCAFFOLD_SIZE_SIGNED control_h;
+   struct CHANNEL* l = NULL;
+
+   control_w = ui_control_get_draw_width( inv_pane );
+   control_h = ui_control_get_draw_height( inv_pane );
+
+   //graphics_draw_rect( g, inv_pane->self.x , inv_pane->self.y, inv_pane->self.width, inv_pane->self.height, GRAPHICS_COLOR_DARK_BLUE )
 
 cleanup:
    return;
@@ -582,6 +591,7 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
       case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
       case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
       case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
+      case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
    }
 
 cleanup:
@@ -589,46 +599,53 @@ cleanup:
 }
 
 static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
-   GRAPHICS_RECT* largest_control = NULL;
-   SCAFFOLD_SIZE_SIGNED
-      win_x = win->x,
-      win_y = win->y,
-      win_new_w = win->width,
-      win_new_h = win->height;
+   GRAPHICS_RECT* largest_control;
+   //GRAPHICS_RECT win_new;
+
+   //memcpy( &win_new, &(win->area), sizeof( GRAPHICS_RECT ) );
 
    /* Make sure the window can contain its largest control. */
    largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
-   largest_control->w = win->width;
-   largest_control->h = win->height;
+   scaffold_check_null( largest_control );
+   memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
    do {
       /* A pointer was returned, so update. */
-      win_new_w = largest_control->w;
-      win_new_h = largest_control->h;
-      if( largest_control->w != win->width || largest_control->h != win->height ) {
-         ui_window_transform( win, win_x, win_y, win_new_w, win_new_h );
+      //win_new.w = largest_control->w;
+      //win_new.h = largest_control->h;
+      if( largest_control->w < win->area.w ) {
+         largest_control->w = win->area.w;
       }
+      if( largest_control->h < win->area.h ) {
+         largest_control->h = win->area.h;
+      }
+
+      largest_control->x = win->area.x;
+      largest_control->y = win->area.y;
+
+      ui_window_transform( win, largest_control  );
       scaffold_free( largest_control );
       ui_window_reset_grid( win );
    } while( NULL != (largest_control = hashmap_iterate( &(win->controls), ui_control_window_size_cb, win )) );
    assert( NULL == largest_control );
 
-   if( 0 >= win->width ) {
-      win->width = UI_WINDOW_MIN_WIDTH;
+   if( 0 >= win->area.w ) {
+      win->area.w = UI_WINDOW_MIN_WIDTH;
    }
-   if( 0 >= win->height ) {
-      win->height = UI_WINDOW_MIN_HEIGHT;
+   if( 0 >= win->area.h ) {
+      win->area.h = UI_WINDOW_MIN_HEIGHT;
    }
 
+cleanup:
    assert( win->ui == &global_ui );
 }
 
 static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
    graphics_draw_rect(
-      win->element, 2, 2, win->width - 4, UI_TITLEBAR_SIZE + 4,
+      win->element, 2, 2, win->area.w - 4, UI_TITLEBAR_SIZE + 4,
       UI_TITLEBAR_BG, TRUE
    );
    graphics_draw_text(
-      win->element, win->width / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
+      win->element, win->area.w / 2, 4, GRAPHICS_TEXT_ALIGN_CENTER,
       UI_TITLEBAR_FG, UI_TITLEBAR_SIZE, win->title, FALSE
    );
 }
@@ -637,10 +654,8 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
    GRAPHICS* g = (GRAPHICS*)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    SCAFFOLD_SIZE_SIGNED
-      win_x = win->x,
-      win_y = win->y,
-      grid_x = 0,
-      grid_y = 0;
+      win_x = win->area.x,
+      win_y = win->area.y;
    BOOL previous_button = FALSE;
    struct UI_CONTROL* control = NULL;
 
@@ -649,7 +664,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
 
       /* Draw the window. */
       graphics_draw_rect(
-         win->element, 0, 0, win->width, win->height, GRAPHICS_COLOR_BLUE, TRUE
+         win->element, 0, 0, win->area.w, win->area.h, UI_WINDOW_BG, TRUE
       );
 
       /* Draw the controls on to the window surface. */
@@ -663,11 +678,11 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg
    }
 
    /* Draw the window onto the screen. */
-   if( 0 > win->x ) {
-      win_x = (GRAPHICS_SCREEN_WIDTH / 2) - (win->width / 2);
+   if( 0 > win->area.x ) {
+      win_x = (GRAPHICS_SCREEN_WIDTH / 2) - (win->area.w / 2);
    }
-   if( 0 > win->y ) {
-      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) - (win->height / 2);
+   if( 0 > win->area.y ) {
+      win_y = (GRAPHICS_SCREEN_HEIGHT / 2) - (win->area.h / 2);
    }
    assert( win->ui == &global_ui );
    graphics_blit( g, win_x, win_y, win->element );
@@ -748,7 +763,7 @@ void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {
    struct UI_CONTROL* control_debug = NULL;
 
    if( NULL == ui_window_by_id( ui, &str_wid_debug ) ) {
-      ui_window_new( ui, win_debug, UI_WINDOW_TYPE_DEBUG, &str_wid_debug,
+      ui_window_new( ui, win_debug, &str_wid_debug,
          &str_wid_debug, NULL, 10, 10, -1, -1 );
       ui_window_push( ui, win_debug );
    }
