@@ -70,6 +70,7 @@ struct UI_CONTROL {
 };
 
 struct UI {
+   GRAPHICS* screen_g;
    struct VECTOR windows;
 };
 
