@@ -191,6 +191,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
 }
 
 void ui_init( GRAPHICS* screen ) {
+   global_ui.screen_g = screen;
    vector_init( &(global_ui.windows) );
 }
 
@@ -503,7 +504,7 @@ static void ui_control_draw_inventory(
    control_w = ui_control_get_draw_width( inv_pane );
    control_h = ui_control_get_draw_height( inv_pane );
 
-   //graphics_draw_rect( g, inv_pane->self.x , inv_pane->self.y, inv_pane->self.width, inv_pane->self.height, GRAPHICS_COLOR_DARK_BLUE )
+   graphics_draw_gfx_rect( g, &(inv_pane->self.area), GRAPHICS_COLOR_DARK_BLUE, TRUE );
 
 cleanup:
    return;

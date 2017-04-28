@@ -24,7 +24,6 @@ typedef struct PACKFILE_VTABLE PACKFILE_VTABLE;
 #define GRAPHICS_COLOR_DEPTH 8
 
 static volatile uint32_t allegro_ticks = 0;
-static GRAPHICS* graphics_screen = NULL;
 
 static void allegro_ticker() {
    allegro_ticks++;
@@ -257,14 +256,8 @@ void graphics_screen_new(
 
    clear_bitmap( (*g)->surface );
 
-   graphics_screen = *g;
-
 cleanup:
    return;
-}
-
-GRAPHICS* graphics_get_screen() {
-   return graphics_screen;
 }
 
 void graphics_surface_cleanup( GRAPHICS* g ) {

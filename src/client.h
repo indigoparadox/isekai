@@ -124,6 +124,7 @@ struct ITEM_SPRITESHEET* client_get_catalog(
    struct CLIENT* c, const bstring name
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
+GRAPHICS* client_get_local_screen( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

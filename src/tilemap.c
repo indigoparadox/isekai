@@ -359,7 +359,7 @@ static void* tilemap_layer_draw_tile_items_cb(
    struct ITEM* e = (struct ITEM*)iter;
    struct GRAPHICS* g_screen = NULL;
 
-   g_screen = graphics_get_screen();
+   g_screen = client_get_local_screen( e->client_or_server );
 
    item_draw_ortho( e, rect->x, rect->y, g_screen );
 }

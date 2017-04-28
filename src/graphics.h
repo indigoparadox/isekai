@@ -102,7 +102,6 @@ void graphics_surface_cleanup( GRAPHICS* g );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
-GRAPHICS* graphics_get_screen();
 void graphics_screen_scroll(
    GRAPHICS* g, GFX_COORD_PIXEL offset_x, GFX_COORD_PIXEL offset_y
 );
@@ -172,6 +171,9 @@ void graphics_bitmap_load(
 );
 SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
    GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
+);
+void graphics_draw_gfx_rect(
+   GRAPHICS* g, GRAPHICS_RECT* rect, GRAPHICS_COLOR color_i, BOOL filled
 );
 
 #ifdef GRAPHICS_C

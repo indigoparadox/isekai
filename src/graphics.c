@@ -231,3 +231,9 @@ SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
 cleanup:
    return;
 }
+
+void graphics_draw_gfx_rect(
+   GRAPHICS* g, GRAPHICS_RECT* rect, GRAPHICS_COLOR color_i, BOOL filled
+) {
+   graphics_draw_rect( g, rect->x, rect->y, rect->w, rect->h, color_i, filled );
+}
