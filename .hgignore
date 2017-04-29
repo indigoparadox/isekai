@@ -1,17 +1,12 @@
 relre:.*\.o$
 glob:deps
-glob:obj
-glob:bin
 glob:*.layout
 glob:*.depend
 glob:images
 glob:testchannel.*
-glob:*.swp
-glob:*.tmp
 glob:testdata
 glob:src/tinypy/*.zip
 syntax: glob
-Debug
 .vs
 ProCIRCd.opensdf
 ProCIRCd.sdf
