@@ -136,6 +136,8 @@ static struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
 static struct tagbstring str_client_control_id_chat = bsStatic( "chat" );
 static struct tagbstring str_client_window_id_inv = bsStatic( "inventory" );
 static struct tagbstring str_client_window_title_inv = bsStatic( "Inventory" );
+static struct tagbstring str_client_control_id_inv_self = bsStatic( "inv_pane_self" );
+static struct tagbstring str_client_control_id_inv_ground = bsStatic( "inv_pane_ground" );
 SCAFFOLD_MODULE( "client.c" );
 #else
 extern struct tagbstring str_client_cache_path;

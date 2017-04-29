@@ -935,13 +935,14 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
       );
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         0, 0, 300, 380
+         0, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
       );
+      ui_control_add( win, &str_client_control_id_inv_self, control );
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         300, 0, 300, 380
+         300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
       );
-      //ui_control_add( win, &str_client_control_id_chat, control );
+      ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
       return TRUE;
 
