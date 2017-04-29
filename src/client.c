@@ -870,6 +870,9 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
+   struct CHANNEL* l = NULL;
+   struct TILEMAP* t = NULL;
+   struct TILEMAP_ITEM_CACHE* cache = NULL;
 
    /* Make sure the buffer that all windows share is available. */
    if(
@@ -885,6 +888,10 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
       update.o = puppet;
       update.l = puppet->channel;
       scaffold_check_null( update.l );
+      l = puppet->channel;
+      scaffold_check_null_msg( l, "No channel loaded." );
+      t = &(l->tilemap);
+      scaffold_check_null_msg( t, "No tilemap loaded." );
    }
 
    /* If no windows need input, then move on to game input. */
@@ -942,6 +949,8 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
          ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
          300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
       );
+      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
+      control->self.attachment = &(cache->items);
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
       return TRUE;

@@ -620,6 +620,29 @@ cleanup:
    return;
 }
 
+static void ui_control_draw_inventory_item(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   struct ITEM* e = (struct ITEM*)iter;
+   struct UI_CONTROL* inv_pane = (struct UI_CONTROL*)arg;
+   struct UI_WINDOW* win = inv_pane->owner;
+   struct ITEM_SPRITESHEET* catalog = NULL;
+   struct ITEM_SPRITE* sprite = NULL;
+
+   catalog = client_get_catalog( e->client_or_server, e->catalog_name );
+   if( NULL == catalog ) { goto cleanup; }
+
+   sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
+   if( NULL == sprite ) { goto cleanup; }
+
+   item_draw_ortho( e, win->grid_pos.x, win->grid_pos.y, win->element );
+
+   win->grid_pos.x += UI_WINDOW_MARGIN + catalog->spritewidth;
+
+cleanup:
+   return;
+}
+
 static void ui_control_draw_inventory(
    struct UI_WINDOW* win, struct UI_CONTROL* inv_pane
 ) {
@@ -627,6 +650,7 @@ static void ui_control_draw_inventory(
    GRAPHICS* g = win->element;
    struct CHANNEL* l = NULL;
    GRAPHICS_RECT bg_rect;
+   struct VECTOR* items = NULL;
 
    memcpy( &bg_rect, &(inv_pane->self.area), sizeof( GRAPHICS_RECT ) );
 
@@ -635,6 +659,14 @@ static void ui_control_draw_inventory(
    graphics_shrink_rect( &bg_rect, UI_BAR_WIDTH );
 
    ui_draw_rect( win, &bg_rect, GRAPHICS_COLOR_DARK_BLUE, TRUE );
+
+   memcpy(
+      &(inv_pane->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
+   );
+   inv_pane->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
+   items = inv_pane->self.attachment;
+   scaffold_check_null_msg( items, "Item list invalid." );
+   vector_iterate( items, ui_control_draw_inventory_item, inv_pane );
 
 cleanup:
    return;
