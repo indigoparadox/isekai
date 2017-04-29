@@ -549,16 +549,17 @@ cleanup:
 static void* ui_control_draw_backlog_line(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
-   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
+   struct UI_CONTROL* control = (struct UI_CONTROL*)arg;
    struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
    bstring nick_decorated = NULL;
    GRAPHICS_RECT nick_size = { 0, 0, 0, 0 };
    GRAPHICS_COLOR msg_fg = UI_TEXT_FG;
+   GRAPHICS_RECT* pos = &(control->self.grid_pos);
 
    /* TODO: Divide multiline lines. */
 
-   nick_size.x = win->grid_pos.x;
-   nick_size.y = win->grid_pos.y;
+   //nick_size.x = win->grid_pos.x;
+   //nick_size.y = win->grid_pos.y;
 
    if( NULL != line->nick ) {
       /* Draw the nick, first. */
@@ -566,22 +567,32 @@ static void* ui_control_draw_backlog_line(
 
       graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
 
-      ui_draw_text(
+      /*ui_draw_text(
          win, &nick_size,
          GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE, TRUE
+      );*/
+
+      graphics_draw_text(
+         control->owner->element, pos->x, pos->y,
+         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE
       );
 
-      nick_size.x += nick_size.w;
+      pos->x += nick_size.w;
    } else {
       msg_fg = GRAPHICS_COLOR_MAGENTA;
    }
 
-   ui_draw_text(
+   /*ui_draw_text(
       win, &nick_size,
       GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, FALSE, TRUE
+   );*/
+
+   graphics_draw_text(
+      control->owner->element, pos->x, pos->y,
+      GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, FALSE
    );
 
-   ui_window_advance_grid( (struct UI_WINDOW*)win, NULL );
+   ui_window_advance_grid( &(control->self), NULL );
 
    bdestroy( nick_decorated );
    return NULL;
@@ -597,7 +608,13 @@ static void ui_control_draw_backlog(
    win->grid_pos.w = ui_control_get_draw_width( backlog );
    win->grid_pos.h = ui_control_get_draw_height( backlog );
 
-   backlog_iter( ui_control_draw_backlog_line, win );
+   memcpy(
+      &(backlog->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
+   );
+
+   backlog->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
+
+   backlog_iter( ui_control_draw_backlog_line, backlog );
 
 cleanup:
    return;
