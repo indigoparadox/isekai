@@ -114,10 +114,12 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
+   /*
    scaffold_print_debug(
       &module, "Client: Requesting %b file: %s\n",
       chunker_type_names[type].data, bdata( filename )
    );
+   */
    client_printf( c, "GRF %d %b", type, filename );
 }
 

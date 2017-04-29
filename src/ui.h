@@ -21,6 +21,8 @@
 #define UI_TEXT_MARGIN     5
 #define UI_WINDOW_MARGIN   5
 
+#define UI_BAR_WIDTH 2
+
 #define UI_TEXT_DEF_LENGTH 30
 #define UI_TEXT_DEF_CONTROL_SIZE 280
 
@@ -29,6 +31,15 @@
 
 #define UI_WINDOW_MIN_WIDTH 10
 #define UI_WINDOW_MIN_HEIGHT 10
+
+#define UI_WINDOW_GRID_X_START (UI_WINDOW_MARGIN)
+#define UI_WINDOW_GRID_Y_START (UI_TITLEBAR_SIZE + (UI_BAR_WIDTH * 2) + UI_WINDOW_MARGIN)
+
+#define UI_CONST_WIDTH_FULL -1
+#define UI_CONST_WIDTH_HALF -2
+
+#define UI_CONST_HEIGHT_FULL -1
+#define UI_CONST_HEIGHT_HALF -2
 
 struct UI;
 
@@ -51,9 +62,10 @@ struct UI_WINDOW {
    BOOL modal;
    struct UI_CONTROL* active_control;
    GRAPHICS_RECT area;
-   SCAFFOLD_SIZE_SIGNED grid_x;
-   SCAFFOLD_SIZE_SIGNED grid_y;
+   //SCAFFOLD_SIZE_SIGNED grid_x;
+   //SCAFFOLD_SIZE_SIGNED grid_y;
    SCAFFOLD_SIZE_SIGNED grid_previous_button;
+   GRAPHICS_RECT grid_pos;
    bstring id;
    struct VECTOR controls_active;
    void* attachment;

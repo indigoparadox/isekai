@@ -172,9 +172,7 @@ void graphics_bitmap_load(
 SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
    GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
 );
-void graphics_draw_gfx_rect(
-   GRAPHICS* g, GRAPHICS_RECT* rect, GRAPHICS_COLOR color_i, BOOL filled
-);
+void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by );
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );

@@ -232,8 +232,9 @@ cleanup:
    return;
 }
 
-void graphics_draw_gfx_rect(
-   GRAPHICS* g, GRAPHICS_RECT* rect, GRAPHICS_COLOR color_i, BOOL filled
-) {
-   graphics_draw_rect( g, rect->x, rect->y, rect->w, rect->h, color_i, filled );
+void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
+   rect->x += shrink_by;
+   rect->y += shrink_by;
+   rect->h -= (2 * shrink_by);
+   rect->w -= (2 * shrink_by);
 }
