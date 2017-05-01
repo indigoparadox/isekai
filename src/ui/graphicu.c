@@ -620,6 +620,14 @@ cleanup:
    return;
 }
 
+static void ui_draw_item_sprite(
+   struct UI_WINDOW* win, GRAPHICS_RECT* rect, struct ITEM* e
+) {
+   item_draw_ortho(
+      e, rect->x, rect->y + UI_WINDOW_GRID_Y_START, win->element
+   );
+}
+
 static void ui_control_draw_inventory_item(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
@@ -628,16 +636,34 @@ static void ui_control_draw_inventory_item(
    struct UI_WINDOW* win = inv_pane->owner;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct ITEM_SPRITE* sprite = NULL;
+   GRAPHICS_RECT label_size;
+   GRAPHICS_RECT* inv_grid = &(inv_pane->self.grid_pos);
+   GFX_COORD_PIXEL label_icon_offset;
 
    catalog = client_get_catalog( e->client_or_server, e->catalog_name );
    if( NULL == catalog ) { goto cleanup; }
 
-   sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
-   if( NULL == sprite ) { goto cleanup; }
+   graphics_measure_text(
+      win->element, &label_size, UI_TEXT_SIZE, e->display_name
+   );
+   label_icon_offset = (label_size.w / 2) - (catalog->spritewidth / 2);
 
-   item_draw_ortho( e, win->grid_pos.x, win->grid_pos.y, win->element );
+   inv_grid->x += label_icon_offset + UI_TEXT_MARGIN;
+   inv_grid->w = catalog->spritewidth;
+   inv_grid->h = catalog->spriteheight;
 
-   win->grid_pos.x += UI_WINDOW_MARGIN + catalog->spritewidth;
+   ui_draw_item_sprite( win, inv_grid, e );
+
+   inv_grid->x -= label_icon_offset;
+   inv_grid->y += (catalog->spriteheight + UI_TEXT_MARGIN);
+
+   ui_draw_text(
+      win, inv_grid, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
+      UI_TEXT_SIZE, e->display_name, FALSE, FALSE
+   );
+
+   inv_grid->x += label_icon_offset + catalog->spritewidth;
+   inv_grid->y -= (catalog->spriteheight + UI_TEXT_MARGIN);
 
 cleanup:
    return;
@@ -670,6 +696,12 @@ static void ui_control_draw_inventory(
 
 cleanup:
    return;
+}
+
+void ui_set_inventory_pane_list(
+   struct UI_CONTROL* inv_pane, struct VECTOR* list
+) {
+   inv_pane->self.attachment = list;
 }
 
 static void ui_control_draw_textfield(

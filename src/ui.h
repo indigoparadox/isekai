@@ -17,6 +17,7 @@
 #define UI_BUTTON_BG       GRAPHICS_COLOR_DARK_CYAN
 #define UI_BUTTON_FG       GRAPHICS_COLOR_WHITE
 #define UI_LABEL_FG        GRAPHICS_COLOR_WHITE
+#define UI_SELECTED_BG     GRAPHICS_COLOR_PURPLE
 
 #define UI_TEXT_MARGIN     5
 #define UI_WINDOW_MARGIN   5
@@ -62,13 +63,13 @@ struct UI_WINDOW {
    BOOL modal;
    struct UI_CONTROL* active_control;
    GRAPHICS_RECT area;
-   //SCAFFOLD_SIZE_SIGNED grid_x;
-   //SCAFFOLD_SIZE_SIGNED grid_y;
    SCAFFOLD_SIZE_SIGNED grid_previous_button;
    GRAPHICS_RECT grid_pos;
    bstring id;
    struct VECTOR controls_active;
    void* attachment;
+   SCAFFOLD_SIZE_SIGNED selection;
+   SCAFFOLD_SIZE_SIGNED grid_iter;
    BOOL dirty;
 };
 
@@ -128,6 +129,9 @@ void ui_window_transform(
 );
 void ui_init( GRAPHICS* screen );
 struct UI* ui_get_local();
+void ui_set_inventory_pane_list(
+   struct UI_CONTROL* inv_pane, struct VECTOR* list
+);
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win );
 void ui_window_pop( struct UI* ui );
 SCAFFOLD_SIZE_SIGNED ui_poll_input(

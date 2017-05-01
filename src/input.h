@@ -31,6 +31,15 @@ typedef enum _INPUT_TYPE {
    INPUT_TYPE_CLOSE
 } INPUT_TYPE;
 
+typedef enum INPUT_ASSIGNMENT {
+   INPUT_ASSIGNMENT_ATTACK = ' ',
+   INPUT_ASSIGNMENT_LEFT = 'a',
+   INPUT_ASSIGNMENT_INV = 'e',
+   INPUT_ASSIGNMENT_DOWN = 's',
+   INPUT_ASSIGNMENT_RIGHT = 'd',
+   INPUT_ASSIGNMENT_UP = 'w'
+} INPUT_ASSIGNMENT;
+
 struct INPUT {
    void* event;
    uint16_t character;
