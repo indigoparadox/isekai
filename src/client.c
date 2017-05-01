@@ -896,7 +896,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
 
    /* If no windows need input, then move on to game input. */
    switch( input->character ) {
-   case 'q': proto_client_stop( c ); return TRUE;
+   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
    case INPUT_ASSIGNMENT_UP:
       update.update = MOBILE_UPDATE_MOVEUP;
       update.x = c->puppet->x;
