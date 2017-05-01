@@ -897,41 +897,41 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
    /* If no windows need input, then move on to game input. */
    switch( input->character ) {
    case 'q': proto_client_stop( c ); return TRUE;
-   case 'w':
+   case INPUT_ASSIGNMENT_UP:
       update.update = MOBILE_UPDATE_MOVEUP;
       update.x = c->puppet->x;
       update.y = c->puppet->y - 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
-   case 'a':
+   case INPUT_ASSIGNMENT_LEFT:
       update.update = MOBILE_UPDATE_MOVELEFT;
       update.x = c->puppet->x - 1;
       update.y = c->puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 
-   case 's':
+   case INPUT_ASSIGNMENT_DOWN:
       update.update = MOBILE_UPDATE_MOVEDOWN;
       update.x = c->puppet->x;
       update.y = c->puppet->y + 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
-   case 'd':
+   case INPUT_ASSIGNMENT_RIGHT:
       update.update = MOBILE_UPDATE_MOVERIGHT;
       update.x = c->puppet->x + 1;
       update.y = c->puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 
-   case ' ':
+   case INPUT_ASSIGNMENT_ATTACK:
       update.update = MOBILE_UPDATE_ATTACK;
       /* TODO: Get attack target. */
       proto_client_send_update( c, &update );
       return TRUE;
 
-   case 'e':
+   case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
          scaffold_check_null( client_input_from_ui );
@@ -950,7 +950,7 @@ static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
          300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
       );
       cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
-      control->self.attachment = &(cache->items);
+      ui_set_inventory_pane_list( control, &(cache->items) );
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
       return TRUE;
