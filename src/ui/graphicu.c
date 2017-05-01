@@ -189,6 +189,8 @@ void ui_control_init(
    control->can_focus = can_focus;
    control->self.title = NULL;
    control->self.attachment = NULL;
+   control->self.grid_iter = 0;
+   control->self.selection = 0;
    vector_init( &(control->self.controls_active) );
 }
 
@@ -301,6 +303,82 @@ cleanup:
    return;
 }
 
+static
+SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
+   struct UI_CONTROL* control = NULL;
+   int bstr_result = 0;
+   SCAFFOLD_SIZE_SIGNED input_length = 0;
+   struct VECTOR* items_list = NULL;
+
+   control = win->active_control;
+   if( NULL == control ) {
+      goto control_optional;
+   }
+
+   if( UI_CONTROL_TYPE_INVENTORY == control->type ) {
+      switch( p->character ) {
+      case INPUT_ASSIGNMENT_LEFT:
+         items_list = (struct VECTOR*)control->self.attachment;
+         control->self.selection--;
+         if( 0 > control->self.selection ) {
+            control->self.selection = 0;
+         }
+         win->dirty = TRUE;
+         break;
+
+      case INPUT_ASSIGNMENT_RIGHT:
+         items_list = (struct VECTOR*)control->self.attachment;
+         control->self.selection++;
+         if( vector_count( items_list ) <= control->self.selection ) {
+            control->self.selection = 0;
+         }
+         win->dirty = TRUE;
+         break;
+      }
+   }
+
+   switch( p->character ) {
+   case INPUT_ASSIGNMENT_ATTACK:
+      bstr_result = bconchar( control->text, p->character );
+      win->dirty = TRUE;
+      scaffold_check_nonzero( bstr_result );
+#ifdef DEBUG_KEYS
+      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
+#endif /* DEBUG_KEYS */
+      goto cleanup;
+   }
+
+   switch( p->scancode ) {
+   case INPUT_SCANCODE_BACKSPACE:
+      bstr_result = btrunc( control->text, blength( control->text ) - 1 );
+      win->dirty = TRUE;
+      scaffold_check_nonzero( bstr_result );
+      break;
+
+   case INPUT_SCANCODE_ENTER:
+      input_length = blength( control->text );
+      ui_window_destroy( win->ui, win->id );
+      break;
+
+   case INPUT_SCANCODE_TAB:
+      ui_window_next_active_control( win );
+      win->dirty = TRUE;
+      break;
+   }
+
+control_optional:
+
+   switch( p->scancode ) {
+   case INPUT_SCANCODE_ESC:
+      input_length = -1;
+      ui_window_destroy( win->ui, win->id );
+      goto cleanup;
+   }
+
+cleanup:
+   return input_length;
+}
+
 /** \brief
  * \param[in]  ui
  * \param[in]  input    The input object to pull input from.
@@ -340,47 +418,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
       goto cleanup;
    }
 
-   if(
-      NULL != control &&
-      INPUT_TYPE_KEY == input->type &&
-      (scaffold_char_is_printable( input->character ) ||
-      ' ' == input->character)
-   ) {
-      bstr_result = bconchar( control->text, input->character );
-      win->dirty = TRUE;
-      scaffold_check_nonzero( bstr_result );
-#ifdef DEBUG_KEYS
-      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
-#endif /* DEBUG_KEYS */
-   } else if(
-      NULL != control &&
-      INPUT_TYPE_KEY == input->type &&
-      INPUT_SCANCODE_BACKSPACE == input->scancode
-   ) {
-      bstr_result = btrunc( control->text, blength( control->text ) - 1 );
-      win->dirty = TRUE;
-      scaffold_check_nonzero( bstr_result );
-   } else if(
-      NULL != control &&
-      INPUT_TYPE_KEY == input->type &&
-      INPUT_SCANCODE_ENTER == input->scancode
-   ) {
-      input_length = blength( control->text );
-      ui_window_destroy( win->ui, id );
-   } else if(
-      NULL != control &&
-      INPUT_TYPE_KEY == input->type &&
-      INPUT_SCANCODE_TAB == input->scancode
-   ) {
-      ui_window_next_active_control( win );
-      win->dirty = TRUE;
-   } else if(
-      INPUT_TYPE_KEY == input->type &&
-      INPUT_SCANCODE_ESC == input->scancode
-   ) {
-      input_length = -1;
-      ui_window_destroy( win->ui, id );
-      goto cleanup;
+   if( INPUT_TYPE_KEY == input->type ) {
+      input_length = ui_poll_keys( win, input );
    }
 
 cleanup:
@@ -621,14 +660,14 @@ cleanup:
 }
 
 static void ui_draw_item_sprite(
-   struct UI_WINDOW* win, GRAPHICS_RECT* rect, struct ITEM* e
+   struct UI_CONTROL* inv_pane, GRAPHICS_RECT* rect, struct ITEM* e
 ) {
    item_draw_ortho(
-      e, rect->x, rect->y + UI_WINDOW_GRID_Y_START, win->element
+      e, rect->x, rect->y + UI_WINDOW_GRID_Y_START, inv_pane->owner->element
    );
 }
 
-static void ui_control_draw_inventory_item(
+static void* ui_control_draw_inventory_item(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
@@ -646,16 +685,26 @@ static void ui_control_draw_inventory_item(
    graphics_measure_text(
       win->element, &label_size, UI_TEXT_SIZE, e->display_name
    );
+   scaffold_assert( 0 < label_size.w );
    label_icon_offset = (label_size.w / 2) - (catalog->spritewidth / 2);
 
    inv_grid->x += label_icon_offset + UI_TEXT_MARGIN;
    inv_grid->w = catalog->spritewidth;
    inv_grid->h = catalog->spriteheight;
 
-   ui_draw_item_sprite( win, inv_grid, e );
+   ui_draw_item_sprite( inv_pane, inv_grid, e );
 
    inv_grid->x -= label_icon_offset;
    inv_grid->y += (catalog->spriteheight + UI_TEXT_MARGIN);
+   inv_grid->w = label_size.w;
+   inv_grid->h = label_size.h;
+
+   if(
+      inv_pane == win->active_control &&
+      inv_pane->self.selection == inv_pane->self.grid_iter
+   ) {
+      ui_draw_rect( win, inv_grid, UI_SELECTED_BG, TRUE );
+   }
 
    ui_draw_text(
       win, inv_grid, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
@@ -665,8 +714,10 @@ static void ui_control_draw_inventory_item(
    inv_grid->x += label_icon_offset + catalog->spritewidth;
    inv_grid->y -= (catalog->spriteheight + UI_TEXT_MARGIN);
 
+   inv_pane->self.grid_iter++;
+
 cleanup:
-   return;
+   return NULL;
 }
 
 static void ui_control_draw_inventory(
@@ -690,6 +741,7 @@ static void ui_control_draw_inventory(
       &(inv_pane->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
    );
    inv_pane->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
+   inv_pane->self.grid_iter = 0;
    items = inv_pane->self.attachment;
    scaffold_check_null_msg( items, "Item list invalid." );
    vector_iterate( items, ui_control_draw_inventory_item, inv_pane );
