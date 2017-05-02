@@ -32,8 +32,8 @@ SCAFFOLD_INLINE
 static void windef_show_repl( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
    if( NULL == ui_window_by_id( ui, &str_client_window_id_repl ) ) {
-      windef_window(
-         UI_WINDOW_TYPE_SIMPLE_TEXT, &str_client_window_id_repl,
+      ui_window_init(
+         win, ui, &str_client_window_id_repl,
          &str_client_window_title_repl, &str_client_window_prompt_repl,
          40, 40, 400, 80
       );

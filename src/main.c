@@ -165,6 +165,9 @@ static BOOL loop_game() {
    } else if( TRUE != main_client->running ) {
       /* We're stopping, not starting. */
       server_stop( main_server );
+#ifndef USE_NETWORK
+      keep_going = FALSE;
+#endif /* USE_NETWORK */
       goto cleanup;
 
    } else if( NULL == twindow->t ) {
@@ -263,7 +266,6 @@ static BOOL loop_connect() {
       scaffold_check_nonzero( bstr_result );
    }
 
-   backlog_ensure_window( ui );
    ui_draw( ui, g_screen );
    input_get_event( input );
 
@@ -353,6 +355,7 @@ static BOOL loop_master() {
    if( !connected ) {
       retval = loop_connect();
    } else if( connected && !main_client_joined ) {
+      backlog_ensure_window( ui );
       scaffold_print_debug(
          &module, "Server connected; joining client to channel...\n"
       );

@@ -94,16 +94,16 @@ void connection_init( CONNECTION* n ) {
 }
 
 static void connection_cleanup_socket( CONNECTION* n ) {
-#ifdef USE_NETWORK
    if( FALSE != connection_connected( n ) ) {
 #ifdef USE_MBED_TLS
       mbedtls_net_free( &(n->ssl_net) );
 #else
+#ifdef USE_NETWORK
       close( n->socket );
+#endif /* USE_NETWORK */
       n->socket = 0;
 #endif /* USE_MBED_TLS */
    }
-#endif /* USE_NETWORK */
 }
 
 BOOL connection_connected( CONNECTION* n ) {
