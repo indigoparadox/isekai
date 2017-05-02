@@ -755,6 +755,10 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       goto cleanup;
 #endif /* USE_EZXML */
       break;
+
+   case CHUNKER_DATA_TYPE_MISC:
+      scaffold_print_error( &module, "Invalid data type specified.\n" );
+      break;
    }
 
 cleanup:
@@ -824,7 +828,6 @@ static BOOL client_poll_ui(
       if( 0 != ui_poll_input(
          c->ui, p, &str_client_window_id_chat
       ) ) {
-         //ui_window_destroy( c->ui, &str_client_window_id_chat );
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
          /* Process collected input. */
@@ -1054,7 +1057,8 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
       goto cleanup;
    } else if( NULL != c_e ) {
       c_e->count = e->count;
-      bassign( c_e->catalog_name, e->catalog_name );
+      retval = bassign( c_e->catalog_name, e->catalog_name );
+      scaffold_check_nonzero( retval );
       scaffold_assign_or_cpy_c( c_e->display_name, bdata( e->display_name ), retval );
       c_e->sprite_id = e->sprite_id;
 

@@ -316,6 +316,7 @@ void* callback_load_spawner_catalogs(
    BYTE* catdata = NULL;
    SCAFFOLD_SIZE catdata_length = 0;
    struct ITEM_SPRITESHEET* catalog = NULL;
+   SCAFFOLD_SIZE_SIGNED bytes_read;
 
    if(
       TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&
@@ -330,7 +331,11 @@ void* callback_load_spawner_catalogs(
       scaffold_check_null( catdata_path );
       scaffold_join_path( catdata_path, spawner->catalog );
       scaffold_check_nonzero( scaffold_error );
-      scaffold_read_file_contents( catdata_path, &catdata, &catdata_length );
+      bytes_read = scaffold_read_file_contents(
+         catdata_path, &catdata, &catdata_length );
+      scaffold_check_null_msg(
+         catdata, "Unable to load catalog data." );
+      scaffold_check_zero_msg( bytes_read, "Unable to load catalog data." );
 
       item_spritesheet_new( catalog, spawner->catalog, client_or_server );
 

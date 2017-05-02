@@ -25,7 +25,9 @@ static void channel_free_final( const struct REF *ref ) {
       l->name
    );
 
+   #ifdef USE_VM
    vm_channel_end( l );
+   #endif /* USE_VM */
 
    /* Actually free stuff. */
    hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
@@ -65,7 +67,9 @@ void channel_init(
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images, server );
+#ifdef USE_VM
    vm_channel_start( l );
+#endif /* USE_VM */
 cleanup:
    return;
 }

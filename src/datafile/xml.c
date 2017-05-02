@@ -1027,6 +1027,9 @@ void datafile_parse_ezxml_string(
    case DATAFILE_TYPE_ITEM:
       datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );
       break;
+   case DATAFILE_TYPE_NONE:
+      scaffold_print_error( &module, "Invalid data type specified.\n" );
+      break;
    }
 
 cleanup:

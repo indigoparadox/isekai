@@ -158,7 +158,7 @@ static long graphics_fmem_fwrite( const void* p, long n, void* userdata ) {
 
 static int graphics_fmem_fseek( void* userdata, int offset ) {
    GRAPHICS_FMEM_INFO* info = userdata;
-   SCAFFOLD_SIZE actual;
+   SCAFFOLD_SIZE_SIGNED actual;
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_start );
    scaffold_assert( GRAPHICS_FMEM_SENTINAL == info->sentinal_end );
 

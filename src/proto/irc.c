@@ -558,7 +558,7 @@ static void irc_server_ison(
    struct VECTOR* ison = NULL;
    bstring response = NULL;
    struct CLIENT* c_iter = NULL;
-   int i;
+   SCAFFOLD_SIZE_SIGNED i;
    int bstr_result;
 
    response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
@@ -1423,7 +1423,7 @@ IRC_COMMAND* irc_dispatch(
 ) {
    struct bstrList* args = NULL;
    const IRC_COMMAND* command = NULL;
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED i;
    bstring cmd_test = NULL; /* Don't free this. */
    IRC_COMMAND* out = NULL;
 
