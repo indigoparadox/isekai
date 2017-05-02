@@ -26,7 +26,7 @@ END_TEST
 START_TEST( test_b64_decode ) {
    bstring b64_test = NULL;
    unsigned char* outbuffer = calloc( 20, sizeof( char ) );
-   SCAFFOLD_SIZE outlen = 20;
+   SCAFFOLD_SIZE_SIGNED outlen = 20;
 
    b64_decode( &b64t_result, outbuffer, &outlen );
    /* scaffold_print_debug(

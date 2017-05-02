@@ -328,7 +328,7 @@ cleanup:
 
 int32_t vector_get_scalar_value( struct VECTOR* v, int32_t value ) {
    int32_t retval = -1;
-   int i;
+   SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -353,7 +353,7 @@ cleanup:
 /* Use a callback to delete items. The callback frees the item or decreases   *
  * its refcount as applicable.                                                */
 SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, void* arg ) {
-   SCAFFOLD_SIZE_SIGNED i, j;
+   SCAFFOLD_SIZE i, j;
    SCAFFOLD_SIZE removed = 0;
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
@@ -569,7 +569,7 @@ cleanup:
 void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
    void* current_iter = NULL;
-   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
 
    scaffold_check_null( v );
@@ -580,9 +580,9 @@ void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg )
    idx.type = CONTAINER_IDX_NUMBER;
 
    vector_lock( v, TRUE );
-   for( i = vector_count( v ) - 1 ; 0 <= i ; i-- ) {
-      current_iter = vector_get( v, i );
-      idx.value.index = i;
+   for( i = vector_count( v ) ; 0 < i ; i-- ) {
+      current_iter = vector_get( v, i - 1 );
+      idx.value.index = i - 1;
       cb_return = callback( &idx, current_iter, arg );
       if( NULL != cb_return ) {
          break;

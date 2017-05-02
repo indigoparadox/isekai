@@ -406,7 +406,7 @@ cleanup:
 
 #endif
 
-int b64_decode( bstring indata, unsigned char *out, SCAFFOLD_SIZE *outLen ) {
+int b64_decode( bstring indata, unsigned char *out, SCAFFOLD_SIZE_SIGNED *outLen ) {
     /* char *end = in + inLen; */
     char iter = 0;
     uint32_t buf = 0;

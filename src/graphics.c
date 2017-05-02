@@ -42,7 +42,7 @@ void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap ) {
 }
 
 void graphics_bitmap_load(
-   const BYTE* data, SCAFFOLD_SIZE data_sz, struct GRAPHICS_BITMAP** bitmap_out
+   const BYTE* data, SCAFFOLD_SIZE_SIGNED data_sz, struct GRAPHICS_BITMAP** bitmap_out
 ) {
 #ifdef USE_BITMAP_DISCREET
    uint32_t* header_data_sz_ptr = (uint32_t*)&(data[2]);
@@ -51,7 +51,7 @@ void graphics_bitmap_load(
    struct GRAPHICS_BITMAP_FILE_HEADER* file_header = NULL;
    struct GRAPHICS_BITMAP_HEADER* header = NULL;
 #endif /* USE_BITMAP_DISCREET */
-   SCAFFOLD_SIZE pixels_sz = 0,
+   SCAFFOLD_SIZE_SIGNED pixels_sz = 0,
       i,
       output_i = 0;
 

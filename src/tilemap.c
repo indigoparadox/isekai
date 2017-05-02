@@ -815,6 +815,8 @@ void tilemap_toggle_debug_state() {
    }
 }
 
+#endif /* DEBUG_TILES */
+
 struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
@@ -878,7 +880,5 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 cleanup:
    return cache_out;
 }
-
-#endif /* DEBUG_TILES */
 
 #endif /* ENABLE_LOCAL_CLIENT */

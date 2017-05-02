@@ -293,7 +293,7 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    uint8_t* mid_buffer = NULL,
       * tail_output_buffer = NULL;
    CHUNKER_TRACK* track = NULL;
-   SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
+   SCAFFOLD_SIZE_SIGNED mid_buffer_length = blength( rx_buffer ) * 2,
       mid_buffer_pos = 0;
 #ifdef DEBUG
    int b64_res = 0;
@@ -577,7 +577,7 @@ int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {
    SCAFFOLD_SIZE new_percent = 0;
    SCAFFOLD_SIZE current_bytes = 0;
    CHUNKER_TRACK* iter_track;
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED i;
 
    for( i = 0 ; vector_count( &(h->tracks) ) > i ; i++ ) {
       iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
