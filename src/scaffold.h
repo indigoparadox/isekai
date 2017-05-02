@@ -50,10 +50,12 @@ typedef unsigned char uint8_t;
 
 /* = Common Headers = */
 
+#ifndef __palmos__
 #include <stdio.h>
 #include <stddef.h>
 #include <memory.h>
 #include <stdlib.h>
+#endif /* __palmos__ */
 
 #include "bstrlib/bstrlib.h"
 #include "colors.h"
