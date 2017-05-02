@@ -930,7 +930,7 @@ static void irc_server_debugvm(
    l = server_get_channel_by_name( s, lname );
    scaffold_check_null( l );
 
-   channel_vm_start( l, code );
+   // FIXME: channel_vm_start( l, code );
 
 cleanup:
    bdestroy( code );
