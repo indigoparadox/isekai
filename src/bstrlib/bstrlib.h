@@ -18,11 +18,13 @@
 extern "C" {
 #endif
 
-#include <stdarg.h>
+#ifndef __palmos__
 #include <string.h>
-#include <limits.h>
 #include <ctype.h>
 #include <assert.h>
+#endif /* __palmos__ */
+#include <stdarg.h>
+#include <limits.h>
 
 #if !defined (BSTRLIB_VSNP_OK) && !defined (BSTRLIB_NOVSNP)
 # if defined (__TURBOC__) && !defined (__BORLANDC__)
