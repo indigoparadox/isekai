@@ -3,13 +3,13 @@
 #include "tilemap.h"
 
 #include <memory.h>
-#include <string.h>
 
 #include "callback.h"
 #include "mobile.h"
 
 static BOOL tilemap_layer_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   tilemap_layer_free( (struct TILEMAP_LAYER*)iter );
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
+   tilemap_layer_free( layer );
    return TRUE;
 }
 

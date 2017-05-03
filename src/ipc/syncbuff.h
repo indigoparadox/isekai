@@ -3,7 +3,10 @@
 #define SYNCBUFF_H
 
 #include <stddef.h>
+
+#ifndef __palmos__
 #include <stdlib.h>
+#endif /* __palmos__ */
 
 #include "../scaffold.h"
 #include "../bstrlib/bstrlib.h"

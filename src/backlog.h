@@ -5,10 +5,14 @@
 #include "scaffold.h"
 #include "ui.h"
 
+#ifdef USE_CLOCK
 #include <time.h>
+#endif /* USE_CLOCK */
 
 struct BACKLOG_LINE {
+#ifdef USE_CLOCK
    struct tm time;
+#endif /* USE_CLOCK */
    bstring nick;
    bstring line;
 };
@@ -18,8 +22,6 @@ void backlog_shutdown();
 void backlog_line_free( struct BACKLOG_LINE* line );
 void backlog_ensure_window( struct UI* ui );
 void* backlog_iter( vector_search_cb cb, void* arg );
-static void backlog_timestamp( struct BACKLOG_LINE* line );
-static void backlog_refresh_window();
 void backlog_speak( const bstring nick, const bstring msg );
 void backlog_system( const bstring msg );
 

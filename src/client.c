@@ -200,11 +200,13 @@ void client_free_channels( struct CLIENT* c ) {
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+#ifdef DEBUG
    scaffold_print_debug(
       &module,
       "Removed %d channels. %d remaining.\n",
       deleted, hashmap_count( &(c->channels) )
    );
+#endif /* DEBUG */
    scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
 
 cleanup:

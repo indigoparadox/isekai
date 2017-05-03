@@ -88,7 +88,7 @@ struct GRAPHICS_TILE_WINDOW {
    graphics_draw_rect( g, 0, 0, g->w, g->h, color, TRUE )
 
 #define graphics_surface_new( g, x, y, w, h ) \
-    g = (GRAPHICS*)calloc( 1, sizeof( GRAPHICS ) ); \
+    g = mem_alloc( 1, GRAPHICS ); \
     scaffold_check_null( g ); \
     graphics_surface_init( g, w, h );
 

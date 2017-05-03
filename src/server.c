@@ -2,8 +2,6 @@
 #define SERVER_C
 #include "server.h"
 
-#include <stdlib.h>
-
 #include "callback.h"
 #include "hashmap.h"
 #include "proto.h"

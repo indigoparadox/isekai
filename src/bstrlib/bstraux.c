@@ -21,10 +21,14 @@
 #define BSTRAUX_C
 
 #include <stdio.h>
+#include <limits.h>
+
+#ifndef __palmos__
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 #include <ctype.h>
+#endif /* __palmos __ */
+
 #include "bstrlib.h"
 #include "bstraux.h"
 
@@ -98,6 +102,8 @@ int bInsertChrs (bstring b, int pos, int len, unsigned char c, unsigned char fil
 	b->data[b->slen] = (unsigned char) '\0';
 	return BSTR_OK;
 }
+
+#ifdef USE_BSTRING_CALLBACKS
 
 /** \brief Left justify a string.
  */
@@ -184,6 +190,8 @@ int i, l, c, bstr_ret;
 	return BSTR_OK;
 }
 
+#endif /* USE_BSTRING_CALLBACKS */
+
 static size_t readNothing (void *buff, size_t elsize, size_t nelem, void *parm) {
 	UNUSED(buff);
 	UNUSED(elsize);
@@ -191,6 +199,8 @@ static size_t readNothing (void *buff, size_t elsize, size_t nelem, void *parm) 
 	UNUSED(parm);
 	return 0; /* Immediately indicate EOF. */
 }
+
+#ifdef USE_BSTRING_STREAMS
 
 /** \brief Create a bStream whose contents are a copy of the bstring passed in.
  *         This allows the use of all the bStream APIs with bstrings.
@@ -200,6 +210,8 @@ struct bStream * s = bsopen ((bNread) readNothing, NULL);
 	bsunread (s, b); /* Push the bstring data into the empty bStream. */
 	return s;
 }
+
+#endif /* USE_BSTRING_STREAMS */
 
 static size_t readRef (void *buff, size_t elsize, size_t nelem, void *parm) {
 struct tagbstring * t = (struct tagbstring *) parm;
@@ -215,6 +227,8 @@ size_t tsz = elsize * nelem;
 	return 0;
 }
 
+#ifdef USE_BSTRING_STREAMS
+
 /*  The "by reference" version of the above function.  This function puts
  *  a number of restrictions on the call site (the passed in struct
  *  tagbstring *will* be modified by this function, and the source data
@@ -225,6 +239,8 @@ static struct bStream * bsFromBstrRef (struct tagbstring * t) {
 	if (!t) return NULL;
 	return bsopen ((bNread) readRef, t);
 }
+
+#endif /* USE_BSTRING_STREAMS */
 
 /*  char * bStr2NetStr (const_bstring b)
  *
@@ -473,6 +489,8 @@ bstring out;
 		}
 	}
 }
+
+#ifdef USE_BSTRING_STREAMS
 
 #define UU_DECODE_BYTE(b) (((b) == (signed int)'`') ? 0 : (b) - (signed int)' ')
 
@@ -729,6 +747,8 @@ unsigned int c0, c1, c2;
 	End:;
 	return out;
 }
+
+#endif /* USE_BSTRING_STREAMS */
 
 /** \brief Performs a YEncode of a block of data.  No header or tail info is
  *         appended.  See: http://www.yenc.org/whatis.htm and
@@ -1022,6 +1042,8 @@ int bSetChar (bstring b, int pos, char c) {
 	return 0;
 }
 
+#ifdef USE_BSTRING_STREAMS
+
 #define INIT_SECURE_INPUT_LENGTH (256)
 
 /*  bstring bSecureInput (int maxlen, int termchar,
@@ -1229,3 +1251,5 @@ void * parm;
 	free (ws);
 	return parm;
 }
+
+#endif /* USE_BSTRING_STREAMS */

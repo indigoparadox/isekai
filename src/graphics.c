@@ -2,8 +2,9 @@
 #define GRAPHICS_C
 #include "graphics.h"
 
-#include <stdlib.h>
+#ifdef USE_CLOCK
 #include <time.h>
+#endif /* USE_CLOCK */
 
 static uint32_t graphics_time = 0;
 static uint32_t graphics_fps_delay = 0;
@@ -70,15 +71,13 @@ void graphics_bitmap_load(
    scaffold_assert( 0 == header->compression );
    scaffold_assert( (file_header->offset + pixels_sz) <= data_sz );
 
-   *bitmap_out =
-      (struct GRAPHICS_BITMAP*)calloc( 1, sizeof( struct GRAPHICS_BITMAP ) );
+   *bitmap_out = mem_alloc( 1, struct GRAPHICS_BITMAP );
    scaffold_check_null( *bitmap_out );
    (*bitmap_out)->w = header->width;
    (*bitmap_out)->h = header->height;
    (*bitmap_out)->pixels_sz = (header->width * header->height);
-   (*bitmap_out)->pixels = (GRAPHICS_COLOR*)calloc(
-      (*bitmap_out)->pixels_sz, sizeof( GRAPHICS_COLOR )
-   );
+   (*bitmap_out)->pixels =
+      mem_alloc( (*bitmap_out)->pixels_sz, GRAPHICS_COLOR );
    scaffold_check_null( (*bitmap_out)->pixels );
 
    for( i = file_header->offset ; (file_header->offset + pixels_sz) > i ; i++ ) {

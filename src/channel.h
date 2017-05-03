@@ -7,8 +7,6 @@
 #include "hashmap.h"
 #include "tilemap.h"
 
-#include <time.h>
-
 #define CHANNEL_SENTINAL 888
 
 #ifdef USE_TINYPY
