@@ -153,12 +153,14 @@ cleanup:
 SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
    HSE_sink_res sink_res;
    HSE_poll_res poll_res;
-   SCAFFOLD_SIZE consumed = 0,
-      exhumed = 0,
+   SCAFFOLD_SIZE_SIGNED
       hs_buffer_len = h->tx_chunk_length * 4,
       hs_buffer_pos = 0,
       raw_buffer_len = h->tx_chunk_length,
       start_pos = h->raw_position;
+   SCAFFOLD_SIZE
+      exhumed = 0,
+      consumed = 0;
    uint8_t* hs_buffer = NULL;
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
@@ -283,7 +285,10 @@ cleanup:
    return;
 }
 
-void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start, SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len ) {
+void chunker_unchunk_pass(
+   struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start,
+   SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len
+) {
    SCAFFOLD_SIZE consumed = 0,
       exhumed = 0,
       tail_output_alloc = 0,
@@ -293,8 +298,9 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    uint8_t* mid_buffer = NULL,
       * tail_output_buffer = NULL;
    CHUNKER_TRACK* track = NULL;
-   SCAFFOLD_SIZE_SIGNED mid_buffer_length = blength( rx_buffer ) * 2,
+   SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
       mid_buffer_pos = 0;
+   VECTOR_ERR verr;
 #ifdef DEBUG
    int b64_res = 0;
 #endif /* DEBUG */
@@ -351,7 +357,12 @@ void chunker_unchunk_pass( struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE s
    track = (CHUNKER_TRACK*)calloc( 1, sizeof( CHUNKER_TRACK ) );
    track->start = src_chunk_start;
    track->length = src_chunk_len;
-   vector_add( &(h->tracks), track );
+   verr = vector_add( &(h->tracks), track );
+   if( VECTOR_ERR_NONE != verr ) {
+      scaffold_free( track );
+      track = NULL;
+      goto cleanup;
+   }
 
    /* Sink enough data to fill an outgoing buffer and wait for it to process. */
    do {
@@ -577,7 +588,7 @@ int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {
    SCAFFOLD_SIZE new_percent = 0;
    SCAFFOLD_SIZE current_bytes = 0;
    CHUNKER_TRACK* iter_track;
-   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE i;
 
    for( i = 0 ; vector_count( &(h->tracks) ) > i ; i++ ) {
       iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );

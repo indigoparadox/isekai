@@ -78,9 +78,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
    struct TILEMAP_SPAWNER* spawner = NULL;
-   SCAFFOLD_SIZE bytes_read = 0;
+   SCAFFOLD_SIZE_SIGNED bytes_read = 0,
+      v_count = 0;
    struct VECTOR* player_spawns = NULL;
-   SCAFFOLD_SIZE v_count = 0;
 
    scaffold_check_null( c );
 
@@ -245,8 +245,8 @@ void channel_load_tilemap( struct CHANNEL* l ) {
       mapdata_path = NULL;
    BYTE* mapdata_buffer = NULL;
    int bstr_retval;
-   SCAFFOLD_SIZE_SIGNED bytes_read = 0;
-   SCAFFOLD_SIZE mapdata_size = 0;
+   SCAFFOLD_SIZE bytes_read = 0,
+      mapdata_size = 0;
 
    scaffold_print_debug(
       &module, "Loading tilemap for channel: %s\n", bdata( l->name )

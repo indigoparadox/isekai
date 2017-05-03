@@ -2600,8 +2600,8 @@ size_t nsz;
  *  least msz entries or sl->qty whichever is greater.
  */
 int bstrListAllocMin (struct bstrList * sl, int msz) {
-bstring * l;
-size_t nsz;
+   bstring* l;
+   size_t nsz;
 	if (!sl || msz <= 0 || !sl->entry || sl->qty < 0 || sl->mlen <= 0 ||
 	    sl->qty > sl->mlen) return BSTR_ERR;
 	if (msz < sl->qty) msz = sl->qty;

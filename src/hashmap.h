@@ -20,7 +20,7 @@ typedef BOOL (*hashmap_delete_cb)( struct CONTAINER_IDX* idx, void* iter, void* 
 struct HASHMAP_ELEMENT {
    uint16_t sentinal;
    bstring key;
-   int in_use;
+   BOOL in_use;
    void* data;
 };
 
@@ -28,8 +28,8 @@ struct HASHMAP_ELEMENT {
  * as well as the data to hold. */
 struct HASHMAP {
    uint16_t sentinal;
-   int table_size;
-   int size;
+   SCAFFOLD_SIZE_SIGNED table_size;
+   SCAFFOLD_SIZE_SIGNED size; /* Hashmap sizes can also be - error codes. */
    struct HASHMAP_ELEMENT* data;
    uint8_t lock_count;
    SCAFFOLD_ERROR last_error;

@@ -280,7 +280,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
    static struct CLIENT* c = NULL;
    BOOL new_clients = FALSE;
 #ifdef DEBUG
-   SCAFFOLD_SIZE old_client_count = 0;
+   SCAFFOLD_SIZE_SIGNED old_client_count = 0;
 
    old_client_count = hashmap_count( &(s->clients) );
    scaffold_trace_path = SCAFFOLD_TRACE_SERVER;

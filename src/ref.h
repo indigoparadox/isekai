@@ -12,7 +12,7 @@
 struct REF {
    uint8_t sentinal;
    void (*gc_free )( const struct REF* );
-   int count;
+   SCAFFOLD_SIZE count;
 };
 
 static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
@@ -20,6 +20,8 @@ static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struc
    ref->gc_free = free;
    ref->sentinal = REF_SENTINAL;
 }
+
+static struct tagbstring ref_module = bsStatic( "ref.h" );
 
 #define refcount_inc( obj, type ) \
    ref_inc( &((obj)->refcount), type, __FUNCTION__ )
@@ -34,7 +36,7 @@ static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, co
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
       scaffold_print_debug(
-         &module,
+         &ref_module,
          "%s: Reference count for %s increased: %d\n", func, type, ref->count
       );
    }
@@ -43,24 +45,33 @@ static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, co
 
 static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
+
+   if( 1 == ((struct REF*)ref)->count ) {
+#ifdef DEBUG_REF
+      if( NULL != type && NULL != func ) {
+         scaffold_print_debug( &ref_module, "%s: %s freed.\n", func, type );
+      }
+#endif /* DEBUG_REF */
+      ((struct REF*)ref)->count = 0;
+      ref->gc_free( ref );
+      return TRUE;
+   } else if( 0 == ((struct REF*)ref)->count ) {
+      scaffold_print_error( &ref_module, "Reference count negative!\n" );
+      goto cleanup;
+   }
+
    --((struct REF*)ref)->count;
+
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
       scaffold_print_debug(
-         &module,
+         &ref_module,
          "%s: Reference count for %s decreased: %d\n", func, type, ref->count
       );
    }
 #endif /* DEBUG_REF */
-   if( 0 >= ((struct REF*)ref)->count ) {
-#ifdef DEBUG_REF
-      if( NULL != type && NULL != func ) {
-         scaffold_print_debug( &module, "%s: %s freed.\n", func, type );
-      }
-#endif /* DEBUG_REF */
-      ref->gc_free( ref );
-      return TRUE;
-   }
+
+cleanup:
    return FALSE;
 }
 

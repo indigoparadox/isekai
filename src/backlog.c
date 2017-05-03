@@ -19,6 +19,12 @@ void backlog_shutdown() {
    vector_cleanup( &global_backlog );
 }
 
+void backlog_line_free( struct BACKLOG_LINE* line ) {
+   bdestroy( line->line );
+   bdestroy( line->nick );
+   free( line );
+}
+
 void backlog_ensure_window( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
@@ -67,6 +73,7 @@ static void backlog_refresh_window() {
 
 void backlog_speak( const bstring nick, const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
+   VECTOR_ERR verr;
 
    line = (struct BACKLOG_LINE*)calloc(
       1, sizeof( struct BACKLOG_LINE)
@@ -77,7 +84,11 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    line->line = bstrcpy( msg );
 
    backlog_timestamp( line );
-   vector_insert( &global_backlog, 0, line );
+   verr = vector_insert( &global_backlog, 0, line );
+   if( VECTOR_ERR_NONE != verr ) {
+      backlog_line_free( line );
+      goto cleanup;
+   }
    backlog_refresh_window();
 
 cleanup:
@@ -86,6 +97,7 @@ cleanup:
 
 void backlog_system( const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
+   VECTOR_ERR verr;
 
    line = (struct BACKLOG_LINE*)calloc(
       1, sizeof( struct BACKLOG_LINE)
@@ -96,7 +108,11 @@ void backlog_system( const bstring msg ) {
    line->line = bstrcpy( msg );
 
    backlog_timestamp( line );
-   vector_insert( &global_backlog, 0, line );
+   verr = vector_insert( &global_backlog, 0, line );
+   if( VECTOR_ERR_NONE != verr ) {
+      /* Check below will destroy leftover object. */
+      goto cleanup;
+   }
    backlog_refresh_window();
 
 cleanup:
