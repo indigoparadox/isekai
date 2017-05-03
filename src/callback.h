@@ -61,10 +61,10 @@ void* callback_get_tile_blocker( struct CONTAINER_IDX* idx, void* iter, void* ar
 #ifdef USE_CHUNKS
 void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg );
-BOOL callback_proc_client_delayed_chunkers(
+#endif /* USE_CHUNKS */
+BOOL callback_proc_client_delayed_files(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 );
-#endif /* USE_CHUNKS */
 #ifdef USE_VM
 void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* arg );
