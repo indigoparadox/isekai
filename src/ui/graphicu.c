@@ -197,6 +197,7 @@ void ui_control_init(
 void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 ) {
+   VECTOR_ERR verr;
 #ifdef DEBUG
    struct UI_CONTROL* control_test = NULL;
 
@@ -215,8 +216,8 @@ void ui_control_add(
    hashmap_put( &(win->controls), id, control );
 
    if( TRUE == control->can_focus ) {
-      vector_add( &(win->controls_active), control );
-      if( NULL == win->active_control ) {
+      verr = vector_add( &(win->controls_active), control );
+      if( VECTOR_ERR_NONE == verr && NULL == win->active_control ) {
          win->active_control = control;
       }
    }
@@ -265,15 +266,21 @@ cleanup:
 }
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
+   VECTOR_ERR verr;
+
    #ifdef DEBUG
    ui_debug_stack( ui );
    #endif /* DEBUG */
+
    /* TODO: Don't allow dupes. */
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != ui );
    scaffold_assert( &global_ui == win->ui );
    scaffold_assert( &global_ui == ui );
-   vector_insert( &(ui->windows), 0, win );
+   verr = vector_insert( &(ui->windows), 0, win );
+   scaffold_check_equal( VECTOR_ERR_NONE, verr );
+
+cleanup:
    #ifdef DEBUG
    ui_debug_stack( ui );
    #endif /* DEBUG */
@@ -319,11 +326,10 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       switch( p->character ) {
       case INPUT_ASSIGNMENT_LEFT:
          items_list = (struct VECTOR*)control->self.attachment;
-         control->self.selection--;
-         if( 0 > control->self.selection ) {
-            control->self.selection = 0;
+         if( 0 < control->self.selection ) {
+            control->self.selection--;
+            win->dirty = TRUE;
          }
-         win->dirty = TRUE;
          break;
 
       case INPUT_ASSIGNMENT_RIGHT:
@@ -476,7 +482,7 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
 static void ui_window_reset_grid( struct UI_WINDOW* win ) {
    assert( win->ui == &global_ui );
    win->grid_pos.x = UI_WINDOW_GRID_X_START;
-   win->grid_pos.y = 0; //UI_WINDOW_GRID_Y_START;
+   win->grid_pos.y = 0;
    win->grid_previous_button = FALSE;
    assert( win->ui == &global_ui );
 }
@@ -596,9 +602,6 @@ static void* ui_control_draw_backlog_line(
    GRAPHICS_RECT* pos = &(control->self.grid_pos);
 
    /* TODO: Divide multiline lines. */
-
-   //nick_size.x = win->grid_pos.x;
-   //nick_size.y = win->grid_pos.y;
 
    if( NULL != line->nick ) {
       /* Draw the nick, first. */
@@ -831,6 +834,7 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
 #endif /* DEBUG */
 
    switch( control->type ) {
+      case UI_CONTROL_TYPE_NONE: break;
       case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
       case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
       case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;

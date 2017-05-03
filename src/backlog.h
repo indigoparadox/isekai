@@ -15,6 +15,7 @@ struct BACKLOG_LINE {
 
 void backlog_init();
 void backlog_shutdown();
+void backlog_line_free( struct BACKLOG_LINE* line );
 void backlog_ensure_window( struct UI* ui );
 void* backlog_iter( vector_search_cb cb, void* arg );
 static void backlog_timestamp( struct BACKLOG_LINE* line );

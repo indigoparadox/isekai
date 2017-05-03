@@ -136,7 +136,7 @@ static unsigned long crc32_tab[] = {
 /* Return a 32-bit CRC of the contents of the buffer. */
 
 static uint32_t hashmap_crc32( bstring string ) {
-   SCAFFOLD_SIZE i = 0;
+   SCAFFOLD_SIZE_SIGNED i = 0;
    uint32_t crc32val = 0;
    const unsigned char* s = NULL;
 
@@ -189,10 +189,10 @@ cleanup:
  * Return the integer of the location in data
  * to store the point to the item, or MAP_FULL.
  */
-static int hashmap_hash( struct HASHMAP* m, const bstring key ) {
-   int curr;
-   int i;
-   int out = HASHMAP_FULL;
+static SCAFFOLD_SIZE_SIGNED hashmap_hash( struct HASHMAP* m, const bstring key ) {
+   SCAFFOLD_SIZE curr,
+      i,
+      out = HASHMAP_FULL;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -430,7 +430,7 @@ void* hashmap_get_nolock( struct HASHMAP* m, const bstring key ) {
 }
 
 void* hashmap_get_first( struct HASHMAP* m ) {
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED i;
    void* found = NULL;
    void* data = NULL;
    BOOL ok = FALSE;
@@ -626,7 +626,7 @@ cleanup:
 void* hashmap_iterate_nolock(
    struct HASHMAP* m, hashmap_search_cb callback, void* arg
 ) {
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED i;
    void* found = NULL;
    void* data = NULL;
    void* test = NULL;
@@ -675,6 +675,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    BOOL ok = FALSE;
    int i;
    struct CONTAINER_IDX idx = { 0 };
+   VECTOR_ERR verr;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -697,7 +698,10 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
             if( NULL == found ) {
                vector_new( found );
             }
-            vector_add( found, test );
+            verr = vector_add( found, test );
+            if( VECTOR_ERR_NONE != verr ) {
+               goto cleanup;
+            }
          }
       }
    }
@@ -719,7 +723,7 @@ cleanup:
  *
  */
 SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
-   SCAFFOLD_SIZE i;
+   SCAFFOLD_SIZE_SIGNED i;
    SCAFFOLD_SIZE removed = 0;
    void* data;
    BOOL locked = FALSE;
@@ -776,9 +780,9 @@ cleanup:
  * Remove an element with that key from the map
  */
 BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
-   int i;
-   int curr;
-   int in_use;
+   SCAFFOLD_SIZE i,
+      curr;
+   BOOL in_use;
    BOOL removed = FALSE;
 
    scaffold_check_null( m );
@@ -793,12 +797,12 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
    for( i = 0 ; i < MAX_CHAIN_LENGTH ; i++) {
 
       in_use = m->data[curr].in_use;
-      if( 1 == in_use ) {
+      if( TRUE == in_use ) {
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
             refcount_test_dec( m->data[curr].data );
 
             /* Blank out the fields */
-            m->data[curr].in_use = 0;
+            m->data[curr].in_use = FALSE;
             m->data[curr].data = NULL;
             bwriteallow( (*m->data[curr].key) );
             bdestroy( m->data[curr].key );
@@ -831,7 +835,7 @@ cleanup:
 }
 
 /* Return the length of the hashmap */
-int hashmap_count( struct HASHMAP* m ) {
+SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m ) {
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    return m->size;

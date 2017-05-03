@@ -137,6 +137,7 @@ static void datafile_mobile_parse_animation_ezxml(
    struct MOBILE_ANI_DEF* animation = NULL;
    bstring name_dir = NULL;
    struct MOBILE_SPRITE_DEF* sprite = NULL;
+   VECTOR_ERR verr;
 
    scaffold_check_null( xml_animation );
 
@@ -162,7 +163,12 @@ static void datafile_mobile_parse_animation_ezxml(
          );
       }
 
-      vector_add( &(animation->frames), sprite );
+      verr = vector_add( &(animation->frames), sprite );
+      if( VECTOR_ERR_NONE != verr ) {
+         scaffold_print_error(
+            &module, "Unable to add frame to mobile animation: %d\n", frame_id
+         );
+      }
 
       xml_frame_iter = ezxml_next( xml_frame_iter );
    }
@@ -503,6 +509,7 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    const char* xml_attr;
    ezxml_t xml_props = NULL,
       xml_prop_iter = NULL;
+   VECTOR_ERR verr;
 
    terrain_info = (struct TILEMAP_TERRAIN_DATA*)calloc(
       1, sizeof( struct TILEMAP_TERRAIN_DATA )
@@ -546,7 +553,11 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
 
    terrain_info->id = id;
 
-   vector_add( &(set->terrain), terrain_info );
+   verr = vector_add( &(set->terrain), terrain_info );
+   if( VECTOR_ERR_NONE != verr ) {
+      /* Check below will destroy leftover object. */
+      goto cleanup;
+   }
    terrain_info = NULL;
 
 cleanup:
@@ -784,6 +795,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    ezxml_t xml_prop_iter = NULL;
    struct TILEMAP_SPAWNER* obj_out = NULL;
    int bstr_res = 0;
+   VECTOR_ERR verr;
 
    tilemap_spawner_new( obj_out, t, TILEMAP_SPAWNER_TYPE_MOBILE );
 
@@ -860,7 +872,11 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
       obj_out->id, obj_out->pos.x, obj_out->pos.y
    );
 
-   vector_add( &(t->spawners), obj_out );
+   verr = vector_add( &(t->spawners), obj_out );
+   if( VECTOR_ERR_NONE != verr ) {
+      /* Check below will destroy leftover object. */
+      goto cleanup;
+   }
    obj_out = NULL;
 
 cleanup:

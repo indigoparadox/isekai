@@ -774,6 +774,7 @@ void tilemap_add_dirty_tile(
    struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    struct TILEMAP_POSITION* pos = NULL;
+   VECTOR_ERR verr;
 
    pos =
       (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) );
@@ -782,7 +783,11 @@ void tilemap_add_dirty_tile(
    pos->x = x;
    pos->y = y;
 
-   vector_add( &(t->dirty_tiles), pos );
+   verr = vector_add( &(t->dirty_tiles), pos );
+   if( VECTOR_ERR_NONE != verr ) {
+      scaffold_free( pos );
+      goto cleanup;
+   }
 
 cleanup:
    return;
@@ -822,6 +827,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
 ) {
    struct TILEMAP_ITEM_CACHE* cache = NULL;
    struct TILEMAP_POSITION pos;
+   VECTOR_ERR verr = FALSE;
 
    pos.x = x;
    pos.y = y;
@@ -831,7 +837,12 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    if( NULL == cache ) {
       tilemap_item_cache_new( cache, t, x, y );
       scaffold_check_null( cache );
-      vector_add( &(t->item_caches), cache );
+      verr = vector_add( &(t->item_caches), cache );
+      if( VECTOR_ERR_NONE != verr ) {
+         tilemap_item_cache_free( cache );
+         cache = NULL;
+         goto cleanup;
+      }
    }
 
    /* Prevent the item from being double-dropped. */
@@ -841,7 +852,11 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
       goto cleanup;
    }
 
-   vector_add( &(cache->items), e );
+   verr = vector_add( &(cache->items), e );
+   if( VECTOR_ERR_NONE != verr ) {
+      item_free( e );
+      goto cleanup;
+   }
 
    tilemap_add_dirty_tile( t, x, y );
 
@@ -863,6 +878,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 ) {
    struct TILEMAP_POSITION tile_map_pos;
    struct TILEMAP_ITEM_CACHE* cache_out = NULL;
+   VECTOR_ERR verr;
 
    tile_map_pos.x = x;
    tile_map_pos.y = y;
@@ -874,7 +890,12 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
    if( NULL == cache_out && FALSE != force ) {
       tilemap_item_cache_new( cache_out, t, x, y );
       scaffold_check_null( cache_out );
-      vector_add( &(t->item_caches), cache_out );
+      verr = vector_add( &(t->item_caches), cache_out );
+      if( VECTOR_ERR_NONE != verr ) {
+         tilemap_item_cache_free( cache_out );
+         cache_out = NULL;
+         goto cleanup;
+      }
    }
 
 cleanup:

@@ -81,6 +81,8 @@ void proto_register( struct CLIENT* c ) {
    client_printf( c, "USER %b", c->realname );
 }
 
+#ifdef USE_CHUNKS
+
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
@@ -141,15 +143,19 @@ void proto_client_request_spritesheet(
    client_printf( c, "CREQ %d %b", type, name );
 }
 
+#endif /* USE_CHUNKS */
+
 void proto_server_name_spritesheet(
    struct CLIENT* c, bstring filename, CHUNKER_DATA_TYPE type
 ) {
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
+#ifdef USE_CHUNKS
    scaffold_print_debug(
       &module, "Server: Naming %b: %s\n",
       chunker_type_names[type].data, filename
    );
+#endif /* USE_CHUNKS */
    client_printf( c, "CRES %d %b", type, filename );
 }
 
@@ -558,7 +564,7 @@ static void irc_server_ison(
    struct VECTOR* ison = NULL;
    bstring response = NULL;
    struct CLIENT* c_iter = NULL;
-   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE i;
    int bstr_result;
 
    response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
@@ -1100,6 +1106,27 @@ cleanup:
    return;
 }
 
+#endif /* ENABLE_LOCAL_CLIENT */
+
+static void irc_server_gamedataabort(
+   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
+) {
+   irc_detect_malformed( 2, "GDA", line );
+
+   scaffold_print_debug(
+      &module,
+      "Server: Terminating transfer of %s at request of client: %d\n",
+      bdata( args->entry[1] ), c->link.socket
+   );
+
+   hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, args->entry[1] );
+
+cleanup:
+   return;
+}
+
+#endif /* USE_CHUNKS */
+
 static void irc_client_item_cache_start(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
@@ -1210,27 +1237,6 @@ static void irc_client_item_cache_end(
 ) {
    last_item_cache = NULL;
 }
-
-#endif /* ENABLE_LOCAL_CLIENT */
-
-static void irc_server_gamedataabort(
-   struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
-) {
-   irc_detect_malformed( 2, "GDA", line );
-
-   scaffold_print_debug(
-      &module,
-      "Server: Terminating transfer of %s at request of client: %d\n",
-      bdata( args->entry[1] ), c->link.socket
-   );
-
-   hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, args->entry[1] );
-
-cleanup:
-   return;
-}
-
-#endif /* USE_CHUNKS */
 
 static void irc_server_gamenewsprite(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line

@@ -87,6 +87,7 @@ typedef ssize_t SCAFFOLD_SIZE_SIGNED;
 typedef uint32_t SCAFFOLD_SIZE;
 typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #define SCAFFOLD_SIZE_MAX UINT_MAX
+#define SCAFFOLD_SIZE_SIGNED_MAX INT_MAX
 #endif /* USE_SIZET */
 
 typedef int32_t INTERVAL;
@@ -390,12 +391,12 @@ BOOL scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, ... );
 void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
-SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
+SCAFFOLD_SIZE scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
 #ifdef __GNUC__
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */
 ;
-SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs )
+SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs )
 #ifdef __GNUC__
 __attribute__ ((warn_unused_result))
 #endif /* __GNUC__ */

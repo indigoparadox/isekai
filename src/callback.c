@@ -314,9 +314,9 @@ void* callback_load_spawner_catalogs(
    struct CLIENT* client_or_server = (struct CLIENT*)arg;
    bstring catdata_path = NULL;
    BYTE* catdata = NULL;
-   SCAFFOLD_SIZE catdata_length = 0;
+   SCAFFOLD_SIZE catdata_length = 0,
+      bytes_read;
    struct ITEM_SPRITESHEET* catalog = NULL;
-   SCAFFOLD_SIZE_SIGNED bytes_read;
 
    if(
       TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&

@@ -479,6 +479,7 @@ void client_request_file_later(
    struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
+   VECTOR_ERR verr;
 
    request = scaffold_alloc( 1, struct CLIENT_DELAYED_REQUEST );
    scaffold_check_null( request );
@@ -486,7 +487,8 @@ void client_request_file_later(
    request->filename = bstrcpy( filename );
    request->type = type;
 
-   vector_add( &(c->chunker_files_delayed), request );
+   verr = vector_add( &(c->chunker_files_delayed), request );
+   scaffold_check_equal( VECTOR_ERR_NONE, verr );
 
 cleanup:
    return;

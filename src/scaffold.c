@@ -351,7 +351,7 @@ cleanup:
  * \param[in] len    A pointer to the size indicator for the buffer.
  * \return The number of bytes read, or -1 on failure.
  */
-SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
+SCAFFOLD_SIZE scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
    struct stat inputstat;
    char* path_c = NULL;
 #if defined( _WIN32 )
@@ -363,7 +363,7 @@ SCAFFOLD_SIZE_SIGNED scaffold_read_file_contents( bstring path, BYTE** buffer, S
    int sz_win;
    HFILE inputfd = NULL;
 #else
-   SCAFFOLD_SIZE_SIGNED sz_out = -1;
+   SCAFFOLD_SIZE sz_out = -1;
    int inputfd = -1;
 #endif /* _WIN32 */
    bstring zero_error = NULL;
@@ -436,12 +436,12 @@ cleanup:
    return sz_out;
 }
 
-SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE len, BOOL mkdirs ) {
+SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs ) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
    struct bstrList* path_dirs = NULL;
-   SCAFFOLD_SIZE true_qty;
+   SCAFFOLD_SIZE_SIGNED true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
@@ -512,7 +512,7 @@ cleanup:
    if( NULL != outputfile ) {
       fclose( outputfile );
    }
-   return (SCAFFOLD_SIZE_SIGNED)sz_out;
+   return sz_out;
 }
 
 void scaffold_list_dir(
@@ -529,6 +529,7 @@ void scaffold_list_dir(
    DIR* dir = NULL;
    struct dirent* entry = NULL;
    int bstr_result;
+   VECTOR_ERR verr;
 
    path_c = bdata( path );
    scaffold_check_null( path_c );
@@ -565,7 +566,10 @@ void scaffold_list_dir(
             (FALSE != show_hidden || '.' != entry->d_name[0])
          ) {
             /* We're tracking files, so add this, too. */
-            vector_add( list, child_path );
+            verr = vector_add( list, child_path );
+            if( VECTOR_ERR_NONE != verr ) {
+               bdestroy( child_path );
+            }
          } else {
             bdestroy( child_path );
          }
@@ -573,7 +577,10 @@ void scaffold_list_dir(
 #ifndef _WIN32
       } else {
          /* Always add directories. */
-         vector_add( list, child_path );
+         verr = vector_add( list, child_path );
+         if( VECTOR_ERR_NONE != verr ) {
+            bdestroy( child_path );
+         }
       }
 #endif /* _WIN32 */
 
@@ -735,6 +742,9 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
    bstring str_color = NULL;
    int color_i = (int)color;
    int bstr_ret;
+   volatile int mlen;
+   volatile int slen;
+   volatile const unsigned char* data;
 
    if( color_i > 6 ) {
       color_i -= 9;
@@ -744,9 +754,9 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
    }
    str_color = &(ansi_color_strs[color_i]);
 
-   volatile int mlen = str_color->mlen;
-   volatile int slen = str_color->slen;
-   volatile const char* data = str_color->data;
+   mlen = str_color->mlen;
+   slen = str_color->slen;
+   data = str_color->data;
 
    bstr_ret = binsert( str, 0, str_color, '\0' );
    if( 0 != bstr_ret ) {

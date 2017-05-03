@@ -21,6 +21,11 @@ struct VECTOR {
 #endif /* DEBUG, USE_THREADS */
 };
 
+typedef enum VECTOR_ERR {
+   VECTOR_ERR_NONE = 0,
+   VECTOR_ERR_FULL = 1
+} VECTOR_ERR;
+
 #define VECTOR_SENTINAL 12121
 
 typedef void* (*vector_search_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
@@ -37,8 +42,16 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
 
 void vector_init( struct VECTOR* v );
 void vector_cleanup( struct VECTOR* v );
-void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data );
-void vector_add( struct VECTOR* v, void* data );
+VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data )
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
+VECTOR_ERR vector_add( struct VECTOR* v, void* data )
+#ifdef __GNUC__
+__attribute__ ((warn_unused_result))
+#endif /* __GNUC__ */
+;
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe );
 void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force );
 void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value );

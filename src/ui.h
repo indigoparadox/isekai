@@ -68,8 +68,8 @@ struct UI_WINDOW {
    bstring id;
    struct VECTOR controls_active;
    void* attachment;
-   SCAFFOLD_SIZE_SIGNED selection;
-   SCAFFOLD_SIZE_SIGNED grid_iter;
+   SCAFFOLD_SIZE selection;
+   SCAFFOLD_SIZE grid_iter;
    BOOL dirty;
 };
 

@@ -83,12 +83,13 @@ cleanup:
  *                   include this index if it does not already.
  * \param[in] data   Pointer to the item to add.
  */
-void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
+VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
 #ifdef DEBUG
    SCAFFOLD_SIZE old_size = 0;
 #endif /* DEBUG */
+   VECTOR_ERR err = VECTOR_ERR_NONE;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -97,6 +98,12 @@ void vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
 
    vector_lock( v, TRUE );
    ok = TRUE;
+
+   if( SCAFFOLD_SIZE_MAX <= index ) {
+      scaffold_print_error( &module, "Error: Vector full!\n" );
+      err = VECTOR_ERR_FULL;
+      goto cleanup;
+   }
 
    if( 0 == v->size ) {
       v->size = 10;
@@ -122,11 +129,12 @@ cleanup:
    }
    scaffold_assert( 0 == v->lock_count );
 
-   return;
+   return err;
 }
 
-void vector_add( struct VECTOR* v, void* data ) {
+VECTOR_ERR vector_add( struct VECTOR* v, void* data ) {
    BOOL ok = FALSE;
+   VECTOR_ERR err = VECTOR_ERR_NONE;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -143,8 +151,19 @@ void vector_add( struct VECTOR* v, void* data ) {
    }
 
    if( v->size == v->count ) {
+      if( SCAFFOLD_SIZE_MAX <= v->size * 2 ) {
+         scaffold_print_error( &module, "Error: Vector full!\n" );
+         err = VECTOR_ERR_FULL;
+         goto cleanup;
+      }
       vector_grow( v, v->size * 2 );
       scaffold_check_nonzero( scaffold_error );
+   }
+
+   if( SCAFFOLD_SIZE_MAX <= v->count + 1 ) {
+      scaffold_print_error( &module, "Error: Vector full!\n" );
+      err = VECTOR_ERR_FULL;
+      goto cleanup;
    }
 
    v->data[v->count] = data;
@@ -157,7 +176,7 @@ cleanup:
    }
    scaffold_assert( 0 == v->lock_count );
 
-   return;
+   return err;
 }
 
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
@@ -603,6 +622,7 @@ struct VECTOR* vector_iterate_v(
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
+   VECTOR_ERR add_err = VECTOR_ERR_NONE;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -620,7 +640,13 @@ struct VECTOR* vector_iterate_v(
          if( NULL == found ) {
             vector_new( found );
          }
-         vector_add( found, cb_return );
+         add_err = vector_add( found, cb_return );
+         if( VECTOR_ERR_NONE != add_err ) {
+            scaffold_print_debug(
+               &module, "Insufficient space for results vector.\n"
+            );
+            goto cleanup;
+         }
       }
    }
 
