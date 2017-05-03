@@ -78,7 +78,7 @@ void graphics_surface_cleanup( GRAPHICS* g ) {
       g->surface = NULL;
    }
    if( NULL == g->palette ) {
-      scaffold_free( g->palette );
+      mem_free( g->palette );
       g->palette = NULL;
    }
 }
@@ -90,7 +90,7 @@ void graphics_screen_new(
 
    graphics_setup();
 
-   (*g) = scaffold_alloc( 1, GRAPHICS );
+   (*g) = mem_alloc( 1, GRAPHICS );
    SDL_Init( SDL_INIT_EVERYTHING );
    (*g)->surface = SDL_SetVideoMode(
       w, h, 0,
@@ -235,7 +235,7 @@ cleanup:
    format = surface->format;
    scaffold_check_null( format );
    scaffold_assert( 16 == format->BitsPerPixel );
-   //holder = scaffold_alloc( bytes_per_pixel, BYTE );
+   //holder = mem_alloc( bytes_per_pixel, BYTE );
    for( y = 0 ; surface->h > y ; y++ ) {
       surface_i = (y / bitmap->w) + (y % bitmap->w);
 

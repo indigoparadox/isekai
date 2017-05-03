@@ -93,7 +93,7 @@ void ui_window_init(
    win->area.y = y;
    win->area.w = width;
    win->area.h = height;
-   win->element = scaffold_alloc( 1, GRAPHICS );
+   win->element = mem_alloc( 1, GRAPHICS );
    win->dirty = TRUE; /* Draw at least once. */
 
    if( NULL != id ) {
@@ -153,7 +153,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
 void ui_window_free( struct UI_WINDOW* win ) {
    scaffold_assert( win->ui == &global_ui );
    ui_window_cleanup( win );
-   scaffold_free( win );
+   mem_free( win );
 }
 
 /** \brief
@@ -232,7 +232,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
       bdestroy( control->text );
       control->text = NULL;
    }
-   scaffold_free( control );
+   mem_free( control );
 }
 
 void ui_init( GRAPHICS* screen ) {
@@ -500,7 +500,7 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, v
       0 >= win->area.w ||
       win->area.w < win->grid_pos.x + win->grid_pos.w + UI_WINDOW_MARGIN
    ) {
-      largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
+      largest_control = mem_alloc( 1, GRAPHICS_RECT );
       largest_control->w = win->grid_pos.x + win->grid_pos.w + UI_WINDOW_MARGIN;
    }
 
@@ -509,7 +509,7 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, v
       win->area.h < win->grid_pos.y + win->grid_pos.h + UI_WINDOW_MARGIN
    ) {
       if( NULL == largest_control ) {
-         largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
+         largest_control = mem_alloc( 1, GRAPHICS_RECT );
       }
       largest_control->h = win->grid_pos.y + win->grid_pos.h + UI_WINDOW_MARGIN;
    }
@@ -863,7 +863,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    }
 
    /* Make sure the window can contain its largest control. */
-   largest_control = scaffold_alloc( 1, GRAPHICS_RECT );
+   largest_control = mem_alloc( 1, GRAPHICS_RECT );
    scaffold_check_null( largest_control );
    memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
    do {
@@ -881,7 +881,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
       largest_control->y = win->area.y;
 
       ui_window_transform( win, largest_control );
-      scaffold_free( largest_control );
+      mem_free( largest_control );
       ui_window_reset_grid( win );
    } while(
       NULL != (largest_control =

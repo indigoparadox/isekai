@@ -74,7 +74,7 @@ void item_free( struct ITEM* e ) {
 void item_sprite_free( struct ITEM_SPRITE* sprite ) {
    if( NULL != sprite ) {
       bdestroy( sprite->display_name );
-      scaffold_free( sprite );
+      mem_free( sprite );
    }
 }
 
@@ -90,7 +90,7 @@ static void item_spritesheet_free_final( const struct REF* ref ) {
       //bdestroy( catalog->name );
       bdestroy( catalog->sprites_filename );
 
-      scaffold_free( catalog );
+      mem_free( catalog );
    }
 }
 
@@ -155,7 +155,7 @@ cleanup:
       /* Sprites are not garbage collected. */
       candidates->count = 0;
       vector_cleanup( candidates );
-      scaffold_free( candidates );
+      mem_free( candidates );
    }
    return selection;
 }

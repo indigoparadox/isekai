@@ -43,7 +43,7 @@ static struct ANIMATION_FRAME* animate_new_last_frame(
    struct ANIMATION_FRAME* last_frame = NULL,
       * new_frame = NULL;
 
-   new_frame = scaffold_alloc( 1, struct ANIMATION_FRAME );
+   new_frame = mem_alloc( 1, struct ANIMATION_FRAME );
    new_frame->next_frame = NULL;
    new_frame->duration = ms_per_frame;
    new_frame->flood_color = GRAPHICS_COLOR_TRANSPARENT;
@@ -247,7 +247,7 @@ void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
 static void animate_free_animation_frame( struct ANIMATION_FRAME** frame ) {
    struct ANIMATION_FRAME* next_frame = (*frame)->next_frame;
 
-   scaffold_free( *frame );
+   mem_free( *frame );
 
    if( NULL != next_frame ) {
       animate_free_animation_frame( &next_frame );
@@ -262,7 +262,7 @@ void animate_free_animation( struct ANIMATION** a ) {
    if( NULL != *a ) {
       graphics_surface_free( (*a)->target );
       animate_free_animation_frame( &((*a)->first_frame) );
-      scaffold_free( *a );
+      mem_free( *a );
       *a = NULL;
    }
 }

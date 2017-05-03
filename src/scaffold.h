@@ -370,18 +370,11 @@ struct CONTAINER_IDX {
 struct VECTOR;
 
 /* Vector needs some stuff above but is needed for stuff below. */
+#include "mem.h"
+#include "files.h"
 #include "vector.h"
 
 #define scaffold_byte( number ) (0xff & number)
-
-#define scaffold_alloc( count, type ) \
-   (type*)calloc( count, sizeof( type ) )
-#define scaffold_free( ptr ) free( ptr )
-#define scaffold_realloc( ptr, count, type ) \
-   (type*)realloc( \
-      ptr, \
-      (count * sizeof( type ) >= count ? (count * sizeof( type )) : 0) \
-   )
 
 BOOL scaffold_is_numeric( bstring line );
 bstring scaffold_list_pop_string( struct bstrList* list );
@@ -391,38 +384,6 @@ BOOL scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, ... );
 void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
-SCAFFOLD_SIZE scaffold_read_file_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len )
-#ifdef __GNUC__
-__attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
-;
-SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs )
-#ifdef __GNUC__
-__attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
-;
-void scaffold_list_dir(
-   const bstring path, struct VECTOR* list, const bstring filter,
-   BOOL dir_only, BOOL show_hidden
-);
-bstring scaffold_basename( bstring path )
-#ifdef __GNUC__
-__attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
-;
-BOOL scaffold_check_directory( const bstring path )
-#ifdef __GNUC__
-__attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
-;
-void scaffold_join_path( bstring path1, const bstring path2 );
-BOOL scaffold_buffer_grow(
-   BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
-)
-#ifdef __GNUC__
-__attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
-;
 BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
 void scaffold_colorize( bstring str, SCAFFOLD_COLOR color );
 int scaffold_strcmp_caseless( const char* s0, const char* s1 );
@@ -437,13 +398,6 @@ struct tagbstring scaffold_space_string = bsStatic( " " );
 struct tagbstring scaffold_colon_string = bsStatic( ":" );
 struct tagbstring scaffold_exclamation_string = bsStatic( "!" );
 struct tagbstring scaffold_null = bsStatic( "(null)" );
-
-#if defined( _WIN32 ) || defined( WIN16 )
-struct tagbstring scaffold_dirsep_string = bsStatic( "\\" );
-#else
-struct tagbstring scaffold_dirsep_string = bsStatic( "/" );
-#endif /* _WIN32 || WIN16 */
-#define SCAFFOLD_DIRSEP_CHAR scaffold_dirsep_string.data[0]
 
 #else
 

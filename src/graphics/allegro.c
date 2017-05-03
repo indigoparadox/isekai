@@ -55,7 +55,7 @@ static int graphics_fmem_fclose( void* userdata ) {
    /* Shorten the allocation back down to the stated length. */
    if( info->alloc > info->length ) {
       /* FIXME: Soft realloc. */
-      info->block = scaffold_realloc( info->block, info->length, BYTE );
+      info->block = mem_realloc( info->block, info->length, BYTE );
       scaffold_assert( NULL !=info->block );
       info->alloc = info->length;
    }
@@ -125,7 +125,7 @@ static int graphics_fmem_putc( int c, void* userdata ) {
       if( info->alloc <= info->length ) {
          info->alloc *= 2;
          /* FIXME: Soft realloc. */
-         info->block = scaffold_realloc( info->block, info->alloc, BYTE );
+         info->block = mem_realloc( info->block, info->alloc, BYTE );
          scaffold_assert( NULL !=info->block );
       }
       info->length++;
@@ -247,7 +247,7 @@ void graphics_screen_new(
    scaffold_check_nonzero( screen_return );
 
    /* TODO: Free double buffer. */
-   *g = scaffold_alloc( 1, GRAPHICS );
+   *g = mem_alloc( 1, GRAPHICS );
    scaffold_check_null( *g );
    (*g)->surface = create_bitmap( w, h );
    (*g)->w = w;
@@ -267,7 +267,7 @@ void graphics_surface_cleanup( GRAPHICS* g ) {
       g->surface = NULL;
    }
    if( NULL == g->palette ) {
-      scaffold_free( g->palette );
+      mem_free( g->palette );
       g->palette = NULL;
    }
    /* TODO: Free surface. */
@@ -444,7 +444,7 @@ cleanup:
       pack_fclose( fmem );
    }
    if( NULL != fmem_info ) {
-      scaffold_free( fmem_info );
+      mem_free( fmem_info );
    }
 #else
    graphics_bitmap_load( data, length, &bitmap );
@@ -495,7 +495,7 @@ cleanup:
       pack_fclose( fmem );
    }
    if( NULL != fmem_info ) {
-      scaffold_free( fmem_info );
+      mem_free( fmem_info );
    }
    return fmem_info->block;
 }

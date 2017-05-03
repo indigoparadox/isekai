@@ -666,7 +666,7 @@ int l, lret;
  */
 
 struct bStream * bsUuDecode (struct bStream * sInp, int * badlines) {
-struct bsUuCtx * luuCtx = scaffold_alloc( 1, struct bsUuCtx );
+struct bsUuCtx * luuCtx = mem_alloc( 1, struct bsUuCtx );
 struct bStream * sOut;
 
 	if (NULL == luuCtx) return NULL;
@@ -854,7 +854,7 @@ b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len ) {
 
 cleanup:
    if( 0 != scaffold_error ) {
-      scaffold_free( *dest );
+      mem_free( *dest );
       *dest = NULL;
    }
    return i;
@@ -1095,7 +1095,7 @@ struct bwriteStream * bwsOpen (bNwrite writeFn, void * parm) {
 struct bwriteStream * ws;
 
 	if (NULL == writeFn) return NULL;
-	ws = scaffold_alloc( 1, struct bwriteStream );
+	ws = mem_alloc( 1, struct bwriteStream );
 	if (ws) {
 		if (NULL == (ws->buff = bfromcstr (""))) {
 			free (ws);

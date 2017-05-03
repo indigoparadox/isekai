@@ -408,7 +408,7 @@ void _tp_list_realloc(_tp_list* self,int len) {
    if (!len) {
       len=1;
    }
-   self->items = scaffold_realloc(self->items, len, tp_obj);
+   self->items = mem_realloc(self->items, len, tp_obj);
    self->alloc = len;
 }
 
@@ -480,14 +480,14 @@ tp_obj tp_index(TP) {
 }
 
 _tp_list* _tp_list_new(void) {
-   return scaffold_alloc(1, sizeof(_tp_list));
+   return mem_alloc(1, sizeof(_tp_list));
 }
 
 tp_obj _tp_list_copy(TP, tp_obj rr) {
    _tp_list* o = rr.list.val;
    _tp_list* r = _tp_list_new();
    *r = *o;
-   r->items = scaffold_alloc(o->alloc, sizeof(tp_obj));
+   r->items = mem_alloc(o->alloc, sizeof(tp_obj));
    memcpy(r->items,o->items,sizeof(tp_obj)*o->alloc);
    return tp_track(tp,(tp_obj)(tp_list_) {
       TP_LIST,r
@@ -623,7 +623,7 @@ void _tp_dict_tp_realloc(TP,_tp_dict* self,int len) {
    tp_item* items = self->items;
    int i,alloc = self->alloc;
 
-   self->items = scaffold_alloc(len, sizeof(tp_item));
+   self->items = mem_alloc(len, sizeof(tp_item));
    self->alloc = len;
    self->mask = len-1;
    self->len = 0;
@@ -701,14 +701,14 @@ void _tp_dict_del(TP,_tp_dict* self,tp_obj k, char* error) {
 }
 
 _tp_dict* _tp_dict_new(void) {
-   _tp_dict* self = scaffold_alloc(1, sizeof(_tp_dict));
+   _tp_dict* self = mem_alloc(1, sizeof(_tp_dict));
    return self;
 }
 tp_obj _tp_dict_copy(TP,tp_obj rr) {
    _tp_dict* o = rr.dict.val;
    _tp_dict* r = _tp_dict_new();
    *r = *o;
-   r->items = scaffold_alloc(o->alloc, sizeof(tp_item));
+   r->items = mem_alloc(o->alloc, sizeof(tp_item));
    memcpy(r->items,o->items,sizeof(tp_item)*o->alloc);
    return tp_track(tp,(tp_obj)(tp_dict_) {
       TP_DICT,r
@@ -757,7 +757,7 @@ tp_obj tp_dict_n(TP,int n, tp_obj* argv) {
 
 
 tp_obj* tp_ptr(tp_obj o) {
-   tp_obj* ptr = scaffold_alloc(1, sizeof(tp_obj));
+   tp_obj* ptr = mem_alloc(1, sizeof(tp_obj));
    *ptr = o;
    return ptr;
 }
@@ -775,7 +775,7 @@ tp_obj _tp_tcall(TP,tp_obj fnc) {
 tp_obj tp_fnc_new(TP,int t, void* v, tp_obj s, tp_obj g) {
    tp_obj r;
    r.type = TP_FNC;
-   _tp_fnc* self = scaffold_alloc(1, sizeof(_tp_fnc));
+   _tp_fnc* self = mem_alloc(1, sizeof(_tp_fnc));
    self->self = s;
    self->globals = g;
    r.fnc.ftype = t;
@@ -797,7 +797,7 @@ tp_obj tp_method(TP,tp_obj self,tp_obj v(TP)) {
 
 tp_obj tp_data(TP,void* v) {
    tp_obj r = (tp_obj)(tp_data_) {
-      TP_DATA,scaffold_alloc(1, sizeof(_tp_data)),v,0
+      TP_DATA,mem_alloc(1, sizeof(_tp_data)),v,0
    };
    r.data.meta = &r.data.info->meta;
    return tp_track(tp,r);
@@ -1671,7 +1671,7 @@ TP_OP(tp_pow,pow(a,b));
 
 tp_vm* _tp_init(void) {
    int i;
-   tp_vm* tp = scaffold_alloc(1, sizeof(tp_vm));
+   tp_vm* tp = mem_alloc(1, sizeof(tp_vm));
    tp->cur = 0;
    tp->jmp = 0;
    tp->ex = None;

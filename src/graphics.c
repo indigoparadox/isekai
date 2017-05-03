@@ -35,9 +35,9 @@ struct GRAPHICS_BITMAP_HEADER {
 void graphics_free_bitmap( struct GRAPHICS_BITMAP* bitmap ) {
    if( NULL != bitmap ) {
       if( NULL != bitmap->pixels ) {
-         scaffold_free( bitmap->pixels );
+         mem_free( bitmap->pixels );
       }
-      scaffold_free( bitmap );
+      mem_free( bitmap );
    }
 }
 
@@ -187,7 +187,7 @@ void graphics_surface_free( GRAPHICS* g ) {
    graphics_surface_cleanup( g );
    scaffold_assert( NULL == g->palette );
    scaffold_assert( NULL == g->surface );
-   scaffold_free( g );
+   mem_free( g );
 cleanup:
    return;
 }

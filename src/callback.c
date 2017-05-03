@@ -67,7 +67,7 @@ void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg
 
    if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
       /* Return an empty command to force abortion of the iteration. */
-      cmd = scaffold_alloc( 1, IRC_COMMAND );
+      cmd = mem_alloc( 1, IRC_COMMAND );
       cmd->callback = NULL;
       cmd->line = bstrcpy( c->nick );
       goto cleanup;
@@ -291,7 +291,7 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
          &module, "Loading tileset XML data from: %s\n",
          bdata( setdata_path )
       );
-      bytes_read = scaffold_read_file_contents(
+      bytes_read = files_read_contents(
          setdata_path, &setdata_buffer, &setdata_size );
       scaffold_check_null_msg(
          setdata_buffer, "Unable to load tileset data." );
@@ -331,7 +331,7 @@ void* callback_load_spawner_catalogs(
       scaffold_check_null( catdata_path );
       scaffold_join_path( catdata_path, spawner->catalog );
       scaffold_check_nonzero( scaffold_error );
-      bytes_read = scaffold_read_file_contents(
+      bytes_read = files_read_contents(
          catdata_path, &catdata, &catdata_length );
       scaffold_check_null_msg(
          catdata, "Unable to load catalog data." );
@@ -354,7 +354,7 @@ void* callback_load_spawner_catalogs(
    }
 
 cleanup:
-   scaffold_free( catdata );
+   mem_free( catdata );
    return NULL;
 }
 
@@ -480,7 +480,7 @@ BOOL callback_proc_client_delayed_files(
    client_request_file( c, req->type, req->filename );
 
    bdestroy( req->filename );
-   scaffold_free( req );
+   mem_free( req );
    return TRUE;
 }
 
@@ -1053,7 +1053,7 @@ BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 }
 
 BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   scaffold_free( iter );
+   mem_free( iter );
    return TRUE;
 }
 
@@ -1095,7 +1095,7 @@ BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    if( NULL == arg ) {
       bdestroy( line->line );
       bdestroy( line->nick );
-      scaffold_free( line );
+      mem_free( line );
       return TRUE;
    }
    return FALSE;

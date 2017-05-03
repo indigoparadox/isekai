@@ -38,7 +38,7 @@ static void server_free_final( const struct REF* ref ) {
 
    server_cleanup( s );
 
-   scaffold_free( s );
+   mem_free( s );
 }
 
 BOOL server_free( struct SERVER* s ) {
@@ -99,7 +99,7 @@ cleanup:
    if( NULL != l_clients ) {
       vector_remove_cb( l_clients, callback_free_clients, NULL );
       vector_cleanup( l_clients );
-      scaffold_free( l_clients );
+      mem_free( l_clients );
    }
    scaffold_assert_server();
 }
@@ -344,7 +344,7 @@ BOOL server_service_clients( struct SERVER* s ) {
       );
       server_drop_client( s, cmd->line );
       bdestroy( cmd->line );
-      scaffold_free( cmd );
+      mem_free( cmd );
       cmd = NULL;
    }
 
@@ -411,6 +411,6 @@ cleanup:
       vector_remove_cb( files, callback_free_strings, NULL );
    }
    vector_cleanup( files );
-   scaffold_free( files );
+   mem_free( files );
    return path_out;
 }

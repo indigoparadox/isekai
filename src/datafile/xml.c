@@ -42,7 +42,7 @@ void datafile_parse_item_sprites_ezxml_t(
 
    xml_sprite = ezxml_child( xml_sprites, "sprite" );
    while( NULL != xml_sprite ) {
-      sprite = scaffold_alloc( 1, struct ITEM_SPRITE );
+      sprite = mem_alloc( 1, struct ITEM_SPRITE );
 
       ezxml_int( sprite_id, xml_attr, xml_sprite, "id" );
 
@@ -122,7 +122,7 @@ static void datafile_mobile_parse_sprite_ezxml(
 
 cleanup:
    if( NULL != sprite ) {
-      scaffold_free( sprite );
+      mem_free( sprite );
    }
    return;
 }
@@ -199,7 +199,7 @@ static void datafile_mobile_parse_animation_ezxml(
 
 cleanup:
    if( NULL != animation ) {
-      scaffold_free( animation );
+      mem_free( animation );
    }
    bdestroy( name_dir );
    return;
@@ -564,7 +564,7 @@ cleanup:
    /* TODO: Don't scrap the whole tileset for a bad tile or two. */
    if( NULL != terrain_info ) {
       bdestroy( terrain_info->name );
-      scaffold_free( terrain_info );
+      mem_free( terrain_info );
    }
 }
 
@@ -882,7 +882,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
 cleanup:
    if( NULL != obj_out ) {
       /* Something went wrong. */
-      scaffold_free( obj_out );
+      mem_free( obj_out );
    }
 }
 

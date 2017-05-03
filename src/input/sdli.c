@@ -6,7 +6,7 @@
 
 void input_init( struct INPUT* p ) {
    SDL_EnableUNICODE( 1 );
-   p->event = scaffold_alloc( 1, SDL_Event );
+   p->event = mem_alloc( 1, SDL_Event );
 }
 
 void input_get_event( struct INPUT* input ) {
@@ -49,5 +49,5 @@ void input_clear_buffer( struct INPUT* input ) {
 }
 
 void input_shutdown( struct INPUT* input ) {
-   scaffold_free( input->event );
+   mem_free( input->event );
 }
