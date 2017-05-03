@@ -2,19 +2,21 @@
 #ifndef DATAFILE_H
 #define DATAFILE_H
 
+typedef enum DATAFILE_TYPE {
+   DATAFILE_TYPE_MISC = 0,
+   DATAFILE_TYPE_TILEMAP,
+   DATAFILE_TYPE_TILESET,
+   DATAFILE_TYPE_TILESET_TILES,
+   DATAFILE_TYPE_MOBILE,
+   DATAFILE_TYPE_MOBILE_SPRITES,
+   DATAFILE_TYPE_ITEM_CATALOG,
+   DATAFILE_TYPE_ITEM_CATALOG_SPRITES
+} DATAFILE_TYPE;
+
 #include "tilemap.h"
 #include "scaffold.h"
 #include "mobile.h"
 #include "item.h"
-
-typedef enum DATAFILE_TYPE {
-   DATAFILE_TYPE_NONE,
-   DATAFILE_TYPE_TILEMAP,
-   DATAFILE_TYPE_MOBILE,
-   DATAFILE_TYPE_ITEM,
-   DATAFILE_TYPE_ITEM_SPRITES,
-   DATAFILE_TYPE_TILESET
-} DATAFILE_TYPE;
 
 typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize
@@ -49,6 +51,12 @@ void datafile_parse_ezxml_string(
    DATAFILE_TYPE type, bstring def_path
 );
 #endif /* USE_EZXML */
+
+
+void datafile_handle_stream(
+   DATAFILE_TYPE type, bstring filename, BYTE* data, SCAFFOLD_SIZE length,
+   struct CLIENT* c
+);
 
 void datafile_reserialize_tilemap( struct TILEMAP* t );
 

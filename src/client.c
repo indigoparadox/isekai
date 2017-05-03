@@ -420,7 +420,7 @@ cleanup:
 #ifdef USE_CHUNKS
 
 void client_send_file(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type,
+   struct CLIENT* c, DATAFILE_TYPE type,
    const bstring serverpath, const bstring filepath
 ) {
    struct CHUNKER* h = NULL;
@@ -476,7 +476,7 @@ void client_clear_puppet( struct CLIENT* c ) {
 }
 
 void client_request_file_later(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
    VECTOR_ERR verr;
@@ -495,7 +495,7 @@ cleanup:
 }
 
 void client_request_file(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 ) {
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
@@ -596,187 +596,13 @@ cleanup:
 }
 
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
-   struct CHANNEL* l = NULL;
-   GRAPHICS* g = NULL;
-   struct TILEMAP_TILESET* set = NULL;
-   bstring lname = NULL,
-      mob_id = NULL,
-      img_src = NULL;
-#ifdef USE_EZXML
-   ezxml_t xml_data = NULL,
-      xml_image = NULL;
-   const char* img_src_c = NULL;
-#endif /* USE_EZXML */
-   BOOL ok_to_remove = FALSE;
-   struct VECTOR* v_applied = NULL;
-   struct ITEM_SPRITESHEET* catalog = NULL;
-   struct MOBILE* o = NULL;
-   struct ITEM_SPRITE* sprite = NULL;
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
-   switch( h->type ) {
-   case CHUNKER_DATA_TYPE_TILESET:
-
-      /* TODO: Fetch this tileset from other tilemaps, too. */
-      set = hashmap_get( &(c->tilesets), h->filename );
-      scaffold_assert( NULL != set );
-      datafile_parse_ezxml_string(
-         set, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_TILESET,
-         h->filename
-      );
-      break;
-
-   case CHUNKER_DATA_TYPE_TILEMAP:
-      lname = bfromcstr( "" );
-#ifdef USE_EZXML
-      xml_data = datafile_tilemap_ezxml_peek_lname(
-         (BYTE*)h->raw_ptr, h->raw_length, lname
-      );
-#endif /* USE_EZXML */
-
-      l = client_get_channel_by_name( c, lname );
-      scaffold_check_null_msg(
-         l, "Unable to find channel to attach loaded tileset."
-      );
-
-#ifdef USE_EZXML
-      scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
-      datafile_parse_tilemap_ezxml_t(
-         &(l->tilemap), xml_data, h->filename, TRUE
-      );
-      scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
-
-      /* Download missing tilesets. */
-      hashmap_iterate( &(c->tilesets), callback_download_tileset, c );
-
-#endif /* USE_EZXML */
-
-      /* Go through the parsed tilemap and load graphics. */
-      proto_client_request_mobs( c, l );
-
-      scaffold_print_debug(
-         &module,
-         "Client: Tilemap for %s successfully attached to channel.\n",
-         bdata( l->name )
-      );
-      break;
-
-   case CHUNKER_DATA_TYPE_TILESET_IMG:
-
-      l = hashmap_iterate(
-         &(c->channels),
-         callback_search_channels_tilemap_img_name,
-         h->filename
-      );
-      scaffold_assert( NULL != l );
-
-      graphics_surface_new( g, 0, 0, 0, 0 );
-      scaffold_check_null( g );
-      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
-      scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
-
-      set = vector_iterate(
-         &(l->tilemap.tilesets), callback_search_tilesets_img_name, h->filename
-      );
-      scaffold_check_null( set );
-
-      hashmap_put( &(set->images), h->filename, g );
-      scaffold_print_debug(
-         &module,
-         "Client: Tilemap image %s successfully loaded into tileset cache.\n",
-         bdata( h->filename )
-      );
-
-      /* TODO: When do we ask for the mobs when not using chunkers? */
-      proto_client_request_mobs( c, l );
-      tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
-      break;
-
-   case CHUNKER_DATA_TYPE_MOBDEF:
-      mob_id = bfromcstr( "" );
-
-#ifdef USE_EZXML
-      xml_data = datafile_mobile_ezxml_peek_mob_id(
-         (BYTE*)h->raw_ptr, h->raw_length, mob_id
-      );
-      scaffold_check_null( xml_data );
-
-      o = hashmap_iterate(
-         &(c->channels), callback_parse_mob_channels, xml_data
-      );
-      if( NULL != o ) {
-         /* TODO: Make sure we never create receiving chunkers server-side (not strictly relevant here, but still). */
-         g = hashmap_get( &(c->sprites), o->sprites_filename );
-         if( NULL == g ) {
-            client_request_file_later( c, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
-         } else {
-            o->sprites = g;
-         }
-
-         scaffold_print_debug(
-            &module,
-            "Client: Mobile def for %s successfully attached to channel.\n",
-            bdata( mob_id )
-         );
-      }
-
-#endif /* USE_EZXML */
-      break;
-
-   case CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES: /* Fall through. */
-   case CHUNKER_DATA_TYPE_MOBSPRITES:
-      graphics_surface_new( g, 0, 0, 0, 0 );
-      scaffold_check_null_msg( g, "Unable to interpret spritesheet image." );
-      graphics_set_image_data( g, h->raw_ptr, h->raw_length );
-      scaffold_check_null( g->surface );
-      hashmap_put( &(c->sprites), h->filename, g );
-      hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
-      scaffold_print_debug(
-         &module,
-         "Client: Spritesheet %b successfully loaded into cache.\n",
-         h->filename
-      );
-      break;
-
-   case CHUNKER_DATA_TYPE_ITEM_CATALOG:
-
-      item_spritesheet_new( catalog, h->filename, c );
-
-#ifdef USE_EZXML
-      datafile_parse_ezxml_string(
-         catalog, h->raw_ptr, h->raw_length, TRUE, DATAFILE_TYPE_ITEM_SPRITES,
-         h->filename
-      );
-      hashmap_put( &(c->item_catalogs), h->filename, catalog );
-
-      client_request_file_later(
-         c, CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES,
-         catalog->sprites_filename
-      );
-      goto cleanup;
-#endif /* USE_EZXML */
-      break;
-
-   case CHUNKER_DATA_TYPE_MISC:
-      scaffold_print_error( &module, "Invalid data type specified.\n" );
-      break;
-   }
+   //xxx
+   datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
 
 cleanup:
-   if( NULL != v_applied ) {
-      v_applied->count = 0; /* Force delete. */
-      vector_cleanup( v_applied );
-      scaffold_free( v_applied );
-   }
-   bdestroy( lname );
-   bdestroy( img_src );
-   bdestroy( mob_id );
-#ifdef USE_EZXML
-   if( NULL != xml_data ) {
-      ezxml_free( xml_data );
-   }
-#endif /* USE_EZXML */
    scaffold_print_debug(
       &module,
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )

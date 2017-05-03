@@ -260,7 +260,7 @@ void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* ar
 
    scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
    if( 0 == set->tileheight && 0 == set->tilewidth ) {
-      client_request_file_later( c, CHUNKER_DATA_TYPE_TILESET, idx->value.key );
+      client_request_file_later( c, DATAFILE_TYPE_TILESET, idx->value.key );
    }
 
 cleanup:
@@ -342,7 +342,7 @@ void* callback_load_spawner_catalogs(
 #ifdef USE_EZXML
 
       datafile_parse_ezxml_string(
-         catalog, catdata, catdata_length, FALSE, DATAFILE_TYPE_ITEM_SPRITES,
+         catalog, catdata, catdata_length, FALSE, DATAFILE_TYPE_ITEM_CATALOG,
          catdata_path
       );
 
@@ -723,7 +723,7 @@ void* callback_search_tileset_img_gid(
       NULL == iter &&
       NULL == hashmap_get( &(c->chunkers), idx->value.key )
    ) {
-      client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
+      client_request_file( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
    } else if( NULL != iter ) {
       return iter;
    }
@@ -753,7 +753,7 @@ void* callback_proc_tileset_img_gs(
    scaffold_check_not_null( iter );
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
-   client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
+   client_request_file( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
 
 cleanup:
    return NULL;

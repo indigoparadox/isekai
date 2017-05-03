@@ -45,7 +45,7 @@ void proto_send_chunk(
    const bstring filename, const bstring data
 );
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h );
-void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type );
+void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type );
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o );
 void proto_send_container( struct CLIENT* c, struct ITEM* e );
 void proto_send_tile_cache(

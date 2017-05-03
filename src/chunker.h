@@ -4,6 +4,7 @@
 #include "bstrlib/bstrlib.h"
 #include "ref.h"
 #include "vector.h"
+#include "datafile.h"
 
 #include "hs/hs_com.h"
 #include "hs/hs_conf.h"
@@ -33,24 +34,13 @@
 #error SHM cannot be used with file cache!
 #endif /* USE_SHM && USE_FILE_CACHE */
 
-typedef enum _CHUNKER_DATA_TYPE {
-   CHUNKER_DATA_TYPE_MISC = 0,
-   CHUNKER_DATA_TYPE_TILEMAP,
-   CHUNKER_DATA_TYPE_TILESET,
-   CHUNKER_DATA_TYPE_TILESET_IMG,
-   CHUNKER_DATA_TYPE_MOBSPRITES,
-   CHUNKER_DATA_TYPE_MOBDEF,
-   CHUNKER_DATA_TYPE_ITEM_CATALOG,
-   CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES
-} CHUNKER_DATA_TYPE;
-
 struct CHUNKER_PROGRESS {
    SCAFFOLD_SIZE current;
    SCAFFOLD_SIZE total;
    SCAFFOLD_SIZE chunk_size;
    bstring data;
    bstring filename;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
 };
 
 typedef struct _CHUNKER_TRACK {
@@ -85,7 +75,7 @@ struct CHUNKER {
    BYTE* raw_ptr;
    SCAFFOLD_SIZE tx_chunk_length;
    BOOL force_finish;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
    struct VECTOR tracks;
    bstring filecache_path;
    bstring filename;
@@ -104,11 +94,11 @@ struct CHUNKER {
 
 void chunker_free( struct CHUNKER* h );
 void chunker_chunk_start(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type,  void* src_buffer,
+   struct CHUNKER* h, DATAFILE_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 );
 void chunker_chunk_start_file(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type, bstring serverpath,
+   struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 );
 SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer )
@@ -118,7 +108,7 @@ __attribute__ ((warn_unused_result))
 ;
 BOOL chunker_chunk_finished( struct CHUNKER* h );
 void chunker_unchunk_start(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type,
+   struct CHUNKER* h, DATAFILE_TYPE type,
    const bstring filename, const bstring filecache_path
 );
 void chunker_unchunk_pass(

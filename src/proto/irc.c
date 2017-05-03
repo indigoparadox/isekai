@@ -113,7 +113,7 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
  * \param filename   Name/path of the file (relative to the server root).
  * \param type       Type of file requested. Used in return processing.
  */
-void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_TYPE type ) {
+void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type ) {
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
    /*
@@ -132,7 +132,7 @@ void proto_request_file( struct CLIENT* c, const bstring filename, CHUNKER_DATA_
  * \param name Name of the object (catalog/mobile type/etc) requesting for.
  */
 void proto_client_request_spritesheet(
-   struct CLIENT* c, bstring name, CHUNKER_DATA_TYPE type
+   struct CLIENT* c, bstring name, DATAFILE_TYPE type
 ) {
    scaffold_assert_client();
    scaffold_assert( 0 < blength( name ) );
@@ -146,7 +146,7 @@ void proto_client_request_spritesheet(
 #endif /* USE_CHUNKS */
 
 void proto_server_name_spritesheet(
-   struct CLIENT* c, bstring filename, CHUNKER_DATA_TYPE type
+   struct CLIENT* c, bstring filename, DATAFILE_TYPE type
 ) {
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
@@ -785,7 +785,7 @@ static void irc_server_gamerequestfile(
    struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line
 ) {
    char* type_c;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
    int bstr_result;
    bstring file_path_found = NULL;
 
@@ -868,19 +868,19 @@ static void irc_server_resource_request(
 ) {
    const char* type_c;
    struct CHUNKER_PROGRESS progress;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
    bstring object_name = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
 
    irc_detect_malformed( 3, "CREQ", line );
 
    type_c = bdata( args->entry[1] );
-   type = (CHUNKER_DATA_TYPE)atoi( type_c );
+   type = (DATAFILE_TYPE)atoi( type_c );
 
    object_name = args->entry[2];
 
    switch( type ) {
-   case CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES:
+   case DATAFILE_TYPE_ITEM_CATALOG:
       catalog = hashmap_get( &(s->self.item_catalogs), object_name );
       scaffold_check_null_msg( catalog, "Item catalog not found." );
       proto_server_name_spritesheet( c, catalog->sprites_filename, type );
@@ -896,14 +896,14 @@ static void irc_client_resource_response(
 ) {
    const char* type_c;
    struct CHUNKER_PROGRESS progress;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
    bstring filename = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
 
    irc_detect_malformed( 3, "CRES", line );
 
    type_c = bdata( args->entry[1] );
-   type = (CHUNKER_DATA_TYPE)atoi( type_c );
+   type = (DATAFILE_TYPE)atoi( type_c );
 
    filename = args->entry[2];
 
@@ -1026,7 +1026,7 @@ static void irc_client_join(
       scaffold_check_nonzero( bstr_res );
       scaffold_check_null( l_filename );
 
-      client_request_file( c, CHUNKER_DATA_TYPE_TILEMAP, l_filename );
+      client_request_file( c, DATAFILE_TYPE_TILEMAP, l_filename );
    }
 
    scaffold_print_info(
@@ -1095,7 +1095,7 @@ static void irc_client_gamedatablock(
    progress.current = atoi( progress_c );
    progress.chunk_size = atoi( length_c );
    progress.total = atoi( total_c );
-   progress.type = (CHUNKER_DATA_TYPE)atoi( type_c );
+   progress.type = (DATAFILE_TYPE)atoi( type_c );
 
    progress.data = args->entry[10];
    scaffold_check_null( progress.data );
@@ -1201,7 +1201,7 @@ static void irc_client_item(
          c, catalog_name, CHUNKER_DATA_TYPE_ITEM_CATALOG
       );
       */
-      client_request_file( c, CHUNKER_DATA_TYPE_ITEM_CATALOG, catalog_name );
+      client_request_file( c, DATAFILE_TYPE_ITEM_CATALOG, catalog_name );
    }
 
    c_iter = bdata( args->entry[5] );

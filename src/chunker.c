@@ -53,7 +53,7 @@ void chunker_free( struct CHUNKER* h ) {
 }
 
 static void chunker_chunk_setup_internal(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type, SCAFFOLD_SIZE tx_chunk_length
+   struct CHUNKER* h, DATAFILE_TYPE type, SCAFFOLD_SIZE tx_chunk_length
 ) {
 
    scaffold_assert( NULL != h );
@@ -107,7 +107,7 @@ static void chunker_chunk_setup_internal(
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_chunk_start(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type,  void* src_buffer,
+   struct CHUNKER* h, DATAFILE_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 ) {
    scaffold_check_null( src_buffer );
@@ -123,7 +123,7 @@ cleanup:
 }
 
 void chunker_chunk_start_file(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type, bstring serverpath,
+   struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 ) {
    bstring full_file_path = NULL;
@@ -227,7 +227,7 @@ BOOL chunker_chunk_finished( struct CHUNKER* h ) {
 
 /* The chunker should NOT free or modify any buffers passed to it. */
 void chunker_unchunk_start(
-   struct CHUNKER* h, CHUNKER_DATA_TYPE type,
+   struct CHUNKER* h, DATAFILE_TYPE type,
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
