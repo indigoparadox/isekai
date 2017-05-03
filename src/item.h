@@ -89,17 +89,17 @@ struct ITEM {
 };
 
 #define item_new( e, serial, display_name, count, catalog, sprite, c ) \
-    e = scaffold_alloc( 1, struct ITEM ); \
+    e = mem_alloc( 1, struct ITEM ); \
     scaffold_check_null( e ); \
     item_init( e, serial, display_name, count, catalog, sprite, c );
 
 #define item_random_new( e, type, item_catalog, c ) \
-    e = scaffold_alloc( 1, struct ITEM ); \
+    e = mem_alloc( 1, struct ITEM ); \
     scaffold_check_null( e ); \
     item_random_init( e, type, item_catalog, c );
 
 #define item_spritesheet_new( catalog, name, client_or_server ) \
-    catalog = scaffold_alloc( 1, struct ITEM_SPRITESHEET ); \
+    catalog = mem_alloc( 1, struct ITEM_SPRITESHEET ); \
     scaffold_check_null( catalog ); \
     item_spritesheet_init( catalog, name, client_or_server );
 

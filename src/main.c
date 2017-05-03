@@ -138,7 +138,7 @@ static BOOL loop_game() {
          throbber->virtual_x = (GRAPHICS_SCREEN_WIDTH / 2) - (r.w / 2) - 40;
          throbber->virtual_y = (GRAPHICS_SCREEN_HEIGHT / 2) - 8;
 
-         a = scaffold_alloc( 1, struct ANIMATION );
+         a = mem_alloc( 1, struct ANIMATION );
          animate_create_resize( a, throbber, 16, 16, 1, 1, FALSE );
          a->indefinite = TRUE;
 
@@ -360,7 +360,7 @@ static BOOL loop_master() {
          &module, "Server connected; joining client to channel...\n"
       );
       main_client->ui = ui;
-      twindow = scaffold_alloc( 1, struct GRAPHICS_TILE_WINDOW );
+      twindow = mem_alloc( 1, struct GRAPHICS_TILE_WINDOW );
       twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
       twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
       twindow->g = g_screen;
@@ -415,7 +415,7 @@ int main( int argc, char** argv ) {
 #endif /* SCAFFOLD_LOG_FILE */
 
 #ifdef ENABLE_LOCAL_CLIENT
-   g_screen = scaffold_alloc( 1, GRAPHICS );
+   g_screen = mem_alloc( 1, GRAPHICS );
    scaffold_check_null( g_screen );
 
 #ifdef _WIN32
@@ -435,7 +435,7 @@ int main( int argc, char** argv ) {
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
-   input = scaffold_alloc( 1, struct INPUT );
+   input = mem_alloc( 1, struct INPUT );
    scaffold_check_null( input );
    input_init( input );
    ui_init( g_screen );
@@ -463,9 +463,9 @@ cleanup:
    animate_shutdown();
    bdestroy( buffer );
 #ifdef ENABLE_LOCAL_CLIENT
-   scaffold_free( twindow );
+   mem_free( twindow );
    input_shutdown( input );
-   scaffold_free( input );
+   mem_free( input );
    backlog_shutdown();
    ui_cleanup( ui );
    scaffold_set_client();
@@ -478,7 +478,7 @@ cleanup:
    bdestroy( str_service );
 #endif /* USE_RANDOM_PORT */
    graphics_shutdown( g_screen );
-   /* scaffold_free( g_screen ); */
+   /* mem_free( g_screen ); */
 #endif /* ENABLE_LOCAL_CLIENT */
 #ifdef SCAFFOLD_LOG_FILE
    fclose( scaffold_log_handle );

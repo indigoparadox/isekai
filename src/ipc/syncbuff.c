@@ -40,7 +40,7 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
    );
 
    syncbuff_size[dest] = new_alloc;
-   syncbuff_lines[dest] = scaffold_realloc(
+   syncbuff_lines[dest] = mem_realloc(
       syncbuff_lines[dest], syncbuff_size[dest], bstring
    );
    scaffold_assert( NULL != syncbuff_lines[dest] );

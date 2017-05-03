@@ -81,7 +81,7 @@ void tilemap_spawner_init(
 
 void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
    bdestroy( ts->id );
-   scaffold_free( ts );
+   mem_free( ts );
 }
 
 void tilemap_item_cache_init(
@@ -99,7 +99,7 @@ void tilemap_item_cache_init(
 void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
    vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
    vector_cleanup( &(cache->items) );
-   scaffold_free( cache );
+   mem_free( cache );
 }
 
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
@@ -123,7 +123,7 @@ static void tilemap_tileset_free_final( const struct REF* ref ) {
 
    tilemap_tileset_cleanup( set );
 
-   scaffold_free( set );
+   mem_free( set );
 }
 
 void tilemap_tileset_free( struct TILEMAP_TILESET* set ) {
@@ -785,7 +785,7 @@ void tilemap_add_dirty_tile(
 
    verr = vector_add( &(t->dirty_tiles), pos );
    if( VECTOR_ERR_NONE != verr ) {
-      scaffold_free( pos );
+      mem_free( pos );
       goto cleanup;
    }
 

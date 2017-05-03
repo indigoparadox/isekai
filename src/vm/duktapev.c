@@ -291,7 +291,7 @@ void vm_channel_start( struct CHANNEL* l ) {
    scaffold_check_not_null( OBJECT_VM( l ) );
 
    l->vm_started = FALSE;
-   l->vm_caddy = scaffold_alloc( 1, struct VM_CADDY );
+   l->vm_caddy = mem_alloc( 1, struct VM_CADDY );
    scaffold_check_null( l->vm_caddy );
 
    scaffold_print_debug(
@@ -341,7 +341,7 @@ void vm_mobile_start( struct MOBILE* o ) {
    scaffold_check_not_null( OBJECT_VM( o ) );
 
    o->vm_started = FALSE;
-   o->vm_caddy = scaffold_alloc( 1, struct VM_CADDY );
+   o->vm_caddy = mem_alloc( 1, struct VM_CADDY );
    scaffold_check_null( o->vm_caddy );
 
    scaffold_print_debug(

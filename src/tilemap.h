@@ -152,12 +152,12 @@ struct TILEMAP {
  */
 
 #define tilemap_tileset_new( set, def_path ) \
-    set = scaffold_alloc( 1, struct TILEMAP_TILESET ); \
+    set = mem_alloc( 1, struct TILEMAP_TILESET ); \
     scaffold_check_null( set ); \
     tilemap_tileset_init( set, def_path );
 
 #define tilemap_spawner_new( ts, t, type ) \
-    ts = scaffold_alloc( 1, struct TILEMAP_SPAWNER ); \
+    ts = mem_alloc( 1, struct TILEMAP_SPAWNER ); \
     scaffold_check_null( ts ); \
     tilemap_spawner_init( ts, t, type );
 
@@ -172,7 +172,7 @@ struct TILEMAP {
     tilemap_layer_init( t );
 
 #define tilemap_item_cache_new( cache, t, x, y ) \
-    cache = scaffold_alloc( 1, struct TILEMAP_ITEM_CACHE ); \
+    cache = mem_alloc( 1, struct TILEMAP_ITEM_CACHE ); \
     scaffold_check_null( cache ); \
     tilemap_item_cache_init( cache, t, x, y );
 
@@ -183,11 +183,11 @@ struct TILEMAP {
 
 #define tilemap_layer_free( layer ) \
     tilemap_layer_cleanup( layer ); \
-    scaffold_free( layer );
+    mem_free( layer );
 
 #define tilemap_position_free( position ) \
     tilemap_position_cleanup( position ); \
-    scaffold_free( position );
+    mem_free( position );
 
 void tilemap_init(
    struct TILEMAP* t, BOOL local_images, struct CLIENT* server

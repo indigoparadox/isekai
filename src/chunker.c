@@ -27,7 +27,7 @@ static void chunker_destroy( const struct REF* ref ) {
    vector_cleanup( &(h->tracks) );
 
    if( NULL != h->raw_ptr ) {
-      scaffold_free( h->raw_ptr );
+      mem_free( h->raw_ptr );
    }
 
    bdestroy( h->filecache_path );
@@ -45,7 +45,7 @@ static void chunker_destroy( const struct REF* ref ) {
    }
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
-   scaffold_free( h );
+   mem_free( h );
 }
 
 void chunker_free( struct CHUNKER* h ) {
@@ -98,7 +98,7 @@ static void chunker_chunk_setup_internal(
    }
    h->serverpath = NULL;
    if( NULL != h->raw_ptr ) {
-      scaffold_free( h->raw_ptr );
+      mem_free( h->raw_ptr );
    }
    h->raw_ptr = NULL;
 
@@ -143,7 +143,7 @@ void chunker_chunk_start_file(
    scaffold_check_null( full_file_path );
 
    bytes_read =
-      scaffold_read_file_contents( full_file_path, &h->raw_ptr, &h->raw_length );
+      files_read_contents( full_file_path, &h->raw_ptr, &h->raw_length );
    scaffold_check_zero( bytes_read, "Zero bytes read from input file." );
 
 cleanup:
@@ -216,7 +216,7 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 cleanup:
 
    if( NULL != hs_buffer ) {
-      scaffold_free( hs_buffer );
+      mem_free( hs_buffer );
    }
    return start_pos;
 }
@@ -359,7 +359,7 @@ void chunker_unchunk_pass(
    track->length = src_chunk_len;
    verr = vector_add( &(h->tracks), track );
    if( VECTOR_ERR_NONE != verr ) {
-      scaffold_free( track );
+      mem_free( track );
       track = NULL;
       goto cleanup;
    }
@@ -417,7 +417,7 @@ void chunker_unchunk_pass(
       scaffold_assert( tail_output_pos <= tail_output_alloc );
       if( tail_output_pos == tail_output_alloc ) {
          tail_output_alloc *= 2;
-         tail_output_buffer = scaffold_realloc( tail_output_buffer, tail_output_alloc, BYTE );
+         tail_output_buffer = mem_realloc( tail_output_buffer, tail_output_alloc, BYTE );
       }
    }
 
@@ -431,10 +431,10 @@ void chunker_unchunk_pass(
 
 cleanup:
    if( NULL != mid_buffer ) {
-      scaffold_free( mid_buffer );
+      mem_free( mid_buffer );
    }
    if( NULL != tail_output_buffer ) {
-      scaffold_free( tail_output_buffer );
+      mem_free( tail_output_buffer );
    }
    return;
 }
@@ -476,7 +476,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
 
    /* TODO: Compare file hashes. */
    scaffold_error_silent = TRUE;
-   sz_read = scaffold_read_file_contents(
+   sz_read = files_read_contents(
       cache_filename, &(h->raw_ptr), &(h->raw_length)
    );
    scaffold_error_silent = FALSE;

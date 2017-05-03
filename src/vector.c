@@ -22,9 +22,9 @@ void vector_cleanup( struct VECTOR* v ) {
    scaffold_assert( 0 >= vector_count( v ) );
 
    if( FALSE != v->scalar ) {
-      scaffold_free( v->scalar_data );
+      mem_free( v->scalar_data );
    } else {
-      scaffold_free( v->data );
+      mem_free( v->data );
    }
 
 cleanup:
@@ -33,8 +33,8 @@ cleanup:
 
 SCAFFOLD_INLINE
 static void vector_reset( struct VECTOR* v ) {
-   scaffold_free( v->scalar_data );
-   scaffold_free( v->data );
+   mem_free( v->scalar_data );
+   mem_free( v->data );
    v->scalar_data = NULL;
    v->scalar = FALSE;
    v->count = 0;
@@ -46,7 +46,7 @@ static void vector_grow( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
       i;
    void* new_data = NULL;
 
-   new_data = scaffold_realloc( v->data, new_size, void* );
+   new_data = mem_realloc( v->data, new_size, void* );
    scaffold_check_null( new_data );
    v->data = new_data;
    v->size = new_size;
@@ -64,7 +64,7 @@ static void vector_grow_scalar( struct VECTOR* v, SCAFFOLD_SIZE new_size ) {
    int32_t* new_data;
 
    v->size = new_size;
-   new_data = scaffold_realloc( v->scalar_data, v->size, int32_t );
+   new_data = mem_realloc( v->scalar_data, v->size, int32_t );
    scaffold_check_null( new_data );
    v->scalar_data = new_data;
 
@@ -107,7 +107,7 @@ VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
 
    if( 0 == v->size ) {
       v->size = 10;
-      v->data = scaffold_alloc( v->size, void* );
+      v->data = mem_alloc( v->size, void* );
       scaffold_check_null( v->data );
    }
 

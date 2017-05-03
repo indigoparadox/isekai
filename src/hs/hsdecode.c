@@ -58,7 +58,7 @@ heatshrink_decoder* heatshrink_decoder_alloc(
    /* TODO: Fix this defeat of malloc safety. */
    buffers_sz = (1 << window_sz2) + input_buffer_size;
    sz = sizeof(heatshrink_decoder) + buffers_sz;
-   hsd = (heatshrink_decoder*)scaffold_alloc(sz, BYTE);
+   hsd = (heatshrink_decoder*)mem_alloc(sz, BYTE);
    if (hsd == NULL) {
       return NULL;
    }
@@ -74,7 +74,7 @@ heatshrink_decoder* heatshrink_decoder_alloc(
 void heatshrink_decoder_free(heatshrink_decoder* hsd) {
    size_t buffers_sz = (1 << hsd->window_sz2) + hsd->input_buffer_size;
    size_t sz = sizeof(heatshrink_decoder) + buffers_sz;
-   scaffold_free(hsd); /* TODO: Adopt bookkeeping for scaffold_free(). */
+   mem_free(hsd); /* TODO: Adopt bookkeeping for mem_free(). */
    (void)sz;   /* may not be used by free */
 }
 #endif

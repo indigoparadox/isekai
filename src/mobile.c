@@ -61,7 +61,7 @@ static void mobile_cleanup( const struct REF* ref ) {
    );
 
    bdestroy( o->display_name );
-   scaffold_free( o );
+   mem_free( o );
 }
 
 void mobile_free( struct MOBILE* o ) {
@@ -143,7 +143,7 @@ void mobile_load_local( struct MOBILE* o ) {
    scaffold_print_debug(
       &module, "Looking for XML data in: %s\n", bdata( mobdata_path )
    );
-   bytes_read = scaffold_read_file_contents(
+   bytes_read = files_read_contents(
       mobdata_path, &mobdata_buffer, &mobdata_size
    );
    scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
@@ -160,7 +160,7 @@ void mobile_load_local( struct MOBILE* o ) {
 cleanup:
    bdestroy( mobdata_path );
    if( NULL != mobdata_buffer ) {
-      scaffold_free( mobdata_buffer );
+      mem_free( mobdata_buffer );
    }
    return;
 }
@@ -209,7 +209,7 @@ cleanup:
       /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
       tiles_end->count = 0;
       vector_cleanup( tiles_end );
-      scaffold_free( tiles_end );
+      mem_free( tiles_end );
    }
    return sprite_height_out;
 }
@@ -527,7 +527,7 @@ cleanup:
       /* Force the count to 0 so we can delete it. */
       tiles_end->count = 0;
       vector_cleanup( tiles_end );
-      scaffold_free( tiles_end );
+      mem_free( tiles_end );
    }
    return update_out;
 }
@@ -609,7 +609,7 @@ cleanup:
       /* Force the count to 0 so we can delete it. */
       tiles_end->count = 0;
       vector_cleanup( tiles_end );
-      scaffold_free( tiles_end );
+      mem_free( tiles_end );
    }
    return steps_inc_out;
 }

@@ -34,7 +34,7 @@ START_TEST( test_b64_decode ) {
    ); */
    ck_assert_str_eq( (const char*)b64t_testdata.data, (char*)outbuffer );
 
-   scaffold_free( b64_test );
+   mem_free( b64_test );
 }
 END_TEST
 

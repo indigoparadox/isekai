@@ -42,7 +42,7 @@ static void client_cleanup( const struct REF *ref ) {
 
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
-   /* scaffold_free( c ); */
+   /* mem_free( c ); */
 }
 
 void client_init( struct CLIENT* c, BOOL client_side ) {
@@ -483,7 +483,7 @@ void client_request_file_later(
    struct CLIENT_DELAYED_REQUEST* request = NULL;
    VECTOR_ERR verr;
 
-   request = scaffold_alloc( 1, struct CLIENT_DELAYED_REQUEST );
+   request = mem_alloc( 1, struct CLIENT_DELAYED_REQUEST );
    scaffold_check_null( request );
 
    request->filename = bstrcpy( filename );
@@ -545,7 +545,7 @@ cleanup:
 
    scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
 
-   bytes_read = scaffold_read_file_contents( filepath, &data, &length );
+   bytes_read = files_read_contents( filepath, &data, &length );
    scaffold_assert( 0 < bytes_read );
    scaffold_check_null_msg( data, "Unable to load resource data." );
    scaffold_check_zero( bytes_read, "Resource is empty." );

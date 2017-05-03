@@ -81,7 +81,7 @@ heatshrink_encoder* heatshrink_encoder_alloc(
     * will be scanned for useful backreferences. */
    buf_sz = (2 << window_sz2);
 
-   hse = (heatshrink_encoder*)scaffold_alloc(sizeof(*hse) + buf_sz, BYTE);
+   hse = (heatshrink_encoder*)mem_alloc(sizeof(*hse) + buf_sz, BYTE);
    if (hse == NULL) {
       return NULL;
    }
@@ -109,11 +109,11 @@ void heatshrink_encoder_free(heatshrink_encoder* hse) {
 #if HEATSHRINK_USE_INDEX
    size_t index_sz = sizeof(struct hs_index) + hse->search_index->size;
    /* HEATSHRINK_FREE(hse->search_index, index_sz); */
-   scaffold_free( hse->search_index );
+   mem_free( hse->search_index );
    (void)index_sz;
 #endif
    /*HEATSHRINK_FREE(hse, sizeof(heatshrink_encoder) + buf_sz); */
-   scaffold_free( hse );
+   mem_free( hse );
    (void)buf_sz;
 }
 #endif

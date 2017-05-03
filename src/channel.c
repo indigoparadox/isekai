@@ -41,7 +41,7 @@ static void channel_free_final( const struct REF *ref ) {
    tilemap_free( &(l->tilemap) );
 
    /* Free channel. */
-   scaffold_free( l );
+   mem_free( l );
 }
 
 void channel_free( struct CHANNEL* l ) {
@@ -270,7 +270,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
 
    scaffold_print_debug(
       &module, "Loading tilemap XML data from: %s\n", bdata( mapdata_path ) );
-   bytes_read = scaffold_read_file_contents(
+   bytes_read = files_read_contents(
       mapdata_path, &mapdata_buffer, &mapdata_size );
    scaffold_check_null_msg(
       mapdata_buffer, "Unable to load tilemap data." );
@@ -291,7 +291,7 @@ cleanup:
    bdestroy( mapdata_filename );
    bdestroy( mapdata_path );
    if( NULL != mapdata_buffer ) {
-      scaffold_free( mapdata_buffer );
+      mem_free( mapdata_buffer );
    }
    return;
 }

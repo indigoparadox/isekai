@@ -55,9 +55,9 @@ void check_chunker_setup_unchecked() {
    }
 
    /* Prepare the original data. */
-   scaffold_read_file_contents(
+   files_read_contents(
       &chunker_test_map_filename, &chunker_mapdata, &chunker_mapsize );
-   scaffold_read_file_contents(
+   files_read_contents(
       &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
 
    /* Prepare the chunk list. */
@@ -220,10 +220,10 @@ void check_chunker_unchunk_checked(
 void check_chunker_teardown_unchecked() {
    /* Get rid of the map data after all tests are complete. */
    if( NULL != chunker_mapdata ) {
-      scaffold_free( chunker_mapdata );
+      mem_free( chunker_mapdata );
    }
    if( NULL != chunker_imgdata ) {
-      scaffold_free( chunker_imgdata );
+      mem_free( chunker_imgdata );
    }
 
    scaffold_print_info( &module, "====== END CHUNKER TRACE ======\n" );
@@ -282,7 +282,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    scaffold_error_silent = TRUE;
-   scaffold_read_file_contents(
+   files_read_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
@@ -298,7 +298,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
       memcmp( cache_file_contents, chunker_mapdata, chunker_mapsize )
    );
 
-   scaffold_free( cache_file_contents );
+   mem_free( cache_file_contents );
    cache_file_contents = NULL;
    cache_file_size = 0;
 
@@ -306,7 +306,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    scaffold_check_nonzero( bstr_res );
    scaffold_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
    scaffold_error_silent = TRUE;
-   scaffold_read_file_contents(
+   files_read_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
