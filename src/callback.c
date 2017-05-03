@@ -395,7 +395,7 @@ void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, 
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if(
       NULL != set &&
-      NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg )
+      NULL != hashmap_iterate_nolock( &(set->images), callback_search_graphics, arg )
    ) {
       /* This is the tileset that contains this image. */
       return set;
@@ -466,7 +466,9 @@ void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void
    }
 }
 
-BOOL callback_proc_client_delayed_chunkers(
+#endif /* USE_CHUNKS */
+
+BOOL callback_proc_client_delayed_files(
    struct CONTAINER_IDX* idx, void* iter, void* arg
 ) {
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
@@ -481,9 +483,6 @@ BOOL callback_proc_client_delayed_chunkers(
    scaffold_free( req );
    return TRUE;
 }
-
-
-#endif /* USE_CHUNKS */
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
@@ -723,7 +722,7 @@ void* callback_search_tileset_img_gid(
       NULL == iter &&
       NULL == hashmap_get( &(c->chunkers), idx->value.key )
    ) {
-      client_request_file( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
+      client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
    } else if( NULL != iter ) {
       return iter;
    }

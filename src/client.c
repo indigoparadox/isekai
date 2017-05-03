@@ -31,7 +31,7 @@ static void client_cleanup( const struct REF *ref ) {
    /* client_stop( c ); */
 
    hashmap_cleanup( &(c->chunkers) );
-   vector_cleanup( &(c->chunker_files_delayed) );
+   vector_cleanup( &(c->delayed_files) );
    hashmap_cleanup( &(c->channels) );
 
    hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
@@ -64,7 +64,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
-   vector_init( &(c->chunker_files_delayed) );
+   vector_init( &(c->delayed_files) );
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
@@ -184,10 +184,12 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
     * their cache.
     */
    hashmap_iterate( &(c->chunkers), callback_proc_client_chunkers, c );
-   vector_remove_cb( &(c->chunker_files_delayed), callback_proc_client_delayed_chunkers, c );
 
 cleanup:
 #endif /* DEBUG_TILES */
+
+   vector_remove_cb( &(c->delayed_files), callback_proc_client_delayed_files, c );
+
    return retval;
 }
 
@@ -487,7 +489,7 @@ void client_request_file_later(
    request->filename = bstrcpy( filename );
    request->type = type;
 
-   verr = vector_add( &(c->chunker_files_delayed), request );
+   verr = vector_add( &(c->delayed_files), request );
    scaffold_check_equal( VECTOR_ERR_NONE, verr );
 
 cleanup:
@@ -530,10 +532,28 @@ void client_request_file(
 
 cleanup:
    hashmap_lock( &(c->chunkers), FALSE );
-   return;
 #else
-/* FIXME: No file receiving method implemented! */
+   /* FIXME: No file receiving method implemented! */
+   BYTE* data = NULL;
+   SCAFFOLD_SIZE length;
+   bstring filepath = NULL;
+   SCAFFOLD_SIZE bytes_read;
+
+   filepath = bstrcpy( &str_server_data_path );
+   scaffold_join_path( filepath, filename );
+   scaffold_check_null( filepath );
+
+   scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
+
+   bytes_read = scaffold_read_file_contents( filepath, &data, &length );
+   scaffold_assert( 0 < bytes_read );
+   scaffold_check_null_msg( data, "Unable to load resource data." );
+   scaffold_check_zero( bytes_read, "Resource is empty." );
+   datafile_handle_stream( type, filename, data, length, c );
+
+cleanup:
 #endif /* USE_CHUNKS */
+   return;
 }
 
 #ifdef ENABLE_LOCAL_CLIENT
@@ -599,7 +619,6 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
    assert( TRUE == chunker_unchunk_finished( h ) );
 
-   //xxx
    datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
 
 cleanup:

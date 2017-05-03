@@ -46,7 +46,7 @@ struct CLIENT {
                              *   channels available if this is a server.
                              */
    struct HASHMAP chunkers;
-   struct VECTOR chunker_files_delayed;
+   struct VECTOR delayed_files;
    struct MOBILE* puppet;
    struct HASHMAP sprites; /*!< Contains sprites for all mobiles/items this
                             *   client encounters on client-side. Not used
