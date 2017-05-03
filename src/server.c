@@ -397,20 +397,3 @@ void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring n
 cleanup:
    return;
 }
-
-bstring server_file_search( bstring search_filename ) {
-   struct VECTOR* files = NULL;
-   bstring path_out = NULL;
-
-   vector_new( files );
-   scaffold_list_dir( &str_server_data_path, files, NULL, FALSE, FALSE );
-   path_out = vector_iterate( files, callback_search_servefiles, search_filename );
-
-cleanup:
-   if( NULL != files ) {
-      vector_remove_cb( files, callback_free_strings, NULL );
-   }
-   vector_cleanup( files );
-   mem_free( files );
-   return path_out;
-}

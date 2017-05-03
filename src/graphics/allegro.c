@@ -355,7 +355,7 @@ static void graphics_export_palette() {
       bformata( palette_out, "%d\t%d\t%d\tUntitled\n", pal_out->r, pal_out->g, pal_out->b );
    }
 
-   scaffold_write_file( palette_path, (BYTE*)bdata( palette_out ), blength( palette_out ), FALSE );
+   files_write( palette_path, (BYTE*)bdata( palette_out ), blength( palette_out ), FALSE );
 
 /* cleanup: */
    bdestroy( palette_path );

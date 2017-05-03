@@ -539,9 +539,7 @@ cleanup:
    bstring filepath = NULL;
    SCAFFOLD_SIZE bytes_read;
 
-   filepath = bstrcpy( &str_server_data_path );
-   scaffold_join_path( filepath, filename );
-   scaffold_check_null( filepath );
+   filepath = files_root( filename );
 
    scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
 

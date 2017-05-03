@@ -255,11 +255,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_null( mapdata_filename );
    bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
 
-   mapdata_path = bstrcpy( &str_server_data_path );
-   scaffold_check_null( mapdata_path );
-
-   scaffold_join_path( mapdata_path, mapdata_filename );
-   scaffold_check_nonzero( scaffold_error );
+   mapdata_path = files_root( mapdata_filename );
 
    /* TODO: Different map filename extensions. */
 
