@@ -206,7 +206,7 @@ void channel_set_mobile(
       vector_set( &(l->mobiles), o->serial, o, TRUE );
       if( NULL != local_c && TRUE == local_c->client_side ) {
          client_request_file(
-            local_c, CHUNKER_DATA_TYPE_MOBDEF, o->def_filename
+            local_c, DATAFILE_TYPE_MOBILE, o->def_filename
          );
       }
    } else {

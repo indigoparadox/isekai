@@ -1037,13 +1037,15 @@ void datafile_parse_ezxml_string(
    case DATAFILE_TYPE_MOBILE:
       datafile_parse_mobile_ezxml_t( object, xml_data, def_path, local_images );
       break;
-   case DATAFILE_TYPE_ITEM_SPRITES:
+   case DATAFILE_TYPE_ITEM_CATALOG:
       datafile_parse_item_sprites_ezxml_t( object, xml_data, def_path, local_images );
       break;
+      /*
    case DATAFILE_TYPE_ITEM:
       datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );
       break;
-   case DATAFILE_TYPE_NONE:
+      */
+   case DATAFILE_TYPE_MISC:
       scaffold_print_error( &module, "Invalid data type specified.\n" );
       break;
    }

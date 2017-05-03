@@ -2,13 +2,13 @@
 #define CLIENT_H
 
 #include "bstrlib/bstrlib.h"
+#include "chunker.h"
 #include "vector.h"
 #include "connect.h"
 #include "graphics.h"
 #include "channel.h"
 #include "hashmap.h"
 #include "mobile.h"
-#include "chunker.h"
 #include "input.h"
 
 struct CHANNEL;
@@ -25,7 +25,7 @@ typedef enum _CLIENT_FLAGS {
 
 struct CLIENT_DELAYED_REQUEST {
    bstring filename;
-   CHUNKER_DATA_TYPE type;
+   DATAFILE_TYPE type;
 };
 
 struct CLIENT {
@@ -99,17 +99,17 @@ void client_lock_channels( struct CLIENT* c, BOOL lock );
 void client_stop( struct CLIENT* c );
 #ifdef USE_CHUNKS
 void client_send_file(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type,
+   struct CLIENT* c, DATAFILE_TYPE type,
    const bstring serverpath, const bstring filepath
 );
 #endif /* USE_CHUNKS */
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o );
 void client_clear_puppet( struct CLIENT* c );
 void client_request_file_later(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 );
 void client_request_file(
-   struct CLIENT* c, CHUNKER_DATA_TYPE type, const bstring filename
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 );
 #ifdef USE_CHUNKS
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
