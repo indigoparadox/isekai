@@ -268,7 +268,7 @@ void chunker_unchunk_start(
    scaffold_check_null( filename_c );
 
 #ifdef USE_FILE_CACHE
-   if( NULL != filecache_path && TRUE == scaffold_check_directory( filecache_path ) ) {
+   if( NULL != filecache_path && TRUE == files_check_directory( filecache_path ) ) {
       scaffold_print_debug(
          &module,
          "Chunker: Activating cache: %s\n",
@@ -452,7 +452,7 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
    scaffold_join_path( cache_filename, h->filename );
 
    written =
-      scaffold_write_file( cache_filename, h->raw_ptr, h->raw_length, TRUE );
+      files_write( cache_filename, h->raw_ptr, h->raw_length, TRUE );
    if( 0 >= written ) {
       scaffold_print_error(
          &module, "Error writing cache file: %s\n", bdata( cache_filename )

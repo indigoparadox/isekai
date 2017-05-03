@@ -7,12 +7,17 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+static struct tagbstring str_server_data_path =
+   bsStatic( "testdata/server" );
+
 #ifdef _WIN32
 #include "wdirent.h"
 #elif defined( __linux )
 #include <dirent.h>
 #include <unistd.h>
 #endif /* _WIN32 || __linux */
+
+#include "callback.h"
 
 /** \brief Provide a block of memory that contains a given file's contents.
  *         May be pulled from weird special storage/ROM or mmap'ed.
@@ -21,7 +26,9 @@
  * \param[in] len    A pointer to the size indicator for the buffer.
  * \return The number of bytes read, or -1 on failure.
  */
-SCAFFOLD_SIZE files_read_contents( bstring path, BYTE** buffer, SCAFFOLD_SIZE* len ) {
+SCAFFOLD_SIZE files_read_contents(
+   bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
+) {
    struct stat inputstat;
    char* path_c = NULL;
 #if defined( _WIN32 )
@@ -106,7 +113,9 @@ cleanup:
    return sz_out;
 }
 
-SCAFFOLD_SIZE_SIGNED scaffold_write_file( bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs ) {
+SCAFFOLD_SIZE_SIGNED files_write(
+   bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs
+) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
@@ -185,7 +194,7 @@ cleanup:
    return sz_out;
 }
 
-void scaffold_list_dir(
+void files_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden
 ) {
@@ -255,7 +264,7 @@ void scaffold_list_dir(
 #endif /* _WIN32 */
 
       /* If the child is a directory then go deeper. */
-      scaffold_list_dir( child_path, list, filter, dir_only, show_hidden );
+      files_list_dir( child_path, list, filter, dir_only, show_hidden );
    }
 
 cleanup:
@@ -267,7 +276,7 @@ cleanup:
 #endif /* WIN16 */
 }
 
-BOOL scaffold_check_directory( const bstring path ) {
+BOOL files_check_directory( const bstring path ) {
    struct stat dir_info = { 0 };
    char* path_c = NULL;
    bstring zero_error = NULL;
@@ -302,7 +311,7 @@ cleanup:
    }
 }
 
-bstring scaffold_basename( bstring path ) {
+bstring files_basename( bstring path ) {
    bstring basename_out = NULL;
    struct bstrList* path_elements = NULL;
 
@@ -332,4 +341,65 @@ void scaffold_join_path( bstring path1, const bstring path2 ) {
    scaffold_check_nonzero( bstr_res );
 cleanup:
    return;
+}
+
+bstring files_root( bstring append ) {
+   bstring path_out = NULL;
+
+   if( NULL == append ) {
+      path_out = &str_server_data_path;
+      goto cleanup;
+   }
+
+   path_out = bstrcpy( &str_server_data_path );
+   scaffold_check_null_msg( path_out, "Could not allocate path buffer." );
+   scaffold_join_path( path_out, append );
+   scaffold_check_nonzero( scaffold_error );
+
+cleanup:
+   return path_out;
+}
+
+static void* files_search_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring file_iter = (bstring)iter,
+      file_iter_short = NULL,
+      file_search = (bstring)arg;
+
+   file_iter_short = bmidstr(
+      file_iter,
+      str_server_data_path.slen + 1,
+      blength( file_iter ) - str_server_data_path.slen - 1
+   );
+   scaffold_check_null( file_iter_short );
+
+   if( 0 != bstrcmp( file_iter_short, file_search ) ) {
+      /* FIXME: If the files request and one of the files present start    *
+       * with similar names (tilelist.png.tmx requested, tilelist.png      *
+       * exists, eg), then weird stuff happens.                            */
+      /* FIXME: Don't try to send directories. */
+      bdestroy( file_iter_short );
+      file_iter_short = NULL;
+   } else {
+      scaffold_print_debug( &module, "Server: File Found: %s\n", bdata( file_iter ) );
+   }
+
+cleanup:
+   return file_iter_short;
+}
+
+bstring files_search( bstring search_filename ) {
+   struct VECTOR* files = NULL;
+   bstring path_out = NULL;
+
+   vector_new( files );
+   files_list_dir( files_root( NULL ), files, NULL, FALSE, FALSE );
+   path_out = vector_iterate( files, files_search_cb, search_filename );
+
+cleanup:
+   if( NULL != files ) {
+      vector_remove_cb( files, callback_free_strings, NULL );
+   }
+   vector_cleanup( files );
+   mem_free( files );
+   return path_out;
 }

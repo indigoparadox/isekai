@@ -196,33 +196,6 @@ void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg
    return NULL;
 }
 
-void* callback_search_servefiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   bstring file_iter = (bstring)iter,
-      file_iter_short = NULL,
-      file_search = (bstring)arg;
-
-   file_iter_short = bmidstr(
-      file_iter,
-      str_server_data_path.slen + 1,
-      blength( file_iter ) - str_server_data_path.slen - 1
-   );
-   scaffold_check_null( file_iter_short );
-
-   if( 0 != bstrcmp( file_iter_short, file_search ) ) {
-      /* FIXME: If the files request and one of the files present start    *
-       * with similar names (tilelist.png.tmx requested, tilelist.png      *
-       * exists, eg), then weird stuff happens.                            */
-      /* FIXME: Don't try to send directories. */
-      bdestroy( file_iter_short );
-      file_iter_short = NULL;
-   } else {
-      scaffold_print_debug( &module, "Server: File Found: %s\n", bdata( file_iter ) );
-   }
-
-cleanup:
-   return file_iter_short;
-}
-
 void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
@@ -282,10 +255,7 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
    scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
    if( 0 == set->tileheight && 0 == set->tilewidth ) {
 
-      setdata_path = bstrcpy( &str_server_data_path );
-      scaffold_check_null( setdata_path );
-      scaffold_join_path( setdata_path, idx->value.key );
-      scaffold_check_nonzero( scaffold_error );
+      setdata_path = files_root( idx->value.key );
 
       scaffold_print_debug(
          &module, "Loading tileset XML data from: %s\n",
@@ -327,10 +297,7 @@ void* callback_load_spawner_catalogs(
       );
 
       scaffold_check_null_msg( spawner->catalog, "Invalid catalog provided." );
-      catdata_path = bstrcpy( &str_server_data_path );
-      scaffold_check_null( catdata_path );
-      scaffold_join_path( catdata_path, spawner->catalog );
-      scaffold_check_nonzero( scaffold_error );
+      catdata_path = files_root( spawner->catalog );
       bytes_read = files_read_contents(
          catdata_path, &catdata, &catdata_length );
       scaffold_check_null_msg(

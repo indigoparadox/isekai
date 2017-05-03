@@ -51,8 +51,6 @@ void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring n
 bstring server_file_search( bstring search_filename );
 
 #ifdef SERVER_C
-struct tagbstring str_server_data_path =
-   bsStatic( "testdata/server" );
 SCAFFOLD_MODULE( "server.c" );
 #else
 extern struct tagbstring str_server_data_path;

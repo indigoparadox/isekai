@@ -132,10 +132,7 @@ void mobile_load_local( struct MOBILE* o ) {
    scaffold_assert( NULL != o->mob_id );
    scaffold_assert( NULL != o->def_filename );
 
-   mobdata_path = bstrcpy( &str_server_data_path );
-   scaffold_check_null( mobdata_path );
-   scaffold_join_path( mobdata_path, o->def_filename );
-   scaffold_check_nonzero( scaffold_error );
+   mobdata_path = files_root( o->def_filename );
 
 #ifdef USE_EZXML
 
