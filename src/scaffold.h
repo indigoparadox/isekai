@@ -7,7 +7,28 @@
 
 /* = OS Detection Stuff = */
 
-#ifdef WIN16
+
+#ifdef __palmos__
+
+typedef unsigned char BYTE;
+typedef unsigned char BOOL;
+typedef unsigned long SCAFFOLD_SIZE;
+typedef long SCAFFOLD_SIZE_SIGNED;
+typedef int int16_t;
+typedef unsigned int uint16_t;
+typedef long int32_t;
+typedef unsigned long uint32_t;
+typedef char int8_t;
+typedef unsigned char uint8_t;
+#define __FUNCTION__ "Unavailable:"
+#define SNPRINTF_UNAVAILABLE
+#define TRUE 1
+#define FALSE 0
+#define USE_SYNCBUFF
+#undef __GNUC__
+#define EZXML_NOMMAP
+
+#elif defined( WIN16 )
 
 #include <windows.h>
 
@@ -23,6 +44,10 @@ typedef unsigned char uint8_t;
 #define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
 
+#define USE_CLOCK 1
+#define USE_FILE 1
+#define USE_BSTRING_CALLBACKS 1
+
 #elif defined( _WIN32 )
 
 #define _CRTDBG_MAP_ALLOC
@@ -31,6 +56,10 @@ typedef unsigned char uint8_t;
 #include <windows.h>
 #include <stdint.h>
 
+#define USE_CLOCK 1
+#define USE_FILE 1
+#define USE_BSTRING_CALLBACKS 1
+
 #elif defined( __linux )
 
 #define _GNU_SOURCE
@@ -38,31 +67,8 @@ typedef unsigned char uint8_t;
 #define _POSIX_SOURCE 1
 #undef __USE_POSIX
 #define __USE_POSIX 1
+
 #include <stdint.h>
-
-#endif /* WIN16 || _WIN32 || __linux */
-
-/* = Debug */
-
-#ifdef DEBUG
-#include <assert.h>
-#endif /* DEBUG */
-
-/* = Common Headers = */
-
-#ifndef __palmos__
-#include <stdio.h>
-#include <stddef.h>
-#include <memory.h>
-#include <stdlib.h>
-#endif /* __palmos__ */
-
-#include "bstrlib/bstrlib.h"
-#include "colors.h"
-
-COLOR_TABLE( SCAFFOLD )
-
-/* = Missing Types = */
 
 #ifndef BYTE
 typedef uint8_t BYTE;
@@ -89,6 +95,29 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #define SCAFFOLD_SIZE_MAX UINT_MAX
 #define SCAFFOLD_SIZE_SIGNED_MAX INT_MAX
 #endif /* USE_SIZET */
+
+#define USE_CLOCK 1
+#define USE_FILE 1
+
+#endif /* __palmos__ || WIN16 || _WIN32 || __linux */
+
+/* = Debug = */
+
+#ifdef DEBUG
+#include <assert.h>
+#endif /* DEBUG */
+
+/* = Common Headers = */
+
+#include <stdio.h>
+#include <stddef.h>
+
+#include "bstrlib/bstrlib.h"
+#include "colors.h"
+
+COLOR_TABLE( SCAFFOLD )
+
+/* = Serial Types = */
 
 typedef int32_t INTERVAL;
 typedef uint8_t SERIAL;

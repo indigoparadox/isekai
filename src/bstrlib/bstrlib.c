@@ -18,10 +18,14 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <limits.h>
+
+#ifndef __palmos__
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
+#endif /* __palmos__ */
+
 #include "bstrlib.h"
 #include "../scaffold.h"
 
@@ -1831,6 +1835,8 @@ int i, d;
 	return BSTR_OK;
 }
 
+#ifdef USE_BSTRING_STREAMS
+
 #define BS_BUFF_SZ (1024)
 
 /*  int breada (bstring b, bNread readPtr, void * parm)
@@ -2308,6 +2314,8 @@ int bspeek (bstring r, const struct bStream * s) {
 	return bassign (r, s->buff);
 }
 
+#endif /* USE_BSTRING_STREAMS */
+
 /*  bstring bjoinblk (const struct bstrList * bl, void * blk, int len);
  *
  *  Join the entries of a bstrList into one bstring by sequentially
@@ -2388,6 +2396,8 @@ bstring bjoin (const struct bstrList * bl, const_bstring sep) {
 	if (sep != NULL && (sep->slen < 0 || sep->data == NULL)) return NULL;
 	return bjoinblk (bl, sep->data, sep->slen);
 }
+
+#ifdef USE_BSTRING_STREAMS
 
 #define BSSSC_BUFF_LEN (256)
 
@@ -2521,6 +2531,8 @@ int i, p, ret;
 	return ret;
 }
 
+#endif /* USE_BSTRING_STREAMS */
+
 /*  int bstrListCreate (void)
  *
  *  Create a bstrList.
@@ -2615,6 +2627,8 @@ int bstrListAllocMin (struct bstrList * sl, int msz) {
 	sl->entry = l;
 	return BSTR_OK;
 }
+
+#ifdef USE_BSTRING_CALLBACKS
 
 /*  int bsplitcb (const_bstring str, unsigned char splitChar, int pos,
  *                int (* cb) (void * parm, int ofs, int len), void * parm)
@@ -2860,6 +2874,8 @@ struct genBstrList g;
 	}
 	return g.bl;
 }
+
+#endif /* USE_BSTRING_CALLBACKS */
 
 #if defined (__TURBOC__) && !defined (__BORLANDC__)
 # ifndef BSTRLIB_NOVSNP

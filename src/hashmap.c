@@ -5,10 +5,6 @@
 #define HASHMAP_C
 #include "hashmap.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #define ENABLE_REF_TEST
 #include "ref.h"
 
@@ -21,7 +17,7 @@
 void hashmap_init( struct HASHMAP* m ) {
    scaffold_check_null( m );
 
-   m->data = (struct HASHMAP_ELEMENT*)calloc( INITIAL_SIZE, sizeof( struct HASHMAP_ELEMENT ) );
+   m->data = mem_alloc( INITIAL_SIZE, struct HASHMAP_ELEMENT );
    scaffold_check_null( m->data );
 
    m->table_size = INITIAL_SIZE;
@@ -309,8 +305,7 @@ void hashmap_rehash( struct HASHMAP* m ) {
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
    /* Setup the new elements */
-   temp = (struct HASHMAP_ELEMENT*)
-                           calloc(2 * m->table_size, sizeof(struct HASHMAP_ELEMENT));
+   temp = mem_alloc( 2 * m->table_size, struct HASHMAP_ELEMENT );
    scaffold_check_null( temp );
 
    /* Update the array */

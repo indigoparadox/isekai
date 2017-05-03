@@ -25,10 +25,12 @@
 #ifndef _EZXML_H
 #define _EZXML_H
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#ifndef __palmos__
+#include <stdlib.h>
 #include <fcntl.h>
+#endif /* __palmos__ */
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
@@ -70,10 +72,12 @@ ezxml_t ezxml_parse_fd(int fd);
 /* a wrapper for ezxml_parse_fd() that accepts a file name */
 ezxml_t ezxml_parse_file(const char *file);
 
+#ifdef USE_FILE
 /* Wrapper for ezxml_parse_str() that accepts a file stream. Reads the entire */
 /* stream into memory and then parses it. For xml files, use ezxml_parse_file() */
 /* or ezxml_parse_fd() */
 ezxml_t ezxml_parse_fp(FILE *fp);
+#endif /* USE_FILE */
 
 /* returns the first child tag (one level deeper) with the given name or NULL */
 /* if not found */

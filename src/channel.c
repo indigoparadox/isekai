@@ -204,11 +204,13 @@ void channel_set_mobile(
       scaffold_assert( NULL != o->def_filename );
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
+#ifdef ENABLE_LOCAL_CLIENT
       if( NULL != local_c && TRUE == local_c->client_side ) {
          client_request_file(
             local_c, DATAFILE_TYPE_MOBILE, o->def_filename
          );
       }
+#endif /* ENABLE_LOCAL_CLIENT */
    } else {
       scaffold_print_debug(
          &module, "Resetting position for existing player mobile: %d, %d\n",

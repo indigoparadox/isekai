@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define VECTOR_C
 #include "vector.h"
@@ -146,7 +143,7 @@ VECTOR_ERR vector_add( struct VECTOR* v, void* data ) {
 
    if( 0 == v->size ) {
       v->size = 10;
-      v->data = (void**)calloc( v->size, sizeof(void*) );
+      v->data = mem_alloc( v->size, void* );
       scaffold_check_null( v->data );
    }
 
@@ -196,7 +193,7 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
 
    if( 0 == v->size || NULL == v->scalar_data ) {
       v->size = 10;
-      v->scalar_data = (int32_t*)calloc( v->size, sizeof( int32_t ) );
+      v->scalar_data = mem_alloc( v->size, int32_t );
       scaffold_check_null( v->scalar_data );
    }
 
@@ -242,7 +239,7 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
 
    if( 0 == v->size ) {
       v->size = 10;
-      v->data = (void**)calloc( v->size, sizeof(void*) );
+      v->data = (void**)mem_alloc( v->size, void* );
       scaffold_check_null( v->data );
    }
 
@@ -290,7 +287,7 @@ void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value ) {
 
    if( 0 == v->size ) {
       v->size = index + 1;
-      v->scalar_data = (int32_t*)calloc( v->size, sizeof( int32_t ) );
+      v->scalar_data = mem_alloc( v->size, int32_t );
       scaffold_check_null( v->scalar_data );
    }
 

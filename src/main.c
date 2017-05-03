@@ -12,9 +12,6 @@
 #include "tnacl.h"
 #endif /* USE_CRYPTO */
 
-#include <stdlib.h>
-#include <time.h>
-
 #ifdef __GNUC__
 #include <unistd.h>
 #endif /* __GNUC__ */

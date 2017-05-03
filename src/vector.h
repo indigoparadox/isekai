@@ -36,7 +36,7 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
    (VECTOR_SENTINAL == (v)->sentinal)
 
 #define vector_new( v ) \
-   v = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) ); \
+   v = mem_alloc( 1, struct VECTOR ); \
    scaffold_check_null( v ); \
    vector_init( v );
 

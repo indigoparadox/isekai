@@ -11,9 +11,6 @@
 #define CONNECTION_C
 #include "connect.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 #ifdef _GNU_SOURCE
 #include <unistd.h>
 #endif /* _WIN32 */

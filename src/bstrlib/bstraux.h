@@ -18,7 +18,9 @@
 
 #include "../scaffold.h"
 
+#ifdef USE_CLOCK
 #include <time.h>
+#endif /* USE_CLOCK */
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,9 +59,11 @@ extern int bFill (bstring a, char c, int len);
 extern int bReplicate (bstring b, int n);
 extern int bReverse (bstring b);
 extern int bInsertChrs (bstring b, int pos, int len, unsigned char c, unsigned char fill);
+#ifdef USE_CLOCK
 extern bstring bStrfTime (const char * fmt, const struct tm * timeptr);
 #define bAscTime(t) (bStrfTime ("%c\n", (t)))
 #define bCTime(t)   ((t) ? bAscTime (localtime (t)) : NULL)
+#endif /* USE_CLOCK */
 
 /* Spacing formatting */
 extern int bJustifyLeft (bstring b, int space);
@@ -91,6 +95,8 @@ __attribute__ ((warn_unused_result))
 ;
 extern int bSGMLEncode (bstring b);
 
+#ifdef USE_BSTRING_STREAMS
+
 /* Writable stream */
 typedef int (* bNwrite) (const void * buf, size_t elsize, size_t nelem, void * parm);
 
@@ -120,6 +126,8 @@ bstring bstr__tmp = (b);                                                \
 }
 extern bstring bSecureInput (int maxlen, int termchar,
                              bNgetc vgetchar, void * vgcCtx);
+
+#endif /* USE_BSTRING_STREAMS */
 
 #ifdef __cplusplus
 }

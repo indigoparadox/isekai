@@ -51,6 +51,8 @@ void* backlog_iter( vector_search_cb cb, void* arg ) {
    return vector_iterate( &global_backlog, cb, arg );
 }
 
+#ifdef USE_CLOCK
+
 static void backlog_timestamp( struct BACKLOG_LINE* line ) {
    time_t time_now;
    struct tm* time_temp = NULL;
@@ -60,6 +62,8 @@ static void backlog_timestamp( struct BACKLOG_LINE* line ) {
    time_temp = localtime( &time_now );
    memcpy( &(line->time), time_temp, sizeof( struct tm ) );
 }
+
+#endif /* USE_CLOCK */
 
 static void backlog_refresh_window() {
    struct UI_WINDOW* bl = NULL;

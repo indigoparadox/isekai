@@ -7,10 +7,6 @@
 #include "../datafile.h"
 #include "../backlog.h"
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
 static struct TILEMAP_ITEM_CACHE* last_item_cache = NULL;
 
 typedef enum _IRC_ERROR {
@@ -795,10 +791,10 @@ static void irc_server_gamerequestfile(
    scaffold_check_null( type_c );
    type = atoi( type_c );
 
-   file_path_found = server_file_search( args->entry[2] );
+   file_path_found = files_search( args->entry[2] );
    scaffold_check_null( file_path_found );
 
-   client_send_file( c, type, &str_server_data_path, file_path_found );
+   client_send_file( c, type, files_root( NULL ), file_path_found );
 
 cleanup:
    bdestroy( file_path_found );

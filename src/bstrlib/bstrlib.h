@@ -181,12 +181,17 @@ extern struct bstrList * bsplits (const_bstring str, const_bstring splitStr);
 extern struct bstrList * bsplitstr (const_bstring str, const_bstring splitStr);
 extern bstring bjoin (const struct bstrList * bl, const_bstring sep);
 extern bstring bjoinblk (const struct bstrList * bl, const void * s, int len);
+
+#ifdef USE_BSTRING_CALLBACKS
+
 extern int bsplitcb (const_bstring str, unsigned char splitChar, int pos,
 	int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitscb (const_bstring str, const_bstring splitStr, int pos,
 	int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitstrcb (const_bstring str, const_bstring splitStr, int pos,
 	int (* cb) (void * parm, int ofs, int len), void * parm);
+
+#endif /* USE_BSTRING_CALLBACKS */
 
 /* Miscellaneous functions */
 extern int bpattern (bstring b, int len);
@@ -237,6 +242,8 @@ int bstrtmp_r = BSTR_ERR, bstrtmp_sz = 16; \
 
 #endif
 
+#ifdef USE_BSTRING_STREAMS
+
 typedef int (*bNgetc) (void *parm);
 typedef size_t (* bNread) (void *buff, size_t elsize, size_t nelem, void *parm);
 
@@ -264,6 +271,8 @@ extern int bssplitscb (struct bStream * s, const_bstring splitStr,
 extern int bssplitstrcb (struct bStream * s, const_bstring splitStr,
 	int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
 extern int bseof (const struct bStream * s);
+
+#endif /* USE_BSTRING_STREAMS */
 
 struct tagbstring {
 	int mlen;
