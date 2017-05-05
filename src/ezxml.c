@@ -33,11 +33,12 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #endif /* __palmos__ */
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sys/types.h>
 #ifndef EZXML_NOMMAP
 #include <sys/mman.h>
 #endif /* EZXML_NOMMAP */

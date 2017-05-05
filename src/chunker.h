@@ -102,9 +102,9 @@ void chunker_chunk_start_file(
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 );
 SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 BOOL chunker_chunk_finished( struct CHUNKER* h );
 void chunker_unchunk_start(

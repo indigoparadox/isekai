@@ -54,24 +54,24 @@ extern char * bstr2cstr (const_bstring s, char z);
 extern int bcstrfree (char * s);
 extern bstring bstrcpy (const_bstring b1);
 extern int bassign (bstring a, const_bstring b)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bassignmidstr (bstring a, const_bstring b, int left, int len)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bassigncstr (bstring a, const char * str)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bassignblk (bstring a, const void * s, int len)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 
 /* Destroy function */
@@ -86,55 +86,55 @@ extern bstring bmidstr (const_bstring b, int left, int len);
 
 /* Various standard manipulations */
 extern int bconcat (bstring b0, const_bstring b1)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bconchar (bstring b0, char c)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bcatcstr (bstring b, const char * s)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bcatblk (bstring b, const void * s, int len)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int binsert (bstring s1, int pos, const_bstring s2, unsigned char fill)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int binsertblk (bstring s1, int pos, const void * s2, int len, unsigned char fill)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int binsertch (bstring s1, int pos, int len, unsigned char fill)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int breplace (bstring b1, int pos, int len, const_bstring b2, unsigned char fill)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bdelete (bstring s1, int pos, int len);
 extern int bsetstr (bstring b0, int pos, const_bstring b1, unsigned char fill)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int btrunc (bstring b, int n)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 
 /* Scan/search functions */
@@ -204,19 +204,19 @@ extern int btrimws (bstring b);
 #if !defined (BSTRLIB_NOVSNP)
 extern bstring bformat (const char * fmt, ...);
 extern int bformata (bstring b, const char * fmt, ...)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bassignformat (bstring b, const char * fmt, ...)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bvcformata (bstring b, int count, const char * fmt, va_list arglist)
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 
 #define bvformata(ret, b, fmt, lastarg) { \

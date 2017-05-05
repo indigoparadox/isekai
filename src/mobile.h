@@ -98,7 +98,7 @@ struct MOBILE_UPDATE_PACKET {
 #define MOBILE_SPRITE_SIZE 32
 
 #define mobile_new( o, mob_id, x, y ) \
-    o = (struct MOBILE*)calloc( 1, sizeof( struct MOBILE ) ); \
+    o = mem_alloc( 1, struct MOBILE ); \
     scaffold_check_null( o ); \
     mobile_init( o, mob_id, x, y );
 

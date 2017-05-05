@@ -5,6 +5,10 @@
 #define HEATSHRINK_ENCODER_C
 #include "hsencode.h"
 
+#if ! HEATSHRINK_DYNAMIC_ALLOC
+#warning HEATSHRINK_DYNAMIC_ALLOC disabled. Chunker may not work.
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
+
 typedef enum {
    HSES_NOT_FULL,              /* input buffer not full enough */
    HSES_FILLED,                /* buffer is full */

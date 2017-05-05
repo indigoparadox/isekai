@@ -124,8 +124,8 @@ void hashmap_cleanup( struct HASHMAP* m );
 /*
  * Get the current size of a hashmap
  */
-int hashmap_count( struct HASHMAP* m);
-int hashmap_active_count( struct HASHMAP* m );
+SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m);
+/* int hashmap_active_count( struct HASHMAP* m ); */
 
 void hashmap_lock( struct HASHMAP* m, BOOL lock );
 

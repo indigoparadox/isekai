@@ -57,9 +57,9 @@ void item_random_init(
    sprite = item_spritesheet_get_sprite( catalog, sprite_id );
    scaffold_check_null_msg( sprite, "Unable to find item sprite." );
 
-   serial = rand() % BIG_SERIAL_MAX;
+   serial = rng_serial();
    while( NULL != client_get_item( catalog->client_or_server, serial ) ) {
-      serial = rand() % BIG_SERIAL_MAX;
+      serial = rng_serial();
    }
    item_init( e, serial, sprite->display_name, 1, catalog_name, sprite_id, c );
 
@@ -147,7 +147,7 @@ SCAFFOLD_SIZE item_random_sprite_id_of_type(
    );
    scaffold_check_null_msg( candidates, "No sprite candidates found." );
 
-   selection = rand() % vector_count( candidates );
+   selection = rng_max( vector_count( candidates ) );
    /* sprite_out = vector_get( candidates, selection ); */
 
 cleanup:

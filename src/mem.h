@@ -16,9 +16,9 @@ void* mem_realloc_internal( void* ptr, SCAFFOLD_SIZE count, SCAFFOLD_SIZE sz );
 BOOL scaffold_buffer_grow(
    BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
 )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 void* mem_free_internal( void* ptr );
 

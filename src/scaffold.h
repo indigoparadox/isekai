@@ -14,6 +14,8 @@ typedef unsigned char BYTE;
 typedef unsigned char BOOL;
 typedef unsigned long SCAFFOLD_SIZE;
 typedef long SCAFFOLD_SIZE_SIGNED;
+#define SCAFFOLD_SIZE_MAX ULONG_MAX
+#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
 typedef int int16_t;
 typedef unsigned int uint16_t;
 typedef long int32_t;
@@ -51,7 +53,6 @@ typedef unsigned char uint8_t;
 #elif defined( _WIN32 )
 
 #define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
 #include <crtdbg.h>
 #include <windows.h>
 #include <stdint.h>

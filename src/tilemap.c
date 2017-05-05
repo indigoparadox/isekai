@@ -2,8 +2,6 @@
 #define TILEMAP_C
 #include "tilemap.h"
 
-#include <memory.h>
-
 #include "callback.h"
 #include "mobile.h"
 
@@ -776,8 +774,7 @@ void tilemap_add_dirty_tile(
    struct TILEMAP_POSITION* pos = NULL;
    VECTOR_ERR verr;
 
-   pos =
-      (struct TILEMAP_POSITION*)calloc( 1, sizeof( struct TILEMAP_POSITION ) );
+   pos = mem_alloc( 1, struct TILEMAP_POSITION );
    scaffold_check_null( pos );
 
    pos->x = x;

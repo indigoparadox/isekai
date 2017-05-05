@@ -23,10 +23,12 @@ void server_free_clients( struct SERVER* s ) {
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
+#ifdef DEBUG
    scaffold_print_debug(
       &module, "Removed %d clients from server. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
    );
+#endif /* DEBUG */
    hashmap_cleanup( &(s->clients) );
 }
 
@@ -237,10 +239,12 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
+#ifdef DEBUG
    scaffold_print_debug(
       &module, "Server: Removed %d clients (%b). %d remaining.\n",
       deleted, nick, hashmap_count( &(s->clients) )
    );
+#endif /* DEBUG */
 
    hashmap_iterate( &(s->self.channels), callback_remove_clients, nick );
 
@@ -255,10 +259,12 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
+#ifdef DEBUG
    scaffold_print_debug(
       &module, "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
+#endif /* DEBUG */
 
 /* cleanup: */
    return;

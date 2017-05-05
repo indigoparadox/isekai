@@ -2,8 +2,6 @@
 #define UI_C
 #include "../ui.h"
 
-#include <stdlib.h>
-
 #include "../graphics.h"
 #include "../callback.h"
 #include "../backlog.h"
@@ -111,12 +109,10 @@ void ui_window_init(
    hashmap_init( &(win->controls) );
 
    if( NULL != prompt ) {
-      windef_control(
-         prompt, UI_CONTROL_TYPE_LABEL, FALSE, NULL,
-         UI_CONST_WIDTH_FULL,
-         UI_CONST_HEIGHT_FULL,
-         UI_CONST_WIDTH_FULL,
-         UI_CONST_HEIGHT_FULL
+      ui_control_new(
+         ui, control, prompt, UI_CONTROL_TYPE_LABEL, FALSE, NULL,
+         UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL,
+         UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL
       );
       ui_control_add(
          win, (const bstring)&str_dialog_label_default_id,

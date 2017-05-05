@@ -82,16 +82,16 @@ extern bstring bUuEncode (const_bstring src);
 extern bstring bYEncode (const_bstring src);
 SCAFFOLD_SIZE
 b_yencode_raw( BYTE* src, SCAFFOLD_SIZE src_len, bstring out )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern bstring bYDecode (const_bstring src);
 SCAFFOLD_SIZE
 b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 extern int bSGMLEncode (bstring b);
 

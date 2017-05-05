@@ -1,4 +1,5 @@
 glob:deps
+glob:wiki
 glob:*.layout
 glob:*.depend
 glob:testchannel.*

@@ -5,6 +5,10 @@
 #define HEATSHRINK_DECODER_C
 #include "hsdecode.h"
 
+#if ! HEATSHRINK_DYNAMIC_ALLOC
+#warning HEATSHRINK_DYNAMIC_ALLOC disabled. Chunker may not work.
+#endif /* HEATSHRINK_DYNAMIC_ALLOC */
+
 /* States for the polling state machine. */
 typedef enum {
    HSDS_TAG_BIT,               /* tag bit */

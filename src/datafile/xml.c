@@ -109,8 +109,7 @@ static void datafile_mobile_parse_sprite_ezxml(
 
    scaffold_check_null( xml_sprite );
 
-   sprite =
-      (struct MOBILE_SPRITE_DEF*)calloc( 1, sizeof( struct MOBILE_SPRITE_DEF ) );
+   sprite = mem_alloc( 1, struct MOBILE_SPRITE_DEF );
 
    /* TODO: Case insensitivity. */
    xml_attr = ezxml_attr( xml_sprite, "id" );
@@ -144,8 +143,7 @@ static void datafile_mobile_parse_animation_ezxml(
    name_dir = bfromcstralloc( 10, "" );
    scaffold_check_null( name_dir );
 
-   animation =
-      (struct MOBILE_ANI_DEF*)calloc( 1, sizeof( struct MOBILE_ANI_DEF ) );
+   animation = mem_alloc( 1, struct MOBILE_ANI_DEF );
 
    ezxml_string( xml_attr, xml_animation, "name" );
    scaffold_assign_or_cpy_c( animation->name, xml_attr, bstr_retval );
@@ -511,9 +509,7 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
       xml_prop_iter = NULL;
    VECTOR_ERR verr;
 
-   terrain_info = (struct TILEMAP_TERRAIN_DATA*)calloc(
-      1, sizeof( struct TILEMAP_TERRAIN_DATA )
-   );
+   terrain_info = mem_alloc( 1, struct TILEMAP_TERRAIN_DATA );
    scaffold_check_null( terrain_info );
 
    xml_attr = ezxml_attr( xml_terrain, "name" );
@@ -647,7 +643,7 @@ void datafile_tilemap_parse_tileset_ezxml(
    xml_tile = ezxml_child( xml_tileset, "tile" );
    scaffold_check_null( xml_tile );
    while( NULL != xml_tile ) {
-      tile_info = (struct TILEMAP_TILE_DATA*)calloc( 1, sizeof( struct TILEMAP_TILE_DATA ) );
+      tile_info = mem_alloc( 1, struct TILEMAP_TILE_DATA );
       scaffold_check_null( tile_info );
 
       xml_attr = ezxml_attr( xml_tile, "id" );

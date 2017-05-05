@@ -43,14 +43,14 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
 void vector_init( struct VECTOR* v );
 void vector_cleanup( struct VECTOR* v );
 VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 VECTOR_ERR vector_add( struct VECTOR* v, void* data )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe );
 void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force );

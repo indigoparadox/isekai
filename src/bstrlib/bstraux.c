@@ -830,7 +830,7 @@ b_ydecode_raw( const_bstring src, BYTE** dest, SCAFFOLD_SIZE* dest_len ) {
 
 	scaffold_assert( NULL == *dest );
    *dest_len = src->slen;
-   *dest = (BYTE*)calloc( *dest_len, sizeof( BYTE ) );
+   *dest = mem_alloc( *dest_len, BYTE );
 
 	for( i = 0 ; i < src->slen ; i++ ) {
 		if( '=' == (c = src->data[i]) ) { /* The = escape mode */
@@ -951,6 +951,8 @@ int i;
 	return 0;
 }
 
+#ifdef USE_CLOCK
+
 /*  bstring bStrfTime (const char * fmt, const struct tm * timeptr)
  *
  *  Takes a format string that is compatible with strftime and a struct tm
@@ -997,6 +999,8 @@ size_t r;
 	return buff;
 #endif
 }
+
+#endif /* USE_CLOCK */
 
 /*  int bSetCstrChar (bstring a, int pos, char c)
  *

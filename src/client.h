@@ -69,7 +69,7 @@ struct CLIENT {
    (connection_connected( &(c->link) ) && TRUE == (c)->running)
 
 #define client_new( c, client_side ) \
-    c = (struct CLIENT*)calloc( 1, sizeof( struct CLIENT ) ); \
+    c = mem_alloc( 1, struct CLIENT ); \
     scaffold_check_null( c ); \
     client_init( c, client_side );
 

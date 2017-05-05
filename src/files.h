@@ -7,30 +7,30 @@
 SCAFFOLD_SIZE files_read_contents(
    bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
 )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 SCAFFOLD_SIZE_SIGNED files_write(
    bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs
 )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 void files_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
    BOOL dir_only, BOOL show_hidden
 );
 bstring files_basename( bstring path )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 BOOL files_check_directory( const bstring path )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 void scaffold_join_path( bstring path1, const bstring path2 );
 bstring files_root( bstring append );
