@@ -2,7 +2,9 @@
 #define MEM_C
 #include "mem.h"
 
+#ifndef __palmos__
 #include <stdlib.h>
+#endif /* __palmos__ */
 
 /** \brief Check to make sure the given count/size combination will not result
  *         in an overflow, creating a memory buffer with an unexpected size.

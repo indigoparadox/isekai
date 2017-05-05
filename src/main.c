@@ -215,6 +215,9 @@ static BOOL loop_connect() {
    BOOL keep_going = TRUE;
    bstring server_address = NULL;
    int bstr_result = 0;
+
+#ifdef ENABLE_LOCAL_CLIENT
+
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
    const char* server_port_c = NULL;
@@ -326,6 +329,9 @@ static BOOL loop_connect() {
       server_tuple = NULL;
    }
 #endif /* USE_CONNECT_DIALOG */
+
+#endif /* ENABLE_LOCAL_CLIENT */
+
 cleanup:
    return keep_going; /* TODO: ESC to quit. */
 #if 0
@@ -405,7 +411,6 @@ int CALLBACK WinMain(
 #else
 int main( int argc, char** argv ) {
 #endif /* _WIN32 */
-   time_t tm = 0;
 #ifdef SCAFFOLD_LOG_FILE
    scaffold_log_handle = fopen( "stdout.log", "w" );
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
@@ -439,13 +444,12 @@ int main( int argc, char** argv ) {
    ui = ui_get_local();
    backlog_init();
    animate_init();
+   rng_init();
 
    connection_setup();
    scaffold_check_nonzero( scaffold_error );
 
 #endif /* ENABLE_LOCAL_CLIENT */
-
-   srand( (unsigned)time( &tm ) );
 
    server_new( main_server, &str_localhost );
 
@@ -458,7 +462,9 @@ int main( int argc, char** argv ) {
 
 cleanup:
    animate_shutdown();
+#ifdef USE_CONNECT_DIALOG
    bdestroy( buffer );
+#endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
    mem_free( twindow );
    input_shutdown( input );

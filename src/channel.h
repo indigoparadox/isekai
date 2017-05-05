@@ -43,7 +43,7 @@ struct CHANNEL_CLIENT {
 
 #define channel_new( l, name, local_graphics, server ) \
     scaffold_check_null( name ); \
-    l = (struct CHANNEL*)calloc( 1, sizeof( struct CHANNEL ) ); \
+    l = mem_alloc( 1, struct CHANNEL ); \
     scaffold_check_null( l ); \
     channel_init( l, name, local_graphics, server );
 

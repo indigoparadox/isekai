@@ -23,7 +23,7 @@ struct SERVER {
 #define SERVER_RANDOM_NICK_LEN 10
 
 #define server_new( s, myhost ) \
-    s = (struct SERVER*)calloc( 1, sizeof( struct SERVER ) ); \
+    s = mem_alloc( 1, struct SERVER ); \
     server_init( s, myhost );
 
 void server_free_clients( struct SERVER* s );

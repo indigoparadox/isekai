@@ -145,7 +145,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       scaffold_print_info( &module, "Remote server disconnected.\n" );
       client_stop( c );
       bdestroy( cmd->line );
-      free( cmd );
+      mem_free( cmd );
       cmd = NULL;
    }
 
@@ -434,7 +434,7 @@ void client_send_file(
    );
 
    /* Begin transmitting tilemap. */
-   h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
+   h = mem_alloc( 1, struct CHUNKER );
    scaffold_check_null( h );
 
    chunker_chunk_start_file(
@@ -516,7 +516,7 @@ void client_request_file(
    if( NULL == h ) {
       /* Create a chunker and get it started, since one is not in progress. */
       /* TODO: Verify cached file hash from server. */
-      h = (struct CHUNKER*)calloc( 1, sizeof( struct CHUNKER ) );
+      h = mem_alloc( 1, struct CHUNKER );
       chunker_unchunk_start(
          h, type, filename, &str_client_cache_path
       );

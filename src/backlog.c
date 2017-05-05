@@ -22,7 +22,7 @@ void backlog_shutdown() {
 void backlog_line_free( struct BACKLOG_LINE* line ) {
    bdestroy( line->line );
    bdestroy( line->nick );
-   free( line );
+   mem_free( line );
 }
 
 void backlog_ensure_window( struct UI* ui ) {
@@ -79,9 +79,7 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
    VECTOR_ERR verr;
 
-   line = (struct BACKLOG_LINE*)calloc(
-      1, sizeof( struct BACKLOG_LINE)
-   );
+   line = mem_alloc( 1, struct BACKLOG_LINE );
    scaffold_check_null( line );
 
    line->nick = bstrcpy( nick );
@@ -103,9 +101,7 @@ void backlog_system( const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
    VECTOR_ERR verr;
 
-   line = (struct BACKLOG_LINE*)calloc(
-      1, sizeof( struct BACKLOG_LINE)
-   );
+   line = mem_alloc( 1, struct BACKLOG_LINE );
    scaffold_check_null( line );
 
    line->nick = NULL;

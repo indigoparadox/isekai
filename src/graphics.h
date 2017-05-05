@@ -110,9 +110,9 @@ void graphics_set_image_data(
    GRAPHICS* g, const BYTE* data, SCAFFOLD_SIZE length
 );
 BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len )
-#ifdef __GNUC__
+#ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
-#endif /* __GNUC__ */
+#endif /* USE_GNUC_EXTENSIONS */
 ;
 void graphics_draw_text(
    GRAPHICS* g, SCAFFOLD_SIZE_SIGNED x_start, SCAFFOLD_SIZE_SIGNED y_start,

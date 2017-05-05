@@ -117,6 +117,7 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -633,6 +634,7 @@
 					<Add option="-DxDEBUG_VM" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
+					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -747,6 +749,7 @@
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -1450,6 +1453,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ref.h" />
+		<Unit filename="src/rng.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/rng.h" />
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
 		</Unit>

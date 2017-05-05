@@ -24,8 +24,7 @@ static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
 
    syncbuff_size[dest] = SYNCBUFF_LINES_INITIAL;
    syncbuff_count[dest] = 0;
-   syncbuff_lines[dest] =
-      (bstring*)calloc( syncbuff_size[dest], sizeof( bstring ) );
+   syncbuff_lines[dest] = mem_alloc( syncbuff_size[dest], bstring );
 
    for( i = 0 ; syncbuff_size[dest] > i ; i++ ) {
       syncbuff_lines[dest][i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );

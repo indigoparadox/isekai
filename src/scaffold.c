@@ -2,6 +2,8 @@
 #define SCAFFOLD_C
 #include "scaffold.h"
 
+#include "backlog.h"
+
 static struct tagbstring str_scaffold_trace[3] = {
    bsStatic( "T_NONE" ),
    bsStatic( "T_CLIENT" ),
@@ -115,7 +117,7 @@ BOOL scaffold_string_is_printable( bstring str ) {
 #include "graphics.h"
 
 static void scaffold_log(
-   FILE* log, const bstring mod_in, enum GRAPHICS_COLOR color,
+   void* log, const bstring mod_in, enum GRAPHICS_COLOR color,
    const char* message, va_list varg
 ) {
    int bstr_ret;
@@ -130,11 +132,16 @@ static void scaffold_log(
    bstr_ret = btrunc( scaffold_print_buffer, 0 );
    scaffold_check_nonzero( bstr_ret );
 
+#ifdef DEBUG
    scaffold_snprintf(
       scaffold_print_buffer, "%b (%b): ",
       mod_in, &(str_scaffold_trace[scaffold_trace_path])
    );
    scaffold_vsnprintf( scaffold_print_buffer, message, varg );
+#else
+   scaffold_snprintf( scaffold_print_buffer, "%b: ", mod_in );
+   scaffold_vsnprintf( scaffold_print_buffer, message, varg );
+#endif /* DEBUG */
 
 /*
    for( i = 0 ; blength( prepend_buffer ) > i ; i++ ) {
@@ -349,58 +356,6 @@ BOOL scaffold_buffer_grow(
    ok = TRUE;
 
 cleanup:
-   return ok;
-}
-
-/** \brief Provides length number of pseudo-random bytes from a good entropy
- *         source.
- */
-BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length ) {
-   BOOL ok = TRUE;
-   #ifdef WIN32
-   static HCRYPTPROV prov = 0;
-
-   if( 0 == prov ) {
-      if( !CryptAcquireContext( &prov, NULL, NULL, PROV_RSA_FULL, 0 ) ) {
-         scaffold_print_error( &module, "Unable to open crypto context.\n" );
-         scaffold_error = SCAFFOLD_ERROR_RANDOM;
-         ok = FALSE;
-         goto cleanup;
-      }
-   }
-   if( !CryptGenRandom( prov, length, ptr ) ) {
-      scaffold_print_error( &module, "Unable to generate random bytes.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = FALSE;
-      goto cleanup;
-   }
-
-cleanup:
-   #else
-   FILE* randhand = fopen( "/dev/urandom", "rb" );
-
-   if( randhand == NULL ) {
-      scaffold_print_error( &module, "Unable to open entropy source.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = FALSE;
-      goto cleanup;
-   }
-
-   if( 0 == fread( ptr, length, 1, randhand ) ) {
-      scaffold_print_error( &module, "Unable to read random bytes.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = FALSE;
-      goto cleanup;
-   }
-
-cleanup:
-   if( NULL != randhand ) {
-      fclose( randhand );
-   }
-   #endif
-   if( FALSE != ok ) {
-      scaffold_error = SCAFFOLD_ERROR_NONE;
-   }
    return ok;
 }
 

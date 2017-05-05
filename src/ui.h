@@ -88,7 +88,7 @@ struct UI {
 };
 
 #define ui_window_new( ui, win, id, title, prompt, x, y, w, h ) \
-   win = (struct UI_WINDOW*)calloc( 1, sizeof( struct UI_WINDOW ) ); \
+   win = mem_alloc( 1, struct UI_WINDOW ); \
    if( NULL == win ) { \
       scaffold_error = SCAFFOLD_ERROR_NULLPO; \
       goto cleanup; \
@@ -98,7 +98,7 @@ struct UI {
 #define ui_control_new( \
       ui, control, text, type, can_focus, buffer, x, y, w, h \
 ) \
-   control = (struct UI_CONTROL*)calloc( 1, sizeof( struct UI_CONTROL ) ); \
+   control = mem_alloc( 1, struct UI_CONTROL ); \
    if( NULL == control ) { \
       scaffold_error = SCAFFOLD_ERROR_NULLPO; \
       goto cleanup; \

@@ -1469,7 +1469,7 @@ IRC_COMMAND* irc_dispatch(
             }
 #endif /* DEBUG_VERBOSE */
 
-            out = (IRC_COMMAND*)calloc( 1, sizeof( IRC_COMMAND ) );
+            out = mem_alloc( 1, IRC_COMMAND );
             scaffold_check_null( out );
             memcpy( out, command, sizeof( IRC_COMMAND ) );
             if( NULL != s ) {

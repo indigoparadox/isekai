@@ -27,10 +27,6 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#ifndef __palmos__
-#include <stdlib.h>
-#include <fcntl.h>
-#endif /* __palmos__ */
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"

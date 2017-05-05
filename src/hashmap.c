@@ -642,7 +642,9 @@ void* hashmap_iterate_nolock(
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
+#ifdef DEBUG
          key_c = bdata( m->data[i].key );
+#endif /* DEBUG */
          idx.value.key = m->data[i].key;
          test = callback( &idx, data, arg );
          if( NULL != test ) {
