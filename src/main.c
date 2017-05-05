@@ -7,6 +7,7 @@
 #include "vm.h"
 #include "backlog.h"
 #include "animate.h"
+#include "rng.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -220,8 +221,7 @@ static BOOL loop_connect() {
 
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
-   const char* server_port_c = NULL;
-   struct bstrList* server_tuple = NULL;
+   struct VECTOR* server_tuple = NULL;
    struct UI_CONTROL* control = NULL;
 
    graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
@@ -234,7 +234,7 @@ static BOOL loop_connect() {
 #endif /* USE_CONNECT_DIALOG */
 
 #ifdef USE_RANDOM_PORT
-      server_port = 30000 + (rand() % 30000);
+      server_port = 30000 + rng_max( 30000 );
 #endif /* USE_RANDOM_PORT */
 
       /* TODO: Add fields for these to connect dialog. */
@@ -288,22 +288,17 @@ static BOOL loop_connect() {
       ui_window_destroy( ui, &str_cdialog_id );
 
       /* Split up the address and port. */
-      server_tuple = bsplit( buffer, ':' );
-      if( 2 < server_tuple->qty ) {
+      server_tuple = bgsplit( buffer, ':' );
+      if( 2 < vector_count( server_tuple ) ) {
          scaffold_print_error( &module, "Invalid host string.\n" );
-         bstrListDestroy( server_tuple );
-         server_tuple = NULL;
          goto cleanup;
       }
-      server_address = server_tuple->entry[0];
-      server_port_c = bdata( server_tuple->entry[1] );
-      if( NULL == server_port_c ) {
+      server_address = vector_get( server_tuple, 0 );
+      server_port = bgtoi( vector_get( server_tuple, 1 ) );
+      if( 0 >= server_port ) {
          scaffold_print_error( &module, "Invalid port string.\n" );
-         bstrListDestroy( server_tuple );
-         server_tuple = NULL;
          goto cleanup;
       }
-      server_port = atoi( server_port_c );
 #else
       server_address = &str_localhost;
 #endif /* USE_CONNECT_DIALOG */
@@ -324,15 +319,16 @@ static BOOL loop_connect() {
       client_connect( main_client, server_address, server_port );
 
 #ifdef USE_CONNECT_DIALOG
-      /* Destroy this after, since server_address is a ptr inside of it. */
-      bstrListDestroy( server_tuple );
-      server_tuple = NULL;
    }
 #endif /* USE_CONNECT_DIALOG */
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
 cleanup:
+   if( NULL != server_tuple ) {
+      vector_remove_cb( server_tuple, callback_free_strings, NULL );
+      vector_free( &server_tuple );
+   }
    return keep_going; /* TODO: ESC to quit. */
 #if 0
    if( 0 != scaffold_error ) {
