@@ -2316,6 +2316,8 @@ int bspeek (bstring r, const struct bStream * s) {
 
 #endif /* USE_BSTRING_STREAMS */
 
+#ifdef USE_BSTRING_LISTS
+
 /*  bstring bjoinblk (const struct bstrList * bl, void * blk, int len);
  *
  *  Join the entries of a bstrList into one bstring by sequentially
@@ -2396,6 +2398,8 @@ bstring bjoin (const struct bstrList * bl, const_bstring sep) {
 	if (sep != NULL && (sep->slen < 0 || sep->data == NULL)) return NULL;
 	return bjoinblk (bl, sep->data, sep->slen);
 }
+
+#endif /* USE_BSTRING_LISTS */
 
 #ifdef USE_BSTRING_STREAMS
 
@@ -2533,6 +2537,8 @@ int i, p, ret;
 
 #endif /* USE_BSTRING_STREAMS */
 
+#ifdef USE_BSTRING_LISTS
+
 /*  int bstrListCreate (void)
  *
  *  Create a bstrList.
@@ -2627,6 +2633,8 @@ int bstrListAllocMin (struct bstrList * sl, int msz) {
 	sl->entry = l;
 	return BSTR_OK;
 }
+
+#endif /* USE_BSTRING_LISTS */
 
 #ifdef USE_BSTRING_CALLBACKS
 

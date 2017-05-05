@@ -4,6 +4,7 @@
 
 #include "../hashmap.h"
 #include "../vm.h"
+#include "../callback.h"
 
 #define ezxml_node( target, parent, id ) \
    target = ezxml_child( parent, id ); \
@@ -724,8 +725,8 @@ static void datafile_tilemap_parse_layer_ezxml(
    struct TILEMAP_LAYER* layer = NULL;
    ezxml_t xml_layer_data = NULL;
    bstring buffer = NULL;
-   struct bstrList* tiles_list = NULL;
-   int i;
+   struct VECTOR* tiles_list = NULL;
+   SCAFFOLD_SIZE i;
    const char* xml_attr = NULL;
    int bstr_res = 0;
    struct TILEMAP_LAYER* prev_layer = NULL;
@@ -743,14 +744,14 @@ static void datafile_tilemap_parse_layer_ezxml(
    /* Split the tiles list CSV into an array of uint16. */
    buffer = bfromcstr( ezxml_txt( xml_layer_data ) );
    scaffold_check_null( buffer );
-   tiles_list = bsplit( buffer, ',' );
+   tiles_list = bgsplit( buffer, ',' );
    scaffold_check_null( tiles_list );
 
    /* Convert each tile terrain ID string into an int16 and stow in array. */
 
    /* TODO: Lock the list while adding, somehow. */
-   for( i = 0 ; tiles_list->qty > i ; i++ ) {
-      xml_attr = bdata( tiles_list->entry[i] );
+   for( i = 0 ; vector_count( tiles_list ) > i ; i++ ) {
+      xml_attr = bdata( (bstring)vector_get( tiles_list, i ) );
       scaffold_check_null( xml_attr );
       vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
@@ -782,7 +783,8 @@ cleanup:
       tilemap_layer_free( layer );
    }
    bdestroy( buffer );
-   bstrListDestroy( tiles_list );
+   vector_remove_cb( tiles_list, callback_free_strings, NULL );
+   vector_free( &tiles_list );
    return;
 }
 

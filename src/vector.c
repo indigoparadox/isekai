@@ -28,6 +28,14 @@ cleanup:
    return;
 }
 
+void vector_free( struct VECTOR** v ) {
+   if( NULL != *v ) {
+      vector_cleanup( *v );
+      mem_free( *v );
+      *v = NULL;
+   }
+}
+
 SCAFFOLD_INLINE
 static void vector_reset( struct VECTOR* v ) {
    mem_free( v->scalar_data );

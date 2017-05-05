@@ -42,6 +42,7 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
 
 void vector_init( struct VECTOR* v );
 void vector_cleanup( struct VECTOR* v );
+void vector_free( struct VECTOR** v );
 VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))

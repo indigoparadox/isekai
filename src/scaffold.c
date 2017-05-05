@@ -44,6 +44,7 @@ BOOL scaffold_is_numeric( bstring line ) {
    return is_numeric;
 }
 
+/*
 bstring scaffold_list_pop_string( struct bstrList* list ) {
    bstring popped = list->entry[0];
    int i;
@@ -56,7 +57,9 @@ bstring scaffold_list_pop_string( struct bstrList* list ) {
 
    return popped;
 }
+*/
 
+/*
 void scaffold_list_remove_string( struct bstrList* list, bstring str ) {
    int i;
    int offset = 0;
@@ -74,7 +77,8 @@ void scaffold_list_remove_string( struct bstrList* list, bstring str ) {
 
    return;
 }
-
+*/
+#if 0
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str ) {
    int bstr_result;
 
@@ -94,6 +98,7 @@ void scaffold_list_append_string_cpy( struct bstrList* list, bstring str ) {
 cleanup:
    return;
 }
+#endif
 
 BOOL scaffold_string_is_printable( bstring str ) {
    BOOL is_printable = TRUE;
