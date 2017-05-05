@@ -698,7 +698,6 @@ static void irc_server_privmsg(
    msg = bfromcstr( "" );
    scaffold_check_null( msg );
    vector_iterate( msg_list, callback_concat_strings, msg );
-   //btrimws( msg );
 
    c_dest = server_get_client( s, (bstring)vector_get( args, 1 ) );
    if( NULL != c_dest ) {
