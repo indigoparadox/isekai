@@ -119,8 +119,8 @@ SCAFFOLD_SIZE_SIGNED files_write(
    FILE* outputfile = NULL;
    char* path_c = NULL;
    bstring test_path = NULL;
-   struct bstrList* path_dirs = NULL;
-   SCAFFOLD_SIZE_SIGNED true_qty;
+   struct VECTOR* path_dirs = NULL;
+   SCAFFOLD_SIZE true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
@@ -132,16 +132,18 @@ SCAFFOLD_SIZE_SIGNED files_write(
    zero_error = bformat( "Zero bytes written to: %s", bdata( path ) );
 
    /* Make sure the parent directory exists. */
-   path_dirs = bsplit( path, '/' );
-   if( 2 > path_dirs->qty ) {
+   path_dirs = bgsplit( path, '/' );
+   if( 2 > vector_count( path_dirs ) ) {
       /* We don't need to create any directories. */
       goto write_file;
    }
 
-   true_qty = path_dirs->qty;
+   true_qty = vector_count( path_dirs );
 
-   for( path_dirs->qty = 1 ; path_dirs->qty < true_qty ; path_dirs->qty++ ) {
-      test_path = bjoin( path_dirs, &files_dirsep_string );
+   for( path_dirs->count = 1 ; path_dirs->count < true_qty ; path_dirs->count++ ) {
+      test_path = bfromcstr( "" );
+      scaffold_check_null( test_path );
+      vector_iterate( path_dirs, callback_concat_strings, test_path );
       scaffold_check_null( test_path );
 
       path_c = bdata( test_path );
@@ -187,7 +189,8 @@ write_file:
 cleanup:
    bdestroy( zero_error );
    bdestroy( test_path );
-   bstrListDestroy( path_dirs );
+   vector_remove_cb( path_dirs, callback_free_strings, NULL );
+   vector_free( &path_dirs );
    if( NULL != outputfile ) {
       fclose( outputfile );
    }
@@ -313,21 +316,22 @@ cleanup:
 
 bstring files_basename( bstring path ) {
    bstring basename_out = NULL;
-   struct bstrList* path_elements = NULL;
+   struct VECTOR* path_elements = NULL;
 
    scaffold_check_null( path );
 
-   path_elements = bsplit( path, SCAFFOLD_DIRSEP_CHAR );
+   path_elements = bgsplit( path, SCAFFOLD_DIRSEP_CHAR );
    scaffold_check_null( path_elements );
 
-   if( 1 == path_elements->qty ) {
-      basename_out = bstrcpy( path_elements->entry[0] );
+   if( 1 == vector_count( path_elements ) ) {
+      basename_out = bstrcpy( vector_get( path_elements, 0 ) );
    }
 
-   basename_out = path_elements->entry[path_elements->qty - 1];
+   basename_out = vector_get( path_elements, vector_count( path_elements ) - 1 );
 
 cleanup:
-   bstrListDestroy( path_elements );
+   vector_remove_cb( path_elements, callback_free_strings, NULL );
+   vector_free( &path_elements );
    return basename_out;
 }
 

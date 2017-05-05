@@ -114,6 +114,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #include <stddef.h>
 
 #include "bstrlib/bstrlib.h"
+#include "bstrglue.h"
 #include "colors.h"
 
 COLOR_TABLE( SCAFFOLD )
@@ -407,9 +408,11 @@ struct VECTOR;
 #define scaffold_byte( number ) (0xff & number)
 
 BOOL scaffold_is_numeric( bstring line );
+/*
 bstring scaffold_list_pop_string( struct bstrList* list );
 void scaffold_list_remove_string( struct bstrList* list, bstring str );
 void scaffold_list_append_string_cpy( struct bstrList* list, bstring str );
+*/
 BOOL scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, ... );
 void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );

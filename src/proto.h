@@ -10,10 +10,10 @@
 typedef struct _IRC_COMMAND {
    struct REF refcount;
    const struct tagbstring command;
-   void (*callback)( struct CLIENT* c, struct SERVER* s, const struct bstrList* args, bstring line );
+   void (*callback)( struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line );
    struct SERVER* server;
    struct CLIENT* client;
-   const struct bstrList* args;
+   struct VECTOR* args;
    bstring line;
 } IRC_COMMAND;
 

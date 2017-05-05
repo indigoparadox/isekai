@@ -454,7 +454,7 @@ int crypto_scalarmult_base(u8 *q,const u8 *n)
 
 int crypto_box_keypair(u8 *y,u8 *x)
 {
-  scaffold_random_bytes(x,32);
+  rng_bytes(x,32);
   return crypto_scalarmult_base(y,x);
 }
 
@@ -664,7 +664,7 @@ int crypto_sign_keypair(u8 *pk, u8 *sk)
   gf p[4];
   int i;
 
-  scaffold_random_bytes(sk, 32);
+  rng_bytes(sk, 32);
   crypto_hash(d, sk, 32);
   d[0] &= 248;
   d[31] &= 127;

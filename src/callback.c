@@ -95,8 +95,17 @@ cleanup:
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
-   struct bstrList* list = (struct bstrList*)arg;
-   scaffold_list_append_string_cpy( list, c->nick );
+   struct VECTOR* list = (struct VECTOR*)arg;
+   vector_add( list, bstrcpy( c->nick ) );
+   return NULL;
+}
+
+void* callback_concat_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring str_out = (bstring)arg;
+   bstring str_cat = (bstring)iter;
+
+   bconcat( str_out, str_cat );
+
    return NULL;
 }
 
@@ -120,19 +129,24 @@ void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* ar
    return NULL;
 }
 
-/* Return any client that is in the bstrlist arg. */
-void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   const struct bstrList* list = (const struct bstrList*)arg;
-   struct CLIENT* c = (struct CLIENT*)iter;
-   int i;
+void* callback_search_bstring_i(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
+   bstring str = (bstring)iter;
+   bstring compare = (bstring)arg;
 
-   for( i = 0 ; list->qty > i ; i++ ) {
-      if( 0 == bstrcmp( c->nick, list->entry[i] ) ) {
-         return c;
-      }
+   if( 0 == bstricmp( str, compare ) ) {
+      return iter;
    }
 
    return NULL;
+}
+
+/* Return any client that is in the bstrlist arg. */
+void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct VECTOR* list = (struct VECTOR*)arg;
+   struct CLIENT* c = (struct CLIENT*)iter;
+   return vector_iterate( list, callback_search_bstring_i, c->nick );
 }
 
 /** \brief If the iterated spawner is of the ID specified in arg, then return

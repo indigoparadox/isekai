@@ -140,8 +140,7 @@ cleanup:
    if( NULL != player_spawns) {
       /* These don't have garbage refs, so just free the vector forcibly. */
       player_spawns->count = 0;
-      vector_cleanup( player_spawns );
-      free( player_spawns );
+      vector_free( &player_spawns );
    }
    return;
 }

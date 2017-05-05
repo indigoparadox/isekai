@@ -32,6 +32,12 @@ extern "C" {
 # endif
 #endif
 
+#ifdef USE_BSTRING_LISTS
+#ifndef USE_BSTRING_CALLBACKS
+#error bstring callbacks must be enabled to use bstring lists!
+#endif /* USE_BSTRING_CALLBACKS */
+#endif /* USE_BSTRING_LISTS */
+
 #define BSTR_ERR (-1)
 #define BSTR_OK (0)
 #define BSTR_BS_BUFF_LENGTH_GET (0)
@@ -165,6 +171,8 @@ extern int bninchrr (const_bstring b0, int pos, const_bstring b1);
 extern int bfindreplace (bstring b, const_bstring find, const_bstring repl, int pos);
 extern int bfindreplacecaseless (bstring b, const_bstring find, const_bstring repl, int pos);
 
+#ifdef USE_BSTRING_LISTS
+
 /* List of string container functions */
 struct bstrList {
     int qty, mlen;
@@ -181,6 +189,8 @@ extern struct bstrList * bsplits (const_bstring str, const_bstring splitStr);
 extern struct bstrList * bsplitstr (const_bstring str, const_bstring splitStr);
 extern bstring bjoin (const struct bstrList * bl, const_bstring sep);
 extern bstring bjoinblk (const struct bstrList * bl, const void * s, int len);
+
+#endif /* USE_BSTRING_LISTS */
 
 #ifdef USE_BSTRING_CALLBACKS
 

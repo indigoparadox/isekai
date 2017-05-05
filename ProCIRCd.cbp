@@ -117,7 +117,6 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -323,7 +322,6 @@
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -369,7 +367,6 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DSTRICT_DEBUG" />
 					<Add option="-DUSE_DUKTAPE" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -417,7 +414,6 @@
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DUSE_TURNS" />
 					<Add option="-DUSE_MBED_TLS" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -464,7 +460,6 @@
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_DUKTAPE" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -523,7 +518,6 @@
 					<Add option="-DUSE_HEATSHRINK" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -545,7 +539,6 @@
 					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
@@ -562,7 +555,6 @@
 					<Add option="-DGFX_CURSES" />
 					<Add option="-DSCH_PTHREAD" />
 					<Add option="-DUSE_CHUNKS" />
-					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add library="curses" />
@@ -634,7 +626,6 @@
 					<Add option="-DxDEBUG_VM" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -749,7 +740,6 @@
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
-					<Add option="-DUSE_BSTRING_CALLBACKS" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -819,6 +809,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/backlog.h" />
+		<Unit filename="src/bstrglue.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/bstrglue.h" />
 		<Unit filename="src/bstrlib/bsafe.c">
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />

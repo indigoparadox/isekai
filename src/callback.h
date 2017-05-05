@@ -7,6 +7,10 @@
 
 void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_concat_strings( struct CONTAINER_IDX* idx, void* iter, void* arg );
+void* callback_search_bstring_i(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+);
 void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* arg );
 void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg );
