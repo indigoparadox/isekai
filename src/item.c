@@ -17,15 +17,13 @@ static void item_free_final( const struct REF* ref ) {
 }
 
 void item_init(
-   struct ITEM* e, BIG_SERIAL serial, const bstring display_name,
+   struct ITEM* e, const bstring display_name,
    SCAFFOLD_SIZE count, const bstring catalog_name,
    SCAFFOLD_SIZE sprite_id, struct CLIENT* c
 ) {
    int retval;
 
    ref_init( &(e->refcount), item_free_final );
-
-   e->serial = serial;
 
    client_set_item( c, e->serial, e );
 
@@ -58,11 +56,10 @@ void item_random_init(
    sprite = item_spritesheet_get_sprite( catalog, sprite_id );
    scaffold_check_null_msg( sprite, "Unable to find item sprite." );
 
-   serial = rng_serial();
-   while( NULL != client_get_item( catalog->client_or_server, serial ) ) {
-      serial = rng_serial();
-   }
-   item_init( e, serial, sprite->display_name, 1, catalog_name, sprite_id, c );
+   item_init( e, sprite->display_name, 1, catalog_name, sprite_id, c );
+   rng_gen_serial(
+      e, &(catalog->client_or_server->unique_items), SERIAL_MIN, BIG_SERIAL_MAX
+   );
 
 cleanup:
    return;

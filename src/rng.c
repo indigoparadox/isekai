@@ -66,10 +66,6 @@ cleanup:
    return ok;
 }
 
-BIG_SERIAL rng_serial() {
-   return rand() % BIG_SERIAL_MAX;
-}
-
 SCAFFOLD_SIZE rng_max( SCAFFOLD_SIZE max ) {
    return rand() % max;
 }

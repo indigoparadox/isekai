@@ -1140,7 +1140,8 @@ static void irc_client_item(
    scaffold_check_null_msg( sprite, "Sprite not found on client." );
    */
 
-   item_new( e, serial, display_name, count,(bstring)vector_get( args, 4 ), sprite_id, c );
+   item_new( e, display_name, count,(bstring)vector_get( args, 4 ), sprite_id, c );
+   e->serial = serial;
 
    tilemap_drop_item_in_cache( last_item_cache, e );
 

@@ -88,10 +88,10 @@ struct ITEM {
    struct CLIENT* client_or_server;
 };
 
-#define item_new( e, serial, display_name, count, catalog, sprite, c ) \
+#define item_new( e, display_name, count, catalog, sprite, c ) \
     e = mem_alloc( 1, struct ITEM ); \
     scaffold_check_null( e ); \
-    item_init( e, serial, display_name, count, catalog, sprite, c );
+    item_init( e, display_name, count, catalog, sprite, c );
 
 #define item_random_new( e, type, item_catalog, c ) \
     e = mem_alloc( 1, struct ITEM ); \
@@ -104,7 +104,7 @@ struct ITEM {
     item_spritesheet_init( catalog, name, client_or_server );
 
 void item_init(
-   struct ITEM* e, BIG_SERIAL serial, const bstring display_name,
+   struct ITEM* e, const bstring display_name,
    SCAFFOLD_SIZE count, bstring catalog_name,
    SCAFFOLD_SIZE sprite_id, struct CLIENT* c
 );

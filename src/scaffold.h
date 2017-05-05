@@ -258,11 +258,6 @@ struct CONTAINER_IDX {
 
 #define SCAFFOLD_MODULE( mod_name ) static struct tagbstring module = bsStatic( mod_name )
 
-#define scaffold_gen_serial( object, vector ) \
-   do { \
-      object->serial = SERIAL_MIN + (rand() % SERIAL_MAX); \
-   } while( 0 == object->serial || NULL != vector_get( vector, object->serial ) );
-
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 

@@ -14,6 +14,7 @@
 #include "datafile.h"
 #include "ezxml.h"
 #endif /* USE_EZXML */
+#include "rng.h"
 
 #ifdef DEBUG
 extern struct UI* last_ui;
@@ -582,7 +583,7 @@ void* callback_proc_channel_spawners(
       scaffold_print_debug( &module, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
-      scaffold_gen_serial( o, &(l->mobiles) );
+      rng_gen_serial( o, &(l->mobiles), SERIAL_MIN, SERIAL_MAX );
       channel_add_mobile( l, o );
       break;
 
