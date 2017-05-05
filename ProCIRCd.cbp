@@ -1154,17 +1154,17 @@
 			<Option target="Strict (Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
-		<Unit filename="src/graphics/allegro.c">
+		<Unit filename="src/graphics/allegrog.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics/curses.c">
@@ -1172,7 +1172,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 		</Unit>
-		<Unit filename="src/graphics/null.c">
+		<Unit filename="src/graphics/nullg.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux-C99)" />
 			<Option target="Check (Linux-C89)" />
@@ -1334,17 +1334,17 @@
 			<Option target="Strict (Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/input.h" />
-		<Unit filename="src/input/allegro.c">
+		<Unit filename="src/input/allegroi.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
 			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/input/curses.c">
@@ -1352,7 +1352,7 @@
 			<Option target="Debug (Linux-Curses)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
 		</Unit>
-		<Unit filename="src/input/null.c">
+		<Unit filename="src/input/nulli.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux-C99)" />
 			<Option target="Check (Linux-C89)" />

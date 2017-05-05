@@ -15,6 +15,7 @@
 #ifdef USE_DUKTAPE
 #include "duktape/duktape.h"
 #endif /* USE_DUKTAPE */
+#include "rng.h"
 
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -114,7 +115,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       );
       mobile_load_local( o );
 
-      scaffold_gen_serial( o, &(l->mobiles) );
+      rng_gen_serial( o, &(l->mobiles), SERIAL_MIN, SERIAL_MAX );
 
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
