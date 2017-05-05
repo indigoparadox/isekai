@@ -5,6 +5,7 @@
 #include "callback.h"
 #include "chunker.h"
 #include "client.h"
+#include "rng.h"
 
 static void item_free_final( const struct REF* ref ) {
    struct ITEM* e = scaffold_container_of( ref, struct ITEM, refcount );

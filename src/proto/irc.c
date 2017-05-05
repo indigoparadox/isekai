@@ -403,7 +403,6 @@ static void irc_server_user(
 ) {
    SCAFFOLD_SIZE i,
        consumed = 0;
-   char* c_mode = NULL;
    int bstr_result = 0;
 
    /* Start at 1, skipping the command, itself. */
@@ -414,9 +413,7 @@ static void irc_server_user(
          scaffold_check_nonzero( bstr_result );
       } else if( 1 == consumed && scaffold_is_numeric( (bstring)vector_get( args, i ) ) ) {
          /* Second arg: Mode */
-         c_mode = bdata( (bstring)vector_get( args, i ) );
-         scaffold_check_null( c_mode );
-         c->mode = atoi( c_mode );
+         c->mode = bgtoi( (bstring)vector_get( args, i ) );
       } else if( 1 == consumed || 2 == consumed ) {
          /* Second or Third arg: * */
          if( 1 == consumed ) {
@@ -781,16 +778,13 @@ cleanup:
 static void irc_server_gamerequestfile(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   char* type_c;
    DATAFILE_TYPE type;
    int bstr_result;
    bstring file_path_found = NULL;
 
    irc_detect_malformed( 3, "GRF", line );
 
-   type_c = bdata( (bstring)vector_get( args, 1 ) );
-   scaffold_check_null( type_c );
-   type = atoi( type_c );
+   type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
 
    file_path_found = files_search( (bstring)vector_get( args, 2 ) );
    scaffold_check_null( file_path_found );
@@ -821,28 +815,14 @@ static void irc_server_gameupdate(
    update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
    scaffold_check_null( update.l );
 
-   serial_c = bdata( (bstring)vector_get( args, 2 ) );
-   scaffold_check_null( serial_c );
-   serial = atoi( serial_c );
+   serial = bgtoi( (bstring)vector_get( args, 2 ) );
+   update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
+   update.x = bgtoi( (bstring)vector_get( args, 4 ) );
+   update.y = bgtoi( (bstring)vector_get( args, 5 ) );
+   target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
    update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
    scaffold_check_null( update.o );
-
-   update_c = bdata( (bstring)vector_get( args, 3 ) );
-   scaffold_check_null( update_c );
-   update.update = (MOBILE_UPDATE)atoi( update_c );
-
-   x_c = bdata( (bstring)vector_get( args, 4 ) );
-   scaffold_check_null( x_c );
-   update.x = atoi( x_c );
-
-   y_c = bdata( (bstring)vector_get( args, 5 ) );
-   scaffold_check_null( y_c );
-   update.y = atoi( y_c );
-
-   target_c = bdata( (bstring)vector_get( args, 6 ) );
-   scaffold_check_null( target_c );
-   target_serial = atoi( target_c );
 
    update.target =
       (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
@@ -865,7 +845,6 @@ cleanup:
 static void irc_server_resource_request(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   const char* type_c;
    struct CHUNKER_PROGRESS progress;
    DATAFILE_TYPE type;
    bstring object_name = NULL;
@@ -873,8 +852,7 @@ static void irc_server_resource_request(
 
    irc_detect_malformed( 3, "CREQ", line );
 
-   type_c = bdata( (bstring)vector_get( args, 1 ) );
-   type = (DATAFILE_TYPE)atoi( type_c );
+   type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
 
    object_name = (bstring)vector_get( args, 2 );
 
@@ -893,7 +871,6 @@ cleanup:
 static void irc_client_resource_response(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   const char* type_c;
    struct CHUNKER_PROGRESS progress;
    DATAFILE_TYPE type;
    bstring filename = NULL;
@@ -901,8 +878,7 @@ static void irc_client_resource_response(
 
    irc_detect_malformed( 3, "CRES", line );
 
-   type_c = bdata( (bstring)vector_get( args, 1 ) );
-   type = (DATAFILE_TYPE)atoi( type_c );
+   type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
 
    filename = (bstring)vector_get( args, 2 );
 
@@ -950,11 +926,6 @@ cleanup:
 static void irc_client_gu(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   char* serial_c,
-      * target_c,
-      * update_c,
-      * x_c,
-      * y_c;
    SCAFFOLD_SIZE serial,
       target_serial;
    struct MOBILE_UPDATE_PACKET update;
@@ -962,28 +933,15 @@ static void irc_client_gu(
    update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
    scaffold_check_null( update.l );
 
-   serial_c = bdata( (bstring)vector_get( args, 2 ) );
-   scaffold_check_null( serial_c );
-   serial = atoi( serial_c );
+   serial = bgtoi( (bstring)vector_get( args, 2 ) );
 
    update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
    scaffold_check_null( update.o );
 
-   update_c = bdata( (bstring)vector_get( args, 3 ) );
-   scaffold_check_null( update_c );
-   update.update = (MOBILE_UPDATE)atoi( update_c );
-
-   x_c = bdata( (bstring)vector_get( args, 4 ) );
-   scaffold_check_null( x_c );
-   update.x = atoi( x_c );
-
-   y_c = bdata( (bstring)vector_get( args, 5 ) );
-   scaffold_check_null( y_c );
-   update.y = atoi( y_c );
-
-   target_c = bdata( (bstring)vector_get( args, 6 ) );
-   scaffold_check_null( target_c );
-   target_serial = atoi( target_c );
+   update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
+   update.x = bgtoi( (bstring)vector_get( args, 4 ) );
+   update.y = bgtoi( (bstring)vector_get( args, 5 ) );
+   target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
    update.target =
       (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
@@ -1072,33 +1030,12 @@ static void irc_client_gamedatablock(
 
    irc_detect_malformed( 11, "GDB", line );
 
-   scaffold_check_null( (bstring)vector_get( args, 5 ) );
-   type_c = bdata( (bstring)vector_get( args, 5 ) );
-   scaffold_check_null( type_c );
-
-   scaffold_check_null( (bstring)vector_get( args, 6 ) );
-   progress_c = bdata( (bstring)vector_get( args, 6 ) );
-   scaffold_check_null( progress_c );
-
-   scaffold_check_null( (bstring)vector_get( args, 7 ) );
-   length_c = bdata( (bstring)vector_get( args, 7 ) );
-   scaffold_check_null( length_c );
-
-   scaffold_check_null( (bstring)vector_get( args, 8 ) );
-   total_c = bdata( (bstring)vector_get( args, 8 ) );
-   scaffold_check_null( total_c );
-
+   progress.type = bgtoi( (bstring)vector_get( args, 5 ) );
+   progress.current = bgtoi( (bstring)vector_get( args, 6 ) );
+   progress.chunk_size = bgtoi( (bstring)vector_get( args, 7 ) );
+   progress.total = bgtoi( (bstring)vector_get( args, 8 ) );
    progress.filename = (bstring)vector_get( args, 4 );
-   filename_c = bdata( progress.filename );
-   scaffold_check_null( filename_c );
-
-   progress.current = atoi( progress_c );
-   progress.chunk_size = atoi( length_c );
-   progress.total = atoi( total_c );
-   progress.type = (DATAFILE_TYPE)atoi( type_c );
-
    progress.data = (bstring)vector_get( args, 10 );
-   scaffold_check_null( progress.data );
 
    client_process_chunk( c, &progress );
 
@@ -1133,7 +1070,6 @@ static void irc_client_item_cache_start(
    struct CHANNEL* l = NULL;
    GFX_COORD_TILE x;
    GFX_COORD_TILE y;
-   const char* c_iter;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
    irc_detect_malformed( 4, "IC_S", line );
@@ -1141,11 +1077,8 @@ static void irc_client_item_cache_start(
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
    scaffold_check_null_msg( l, "Channel not found." );
 
-   c_iter = bdata( (bstring)vector_get( args, 2 ) );
-   x = atoi( c_iter );
-
-   c_iter = bdata( (bstring)vector_get( args, 3 ) );
-   y = atoi( c_iter );
+   x = bgtoi( (bstring)vector_get( args, 2 ) );
+   y = bgtoi( (bstring)vector_get( args, 3 ) );
 
    if( NULL != cache ) {
       scaffold_print_error(
@@ -1171,7 +1104,6 @@ static void irc_client_item(
       count,
       sprite_id;
    struct ITEM* e = NULL;
-   const char* c_iter;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
    int retval;
    bstring display_name;
@@ -1181,13 +1113,11 @@ static void irc_client_item(
 
    irc_detect_malformed( 6, "ITEM", line );
 
-   c_iter = bdata( (bstring)vector_get( args, 1 ) );
-   serial = atoi( c_iter );
+   serial = bgtoi( (bstring)vector_get( args, 1 ) );
 
    display_name = (bstring)vector_get( args, 2 );
 
-   c_iter = bdata( (bstring)vector_get( args, 3 ) );
-   count = atoi( c_iter );
+   count = bgtoi( (bstring)vector_get( args, 3 ) );
 
    catalog_name = (bstring)vector_get( args, 4 );
    catalog = client_get_catalog( c, catalog_name );
@@ -1204,8 +1134,7 @@ static void irc_client_item(
       client_request_file( c, DATAFILE_TYPE_ITEM_CATALOG, catalog_name );
    }
 
-   c_iter = bdata( (bstring)vector_get( args, 5 ) );
-   sprite_id = atoi( c_iter );
+   sprite_id = bgtoi( (bstring)vector_get( args, 5 ) );
 
    /*
    sprite = item_spritesheet_get_sprite( catalog, sprite_id );
@@ -1275,29 +1204,14 @@ static void irc_client_mob(
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
    scaffold_check_null( l );
 
-   scaffold_check_null( (bstring)vector_get( args, 2 ) );
-   serial_c = bdata( (bstring)vector_get( args, 2 ) );
-   scaffold_check_null( serial_c );
-   serial = atoi( serial_c );
+   serial = bgtoi( (bstring)vector_get( args, 2 ) );
 
    mob_id = (bstring)vector_get( args, 3 );
-   scaffold_check_null( mob_id );
-
    def_filename = (bstring)vector_get( args, 4 );
-   scaffold_check_null( def_filename );
-
    nick = (bstring)vector_get( args, 5 );
-   scaffold_check_null( nick );
 
-   scaffold_check_null( (bstring)vector_get( args, 6 ) );
-   x_c = bdata( (bstring)vector_get( args, 6 ) );
-   scaffold_check_null( x_c );
-   x = atoi( x_c );
-
-   scaffold_check_null( (bstring)vector_get( args, 7 ) );
-   y_c = bdata( (bstring)vector_get( args, 7 ) );
-   scaffold_check_null( y_c );
-   y = atoi( y_c );
+   x = bgtoi( (bstring)vector_get( args, 6 ) );
+   y = bgtoi( (bstring)vector_get( args, 7 ) );
 
    channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y, c );
    scaffold_assert( 0 == scaffold_error );

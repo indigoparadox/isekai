@@ -2,7 +2,6 @@
 #define CLIENT_H
 
 #include "bstrlib/bstrlib.h"
-#include "chunker.h"
 #include "vector.h"
 #include "connect.h"
 #include "graphics.h"
@@ -10,10 +9,15 @@
 #include "hashmap.h"
 #include "mobile.h"
 #include "input.h"
+#include "datafile.h"
 
 struct CHANNEL;
 struct MOBILE;
 struct UI;
+#ifdef USE_CHUNKS
+struct CHUNKER_PROGRESS;
+struct CHUNKER;
+#endif /* USE_CHUNKS */
 
 typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_HAVE_USER = 0x01,
