@@ -764,9 +764,6 @@ static void ui_control_draw_textfield(
 
    memcpy( &bg_rect, &(textfield->self.area), sizeof( GRAPHICS_RECT ) );
 
-   //win->grid_pos.w = ui_control_get_draw_width( textfield );
-   //win->grid_pos.h = ui_control_get_draw_height( textfield );
-
    ui_control_auto_size( textfield, &bg_rect, win, 1 );
 
    ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, TRUE );
@@ -846,9 +843,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    GRAPHICS_RECT* largest_control;
    BOOL auto_h = FALSE;
    BOOL auto_w = FALSE;
-   //GRAPHICS_RECT win_new;
 
-   //memcpy( &win_new, &(win->area), sizeof( GRAPHICS_RECT ) );
    if( 0 >= win->area.h ) {
       win->area.h = UI_WINDOW_MIN_HEIGHT;
       auto_h = TRUE;
@@ -864,8 +859,6 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
    do {
       /* A pointer was returned, so update. */
-      //win_new.w = largest_control->w;
-      //win_new.h = largest_control->h;
       if( largest_control->w < win->area.w ) {
          largest_control->w = win->area.w;
       }
