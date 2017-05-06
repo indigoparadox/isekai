@@ -16,11 +16,10 @@
 bstring client_input_from_ui = NULL;
 
 static void client_cleanup( const struct REF *ref ) {
-   CONNECTION* n =
-      (CONNECTION*)scaffold_container_of( ref, CONNECTION, refcount );
-   struct CLIENT* c = scaffold_container_of( n, struct CLIENT, link );
+   struct CLIENT* c =
+      (struct CLIENT*)scaffold_container_of( ref, struct CLIENT, refcount );
 
-   connection_cleanup( &(c->link) );
+   ipc_free( &(c->link) );
 
    bdestroy( c->nick );
    bdestroy( c->realname );
@@ -46,11 +45,11 @@ static void client_cleanup( const struct REF *ref ) {
 }
 
 void client_init( struct CLIENT* c, BOOL client_side ) {
-   ref_init( &(c->link.refcount), client_cleanup );
+   ref_init( &(c->refcount), client_cleanup );
 
    scaffold_assert( FALSE == c->running );
 
-   connection_init( &(c->link) );
+   connection_init( c->link );
 
 #ifdef ENABLE_LOCAL_CLIENT
    c->client_side = client_side;
@@ -73,6 +72,7 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
+   c->link = ipc_alloc();
 
    c->sentinal = CLIENT_SENTINAL;
    c->running = TRUE;
@@ -89,12 +89,12 @@ BOOL client_free_from_server( struct CLIENT* c ) {
    /* Kind of a hack, but make sure "running" is set to true to fool the      *
     * client_stop() call that comes later.                                    */
    c->running = TRUE;
-   client_cleanup( &(c->link.refcount) );
+   client_cleanup( &(c->refcount) );
    return TRUE;
 }
 
 BOOL client_free( struct CLIENT* c ) {
-   return refcount_dec( &(c->link), "client" );
+   return refcount_dec( c, "client" );
 }
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
@@ -108,7 +108,7 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
       &module, "Client connecting to: %b:%d\n", server, port
    );
 
-   connection_connect( &(c->link), server , port );
+   ipc_connect( c->link, server , port );
    scaffold_check_nonzero( scaffold_error );
 
    scaffold_print_info( &module, "Client connected and running.\n" );
@@ -180,10 +180,12 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
    }
 
+#ifdef USE_CHUNKS
    /* Deal with chunkers that will never receive blocks that are finished via
     * their cache.
     */
    hashmap_iterate( &(c->chunkers), callback_proc_client_chunkers, c );
+#endif /* USE_CHUNKS */
 
 cleanup:
 #endif /* DEBUG_TILES */
@@ -239,9 +241,9 @@ void client_stop( struct CLIENT* c ) {
 
    scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
-   if( FALSE != connection_connected( &(c->link) ) ) {
+   if( FALSE != ipc_connected( c->link ) ) {
       scaffold_print_info( &module, "Client connection stopping...\n" );
-      connection_cleanup( &(c->link) );
+      ipc_stop( c->link );
    }
 
    /*
@@ -275,8 +277,8 @@ void client_stop( struct CLIENT* c ) {
 #endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
-   while( 0 < connection_read_line(
-      &(c->link),
+   while( 0 < ipc_read(
+      c->link,
       buffer,
 #ifdef ENABLE_LOCAL_CLIENT
       c->client_side
@@ -292,7 +294,7 @@ void client_stop( struct CLIENT* c ) {
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   scaffold_assert( FALSE == connection_connected( &(c->link) ) );
+   scaffold_assert( FALSE == ipc_connected( c->link ) );
    c->running = FALSE;
 
 cleanup:
@@ -358,8 +360,8 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
    scaffold_check_nonzero( bstr_retval );
    bstr_retval = bconchar( buffer_copy, '\n' );
    scaffold_check_nonzero( bstr_retval );
-   connection_write_line(
-      &(c->link),
+   ipc_write(
+      c->link,
       buffer_copy,
 #ifdef ENABLE_LOCAL_CLIENT
       c->client_side

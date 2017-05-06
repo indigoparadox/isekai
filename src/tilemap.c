@@ -4,6 +4,7 @@
 
 #include "callback.h"
 #include "mobile.h"
+#include "channel.h"
 
 static BOOL tilemap_layer_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;

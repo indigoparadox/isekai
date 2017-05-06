@@ -503,8 +503,8 @@ static void irc_server_nick(
    /* Don't reply yet if there's been no USER statement yet. */
    if( !(c->flags & CLIENT_FLAGS_HAVE_USER) ) {
       scaffold_print_debug(
-         &module, "Client %d quietly changed nick from: %s To: %s\n",
-         c->link.socket, bdata( oldnick ), bdata( c->nick )
+         &module, "Client %p quietly changed nick from: %s To: %s\n",
+         c, bdata( oldnick ), bdata( c->nick )
       );
       goto cleanup;
    }
@@ -519,8 +519,8 @@ static void irc_server_nick(
    );
 
    scaffold_print_debug(
-      &module, "Client %d changed nick from: %s To: %s\n",
-      c->link.socket, bdata( oldnick ), bdata( c->nick )
+      &module, "Client %p changed nick from: %s To: %s\n",
+      c, bdata( oldnick ), bdata( c->nick )
    );
 
 cleanup:
@@ -568,7 +568,7 @@ static void irc_server_ison(
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
-      assert( 2 <= c_iter->link.refcount.count );
+      assert( 2 <= c_iter->refcount.count );
       bstr_result = bconcat( response, c_iter->nick );
       scaffold_check_nonzero( bstr_result );
       bstr_result = bconchar( response, ' ' );
@@ -1051,8 +1051,8 @@ static void irc_server_gamedataabort(
 
    scaffold_print_debug(
       &module,
-      "Server: Terminating transfer of %s at request of client: %d\n",
-      bdata( (bstring)vector_get( args, 1 ) ), c->link.socket
+      "Server: Terminating transfer of %s at request of client: %p\n",
+      bdata( (bstring)vector_get( args, 1 ) ), c
    );
 
    hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, (bstring)vector_get( args, 1 ) );
@@ -1369,6 +1369,9 @@ IRC_COMMAND* irc_dispatch(
          NULL != command->callback;
          command++
       ) {
+         if( NULL != command ) {
+            scaffold_print_debug_color( &module, SCAFFOLD_COLOR_MAGENTA, "%b vs %b\n", cmd_test, &(command->command) );
+         }
          if( 0 == bstricmp( cmd_test, &(command->command) ) ) {
 #ifdef DEBUG_VERBOSE
             if(

@@ -52,8 +52,8 @@ void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg
    }
 
    /* Get the next line and clean it up. */
-   last_read_count = connection_read_line(
-      &(c->link),
+   last_read_count = ipc_read(
+      c->link,
       buffer,
 #ifdef ENABLE_LOCAL_CLIENT
       c->client_side

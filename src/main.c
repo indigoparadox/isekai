@@ -216,12 +216,12 @@ static BOOL loop_connect() {
    BOOL keep_going = TRUE;
    bstring server_address = NULL;
    int bstr_result = 0;
+   struct VECTOR* server_tuple = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
 
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
-   struct VECTOR* server_tuple = NULL;
    struct UI_CONTROL* control = NULL;
 
    graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );

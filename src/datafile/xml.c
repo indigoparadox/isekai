@@ -5,6 +5,7 @@
 #include "../hashmap.h"
 #include "../vm.h"
 #include "../callback.h"
+#include "../channel.h"
 
 #define ezxml_node( target, parent, id ) \
    target = ezxml_child( parent, id ); \
