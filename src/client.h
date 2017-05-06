@@ -3,17 +3,15 @@
 
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
-#include "connect.h"
 #include "graphics.h"
-#include "channel.h"
 #include "hashmap.h"
-#include "mobile.h"
 #include "input.h"
 #include "datafile.h"
 
 struct CHANNEL;
 struct MOBILE;
 struct UI;
+struct CONNECTION;
 #ifdef USE_CHUNKS
 struct CHUNKER_PROGRESS;
 struct CHUNKER;
@@ -33,7 +31,9 @@ struct CLIENT_DELAYED_REQUEST {
 };
 
 struct CLIENT {
-   CONNECTION link;  /*!< Parent "class". The "root" class is REF. */
+   struct REF refcount; /*!< Parent "class". The "root" class is REF. */
+
+   struct CONNECTION* link;
 
    /* Items shared between server and client. */
    BOOL running;
@@ -70,7 +70,7 @@ struct CLIENT {
 #define CLIENT_BUFFER_ALLOC 256
 
 #define client_connected( c ) \
-   (connection_connected( &(c->link) ) && TRUE == (c)->running)
+   (FALSE != ipc_connected( c->link ) && TRUE == (c)->running)
 
 #define client_new( c, client_side ) \
     c = mem_alloc( 1, struct CLIENT ); \

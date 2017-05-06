@@ -13,7 +13,7 @@ static void server_cleanup( struct SERVER* s ) {
    /* Remove clients. */
    server_free_clients( s );
 
-   scaffold_assert( 0 == s->self.link.refcount.count );
+   scaffold_assert( 0 == s->self.refcount.count );
 }
 
 void server_free_clients( struct SERVER* s ) {
@@ -34,7 +34,7 @@ void server_free_clients( struct SERVER* s ) {
 
 static void server_free_final( const struct REF* ref ) {
    struct SERVER* s =
-      scaffold_container_of( ref, struct SERVER, self.link.refcount );
+      scaffold_container_of( ref, struct SERVER, self.refcount );
 
    server_cleanup( s );
 
@@ -45,13 +45,13 @@ BOOL server_free( struct SERVER* s ) {
    if( NULL == s ) {
       return FALSE;
    }
-   return refcount_dec( &(s->self.link), "server" );
+   return refcount_dec( &(s->self), "server" );
 }
 
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
    client_init( &(s->self), FALSE );
-   s->self.link.refcount.gc_free = server_free_final;
+   s->self.refcount.gc_free = server_free_final;
    hashmap_init( &(s->clients) );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
@@ -61,10 +61,11 @@ cleanup:
 }
 
 void server_stop( struct SERVER* s ) {
+   /* FIXME: What are we doing, here? */ /*
    if( 0 < s->self.link.socket) {
       scaffold_print_info( &module, "Server shutting down...\n" );
       connection_cleanup( &(s->self.link) );
-   }
+   } */
    while(
       0 < hashmap_count( &(s->clients) ) &&
       0 < hashmap_count( &(s->self.channels) )
@@ -136,8 +137,8 @@ void server_add_client( struct SERVER* s, struct CLIENT* c ) {
    scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    hashmap_put( &(s->clients), c->nick, c );
    scaffold_print_debug(
-      &module, "Client %d added to server with nick: %s\n",
-      c->link.socket, bdata( c->nick )
+      &module, "Client %p added to server with nick: %s\n",
+      c, bdata( c->nick )
    );
 }
 
@@ -180,13 +181,13 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       goto cleanup;
    }
 
-   scaffold_assert( 0 < c_first->link.refcount.count );
+   scaffold_assert( 0 < c_first->refcount.count );
    scaffold_assert( 0 < l->refcount.count );
 
 #ifdef DEBUG
-   old_count = c_first->link.refcount.count;
+   old_count = c_first->refcount.count;
    server_channel_add_client( l, c_first );
-   scaffold_assert( c_first->link.refcount.count > old_count );
+   scaffold_assert( c_first->refcount.count > old_count );
    old_count = l->refcount.count;
    client_add_channel( c_first, l );
    scaffold_assert( l->refcount.count > old_count );
@@ -271,8 +272,8 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
 }
 
 void server_listen( struct SERVER* s, int port ) {
-   s->self.link.arg = s;
-   connection_listen( &(s->self.link), port );
+   //s->self.link.arg = s;
+   ipc_listen( s->self.link, port );
    if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
       scaffold_print_error(
          &module, "Server: Unable to bind to specified port. Exiting.\n" );
@@ -296,13 +297,13 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
    }
 
    /* Check for new clients. */
-   connection_register_incoming( &(s->self.link), &(c->link) );
+   ipc_accept( s->self.link, c->link );
    if( !client_connected( c ) ) {
       goto cleanup;
    } else {
 
       /* Add some details to c before stowing it. */
-      connection_assign_remote_name( &(c->link), c->remote );
+      connection_assign_remote_name( c->link, c->remote );
 
       server_add_client( s, c );
 
@@ -312,7 +313,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
       /* The only association this client should start with is the server's   *
        * client hashmap, so get rid of its initial ref.                       */
-      refcount_dec( &(c->link), "client" );
+      refcount_dec( c, "client" );
       c = NULL;
 
       new_clients = TRUE;

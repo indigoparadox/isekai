@@ -2,20 +2,42 @@
 #define SYNCBUFF_C
 #include "syncbuff.h"
 
+#include "../connect.h"
+
+typedef enum SYNCBUFF_STATE {
+   SYNCBUFF_STATE_DISCONNECTED,
+   SYNCBUFF_STATE_LISTENING,
+   SYNCBUFF_STATE_CONNECTED
+} SYNCBUFF_STATE;
+
+struct CONNECTION {
+   void* (*callback)( void* client );
+   void* arg;
+   SYNCBUFF_DEST type;
+   SYNCBUFF_STATE state;
+   SCAFFOLD_SIZE client_count;
+} CONNECTION;
+
 #define SYNCBUFF_LINE_DEFAULT 255
 #define SYNCBUFF_LINES_INITIAL 2
 
 static SCAFFOLD_SIZE syncbuff_size[2];
 static bstring* syncbuff_lines[2];
 static SCAFFOLD_SIZE syncbuff_count[2];
-static uint8_t syncbuff_listening = 0;
-static uint8_t syncbuff_connected = 0;
 
-SCAFFOLD_SIZE syncbuff_get_count( SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE syncbuff_get_count( BOOL client ) {
+   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
+   if( FALSE != client ) {
+      dest = SYNCBUFF_DEST_SERVER;
+   }
    return syncbuff_count[dest];
 }
 
-SCAFFOLD_SIZE syncbuff_get_allocated( SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE syncbuff_get_allocated( BOOL client ) {
+   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
+   if( FALSE != client ) {
+      dest = SYNCBUFF_DEST_SERVER;
+   }
    return syncbuff_size[dest];
 }
 
@@ -49,55 +71,93 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
    }
 }
 
-uint8_t syncbuff_listen() {
+struct CONNECTION* ipc_alloc() {
+   return mem_alloc( 1, struct CONNECTION );
+}
+
+void ipc_free( struct CONNECTION** n ) {
+   mem_free( *n );
+   n = NULL;
+}
+
+BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
+   BOOL retval = FALSE;
+
 #ifdef SYNCBUFF_STRICT
-   scaffold_assert( 0 == listening );
+   scaffold_assert( SYNCBUFF_STATE_LISTENING != n->state );
 #else
-   if( 0 != syncbuff_listening ) {
-      return 0;
+   if( SYNCBUFF_STATE_LISTENING == n->state ) {
+      retval = FALSE;
+      goto cleanup;
    }
 #endif /* SYNCBUFF_STRICT */
 
    syncbuff_alloc( SYNCBUFF_DEST_CLIENT );
    syncbuff_alloc( SYNCBUFF_DEST_SERVER );
 
-   if( !syncbuff_listening ) {
-      syncbuff_listening = 1;
-      return syncbuff_listening;
+   n->type = SYNCBUFF_DEST_SERVER;
+   n->state = SYNCBUFF_STATE_LISTENING;
+   retval = TRUE;
+
+cleanup:
+   if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+      n->state = SYNCBUFF_STATE_DISCONNECTED;
+   }
+
+   return retval;
+}
+
+BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
+   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
+   n->state = SYNCBUFF_STATE_CONNECTED;
+   n->type = SYNCBUFF_DEST_CLIENT;
+   return TRUE;
+}
+
+BOOL ipc_connected( struct CONNECTION* n ) {
+   if(
+      SYNCBUFF_STATE_CONNECTED == n->state ||
+      SYNCBUFF_STATE_LISTENING == n->state
+   ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+void ipc_stop( struct CONNECTION* n ) {
+   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED != n->state );
+   n->state = SYNCBUFF_STATE_DISCONNECTED;
+}
+
+BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
+   scaffold_assert( SYNCBUFF_STATE_LISTENING == n_server->state );
+   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
+   scaffold_assert( SYNCBUFF_DEST_SERVER == n_server->type );
+   if( 0 == n_server->client_count ) {
+      //scaffold_assert( SYNCBUFF_DEST_CLIENT == n->type );
+      n->state = SYNCBUFF_STATE_CONNECTED;
+      n->type = SYNCBUFF_DEST_CLIENT;
+      n_server->client_count++;
+      return TRUE;
    } else {
-      return 0;
+      return FALSE;
    }
 }
 
-uint8_t syncbuff_connect() {
-   assert( 1 == syncbuff_listening );
-   if( !syncbuff_connected ) {
-      syncbuff_connected = 1;
-      return syncbuff_connected;
-   } else {
-      return 0;
-   }
-}
-
-uint8_t syncbuff_accept() {
-   static uint8_t accepted = 0;
-   if( !accepted ) {
-      accepted = 1;
-      return accepted;
-   } else {
-      return 0;
-   }
-}
-
+SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer, BOOL client ) {
 /* Push a line down onto the top. */
-SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
    int bstr_result;
    SCAFFOLD_SIZE_SIGNED i;
-   SCAFFOLD_SIZE_SIGNED size_out = -1;
+   SCAFFOLD_SIZE_SIGNED size_out = 0;
+   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
 
-   scaffold_assert( NULL != line );
+   scaffold_assert( NULL != buffer );
 
-   scaffold_print_debug( &module,  "Write: %s\n", bdata( line ) );
+   if( FALSE != client ) {
+      dest = SYNCBUFF_DEST_CLIENT;
+   }
+
+   scaffold_print_debug( &module,  "Write: %s\n", bdata( buffer ) );
 
    if( syncbuff_count[dest] + 2 >= syncbuff_size[dest] ) {
       syncbuff_realloc( dest, syncbuff_size[dest] * 2 );
@@ -124,9 +184,9 @@ SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
       "Write: %d: %d was: %s\n", dest, 0, bdata( syncbuff_lines[dest][0] )
    );
    bstr_result =
-      bassignformat( syncbuff_lines[dest][0], "%s", bdata( line ) );
+      bassignformat( syncbuff_lines[dest][0], "%s", bdata( buffer ) );
    scaffold_assert( NULL != syncbuff_lines[dest][0] );
-   scaffold_assert( blength( line ) == blength( syncbuff_lines[dest][0] ) );
+   scaffold_assert( blength( buffer ) == blength( syncbuff_lines[dest][0] ) );
    if( 0 != bstr_result ) {
       goto cleanup;
    }
@@ -136,7 +196,7 @@ SCAFFOLD_SIZE_SIGNED syncbuff_write( const bstring line, SYNCBUFF_DEST dest ) {
 
    (syncbuff_count[dest])++;
 
-   scaffold_assert( bdata( line ) != bdata( syncbuff_lines[dest][0] ) );
+   scaffold_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][0] ) );
 
    size_out = blength( syncbuff_lines[dest][0] );
 
@@ -145,11 +205,17 @@ cleanup:
 }
 
 /* Pull a line off the bottom. */
-SCAFFOLD_SIZE_SIGNED syncbuff_read( bstring buffer, SYNCBUFF_DEST dest ) {
+SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer, BOOL client ) {
    int  bstr_result;
    SCAFFOLD_SIZE_SIGNED size_out = -1;
+   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
 
    scaffold_assert( NULL != buffer );
+
+   if( FALSE != client ) {
+      dest = SYNCBUFF_DEST_CLIENT;
+   }
+
    bstr_result = btrunc( buffer, 0 );
    scaffold_assert( 0 == blength( buffer ) );
    if( 0 != bstr_result ) {

@@ -82,7 +82,7 @@ cleanup:
 
 void check_chunker_chunk_checked(
    const bstring filename,
-   CHUNKER_DATA_TYPE type,
+   DATAFILE_TYPE type,
    BYTE* data_source,
    SCAFFOLD_SIZE data_source_len,
    struct bstrList* chunks,
@@ -137,7 +137,7 @@ void check_chunker_chunk_checked(
    ck_assert_int_eq( h->raw_length, data_source_len );
    ck_assert( NULL != chunks );
    if( NULL != chunks ) {
-      ck_assert_int_ne( 0, chunks->qty );
+      ck_assert_int_ne( 0, vector_count( chunks ) );
    }
 
 cleanup:
@@ -148,7 +148,7 @@ cleanup:
 
 void check_chunker_unchunk_checked(
    const bstring filename,
-   CHUNKER_DATA_TYPE type,
+   DATAFILE_TYPE type,
    BYTE* data_source,
    SCAFFOLD_SIZE data_source_len,
    struct bstrList* chunks,
@@ -167,18 +167,18 @@ void check_chunker_unchunk_checked(
    ck_assert( NULL != h );
 
    ck_assert( NULL != chunks );
-   ck_assert_int_ne( 0, chunks->qty );
+   ck_assert_int_ne( 0, vector_count( chunks ) );
    ck_assert_int_ne( 0, data_source_len );
 
    chunker_unchunk_start( h, type, filename, &chunker_test_cachepath );
 
-   ck_assert_int_eq( chunks->qty, vector_count( v_starts ) );
-   if( chunks->qty != vector_count( v_starts ) ) {
+   ck_assert_int_eq( vector_count( chunks ), vector_count( v_starts ) );
+   if( vector_count( chunks ) != vector_count( v_starts ) ) {
       ck_abort_msg( "Vector and string list size mismatch." );
    }
 
-   while( chunks->qty > chunk_index ) {
-      unchunk_buffer = chunks->entry[chunk_index];
+   while( vector_count( chunks ) > chunk_index ) {
+      unchunk_buffer = (bstring)vector_get( chunks, chunk_index );
       curr_start = (SCAFFOLD_SIZE*)vector_get( v_starts, chunk_index );
       if( NULL == unchunk_buffer ) { break; }
       next_start = (SCAFFOLD_SIZE*)vector_get( v_starts, chunk_index + 1 );
@@ -232,7 +232,7 @@ void check_chunker_teardown_unchecked() {
 START_TEST( test_chunker_chunk_unchunk_tilemap ) {
    check_chunker_chunk_checked(
       &chunker_test_map_filename,
-      CHUNKER_DATA_TYPE_TILEMAP,
+      DATAFILE_TYPE_TILEMAP,
       chunker_mapdata,
       chunker_mapsize,
       chunker_mapchunks,
@@ -241,7 +241,7 @@ START_TEST( test_chunker_chunk_unchunk_tilemap ) {
    );
    check_chunker_unchunk_checked(
       &chunker_test_map_filename,
-      CHUNKER_DATA_TYPE_TILEMAP,
+      DATAFILE_TYPE_TILEMAP,
       chunker_mapdata,
       chunker_mapsize,
       chunker_mapchunks,
@@ -254,7 +254,7 @@ END_TEST
 START_TEST( test_chunker_chunk_unchunk_image ) {
    check_chunker_chunk_checked(
       &chunker_test_img_filename,
-      CHUNKER_DATA_TYPE_MOBSPRITES,
+      DATAFILE_TYPE_MOBILE_SPRITES,
       chunker_imgdata,
       chunker_imgsize,
       chunker_imgchunks,
@@ -263,7 +263,7 @@ START_TEST( test_chunker_chunk_unchunk_image ) {
    );
    check_chunker_unchunk_checked(
       &chunker_test_img_filename,
-      CHUNKER_DATA_TYPE_MOBSPRITES,
+      DATAFILE_TYPE_MOBILE_SPRITES,
       chunker_imgdata,
       chunker_imgsize,
       chunker_imgchunks,

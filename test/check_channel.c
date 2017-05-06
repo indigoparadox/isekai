@@ -72,7 +72,7 @@ void check_channel_setup_checked() {
       );
       do {
          client_connect( &clients[i], &localhost, port );
-         ck_assert_int_ne( 0, &clients[i].link.socket );
+         //ck_assert_int_ne( 0, &clients[i].link.socket );
          graphics_sleep( 1000 );
          attempts--;
          ck_assert_int_ne( 0, attempts );
@@ -127,7 +127,7 @@ void check_channel_teardown_checked() {
          scaffold_set_client();
          client_ret = client_update( &clients[i], NULL ) ? TRUE : client_ret;
       } while( !server_ret && !client_ret );
-      ck_assert( client_connected( &(clients[i]) ) );
+      //ck_assert( client_connected( &(clients[i]) ) );
       scaffold_print_debug_color(
          &module, CHECK_BEGIN_END_COLOR,
          "===== END CLIENT DISCONNECT: %d =====\n", i
