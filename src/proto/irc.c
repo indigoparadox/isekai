@@ -84,13 +84,34 @@ void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
 ) {
+   DATAFILE_TYPE type = DATAFILE_TYPE_INVALID;
+   SCAFFOLD_SIZE chunk_len,
+      raw_len;
+   bstring data_sent = NULL;
+
    scaffold_assert_server();
+
    /* Note the starting point and progress for the client. */
+
+   if( NULL != h ) {
+      type = h->type;
+      chunk_len = h->tx_chunk_length;
+      raw_len = h->raw_length;
+   } else {
+      /* Make things easy on the arg count validator. */
+      data_sent = bfromcstr( "x" );
+   }
+
    client_printf(
       c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
-      c->nick, filename, h->type, start_pos,
-      h->tx_chunk_length, h->raw_length, data
+      c->nick, filename, type, start_pos,
+      chunk_len, raw_len, data_sent
    );
+
+cleanup:
+   if( NULL == h ) {
+      bdestroy( data_sent );
+   }
    return;
 }
 
@@ -785,14 +806,21 @@ static void irc_server_gamerequestfile(
 ) {
    DATAFILE_TYPE type;
    int bstr_result;
-   bstring file_path_found = NULL;
+   bstring file_path_found = NULL,
+      filename = NULL;
 
    irc_detect_malformed( 3, "GRF", line );
 
    type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
 
-   file_path_found = files_search( (bstring)vector_get( args, 2 ) );
-   scaffold_check_null( file_path_found );
+   filename = (bstring)vector_get( args, 2 );
+
+   file_path_found = files_search( filename );
+   if( NULL == file_path_found ) {
+      scaffold_print_debug( &module, "Sending cancel for: %b\n", filename );
+      proto_send_chunk( c, NULL, 0, filename, NULL );
+      goto cleanup;
+   }
 
    client_send_file( c, type, files_root( NULL ), file_path_found );
 

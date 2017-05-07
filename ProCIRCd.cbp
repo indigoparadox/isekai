@@ -160,6 +160,7 @@
 					<Add option="-DxUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DUSE_RANDOM_PORT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -1029,7 +1030,6 @@
 		</Unit>
 		<Unit filename="src/client.h" />
 		<Unit filename="src/colors.h" />
-		<Unit filename="src/connect.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1421,24 +1421,6 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (MingW32-SB)" />
-		</Unit>
-		<Unit filename="src/ipc/syncbuff.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Palm-SB)" />
-			<Option target="Debug (Linux-NET-Curses)" />
 		</Unit>
 		<Unit filename="src/item.c">
 			<Option compilerVar="CC" />

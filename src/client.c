@@ -13,6 +13,7 @@
 #include "tinypy/tinypy.h"
 #include "windefs.h"
 #include "channel.h"
+#include "ipc.h"
 
 bstring client_input_from_ui = NULL;
 
@@ -45,7 +46,7 @@ static void client_cleanup( const struct REF *ref ) {
    /* mem_free( c ); */
 }
 
-void client_init( struct CLIENT* c, BOOL client_side ) {
+void client_init( struct CLIENT* c ) {
    ref_init( &(c->refcount), client_cleanup );
 
    scaffold_assert( FALSE == c->running );
@@ -425,6 +426,7 @@ void client_send_file(
    const bstring serverpath, const bstring filepath
 ) {
    struct CHUNKER* h = NULL;
+   BOOL valid_file;
 
    scaffold_print_debug(
       &module, "Sending file to client %p: %s\n", c, bdata( filepath )
@@ -434,17 +436,24 @@ void client_send_file(
    h = mem_alloc( 1, struct CHUNKER );
    scaffold_check_null( h );
 
-   chunker_chunk_start_file(
+   valid_file = chunker_chunk_start_file(
       h,
       type,
       serverpath,
       filepath,
       64
    );
-   scaffold_check_nonzero( scaffold_error );
+   //scaffold_check_nonzero( scaffold_error );
+
+   if( FALSE == valid_file ) {
+      scaffold_print_error(
+         &module, "Server: File not found, canceling: %b\n", filepath
+      );
+      proto_send_chunk( c, NULL, 0, filepath, NULL );
+   }
 
    scaffold_print_debug(
-      &module, "Server: Adding chunker to send: %s\n", bdata( filepath )
+      &module, "Server: Adding chunker to send: %b\n", filepath
    );
    hashmap_put( &(c->chunkers), filepath, h );
 
@@ -578,8 +587,8 @@ cleanup:
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    struct CHUNKER* h = NULL;
    int8_t chunker_percent;
+   BOOL remove_ok;
 
-   scaffold_assert( 0 < blength( cp->data ) );
    scaffold_assert( 0 < blength( cp->filename ) );
 
    if( cp->current > cp->total ) {
@@ -608,6 +617,17 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
+
+   if( DATAFILE_TYPE_INVALID == cp->type ) {
+      scaffold_assert( NULL != h );
+      scaffold_print_debug(
+         &module, "Removing invalid chunker: %b\n", h->filename );
+      remove_ok = hashmap_remove( &(c->chunkers), cp->filename );
+      scaffold_assert( TRUE == remove_ok );
+      goto cleanup;
+   }
+
+   scaffold_assert( 0 < blength( cp->data ) );
 
    chunker_unchunk_pass( h, cp->data, cp->current, cp->total, cp->chunk_size );
 

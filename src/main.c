@@ -9,6 +9,7 @@
 #include "animate.h"
 #include "rng.h"
 #include "channel.h"
+#include "ipc.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -460,7 +461,7 @@ int main( int argc, char** argv ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_set_client();
-   client_new( main_client, TRUE );
+   client_new( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */
 
    while( loop_master() );

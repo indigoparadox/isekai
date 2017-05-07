@@ -111,10 +111,13 @@ void datafile_handle_stream(
          &(c->channels), callback_parse_mob_channels, xml_data
       );
       if( NULL != o ) {
-         /* TODO: Make sure we never create receiving chunkers server-side (not strictly relevant here, but still). */
+         /* TODO: Make sure we never create receiving chunkers server-side
+          *       (not strictly relevant here, but still).
+          */
          g = hashmap_get( &(c->sprites), o->sprites_filename );
          if( NULL == g ) {
-            client_request_file_later( c, DATAFILE_TYPE_MOBILE_SPRITES, o->sprites_filename );
+            client_request_file_later(
+               c, DATAFILE_TYPE_MOBILE_SPRITES, o->sprites_filename );
          } else {
             o->sprites = g;
          }
@@ -165,6 +168,9 @@ void datafile_handle_stream(
 
    case DATAFILE_TYPE_MISC:
       scaffold_print_error( &module, "Invalid data type specified.\n" );
+      break;
+
+   case DATAFILE_TYPE_INVALID:
       break;
    }
 

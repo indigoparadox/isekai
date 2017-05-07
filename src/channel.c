@@ -16,6 +16,8 @@
 #include "duktape/duktape.h"
 #endif /* USE_DUKTAPE */
 #include "rng.h"
+#include "vm.h"
+#include "ipc.h"
 
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -333,7 +335,10 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if( l->client_or_server->tilesets_loaded < hashmap_count( &(l->client_or_server->tilesets) ) ) {
+   if(
+      l->client_or_server->tilesets_loaded <
+      hashmap_count( &(l->client_or_server->tilesets) )
+   ) {
       goto cleanup;
    }
 
