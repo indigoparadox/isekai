@@ -163,7 +163,7 @@ void item_draw_ortho(
 ) {
    struct MOBILE* o_player = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
-   GRAPHICS_RECT sprite_rect;
+   GRAPHICS_RECT sprite_rect = { 0, 0, 0, 0 };
    struct ITEM_SPRITE* sprite = NULL;
 
    scaffold_assert_client();

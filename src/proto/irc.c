@@ -85,8 +85,8 @@ void proto_send_chunk(
    const bstring filename, const bstring data
 ) {
    DATAFILE_TYPE type = DATAFILE_TYPE_INVALID;
-   SCAFFOLD_SIZE chunk_len,
-      raw_len;
+   SCAFFOLD_SIZE chunk_len = 0,
+      raw_len = 0;
    bstring data_sent = NULL;
 
    scaffold_assert_server();
@@ -1276,7 +1276,10 @@ static void irc_client_privmsg(
    scaffold_check_null( msg );
 
 #ifdef DEBUG_VERBOSE
-   scaffold_print_debug( &module, "Message Incoming (%b): %b\n", args->entry[2], msg );
+   scaffold_print_debug(
+      &module, "Message Incoming (%b): %b\n",
+      (bstring)vector_get( args, 2 ), msg
+   );
 #endif /* DEBUG_VERBOSE */
 
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 2 ) );

@@ -248,7 +248,9 @@ void ui_window_transform(
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
    scaffold_assert( &global_ui == win->ui );
-   memcpy( &(win->area), new_area, sizeof( GRAPHICS_RECT ) );
+   if( NULL != new_area && new_area != &(win->area) ) {
+      memcpy( &(win->area), new_area, sizeof( GRAPHICS_RECT ) );
+   }
    old_element = win->element;
    win->element = NULL;
    graphics_surface_new( win->element, 0, 0, win->area.w, win->area.h );

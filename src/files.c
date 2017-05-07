@@ -2,7 +2,6 @@
 #define FILES_C
 #include "files.h"
 
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -89,7 +88,7 @@ SCAFFOLD_SIZE files_read_contents(
    }
    *len = inputstat.st_size;
 #endif /* _WIN32 || _WIN16 */
-   *buffer = (BYTE*)calloc( *len, sizeof( BYTE ) );
+   *buffer = mem_alloc( *len, BYTE );
    scaffold_check_null( *buffer );
 
    /* Read and close the file. */
