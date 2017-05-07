@@ -49,15 +49,14 @@ void client_init( struct CLIENT* c, BOOL client_side ) {
 
    scaffold_assert( FALSE == c->running );
 
-   connection_init( c->link );
-
 #ifdef ENABLE_LOCAL_CLIENT
-   c->client_side = client_side;
-   if( TRUE == c->client_side ) {
+   /*
+   if( TRUE == ipc_is_local_client( c->link ) ) {
       scaffold_assert_client();
       bdestroy( client_input_from_ui );
       client_input_from_ui = NULL;
    }
+   */
 #endif /* ENABLE_LOCAL_CLIENT */
 
    hashmap_init( &(c->channels) );
@@ -101,15 +100,19 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
    return hashmap_get( &(c->channels), name );
 }
 
-void client_connect( struct CLIENT* c, const bstring server, int port ) {
+BOOL client_connect( struct CLIENT* c, const bstring server, int port ) {
+   BOOL connected = FALSE;
+
    scaffold_set_client();
 
    scaffold_print_info(
       &module, "Client connecting to: %b:%d\n", server, port
    );
 
-   ipc_connect( c->link, server , port );
-   scaffold_check_nonzero( scaffold_error );
+   connected = ipc_connect( c->link, server , port );
+   if( FALSE == connected ) {
+      goto cleanup;
+   }
 
    scaffold_print_info( &module, "Client connected and running.\n" );
    c->running = TRUE;
@@ -119,7 +122,7 @@ void client_connect( struct CLIENT* c, const bstring server, int port ) {
 
 cleanup:
 
-   return;
+   return connected;
 }
 
 /** \brief This runs on the local client.
@@ -254,7 +257,7 @@ void client_stop( struct CLIENT* c ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-   if( TRUE == c->client_side ) {
+   if( TRUE == ipc_is_local_client( c->link ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -279,17 +282,15 @@ void client_stop( struct CLIENT* c ) {
    /* Empty receiving buffer. */
    while( 0 < ipc_read(
       c->link,
-      buffer,
-#ifdef ENABLE_LOCAL_CLIENT
-      c->client_side
-#else
-      FALSE
-#endif /* ENABLE_LOCAL_CLIENT */
+      buffer
    ) );
 
    client_clear_puppet( c );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( TRUE == c->client_side && HASHMAP_SENTINAL == c->sprites.sentinal ) {
+   if(
+      TRUE == ipc_is_local_client( c->link ) &&
+      HASHMAP_SENTINAL == c->sprites.sentinal
+   ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -360,15 +361,7 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
    scaffold_check_nonzero( bstr_retval );
    bstr_retval = bconchar( buffer_copy, '\n' );
    scaffold_check_nonzero( bstr_retval );
-   ipc_write(
-      c->link,
-      buffer_copy,
-#ifdef ENABLE_LOCAL_CLIENT
-      c->client_side
-#else
-      FALSE
-#endif /* ENABLE_LOCAL_CLIENT */
-   );
+   ipc_write( c->link, buffer_copy );
 
 #ifdef DEBUG_NETWORK
    if( TRUE == c->client_side ) {
@@ -386,7 +379,7 @@ void client_send( struct CLIENT* c, const bstring buffer ) {
 cleanup:
    bdestroy( buffer_copy );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( TRUE == c->client_side ) {
+   if( ipc_is_local_client( c->link ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -400,9 +393,10 @@ void client_printf( struct CLIENT* c, const char* message, ... ) {
    va_list varg;
 
 #ifdef ENABLE_LOCAL_CLIENT
-   if( TRUE == c->client_side ) {
+   if( ipc_is_local_client( c->link ) ) {
       scaffold_assert_client();
    } else {
+      struct CONNECTION* n = c->link;
       scaffold_assert_server();
    }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -481,12 +475,30 @@ void client_clear_puppet( struct CLIENT* c ) {
    client_set_puppet( c, NULL );
 }
 
+static void* client_dr_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring filename = (bstring)arg;
+   struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
+
+   if( NULL == req || 0 == bstrcmp( filename, req->filename ) ) {
+      return req;
+   }
+
+   return NULL;
+}
+
 void client_request_file_later(
    struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
    VECTOR_ERR verr;
 
+   /* Make sure request wasn't made already. */
+   request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
+   if( NULL != request ) {
+      goto cleanup; /* Silently. */
+   }
+
+   /* Create a new delayed request. */
    request = mem_alloc( 1, struct CLIENT_DELAYED_REQUEST );
    scaffold_check_null( request );
 

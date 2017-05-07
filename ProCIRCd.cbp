@@ -1029,9 +1029,6 @@
 		</Unit>
 		<Unit filename="src/client.h" />
 		<Unit filename="src/colors.h" />
-		<Unit filename="src/connect.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/connect.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />

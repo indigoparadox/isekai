@@ -44,7 +44,7 @@ struct CLIENT* server_get_client( struct SERVER* s, const bstring nick );
 struct CLIENT* server_get_client_by_ptr( struct SERVER* s, struct CLIENT* c );
 void server_cleanup_client_channels( struct SERVER* s, struct CLIENT* c );
 void server_drop_client( struct SERVER* s, bstring nick );
-void server_listen( struct SERVER* s, int port );
+BOOL server_listen( struct SERVER* s, int port );
 BOOL server_poll_new_clients( struct SERVER* s );
 BOOL server_service_clients( struct SERVER* s );
 void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick );

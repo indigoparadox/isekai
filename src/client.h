@@ -57,11 +57,9 @@ struct CLIENT {
                             *   server-side.
                             */
    struct HASHMAP tilesets;
+   BOOL tilesets_loaded;
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
-#ifdef ENABLE_LOCAL_CLIENT
-   BOOL client_side; /*!< Are we the server mirror or the real client? */
-#endif /* ENABLE_LOCAL_CLIENT */
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542
@@ -88,7 +86,7 @@ BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
 void client_add_channel( struct CLIENT* c, struct CHANNEL* l );
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
-void client_connect( struct CLIENT* c, const bstring server, int port );
+BOOL client_connect( struct CLIENT* c, const bstring server, int port );
 void client_remove_all_channels( struct CLIENT* c );
 BOOL client_update( struct CLIENT* c, GRAPHICS* g );
 void client_free_channels( struct CLIENT* c );

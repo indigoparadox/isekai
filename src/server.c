@@ -61,11 +61,10 @@ cleanup:
 }
 
 void server_stop( struct SERVER* s ) {
-   /* FIXME: What are we doing, here? */ /*
-   if( 0 < s->self.link.socket) {
+   if( ipc_is_listening( s->self.link ) ) {
       scaffold_print_info( &module, "Server shutting down...\n" );
-      connection_cleanup( &(s->self.link) );
-   } */
+      ipc_stop( s->self.link );
+   }
    while(
       0 < hashmap_count( &(s->clients) ) &&
       0 < hashmap_count( &(s->self.channels) )
@@ -271,14 +270,18 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    return;
 }
 
-void server_listen( struct SERVER* s, int port ) {
-   //s->self.link.arg = s;
-   ipc_listen( s->self.link, port );
-   if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+BOOL server_listen( struct SERVER* s, int port ) {
+   BOOL connected = FALSE;
+
+   connected = ipc_listen( s->self.link, port );
+   if( FALSE == connected ) {
       scaffold_print_error(
          &module, "Server: Unable to bind to specified port. Exiting.\n" );
+   } else {
+      s->self.running = TRUE;
    }
-   s->self.running = TRUE;
+
+   return connected;
 }
 
 BOOL server_poll_new_clients( struct SERVER* s ) {
@@ -303,7 +306,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
    } else {
 
       /* Add some details to c before stowing it. */
-      connection_assign_remote_name( c->link, c->remote );
+      //connection_assign_remote_name( c->link, c->remote );
 
       server_add_client( s, c );
 
@@ -330,9 +333,7 @@ BOOL server_service_clients( struct SERVER* s ) {
    IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
 
-#ifdef DEBUG
-   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
-#endif /* DEBUG */
+   scaffold_set_server();
 
    scaffold_check_null( s );
 

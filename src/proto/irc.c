@@ -1213,7 +1213,7 @@ static void irc_client_mob(
    x = bgtoi( (bstring)vector_get( args, 6 ) );
    y = bgtoi( (bstring)vector_get( args, 7 ) );
 
-   channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y, c );
+   channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y );
    scaffold_assert( 0 == scaffold_error );
 
    scaffold_print_debug(
@@ -1369,9 +1369,11 @@ IRC_COMMAND* irc_dispatch(
          NULL != command->callback;
          command++
       ) {
+#ifdef DEBUG_VERBOSE
          if( NULL != command ) {
             scaffold_print_debug_color( &module, SCAFFOLD_COLOR_MAGENTA, "%b vs %b\n", cmd_test, &(command->command) );
          }
+#endif /* DEBUG_VERBOSE */
          if( 0 == bstricmp( cmd_test, &(command->command) ) ) {
 #ifdef DEBUG_VERBOSE
             if(
