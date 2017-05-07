@@ -22,25 +22,23 @@ extern struct UI* last_ui;
 
 void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
-   struct SERVER* s = NULL;
+   struct SERVER* s = (struct SERVER*)arg;
    static bstring buffer = NULL;
    struct CLIENT* c = (struct CLIENT*)iter;
    IRC_COMMAND* cmd = NULL;
-   const IRC_COMMAND* table = NULL;
+   const IRC_COMMAND* table = proto_table_server;
    int bstr_result;
 
 #ifdef ENABLE_LOCAL_CLIENT
    /* Figure out if we're being called from a client or server. */
-   if( NULL == arg || CLIENT_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
+   if( FALSE != ipc_is_local_client( c->link ) ) {
       table = proto_table_client;
-   } else
-#endif /* ENABLE_LOCAL_CLIENT */
-   if( SERVER_SENTINAL == ((struct CLIENT*)arg)->sentinal ) {
-      s = (struct SERVER*)arg;
-      table = proto_table_server;
    } else {
-      scaffold_assert( NULL == arg ); /* Just die. */
+#endif /* ENABLE_LOCAL_CLIENT */
+   scaffold_assert( NULL != s );
+#ifdef ENABLE_LOCAL_CLIENT
    }
+#endif /* ENABLE_LOCAL_CLIENT */
 
    /* Make sure a buffer is present. */
    if( NULL == buffer ) {
@@ -54,12 +52,7 @@ void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg
    /* Get the next line and clean it up. */
    last_read_count = ipc_read(
       c->link,
-      buffer,
-#ifdef ENABLE_LOCAL_CLIENT
-      c->client_side
-#else
-      FALSE
-#endif /* ENABLE_LOCAL_CLIENT */
+      buffer
    );
 
    /* Everything is fine, so tidy up the buffer. */

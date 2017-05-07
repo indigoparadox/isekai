@@ -13,9 +13,10 @@ typedef enum SYNCBUFF_STATE {
 struct CONNECTION {
    void* (*callback)( void* client );
    void* arg;
-   SYNCBUFF_DEST type;
+   IPC_END type;
    SYNCBUFF_STATE state;
    SCAFFOLD_SIZE client_count;
+   BOOL local;
 } CONNECTION;
 
 #define SYNCBUFF_LINE_DEFAULT 255
@@ -25,23 +26,15 @@ static SCAFFOLD_SIZE syncbuff_size[2];
 static bstring* syncbuff_lines[2];
 static SCAFFOLD_SIZE syncbuff_count[2];
 
-SCAFFOLD_SIZE syncbuff_get_count( BOOL client ) {
-   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
-   if( FALSE != client ) {
-      dest = SYNCBUFF_DEST_SERVER;
-   }
-   return syncbuff_count[dest];
+SCAFFOLD_SIZE syncbuff_get_count( struct CONNECTION* n ) {
+   return syncbuff_count[n->type];
 }
 
-SCAFFOLD_SIZE syncbuff_get_allocated( BOOL client ) {
-   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
-   if( FALSE != client ) {
-      dest = SYNCBUFF_DEST_SERVER;
-   }
-   return syncbuff_size[dest];
+SCAFFOLD_SIZE syncbuff_get_allocated( struct CONNECTION* n ) {
+   return syncbuff_size[n->type];
 }
 
-static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
+static void syncbuff_alloc( IPC_END dest ) {
    SCAFFOLD_SIZE i;
 
    syncbuff_size[dest] = SYNCBUFF_LINES_INITIAL;
@@ -53,7 +46,7 @@ static void syncbuff_alloc( SYNCBUFF_DEST dest ) {
    }
 }
 
-static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
+static void syncbuff_realloc( IPC_END dest, SCAFFOLD_SIZE new_alloc ) {
    SCAFFOLD_SIZE i;
 
    scaffold_print_debug( &module,
@@ -69,6 +62,11 @@ static void syncbuff_realloc( SYNCBUFF_DEST dest, SCAFFOLD_SIZE new_alloc ) {
    for( i = syncbuff_count[dest] ; syncbuff_size[dest] > i ; i++ ) {
       syncbuff_lines[dest][i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );
    }
+}
+
+void ipc_setup() {
+   syncbuff_alloc( IPC_END_CLIENT );
+   syncbuff_alloc( IPC_END_SERVER );
 }
 
 struct CONNECTION* ipc_alloc() {
@@ -92,10 +90,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    }
 #endif /* SYNCBUFF_STRICT */
 
-   syncbuff_alloc( SYNCBUFF_DEST_CLIENT );
-   syncbuff_alloc( SYNCBUFF_DEST_SERVER );
-
-   n->type = SYNCBUFF_DEST_SERVER;
+   n->type = IPC_END_SERVER;
    n->state = SYNCBUFF_STATE_LISTENING;
    retval = TRUE;
 
@@ -110,7 +105,8 @@ cleanup:
 BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
    scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
    n->state = SYNCBUFF_STATE_CONNECTED;
-   n->type = SYNCBUFF_DEST_CLIENT;
+   n->type = IPC_END_CLIENT;
+   n->local = TRUE;
    return TRUE;
 }
 
@@ -132,11 +128,10 @@ void ipc_stop( struct CONNECTION* n ) {
 BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
    scaffold_assert( SYNCBUFF_STATE_LISTENING == n_server->state );
    scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
-   scaffold_assert( SYNCBUFF_DEST_SERVER == n_server->type );
+   scaffold_assert( IPC_END_SERVER == n_server->type );
    if( 0 == n_server->client_count ) {
-      //scaffold_assert( SYNCBUFF_DEST_CLIENT == n->type );
       n->state = SYNCBUFF_STATE_CONNECTED;
-      n->type = SYNCBUFF_DEST_CLIENT;
+      n->type = IPC_END_CLIENT;
       n_server->client_count++;
       return TRUE;
    } else {
@@ -144,17 +139,18 @@ BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
    }
 }
 
-SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer, BOOL client ) {
+SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
 /* Push a line down onto the top. */
    int bstr_result;
    SCAFFOLD_SIZE_SIGNED i;
    SCAFFOLD_SIZE_SIGNED size_out = 0;
-   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
+   IPC_END dest = IPC_END_SERVER;
 
    scaffold_assert( NULL != buffer );
 
-   if( FALSE != client ) {
-      dest = SYNCBUFF_DEST_CLIENT;
+   if( FALSE == n->local ) {
+      /* We're sending stuff TO the client. */
+      dest = IPC_END_CLIENT;
    }
 
    scaffold_print_debug( &module,  "Write: %s\n", bdata( buffer ) );
@@ -205,15 +201,15 @@ cleanup:
 }
 
 /* Pull a line off the bottom. */
-SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer, BOOL client ) {
+SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    int  bstr_result;
    SCAFFOLD_SIZE_SIGNED size_out = -1;
-   SYNCBUFF_DEST dest = SYNCBUFF_DEST_SERVER;
+   IPC_END dest = IPC_END_SERVER;
 
    scaffold_assert( NULL != buffer );
 
-   if( FALSE != client ) {
-      dest = SYNCBUFF_DEST_CLIENT;
+   if( FALSE != n->local ) {
+      dest = IPC_END_CLIENT;
    }
 
    bstr_result = btrunc( buffer, 0 );
@@ -244,4 +240,19 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer, BOOL client
 
 cleanup:
    return size_out;
+}
+
+IPC_END ipc_get_type( struct CONNECTION* n ) {
+   return n->type;
+}
+
+BOOL ipc_is_local_client( struct CONNECTION* n ) {
+   return n->local;
+}
+
+BOOL ipc_is_listening( struct CONNECTION* n ) {
+   if( SYNCBUFF_STATE_LISTENING == n->state ) {
+      return TRUE;
+   }
+   return FALSE;
 }

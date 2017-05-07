@@ -29,6 +29,7 @@ void datafile_handle_stream(
       datafile_parse_ezxml_string(
          set, data, length, TRUE, DATAFILE_TYPE_TILESET, filename
       );
+      c->tilesets_loaded++;
       break;
 
    case DATAFILE_TYPE_TILEMAP:

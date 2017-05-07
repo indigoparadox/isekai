@@ -1,19 +1,8 @@
 
-/* Need to include winsock stuff before windows.h in scaffold. */
-#if defined( _WIN32 ) && defined( USE_NETWORK )
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment( lib, "Ws2_32.lib" )
-#pragma comment( lib, "Mswsock.lib" )
-#pragma comment( lib, "AdvApi32.lib" )
-#endif /* _WIN32 && USE_NETWORK */
 
 #define CONNECTION_C
 #include "connect.h"
 
-#ifdef _GNU_SOURCE
-#include <unistd.h>
-#endif /* _WIN32 */
 
 #ifdef USE_NETWORK
 #endif /* USE_NETWORK */
@@ -25,49 +14,9 @@
 /** \brief Perform any system-wide initialization required by connections.
  */
 void connection_setup() {
-#ifdef USE_MBED_TLS
-   int mbed_tls_ret;
-   unsigned char* pers = NULL;
-#endif /* USE_MBED_TLS */
-#if defined( _WIN32 ) && defined( USE_NETWORK )
-   int result = 0;
-   WSADATA wsa_data = { 0 };
-
-   result = WSAStartup( MAKEWORD(2,2), &wsa_data );
-   if( 0 != result ) {
-      scaffold_print_error(
-         &module,
-         "WSAStartup failed with error: %d\n", result
-      );
-      scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
-   }
-#endif /* _WIN32 && USE_NETWORK */
-
-cleanup:
-   return;
 }
 
 void connection_init( struct CONNECTION* n ) {
-#ifdef USE_MBED_TLS
-   mbedtls_net_init( &(n->ssl_net) );
-   mbedtls_ssl_init( &(n->ssl) );
-   mbedtls_ssl_config_init( &(n->ssl_conf) );
-   /* mbedtls_x509_crt_init( &cacert );
-   mbedtls_ctr_drbg_init( &ctr_drbg ); */
-
-   /*
-   mbedtls_entropy_init( &entropy );
-   if( (mbed_tls_ret = mbedtls_ctr_drbg_seed(
-      &ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char*)pers,
-      strlen( pers ) ) ) != 0
-   ) {
-      scaffold_print_error(
-         &module, "mbedtls_ctr_drbg_seed returned: %d\n", mbed_tls_ret
-      );
-      goto cleanup;
-   }
-   */
-#endif /* USE_MBED_TLS */
 }
 
 #if 0

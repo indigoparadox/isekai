@@ -26,6 +26,7 @@ struct VECTOR* bgsplit( const_bstring str, char split ) {
       if( *chr == split ) {
          if( 0 == blength( current_str ) ) {
             /* Skip all whitespace until the next chunk starts. */
+            i++;
             continue;
          }
          current_str = bfromcstr( "" );

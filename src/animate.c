@@ -6,7 +6,20 @@ void animate_init() {
    hashmap_init( &animations );
 }
 
+static BOOL animate_del_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   bstring key_search = (bstring)arg;
+   struct ANIMATION* a = (struct ANIMATION*)iter;
+   if( NULL == arg || 0 == bstrcmp( idx->value.key, key_search ) ) {
+      if( NULL != a ) {
+         animate_free_animation( &a );
+      }
+      return TRUE;
+   }
+   return FALSE;
+}
+
 void animate_shutdown() {
+   hashmap_remove_cb( &animations, animate_del_cb, NULL );
    hashmap_cleanup( &animations );
 }
 

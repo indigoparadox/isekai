@@ -30,6 +30,11 @@ static struct tagbstring str_cdialog_prompt =
 #error Connect dialog requires network to be enabled!
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
 
+
+#ifndef USE_CONNECT_DIALOG
+SCAFFOLD_SIZE loop_count = 0;
+#endif /* USE_CONNECT_DIALOG */
+
 struct SERVER* main_server = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
@@ -120,11 +125,7 @@ static BOOL loop_game() {
 
    /* Do drawing. */
    l = hashmap_get_first( &(main_client->channels) );
-   if(
-      (NULL == l ||
-      NULL == main_client->puppet) &&
-      TRUE == main_client->running /* We're starting, not stopping. */
-   ) {
+   if( FALSE == channel_is_loaded( l ) ) {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
          scaffold_print_debug( &module, "Creating loading animation...\n" );
@@ -303,9 +304,11 @@ static BOOL loop_connect() {
       server_address = &str_localhost;
 #endif /* USE_CONNECT_DIALOG */
 
-      server_listen( main_server, server_port );
-      scaffold_check_nonzero( scaffold_error );
-
+      if( FALSE == ipc_is_listening( main_server->self.link ) ) {
+         if( FALSE == server_listen( main_server, server_port ) ) {
+            goto cleanup;
+         }
+      }
       scaffold_print_debug( &module, "Listening on port: %d\n", server_port );
 
 #ifdef USE_RANDOM_PORT
@@ -316,10 +319,16 @@ static BOOL loop_connect() {
       ui_debug_window( ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
-      client_connect( main_client, server_address, server_port );
+      BOOL connected = client_connect( main_client, server_address, server_port );
+      if( FALSE == connected ) {
+         scaffold_print_debug( &module, "fail\n" );
+      }
 
 #ifdef USE_CONNECT_DIALOG
    }
+#else
+      /* One successful connection. */
+      loop_count++;
 #endif /* USE_CONNECT_DIALOG */
 
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -330,13 +339,6 @@ cleanup:
       vector_free( &server_tuple );
    }
    return keep_going; /* TODO: ESC to quit. */
-#if 0
-   if( 0 != scaffold_error ) {
-      return TRUE; /* Try again! */
-   } else {
-      return FALSE;
-   }
-#endif
 }
 
 static BOOL loop_master() {
@@ -351,8 +353,17 @@ static BOOL loop_master() {
    connected = client_connected( main_client );
    main_client_joined = main_client->flags & CLIENT_FLAGS_SENT_CHANNEL_JOIN;
 
-   if( !connected ) {
+   if(
+      FALSE == connected
+#ifndef USE_CONNECT_DIALOG
+      && 0 >= loop_count
+#endif /* !USE_CONNECT_DIALOG */
+   ) {
       retval = loop_connect();
+#ifndef USE_CONNECT_DIALOG
+   } else if( FALSE == connected && 0 < loop_count ) {
+      retval = FALSE;
+#endif /* !USE_CONNECT_DIALOG */
    } else if( connected && !main_client_joined ) {
       backlog_ensure_window( ui );
       scaffold_print_debug(
@@ -442,7 +453,7 @@ int main( int argc, char** argv ) {
    animate_init();
    rng_init();
 
-   connection_setup();
+   ipc_setup();
    scaffold_check_nonzero( scaffold_error );
 
 #endif /* ENABLE_LOCAL_CLIENT */

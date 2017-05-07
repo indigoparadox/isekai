@@ -174,7 +174,7 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
 void channel_set_mobile(
    struct CHANNEL* l, uint8_t serial, const bstring mob_id,
    const bstring def_filename, const bstring mob_nick,
-   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y, struct CLIENT* local_c
+   SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 ) {
    struct MOBILE* o = NULL;
    int bstr_res = 0;
@@ -205,9 +205,9 @@ void channel_set_mobile(
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
 #ifdef ENABLE_LOCAL_CLIENT
-      if( NULL != local_c && TRUE == local_c->client_side ) {
+      if( ipc_is_local_client( l->client_or_server->link ) ) {
          client_request_file(
-            local_c, DATAFILE_TYPE_MOBILE, o->def_filename
+            l->client_or_server, DATAFILE_TYPE_MOBILE, o->def_filename
          );
       }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -292,4 +292,63 @@ cleanup:
       mem_free( mapdata_buffer );
    }
    return;
+}
+
+BOOL channel_is_loaded( struct CHANNEL* l ) {
+   BOOL retval = FALSE;
+
+   if( NULL == l ) {
+      goto cleanup;
+   }
+
+   if( NULL == l->client_or_server ) {
+      goto cleanup;
+   }
+
+   if( NULL == l->client_or_server->puppet ) {
+      goto cleanup;
+   }
+
+   //scaffold_assert( l->client_or_server.client_side );
+
+   /*
+   if( NULL == main_client->puppet ) {
+      goto cleanup;
+   }
+   */
+
+   //if( TRUE == main_client->running /* We're starting, not stopping. */
+
+   if( 0 >= hashmap_count( &(l->clients) ) ) {
+      goto cleanup;
+   }
+
+   if( 0 >= vector_count( &(l->mobiles) ) ) {
+      goto cleanup;
+   }
+
+   if( 0 >= hashmap_count( &(l->client_or_server->sprites) ) ) {
+      goto cleanup;
+   }
+
+   if( 0 >= hashmap_count( &(l->client_or_server->tilesets) ) ) {
+      goto cleanup;
+   }
+
+   if( 0 < hashmap_count( &(l->client_or_server->chunkers) ) ) {
+      goto cleanup;
+   }
+
+   if( 0 < vector_count( &(l->client_or_server->delayed_files) ) ) {
+      goto cleanup;
+   }
+
+   if( l->client_or_server->tilesets_loaded < hashmap_count( &(l->client_or_server->tilesets) ) ) {
+      goto cleanup;
+   }
+
+   retval = TRUE;
+
+cleanup:
+   return retval;
 }
