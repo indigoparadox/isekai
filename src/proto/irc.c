@@ -6,6 +6,7 @@
 #include "../chunker.h"
 #include "../datafile.h"
 #include "../backlog.h"
+#include "../channel.h"
 
 static struct TILEMAP_ITEM_CACHE* last_item_cache = NULL;
 
@@ -157,13 +158,18 @@ void proto_server_name_spritesheet(
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    bstring owner_nick = NULL;
+   struct CHANNEL* l = NULL;
+   bstring channel_name = NULL;
 
    scaffold_assert_server();
    scaffold_assert( NULL != o );
    scaffold_assert( NULL != o->mob_id );
    scaffold_assert( NULL != o->def_filename );
-   scaffold_assert( NULL != o->channel );
-   scaffold_assert( NULL != o->channel->name );
+
+   l = mobile_get_channel( o );
+   scaffold_assert( NULL != l );
+   channel_name = channel_get_name( l );
+   scaffold_assert( NULL != channel_name );
 
    if( NULL != o->owner ) {
       scaffold_assert( NULL != o->owner->nick );
@@ -174,7 +180,7 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
 
    client_printf(
       c, "MOB %b %d %b %b %b %d %d",
-      o->channel->name, o->serial, o->mob_id, o->def_filename,
+      channel_name, o->serial, o->mob_id, o->def_filename,
       owner_nick, o->x, o->y
    );
 }

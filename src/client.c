@@ -12,6 +12,7 @@
 #include "ui.h"
 #include "tinypy/tinypy.h"
 #include "windefs.h"
+#include "channel.h"
 
 bstring client_input_from_ui = NULL;
 

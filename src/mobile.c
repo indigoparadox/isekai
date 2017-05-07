@@ -9,6 +9,7 @@
 #include "datafile.h"
 #include "vm.h"
 #include "backlog.h"
+#include "channel.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -826,4 +827,11 @@ BOOL mobile_is_occupied( struct MOBILE* o ) {
 
 void mobile_add_item( struct MOBILE* o, struct ITEM* e ) {
    vector_add( &(o->items), e );
+}
+
+struct CHANNEL* mobile_get_channel( struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->channel;
 }

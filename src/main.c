@@ -8,6 +8,7 @@
 #include "backlog.h"
 #include "animate.h"
 #include "rng.h"
+#include "channel.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -319,10 +320,7 @@ static BOOL loop_connect() {
       ui_debug_window( ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
 
-      BOOL connected = client_connect( main_client, server_address, server_port );
-      if( FALSE == connected ) {
-         scaffold_print_debug( &module, "fail\n" );
-      }
+      client_connect( main_client, server_address, server_port );
 
 #ifdef USE_CONNECT_DIALOG
    }

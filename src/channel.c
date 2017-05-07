@@ -309,16 +309,6 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   //scaffold_assert( l->client_or_server.client_side );
-
-   /*
-   if( NULL == main_client->puppet ) {
-      goto cleanup;
-   }
-   */
-
-   //if( TRUE == main_client->running /* We're starting, not stopping. */
-
    if( 0 >= hashmap_count( &(l->clients) ) ) {
       goto cleanup;
    }
@@ -351,4 +341,11 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
 
 cleanup:
    return retval;
+}
+
+bstring channel_get_name( struct CHANNEL* l ) {
+   if( NULL == l ) {
+      return NULL;
+   }
+   return l->name;
 }

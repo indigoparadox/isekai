@@ -4,6 +4,7 @@
 
 #include "callback.h"
 #include "proto.h"
+#include "channel.h"
 
 void datafile_handle_stream(
    DATAFILE_TYPE type, bstring filename, BYTE* data, SCAFFOLD_SIZE length,

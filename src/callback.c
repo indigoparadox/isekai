@@ -15,6 +15,8 @@
 #include "ezxml.h"
 #endif /* USE_EZXML */
 #include "rng.h"
+#include "ipc.h"
+#include "channel.h"
 
 #ifdef DEBUG
 extern struct UI* last_ui;
@@ -42,7 +44,7 @@ void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg
 
    /* Make sure a buffer is present. */
    if( NULL == buffer ) {
-      buffer = bfromcstralloc( CONNECTION_BUFFER_LEN, "" );
+      buffer = bfromcstralloc( IPC_BUFFER_LEN, "" );
    } else {
       bwriteallow( (*buffer) ); /* Unprotect the buffer. */
       bstr_result = btrunc( buffer, 0 );

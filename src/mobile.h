@@ -144,6 +144,7 @@ void mobile_speak( struct MOBILE* o, bstring speech );
 SCAFFOLD_INLINE
 BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c );
 BOOL mobile_is_occupied( struct MOBILE* o );
+struct CHANNEL* mobile_get_channel( struct MOBILE* o );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

@@ -2,11 +2,10 @@
 #define SERVER_H
 
 #include "vector.h"
-#include "connect.h"
 #include "client.h"
-#include "channel.h"
 
 struct CLIENT;
+struct CHANNEL;
 
 struct SERVER {
    /* "Root" class is REF*/
