@@ -145,7 +145,9 @@ void animate_create_resize(
    BOOL width_adjusted = TRUE;
 
    /* Copy graphic target. */
-   a->target = graphics_copy( target );
+   if( NULL == a->target ) {
+      a->target = graphics_copy( target );
+   }
 
    a->blocking = block;
    a->indefinite = FALSE;

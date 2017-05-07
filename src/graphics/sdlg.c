@@ -121,21 +121,23 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
 
    screen = SDL_GetVideoSurface();
 
-   g->surface = SDL_CreateRGBSurface(
+   if( 0 < w && 0 < h ) {
+      g->surface = SDL_CreateRGBSurface(
 #ifdef USE_SDL_IMAGE
-      SDL_HWSURFACE,
+         SDL_HWSURFACE,
 #else
-      SDL_SWSURFACE,
+         SDL_SWSURFACE,
 #endif /* USE_SDL_IMAGE */
-      w,
-      h,
-      screen->format->BitsPerPixel,
-      screen->format->Rmask,
-      screen->format->Gmask,
-      screen->format->Bmask,
-      screen->format->Amask
-   );
-   scaffold_check_null( g->surface );
+         w,
+         h,
+         screen->format->BitsPerPixel,
+         screen->format->Rmask,
+         screen->format->Gmask,
+         screen->format->Bmask,
+         screen->format->Amask
+      );
+      scaffold_check_null( g->surface );
+   }
    g->virtual_x = 0;
    g->virtual_y = 0;
    g->w = w;
@@ -149,6 +151,8 @@ void graphics_flip_screen( GRAPHICS* g ) {
 }
 
 void graphics_shutdown( GRAPHICS* g ) {
+   SDL_FreeSurface( g->surface );
+   mem_free( g );
    SDL_Quit();
 }
 

@@ -622,6 +622,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       scaffold_assert( NULL != h );
       scaffold_print_debug(
          &module, "Removing invalid chunker: %b\n", h->filename );
+      chunker_free( h );
       remove_ok = hashmap_remove( &(c->chunkers), cp->filename );
       scaffold_assert( TRUE == remove_ok );
       goto cleanup;

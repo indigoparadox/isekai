@@ -281,6 +281,8 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
          set, setdata_buffer, setdata_size, FALSE,
          DATAFILE_TYPE_TILESET, idx->value.key
       );
+
+      mem_free( setdata_buffer );
    }
 
 cleanup:
@@ -331,6 +333,7 @@ void* callback_load_spawner_catalogs(
    }
 
 cleanup:
+   bdestroy( catdata_path );
    mem_free( catdata );
    return NULL;
 }
