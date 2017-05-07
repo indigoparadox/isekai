@@ -1,5 +1,6 @@
 #include "tnacl.h"
 #include "scaffold.h"
+#include "rng.h"
 #define FOR(i,n) for (i = 0;i < n;++i)
 #define sv static void
 
