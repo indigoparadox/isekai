@@ -131,7 +131,7 @@ cleanup:
  * \return TRUE if a command was executed, or FALSE otherwise.
  */
 BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
-   IRC_COMMAND* cmd = NULL;
+   //IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
 #ifdef DEBUG_TILES
    int bstr_ret;
@@ -139,21 +139,25 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       steps_remaining_y;
    static bstring pos = NULL;
 #endif /* DEBUG_TILES */
+   BOOL keep_going = FALSE;
 
    scaffold_set_client();
 
    /* Check for commands from the server. */
-   cmd = callback_ingest_commands( NULL, c, NULL );
+   //cmd = callback_ingest_commands( NULL, c, NULL );
+
+   keep_going = proto_dispatch( c, NULL );
 
    /* TODO: Is this ever called? */
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+   if( FALSE == keep_going ) {
       scaffold_print_info( &module, "Remote server disconnected.\n" );
       client_stop( c );
-      bdestroy( cmd->line );
-      mem_free( cmd );
-      cmd = NULL;
+      //bdestroy( cmd->line );
+      //mem_free( cmd );
+      //cmd = NULL;
    }
 
+   /*
    if( NULL != cmd ) {
       retval = TRUE;
       if( NULL != cmd->callback ) {
@@ -166,6 +170,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       irc_command_free( cmd );
       retval = TRUE;
    }
+   */
 
 #ifdef DEBUG_TILES
    if( NULL == pos ) {

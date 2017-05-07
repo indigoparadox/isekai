@@ -22,6 +22,7 @@
 extern struct UI* last_ui;
 #endif /* DEBUG */
 
+#if 0
 void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
    struct SERVER* s = (struct SERVER*)arg;
@@ -87,6 +88,7 @@ void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg
 cleanup:
    return cmd;
 }
+#endif
 
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -1028,11 +1030,13 @@ BOOL callback_free_finished_chunkers(
 
 #endif /* USE_CHUNKS */
 
+/*
 BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
    irc_command_free( cmd );
    return TRUE;
 }
+*/
 
 BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    mem_free( iter );

@@ -9,7 +9,7 @@
 #define mem_realloc( ptr, count, type ) \
    (type*)mem_realloc_internal( ptr, count, sizeof( type ) )
 #define mem_free( ptr ) \
-   (ptr = mem_free_internal( ptr ))
+   ((ptr) = mem_free_internal( ptr ))
 
 void* mem_alloc_internal( SCAFFOLD_SIZE count, SCAFFOLD_SIZE sz );
 void* mem_realloc_internal( void* ptr, SCAFFOLD_SIZE count, SCAFFOLD_SIZE sz );

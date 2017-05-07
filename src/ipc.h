@@ -15,6 +15,7 @@ typedef enum IPC_END {
 } IPC_END;
 
 void ipc_setup();
+void ipc_shutdown();
 struct CONNECTION* ipc_alloc();
 void ipc_free( struct CONNECTION** n );
 BOOL ipc_connected( struct CONNECTION* n );

@@ -455,6 +455,9 @@ int main( int argc, char** argv ) {
    ipc_setup();
    scaffold_check_nonzero( scaffold_error );
 
+   proto_setup();
+   scaffold_check_nonzero( scaffold_error );
+
 #endif /* ENABLE_LOCAL_CLIENT */
 
    server_new( main_server, &str_localhost );
@@ -467,6 +470,8 @@ int main( int argc, char** argv ) {
    while( loop_master() );
 
 cleanup:
+   proto_shutdown();
+   ipc_shutdown();
    animate_shutdown();
 #ifdef USE_CONNECT_DIALOG
    bdestroy( buffer );

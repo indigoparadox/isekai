@@ -7,8 +7,43 @@
 #include "../datafile.h"
 #include "../backlog.h"
 #include "../channel.h"
+#include "../ipc.h"
+
+typedef struct _IRC_COMMAND {
+   struct REF refcount;
+   const struct tagbstring command;
+   void (*callback)( struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line );
+   struct SERVER* server;
+   struct CLIENT* client;
+   struct VECTOR* args;
+   bstring line;
+} IRC_COMMAND;
+
+#define IRC_COMMAND_TABLE_START( name ) \
+   const IRC_COMMAND proto_table_ ## name []
+#define IRC_COMMAND_ROW( command, callback ) \
+   {REF_DISABLED, bsStatic( command ), callback, NULL, NULL, NULL, NULL}
+#define IRC_COMMAND_TABLE_END() \
+   {REF_DISABLED, bsStatic( "" ), NULL, NULL, NULL, NULL, NULL}
+
+#ifndef IRC_C
+extern IRC_COMMAND_TABLE_START( server );
+extern IRC_COMMAND_TABLE_START( client );
+#endif /* IRC_C */
+
+#ifdef DEBUG
+#define irc_print_args() \
+   for( i = 0 ; args->qty > i ; i++ ) { \
+      scaffold_print_debug( \
+         &module, "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
+   }
+#endif
+
+#define IRC_LINE_CMD_SEARCH_RANGE 3
 
 static struct TILEMAP_ITEM_CACHE* last_item_cache = NULL;
+
+static bstring irc_line_buffer = NULL;
 
 typedef enum _IRC_ERROR {
    ERR_NONICKNAMEGIVEN = 431,
@@ -1470,4 +1505,82 @@ cleanup:
       vector_free( &args );
    }
    return out;
+}
+
+BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
+   BOOL keep_going = TRUE;
+   SCAFFOLD_SIZE last_read_count = 0;
+   IRC_COMMAND* cmd = NULL;
+   const IRC_COMMAND* table = proto_table_server;
+   int bstr_result;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   /* Figure out if we're being called from a client or server. */
+   if( FALSE != ipc_is_local_client( c->link ) ) {
+      table = proto_table_client;
+   } else {
+#endif /* ENABLE_LOCAL_CLIENT */
+      scaffold_assert( NULL != s );
+#ifdef ENABLE_LOCAL_CLIENT
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   /* Make sure a buffer is present. */
+   bwriteallow( (*irc_line_buffer) ); /* Unprotect the buffer. */
+   bstr_result = btrunc( irc_line_buffer, 0 );
+   scaffold_check_nonzero( bstr_result );
+
+   /* Get the next line and clean it up. */
+   last_read_count = ipc_read(
+      c->link,
+      irc_line_buffer
+   );
+
+   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+      /* Return an empty command to force abortion of the iteration. */
+      /* cmd = mem_alloc( 1, IRC_COMMAND );
+      cmd->callback = NULL;
+      cmd->line = bstrcpy( c->nick ); */
+      keep_going = FALSE;
+      goto cleanup;
+   }
+
+   /* Everything is fine, so tidy up the buffer. */
+   btrimws( irc_line_buffer );
+   bwriteprotect( (*irc_line_buffer) ); /* Protect the buffer until next read. */
+
+   /* The -1 is not bubbled up; the scaffold_error should suffice. */
+   if( 0 >= last_read_count ) {
+      goto cleanup;
+   }
+
+#ifdef DEBUG_NETWORK
+   scaffold_print_debug(
+      &module,
+      "Server: Line received from %d: %s\n",
+      c->link.socket, bdata( irc_line_buffer )
+   );
+#endif /* DEBUG_NETWORK */
+
+   cmd = irc_dispatch( table, s, c, irc_line_buffer );
+   if( NULL != cmd ) {
+      cmd->callback( c, s, cmd->args, irc_line_buffer );
+   }
+
+cleanup:
+   if( NULL != cmd && NULL != cmd->args ) {
+      vector_remove_cb( cmd->args, callback_free_strings, NULL );
+      vector_free( &(cmd->args) );
+   }
+   mem_free( cmd );
+   return keep_going;
+}
+
+void proto_setup() {
+   irc_line_buffer = bfromcstralloc( IPC_BUFFER_LEN, "" );
+}
+
+void proto_shutdown() {
+   bwriteallow( *irc_line_buffer );
+   bdestroy( irc_line_buffer );
 }
