@@ -328,12 +328,26 @@ cleanup:
    return new_clients;
 }
 
+static void* server_srv_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   struct SERVER* s = (struct SERVER*)arg;
+   BOOL keep_going = TRUE;
+
+   keep_going = proto_dispatch( c, s );
+   if( FALSE == keep_going ) {
+      return c;
+   }
+
+   return NULL;
+}
+
 /**
  * \return TRUE if a command was executed, or FALSE otherwise.
  */
 BOOL server_service_clients( struct SERVER* s ) {
-   IRC_COMMAND* cmd = NULL;
+   //IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
+   struct CLIENT* c_stop = NULL;
 
    scaffold_set_server();
 
@@ -341,21 +355,21 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    /* Check for commands from existing clients. */
    if( 0 < hashmap_count( &(s->clients) ) ) {
-      /* TODO: Make sure hashmap_iterate can't overwrite scaffold errors. */
-      cmd = hashmap_iterate( &(s->clients), callback_ingest_commands, s );
+      c_stop = hashmap_iterate_nolock( &(s->clients), server_srv_cb, s );
    }
 
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+   if( NULL != c_stop ) {
       /* A dummy was returned, so the connection closed. */
       scaffold_print_info(
-         &module, "Remote client disconnected: %n\n", cmd->line
+         &module, "Remote client disconnected: %b\n", c_stop->nick
       );
-      server_drop_client( s, cmd->line );
-      bdestroy( cmd->line );
-      mem_free( cmd );
-      cmd = NULL;
+      server_drop_client( s, c_stop->nick );
+      //bdestroy( cmd->line );
+      //mem_free( cmd );
+      //cmd = NULL;
    }
 
+#if 0
    if( NULL != cmd ) {
       /* A presumably real command was returned. */
       retval = TRUE;
@@ -369,6 +383,7 @@ BOOL server_service_clients( struct SERVER* s ) {
       irc_command_free( cmd );
       retval = TRUE;
    }
+#endif // 0
 
 #ifdef USE_CHUNKS
 

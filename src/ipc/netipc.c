@@ -92,6 +92,10 @@ cleanup:
    return;
 }
 
+void ipc_shutdown() {
+   /* TODO */
+}
+
 struct CONNECTION* ipc_alloc() {
    struct CONNECTION* n_out = NULL;
 

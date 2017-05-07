@@ -554,8 +554,8 @@
 					<Add option="-g" />
 					<Add option="-DUSE_ALLEGRO" />
 					<Add option="-DDEBUG" />
-					<Add option="-DUSE_SYNCBUFF" />
 					<Add option="-DUSE_SHM" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
