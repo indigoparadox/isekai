@@ -37,6 +37,7 @@ void proto_client_debug_vm(
    struct CLIENT* c, struct CHANNEL* l, const bstring code
 );
 #endif /* DEBUG_VM */
+BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s );
 void proto_setup();
 void proto_shutdown();
 

@@ -749,7 +749,7 @@ MOBILE_UPDATE mobile_apply_update(
    if(
       NULL != o->owner
 #ifdef ENABLE_LOCAL_CLIENT
-      && TRUE != o->owner->client_side
+      && TRUE != ipc_is_local_client( o->owner->link )
 #endif /* ENABLE_LOCAL_CLIENT */
    ) {
       vm_tick();

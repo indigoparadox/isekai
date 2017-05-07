@@ -131,7 +131,6 @@ cleanup:
  * \return TRUE if a command was executed, or FALSE otherwise.
  */
 BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
-   //IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
 #ifdef DEBUG_TILES
    int bstr_ret;
@@ -144,33 +143,13 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    scaffold_set_client();
 
    /* Check for commands from the server. */
-   //cmd = callback_ingest_commands( NULL, c, NULL );
-
    keep_going = proto_dispatch( c, NULL );
 
    /* TODO: Is this ever called? */
    if( FALSE == keep_going ) {
       scaffold_print_info( &module, "Remote server disconnected.\n" );
       client_stop( c );
-      //bdestroy( cmd->line );
-      //mem_free( cmd );
-      //cmd = NULL;
    }
-
-   /*
-   if( NULL != cmd ) {
-      retval = TRUE;
-      if( NULL != cmd->callback ) {
-         cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
-      } else {
-         scaffold_print_error(
-            &module, "Client: Invalid command: %s\n", bdata( &(cmd->command) )
-         );
-      }
-      irc_command_free( cmd );
-      retval = TRUE;
-   }
-   */
 
 #ifdef DEBUG_TILES
    if( NULL == pos ) {
@@ -255,12 +234,6 @@ void client_stop( struct CLIENT* c ) {
       scaffold_print_info( &module, "Client connection stopping...\n" );
       ipc_stop( c->link );
    }
-
-   /*
-   if( TRUE != c->running ) {
-      goto cleanup;
-   }
-   */
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -448,7 +421,6 @@ void client_send_file(
       filepath,
       64
    );
-   //scaffold_check_nonzero( scaffold_error );
 
    if( FALSE == valid_file ) {
       scaffold_print_error(
@@ -603,14 +575,6 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
-
-   /*
-   if( 0 < d->incoming_buffer_len && d->incoming_buffer_len != progress->total ) {
-      scaffold_print_error( "Invalid total for %s.\n", bdata( progress->filename ) );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
-      goto cleanup;
-   }
-   */
 
    h = hashmap_get( &(c->chunkers), cp->filename );
    if( NULL == h ) {

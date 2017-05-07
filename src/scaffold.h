@@ -46,9 +46,11 @@ typedef unsigned char uint8_t;
 #define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
 
+#define SCAFFOLD_SIZE_MAX ULONG_MAX
+#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
+
 #define USE_CLOCK 1
 #define USE_FILE 1
-#define USE_BSTRING_CALLBACKS 1
 
 #elif defined( _WIN32 )
 
@@ -57,9 +59,15 @@ typedef unsigned char uint8_t;
 #include <windows.h>
 #include <stdint.h>
 
+typedef unsigned char BYTE;
+typedef unsigned long SCAFFOLD_SIZE;
+typedef long SCAFFOLD_SIZE_SIGNED;
+
+#define SCAFFOLD_SIZE_MAX ULONG_MAX
+#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
+
 #define USE_CLOCK 1
 #define USE_FILE 1
-#define USE_BSTRING_CALLBACKS 1
 
 #elif defined( __linux )
 

@@ -67,6 +67,10 @@ void ipc_setup() {
    syncbuff_alloc( IPC_END_SERVER );
 }
 
+void ipc_shutdown() {
+   /* TODO */
+}
+
 struct CONNECTION* ipc_alloc() {
    return mem_alloc( 1, struct CONNECTION );
 }

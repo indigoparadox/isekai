@@ -178,39 +178,7 @@ void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE
    client_printf( c, "GRF %d %b", type, filename );
 }
 
-/** \brief Request spritesheet file name for the resource with the provided
- *         name.
- * \param c    Local client object.
- * \param type Resource type to request (e.g. CDT_ITEM_CATALOG_SPRITES)
- * \param name Name of the object (catalog/mobile type/etc) requesting for.
- */
-void proto_client_request_spritesheet(
-   struct CLIENT* c, bstring name, DATAFILE_TYPE type
-) {
-   scaffold_assert_client();
-   scaffold_assert( 0 < blength( name ) );
-   scaffold_print_debug(
-      &module, "Client: Requesting %b: %b\n",
-      &(chunker_type_names[type]), name
-   );
-   client_printf( c, "CREQ %d %b", type, name );
-}
-
 #endif /* USE_CHUNKS */
-
-void proto_server_name_spritesheet(
-   struct CLIENT* c, bstring filename, DATAFILE_TYPE type
-) {
-   scaffold_assert_client();
-   scaffold_assert( 0 < blength( filename ) );
-#ifdef USE_CHUNKS
-   scaffold_print_debug(
-      &module, "Server: Naming %b: %s\n",
-      chunker_type_names[type].data, filename
-   );
-#endif /* USE_CHUNKS */
-   client_printf( c, "CRES %d %b", type, filename );
-}
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    bstring owner_nick = NULL;
@@ -910,52 +878,6 @@ cleanup:
    return;
 }
 
-static void irc_server_resource_request(
-   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
-) {
-   struct CHUNKER_PROGRESS progress;
-   DATAFILE_TYPE type;
-   bstring object_name = NULL;
-   struct ITEM_SPRITESHEET* catalog = NULL;
-
-   irc_detect_malformed( 3, "CREQ", line );
-
-   type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
-
-   object_name = (bstring)vector_get( args, 2 );
-
-   switch( type ) {
-   case DATAFILE_TYPE_ITEM_CATALOG:
-      catalog = hashmap_get( &(s->self.item_catalogs), object_name );
-      scaffold_check_null_msg( catalog, "Item catalog not found." );
-      proto_server_name_spritesheet( c, catalog->sprites_filename, type );
-      break;
-   }
-
-cleanup:
-   return;
-}
-
-static void irc_client_resource_response(
-   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
-) {
-   struct CHUNKER_PROGRESS progress;
-   DATAFILE_TYPE type;
-   bstring filename = NULL;
-   struct ITEM_SPRITESHEET* catalog = NULL;
-
-   irc_detect_malformed( 3, "CRES", line );
-
-   type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
-
-   filename = (bstring)vector_get( args, 2 );
-
-   client_request_file( c, type, filename );
-
-cleanup:
-   return;
-}
-
 #ifdef DEBUG_VM
 
 static void irc_server_debugvm(
@@ -1194,21 +1116,10 @@ static void irc_client_item(
       scaffold_print_debug(
          &module, "Client: Catalog not present in cache: %b\n", catalog_name
       );
-      /*
-      proto_client_request_spritesheet(
-         c, catalog_name, CHUNKER_DATA_TYPE_ITEM_CATALOG
-      );
-      */
       client_request_file( c, DATAFILE_TYPE_ITEM_CATALOG, catalog_name );
    }
 
    sprite_id = bgtoi( (bstring)vector_get( args, 5 ) );
-
-   /*
-   sprite = item_spritesheet_get_sprite( catalog, sprite_id );
-   scaffold_check_null_msg( sprite, "Sprite not found on client." );
-   */
-
    item_new( e, display_name, count,(bstring)vector_get( args, 4 ), sprite_id, c );
    e->serial = serial;
 
@@ -1352,11 +1263,9 @@ IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
 IRC_COMMAND_ROW( "WHO", irc_server_who ),
 IRC_COMMAND_ROW( "PING", irc_server_ping ),
 IRC_COMMAND_ROW( "GU", irc_server_gameupdate ),
-IRC_COMMAND_ROW( "CREQ", irc_server_resource_request ),
 #ifdef USE_CHUNKS
 IRC_COMMAND_ROW( "GRF", irc_server_gamerequestfile ),
 IRC_COMMAND_ROW( "GDA", irc_server_gamedataabort ),
-IRC_COMMAND_ROW( "CREQ", irc_server_gamerequestfile ),
 #endif /* USE_CHUNKS */
 IRC_COMMAND_ROW( "GNS", irc_server_gamenewsprite ),
 IRC_COMMAND_ROW( "MOB", irc_server_mob ),
@@ -1380,7 +1289,6 @@ IRC_COMMAND_ROW( "PRIVMSG", irc_client_privmsg ),
 IRC_COMMAND_ROW( "IC_S", irc_client_item_cache_start ),
 IRC_COMMAND_ROW( "ITEM", irc_client_item ),
 IRC_COMMAND_ROW( "IC_E", irc_client_item_cache_end ),
-IRC_COMMAND_ROW( "CRES", irc_client_resource_response ),
 IRC_COMMAND_TABLE_END() };
 
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -1406,11 +1314,7 @@ static void irc_command_cleanup( const struct REF* ref ) {
    mem_free( cmd );
 }
 
-void irc_command_free( IRC_COMMAND* cmd ) {
-   refcount_dec( cmd, "command" );
-}
-
-IRC_COMMAND* irc_dispatch(
+static IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, struct SERVER* s, struct CLIENT* c, const_bstring line
 ) {
    struct VECTOR* args = NULL;
