@@ -1,8 +1,6 @@
 
-#define SYNCBUFF_C
-#include "syncbuff.h"
-
-#include "../connect.h"
+#define IPC_C
+#include "../ipc.h"
 
 typedef enum SYNCBUFF_STATE {
    SYNCBUFF_STATE_DISCONNECTED,

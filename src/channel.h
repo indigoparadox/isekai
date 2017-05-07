@@ -73,6 +73,8 @@ void channel_vm_start( struct CHANNEL* l, bstring code );
 void channel_vm_step( struct CHANNEL* l );
 void channel_vm_end( struct CHANNEL* l );
 BOOL channel_vm_can_step( struct CHANNEL* l );
+BOOL channel_is_loaded( struct CHANNEL* l );
+bstring channel_get_name( struct CHANNEL* l );
 
 #ifdef CHANNEL_C
 SCAFFOLD_MODULE( "channel.c" );

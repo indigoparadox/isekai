@@ -5,6 +5,7 @@
 #include "callback.h"
 #include "hashmap.h"
 #include "proto.h"
+#include "channel.h"
 
 static void server_cleanup( struct SERVER* s ) {
    /* Infinite circle. server_free > client_free > ref_dec > server_free */

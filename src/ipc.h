@@ -5,6 +5,8 @@
 #include "scaffold.h"
 #include "ref.h"
 
+#define IPC_BUFFER_LEN 80
+
 struct CONNECTION;
 
 typedef enum IPC_END {
