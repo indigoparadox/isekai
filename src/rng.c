@@ -6,6 +6,10 @@
 #include <time.h>
 #endif /* USE_CLOCK */
 
+#ifndef __palmos__
+#include <stdlib.h>
+#endif /* __palmos__ */
+
 void rng_init() {
 #ifdef USE_CLOCK
    time_t tm = 0;
