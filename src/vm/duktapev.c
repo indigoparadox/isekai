@@ -6,6 +6,7 @@
 #include "../graphics.h"
 #include "../mobile.h"
 #include "../proto.h"
+#include "../channel.h"
 
 #define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
 #define OBJECT_VM( o ) (duk_context*)( o->vm )
@@ -39,7 +40,8 @@ static void duktape_helper_channel_crash( void* udata, const char* msg ) {
    struct CHANNEL* l = (struct CHANNEL*)udata;
 
    scaffold_print_error(
-      &module, "Script (%b): %s", l->name, (msg ? msg : "No message.")
+      &module, "Script (%b): %s",
+      channel_get_name( l ), (msg ? msg : "No message.")
    );
 }
 

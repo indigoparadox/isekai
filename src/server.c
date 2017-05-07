@@ -6,6 +6,7 @@
 #include "hashmap.h"
 #include "proto.h"
 #include "channel.h"
+#include "ipc.h"
 
 static void server_cleanup( struct SERVER* s ) {
    /* Infinite circle. server_free > client_free > ref_dec > server_free */
@@ -51,7 +52,7 @@ BOOL server_free( struct SERVER* s ) {
 
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
-   client_init( &(s->self), FALSE );
+   client_init( &(s->self) );
    s->self.refcount.gc_free = server_free_final;
    hashmap_init( &(s->clients) );
    s->self.sentinal = SERVER_SENTINAL;
@@ -297,7 +298,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
    /* Get a new standby client ready. */
    if( NULL == c ) {
-      client_new( c, FALSE );
+      client_new( c );
    }
 
    /* Check for new clients. */

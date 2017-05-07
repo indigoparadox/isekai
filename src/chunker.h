@@ -97,7 +97,7 @@ void chunker_chunk_start(
    struct CHUNKER* h, DATAFILE_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 );
-void chunker_chunk_start_file(
+BOOL chunker_chunk_start_file(
    struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 );

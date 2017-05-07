@@ -70,10 +70,10 @@ struct CLIENT {
 #define client_connected( c ) \
    (FALSE != ipc_connected( c->link ) && TRUE == (c)->running)
 
-#define client_new( c, client_side ) \
+#define client_new( c ) \
     c = mem_alloc( 1, struct CLIENT ); \
     scaffold_check_null( c ); \
-    client_init( c, client_side );
+    client_init( c );
 
 struct GAMEDATA;
 struct INPUT;
@@ -81,7 +81,7 @@ struct INPUT;
 BOOL cb_client_del_channels( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 
-void client_init( struct CLIENT* c, BOOL client_side );
+void client_init( struct CLIENT* c );
 BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
 void client_add_channel( struct CLIENT* c, struct CHANNEL* l );

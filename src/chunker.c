@@ -122,12 +122,13 @@ cleanup:
    return;
 }
 
-void chunker_chunk_start_file(
+BOOL chunker_chunk_start_file(
    struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 ) {
    bstring full_file_path = NULL;
    SCAFFOLD_SIZE_SIGNED bytes_read;
+   BOOL read_ok = FALSE;
 
    chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
@@ -146,8 +147,12 @@ void chunker_chunk_start_file(
       files_read_contents( full_file_path, &h->raw_ptr, &h->raw_length );
    scaffold_check_zero( bytes_read, "Zero bytes read from input file." );
 
+   read_ok = TRUE;
+
 cleanup:
    bdestroy( full_file_path );
+
+   return read_ok;
 }
 
 SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {

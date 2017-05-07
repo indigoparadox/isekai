@@ -429,7 +429,9 @@ void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* iter, void
 
 #ifdef USE_CHUNKS
 
-void* callback_proc_client_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_proc_client_chunkers(
+   struct CONTAINER_IDX* idx, void* iter, void* arg
+) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
