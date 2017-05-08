@@ -260,10 +260,7 @@ void client_stop( struct CLIENT* c ) {
 #endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
-   while( 0 < ipc_read(
-      c->link,
-      buffer
-   ) );
+   proto_empty_buffer( c );
 
    client_clear_puppet( c );
 #ifdef ENABLE_LOCAL_CLIENT
