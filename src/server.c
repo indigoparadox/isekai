@@ -83,51 +83,6 @@ void server_stop( struct SERVER* s ) {
    s->self.running = FALSE;
 }
 
-void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
-   struct VECTOR* l_clients = NULL;
-   bstring skip_nick = NULL;
-
-   if( NULL != c_skip ) {
-      skip_nick = c_skip->nick;
-   }
-
-   l_clients =
-      hashmap_iterate_v( &(l->clients), callback_search_clients_r, skip_nick );
-   scaffold_check_null( l_clients );
-
-   vector_iterate( l_clients, callback_send_clients, buffer );
-
-cleanup:
-   if( NULL != l_clients ) {
-      vector_remove_cb( l_clients, callback_free_clients, NULL );
-      vector_cleanup( l_clients );
-      mem_free( l_clients );
-   }
-   scaffold_assert_server();
-}
-
-void server_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... ) {
-   bstring buffer = NULL;
-   va_list varg;
-
-   buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
-
-   va_start( varg, message );
-   scaffold_vsnprintf( buffer, message, varg );
-   va_end( varg );
-
-   if( 0 == scaffold_error ) {
-      server_channel_send( s, l, c_skip, buffer );
-   }
-
-   scaffold_assert_server();
-
-cleanup:
-   bdestroy( buffer );
-   return;
-}
-
 void server_add_client( struct SERVER* s, struct CLIENT* c ) {
    if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */

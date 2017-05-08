@@ -287,48 +287,7 @@ void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
    hashmap_put( &(c->channels), l->name, l );
 }
 
-void client_join_channel( struct CLIENT* c, const bstring name ) {
-   bstring buffer = NULL;
-   int bstr_retval;
-   /* We won't record the channel in our list until the server confirms it. */
-
-   scaffold_set_client();
-
-   buffer = bfromcstr( "JOIN " );
-   scaffold_check_null( buffer );
-   bstr_retval = bconcat( buffer, name );
-   scaffold_check_nonzero( bstr_retval );
-
-   client_send( c, buffer );
-
-   c->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
-
-cleanup:
-   bdestroy( buffer );
-}
-
-void client_leave_channel( struct CLIENT* c, const bstring lname ) {
-   int bstr_retval;
-   bstring buffer = NULL;
-
-   /* We won't record the channel in our list until the server confirms it. */
-
-   scaffold_assert_client();
-
-   buffer = bfromcstr( "PART " );
-   scaffold_check_null( buffer );
-   bstr_retval = bconcat( buffer, lname );
-   scaffold_check_nonzero( bstr_retval );
-   client_send( c, buffer );
-
-   /* TODO: Add callback from parser and only delete channel on confirm. */
-   hashmap_remove( &(c->channels), lname );
-
-cleanup:
-   bdestroy( buffer );
-   return;
-}
-
+#if 0
 void client_send( struct CLIENT* c, const bstring buffer ) {
    int bstr_retval;
    bstring buffer_copy = NULL;
@@ -396,6 +355,8 @@ cleanup:
    bdestroy( buffer );
    return;
 }
+
+#endif
 
 #ifdef USE_CHUNKS
 

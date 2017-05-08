@@ -92,7 +92,7 @@ const struct tagbstring irc_reply_error_text[35] = {
 #define IRC_STANZA_ALLOC 80
 
 #define irc_error( enum_index ) \
-   client_printf( \
+   proto_printf( \
       c, ":%b %d %b %b", \
       s->self.remote, enum_index, c->nick, irc_reply_error_text[enum_index - 400] \
    );
@@ -108,9 +108,171 @@ const struct tagbstring irc_reply_error_text[35] = {
       goto cleanup; \
    }
 
+static void proto_send( struct CLIENT* c, const bstring buffer ) {
+   int bstr_retval;
+   bstring buffer_copy = NULL;
+
+   /* TODO: Make sure we're still connected. */
+
+   buffer_copy = bstrcpy( buffer );
+   scaffold_check_null( buffer_copy );
+   bstr_retval = bconchar( buffer_copy, '\r' );
+   scaffold_check_nonzero( bstr_retval );
+   bstr_retval = bconchar( buffer_copy, '\n' );
+   scaffold_check_nonzero( bstr_retval );
+   ipc_write( c->link, buffer_copy );
+
+#ifdef DEBUG_NETWORK
+   if( TRUE == c->client_side ) {
+      scaffold_print_debug(
+         &module, "Client sent to server: %s\n", bdata( buffer )
+      );
+   } else {
+      scaffold_print_debug(
+         &module, "Server sent to client %d: %s\n",
+         c->link.socket, bdata( buffer )
+      );
+   }
+#endif /* DEBUG_NETWORK */
+
+cleanup:
+   bdestroy( buffer_copy );
+#ifdef ENABLE_LOCAL_CLIENT
+   if( ipc_is_local_client( c->link ) ) {
+      scaffold_assert_client();
+   } else {
+      scaffold_assert_server();
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+   return;
+}
+
+static void proto_printf( struct CLIENT* c, const char* message, ... ) {
+   bstring buffer = NULL;
+   va_list varg;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   if( ipc_is_local_client( c->link ) ) {
+      scaffold_assert_client();
+   } else {
+      struct CONNECTION* n = c->link;
+      scaffold_assert_server();
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
+
+   va_start( varg, message );
+   scaffold_vsnprintf( buffer, message, varg );
+   va_end( varg );
+
+   if( 0 == scaffold_error ) {
+      proto_send( c, buffer );
+   }
+
+cleanup:
+   bdestroy( buffer );
+   return;
+}
+
+static void* proto_send_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   bstring buffer = (bstring)arg;
+   proto_send( c, buffer );
+   return NULL;
+}
+
+static void proto_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
+   struct VECTOR* l_clients = NULL;
+   bstring skip_nick = NULL;
+
+   if( NULL != c_skip ) {
+      skip_nick = c_skip->nick;
+   }
+
+   l_clients =
+      hashmap_iterate_v( &(l->clients), callback_search_clients_r, skip_nick );
+   scaffold_check_null( l_clients );
+
+   vector_iterate( l_clients, proto_send_cb, buffer );
+
+cleanup:
+   if( NULL != l_clients ) {
+      vector_remove_cb( l_clients, callback_free_clients, NULL );
+      vector_cleanup( l_clients );
+      mem_free( l_clients );
+   }
+   scaffold_assert_server();
+}
+
+static void proto_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... ) {
+   bstring buffer = NULL;
+   va_list varg;
+
+   buffer = bfromcstralloc( strlen( message ), "" );
+   scaffold_check_null( buffer );
+
+   va_start( varg, message );
+   scaffold_vsnprintf( buffer, message, varg );
+   va_end( varg );
+
+   if( 0 == scaffold_error ) {
+      proto_channel_send( s, l, c_skip, buffer );
+   }
+
+   scaffold_assert_server();
+
+cleanup:
+   bdestroy( buffer );
+   return;
+}
+
 void proto_register( struct CLIENT* c ) {
-   client_printf( c, "NICK %b", c->nick );
-   client_printf( c, "USER %b", c->realname );
+   proto_printf( c, "NICK %b", c->nick );
+   proto_printf( c, "USER %b", c->realname );
+}
+
+void proto_client_join( struct CLIENT* c, const bstring name ) {
+   bstring buffer = NULL;
+   int bstr_retval;
+   /* We won't record the channel in our list until the server confirms it. */
+
+   scaffold_set_client();
+
+   buffer = bfromcstr( "JOIN " );
+   scaffold_check_null( buffer );
+   bstr_retval = bconcat( buffer, name );
+   scaffold_check_nonzero( bstr_retval );
+
+   proto_send( c, buffer );
+
+   c->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
+
+cleanup:
+   bdestroy( buffer );
+}
+
+void proto_client_leave( struct CLIENT* c, const bstring lname ) {
+   int bstr_retval;
+   bstring buffer = NULL;
+
+   /* We won't record the channel in our list until the server confirms it. */
+
+   scaffold_assert_client();
+
+   buffer = bfromcstr( "PART " );
+   scaffold_check_null( buffer );
+   bstr_retval = bconcat( buffer, lname );
+   scaffold_check_nonzero( bstr_retval );
+   proto_send( c, buffer );
+
+   /* TODO: Add callback from parser and only delete channel on confirm. */
+   hashmap_remove( &(c->channels), lname );
+
+cleanup:
+   bdestroy( buffer );
+   return;
 }
 
 #ifdef USE_CHUNKS
@@ -137,7 +299,7 @@ void proto_send_chunk(
       data_sent = bfromcstr( "x" );
    }
 
-   client_printf(
+   proto_printf(
       c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
       c->nick, filename, type, start_pos,
       chunk_len, raw_len, data_sent
@@ -157,7 +319,7 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
       "Client: Aborting transfer of %s from server due to cached copy.\n",
       bdata( h->filename )
    );
-   client_printf( c, "GDA %b", h->filename );
+   proto_printf( c, "GDA %b", h->filename );
 }
 
 /** \brief This should ONLY be called by client_request_file(). All requests for
@@ -175,7 +337,7 @@ void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE
       chunker_type_names[type].data, bdata( filename )
    );
    */
-   client_printf( c, "GRF %d %b", type, filename );
+   proto_printf( c, "GRF %d %b", type, filename );
 }
 
 #endif /* USE_CHUNKS */
@@ -202,7 +364,7 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
       owner_nick = &scaffold_null;
    }
 
-   client_printf(
+   proto_printf(
       c, "MOB %b %d %b %b %b %d %d",
       channel_name, o->serial, o->mob_id, o->def_filename,
       owner_nick, o->x, o->y
@@ -219,7 +381,7 @@ static void* proto_send_item_cb(
 
    scaffold_assert( 0 < blength( e->catalog_name ) );
 
-   client_printf(
+   proto_printf(
       c, "ITEM %d %b %d %b %d",
       e->serial, e->display_name, e->count, e->catalog_name, e->sprite_id
    );
@@ -230,14 +392,14 @@ static void* proto_send_item_cb(
 void proto_send_container( struct CLIENT* c, struct ITEM* e ) {
    if( FALSE != item_is_container( e ) ) {
 
-      client_printf(
+      proto_printf(
          c, "CONTAINER_START %d",
          e->serial
       );
 
       vector_iterate( e->content.container, proto_send_item_cb, c );
 
-      client_printf( c, "CONTAINER_END" );
+      proto_printf( c, "CONTAINER_END" );
    }
 }
 
@@ -251,14 +413,14 @@ void proto_send_tile_cache(
    l = scaffold_container_of( cache->tilemap, struct CHANNEL, tilemap );
    scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
 
-   client_printf(
+   proto_printf(
       c, "IC_S %b %d %d",
       l->name, cache->position.x, cache->position.y
    );
 
    vector_iterate( &(cache->items), proto_send_item_cb, c );
 
-   client_printf( c, "IC_E" );
+   proto_printf( c, "IC_E" );
 
 cleanup:
    return;
@@ -289,7 +451,7 @@ void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    if( NULL != update->target ) {
       serial = update->target->serial;
    }
-   client_printf(
+   proto_printf(
       c, "GU %b %d %d %d %d %d",
       update->l->name, update->o->serial, update->update, update->x, update->y, serial
    );
@@ -301,7 +463,7 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    if( NULL != update->target ) {
       serial = update->target->serial;
    }
-   client_printf(
+   proto_printf(
       c, "GU %b %d %d %d %d %d",
       update->l->name, update->o->serial, update->update, update->x, update->y, serial
    );
@@ -319,7 +481,7 @@ void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg ) {
 
 void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg ) {
    scaffold_assert_client();
-   client_printf( c, "PRIVMSG %b :%b", dest, msg );
+   proto_printf( c, "PRIVMSG %b :%b", dest, msg );
 }
 
 void proto_server_send_msg_channel(
@@ -327,7 +489,7 @@ void proto_server_send_msg_channel(
 ) {
    scaffold_assert_server();
    scaffold_check_null_msg( l, "Invalid channel to send message." );
-   server_channel_printf(
+   proto_channel_printf(
       s, l, NULL, ":%b!%b@%b PRIVMSG %b :%b", nick, nick, s->self.remote, l->name, msg
    );
 cleanup:
@@ -336,11 +498,11 @@ cleanup:
 
 void proto_client_stop( struct CLIENT* c ) {
    scaffold_assert_client();
-   client_printf( c, "QUIT" );
+   proto_printf( c, "QUIT" );
 }
 
 void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l ) {
-   client_printf( c, "WHO %b", l->name );
+   proto_printf( c, "WHO %b", l->name );
 }
 
 #ifdef DEBUG_VM
@@ -348,7 +510,7 @@ void proto_client_request_mobs( struct CLIENT* c, struct CHANNEL* l ) {
 void proto_client_debug_vm(
    struct CLIENT* c, struct CHANNEL* l, const bstring code
 ) {
-   client_printf( c, "DEBUGVM %b %b", l->name, code );
+   proto_printf( c, "DEBUGVM %b %b", l->name, code );
 }
 
 #endif /* DEBUG_VM */
@@ -358,27 +520,27 @@ void proto_client_debug_vm(
 
 static void irc_server_reply_welcome( struct CLIENT* c, struct SERVER* s ) {
 
-   client_printf(
+   proto_printf(
       c, ":%b 001 %b :Welcome to the Internet Relay Network %b!%b@%b",
       s->self.remote, c->nick, c->nick, c->username, c->remote
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 002 %b :Your host is ProCIRCd, running version 0.1",
       s->self.remote, c->nick
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 003 %b :This server was created 01/01/1970",
       s->self.remote, c->nick
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 004 %b :%b ProCIRCd-0.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
       s->self.remote, c->nick, s->self.remote
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 251 %b :There are %d users and 0 services on 1 servers",
       s->self.remote, c->nick, hashmap_count( &(s->clients) )
    );
@@ -395,7 +557,7 @@ struct IRC_WHO_REPLY {
 static void* irc_callback_reply_who( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
-   client_printf(
+   proto_printf(
       who->c,
       ":%b 352 %b %b %b %b server %b H :0 %b",
       who->s->self.remote,
@@ -493,7 +655,7 @@ static void irc_server_nick(
 
    /* Disallow system nick "(null)". */
    if( 0 == bstrcmp( &scaffold_null, newnick ) ) {
-      client_printf(
+      proto_printf(
          c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
       );
@@ -502,7 +664,7 @@ static void irc_server_nick(
 
    server_set_client_nick( s, c, newnick );
    if( SCAFFOLD_ERROR_NULLPO == scaffold_error ) {
-      client_printf(
+      proto_printf(
          c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
       );
@@ -510,7 +672,7 @@ static void irc_server_nick(
    }
 
    if( SCAFFOLD_ERROR_NOT_NULLPO == scaffold_error ) {
-      client_printf(
+      proto_printf(
          c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->nick
       );
@@ -543,7 +705,7 @@ static void irc_server_nick(
       irc_server_reply_welcome( c, s );
    }
 
-   client_printf(
+   proto_printf(
       c, ":%b %b :%b!%b@%b NICK %b",
       s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
    );
@@ -569,7 +731,7 @@ static void irc_server_quit(
    message = bfromcstr( "" );
    vector_iterate( args, callback_concat_strings, message );
 
-   client_printf(
+   proto_printf(
       c, "ERROR :Closing Link: %b (Client Quit)",
       c->nick
    );
@@ -607,7 +769,7 @@ static void irc_server_ison(
    vector_lock( ison, FALSE );
    scaffold_check_null( response );
 
-   client_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
+   proto_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
 
 cleanup:
    if( NULL != ison ) {
@@ -629,7 +791,7 @@ static void irc_server_join(
    struct VECTOR* cat_names = NULL;
 
    if( 2 > vector_count( args ) ) {
-      client_printf(
+      proto_printf(
          c, ":%b 461 %b %b :Not enough parameters",
          s->self.remote, c->username, (bstring)vector_get( args, 0 )
       );
@@ -642,7 +804,7 @@ static void irc_server_join(
    scaffold_check_nonzero( bstr_result );
 
    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
-      client_printf(
+      proto_printf(
          c, ":%b 403 %b %b :No such channel",
          s->self.remote, c->username, namehunt
       );
@@ -660,12 +822,12 @@ static void irc_server_join(
    assert( NULL != l->name );
 
    /* Announce the new join. */
-   server_channel_printf(
+   proto_channel_printf(
       s, l, c, ":%b!%b@%b JOIN %b", c->nick, c->username, c->remote, l->name
    );
 
    /* Now tell the joining client. */
-   client_printf(
+   proto_printf(
       c, ":%b!%b@%b JOIN %b",
       c->nick, c->username, c->remote, l->name
    );
@@ -676,17 +838,17 @@ static void irc_server_join(
    scaffold_check_null( names );
    vector_iterate( cat_names, callback_concat_strings, names );
 
-   client_printf(
+   proto_printf(
       c, ":%b 332 %b %b :%b",
       s->self.remote, c->nick, l->name, l->topic
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 353 %b = %b :%b",
       s->self.remote, c->nick, l->name, names
    );
 
-   client_printf(
+   proto_printf(
       c, ":%b 366 %b %b :End of NAMES list",
       s->self.remote, c->nick, l->name
    );
@@ -731,7 +893,7 @@ static void irc_server_privmsg(
 
    c_dest = server_get_client( s, (bstring)vector_get( args, 1 ) );
    if( NULL != c_dest ) {
-      client_printf(
+      proto_printf(
          c_dest, ":%b!%b@%b %b", c->nick, c->username, c->remote, line
       );
       goto cleanup;
@@ -740,7 +902,7 @@ static void irc_server_privmsg(
    /* Maybe it's for a channel, instead? */
    l_dest = client_get_channel_by_name( &(s->self), (bstring)vector_get( args, 1 ) );
    if( NULL != l_dest ) {
-      server_channel_printf(
+      proto_channel_printf(
          s, l_dest, c, ":%b!%b@%b %b", c->nick, c->username, c->remote, line
       );
       goto cleanup;
@@ -775,7 +937,7 @@ static void irc_server_who(
    who.l = l;
    who.s = s;
    hashmap_iterate( &(l->clients), irc_callback_reply_who, &who );
-   client_printf(
+   proto_printf(
       c, ":server 315 %b :End of /WHO list.",
       c->nick, l->name
    );
@@ -794,7 +956,7 @@ static void irc_server_ping(
       goto cleanup;
    }
 
-   client_printf(
+   proto_printf(
       c, ":%b PONG %b :%b", s->self.remote, s->self.remote, c->remote
    );
 

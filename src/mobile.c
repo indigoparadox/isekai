@@ -10,6 +10,7 @@
 #include "vm.h"
 #include "backlog.h"
 #include "channel.h"
+#include "ipc.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
