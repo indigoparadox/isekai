@@ -1166,6 +1166,13 @@ static void irc_client_error(
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+void proto_empty_buffer( struct CLIENT* c ) {
+   while( 0 < ipc_read(
+      c->link,
+      buffer
+   ) );
+}
+
 #ifdef USE_CHUNKS
 
 #ifdef ENABLE_LOCAL_CLIENT

@@ -8,6 +8,8 @@
 #include "chunker.h"
 
 void proto_register( struct CLIENT* c );
+void proto_client_join( struct CLIENT* c, const bstring name );
+void proto_client_leave( struct CLIENT* c, const bstring lname );
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
    const bstring filename, const bstring data
@@ -40,6 +42,7 @@ void proto_client_debug_vm(
 BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s );
 void proto_setup();
 void proto_shutdown();
+void proto_empty_buffer( struct CLIENT* c );
 
 /*
 void irc_command_free( IRC_COMMAND* cmd );

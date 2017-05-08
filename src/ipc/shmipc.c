@@ -9,6 +9,9 @@ struct CONNECTION {
 void ipc_setup() {
 }
 
+void ipc_shutdown() {
+}
+
 struct CONNECTION* ipc_alloc() {
 }
 
@@ -27,11 +30,13 @@ BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
 BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
 }
 
+/*
 SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
 }
 
 SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
 }
+*/
 
 void ipc_stop( struct CONNECTION* n ) {
 }
