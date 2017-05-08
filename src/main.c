@@ -10,6 +10,7 @@
 #include "rng.h"
 #include "channel.h"
 #include "ipc.h"
+#include "proto.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -375,7 +376,7 @@ static BOOL loop_master() {
       twindow->g = g_screen;
       twindow->local_client = main_client;
       twindow->t = NULL;
-      client_join_channel( main_client, &str_default_channel );
+      proto_client_join( main_client, &str_default_channel );
       retval = TRUE;
 
 #ifdef DEBUG_FPS

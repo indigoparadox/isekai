@@ -192,13 +192,6 @@ void* callback_search_items(
    return NULL;
 }
 
-void* callback_send_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)iter;
-   bstring buffer = (bstring)arg;
-   client_send( c, buffer );
-   return NULL;
-}
-
 void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;

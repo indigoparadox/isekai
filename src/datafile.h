@@ -23,6 +23,8 @@ typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize
 );
 
+struct MOBILE;
+
 #ifdef USE_EZXML
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
