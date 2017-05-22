@@ -364,7 +364,7 @@ static BOOL loop_master() {
    } else if( FALSE == connected && 0 < loop_count ) {
       retval = FALSE;
 #endif /* !USE_CONNECT_DIALOG */
-   } else if( connected && !main_client_joined ) {
+   } else if( connected && (!main_client_joined || NULL == twindow) ) {
       backlog_ensure_window( ui );
       scaffold_print_debug(
          &module, "Server connected; joining client to channel...\n"

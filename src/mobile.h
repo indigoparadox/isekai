@@ -31,6 +31,11 @@ typedef enum MOBILE_FACING {
    MOBILE_FACING_LEFT = 3
 } MOBILE_FACING;
 
+typedef enum MOBILE_TYPE {
+   MOBILE_TYPE_GENERIC,
+   MOBILE_TYPE_PLAYER
+} MOBILE_TYPE;
+
 struct MOBILE_ANI_DEF {
    MOBILE_FACING facing;
    bstring name;
@@ -66,6 +71,7 @@ struct MOBILE {
    bstring def_filename;
    bstring mob_id;
    struct CHANNEL* channel;
+   MOBILE_TYPE type;
    struct VM* vm;
    struct VM_CADDY* vm_caddy;
    BOOL vm_started;

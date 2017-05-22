@@ -2,6 +2,8 @@
 #define CALLBACKS_C
 #include "callback.h"
 
+#include "scaffold.h"
+
 #include "client.h"
 #include "server.h"
 #include "proto.h"
@@ -21,6 +23,8 @@
 #ifdef DEBUG
 extern struct UI* last_ui;
 #endif /* DEBUG */
+
+extern struct CLIENT* main_client;
 
 #if 0
 void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
@@ -574,12 +578,21 @@ void* callback_proc_channel_spawners(
    /* By process of elimination, we must be at zero, so perform a spawn! */
    ts->countdown_remaining = -1;
    switch( ts->type ) {
+   case TILEMAP_SPAWNER_TYPE_PLAYER:
    case TILEMAP_SPAWNER_TYPE_MOBILE:
       scaffold_print_debug( &module, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
       rng_gen_serial( o, &(l->mobiles), SERIAL_MIN, SERIAL_MAX );
       channel_add_mobile( l, o );
+      if( TILEMAP_SPAWNER_TYPE_PLAYER == ts->type ) {
+         o->type = MOBILE_TYPE_PLAYER;
+#ifdef DEBUG_NO_CLIENT_SERVER_MODEL
+         client_set_puppet( main_client, o );
+#endif /* DEBUG_NO_CLIENT_SERVER_MODEL */
+      } else {
+         o->type = MOBILE_TYPE_GENERIC;
+      }
       break;
 
    case TILEMAP_SPAWNER_TYPE_ITEM:
