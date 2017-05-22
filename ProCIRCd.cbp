@@ -778,6 +778,9 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 		</Compiler>
+		<Unit filename="procircd.def">
+			<Option target="Debug (Palm-SB)" />
+		</Unit>
 		<Unit filename="src/animate.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1532,6 +1535,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/scaffold.h" />
+		<Unit filename="src/sections.h">
+			<Option target="Debug (Palm-SB)" />
+		</Unit>
 		<Unit filename="src/server.c">
 			<Option compilerVar="CC" />
 		</Unit>
