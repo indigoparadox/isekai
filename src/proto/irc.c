@@ -1120,6 +1120,7 @@ static void irc_client_join(
    l_name = (bstring)vector_get( args, 3 );
 
    /* Get the channel, or create it if it does not exist. */
+   /* TODO: Move this to client module. */
    l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
       /* Create a new client-side channel mirror. */
@@ -1167,10 +1168,15 @@ static void irc_client_error(
 #endif /* ENABLE_LOCAL_CLIENT */
 
 void proto_empty_buffer( struct CLIENT* c ) {
+   bstring buffer = NULL;
+   buffer = bfromcstr( "" );
    while( 0 < ipc_read(
       c->link,
       buffer
    ) );
+cleanup:
+   bdestroy( buffer );
+   return;
 }
 
 #ifdef USE_CHUNKS

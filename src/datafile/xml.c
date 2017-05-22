@@ -850,7 +850,9 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    /* Figure out the spawner type. */
    xml_attr = ezxml_attr( xml_object, "type" );
    scaffold_check_null_msg( xml_attr, "Invalid or no type specified." );
-   if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
+   if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_player" ) ) {
+      obj_out->type = TILEMAP_SPAWNER_TYPE_PLAYER;
+   } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
       obj_out->type = TILEMAP_SPAWNER_TYPE_MOBILE;
    } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_item_random" ) ) {
       scaffold_check_null_msg(

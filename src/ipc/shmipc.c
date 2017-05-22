@@ -13,18 +13,21 @@ void ipc_shutdown() {
 }
 
 struct CONNECTION* ipc_alloc() {
+   return mem_alloc( 1, struct CONNECTION );
 }
 
 void ipc_free( struct CONNECTION** n ) {
 }
 
 BOOL ipc_connected( struct CONNECTION* n ) {
+   return n->connected;
 }
 
 BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
 }
 
 BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
+   n->connected = TRUE;
 }
 
 BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {

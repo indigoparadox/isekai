@@ -5,8 +5,11 @@
 #define C99
 #endif /* C99 */
 
-/* = OS Detection Stuff = */
+#ifdef USE_SHM
+#define DEBUG_NO_CLIENT_SERVER_MODEL
+#endif /* USE_SHM */
 
+/* = OS Detection Stuff = */
 
 #ifdef __palmos__
 
@@ -198,6 +201,16 @@ void scaffold_print_debug_color(
 
 #define scaffold_assert( arg ) assert( arg )
 
+#else
+
+/* Disable debug-level notifications. */
+
+#define scaffold_assert( expr )
+
+#endif /* DEBUG */
+
+#if defined( DEBUG ) && !defined( DEBUG_NO_CLIENT_SERVER_MODEL )
+
 #define scaffold_assert_client() \
    scaffold_assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
 #define scaffold_assert_server() \
@@ -210,16 +223,12 @@ void scaffold_print_debug_color(
 
 #else
 
-/* Disable debug-level notifications. */
-
-#define scaffold_assert( expr )
-
 #define scaffold_assert_client()
 #define scaffold_assert_server()
 #define scaffold_set_client()
 #define scaffold_set_server()
 
-#endif /* DEBUG */
+#endif /* DEBUG && !DEBUG_NO_CLIENT_SERVER_MODEL */
 
 #ifdef USE_COLORED_CONSOLE
 #if defined _WIN32 || defined WIN16
