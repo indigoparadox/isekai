@@ -1647,9 +1647,12 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    }
 
 cleanup:
-   if( NULL != cmd && NULL != cmd->args ) {
-      vector_remove_cb( cmd->args, callback_free_strings, NULL );
-      vector_free( &(cmd->args) );
+   if( NULL != cmd ) {
+      if( NULL != cmd->args ) {
+         vector_remove_cb( cmd->args, callback_free_strings, NULL );
+         vector_free( &(cmd->args) );
+      }
+      bdestroy( cmd->line );
    }
    mem_free( cmd );
    return keep_going;

@@ -194,7 +194,11 @@ static void datafile_mobile_parse_animation_ezxml(
       &module, "Loaded mobile animation: %b\n", name_dir
    );
 
-   hashmap_put( &(o->ani_defs), name_dir, animation );
+   if( hashmap_put( &(o->ani_defs), name_dir, animation, FALSE ) ) {
+      scaffold_print_error(
+         &module, "Attempted to double-add mobile animation def.\n" );
+      mobile_animation_free( animation );
+   }
    animation = NULL;
 
 cleanup:
@@ -282,11 +286,18 @@ void datafile_parse_mobile_ezxml_t(
       if(
          0 == scaffold_strcmp_caseless( "global", xml_script_iter->name )
       ) {
-         hashmap_put( &(o->vm_globals), vm_key_buffer, bstrcpy( vm_val_buffer ) );
-         scaffold_print_debug(
-            &module, "Stored global \"%b\" for mobile: %d\n",
-            vm_key_buffer, o->serial
-         );
+         if( hashmap_put(
+            &(o->vm_globals), vm_key_buffer, bstrcpy( vm_val_buffer ), FALSE
+         ) ) {
+            scaffold_print_error( &module,
+               "Attempted to double-put script: %d: %b\n",
+               o->serial, vm_key_buffer );
+         } else {
+            scaffold_print_debug(
+               &module, "Stored global \"%b\" for mobile: %d\n",
+               vm_key_buffer, o->serial
+            );
+         }
       }
 
 next_global:
@@ -324,7 +335,8 @@ next_global:
             "text/javascript", ezxml_attr( xml_script_iter, "type" )
          )
       ) {
-         hashmap_put( &(o->vm_scripts), vm_key_buffer, bstrcpy( vm_val_buffer ) );
+         hashmap_put(
+            &(o->vm_scripts), vm_key_buffer, bstrcpy( vm_val_buffer ), TRUE );
          scaffold_print_debug(
             &module, "Stored \"%b\" script for mobile: %d\n",
             vm_key_buffer, o->serial
@@ -490,7 +502,10 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    /* The key with NULL means we need to load this image. */
-   hashmap_put( &(set->images), buffer, NULL );
+   if( hashmap_put( &(set->images), buffer, NULL, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to add existing image: %b\n",
+         buffer );
+   }
 
 cleanup:
    bdestroy( buffer );
@@ -762,7 +777,12 @@ static void datafile_tilemap_parse_layer_ezxml(
 
    bstr_res = bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
    scaffold_check_nonzero( bstr_res );
-   hashmap_put( &(t->layers), buffer, layer );
+   if( hashmap_put( &(t->layers), buffer, layer, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to double-put layer: %b\n" ,
+         buffer );
+      tilemap_layer_free( layer );
+      goto cleanup;
+   }
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
@@ -962,11 +982,13 @@ void datafile_parse_tilemap_ezxml_t(
 
       set = hashmap_get( &(l->client_or_server->tilesets), tileset_id );
       if( NULL == set ) {
+         /* This layer uses a tileset not seen yet. */
          scaffold_print_debug(
             &module, "New tileset found server-wide: %b\n", tileset_id
          );
          tilemap_tileset_new( set, tileset_id );
-         hashmap_put( &(l->client_or_server->tilesets), tileset_id, set );
+         /* Don't have to check since the hashmap_get above is a check. */
+         hashmap_put( &(l->client_or_server->tilesets), tileset_id, set, TRUE );
 
          datafile_tilemap_parse_tileset_ezxml(
             set, xml_tileset, tileset_id, local_images );

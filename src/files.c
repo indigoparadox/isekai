@@ -346,7 +346,7 @@ cleanup:
    return;
 }
 
-bstring files_root( bstring append ) {
+bstring files_root( const bstring append ) {
    bstring path_out = NULL;
 
    if( NULL == append ) {

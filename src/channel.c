@@ -137,7 +137,10 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    client_add_channel( c, l  );
 
-   hashmap_put( &(l->clients), c->nick, c );
+   if( hashmap_put( &(l->clients), c->nick, c, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to double-add client.\n" );
+      client_free( c );
+   }
 
 cleanup:
    if( NULL != player_spawns) {

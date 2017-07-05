@@ -245,10 +245,13 @@ void hashmap_rehash( struct HASHMAP* m );
 /*
  * Add a pointer to the hashmap without touching its refcount.
  */
-static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* value, BOOL lock ) {
+static short hashmap_put_internal(
+   struct HASHMAP* m, const bstring key, void* value, BOOL overwrite, BOOL lock
+) {
    int index;
    BOOL ok = FALSE;
    BOOL pre_existing = FALSE;
+   short retval = 0;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -266,13 +269,21 @@ static void hashmap_put_internal( struct HASHMAP* m, const bstring key, void* va
       index = hashmap_hash( m, key );
    }
 
-   /* Set the data */
-   m->data[index].data = value;
    if( NULL != m->data[index].key ) {
       scaffold_assert( 1 == m->data[index].in_use );
-      bdestroy( m->data[index].key );
-      pre_existing = TRUE;
+      /* Only make changes if we were asked to or if the entry is empty. */
+      if( overwrite || NULL == m->data[index].data ) {
+         /* Destroy the key so it's re-added below. */
+         bdestroy( m->data[index].key );
+         pre_existing = TRUE;
+      } else {
+         retval = 1;
+         goto cleanup;
+      }
    }
+
+   /* Set the data */
+   m->data[index].data = value;
    m->data[index].key = bstrcpy( key );
    bwriteprotect( (*m->data[index].key) );
    m->data[index].in_use = 1;
@@ -289,7 +300,7 @@ cleanup:
    hashmap_verify_size( m );
 #endif /* DEBUG */
 
-   return;
+   return retval;
 }
 
 /*
@@ -324,7 +335,7 @@ void hashmap_rehash( struct HASHMAP* m ) {
       }
 
       /* Never lock when calling recursively! */
-      hashmap_put_internal( m, curr[i].key, curr[i].data, FALSE );
+      hashmap_put_internal( m, curr[i].key, curr[i].data, TRUE, FALSE );
       scaffold_check_nonzero( scaffold_error );
    }
 
@@ -337,23 +348,35 @@ cleanup:
    return;
 }
 
-/*
- * Add a pointer to the hashmap with some key
+/** \brief Add a pointer to the hashmap with some key.
+ * \param @m
+ * \param @key
+ * \param @overwrite
+ * \return 0 if successful.
+ *
  */
-void hashmap_put( struct HASHMAP* m, const bstring key, void* value ) {
-   hashmap_put_internal( m, key, value, TRUE );
+short hashmap_put(
+   struct HASHMAP* m, const bstring key, void* value, BOOL overwrite
+) {
+   short retval = 0;
+   retval = hashmap_put_internal( m, key, value, overwrite, TRUE );
    if( NULL != value ) {
       refcount_test_inc( value );
    }
    m->last_error = SCAFFOLD_ERROR_NONE;
+   return retval;
 }
 
-void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value ) {
-   hashmap_put_internal( m, key, value, FALSE );
+short hashmap_put_nolock(
+   struct HASHMAP* m, const bstring key, void* value, BOOL overwrite
+) {
+   short retval = 0;
+   retval = hashmap_put_internal( m, key, value, overwrite, FALSE );
    if( NULL != value ) {
       refcount_test_inc( value );
    }
    m->last_error = SCAFFOLD_ERROR_NONE;
+   return retval;
 }
 
 /*

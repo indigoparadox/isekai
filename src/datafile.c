@@ -7,7 +7,7 @@
 #include "channel.h"
 
 void datafile_handle_stream(
-   DATAFILE_TYPE type, bstring filename, BYTE* data, SCAFFOLD_SIZE length,
+   DATAFILE_TYPE type, const bstring filename, BYTE* data, SCAFFOLD_SIZE length,
    struct CLIENT* c
 ) {
    struct CHANNEL* l = NULL;
@@ -87,12 +87,17 @@ void datafile_handle_stream(
       );
       scaffold_check_null( set );
 
-      hashmap_put( &(set->images), filename, g );
-      scaffold_print_debug(
-         &module,
-         "Client: Tilemap image %s successfully loaded into tileset cache.\n",
-         bdata( filename )
-      );
+      if( hashmap_put( &(set->images), filename, g, FALSE ) ) {
+         scaffold_print_error(
+            &module, "Attempted to double-add file: %b\n", filename );
+         graphics_surface_free( g );
+      } else {
+         scaffold_print_debug(
+            &module,
+            "Client: Tilemap image %s successfully loaded into tileset cache.\n",
+            bdata( filename )
+         );
+      }
 
 #ifdef USE_CHUNKS
       proto_client_request_mobs( c, l );
@@ -138,13 +143,18 @@ void datafile_handle_stream(
       scaffold_check_null_msg( g, "Unable to interpret spritesheet image." );
       graphics_set_image_data( g, data, length );
       scaffold_check_null( g->surface );
-      hashmap_put( &(c->sprites), filename, g );
-      hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
-      scaffold_print_debug(
-         &module,
-         "Client: Spritesheet %b successfully loaded into cache.\n",
-         filename
-      );
+      if( hashmap_put( &(c->sprites), filename, g, FALSE ) ) {
+         scaffold_print_error(
+            &module, "Attempted to double-add spritesheet: %b\n", filename );
+         graphics_surface_free( g );
+      } else {
+         hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
+         scaffold_print_debug(
+            &module,
+            "Client: Spritesheet %b successfully loaded into cache.\n",
+            filename
+         );
+      }
       break;
 
    case DATAFILE_TYPE_ITEM_CATALOG:
@@ -156,13 +166,16 @@ void datafile_handle_stream(
          catalog, data, length, TRUE, DATAFILE_TYPE_ITEM_CATALOG,
          filename
       );
-      hashmap_put( &(c->item_catalogs), filename, catalog );
-
-      client_request_file_later(
-         c, DATAFILE_TYPE_ITEM_CATALOG_SPRITES,
-         catalog->sprites_filename
-      );
-      goto cleanup;
+      if( hashmap_put( &(c->item_catalogs), filename, catalog, FALSE ) ) {
+         scaffold_print_error( &module, "Attempted to double-add catalog: %b\n",
+            filename );
+         item_spritesheet_free( catalog );
+      } else {
+         client_request_file_later(
+            c, DATAFILE_TYPE_ITEM_CATALOG_SPRITES,
+            catalog->sprites_filename
+         );
+      }
 #endif /* USE_EZXML */
       break;
 

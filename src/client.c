@@ -280,8 +280,12 @@ cleanup:
    return;
 }
 
-void client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
-   hashmap_put( &(c->channels), l->name, l );
+short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
+   if( hashmap_put( &(c->channels), l->name, l, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to double-add channel...\n" );
+      return 1;
+   }
+   return 0;
 }
 
 #if 0
@@ -390,7 +394,7 @@ void client_send_file(
    scaffold_print_debug(
       &module, "Server: Adding chunker to send: %b\n", filepath
    );
-   hashmap_put( &(c->chunkers), filepath, h );
+   hashmap_put( &(c->chunkers), filepath, h, TRUE );
 
 cleanup:
    if( NULL != h ) {
@@ -482,7 +486,7 @@ void client_request_file(
       scaffold_print_debug(
          &module, "Adding unchunker to receive: %s\n", bdata( filename )
       );
-      hashmap_put_nolock( &(c->chunkers), filename, h );
+      hashmap_put_nolock( &(c->chunkers), filename, h, TRUE );
       scaffold_check_nonzero( scaffold_error );
 
       if( !chunker_unchunk_finished( h ) ) {

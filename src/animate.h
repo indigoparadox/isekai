@@ -42,7 +42,11 @@ void animate_create_blink_color(
    struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
    INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, BOOL block
 );
-void animate_add_animation( struct ANIMATION* a, bstring key );
+short animate_add_animation( struct ANIMATION* a, bstring key )
+#ifdef USE_GNUC_EXTENSIONS
+__attribute__ ((warn_unused_result))
+#endif /* USE_GNUC_EXTENSIONS */
+;
 struct ANIMATION* animate_get_animation( bstring key );
 void animate_cancel_animation( struct ANIMATION** a, bstring key );
 void animate_free_animation( struct ANIMATION** a );

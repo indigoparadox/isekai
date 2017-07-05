@@ -232,9 +232,13 @@ cleanup:
    return;
 }
 
-void animate_add_animation( struct ANIMATION* a, bstring key ) {
+short animate_add_animation( struct ANIMATION* a, bstring key ) {
    /* TODO: What if key exists? */
-   hashmap_put( &animations, key, a );
+   if( hashmap_put( &animations, key, a, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to double-add animation...\n" );
+      return 1;
+   }
+   return 0;
 }
 
 struct ANIMATION* animate_get_animation( bstring key ) {

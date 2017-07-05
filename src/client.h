@@ -84,7 +84,11 @@ void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void*
 void client_init( struct CLIENT* c );
 BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
-void client_add_channel( struct CLIENT* c, struct CHANNEL* l );
+short client_add_channel( struct CLIENT* c, struct CHANNEL* l )
+#ifdef USE_GNUC_EXTENSIONS
+__attribute__ ((warn_unused_result))
+#endif /* USE_GNUC_EXTENSIONS */
+;
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
 BOOL client_connect( struct CLIENT* c, const bstring server, int port );
 void client_remove_all_channels( struct CLIENT* c );
