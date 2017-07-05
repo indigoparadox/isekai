@@ -1390,6 +1390,10 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
 		</Unit>
+		<Unit filename="src/htmtree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/htmtree.h" />
 		<Unit filename="src/input.h" />
 		<Unit filename="src/input/allegroi.c">
 			<Option compilerVar="CC" />

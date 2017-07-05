@@ -70,6 +70,12 @@ void mobile_free( struct MOBILE* o ) {
    refcount_dec( o, "mobile" );
 }
 
+void mobile_animation_free( struct MOBILE_ANI_DEF* animation ) {
+   animation->frames.count = 0;
+   vector_cleanup( &(animation->frames) );
+   bdestroy( animation->name );
+}
+
 void mobile_init(
    struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {

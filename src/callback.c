@@ -285,6 +285,7 @@ void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void*
    }
 
 cleanup:
+   bdestroy( setdata_path );
    return NULL;
 }
 
@@ -324,7 +325,13 @@ void* callback_load_spawner_catalogs(
          catdata_path
       );
 
-      hashmap_put( &(client_or_server->item_catalogs), spawner->catalog, catalog );
+      if( hashmap_put(
+         &(client_or_server->item_catalogs), spawner->catalog, catalog, FALSE
+      ) ) {
+         scaffold_print_error( &module, "Attempted to double-add catalog: %b\n",
+            spawner->catalog );
+         item_spritesheet_free( catalog );
+      }
 
 #endif /* USE_EZXML */
 
@@ -1130,9 +1137,7 @@ void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg 
 BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
-      animation->frames.count = 0;
-      vector_cleanup( &(animation->frames) );
-      bdestroy( animation->name );
+      mobile_animation_free( animation );
       return TRUE;
    }
    return FALSE;

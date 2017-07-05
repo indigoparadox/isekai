@@ -1,5 +1,5 @@
 
-#include "parser.h"
+#include "htmtree.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -125,7 +125,7 @@ static struct html_tree_attr* html_tree_new_attr( struct html_tree_tag* tag ) {
    return new_attr;
 }
 
-static void html_tree_append_char( char c, struct html_tree* tree ) {
+static void html_tree_append_char( unsigned char c, struct html_tree* tree ) {
    struct html_tree_attr* attr_current = NULL;
 
    switch( tree->state ) {
@@ -173,7 +173,7 @@ static void html_tree_append_char( char c, struct html_tree* tree ) {
    }
 }
 
-static void html_tree_parse_char( char c, struct html_tree* tree ) {
+static void html_tree_parse_char( unsigned char c, struct html_tree* tree ) {
    int i;
    short tag_is_singleton_or_entity = 0;
 
@@ -316,6 +316,24 @@ static void html_tree_parse_char( char c, struct html_tree* tree ) {
 
          /* Fall through to default. */
 
+      case '?':
+         if(
+            '?' == c &&
+            HTML_TREE_OPENING_TAG == tree->state
+         ) {
+            html_tree_new_tag( tree );
+            tree->state = HTML_TREE_IN_START_TAG;
+            break;
+         } else if(
+            '?' == c &&
+            HTML_TREE_IN_START_TAG == tree->state
+         ) {
+            tree->state = HTML_TREE_IN_END_TAG;
+            break;
+         }
+
+         /* Fall through to default. */
+
       default:
          if( HTML_TREE_OPENING_TAG == tree->state ) {
             /* The character isn't '/' or '>', so we're in a tag! */
@@ -330,7 +348,9 @@ static void html_tree_parse_char( char c, struct html_tree* tree ) {
          } else if(
             HTML_TREE_IN_DATA == tree->state &&
             /* TODO: Crash if text before <html>? */
-            0 < blength( tree->current->tag )
+            ((NULL != tree->current &&
+            0 < blength( tree->current->tag )) ||
+            NULL == tree->current)
          ) {
             html_tree_new_tag( tree );
          }

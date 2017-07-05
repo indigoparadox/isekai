@@ -83,7 +83,7 @@ void server_stop( struct SERVER* s ) {
    s->self.running = FALSE;
 }
 
-void server_add_client( struct SERVER* s, struct CLIENT* c ) {
+short server_add_client( struct SERVER* s, struct CLIENT* c ) {
    if( 0 >= blength( c->nick ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
@@ -91,11 +91,18 @@ void server_add_client( struct SERVER* s, struct CLIENT* c ) {
       } while( NULL != hashmap_get( &(s->clients), c->nick ) );
    }
    scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
-   hashmap_put( &(s->clients), c->nick, c );
-   scaffold_print_debug(
-      &module, "Client %p added to server with nick: %s\n",
-      c, bdata( c->nick )
-   );
+   if( hashmap_put( &(s->clients), c->nick, c, FALSE ) ) {
+      scaffold_print_error( &module, "Attempted to double-add client: %b\n",
+         c->nick );
+      client_free( c );
+      return 1;
+   } else {
+      scaffold_print_debug(
+         &module, "Client %p added to server with nick: %s\n",
+         c, bdata( c->nick )
+      );
+      return 0;
+   }
 }
 
 struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLIENT* c_first ) {

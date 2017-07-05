@@ -209,7 +209,10 @@ void ui_control_add(
    scaffold_assert( NULL != control );
    scaffold_assert( &global_ui == win->ui );
 
-   hashmap_put( &(win->controls), id, control );
+   if( hashmap_put( &(win->controls), id, control, FALSE ) ) {
+      scaffold_print_error( &module,
+         "Attempted to double-add control: %b\n", id );
+   }
 
    if( TRUE == control->can_focus ) {
       verr = vector_add( &(win->controls_active), control );

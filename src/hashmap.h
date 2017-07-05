@@ -89,8 +89,18 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
 /*
  * Add an element to the hashmap. Return MAP_OK or MAP_OMEM.
  */
-void hashmap_put( struct HASHMAP* m, const bstring key, void* value );
-void hashmap_put_nolock( struct HASHMAP* m, const bstring key, void* value );
+short hashmap_put(
+   struct HASHMAP* m, const bstring key, void* value, BOOL overwrite )
+#ifdef USE_GNUC_EXTENSIONS
+__attribute__ ((warn_unused_result))
+#endif /* USE_GNUC_EXTENSIONS */
+;
+short hashmap_put_nolock(
+   struct HASHMAP* m, const bstring key, void* value, BOOL overwrite )
+#ifdef USE_GNUC_EXTENSIONS
+__attribute__ ((warn_unused_result))
+#endif /* USE_GNUC_EXTENSIONS */
+;
 
 /*
  * Get an element from the hashmap. Return MAP_OK or MAP_MISSING.

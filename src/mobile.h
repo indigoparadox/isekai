@@ -125,6 +125,7 @@ void mobile_free( struct MOBILE* o );
 void mobile_init(
    struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
 );
+void mobile_animation_free( struct MOBILE_ANI_DEF* animation );
 void mobile_load_local( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(

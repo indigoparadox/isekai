@@ -2,7 +2,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "bstrlib.h"
+#include "bstrlib/bstrlib.h"
 
 enum html_tree_state {
    HTML_TREE_IN_DATA,
@@ -32,7 +32,7 @@ struct html_tree_tag {
 struct html_tree {
    enum html_tree_state state;
    enum html_tree_state last_state;
-   char last_char;
+   unsigned char last_char;
    struct html_tree_tag* root;
    struct html_tree_tag* current;
 };

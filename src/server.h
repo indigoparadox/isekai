@@ -34,7 +34,7 @@ void server_stop( struct SERVER* s );
 BOOL server_free( struct SERVER* s );
 void server_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... );
 void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer );
-void server_add_client( struct SERVER* s, struct CLIENT* n );
+short server_add_client( struct SERVER* s, struct CLIENT* n );
 struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLIENT* c_first );
 void server_add_connection( struct SERVER* s, struct CLIENT* n );
 struct CHANNEL* server_get_channel_by_name( struct SERVER* s, bstring nick );
