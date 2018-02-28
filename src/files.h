@@ -32,7 +32,7 @@ BOOL files_check_directory( const bstring path )
 __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */
 ;
-void scaffold_join_path( bstring path1, const bstring path2 );
+void files_join_path( bstring path1, const bstring path2 );
 bstring files_root( bstring append );
 bstring files_search( bstring search_filename );
 

@@ -237,3 +237,5 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
    rect->h -= (2 * shrink_by);
    rect->w -= (2 * shrink_by);
 }
+
+

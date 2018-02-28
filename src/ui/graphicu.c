@@ -292,6 +292,8 @@ cleanup:
    #ifdef DEBUG
    ui_debug_stack( ui );
    #endif /* DEBUG */
+
+   return;
 }
 
 void ui_window_pop( struct UI* ui ) {
