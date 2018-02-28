@@ -93,6 +93,9 @@ void ui_window_init(
    win->area.h = height;
    win->element = mem_alloc( 1, GRAPHICS );
    win->dirty = TRUE; /* Draw at least once. */
+#ifdef DEBUG
+   win->sentinal = UI_SENTINAL_WINDOW;
+#endif /* DEBUG */
 
    if( NULL != id ) {
       win->id = bstrcpy( id );
@@ -148,6 +151,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
 
 void ui_window_free( struct UI_WINDOW* win ) {
    scaffold_assert( win->ui == &global_ui );
+   scaffold_assert( UI_SENTINAL_WINDOW == win->sentinal );
    ui_window_cleanup( win );
    mem_free( win );
 }
@@ -187,6 +191,9 @@ void ui_control_init(
    control->self.attachment = NULL;
    control->self.grid_iter = 0;
    control->self.selection = 0;
+#ifdef DEBUG
+   control->self.sentinal = UI_SENTINAL_CONTROL;
+#endif /* DEBUG */
    vector_init( &(control->self.controls_active) );
 }
 
