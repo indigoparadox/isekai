@@ -42,6 +42,11 @@
 #define UI_CONST_HEIGHT_FULL -1
 #define UI_CONST_HEIGHT_HALF -2
 
+#ifdef DEBUG
+#define UI_SENTINAL_WINDOW 23232
+#define UI_SENTINAL_CONTROL 45454
+#endif /* DEBUG */
+
 struct UI;
 
 typedef enum {
@@ -71,6 +76,9 @@ struct UI_WINDOW {
    SCAFFOLD_SIZE selection;
    SCAFFOLD_SIZE grid_iter;
    BOOL dirty;
+#ifdef DEBUG
+   uint32_t sentinal;
+#endif /* DEBUG */
 };
 
 struct UI_CONTROL {

@@ -598,7 +598,7 @@ void graphics_blit_stretch(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
 ) {
-   if( w == 0 || h == 0 ) {
+   if( w <= 0 || h <= 0 ) {
       goto cleanup;
    }
 
