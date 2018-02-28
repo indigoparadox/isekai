@@ -303,10 +303,56 @@ cleanup:
 }
 
 void graphics_draw_line(
-   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
-   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, GRAPHICS_COLOR color
+   GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
 ) {
    /* TODO */
+   /* Uint32 colorSDL; */
+   Uint32* bufp;
+   GFX_COORD_PIXEL y;
+   SDL_Surface* surface = g->surface;
+
+   /* Ensure y2 > y1 at all times. */
+   if( y2 < y1 ) {
+      y1 += y2;
+      y2 = y1 - y2;
+      y1 -= y2;
+   }
+
+   /* Ensure x2 > x1 at all times. */
+   if( x2 < x1 ) {
+      x1 += x2;
+      x2 = x1 - x2;
+      x1 -= x2;
+   }
+
+   if(
+      y2 < 0 ||
+      y1 >= g->h ||
+      x1 < 0 ||
+      x1 >= g->w
+   ) {
+      return 0; /* No single point of the line is on screen. */
+   }
+
+   /* Clipping. */
+   if( y1 < 0 ) {
+      y1 = 0;
+   }
+   if( y2 >= g->w ) {
+      y2 = g->h - 1;
+   }
+
+   /* colorSDL =  SDL_MapRGB( surface->format, color->r, color->g, color->b ); */
+
+   /* bufp = (Uint32*)(surface->pixels) + y1 * surface->pitch / 4 + x1; */
+   for( y = y1; y <= y2; y++ ) {
+      /* *bufp = colorSDL;
+      bufp += g->surface->pitch / 4; */
+      /* TODO: Horizontal travel. */
+      SDL_PutPixel( surface, x1, y, color );
+   }
+   return 1;
 }
 
 void graphics_draw_triangle(

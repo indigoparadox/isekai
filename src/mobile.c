@@ -113,7 +113,7 @@ void mobile_init(
    /* We always need the filename to fetch the file with a chunker. */
    o->def_filename = bfromcstr( "mobs" );
    scaffold_check_null( o->def_filename );
-   scaffold_join_path( o->def_filename, o->mob_id );
+   files_join_path( o->def_filename, o->mob_id );
    scaffold_check_nonzero( scaffold_error );
 
 #ifdef USE_EZXML

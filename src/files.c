@@ -334,7 +334,7 @@ cleanup:
    return basename_out;
 }
 
-void scaffold_join_path( bstring path1, const bstring path2 ) {
+void files_join_path( bstring path1, const bstring path2 ) {
    int bstr_res = 0;
    if( SCAFFOLD_DIRSEP_CHAR != bchar( path1, blength( path1 ) - 1 ) ) {
       bstr_res = bconchar( path1, SCAFFOLD_DIRSEP_CHAR );
@@ -356,7 +356,7 @@ bstring files_root( const bstring append ) {
 
    path_out = bstrcpy( &str_server_data_path );
    scaffold_check_null_msg( path_out, "Could not allocate path buffer." );
-   scaffold_join_path( path_out, append );
+   files_join_path( path_out, append );
    scaffold_check_nonzero( scaffold_error );
 
 cleanup:

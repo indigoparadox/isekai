@@ -32,7 +32,7 @@ void check_chunker_setup_unchecked() {
    scaffold_print_info( &module, "====== BEGIN CHUNKER TRACE ======\n" );
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
-   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
+   files_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
@@ -44,7 +44,7 @@ void check_chunker_setup_unchecked() {
 
    bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
    scaffold_check_nonzero( bstr_res );
-   scaffold_join_path( cache_file_path, &chunker_test_img_filename );
+   files_join_path( cache_file_path, &chunker_test_img_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
@@ -280,7 +280,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    int bstr_res;
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
-   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
+   files_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    scaffold_error_silent = TRUE;
    files_read_contents(
       cache_file_path,
@@ -304,7 +304,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
 
    bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
    scaffold_check_nonzero( bstr_res );
-   scaffold_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
+   files_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
    scaffold_error_silent = TRUE;
    files_read_contents(
       cache_file_path,

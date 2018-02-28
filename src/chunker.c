@@ -140,7 +140,7 @@ BOOL chunker_chunk_start_file(
 
    full_file_path = bstrcpy( h->serverpath );
 
-   scaffold_join_path( full_file_path, h->filename );
+   files_join_path( full_file_path, h->filename );
    scaffold_check_null( full_file_path );
 
    bytes_read =
@@ -454,7 +454,7 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
    scaffold_check_silence(); /* Caching disabled is a non-event. */
    scaffold_check_null( cache_filename );
 
-   scaffold_join_path( cache_filename, h->filename );
+   files_join_path( cache_filename, h->filename );
 
    written =
       files_write( cache_filename, h->raw_ptr, h->raw_length, TRUE );
@@ -476,7 +476,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    cache_filename = bstrcpy( h->filecache_path );
    scaffold_check_null( cache_filename );
 
-   scaffold_join_path( cache_filename, h->filename );
+   files_join_path( cache_filename, h->filename );
    scaffold_check_nonzero( scaffold_error );
 
    /* TODO: Compare file hashes. */

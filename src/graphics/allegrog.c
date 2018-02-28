@@ -620,3 +620,9 @@ void graphics_sleep( uint16_t milliseconds ) {
 uint32_t graphics_get_ticks() {
    return allegro_ticks;
 }
+
+#ifdef USE_RAYCASTING
+
+
+
+#endif /* USE_RAYCASTING */

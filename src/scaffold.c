@@ -2,8 +2,6 @@
 #define SCAFFOLD_C
 #include "scaffold.h"
 
-#include "backlog.h"
-
 static struct tagbstring str_scaffold_trace[3] = {
    bsStatic( "T_NONE" ),
    bsStatic( "T_CLIENT" ),
@@ -232,7 +230,9 @@ void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
       bdata( mod_in ), bdata( scaffold_print_buffer ) );
 #endif /* DEBUG */
 
+#ifdef BACKLOG_PRESENT
    backlog_system( scaffold_print_buffer );
+#endif /* BACKLOG_PRESENT */
 
 cleanup:
    return;
