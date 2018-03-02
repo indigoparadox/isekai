@@ -124,7 +124,6 @@ static void scaffold_log(
    const char* message, va_list varg
 ) {
    int bstr_ret;
-   int i;
    bstring prepend_buffer = NULL;
 
    if( NULL == scaffold_print_buffer ) {
@@ -145,14 +144,6 @@ static void scaffold_log(
    scaffold_snprintf( scaffold_print_buffer, "%b: ", mod_in );
    scaffold_vsnprintf( scaffold_print_buffer, message, varg );
 #endif /* DEBUG */
-
-/*
-   for( i = 0 ; blength( prepend_buffer ) > i ; i++ ) {
-      bstr_ret =
-         binsertch( scaffold_print_buffer, 0, 1, bchar( prepend_buffer, i ) );
-      if( 0 > bstr_ret ) { goto cleanup; }
-   }
-*/
 
    scaffold_colorize( scaffold_print_buffer, color );
 

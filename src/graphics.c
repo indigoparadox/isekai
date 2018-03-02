@@ -238,4 +238,93 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
    rect->w -= (2 * shrink_by);
 }
 
+#ifdef USE_RAYCASTING
 
+/** \brief
+ *
+ * \param
+ * \param wall_pos A rectangle with W set to the map width. The wall collision
+ * will be returned via X and Y. The wall side (NE/SW) will be returned via H.
+ * \return
+ *
+ */
+int graphics_raycast_throw(
+  int x, GRAPHICS_CAM* cam_pos, GRAPHICS_CAM* plane_pos, GRAPHICS* g,
+  BOOL (collision_check)( GRAPHICS_RECT*, void* ), void* data,
+  GRAPHICS_RECT* wall_pos
+) {
+  double camera_x;
+  GRAPHICS_CAM ray_pos;
+
+  /* Length of ray from current position to next x or y-side. */
+  double side_dist_x;
+  double side_dist_y;
+
+  /* Length of ray from one x or y-side to next x or y-side. */
+  double delta_dist_x = 0;
+  double delta_dist_y = 0;
+  double perpen_wall_dist = 0;
+
+  /* What direction to step in x or y-direction (either +1 or -1). */
+  int stepX;
+  int stepY;
+
+  BOOL wall_hit = FALSE;
+
+  wall_pos->x = (int)cam_pos->x;
+  wall_pos->y = (int)cam_pos->y;
+
+  /* Calculate ray position and directionmap_pos. */
+  camera_x = 2 * x / (double)(g->w) - 1;
+  ray_pos.fx = cam_pos->fx + plane_pos->x * camera_x;
+  ray_pos.y = cam_pos->fy + plane_pos->y * camera_x;
+  delta_dist_x = fabs(1 / ray_pos.fx);
+  delta_dist_y = fabs(1 / ray_pos.y);
+
+  /* Calculate step and initial sideDist. */
+  if( 0 > ray_pos.fx ) {
+    stepX = -1;
+    side_dist_x = (cam_pos->x - wall_pos->x) * delta_dist_x;
+  } else {
+    stepX = 1;
+    side_dist_x = (wall_pos->x + 1.0 - cam_pos->x) * delta_dist_x;
+  }
+  if( 0 > ray_pos.y ) {
+    stepY = -1;
+    side_dist_y = (cam_pos->y - wall_pos->y) * delta_dist_y;
+  } else {
+    stepY = 1;
+    side_dist_y = (wall_pos->y + 1.0 - cam_pos->y) * delta_dist_y;
+  }
+
+  /* Do the actual casting. */
+  while( FALSE == wall_hit ) {
+    /* Jump to next map square, OR in x-direction, OR in y-direction. */
+    if( side_dist_x < side_dist_y ) {
+      side_dist_x += delta_dist_x;
+      wall_pos->x += stepX;
+      wall_pos->h = 0;
+    } else {
+      side_dist_y += delta_dist_y;
+      wall_pos->y += stepY;
+      wall_pos->h = 1;
+    }
+
+    /* Check if ray has hit a wall. */
+    if( collision_check( wall_pos, data ) ) {
+      wall_hit = TRUE;
+    }
+  }
+
+  /* Calculate distance projected on camera direction (Euclidean distance will give fisheye effect!). */
+  if( 0 == wall_pos->h ) {
+    perpen_wall_dist = (wall_pos->x - cam_pos->x + (1 - stepX) / 2) / ray_pos.fx;
+  } else {
+    perpen_wall_dist = (wall_pos->y - cam_pos->y + (1 - stepY) / 2) / ray_pos.y;
+  }
+
+  /* Calculate height of line to draw on screen. */
+  return (int)(g->h / perpen_wall_dist);
+}
+
+#endif /* USE_RAYCASTING */

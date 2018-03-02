@@ -190,7 +190,7 @@ extern FILE* scaffold_log_handle_err;
 #define scaffold_log_handle_err stderr
 #endif /* SCAFFOLD_LOG_FILE */
 
-#ifdef DEBUG
+//#ifdef DEBUG
 
 void scaffold_print_debug( const bstring module, const char* message, ... );
 void scaffold_print_info( const bstring module, const char* message, ... );
@@ -198,6 +198,8 @@ void scaffold_print_error( const bstring module, const char* message, ... );
 void scaffold_print_debug_color(
    const bstring mod_in, SCAFFOLD_COLOR color, const char* message, ...
 );
+
+#ifdef DEBUG
 
 #define scaffold_assert( arg ) assert( arg )
 

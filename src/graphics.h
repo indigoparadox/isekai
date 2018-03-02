@@ -1,6 +1,10 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#ifdef USE_RAYCASTING
+#include <math.h>
+#endif /* USE_RAYCASTING */
+
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 #include "ref.h"
@@ -67,6 +71,17 @@ typedef struct {
    GFX_COORD_PIXEL w;
    GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
+
+#ifdef USE_RAYCASTING
+
+typedef struct {
+   double x;
+   double y;
+   double fx;
+   double fy;
+} GRAPHICS_CAM;
+
+#endif /* USE_RAYCASTING */
 
 struct GRAPHICS_TILE_WINDOW {
    struct CLIENT* local_client;
@@ -173,6 +188,16 @@ SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
    GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
 );
 void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by );
+
+#ifdef USE_RAYCASTING
+
+int graphics_raycast_throw(
+  int x, GRAPHICS_CAM* cam_pos, GRAPHICS_CAM* plane_pos, GRAPHICS* g,
+  BOOL (collision_check)( GRAPHICS_RECT*, void* ), void* data,
+  GRAPHICS_RECT* wall_pos
+);
+
+#endif /* USE_RAYCASTING */
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );
