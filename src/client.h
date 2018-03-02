@@ -130,22 +130,36 @@ struct ITEM_SPRITESHEET* client_get_catalog(
    struct CLIENT* c, const bstring name
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
-GRAPHICS* client_get_local_screen( struct CLIENT* c );
+
+GRAPHICS* client_local_get_screen( struct CLIENT* c );
+void client_local_free( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
    bsStatic( "testdata/livecache" );
-static struct tagbstring str_wid_debug_tiles_pos =
+struct tagbstring str_wid_debug_tiles_pos =
    bsStatic( "debug_tiles_pos" );
-static struct tagbstring str_client_window_id_chat = bsStatic( "chat" );
-static struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
-static struct tagbstring str_client_control_id_chat = bsStatic( "chat" );
-static struct tagbstring str_client_window_id_inv = bsStatic( "inventory" );
-static struct tagbstring str_client_window_title_inv = bsStatic( "Inventory" );
-static struct tagbstring str_client_control_id_inv_self = bsStatic( "inv_pane_self" );
-static struct tagbstring str_client_control_id_inv_ground = bsStatic( "inv_pane_ground" );
+struct tagbstring str_client_window_id_chat = bsStatic( "chat" );
+struct tagbstring str_client_window_title_chat = bsStatic( "Chat" );
+struct tagbstring str_client_control_id_chat = bsStatic( "chat" );
+struct tagbstring str_client_window_id_inv = bsStatic( "inventory" );
+struct tagbstring str_client_window_title_inv = bsStatic( "Inventory" );
+struct tagbstring str_client_control_id_inv_self = bsStatic( "inv_pane_self" );
+struct tagbstring str_client_control_id_inv_ground = bsStatic( "inv_pane_ground" );
 SCAFFOLD_MODULE( "client.c" );
 #else
+#ifdef CLIENT_LOCAL_C
+extern struct tagbstring str_client_cache_path;
+extern struct tagbstring str_wid_debug_tiles_pos;
+extern struct tagbstring str_client_window_id_chat;
+extern struct tagbstring str_client_window_title_chat;
+extern struct tagbstring str_client_control_id_chat;
+extern struct tagbstring str_client_window_id_inv;
+extern struct tagbstring str_client_window_title_inv;
+extern struct tagbstring str_client_control_id_inv_self;
+extern struct tagbstring str_client_control_id_inv_ground;
+SCAFFOLD_MODULE( "client_local.c" );
+#endif /* CLIENT_LOCAL_C */
 extern struct tagbstring str_client_cache_path;
 #endif /* CLIENT_C */
 

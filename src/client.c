@@ -51,16 +51,6 @@ void client_init( struct CLIENT* c ) {
 
    scaffold_assert( FALSE == c->running );
 
-#ifdef ENABLE_LOCAL_CLIENT
-   /*
-   if( TRUE == ipc_is_local_client( c->link ) ) {
-      scaffold_assert_client();
-      bdestroy( client_input_from_ui );
-      client_input_from_ui = NULL;
-   }
-   */
-#endif /* ENABLE_LOCAL_CLIENT */
-
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
    hashmap_init( &(c->chunkers) );
@@ -264,12 +254,7 @@ void client_stop( struct CLIENT* c ) {
 
    client_clear_puppet( c );
 #ifdef ENABLE_LOCAL_CLIENT
-   if(
-      TRUE == ipc_is_local_client( c->link ) &&
-      HASHMAP_SENTINAL == c->sprites.sentinal
-   ) {
-      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
-   }
+   client_local_free( c );
 #endif /* ENABLE_LOCAL_CLIENT */
 
    scaffold_assert( FALSE == ipc_connected( c->link ) );
@@ -287,77 +272,6 @@ short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
    }
    return 0;
 }
-
-#if 0
-void client_send( struct CLIENT* c, const bstring buffer ) {
-   int bstr_retval;
-   bstring buffer_copy = NULL;
-
-   /* TODO: Make sure we're still connected. */
-
-   buffer_copy = bstrcpy( buffer );
-   scaffold_check_null( buffer_copy );
-   bstr_retval = bconchar( buffer_copy, '\r' );
-   scaffold_check_nonzero( bstr_retval );
-   bstr_retval = bconchar( buffer_copy, '\n' );
-   scaffold_check_nonzero( bstr_retval );
-   ipc_write( c->link, buffer_copy );
-
-#ifdef DEBUG_NETWORK
-   if( TRUE == c->client_side ) {
-      scaffold_print_debug(
-         &module, "Client sent to server: %s\n", bdata( buffer )
-      );
-   } else {
-      scaffold_print_debug(
-         &module, "Server sent to client %d: %s\n",
-         c->link.socket, bdata( buffer )
-      );
-   }
-#endif /* DEBUG_NETWORK */
-
-cleanup:
-   bdestroy( buffer_copy );
-#ifdef ENABLE_LOCAL_CLIENT
-   if( ipc_is_local_client( c->link ) ) {
-      scaffold_assert_client();
-   } else {
-      scaffold_assert_server();
-   }
-#endif /* ENABLE_LOCAL_CLIENT */
-   return;
-}
-
-void client_printf( struct CLIENT* c, const char* message, ... ) {
-   bstring buffer = NULL;
-   va_list varg;
-
-#ifdef ENABLE_LOCAL_CLIENT
-   if( ipc_is_local_client( c->link ) ) {
-      scaffold_assert_client();
-   } else {
-      struct CONNECTION* n = c->link;
-      scaffold_assert_server();
-   }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-   buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
-
-   va_start( varg, message );
-   scaffold_vsnprintf( buffer, message, varg );
-   va_end( varg );
-
-   if( 0 == scaffold_error ) {
-      client_send( c, buffer );
-   }
-
-cleanup:
-   bdestroy( buffer );
-   return;
-}
-
-#endif
 
 #ifdef USE_CHUNKS
 
@@ -605,7 +519,7 @@ cleanup:
  * \param
  * \return TRUE if input is consumed, or FALSE otherwise.
  */
-static BOOL client_poll_ui(
+BOOL client_poll_ui(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
 ) {
    struct TILEMAP* t = NULL;
@@ -681,162 +595,8 @@ reset_buffer:
    return retval;
 }
 
-static BOOL client_poll_keyboard( struct CLIENT* c, struct INPUT* input ) {
-   struct MOBILE* puppet = NULL;
-   struct MOBILE_UPDATE_PACKET update;
-   struct UI* ui = NULL;
-   struct UI_WINDOW* win = NULL;
-   struct UI_CONTROL* control = NULL;
-   struct CHANNEL* l = NULL;
-   struct TILEMAP* t = NULL;
-   struct TILEMAP_ITEM_CACHE* cache = NULL;
-
-   /* Make sure the buffer that all windows share is available. */
-   if(
-      NULL == c->puppet ||
-      (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
-   ) {
-      /* TODO: Handle limited input while loading. */
-      input_clear_buffer( input );
-      return FALSE; /* Silently ignore input until animations are done. */
-   } else {
-      puppet = c->puppet;
-      ui = c->ui;
-      update.o = puppet;
-      update.l = puppet->channel;
-      scaffold_check_null( update.l );
-      l = puppet->channel;
-      scaffold_check_null_msg( l, "No channel loaded." );
-      t = &(l->tilemap);
-      scaffold_check_null_msg( t, "No tilemap loaded." );
-   }
-
-   /* If no windows need input, then move on to game input. */
-   switch( input->character ) {
-   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
-   case INPUT_ASSIGNMENT_UP:
-      update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y - 1;
-      proto_client_send_update( c, &update );
-      return TRUE;
-
-   case INPUT_ASSIGNMENT_LEFT:
-      update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = c->puppet->x - 1;
-      update.y = c->puppet->y;
-      proto_client_send_update( c, &update );
-      return TRUE;
-
-   case INPUT_ASSIGNMENT_DOWN:
-      update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y + 1;
-      proto_client_send_update( c, &update );
-      return TRUE;
-
-   case INPUT_ASSIGNMENT_RIGHT:
-      update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = c->puppet->x + 1;
-      update.y = c->puppet->y;
-      proto_client_send_update( c, &update );
-      return TRUE;
-
-   case INPUT_ASSIGNMENT_ATTACK:
-      update.update = MOBILE_UPDATE_ATTACK;
-      /* TODO: Get attack target. */
-      proto_client_send_update( c, &update );
-      return TRUE;
-
-   case INPUT_ASSIGNMENT_INV:
-      if( NULL == client_input_from_ui ) {
-         client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
-      }
-      ui_window_new(
-         ui, win, &str_client_window_id_inv,
-         &str_client_window_title_inv, NULL, -1, -1, 600, 380
-      );
-      ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         0, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
-      );
-      ui_control_add( win, &str_client_control_id_inv_self, control );
-      ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
-      );
-      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
-      ui_set_inventory_pane_list( control, &(cache->items) );
-      ui_control_add( win, &str_client_control_id_inv_ground, control );
-      ui_window_push( ui, win );
-      return TRUE;
-
-   case '\\':
-      if( NULL == client_input_from_ui ) {
-         client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
-      }
-      ui_window_new(
-         ui, win, &str_client_window_id_chat,
-         &str_client_window_title_chat, NULL, -1, -1, -1, -1
-      );
-      ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, client_input_from_ui,
-         -1, -1, -1, -1
-      );
-      ui_control_add( win, &str_client_control_id_chat, control );
-      ui_window_push( ui, win );
-      return TRUE;
-#ifdef DEBUG_VM
-   case 'p': windef_show_repl( ui ); return TRUE;
-#endif /* DEBUG_VM */
-#ifdef DEBUG_TILES
-   case 't':
-      if( 0 == input->repeat ) {
-         tilemap_toggle_debug_state();
-         return TRUE;
-      }
-      break;
-   case 'l':
-      if( 0 == input->repeat ) {
-         tilemap_dt_layer++;
-         return TRUE;
-      }
-      break;
-#endif /* DEBUG_TILES */
-   }
-
-   cleanup:
-   return FALSE;
-}
-
-void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
-   scaffold_set_client();
-   input_get_event( p );
-   if( INPUT_TYPE_CLOSE == p->type ) {
-      proto_client_stop( c );
-   } else if( INPUT_TYPE_KEY == p->type ) {
-      if( !client_poll_ui( c, l, p ) ) {
-         client_poll_keyboard( c, p );
-      }
-   }
-   return;
-}
 
 #endif /* ENABLE_LOCAL_CLIENT */
-
-/*
-BOOL client_connected( struct CLIENT* c ) {
-   if( 0 < c->link.socket ) {
-      scaffold_assert( TRUE == c->running );
-      return TRUE;
-   } else {
-      scaffold_assert( FALSE == c->running );
-      return FALSE;
-   }
-}
-*/
 
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
@@ -887,10 +647,4 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
 
 cleanup:
    return;
-}
-
-GRAPHICS* client_get_local_screen( struct CLIENT* c ) {
-   scaffold_assert_client();
-
-   return c->ui->screen_g;
 }
