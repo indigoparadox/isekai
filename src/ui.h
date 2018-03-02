@@ -146,6 +146,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    struct UI* ui, struct INPUT* input, const bstring id
 );
 void ui_draw( struct UI* ui, GRAPHICS* g );
+void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow );
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id );
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer );

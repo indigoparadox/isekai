@@ -122,7 +122,7 @@ static BOOL loop_game() {
 
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == animate_is_blocking() ) {
-      client_poll_input( main_client, l, input );
+      client_local_poll_input( main_client, l, input );
       client_update( main_client, g_screen );
    }
 
@@ -174,9 +174,7 @@ static BOOL loop_game() {
 
    } else if( NULL == twindow->t ) {
       twindow->t = &(l->tilemap);
-      tilemap_update_window_ortho(
-         twindow, main_client->puppet->x, main_client->puppet->y
-      );
+      client_local_update( main_client, l, twindow );
    }
 
    /* If we're this far, we must be done loading! */
@@ -201,8 +199,7 @@ static BOOL loop_game() {
    /* If there's no puppet then there should be a load screen. */
    scaffold_assert( NULL != main_client->puppet );
 
-   tilemap_draw_ortho( twindow );
-   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+   client_local_draw( main_client, l, twindow );
 
    if( NULL != twindow ) {
       ui_window_draw_tilegrid( ui, twindow );
