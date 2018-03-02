@@ -555,8 +555,7 @@ void graphics_draw_char(
    GRAPHICS* g, GFX_COORD_PIXEL x_start, GFX_COORD_PIXEL y_start,
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
 ) {
-   GFX_COORD_PIXEL x, y, bit;
-   uint8_t* font_char;
+   GFX_COORD_PIXEL x, y;
    float divisor;
 
    if( NULL == g->surface ) {

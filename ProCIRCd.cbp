@@ -777,6 +777,7 @@
 			<Add option="-DxEZXML_EMBEDDED_IMAGES" />
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
+			<Add option="-DBACKLOG_PRESENT" />
 		</Compiler>
 		<Unit filename="procircd.def">
 			<Option target="Debug (Palm-SB)" />
