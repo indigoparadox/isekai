@@ -10,6 +10,7 @@
 #include "../channel.h"
 #include "../tilemap.h"
 #include "../proto.h"
+#include "../mobile.h"
 
 extern bstring client_input_from_ui;
 
@@ -69,7 +70,7 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
       case 3:
          return 1 == wall_pos->side ? GRAPHICS_COLOR_BLUE : GRAPHICS_COLOR_DARK_BLUE;
       case 4:
-         return 1 == wall_pos->side ? GRAPHICS_COLOR_WHITE : GRAPHICS_COLOR_GRAY;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_CYAN : GRAPHICS_COLOR_DARK_CYAN;
       default:
          return 1 == wall_pos->side ? GRAPHICS_COLOR_YELLOW : GRAPHICS_COLOR_BROWN;
    }
@@ -97,6 +98,9 @@ void client_local_draw(
    GRAPHICS_RECT tile_tilesheet_pos;
    SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS_COLOR color;
+   double steps_remaining = 0;
+   struct MOBILE* player;
+   int tex_x, tex_y;
 
    if( NULL == twindow->t ) {
       return;
@@ -109,19 +113,43 @@ void client_local_draw(
       return;
    }
 
+   player = twindow->local_client->puppet;
+   cam_pos.x = player->x;
+   cam_pos.y = player->y;
+
+   if( 0 < player->steps_remaining ) {
+      switch( player->facing )  {
+         case MOBILE_FACING_LEFT:
+            steps_remaining = 10 / player->steps_remaining;
+            cam_pos.x -= steps_remaining;
+            break;
+         case MOBILE_FACING_RIGHT:
+            steps_remaining = 10 - (10 / player->steps_remaining);
+            cam_pos.x += steps_remaining;
+            break;
+         case MOBILE_FACING_DOWN:
+            steps_remaining = 10 - (10 / player->steps_remaining);
+            cam_pos.y += steps_remaining;
+            break;
+         case MOBILE_FACING_UP:
+            steps_remaining = 10 / player->steps_remaining;
+            cam_pos.y -= steps_remaining;
+            break;
+      }
+   }
+
    wall_map_pos.map_w = twindow->t->width;
    wall_map_pos.map_h = twindow->t->height;
-   cam_pos.x = twindow->local_client->puppet->x;
-   cam_pos.y = twindow->local_client->puppet->y;
    cam_pos.dx.facing = -1; /* TODO */
    cam_pos.dy.facing = 0;
    plane_pos.x = 0;
    plane_pos.y = 0.66;
-
+   floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
+   floor_pos.tex_h = 32;
 
 
    /* Draw a sky. */
-   graphics_draw_rect( twindow->g, 0, 0, twindow->g->w, twindow->g->h / 2, GRAPHICS_COLOR_CYAN, TRUE );
+   graphics_draw_rect( twindow->g, 0, 0, twindow->g->w, twindow->g->h, GRAPHICS_COLOR_CYAN, TRUE );
 
    for( x = 0; x < twindow->g->w; x++ ) {
 
@@ -161,20 +189,18 @@ void client_local_draw(
 
       /* Draw the floor from draw_end to the bottom of the screen. */
       for( y = draw_end +1; y < twindow->g->h; y++ ) {
+         /* Get the tileset and its tilesheet. */
+         graphics_floorcast_throw(
+            &floor_pos, &ray, x, y, line_height,
+            &plane_pos, &cam_pos, &wall_map_pos,
+            twindow->g
+         );
          layer = twindow->t->first_layer;
          while( NULL != layer ) {
             tile = tilemap_get_tile( layer, wall_map_pos.x, wall_map_pos.y  );
             set = tilemap_get_tileset( twindow->t, tile, &set_firstgid );
             if( NULL != set ) {
-               /* Get the tileset and its tilesheet. */
-               floor_pos.tex_w = set->tilewidth;
-               floor_pos.tex_h = set->tileheight;
-               graphics_floorcast_throw(
-                  &floor_pos, &ray, x, y, line_height,
-                  &plane_pos, &cam_pos, &wall_map_pos,
-                  twindow->g
-               );
-               tile = tilemap_get_tile( layer, floor_pos.x, floor_pos.y  );
+               tile = tilemap_get_tile( layer, (int)floor_pos.x, (int)floor_pos.y );
                g_tileset = hashmap_iterate(
                   &(set->images),
                   callback_search_tileset_img_gid,
@@ -184,14 +210,12 @@ void client_local_draw(
                   /* Move the source region on the tilesheet. */
                   tilemap_get_tile_tileset_pos(
                      set, set_firstgid, g_tileset, tile, &tile_tilesheet_pos );
-                  floor_pos.tex_x += tile_tilesheet_pos.x;
-                  floor_pos.tex_y += tile_tilesheet_pos.y;
-                  graphics_blit_pixel(
-                     twindow->g,
-                     x, y,
-                     floor_pos.tex_x, floor_pos.tex_y,
-                     g_tileset
-                  );
+                  tex_x = floor_pos.tex_x + tile_tilesheet_pos.x;
+                  tex_y = floor_pos.tex_y + tile_tilesheet_pos.y;
+                  color = graphics_get_pixel( g_tileset, tex_x, tex_y );
+                  if( GRAPHICS_COLOR_WHITE != color ) {
+                     graphics_set_pixel( twindow->g, x, y, color );
+                  }
                }
             }
             layer = layer->next_layer;
