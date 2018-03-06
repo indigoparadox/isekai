@@ -249,26 +249,26 @@ GFX_RAY_FLOOR* graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, GFX_DELTA* cam_pos,
    GFX_RAY_WALL* wall_map_pos, GRAPHICS* g
 ) {
-   double wallX; //where exactly the wall was hit
-   if( 0 == wall_map_pos->side ) {
-      wallX = cam_pos->y + wall_map_pos->perpen_dist * ray->direction_y;
-   } else {
-      wallX = cam_pos->x + wall_map_pos->perpen_dist * ray->direction_x;
-   }
-   wallX -= floor((wallX));
+   double wall_x_hit; /* Where, exactly, the wall was hit. */
 
-   //4 different wall directions possible
+   if( 0 == wall_map_pos->side ) {
+      wall_x_hit = cam_pos->y + wall_map_pos->perpen_dist * ray->direction_y;
+   } else {
+      wall_x_hit = cam_pos->x + wall_map_pos->perpen_dist * ray->direction_x;
+   }
+   wall_x_hit -= floor( wall_x_hit );
+
    if( wall_map_pos->side == 0 && 0 < ray->direction_x ) {
       floor_pos->wall_x = wall_map_pos->x;
-      floor_pos->wall_y = wall_map_pos->y + wallX;
+      floor_pos->wall_y = wall_map_pos->y + wall_x_hit;
    } else if( 0 == wall_map_pos->side && 0 > ray->direction_x ) {
       floor_pos->wall_x = wall_map_pos->x + 1.0;
-      floor_pos->wall_y = wall_map_pos->y + wallX;
+      floor_pos->wall_y = wall_map_pos->y + wall_x_hit;
    } else if( 1 == wall_map_pos->side && 0 < ray->direction_y ) {
-      floor_pos->wall_x = wall_map_pos->x + wallX;
+      floor_pos->wall_x = wall_map_pos->x + wall_x_hit;
       floor_pos->wall_y = wall_map_pos->y;
    } else {
-      floor_pos->wall_x = wall_map_pos->x + wallX;
+      floor_pos->wall_x = wall_map_pos->x + wall_x_hit;
       floor_pos->wall_y = wall_map_pos->y + 1.0;
    }
 

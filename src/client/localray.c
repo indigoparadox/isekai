@@ -13,31 +13,45 @@
 
 extern bstring client_input_from_ui;
 
-static BOOL check_ray_wall_collision( GFX_RAY_WALL* wall_map_pos, void* data ) {
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)data;
-   struct TILEMAP_LAYER* layer;
+static void* client_local_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TILEMAP* t = twindow->t;
+   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    uint32_t tile;
    struct TILEMAP_TILESET* set;
    struct TILEMAP_TILE_DATA* tile_info;
    int i;
    struct TILEMAP_TERRAIN_DATA* terrain_iter;
 
-   layer = twindow->t->first_layer;
+   scaffold_check_null( t );
 
-   tile = tilemap_get_tile(
-      layer, twindow->local_client->puppet->x, twindow->local_client->puppet->y
-   );
-   set = tilemap_get_tileset( twindow->t, tile, NULL );
-   tile_info = vector_get( &(set->tiles), tile - 1 );
-   for( i = 0 ; 4 > i ; i++ ) {
-      terrain_iter = tile_info->terrain[i];
-      if( NULL == terrain_iter ) { continue; }
-      if( TILEMAP_MOVEMENT_BLOCK == terrain_iter->movement ) {
-         return FALSE;
+   layer = t->first_layer;
+   while( NULL != layer ) {
+      tile = tilemap_get_tile( layer, pos->x, pos->y );
+      set = tilemap_get_tileset( twindow->t, tile, NULL );
+      tile_info = vector_get( &(set->tiles), tile - 1 );
+      for( i = 0 ; 4 > i ; i++ ) {
+         terrain_iter = tile_info->terrain[i];
+         if( NULL == terrain_iter ) { continue; }
+         if( TILEMAP_MOVEMENT_BLOCK == terrain_iter->movement ) {
+            return 1;
+         }
       }
    }
 
-   return TRUE;
+cleanup:
+   return NULL;
+}
+
+static BOOL check_ray_wall_collision( GFX_RAY_WALL* wall_map_pos, void* data ) {
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)data;
+   struct TILEMAP_LAYER* layer;
+   int res;
+
+   res = hashmap_iterate( &(twindow->t->layers), client_local_raycol_cb, twindow );
+
+   return res ? 0 : 1;
 }
 
 static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
@@ -75,7 +89,7 @@ void client_local_draw(
    GFX_RAY ray;
    GFX_DELTA* wall_scr_pos;
    GFX_RAY_FLOOR floor_pos;
-   //tilemap_draw_ortho( twindow );
+   int line_height;
 
    if( NULL == twindow->t ) {
       return;
@@ -112,7 +126,7 @@ void client_local_draw(
 
       /* Calculate ray position and direction. */
       graphics_raycast_create( &ray, x, &plane_pos, &cam_pos, twindow->g );
-      int line_height = graphics_raycast_wall_throw(
+      line_height = graphics_raycast_wall_throw(
          &cam_pos, &plane_pos, twindow->g, check_ray_wall_collision,
          twindow, &ray, &wall_map_pos
       );
