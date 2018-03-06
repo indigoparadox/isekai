@@ -90,6 +90,13 @@ void client_local_draw(
    GFX_DELTA* wall_scr_pos;
    GFX_RAY_FLOOR floor_pos;
    int line_height;
+   struct TILEMAP_TILESET* set;
+   struct TILEMAP_LAYER* layer;
+   uint32_t tile;
+   GRAPHICS* g_tileset;
+   GRAPHICS_RECT tile_tilesheet_pos;
+   SCAFFOLD_SIZE set_firstgid = 0;
+   GRAPHICS_COLOR color;
 
    if( NULL == twindow->t ) {
       return;
@@ -102,14 +109,6 @@ void client_local_draw(
       return;
    }
 
-   floor_pos.tex_w = 4;
-   floor_pos.tex_h = 4;
-   GRAPHICS_COLOR texture[16] =
-      {3,3,3,3,
-       3,4,5,3,
-       3,5,4,3,
-       3,3,3,3};
-
    wall_map_pos.map_w = twindow->t->width;
    wall_map_pos.map_h = twindow->t->height;
    cam_pos.x = twindow->local_client->puppet->x;
@@ -118,6 +117,11 @@ void client_local_draw(
    cam_pos.dy.facing = 0;
    plane_pos.x = 0;
    plane_pos.y = 0.66;
+
+
+
+   /* Draw a sky. */
+   graphics_draw_rect( twindow->g, 0, 0, twindow->g->w, twindow->g->h / 2, GRAPHICS_COLOR_CYAN, TRUE );
 
    for( x = 0; x < twindow->g->w; x++ ) {
 
@@ -136,11 +140,14 @@ void client_local_draw(
 
       if( TRUE != ray.infinite_dist ) {
          /* Choose wall color. */
-         GRAPHICS_COLOR color = get_wall_color( &wall_map_pos );
-
-         /* Draw the pixels of the stripe as a vertical line. */
-         graphics_draw_line( twindow->g, x, draw_start, x, draw_end, color );
+         color = get_wall_color( &wall_map_pos );
+      } else {
+         /* Fog. */
+         color = GRAPHICS_COLOR_WHITE;
       }
+
+      /* Draw the pixels of the stripe as a vertical line. */
+      graphics_draw_line( twindow->g, x, draw_start, x, draw_end, color );
 
       graphics_floorcast_create(
          &floor_pos, &ray, x, &cam_pos,
@@ -154,21 +161,46 @@ void client_local_draw(
 
       /* Draw the floor from draw_end to the bottom of the screen. */
       for( y = draw_end +1; y < twindow->g->h; y++ ) {
-         graphics_floorcast_throw(
-            &floor_pos, &ray, x, y, line_height,
-            &plane_pos, &cam_pos, &wall_map_pos,
-            twindow->g
-         );
-
-         graphics_draw_line(
-            twindow->g, x, y, x, y,
-            texture[floor_pos.tex_w * floor_pos.tex_y + floor_pos.tex_x]
-         );
+         layer = twindow->t->first_layer;
+         while( NULL != layer ) {
+            tile = tilemap_get_tile( layer, wall_map_pos.x, wall_map_pos.y  );
+            set = tilemap_get_tileset( twindow->t, tile, &set_firstgid );
+            if( NULL != set ) {
+               /* Get the tileset and its tilesheet. */
+               floor_pos.tex_w = set->tilewidth;
+               floor_pos.tex_h = set->tileheight;
+               graphics_floorcast_throw(
+                  &floor_pos, &ray, x, y, line_height,
+                  &plane_pos, &cam_pos, &wall_map_pos,
+                  twindow->g
+               );
+               tile = tilemap_get_tile( layer, floor_pos.x, floor_pos.y  );
+               g_tileset = hashmap_iterate(
+                  &(set->images),
+                  callback_search_tileset_img_gid,
+                  twindow->local_client
+               );
+               if( NULL != g_tileset ) {
+                  /* Move the source region on the tilesheet. */
+                  tilemap_get_tile_tileset_pos(
+                     set, set_firstgid, g_tileset, tile, &tile_tilesheet_pos );
+                  floor_pos.tex_x += tile_tilesheet_pos.x;
+                  floor_pos.tex_y += tile_tilesheet_pos.y;
+                  graphics_blit_pixel(
+                     twindow->g,
+                     x, y,
+                     floor_pos.tex_x, floor_pos.tex_y,
+                     g_tileset
+                  );
+               }
+            }
+            layer = layer->next_layer;
+         }
       }
 
    }
 
-   //vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
 }
 
 void client_local_update(
