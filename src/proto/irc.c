@@ -294,6 +294,7 @@ void proto_send_chunk(
       type = h->type;
       chunk_len = h->tx_chunk_length;
       raw_len = h->raw_length;
+      data_sent = bstrcpy( data );
    } else {
       /* Make things easy on the arg count validator. */
       data_sent = bfromcstr( "x" );
@@ -306,9 +307,9 @@ void proto_send_chunk(
    );
 
 cleanup:
-   if( NULL == h ) {
+   //if( NULL == h ) {
       bdestroy( data_sent );
-   }
+   //}
    return;
 }
 

@@ -211,6 +211,9 @@ void files_list_dir(
    struct dirent* entry = NULL;
    int bstr_result;
    VECTOR_ERR verr;
+   struct stat stat_buff;
+   BOOL is_dir = FALSE;
+   int stat_result;
 
    path_c = bdata( path );
    scaffold_check_null( path_c );
@@ -219,6 +222,10 @@ void files_list_dir(
    dir = opendir( path_c );
    scaffold_check_silence();
    scaffold_check_null( dir );
+
+   scaffold_print_debug( &module, "Listing directory: %b\n", path );
+
+   /* XXX: Not reading directories? */
 
    /* This is a valid directory that we can open. */
    while( NULL != (entry = readdir( dir )) ) {
@@ -240,7 +247,26 @@ void files_list_dir(
 
       /* FIXME: Detect directories under Windows. */
 #ifndef _WIN32
-      if( DT_DIR != entry->d_type ) {
+
+#ifdef _DIRENT_HAVE_D_TYPE
+      if( DT_DIR == entry->d_type ) {
+         /* Directory. */
+         is_dir = TRUE;
+      } else if( DT_UNKNOWN != entry->d_type ) {
+         /* Not a directory. */
+         is_dir = FALSE;
+      } else {
+#endif /* _DIRENT_HAVE_D_TYPE */
+         /* No dirent, so do this the hard way. */
+         stat_result = stat( bdata( child_path ), &stat_buff );
+         /* TODO: Check stat_result. */
+         is_dir = S_ISDIR( stat_buff.st_mode );
+#ifdef _DIRENT_HAVE_D_TYPE
+      }
+#endif /* _DIRENT_HAVE_D_TYPE */
+
+      if( FALSE == is_dir ) {
+         scaffold_print_debug( &module, "Found file: %b\n", child_path );
 #endif /* _WIN32 */
          if(
             FALSE == dir_only &&
@@ -257,6 +283,11 @@ void files_list_dir(
          continue;
 #ifndef _WIN32
       } else {
+         scaffold_print_debug( &module, "Found directory: %b\n", child_path );
+
+         /* If the child is a directory then go deeper. */
+         files_list_dir( child_path, list, filter, dir_only, show_hidden );
+
          /* Always add directories. */
          verr = vector_add( list, child_path );
          if( VECTOR_ERR_NONE != verr ) {
@@ -264,9 +295,6 @@ void files_list_dir(
          }
       }
 #endif /* _WIN32 */
-
-      /* If the child is a directory then go deeper. */
-      files_list_dir( child_path, list, filter, dir_only, show_hidden );
    }
 
 cleanup:
@@ -380,6 +408,7 @@ static void* files_search_cb( struct CONTAINER_IDX* idx, void* iter, void* arg )
        * with similar names (tilelist.png.tmx requested, tilelist.png      *
        * exists, eg), then weird stuff happens.                            */
       /* FIXME: Don't try to send directories. */
+      scaffold_print_debug( &module, "Server: Filename Cmp: Iter: %s (%s) Looking for: %s \n", bdata( file_iter ), bdata( file_iter_short ), bdata( file_search ) );
       bdestroy( file_iter_short );
       file_iter_short = NULL;
    } else {
