@@ -124,7 +124,6 @@ static void scaffold_log(
    const char* message, va_list varg
 ) {
    int bstr_ret;
-   bstring prepend_buffer = NULL;
 
    if( NULL == scaffold_print_buffer ) {
       scaffold_print_buffer = bfromcstralloc( SCAFFOLD_PRINT_BUFFER_ALLOC, "" );
@@ -182,9 +181,10 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
       scaffold_log_handle_err, mod_in, color, message, varg
    );
    va_end( varg );
-#endif /* DEBUG */
+
 cleanup:
    return;
+#endif /* DEBUG */
 }
 
 void scaffold_print_debug_color(
@@ -195,9 +195,10 @@ void scaffold_print_debug_color(
    va_start( varg, message );
    scaffold_log( scaffold_log_handle_err, mod_in, color, message, varg );
    va_end( varg );
-#endif /* DEBUG */
+
 cleanup:
    return;
+#endif /* DEBUG */
 }
 
 void scaffold_print_info( const bstring mod_in, const char* message, ... ) {

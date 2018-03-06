@@ -612,6 +612,19 @@ cleanup:
    return;
 }
 
+void graphics_blit_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL x_src, GFX_COORD_PIXEL y_src,
+   const GRAPHICS* g_src
+) {
+   BITMAP* dest = (BITMAP*)(g->surface);
+   BITMAP* src = (BITMAP*)(g_src->surface);
+   int pixel = 0;
+
+   pixel = getpixel( src, x_src, y_src );
+   putpixel( dest, x, y, pixel );
+}
+
 void graphics_sleep( uint16_t milliseconds ) {
    rest( milliseconds );
 }

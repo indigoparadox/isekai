@@ -771,6 +771,52 @@
 					<SilentBuild command=" &gt; $(CMD_NULL)" />
 				</MakeCommands>
 			</Target>
+			<Target title="Debug (Ray-Linux-NET-Allegro4)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIRCd-Allegro-NET" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-Linux-NET-Allegro4/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wshadow" />
+					<Add option="-Winit-self" />
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wcast-align" />
+					<Add option="-Winline" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wmissing-declarations" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-std=gnu99" />
+					<Add option="-Wstack-protector" />
+					<Add option="-fstack-protector-all" />
+					<Add option="-fsanitize=undefined" />
+					<Add option="-ggdb3" />
+					<Add option="-fvar-tracking" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DUSE_CHUNKS" />
+					<Add option="-DUSE_RANDOM_PORT" />
+					<Add option="-DxDEBUG_REF" />
+					<Add option="-DUSE_CONNECT_DIALOG" />
+					<Add option="-DDEBUG_TILES" />
+					<Add option="-DxDEBUG_VM" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DDEBUG_FPS" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DSTRICT_DEBUG" />
+					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DUSE_RAYCASTING" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="alleg" />
+					<Add library="ubsan" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-DEZXML_CSTR" />
@@ -808,6 +854,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/b64.h">
 			<Option target="Debug" />
@@ -830,6 +877,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/backlog.c">
 			<Option compilerVar="CC" />
@@ -866,6 +914,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstraux.c">
 			<Option compilerVar="CC" />
@@ -892,6 +941,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstraux.h">
 			<Option target="Debug" />
@@ -917,6 +967,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/bstrlib.c">
 			<Option compilerVar="CC" />
@@ -947,6 +998,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/buniutil.h">
 			<Option target="Debug" />
@@ -971,6 +1023,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/utf8util.c">
 			<Option compilerVar="CC" />
@@ -996,6 +1049,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/bstrlib/utf8util.h">
 			<Option target="Debug" />
@@ -1020,6 +1074,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/callback.c">
 			<Option compilerVar="CC" />
@@ -1050,6 +1105,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/chunker.h">
 			<Option target="Debug" />
@@ -1071,11 +1127,43 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/client.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
+		<Unit filename="src/client/local2d.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
+			<Option target="Strict (Linux-SB-Allegro4)" />
+			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-SB-Curses)" />
+			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (Palm-SB)" />
+		</Unit>
+		<Unit filename="src/client/localray.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
+		</Unit>
 		<Unit filename="src/colors.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />
@@ -1102,6 +1190,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.c">
 			<Option compilerVar="CC" />
@@ -1122,6 +1211,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.h">
 			<Option target="Debug" />
@@ -1141,6 +1231,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/duktape/duktype.h">
 			<Option target="Debug" />
@@ -1163,6 +1254,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
@@ -1193,6 +1285,7 @@
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/files.h" />
 		<Unit filename="src/font.h" />
@@ -1221,6 +1314,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegrog.c">
@@ -1235,6 +1329,7 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics/cursesg.c">
 			<Option compilerVar="CC" />
@@ -1283,6 +1378,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hs_conf.h">
 			<Option target="Debug" />
@@ -1304,6 +1400,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsdecode.c">
 			<Option compilerVar="CC" />
@@ -1326,6 +1423,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsdecode.h">
 			<Option target="Debug" />
@@ -1347,6 +1445,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsencode.c">
 			<Option compilerVar="CC" />
@@ -1369,6 +1468,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsencode.h">
 			<Option target="Debug" />
@@ -1390,6 +1490,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/htmtree.c">
 			<Option compilerVar="CC" />
@@ -1408,6 +1509,7 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/input/cursesi.c">
 			<Option compilerVar="CC" />
@@ -1445,6 +1547,7 @@
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ipc/shmipc.c">
 			<Option compilerVar="CC" />
@@ -1491,6 +1594,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/mem.c">
 			<Option compilerVar="CC" />
@@ -1526,6 +1630,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/proto/shmp.c">
 			<Option compilerVar="CC" />
@@ -1571,6 +1676,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
 			<Option target="Debug" />
@@ -1591,6 +1697,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tnacl.c">
 			<Option compilerVar="CC" />
@@ -1613,6 +1720,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tnacl.h">
 			<Option target="Debug" />
@@ -1634,6 +1742,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/cursesu.c">
@@ -1664,6 +1773,7 @@
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ui/win32u.c">
 			<Option compilerVar="CC" />
@@ -1691,6 +1801,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/vm/duktapev.c">
 			<Option compilerVar="CC" />
@@ -1711,6 +1822,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="src/windefs.h">
 			<Option target="Debug" />
@@ -1736,6 +1848,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
 		</Unit>
 		<Unit filename="test/check_b64.c">
 			<Option compilerVar="CC" />

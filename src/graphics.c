@@ -2,6 +2,11 @@
 #define GRAPHICS_C
 #include "graphics.h"
 
+#ifdef USE_RAYCASTING
+
+
+#endif /* USE_RAYCASTING */
+
 #ifdef USE_CLOCK
 #include <time.h>
 #endif /* USE_CLOCK */
@@ -240,91 +245,190 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 
 #ifdef USE_RAYCASTING
 
+GFX_RAY_FLOOR* graphics_floorcast_create(
+   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, GFX_DELTA* cam_pos,
+   GFX_RAY_WALL* wall_map_pos, GRAPHICS* g
+) {
+   double wallX; //where exactly the wall was hit
+   if( 0 == wall_map_pos->side ) {
+      wallX = cam_pos->y + wall_map_pos->perpen_dist * ray->direction_y;
+   } else {
+      wallX = cam_pos->x + wall_map_pos->perpen_dist * ray->direction_x;
+   }
+   wallX -= floor((wallX));
+
+   //4 different wall directions possible
+   if( wall_map_pos->side == 0 && 0 < ray->direction_x ) {
+      floor_pos->wall_x = wall_map_pos->x;
+      floor_pos->wall_y = wall_map_pos->y + wallX;
+   } else if( 0 == wall_map_pos->side && 0 > ray->direction_x ) {
+      floor_pos->wall_x = wall_map_pos->x + 1.0;
+      floor_pos->wall_y = wall_map_pos->y + wallX;
+   } else if( 1 == wall_map_pos->side && 0 < ray->direction_y ) {
+      floor_pos->wall_x = wall_map_pos->x + wallX;
+      floor_pos->wall_y = wall_map_pos->y;
+   } else {
+      floor_pos->wall_x = wall_map_pos->x + wallX;
+      floor_pos->wall_y = wall_map_pos->y + 1.0;
+   }
+
+   return floor_pos;
+}
+
+/** \brief
+ *
+ * \param floor_pos
+ * \param
+ * \return
+ *
+ */
+GFX_RAY_FLOOR* graphics_floorcast_throw(
+   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, int y, int line_height,
+   GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GFX_RAY_WALL* wall_map_pos,
+   GRAPHICS* g
+) {
+   double current_dist;
+
+   current_dist = g->h / (2.0 * y - g->h);
+
+   floor_pos->weight = current_dist / wall_map_pos->perpen_dist;
+
+   floor_pos->x = floor_pos->weight * floor_pos->wall_x +
+      (1.0 - floor_pos->weight) * cam_pos->x;
+   floor_pos->y = floor_pos->weight * floor_pos->wall_y +
+      (1.0 - floor_pos->weight) * cam_pos->y;
+
+   floor_pos->tex_x =
+      (int)(floor_pos->x * floor_pos->tex_w) % floor_pos->tex_w;
+   floor_pos->tex_y =
+      (int)(floor_pos->y * floor_pos->tex_h) % floor_pos->tex_h;
+
+   return floor_pos;
+}
+
+GFX_RAY* graphics_raycast_create(
+   GFX_RAY* ray, int x, GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GRAPHICS* g
+) {
+   double camera_x;
+   int cam_map_pos_x = (int)(cam_pos->x);
+   int cam_map_pos_y = (int)(cam_pos->y);
+
+   camera_x = 2 * x / (double)(g->w) - 1;
+   ray->direction_x = cam_pos->dx.facing + plane_pos->x * camera_x;
+   ray->direction_y = cam_pos->dy.facing + plane_pos->y * camera_x;
+   ray->delta_dist_x = fabs( 1 / ray->direction_x );
+   ray->delta_dist_y = fabs( 1 / ray->direction_y );
+
+   /* Assume distance is finite to start. */
+   ray->infinite_dist = FALSE;
+
+   /* Calculate step and initial sideDist. */
+   if( 0 > ray->direction_x ) {
+      ray->step_x = -1;
+      ray->side_dist_x = (cam_pos->x - cam_map_pos_x) * ray->delta_dist_x;
+   } else {
+      ray->step_x = 1;
+      ray->side_dist_x = (cam_map_pos_x + 1.0 - cam_pos->x) * ray->delta_dist_x;
+   }
+   if( 0 > ray->direction_y ) {
+      ray->step_y = -1;
+      ray->side_dist_y = (cam_pos->y - cam_map_pos_y) * ray->delta_dist_y;
+   } else {
+      ray->step_y = 1;
+      ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->y) * ray->delta_dist_y;
+   }
+
+   return ray;
+}
+
 /** \brief
  *
  * \param
  * \param wall_pos A rectangle with W set to the map width. The wall collision
  * will be returned via X and Y. The wall side (NE/SW) will be returned via H.
+ * X and Y are in map tiles.
  * \return
  *
  */
-int graphics_raycast_throw(
-  int x, GRAPHICS_CAM* cam_pos, GRAPHICS_CAM* plane_pos, GRAPHICS* g,
-  BOOL (collision_check)( GRAPHICS_RECT*, void* ), void* data,
-  GRAPHICS_RECT* wall_pos
+int graphics_raycast_wall_throw(
+   GFX_DELTA* cam_pos, GFX_DELTA* plane_pos, GRAPHICS* g,
+   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data,
+   GFX_RAY* ray, GFX_RAY_WALL* wall_pos
 ) {
-  double camera_x;
-  GRAPHICS_CAM ray_pos;
+   BOOL wall_hit = FALSE;
 
-  /* Length of ray from current position to next x or y-side. */
-  double side_dist_x;
-  double side_dist_y;
+   /* Do the actual casting. */
+   while( FALSE == wall_hit ) {
+      /* Jump to next map square, OR in x-direction, OR in y-direction. */
+      if( ray->side_dist_x < ray->side_dist_y ) {
+         ray->side_dist_x += ray->delta_dist_x;
+         wall_pos->x += ray->step_x;
+         wall_pos->side = 0;
+      } else {
+         ray->side_dist_y += ray->delta_dist_y;
+         wall_pos->y += ray->step_y;
+         wall_pos->side = 1;
+      }
 
-  /* Length of ray from one x or y-side to next x or y-side. */
-  double delta_dist_x = 0;
-  double delta_dist_y = 0;
-  double perpen_wall_dist = 0;
+      /* Don't draw walls outside of the map. */
+      if(
+         wall_pos->x > wall_pos->map_w ||
+         wall_pos->y > wall_pos->map_h ||
+         0 > wall_pos->x ||
+         0 > wall_pos->y
+      ) {
+         ray->infinite_dist = TRUE;
+         break;
+      }
 
-  /* What direction to step in x or y-direction (either +1 or -1). */
-  int stepX;
-  int stepY;
+      /* Check if ray has hit a wall. */
+      if( collision_check( wall_pos, data ) ) {
+         wall_hit = TRUE;
+      }
+   }
 
-  BOOL wall_hit = FALSE;
+   /* Calculate distance projected on camera direction
+      (Euclidean distance will give fisheye effect!). */
+   if( 0 == wall_pos->side ) {
+      wall_pos->perpen_dist =
+         (wall_pos->x - cam_pos->x + (1 - ray->step_x) / 2) / ray->direction_x;
+   } else {
+      wall_pos->perpen_dist =
+         (wall_pos->y - cam_pos->y + (1 - ray->step_y) / 2) / ray->direction_y;
+   }
 
-  wall_pos->x = (int)cam_pos->x;
-  wall_pos->y = (int)cam_pos->y;
+   /* Calculate height of line to draw on screen. */
+   return (int)(g->h / wall_pos->perpen_dist);
+}
 
-  /* Calculate ray position and directionmap_pos. */
-  camera_x = 2 * x / (double)(g->w) - 1;
-  ray_pos.fx = cam_pos->fx + plane_pos->x * camera_x;
-  ray_pos.y = cam_pos->fy + plane_pos->y * camera_x;
-  delta_dist_x = fabs(1 / ray_pos.fx);
-  delta_dist_y = fabs(1 / ray_pos.y);
+/** \brief Calculate lowest and highest pixel to fill in current stripe.
+ *
+ * \param
+ * \param
+ * \return
+ *
+ */
+int graphics_get_ray_stripe_end( int line_height, GRAPHICS* g ) {
+   int draw_end = line_height / 2 + g->h / 2;
+   if( draw_end >= g->h ) {
+      draw_end = g->h - 1;
+   }
+   return draw_end;
+}
 
-  /* Calculate step and initial sideDist. */
-  if( 0 > ray_pos.fx ) {
-    stepX = -1;
-    side_dist_x = (cam_pos->x - wall_pos->x) * delta_dist_x;
-  } else {
-    stepX = 1;
-    side_dist_x = (wall_pos->x + 1.0 - cam_pos->x) * delta_dist_x;
-  }
-  if( 0 > ray_pos.y ) {
-    stepY = -1;
-    side_dist_y = (cam_pos->y - wall_pos->y) * delta_dist_y;
-  } else {
-    stepY = 1;
-    side_dist_y = (wall_pos->y + 1.0 - cam_pos->y) * delta_dist_y;
-  }
-
-  /* Do the actual casting. */
-  while( FALSE == wall_hit ) {
-    /* Jump to next map square, OR in x-direction, OR in y-direction. */
-    if( side_dist_x < side_dist_y ) {
-      side_dist_x += delta_dist_x;
-      wall_pos->x += stepX;
-      wall_pos->h = 0;
-    } else {
-      side_dist_y += delta_dist_y;
-      wall_pos->y += stepY;
-      wall_pos->h = 1;
-    }
-
-    /* Check if ray has hit a wall. */
-    if( collision_check( wall_pos, data ) ) {
-      wall_hit = TRUE;
-    }
-  }
-
-  /* Calculate distance projected on camera direction (Euclidean distance will give fisheye effect!). */
-  if( 0 == wall_pos->h ) {
-    perpen_wall_dist = (wall_pos->x - cam_pos->x + (1 - stepX) / 2) / ray_pos.fx;
-  } else {
-    perpen_wall_dist = (wall_pos->y - cam_pos->y + (1 - stepY) / 2) / ray_pos.y;
-  }
-
-  /* Calculate height of line to draw on screen. */
-  return (int)(g->h / perpen_wall_dist);
+/** \brief Calculate lowest and highest pixel to fill in current stripe.
+ *
+ * \param
+ * \param
+ * \return
+ *
+ */
+int graphics_get_ray_stripe_start( int line_height, GRAPHICS* g ) {
+   int draw_start = -line_height / 2 + g->h / 2;
+   if( 0 > draw_start ) {
+      draw_start = 0;
+   }
+   return draw_start;
 }
 
 #endif /* USE_RAYCASTING */
