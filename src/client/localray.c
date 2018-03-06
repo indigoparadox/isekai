@@ -9,6 +9,7 @@
 #include "../ipc.h"
 #include "../channel.h"
 #include "../tilemap.h"
+#include "../proto.h"
 
 extern bstring client_input_from_ui;
 
@@ -16,14 +17,27 @@ static BOOL check_ray_wall_collision( GFX_RAY_WALL* wall_map_pos, void* data ) {
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)data;
    struct TILEMAP_LAYER* layer;
    uint32_t tile;
+   struct TILEMAP_TILESET* set;
+   struct TILEMAP_TILE_DATA* tile_info;
+   int i;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter;
 
    layer = twindow->t->first_layer;
 
    tile = tilemap_get_tile(
       layer, twindow->local_client->puppet->x, twindow->local_client->puppet->y
    );
+   set = tilemap_get_tileset( twindow->t, tile, NULL );
+   tile_info = vector_get( &(set->tiles), tile - 1 );
+   for( i = 0 ; 4 > i ; i++ ) {
+      terrain_iter = tile_info->terrain[i];
+      if( NULL == terrain_iter ) { continue; }
+      if( TILEMAP_MOVEMENT_BLOCK == terrain_iter->movement ) {
+         return FALSE;
+      }
+   }
 
-   return( 0 > tile );
+   return TRUE;
 }
 
 static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
@@ -82,6 +96,15 @@ void client_local_draw(
        3,5,4,3,
        3,3,3,3};
 
+   wall_map_pos.map_w = twindow->t->width;
+   wall_map_pos.map_h = twindow->t->height;
+   cam_pos.x = twindow->local_client->puppet->x;
+   cam_pos.y = twindow->local_client->puppet->y;
+   cam_pos.dx.facing = -1; /* TODO */
+   cam_pos.dy.facing = 0;
+   plane_pos.x = 0;
+   plane_pos.y = 0.66;
+
    for( x = 0; x < twindow->g->w; x++ ) {
 
       wall_map_pos.x = (int)cam_pos.x;
@@ -93,10 +116,6 @@ void client_local_draw(
          &cam_pos, &plane_pos, twindow->g, check_ray_wall_collision,
          twindow, &ray, &wall_map_pos
       );
-
-      if( TRUE == ray.infinite_dist ) {
-         continue;
-      }
 
       draw_end = graphics_get_ray_stripe_end( line_height, twindow->g );
       draw_start = graphics_get_ray_stripe_start( line_height, twindow->g );

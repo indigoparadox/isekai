@@ -147,10 +147,10 @@ struct GRAPHICS_TILE_WINDOW {
    GFX_COORD_TILE y;        /*!< Window top in tiles. */
    GFX_COORD_TILE width;    /*!< Window width in tiles. */
    GFX_COORD_TILE height;   /*!< Window height in tiles. */
-   GFX_COORD_TILE max_x;
-   GFX_COORD_TILE max_y;
-   GFX_COORD_TILE min_x;
-   GFX_COORD_TILE min_y;
+   GFX_COORD_TILE max_x;    /*!< Right-most window tile. */
+   GFX_COORD_TILE max_y;    /*!< Bottom-most window tile. */
+   GFX_COORD_TILE min_x;    /*!< Left-most window tile. */
+   GFX_COORD_TILE min_y;    /*!< Top-most window tile. */
    uint8_t grid_w;
    uint8_t grid_h;
 };
