@@ -21,6 +21,14 @@
 
 COLOR_TABLE( GRAPHICS )
 
+#ifdef USE_RAYCASTING
+/* #define USE_HICOLOR */
+#endif /* USE_RAYCASTING */
+
+#ifdef USE_HICOLOR
+typedef uint32_t GRAPHICS_HICOLOR;
+#endif /* USE_HICOLOR */
+
 typedef int GFX_COORD_TILE;
 typedef long GFX_COORD_PIXEL;
 
@@ -77,9 +85,57 @@ typedef struct {
 typedef struct {
    double x;
    double y;
-   double fx;
-   double fy;
-} GRAPHICS_CAM;
+   union {
+      int direction;
+      double facing;
+      double width;
+   } dx;
+   union {
+      int direction;
+      double facing;
+      double height;
+   } dy;
+} GFX_DELTA;
+
+typedef struct {
+   double direction_x;
+   double direction_y;
+   /* Length of ray from one side to next x or y-side. */
+   double delta_dist_x;
+   double delta_dist_y;
+   /* Length of ray to next x or y-side. */
+   double side_dist_x;
+   double side_dist_y;
+   int step_x;
+   int step_y;
+   BOOL infinite_dist;
+} GFX_RAY;
+
+typedef struct {
+   int x;
+   int y;
+   int map_w;
+   int map_h;
+   int side;
+   double perpen_dist;
+} GFX_RAY_WALL;
+
+typedef struct {
+   double x;
+   double y;
+   int tex_x;
+   int tex_y;
+   int tex_w;
+   int tex_h;
+   /* x, y position of the floor texel at the bottom of the wall. */
+   double wall_x;
+   double wall_y;
+   int map_w;
+   int map_h;
+   int side;
+   double weight;
+   int line_height;
+} GFX_RAY_FLOOR;
 
 #endif /* USE_RAYCASTING */
 
@@ -170,6 +226,11 @@ void graphics_blit_partial(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GFX_COORD_PIXEL s_x,
    GFX_COORD_PIXEL s_y, GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h, const GRAPHICS* src
 );
+void graphics_blit_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL x_src, GFX_COORD_PIXEL y_src,
+   const GRAPHICS* g_src
+);
 void graphics_blit_stretch(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
@@ -189,13 +250,33 @@ SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
 );
 void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by );
 
+#ifdef USE_HICOLOR
+GRAPHICS_HICOLOR graphics_get_hipixel(
+   GRAPHICS* surface, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+);
+#endif /* USE_HICOLOR */
+
 #ifdef USE_RAYCASTING
 
-int graphics_raycast_throw(
-  int x, GRAPHICS_CAM* cam_pos, GRAPHICS_CAM* plane_pos, GRAPHICS* g,
-  BOOL (collision_check)( GRAPHICS_RECT*, void* ), void* data,
-  GRAPHICS_RECT* wall_pos
+GFX_RAY* graphics_raycast_create(
+   GFX_RAY* ray, int x, GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GRAPHICS* g
 );
+int graphics_raycast_wall_throw(
+   GFX_DELTA* cam_pos, GFX_DELTA* plane_pos, GRAPHICS* g,
+   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data,
+   GFX_RAY* ray, GFX_RAY_WALL* wall_pos
+);
+GFX_RAY_FLOOR* graphics_floorcast_create(
+   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, GFX_DELTA* cam_pos,
+   GFX_RAY_WALL* wall_map_pos, GRAPHICS* g
+);
+GFX_RAY_FLOOR* graphics_floorcast_throw(
+   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, int y, int line_height,
+   GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GFX_RAY_WALL* wall_map_pos,
+   GRAPHICS* g
+);
+int graphics_get_ray_stripe_end( int line_height, GRAPHICS* g );
+int graphics_get_ray_stripe_start( int line_height, GRAPHICS* g );
 
 #endif /* USE_RAYCASTING */
 
