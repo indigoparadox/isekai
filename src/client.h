@@ -121,6 +121,9 @@ void client_request_file(
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
 #endif /* USE_CHUNKS */
+BOOL client_poll_ui(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
+);
 void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
@@ -132,6 +135,17 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 
 GRAPHICS* client_local_get_screen( struct CLIENT* c );
+void client_local_update(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void client_local_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void client_local_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void client_local_free( struct CLIENT* c );
 
 #ifdef CLIENT_C
@@ -160,7 +174,6 @@ extern struct tagbstring str_client_control_id_inv_self;
 extern struct tagbstring str_client_control_id_inv_ground;
 SCAFFOLD_MODULE( "client_local.c" );
 #endif /* CLIENT_LOCAL_C */
-extern struct tagbstring str_client_cache_path;
 #endif /* CLIENT_C */
 
 #endif /* CLIENT_H */

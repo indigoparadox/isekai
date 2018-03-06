@@ -2,6 +2,8 @@
 #define CLIENT_LOCAL_C
 #include "../client.h"
 
+#include <stdlib.h>
+
 #include "../callback.h"
 #include "../ui.h"
 #include "../ipc.h"
@@ -10,7 +12,7 @@
 
 extern bstring client_input_from_ui;
 
-BOOL check_ray_wall_collision( GRAPHICS_RECT* wall_map_pos, void* data ) {
+static BOOL check_ray_wall_collision( GFX_RAY_WALL* wall_map_pos, void* data ) {
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)data;
    struct TILEMAP_LAYER* layer;
    uint32_t tile;
@@ -24,7 +26,7 @@ BOOL check_ray_wall_collision( GRAPHICS_RECT* wall_map_pos, void* data ) {
    return( 0 > tile );
 }
 
-GRAPHICS_COLOR get_wall_color( int x, int y, int side ) {
+static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
 //#ifdef TECHNICOLOR_RAYS
    switch( (rand() + 1) % 4 ) {
 //#endif /* TECHNICOLOR_RAYS */
@@ -33,15 +35,15 @@ GRAPHICS_COLOR get_wall_color( int x, int y, int side ) {
          return GRAPHICS_COLOR_DARK_GREEN;
          break;
       case 1:
-         return 1 == side ? GRAPHICS_COLOR_RED : GRAPHICS_COLOR_DARK_RED;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_RED : GRAPHICS_COLOR_DARK_RED;
       case 2:
-         return 1 == side ? GRAPHICS_COLOR_GREEN : GRAPHICS_COLOR_DARK_GREEN;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_GREEN : GRAPHICS_COLOR_DARK_GREEN;
       case 3:
-         return 1 == side ? GRAPHICS_COLOR_BLUE : GRAPHICS_COLOR_DARK_BLUE;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_BLUE : GRAPHICS_COLOR_DARK_BLUE;
       case 4:
-         return 1 == side ? GRAPHICS_COLOR_WHITE : GRAPHICS_COLOR_GRAY;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_WHITE : GRAPHICS_COLOR_GRAY;
       default:
-         return 1 == side ? GRAPHICS_COLOR_YELLOW : GRAPHICS_COLOR_BROWN;
+         return 1 == wall_pos->side ? GRAPHICS_COLOR_YELLOW : GRAPHICS_COLOR_BROWN;
    }
 }
 
@@ -55,7 +57,7 @@ void client_local_draw(
    int done = 0;
    GFX_DELTA cam_pos;
    GFX_DELTA plane_pos;
-   GRAPHICS_RECT wall_map_pos; /* The position of the found wall. */
+   GFX_RAY_WALL wall_map_pos; /* The position of the found wall. */
    GFX_RAY ray;
    GFX_DELTA* wall_scr_pos;
    GFX_RAY_FLOOR floor_pos;
@@ -72,6 +74,14 @@ void client_local_draw(
       return;
    }
 
+   floor_pos.tex_w = 4;
+   floor_pos.tex_h = 4;
+   GRAPHICS_COLOR texture[16] =
+      {3,3,3,3,
+       3,4,5,3,
+       3,5,4,3,
+       3,3,3,3};
+
    for( x = 0; x < twindow->g->w; x++ ) {
 
       wall_map_pos.x = (int)cam_pos.x;
@@ -79,26 +89,49 @@ void client_local_draw(
 
       /* Calculate ray position and direction. */
       graphics_raycast_create( &ray, x, &plane_pos, &cam_pos, twindow->g );
-      int line_height = graphics_raycast_wall_throw( &cam_pos, &plane_pos, twindow->g, check_ray_wall_collision, twindow, &ray, &wall_map_pos );
+      int line_height = graphics_raycast_wall_throw(
+         &cam_pos, &plane_pos, twindow->g, check_ray_wall_collision,
+         twindow, &ray, &wall_map_pos
+      );
 
-         if( TRUE == ray.infinite_dist ) {
-            continue;
-         }
+      if( TRUE == ray.infinite_dist ) {
+         continue;
+      }
 
       draw_end = graphics_get_ray_stripe_end( line_height, twindow->g );
       draw_start = graphics_get_ray_stripe_start( line_height, twindow->g );
 
-      /* Choose wall color. */
-      GRAPHICS_COLOR color = get_wall_color( wall_map_pos.x, wall_map_pos.y, wall_map_pos.h );
+      if( TRUE != ray.infinite_dist ) {
+         /* Choose wall color. */
+         GRAPHICS_COLOR color = get_wall_color( &wall_map_pos );
 
-      /* Draw the pixels of the stripe as a vertical line. */
-      graphics_draw_line( twindow->g, x, draw_start, x, draw_end, color );
+         /* Draw the pixels of the stripe as a vertical line. */
+         graphics_draw_line( twindow->g, x, draw_start, x, draw_end, color );
+      }
 
-      /*graphics_raycast_floor_throw(
-      &cam_pos, &plane_pos, g_screen, line_height,
-      &ray_pos, &delta, &side, &step,
-      &wall_map_pos, &wall_scr_pos, &floor_pos, x
-      );*/
+      graphics_floorcast_create(
+         &floor_pos, &ray, x, &cam_pos,
+         &wall_map_pos, twindow->g
+      );
+
+      if( 0 > draw_end ) {
+         /* Become < 0 if the integer overflows. */
+         draw_end = twindow->g->h;
+      }
+
+      /* Draw the floor from draw_end to the bottom of the screen. */
+      for( y = draw_end +1; y < twindow->g->h; y++ ) {
+         graphics_floorcast_throw(
+            &floor_pos, &ray, x, y, line_height,
+            &plane_pos, &cam_pos, &wall_map_pos,
+            twindow->g
+         );
+
+         graphics_draw_line(
+            twindow->g, x, y, x, y,
+            texture[floor_pos.tex_w * floor_pos.tex_y + floor_pos.tex_x]
+         );
+      }
 
    }
 
