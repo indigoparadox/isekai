@@ -612,17 +612,19 @@ cleanup:
    return;
 }
 
-void graphics_blit_pixel(
-   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
-   GFX_COORD_PIXEL x_src, GFX_COORD_PIXEL y_src,
-   const GRAPHICS* g_src
+GRAPHICS_COLOR graphics_get_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
 ) {
-   BITMAP* dest = (BITMAP*)(g->surface);
-   BITMAP* src = (BITMAP*)(g_src->surface);
-   int pixel = 0;
+   BITMAP* bitmap = (BITMAP*)(g->surface);
+   return (GRAPHICS_COLOR)getpixel( bitmap, x, y );
+}
 
-   pixel = getpixel( src, x_src, y_src );
-   putpixel( dest, x, y, pixel );
+void graphics_set_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
+) {
+   BITMAP* bitmap = (BITMAP*)(g->surface);
+
+   putpixel( bitmap, x, y, (int)pixel );
 }
 
 void graphics_sleep( uint16_t milliseconds ) {
