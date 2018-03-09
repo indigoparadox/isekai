@@ -246,8 +246,8 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 #ifdef USE_RAYCASTING
 
 GFX_RAY_FLOOR* graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, GFX_DELTA* cam_pos,
-   GFX_RAY_WALL* wall_map_pos, GRAPHICS* g
+   GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
+   const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 ) {
    double wall_x_hit; /* Where, exactly, the wall was hit. */
 
@@ -283,9 +283,9 @@ GFX_RAY_FLOOR* graphics_floorcast_create(
  *
  */
 GFX_RAY_FLOOR* graphics_floorcast_throw(
-   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, int y, int line_height,
-   GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GFX_RAY_WALL* wall_map_pos,
-   GRAPHICS* g
+   GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
+   const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
+   const GRAPHICS* g
 ) {
    double current_dist;
 
@@ -306,12 +306,15 @@ GFX_RAY_FLOOR* graphics_floorcast_throw(
    return floor_pos;
 }
 
-GFX_RAY* graphics_raycast_create(
-   GFX_RAY* ray, int x, GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GRAPHICS* g
+GFX_RAY* graphics_raycast_wall_create(
+   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GFX_DELTA* plane_pos,
+   const GFX_DELTA* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
    int cam_map_pos_x = (int)(cam_pos->x);
    int cam_map_pos_y = (int)(cam_pos->y);
+
+   memset( wall_pos, sizeof( GFX_RAY_WALL ), '\0' );
 
    camera_x = 2 * x / (double)(g->w) - 1;
    ray->direction_x = cam_pos->dx.facing + plane_pos->x * camera_x;
@@ -324,23 +327,61 @@ GFX_RAY* graphics_raycast_create(
 
    /* Calculate step and initial sideDist. */
    if( 0 > ray->direction_x ) {
-      ray->step_x = -1;
+      ray->step_x = -GRAPHICS_RAY_INITIAL_STEP_X;
       ray->side_dist_x = (cam_pos->x - cam_map_pos_x) * ray->delta_dist_x;
    } else {
-      ray->step_x = 1;
+      ray->step_x = GRAPHICS_RAY_INITIAL_STEP_X;
       ray->side_dist_x = (cam_map_pos_x + 1.0 - cam_pos->x) * ray->delta_dist_x;
    }
    if( 0 > ray->direction_y ) {
-      ray->step_y = -1;
+      ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
       ray->side_dist_y = (cam_pos->y - cam_map_pos_y) * ray->delta_dist_y;
    } else {
-      ray->step_y = 1;
+      ray->step_y = GRAPHICS_RAY_INITIAL_STEP_X;
       ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->y) * ray->delta_dist_y;
    }
 
    return ray;
 }
 
+void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
+   /* Jump to next map square, OR in x-direction, OR in y-direction. */
+   if( ray->side_dist_x < ray->side_dist_y ) {
+      ray->side_dist_x += ray->delta_dist_x;
+      wall_pos->x += ray->step_x;
+      wall_pos->side = 0;
+   } else {
+      ray->side_dist_y += ray->delta_dist_y;
+      wall_pos->y += ray->step_y;
+      wall_pos->side = 1;
+   }
+
+   /* Don't draw walls outside of the map. */
+   if(
+      wall_pos->x > wall_pos->map_w ||
+      wall_pos->y > wall_pos->map_h ||
+      0 > wall_pos->x ||
+      0 > wall_pos->y
+   ) {
+      ray->infinite_dist = TRUE;
+   }
+}
+
+double graphics_raycast_get_distance(
+   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray
+) {
+   /* Calculate distance projected on camera direction
+      (Euclidean distance will give fisheye effect!). */
+   if( 0 == wall_pos->side ) {
+      return
+         (wall_pos->x - cam_pos->x + (1 - ray->step_x) / 2) / ray->direction_x;
+   } else {
+      return
+         (wall_pos->y - cam_pos->y + (1 - ray->step_y) / 2) / ray->direction_y;
+   }
+}
+
+#if 0
 /** \brief
  *
  * \param
@@ -351,9 +392,9 @@ GFX_RAY* graphics_raycast_create(
  *
  */
 int graphics_raycast_wall_throw(
-   GFX_DELTA* cam_pos, GFX_DELTA* plane_pos, GRAPHICS* g,
-   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data,
-   GFX_RAY* ray, GFX_RAY_WALL* wall_pos
+   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
+   const GFX_DELTA* cam_pos, const GRAPHICS* g,
+   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
 ) {
    BOOL wall_hit = FALSE;
 
@@ -401,6 +442,8 @@ int graphics_raycast_wall_throw(
    return (int)(g->h / wall_pos->perpen_dist);
 }
 
+#endif
+
 /** \brief Calculate lowest and highest pixel to fill in current stripe.
  *
  * \param
@@ -408,7 +451,7 @@ int graphics_raycast_wall_throw(
  * \return
  *
  */
-int graphics_get_ray_stripe_end( int line_height, GRAPHICS* g ) {
+int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g ) {
    int draw_end = line_height / 2 + g->h / 2;
    if( draw_end >= g->h ) {
       draw_end = g->h - 1;
@@ -423,7 +466,7 @@ int graphics_get_ray_stripe_end( int line_height, GRAPHICS* g ) {
  * \return
  *
  */
-int graphics_get_ray_stripe_start( int line_height, GRAPHICS* g ) {
+int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g ) {
    int draw_start = -line_height / 2 + g->h / 2;
    if( 0 > draw_start ) {
       draw_start = 0;

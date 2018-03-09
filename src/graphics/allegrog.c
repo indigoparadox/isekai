@@ -613,7 +613,7 @@ cleanup:
 }
 
 GRAPHICS_COLOR graphics_get_pixel(
-   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+   const GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
 ) {
    BITMAP* bitmap = (BITMAP*)(g->surface);
    return (GRAPHICS_COLOR)getpixel( bitmap, x, y );

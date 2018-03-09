@@ -28,8 +28,8 @@ static void tilemap_cleanup( const struct REF* ref ) {
       &module, "Destroying tilemap for channel: %b\n", l->name
    );
 
-   hashmap_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
-   hashmap_cleanup( &(t->layers) );
+   vector_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
+   vector_cleanup( &(t->layers) );
    vector_remove_cb( &(t->item_caches), callback_free_item_caches, NULL );
    vector_cleanup( &(t->item_caches) );
    vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
@@ -45,7 +45,7 @@ void tilemap_init(
 ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
-   hashmap_init( &(t->layers) );
+   vector_init( &(t->layers) );
    vector_init( &(t->item_caches) );
    vector_init( &(t->tilesets) );
    vector_init( &(t->spawners) );
@@ -107,6 +107,7 @@ void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
 
 void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
    vector_cleanup( &(layer->tiles ) );
+   bdestroy( layer->name );
 }
 
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* set ) {
@@ -206,9 +207,12 @@ cleanup:
  * \return A GID that can be used to find the tile's image or terrain info.
  */
 SCAFFOLD_INLINE uint32_t tilemap_get_tile(
-   struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
+   const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
+   if( 0 > index || vector_count( &(layer->tiles) ) <= index ) {
+      return -1;
+   }
    return vector_get_scalar( &(layer->tiles), index );
 }
 
@@ -257,7 +261,7 @@ static void tilemap_layer_draw_tile_debug(
    scaffold_check_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
 
-   if( hashmap_count( &(t->layers) ) <= tilemap_dt_layer ) {
+   if( vector_count( &(t->layers) ) <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
    }
 
@@ -269,7 +273,7 @@ static void tilemap_layer_draw_tile_debug(
    tile_info = vector_get( &(set->tiles), gid - 1 );
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_COORDS:
-      if( hashmap_count( &(t->layers) ) - 1 == layer->z ) {
+      if( vector_count( &(t->layers) ) - 1 == layer->z ) {
          bstr_result = bassignformat( bnum, "%d,", tile_x );
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
@@ -466,26 +470,6 @@ cleanup:
    return NULL;
 }
 
-static void* tilemap_layer_draw_dirty_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->t;
-   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   uint32_t tile;
-
-   scaffold_check_null( t );
-
-   layer = t->first_layer;
-   while( NULL != layer ) {
-      tile = tilemap_get_tile( layer, pos->x, pos->y );
-      tilemap_layer_draw_tile( layer, twindow, pos->x, pos->y, tile );
-      layer = layer->next_layer;
-   }
-
-cleanup:
-   return NULL;
-}
-
 static void* tilemap_layer_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
@@ -516,6 +500,27 @@ cleanup:
    return NULL;
 }
 
+static void tilemap_pos_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POS*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TILEMAP_LAYER* layer = NULL;
+   struct TILEMAP* t =  twindow->t;
+   int layer_idx = 0;
+   int layer_max;
+   uint32_t tile;
+
+   vector_lock( &(t->layers), TRUE );
+   layer_max = vector_count( &(t->layers) );
+   for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
+      layer = vector_get( &(t->layers), layer_idx );
+      tile = tilemap_get_tile( layer, pos->x, pos->y );
+      if( 0 < tile ) {
+         tilemap_layer_draw_tile( layer, twindow, pos->x, pos->y, tile );
+      }
+   }
+   vector_lock( &(t->layers), FALSE );
+}
+
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    struct CLIENT* local_client = twindow->local_client;
    struct MOBILE* o = local_client->puppet;
@@ -530,13 +535,13 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
       || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
 #endif /* DEBUG_TILES */
    ) {
-      hashmap_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+      vector_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
    } else if(
       TILEMAP_REDRAW_DIRTY == twindow->t->redraw_state &&
       0 < vector_count( &(twindow->t->dirty_tiles ) )
    ) {
       vector_iterate(
-         &(twindow->t->dirty_tiles), tilemap_layer_draw_dirty_cb, twindow
+         &(twindow->t->dirty_tiles), tilemap_pos_draw_cb, twindow
       );
    }
 

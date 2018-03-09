@@ -111,7 +111,8 @@ struct TILEMAP_LAYER {
    GFX_COORD_TILE height;   /*!< Layer height in tiles. */
    struct VECTOR tiles;
    struct TILEMAP* tilemap;
-   struct TILEMAP_LAYER* next_layer;
+   bstring name;
+   //struct TILEMAP_LAYER* next_layer;
 };
 
 struct TILEMAP {
@@ -119,7 +120,7 @@ struct TILEMAP {
    GFX_COORD_TILE width;
    GFX_COORD_TILE height;
    struct VECTOR item_caches;
-   struct HASHMAP layers;
+   struct VECTOR layers;
    struct VECTOR tilesets;
    struct VECTOR spawners;
    TILEMAP_ORIENTATION orientation;
@@ -128,7 +129,7 @@ struct TILEMAP {
    bstring lname;
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
-   struct TILEMAP_LAYER* first_layer;
+   //struct TILEMAP_LAYER* first_layer;
    SCAFFOLD_ERROR scaffold_error;
 #ifdef DEBUG
    uint16_t sentinal;
@@ -219,7 +220,9 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
    SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 );
-SCAFFOLD_INLINE uint32_t tilemap_get_tile( struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y );
+SCAFFOLD_INLINE uint32_t tilemap_get_tile(
+   const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
+);
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );
 void tilemap_update_window_ortho(
    struct GRAPHICS_TILE_WINDOW* twindow,

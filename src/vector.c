@@ -314,7 +314,7 @@ cleanup:
    return;
 }
 
-void* vector_get( struct VECTOR* v, SCAFFOLD_SIZE index ) {
+void* vector_get( const struct VECTOR* v, SCAFFOLD_SIZE index ) {
    void* retptr = NULL;
 
    if( NULL == v ) {
@@ -334,7 +334,7 @@ cleanup:
    return retptr;
 }
 
-int32_t vector_get_scalar( struct VECTOR* v, SCAFFOLD_SIZE index ) {
+int32_t vector_get_scalar( const struct VECTOR* v, SCAFFOLD_SIZE index ) {
    int32_t retval = -1;
 
    scaffold_check_null( v );
@@ -350,7 +350,7 @@ cleanup:
    return retval;
 }
 
-int32_t vector_get_scalar_value( struct VECTOR* v, int32_t value ) {
+int32_t vector_get_scalar_value( const struct VECTOR* v, int32_t value ) {
    int32_t retval = -1;
    SCAFFOLD_SIZE i;
 
