@@ -736,7 +736,7 @@ cleanup:
 }
 
 static void datafile_tilemap_parse_layer_ezxml(
-   struct TILEMAP* t, ezxml_t xml_layer, SCAFFOLD_SIZE z
+   struct TILEMAP* t, ezxml_t xml_layer, SCAFFOLD_SIZE layer_index
 ) {
    struct TILEMAP_LAYER* layer = NULL;
    ezxml_t xml_layer_data = NULL;
@@ -773,21 +773,27 @@ static void datafile_tilemap_parse_layer_ezxml(
    }
 
    layer->tilemap = t;
-   layer->z = z;
+   layer->z = layer_index;
 
-   bstr_res = bassigncstr( buffer, ezxml_attr( xml_layer, "name" ) );
-   scaffold_check_nonzero( bstr_res );
-   if( hashmap_put( &(t->layers), buffer, layer, FALSE ) ) {
+   /* TODO: Error checking. */
+   layer->name = bfromcstr( ezxml_attr( xml_layer, "name" ) );
+   //scaffold_check_nonzero( bstr_res );
+
+   vector_set( &(t->layers), layer_index, layer, TRUE );
+#if 0
+   if( vector_set( &(t->layers), buffer, layer, TRUE ) ) {
       scaffold_print_error( &module, "Attempted to double-put layer: %b\n" ,
          buffer );
       tilemap_layer_free( layer );
       goto cleanup;
    }
+#endif // 0
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
    if( layer->height > t->height ) { t->height = layer->height; }
 
+#if 0
    /* Add to the layers linked list. */
    if( NULL == t->first_layer ) {
       t->first_layer = layer;
@@ -798,6 +804,7 @@ static void datafile_tilemap_parse_layer_ezxml(
       }
       prev_layer->next_layer = layer;
    }
+#endif // 0
 
 cleanup:
    if( SCAFFOLD_ERROR_NONE != scaffold_error ) {

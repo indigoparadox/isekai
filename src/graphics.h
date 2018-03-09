@@ -17,6 +17,11 @@
 #define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
 #define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 
+#ifdef USE_RAYCASTING
+#define GRAPHICS_RAY_INITIAL_STEP_X 1
+#define GRAPHICS_RAY_INITIAL_STEP_Y 1
+#endif /* USE_RAYCASTING */
+
 #include "colors.h"
 
 COLOR_TABLE( GRAPHICS )
@@ -249,6 +254,12 @@ SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
    GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
 );
 void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by );
+GRAPHICS_COLOR graphics_get_pixel(
+   const GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+);
+void graphics_set_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
+);
 
 #ifdef USE_HICOLOR
 GRAPHICS_HICOLOR graphics_get_hipixel(
@@ -259,24 +270,29 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 #ifdef USE_RAYCASTING
 
 GFX_RAY* graphics_raycast_create(
-   GFX_RAY* ray, int x, GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GRAPHICS* g
+   GFX_RAY* ray, int x, const GFX_DELTA* plane_pos, const GFX_DELTA* cam_pos,
+   const GRAPHICS* g
 );
-int graphics_raycast_wall_throw(
-   GFX_DELTA* cam_pos, GFX_DELTA* plane_pos, GRAPHICS* g,
-   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data,
-   GFX_RAY* ray, GFX_RAY_WALL* wall_pos
+void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray );
+double graphics_raycast_get_distance(
+   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray
 );
+/* int graphics_raycast_wall_throw(
+   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
+   const GFX_DELTA* cam_pos, const GRAPHICS* g,
+   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
+); */
 GFX_RAY_FLOOR* graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, GFX_DELTA* cam_pos,
-   GFX_RAY_WALL* wall_map_pos, GRAPHICS* g
+   GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
+   const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 );
 GFX_RAY_FLOOR* graphics_floorcast_throw(
-   GFX_RAY_FLOOR* floor_pos, GFX_RAY* ray, int x, int y, int line_height,
-   GFX_DELTA* plane_pos, GFX_DELTA* cam_pos, GFX_RAY_WALL* wall_map_pos,
-   GRAPHICS* g
+   GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
+   const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
+   const GRAPHICS* g
 );
-int graphics_get_ray_stripe_end( int line_height, GRAPHICS* g );
-int graphics_get_ray_stripe_start( int line_height, GRAPHICS* g );
+int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
+int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
 
 #endif /* USE_RAYCASTING */
 
