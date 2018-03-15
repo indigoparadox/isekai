@@ -176,14 +176,18 @@ cleanup:
    return;
 }
 
-static void* proto_send_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* proto_send_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
    proto_send( c, buffer );
    return NULL;
 }
 
-static void proto_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer ) {
+static void proto_channel_send(
+   struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer
+) {
    struct VECTOR* l_clients = NULL;
    bstring skip_nick = NULL;
 
@@ -373,7 +377,7 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
 }
 
 static void* proto_send_item_cb(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -428,7 +432,7 @@ cleanup:
 }
 
 static void* proto_send_tile_cache_channel_cb(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)arg;
@@ -555,7 +559,9 @@ struct IRC_WHO_REPLY {
    struct SERVER* s;
 };
 
-static void* irc_callback_reply_who( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* irc_callback_reply_who(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
    proto_printf(

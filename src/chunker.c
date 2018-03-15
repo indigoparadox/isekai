@@ -305,7 +305,7 @@ void chunker_unchunk_pass(
    CHUNKER_TRACK* track = NULL;
    SCAFFOLD_SIZE mid_buffer_length = blength( rx_buffer ) * 2,
       mid_buffer_pos = 0;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 #ifdef DEBUG
    int b64_res = 0;
 #endif /* DEBUG */
@@ -363,7 +363,7 @@ void chunker_unchunk_pass(
    track->start = src_chunk_start;
    track->length = src_chunk_len;
    verr = vector_add( &(h->tracks), track );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       mem_free( track );
       track = NULL;
       goto cleanup;

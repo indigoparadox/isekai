@@ -13,8 +13,8 @@
 #include "scaffold.h"
 #include "vector.h"
 
-typedef void* (*hashmap_search_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
-typedef BOOL (*hashmap_delete_cb)( struct CONTAINER_IDX* idx, void* iter, void* arg );
+typedef void* (*hashmap_search_cb)( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg );
+typedef BOOL (*hashmap_delete_cb)( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg );
 
 /* We need to keep keys and values */
 struct HASHMAP_ELEMENT {
@@ -22,6 +22,9 @@ struct HASHMAP_ELEMENT {
    bstring key;
    BOOL in_use;
    void* data;
+#ifdef USE_ITERATOR_CACHE
+   SCAFFOLD_SIZE iterator_index;
+#endif /* USE_ITERATOR_CACHE */
 };
 
 /* A hashmap has some maximum size and current size,
@@ -33,6 +36,9 @@ struct HASHMAP {
    struct HASHMAP_ELEMENT* data;
    uint8_t lock_count;
    SCAFFOLD_ERROR last_error;
+#ifdef USE_ITERATOR_CACHE
+   struct VECTOR iterators; /*!< List of hashes stored sequentially.  */
+#endif /* USE_ITERATOR_CACHE */
 };
 
 #define HASHMAP_SENTINAL 12345

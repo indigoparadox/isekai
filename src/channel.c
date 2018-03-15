@@ -97,7 +97,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
       /* Make a list of player-capable spawns and pick one at pseudo-random. */
       player_spawns = vector_iterate_v(
-         &(t->spawners), callback_search_spawners, &str_player
+         &(t->spawners), callback_search_spawners, NULL, &str_player
       );
       scaffold_check_null_msg( player_spawns, "No player spawns available." );
       spawner =

@@ -88,13 +88,13 @@ cleanup:
  *                   include this index if it does not already.
  * \param[in] data   Pointer to the item to add.
  */
-VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
+SCAFFOLD_SIZE_SIGNED vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
 #ifdef DEBUG
    SCAFFOLD_SIZE old_size = 0;
 #endif /* DEBUG */
-   VECTOR_ERR err = VECTOR_ERR_NONE;
+   SCAFFOLD_SIZE_SIGNED err = -1;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -127,6 +127,7 @@ VECTOR_ERR vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
    v->data[index] = data;
    v->count++;
    refcount_test_inc( data );
+   err = index;
 
 cleanup:
    if( FALSE != ok ) {
@@ -137,9 +138,9 @@ cleanup:
    return err;
 }
 
-VECTOR_ERR vector_add( struct VECTOR* v, void* data ) {
+SCAFFOLD_SIZE_SIGNED vector_add( struct VECTOR* v, void* data ) {
    BOOL ok = FALSE;
-   VECTOR_ERR err = VECTOR_ERR_NONE;
+   SCAFFOLD_SIZE_SIGNED err = 0;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -172,6 +173,7 @@ VECTOR_ERR vector_add( struct VECTOR* v, void* data ) {
    }
 
    v->data[v->count] = data;
+   err = v->count;
    v->count++;
    refcount_test_inc( data );
 
@@ -393,7 +395,7 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
       /* The delete callback should call the object-specific free() function, *
        * which decreases its refcount naturally. So there's no need to do it  *
        * manually here.                                                       */
-      if( FALSE != callback( NULL, v->data[i], arg ) ) {
+      if( FALSE != callback( NULL, v, v->data[i], arg ) ) {
          removed++;
          for( j = i ; v->count - 1 > j ; j++ ) {
             v->data[j] = v->data[j + 1];
@@ -550,14 +552,16 @@ void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
-   cb_return = vector_iterate_nolock( v, callback, arg );
+   cb_return = vector_iterate_nolock( v, callback, v, arg );
    vector_lock( v, FALSE );
 
 cleanup:
    return cb_return;
 }
 
-void* vector_iterate_nolock( struct VECTOR* v, vector_search_cb callback, void* arg ) {
+void* vector_iterate_nolock(
+   struct VECTOR* v, vector_search_cb callback, void* parent, void* arg
+) {
    void* cb_return = NULL;
    void* current_iter = NULL;
    SCAFFOLD_SIZE i;
@@ -570,10 +574,15 @@ void* vector_iterate_nolock( struct VECTOR* v, vector_search_cb callback, void* 
 
    idx.type = CONTAINER_IDX_NUMBER;
 
+   /* If a parent wasn't explicitly provided, use the vector, itself. */
+   if( NULL == parent ) {
+      parent = v;
+   }
+
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
       current_iter = vector_get( v, i );
       idx.value.index = i;
-      cb_return = callback( &idx, current_iter, arg );
+      cb_return = callback( &idx, parent, current_iter, arg );
       if( NULL != cb_return ) {
          break;
       }
@@ -607,7 +616,7 @@ void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg )
    for( i = vector_count( v ) ; 0 < i ; i-- ) {
       current_iter = vector_get( v, i - 1 );
       idx.value.index = i - 1;
-      cb_return = callback( &idx, current_iter, arg );
+      cb_return = callback( &idx, v, current_iter, arg );
       if( NULL != cb_return ) {
          break;
       }
@@ -619,7 +628,7 @@ cleanup:
 }
 
 struct VECTOR* vector_iterate_v(
-   struct VECTOR* v, vector_search_cb callback, void* arg
+   struct VECTOR* v, vector_search_cb callback, void* parent, void* arg
 ) {
    struct VECTOR* found = NULL;
    void* current_iter = NULL;
@@ -627,7 +636,7 @@ struct VECTOR* vector_iterate_v(
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
-   VECTOR_ERR add_err = VECTOR_ERR_NONE;
+   SCAFFOLD_SIZE_SIGNED add_err = 0;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -636,17 +645,22 @@ struct VECTOR* vector_iterate_v(
    ok = TRUE;
 
    idx.type = CONTAINER_IDX_NUMBER;
+
+   if( NULL == parent ) {
+      parent = v;
+   }
+
    /* Linear probing */
    for( i = 0 ; vector_count( v ) > i ; i++ ) {
       current_iter = vector_get( v, i );
       idx.value.index = i;
-      cb_return = callback( &idx, current_iter, arg );
+      cb_return = callback( &idx, parent, current_iter, arg );
       if( NULL != cb_return ) {
          if( NULL == found ) {
             vector_new( found );
          }
          add_err = vector_add( found, cb_return );
-         if( VECTOR_ERR_NONE != add_err ) {
+         if( 0 > add_err ) {
             scaffold_print_debug(
                &module, "Insufficient space for results vector.\n"
             );

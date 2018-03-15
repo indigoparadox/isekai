@@ -181,7 +181,9 @@ static duk_ret_t vm_update( duk_context* vm ) {
    return 0;
 }
 
-static void* vm_global_set_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* vm_global_set_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct MOBILE* o = (struct MOBILE*)arg;
    bstring value = (bstring)iter;
 

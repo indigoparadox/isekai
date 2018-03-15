@@ -77,7 +77,7 @@ static void backlog_refresh_window() {
 
 void backlog_speak( const bstring nick, const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    line = mem_alloc( 1, struct BACKLOG_LINE );
    scaffold_check_null( line );
@@ -87,7 +87,7 @@ void backlog_speak( const bstring nick, const bstring msg ) {
 
    backlog_timestamp( line );
    verr = vector_insert( &global_backlog, 0, line );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       backlog_line_free( line );
       goto cleanup;
    }
@@ -99,7 +99,7 @@ cleanup:
 
 void backlog_system( const bstring msg ) {
    struct BACKLOG_LINE* line = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    line = mem_alloc( 1, struct BACKLOG_LINE );
    scaffold_check_null( line );
@@ -109,7 +109,7 @@ void backlog_system( const bstring msg ) {
 
    backlog_timestamp( line );
    verr = vector_insert( &global_backlog, 0, line );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;
    }

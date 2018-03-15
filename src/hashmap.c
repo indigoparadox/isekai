@@ -26,6 +26,11 @@ void hashmap_init( struct HASHMAP* m ) {
    m->lock_count = 0;
    m->last_error = SCAFFOLD_ERROR_NONE;
 
+#ifdef USE_ITERATOR_CACHE
+   /* Initialize the iterator cache. */
+   vector_init( &(m->iterators) );
+#endif /* USE_ITERATOR_CACHE */
+
 cleanup:
    return;
 }
@@ -240,6 +245,39 @@ static void hashmap_verify_size( struct HASHMAP* m ) {
 
 #endif /* DEBUG */
 
+#ifdef USE_ITERATOR_CACHE
+
+struct HASHMAP_VECTOR_ADAPTER {
+   hashmap_search_cb callback;
+   void* arg;
+};
+
+static void* hashvector_search_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   void* void_iter = NULL;
+   struct HASHMAP* m = (struct HASHMAP*)parent;
+   struct HASHMAP_ELEMENT* e = (struct HASHMAP_ELEMENT*)iter;
+   struct HASHMAP_VECTOR_ADAPTER* adp = (struct HASHMAP_VECTOR_ADAPTER*)arg;
+   struct CONTAINER_IDX idx_wrapper;
+
+   void_iter = hashmap_get_nolock( m, e->key );
+
+   idx_wrapper.type = CONTAINER_IDX_STRING;
+   idx_wrapper.value.key = e->key;
+
+   return adp->callback( &idx_wrapper, m, void_iter, adp->arg );
+}
+
+
+static void* hashvector_remove_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+
+}
+
+#endif /* USE_ITERATOR_CACHE */
+
 void hashmap_rehash( struct HASHMAP* m );
 
 /*
@@ -252,6 +290,7 @@ static short hashmap_put_internal(
    BOOL ok = FALSE;
    BOOL pre_existing = FALSE;
    short retval = 0;
+   SCAFFOLD_SIZE_SIGNED iterator_index = 0;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -290,6 +329,11 @@ static short hashmap_put_internal(
    if( TRUE != pre_existing ) {
       m->size++;
    }
+
+#ifdef USE_ITERATOR_CACHE
+   iterator_index = vector_add( &(m->iterators), &(m->data[index]) );
+   m->data[index].iterator_index = iterator_index;
+#endif /* USE_ITERATOR_CACHE */
 
 cleanup:
    if( FALSE != ok && FALSE != lock ) {
@@ -371,6 +415,7 @@ short hashmap_put_nolock(
    struct HASHMAP* m, const bstring key, void* value, BOOL overwrite
 ) {
    short retval = 0;
+
    retval = hashmap_put_internal( m, key, value, overwrite, FALSE );
    if( NULL != value ) {
       refcount_test_inc( value );
@@ -669,7 +714,7 @@ void* hashmap_iterate_nolock(
          key_c = bdata( m->data[i].key );
 #endif /* DEBUG */
          idx.value.key = m->data[i].key;
-         test = callback( &idx, data, arg );
+         test = callback( &idx, m, data, arg );
          if( NULL != test ) {
             found = test;
             goto cleanup;
@@ -695,7 +740,10 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    BOOL ok = FALSE;
    int i;
    struct CONTAINER_IDX idx = { 0 };
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
+#ifdef USE_ITERATOR_CACHE
+   struct HASHMAP_VECTOR_ADAPTER adp;
+#endif /* USE_ITERATOR_CACHE */
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -708,23 +756,30 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
 
    idx.type = CONTAINER_IDX_STRING;
 
+#ifdef USE_ITERATOR_CACHE
+   adp.callback = callback;
+   adp.arg = arg;
+
+   vector_iterate_v( &(m->iterators), hashvector_search_cb, m, &adp );
+#else
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
          idx.value.key = m->data[i].key;
-         test = callback( &idx, data, arg );
+         test = callback( &idx, m, data, arg );
          if( NULL != test ) {
             if( NULL == found ) {
                vector_new( found );
             }
             verr = vector_add( found, test );
-            if( VECTOR_ERR_NONE != verr ) {
+            if( 0 > verr ) {
                goto cleanup;
             }
          }
       }
    }
+#endif /* USE_ITERATOR_CACHE */
 
 cleanup:
 #ifdef DEBUG
@@ -736,6 +791,29 @@ cleanup:
    return found;
 }
 
+static
+BOOL hashmap_remove_internal( struct HASHMAP* m, struct HASHMAP_ELEMENT* e ) {
+#ifdef USE_ITERATOR_CACHE
+   vector_remove( &(m->iterators), e->iterator_index );
+#endif /* USE_ITERATOR_CACHE */
+
+#ifndef HASHMAP_NO_LOCK_REMOVE
+   refcount_test_dec( e->data );
+#endif /* HASHMAP_NO_LOCK_REMOVE */
+
+   /* Blank out the fields */
+   e->in_use = 0;
+   e->data = NULL;
+   bwriteallow( (*e->key) );
+   bdestroy( e->key );
+   e->key = NULL;
+
+   /* Reduce the size */
+   m->size--;
+
+   return TRUE;
+}
+
 /** \brief Use a callback to delete items. The callback frees the item or
  *         decreases its refcount as applicable.
  *
@@ -743,11 +821,17 @@ cleanup:
  *
  */
 SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
-   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE_SIGNED i, j;
    SCAFFOLD_SIZE removed = 0;
    void* data;
+#ifndef HASHMAP_NO_LOCK_REMOVE
    BOOL locked = FALSE;
+#endif /* HASHMAP_NO_LOCK_REMOVE */
    struct CONTAINER_IDX idx = { 0 };
+#ifdef USE_ITERATOR_CACHE
+   SCAFFOLD_SIZE iterator_index = 0;
+   struct HASHMAP_ELEMENT* e_iterator = NULL;
+#endif /* USE_ITERATOR_CACHE */
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
@@ -756,8 +840,10 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
    scaffold_check_zero_against(
       m->last_error, hashmap_count( m ), "Hashmap empty during remove_cb." );
 
+#ifndef HASHMAP_NO_LOCK_REMOVE
    hashmap_lock( m, TRUE );
    locked = TRUE;
+#endif /* HASHMAP_NO_LOCK_REMOVE */
 
    if( 0 >= hashmap_count( m ) ) {
       goto cleanup; /* Quietly. */
@@ -770,18 +856,26 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
          idx.value.key = m->data[i].key;
-         if( FALSE != callback( &idx, data, arg ) ) {
-            /* Blank out the fields */
-            m->data[i].in_use = 0;
-            m->data[i].data = NULL;
-            bwriteallow( (*m->data[i].key) );
-            bdestroy( m->data[i].key );
-            m->data[i].key = NULL;
+         if( FALSE != callback( &idx, m, data, arg ) ) {
 
-            /* Reduce the size */
-            m->size--;
+            iterator_index = m->data[i].iterator_index;
+            if( TRUE == hashmap_remove_internal( m, &(m->data[i]) ) ) {
+               removed++;
+            }
 
-            removed++;
+#ifdef USE_ITERATOR_CACHE
+            /* Tighten up the slack in the iterator order. */
+            vector_lock( &(m->iterators), TRUE );
+            for(
+               j = iterator_index ;
+               vector_count( &(m->iterators) ) > j ;
+               j++
+            ) {
+               e_iterator = ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ));
+               e_iterator->iterator_index--;
+            }
+            vector_lock( &(m->iterators), FALSE );
+#endif /* USE_ITERATOR_CACHE */
          }
       }
    }
@@ -790,9 +884,11 @@ cleanup:
 #ifdef DEBUG
    hashmap_verify_size( m );
 #endif /* DEBUG */
+#ifndef HASHMAP_NO_LOCK_REMOVE
    if( TRUE == locked ) {
       hashmap_lock( m, FALSE );
    }
+#endif /* HASHMAP_NO_LOCK_REMOVE */
    return removed;
 }
 
@@ -800,15 +896,26 @@ cleanup:
  * Remove an element with that key from the map
  */
 BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
-   SCAFFOLD_SIZE i,
+   SCAFFOLD_SIZE i, j,
       curr;
    BOOL in_use;
    BOOL removed = FALSE;
+#ifndef HASHMAP_NO_LOCK_REMOVE
+   BOOL locked = FALSE;
+#endif /* HASHMAP_NO_LOCK_REMOVE */
+#ifdef USE_ITERATOR_CACHE
+   SCAFFOLD_SIZE iterator_index = 0;
+#endif /* USE_ITERATOR_CACHE */
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    scaffold_check_zero_against(
       m->last_error, hashmap_count( m ), "Hashmap empty during remove." );
+
+#ifndef HASHMAP_NO_LOCK_REMOVE
+   hashmap_lock( m, TRUE );
+   locked = TRUE;
+#endif /* HASHMAP_NO_LOCK_REMOVE */
 
    /* Find key */
    curr = hashmap_hash_int(m, key);
@@ -819,24 +926,42 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
       in_use = m->data[curr].in_use;
       if( TRUE == in_use ) {
          if( 0 == bstrcmp( m->data[curr].key, key ) ) {
+
+#ifndef HASHMAP_NO_LOCK_REMOVE
             refcount_test_dec( m->data[curr].data );
+#endif /* HASHMAP_NO_LOCK_REMOVE */
 
-            /* Blank out the fields */
-            m->data[curr].in_use = FALSE;
-            m->data[curr].data = NULL;
-            bwriteallow( (*m->data[curr].key) );
-            bdestroy( m->data[curr].key );
-            m->data[curr].key = NULL;
+            //vector_remove( &(m->iterators), m->data[curr].iterator_index );
+            iterator_index = m->data[curr].iterator_index;
+            if( TRUE == hashmap_remove_internal( m, &(m->data[curr]) ) ) {
+               removed++;
+            }
 
-            /* Reduce the size */
-            m->size--;
-            removed = TRUE;
+#ifdef USE_ITERATOR_CACHE
+            /* Tighten up the slack in the iterator order. */
+            vector_lock( &(m->iterators), TRUE );
+            for(
+               j = iterator_index ;
+               vector_count( &(m->iterators) ) > j ;
+               j++
+            ) {
+               ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ))
+                  ->iterator_index--;
+            }
+            vector_lock( &(m->iterators), FALSE );
+#endif /* USE_ITERATOR_CACHE */
+
             goto cleanup;
          }
       }
       curr = (curr + 1) % m->table_size;
    }
 cleanup:
+#ifndef HASHMAP_NO_LOCK_REMOVE
+   if( TRUE == locked ) {
+      hashmap_lock( m, FALSE );
+   }
+#endif /* HASHMAP_NO_LOCK_REMOVE */
 #ifdef DEBUG
    hashmap_verify_size( m );
 #endif /* DEBUG */
@@ -848,6 +973,9 @@ void hashmap_cleanup( struct HASHMAP* m ) {
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    scaffold_assert( 0 >= hashmap_count( m ) );
+#ifdef USE_ITERATOR_CACHE
+   vector_cleanup( &(m->iterators) );
+#endif /* USE_ITERATOR_CACHE */
    mem_free( m->data );
    m->sentinal = 0;
 cleanup:
