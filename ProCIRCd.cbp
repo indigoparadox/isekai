@@ -810,7 +810,6 @@
 					<Add option="-DSTRICT_DEBUG" />
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DUSE_RAYCASTING" />
-					<Add option="-DUSE_ITERATOR_CACHE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -825,6 +824,8 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 			<Add option="-DBACKLOG_PRESENT" />
+			<Add option="-DUSE_ITERATOR_CACHE" />
+			<Add option="-DHASHMAP_NO_LOCK_REMOVE" />
 		</Compiler>
 		<Unit filename="procircd.def">
 			<Option target="Debug (Palm-SB)" />
