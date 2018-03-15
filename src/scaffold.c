@@ -2,6 +2,10 @@
 #define SCAFFOLD_C
 #include "scaffold.h"
 
+#ifdef BACKLOG_PRESENT
+#include "backlog.h"
+#endif /* BACKLOG_PRESENT */
+
 static struct tagbstring str_scaffold_trace[3] = {
    bsStatic( "T_NONE" ),
    bsStatic( "T_CLIENT" ),
@@ -16,6 +20,8 @@ SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 FILE* scaffold_log_handle = NULL;
 FILE* scaffold_log_handle_err = NULL;
 #endif /* SCAFFOLD_LOG_FILE */
+
+#include <stdlib.h>
 
 int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;

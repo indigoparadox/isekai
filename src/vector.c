@@ -507,7 +507,7 @@ cleanup:
    return difference;
 }
 
-SCAFFOLD_SIZE vector_count( struct VECTOR* v ) {
+SCAFFOLD_SIZE vector_count( const struct VECTOR* v ) {
    scaffold_check_null( v );
    if( VECTOR_SENTINAL != v->sentinal ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
