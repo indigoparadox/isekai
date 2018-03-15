@@ -321,6 +321,7 @@ GFX_RAY* graphics_raycast_wall_create(
    ray->direction_y = cam_pos->dy.facing + plane_pos->y * camera_x;
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
+   ray->steps = 0;
 
    /* Assume distance is finite to start. */
    ray->infinite_dist = FALSE;
@@ -356,6 +357,18 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
       wall_pos->side = 1;
    }
 
+#ifdef LIMIT_RAY_STEPS
+   ray->steps++;
+   if( 10 < ray->steps ) {
+      if( ray->side_dist_x >= ray->side_dist_y ) {
+         ray->side_dist_y += ray->delta_dist_y;
+         wall_pos->y += ray->step_y;
+         wall_pos->side = 1;
+      }
+      ray->infinite_dist = TRUE;
+   }
+#endif /* LIMIT_RAY_STEPS */
+
    /* Don't draw walls outside of the map. */
    if(
       wall_pos->x > wall_pos->map_w ||
@@ -367,8 +380,10 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
    }
 }
 
+#if 0
+
 double graphics_raycast_get_distance(
-   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray
+   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray, int j
 ) {
    /* Calculate distance projected on camera direction
       (Euclidean distance will give fisheye effect!). */
@@ -381,7 +396,6 @@ double graphics_raycast_get_distance(
    }
 }
 
-#if 0
 /** \brief
  *
  * \param

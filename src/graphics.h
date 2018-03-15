@@ -114,6 +114,7 @@ typedef struct {
    int step_x;
    int step_y;
    BOOL infinite_dist;
+   int steps;
 } GFX_RAY;
 
 typedef struct {
@@ -158,6 +159,10 @@ struct GRAPHICS_TILE_WINDOW {
    GFX_COORD_TILE min_y;    /*!< Top-most window tile. */
    uint8_t grid_w;
    uint8_t grid_h;
+#ifdef USE_RAYCASTING
+   double* z_buffer;
+   BOOL dirty;
+#endif /* USE_RAYCASTING */
 };
 
 #define graphics_clear_screen( g, color ) \
@@ -269,9 +274,9 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 
 #ifdef USE_RAYCASTING
 
-GFX_RAY* graphics_raycast_create(
-   GFX_RAY* ray, int x, const GFX_DELTA* plane_pos, const GFX_DELTA* cam_pos,
-   const GRAPHICS* g
+GFX_RAY* graphics_raycast_wall_create(
+   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GFX_DELTA* plane_pos,
+   const GFX_DELTA* cam_pos, const GRAPHICS* g
 );
 void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray );
 double graphics_raycast_get_distance(

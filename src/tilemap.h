@@ -83,6 +83,7 @@ struct TILEMAP_TILESET {
 struct TILEMAP_POSITION {
    GFX_COORD_TILE x;
    GFX_COORD_TILE y;
+   int facing;
 };
 
 struct TILEMAP_ITEM_CACHE {

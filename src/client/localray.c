@@ -14,6 +14,10 @@
 
 extern bstring client_input_from_ui;
 
+static GFX_RAY_WALL* cl_walls = NULL;
+static GFX_RAY_FLOOR* cl_floors = NULL;
+static GRAPHICS* ray_view = NULL;
+
 static void* client_local_raylay_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 
 }
@@ -91,12 +95,19 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
    }
 }
 
-void client_local_draw(
-   struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+/** \brief Create the first-person view and walls to draw on screen beneath the
+ *         sprites.
+ *
+ * \param
+ * \param
+ * \return
+ *
+ */
+static void client_local_update_view(
+   GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
+   struct CLIENT* c
 ) {
-   int i_x, i_y, draw_start, draw_end;
+   int i_x, i_y, draw_start, draw_end, j, k;
    struct INPUT p;
    int done = 0;
    GFX_DELTA cam_pos;
@@ -114,26 +125,32 @@ void client_local_draw(
    SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS_COLOR color;
    double steps_remaining = 0;
-   struct MOBILE* player;
    int tex_x, tex_y;
    int layer_index = 0,
       layer_max = 0;
    BOOL wall_hit = FALSE;
 
-   if( NULL == twindow->t ) {
+   /*
+   static BOOL pos_dirty = TRUE;
+   static GRAPHICS_RECT former_pos;
+*/
+
+   if( NULL == t ) {
       return;
    }
 
-   if(
-      NULL == twindow->local_client ||
-      NULL == twindow->local_client->puppet
-   ) {
-      return;
+   cam_pos.x = x;
+   cam_pos.y = y;
+
+#if 0
+   if( pos_dirty ) {
+      memset( &former_pos, '\0', sizeof( struct TILEMAP_POSITION ) );
+      pos_dirty = FALSE;
    }
 
-   player = twindow->local_client->puppet;
-   cam_pos.x = player->x;
-   cam_pos.y = player->y;
+   if( former_pos.x ) {
+
+   }
 
    if( 0 < player->steps_remaining ) {
       switch( player->facing )  {
@@ -155,30 +172,57 @@ void client_local_draw(
             break;
       }
    }
+#endif // 0
 
-   wall_map_pos.map_w = twindow->t->width;
-   wall_map_pos.map_h = twindow->t->height;
-   cam_pos.dx.facing = -1; /* TODO */
-   cam_pos.dy.facing = 0;
-   plane_pos.x = 0;
-   plane_pos.y = 0.66;
+   /*if( NULL == twindow->z_buffer ) {
+      twindow->z_buffer = calloc( twindow->g->w, sizeof( double ) );
+   }*/
+
+   wall_map_pos.map_w = t->width;
+   wall_map_pos.map_h = t->height;
+   switch( facing ) {
+      case MOBILE_FACING_LEFT:
+         cam_pos.dx.facing = -1; /* TODO */
+         cam_pos.dy.facing = 0;
+         plane_pos.x = 0;
+         plane_pos.y = 0.66;
+         break;
+      case MOBILE_FACING_RIGHT:
+         cam_pos.dx.facing = 1; /* TODO */
+         cam_pos.dy.facing = 0;
+         plane_pos.x = 0;
+         plane_pos.y = -0.66;
+         break;
+      case MOBILE_FACING_UP:
+         cam_pos.dx.facing = 0; /* TODO */
+         cam_pos.dy.facing = -1;
+         plane_pos.x = 0.66;
+         plane_pos.y = 0;
+         break;
+      case MOBILE_FACING_DOWN:
+         cam_pos.dx.facing = 0; /* TODO */
+         cam_pos.dy.facing = 1;
+         plane_pos.x = -0.66;
+         plane_pos.y = 0;
+         break;
+   }
    floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
    floor_pos.tex_h = 32;
 
    /* Draw a sky. */
-   graphics_draw_rect( twindow->g, 0, 0, twindow->g->w, twindow->g->h, GRAPHICS_COLOR_CYAN, TRUE );
+   graphics_draw_rect( g, 0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, TRUE );
 
-   layer_max = vector_count( &(twindow->t->layers) );
-   for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
-      layer = vector_get( &(twindow->t->layers), layer_index );
+   layer_max = vector_count( &(t->layers) );
+   for( layer_index = 0 ; layer_index < 3 ; layer_index++ ) {
+      layer = vector_get( &(t->layers), layer_index );
 
-      for( i_x = 0; i_x < twindow->g->w; i_x++ ) {
+      for( i_x = 0; i_x < g->w; i_x++ ) {
 
          wall_map_pos.x = (int)cam_pos.x;
          wall_map_pos.y = (int)cam_pos.y;
 
          /* Calculate ray position and direction. */
-         graphics_raycast_wall_create( &ray, i_x, &wall_map_pos, &plane_pos, &cam_pos, twindow->g );
+         graphics_raycast_wall_create( &ray, i_x, &wall_map_pos, &plane_pos, &cam_pos, g );
 
          /* Do the actual casting. */
          wall_hit = FALSE;
@@ -186,51 +230,76 @@ void client_local_draw(
             graphics_raycast_wall_iter( &wall_map_pos, &ray );
 
             if( ray.infinite_dist ) {
+               if(
+                  MOBILE_FACING_LEFT == facing ||
+                  MOBILE_FACING_RIGHT == facing
+               ) {
+                  ray.side_dist_x += ray.delta_dist_x;
+                  wall_map_pos.x += ray.step_x;
+                  wall_map_pos.side = 0;
+               }
+
                break;
             }
 
             /* Check if ray has hit a wall. */
-            if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
+            /* if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
+               wall_hit = TRUE;
+            } */
+            if( 0 != tile && 3 <= layer_index ) {
                wall_hit = TRUE;
             }
          }
 
-         wall_map_pos.perpen_dist =
-            graphics_raycast_get_distance( &wall_map_pos, &cam_pos, &ray );
-         line_height = (int)(twindow->g->h / wall_map_pos.perpen_dist);
-
-         draw_end = graphics_get_ray_stripe_end( line_height, twindow->g );
-         draw_start = graphics_get_ray_stripe_start( line_height, twindow->g );
-
-         if( TRUE != ray.infinite_dist ) {
-            /* Choose wall color. */
-            color = get_wall_color( &wall_map_pos );
+         if( 0 == wall_map_pos.side ) {
+            wall_map_pos.perpen_dist =
+               (wall_map_pos.x - cam_pos.x + (-1 - ray.step_x) / 2) / ray.direction_x;
          } else {
-            /* Fog. */
-            color = GRAPHICS_COLOR_WHITE;
+            wall_map_pos.perpen_dist =
+               (wall_map_pos.y - cam_pos.y + (-1 - ray.step_y) / 2) / ray.direction_y;
          }
 
+         /* wall_map_pos.perpen_dist =
+            graphics_raycast_get_distance( &wall_map_pos, &cam_pos, &ray ); */
+         //twindow->z_buffer[i_x] = wall_map_pos.perpen_dist;
+         line_height = (int)(g->h / wall_map_pos.perpen_dist);
+
+         draw_end = graphics_get_ray_stripe_end( line_height, g );
+         draw_start = graphics_get_ray_stripe_start( line_height, g );
+
          /* Draw the pixels of the stripe as a vertical line. */
-         if( 0 == layer_index ) {
-            graphics_draw_line( twindow->g, i_x, draw_start, i_x, draw_end, color );
+         if( 0 == layer_index && 0 < line_height ) {
+            if( TRUE != ray.infinite_dist ) {
+               /* Choose wall color. */
+               color = get_wall_color( &wall_map_pos );
+#ifdef RAY_FOG
+            } else {
+               /* Fog. */
+               color = GRAPHICS_COLOR_WHITE;
+            }
+#endif /* RAY_FOG */
+            graphics_draw_line( g, i_x, draw_start, i_x, draw_end, color );
+#ifndef RAY_FOG
+            }
+#endif /* RAY_FOG */
          }
 
          graphics_floorcast_create(
             &floor_pos, &ray, i_x, &cam_pos,
-            &wall_map_pos, twindow->g
+            &wall_map_pos, g
          );
 
          if( 0 > draw_end ) {
             /* Become < 0 if the integer overflows. */
-            draw_end = twindow->g->h;
+            draw_end = g->h;
          }
 
          /* Draw the floor from draw_end to the bottom of the screen. */
-         for( i_y = draw_end +1; i_y < twindow->g->h; i_y++ ) {
+         for( i_y = draw_end +1; i_y < g->h; i_y++ ) {
             graphics_floorcast_throw(
                &floor_pos, i_x, i_y, line_height,
                &cam_pos, &wall_map_pos,
-               twindow->g
+               g
             );
 
             /* Ensure we have everything needed to draw the tile. */
@@ -239,7 +308,7 @@ void client_local_draw(
                continue;
             }
 
-            set = tilemap_get_tileset( twindow->t, tile, &set_firstgid );
+            set = tilemap_get_tileset( t, tile, &set_firstgid );
             if( NULL == set ) {
                continue;
             }
@@ -247,7 +316,7 @@ void client_local_draw(
             g_tileset = hashmap_iterate(
                &(set->images),
                callback_search_tileset_img_gid,
-               twindow->local_client
+               c
             );
             if( NULL == g_tileset ) {
                continue;
@@ -260,13 +329,55 @@ void client_local_draw(
             tex_y = floor_pos.tex_y + tile_tilesheet_pos.y;
             color = graphics_get_pixel( g_tileset, tex_x, tex_y );
             if( GRAPHICS_COLOR_TRANSPARENT != color ) {
-               graphics_set_pixel( twindow->g, i_x, i_y, color );
+               graphics_set_pixel( g, i_x, i_y, color );
             }
          }
       }
    }
+}
+
+void client_local_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+) {
+   GRAPHICS* g = twindow->g;
+   struct MOBILE* player = NULL;
+   static struct TILEMAP_POSITION last;
+
+   if(
+      NULL == twindow->local_client ||
+      NULL == twindow->local_client->puppet
+   ) {
+      memset( &last, '\0', sizeof( struct TILEMAP_POSITION ) );
+      return;
+   }
+
+   player = twindow->local_client->puppet;
+
+   if( NULL == ray_view ) {
+      graphics_surface_new( ray_view, 0, 0, g->w, g->h );
+   }
+
+   if(
+      player->x != last.x ||
+      player->y != last.y ||
+      player->facing != last.facing
+   ) {
+      client_local_update_view(
+         ray_view, player->x, player->y, player->facing, twindow->t, twindow->local_client
+      );
+      last.x = player->x;
+      last.y = player->y;
+      last.facing = player->facing;
+   }
+
+   graphics_blit( g, 0, 0, ray_view );
 
    vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+
+cleanup:
+   return;
 }
 
 void client_local_update(
@@ -274,9 +385,14 @@ void client_local_update(
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   tilemap_update_window_ortho(
+   /* tilemap_update_window_ortho(
       twindow, c->puppet->x, c->puppet->y
-   );
+   ); */
+
+
+
+cleanup:
+   return;
 }
 
 static BOOL client_local_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
@@ -428,6 +544,11 @@ void client_local_free( struct CLIENT* c ) {
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+   }
+
+   if( NULL != ray_view ) {
+      graphics_surface_free( ray_view );
+      ray_view = NULL;
    }
 }
 

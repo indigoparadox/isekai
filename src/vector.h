@@ -63,7 +63,7 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
 void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index );
 void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index );
 SCAFFOLD_SIZE vector_remove_scalar_value( struct VECTOR* v, int32_t value );
-SCAFFOLD_SIZE vector_count( struct VECTOR* v );
+SCAFFOLD_SIZE vector_count( const struct VECTOR* v );
 void vector_lock( struct VECTOR* v, BOOL lock );
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg );
 void* vector_iterate_nolock( struct VECTOR* v, vector_search_cb callback, void* arg );

@@ -7,6 +7,8 @@
 #include "../callback.h"
 #include "../channel.h"
 
+#include <stdlib.h>
+
 #define ezxml_node( target, parent, id ) \
    target = ezxml_child( parent, id ); \
    scaffold_check_null( target );

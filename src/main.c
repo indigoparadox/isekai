@@ -475,6 +475,11 @@ cleanup:
    bdestroy( buffer );
 #endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
+#ifdef USE_RAYCASTING
+   if( NULL != twindow && NULL != twindow->z_buffer ) {
+      mem_free( twindow->z_buffer );
+   }
+#endif /* USE_RAYCASTING */
    mem_free( twindow );
    input_shutdown( input );
    mem_free( input );
