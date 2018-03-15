@@ -290,7 +290,9 @@ cleanup:
    return new_clients;
 }
 
-static void* server_srv_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* server_srv_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct SERVER* s = (struct SERVER*)arg;
    BOOL keep_going = TRUE;

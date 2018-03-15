@@ -6,13 +6,17 @@
 #include "mobile.h"
 #include "channel.h"
 
-static BOOL tilemap_layer_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static BOOL tilemap_layer_free_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    tilemap_layer_free( layer );
    return TRUE;
 }
 
-static BOOL tilemap_tileset_free_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static BOOL tilemap_tileset_free_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    tilemap_tileset_free( (struct TILEMAP_TILESET*)iter );
    return TRUE;
 }
@@ -356,7 +360,7 @@ cleanup:
 #endif /* DEBUG_TILES */
 
 static void* tilemap_layer_draw_tile_items_cb(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    GRAPHICS_RECT* rect = (GRAPHICS_RECT*)arg;
    struct ITEM* e = (struct ITEM*)iter;
@@ -470,7 +474,9 @@ cleanup:
    return NULL;
 }
 
-static void* tilemap_layer_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* tilemap_layer_draw_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    SCAFFOLD_SIZE_SIGNED
@@ -500,8 +506,10 @@ cleanup:
    return NULL;
 }
 
-static void tilemap_pos_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct TILEMAP_POSITION* pos = (struct TILEMAP_POS*)iter;
+static void* tilemap_pos_draw_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP_LAYER* layer = NULL;
    struct TILEMAP* t =  twindow->t;
@@ -778,7 +786,7 @@ void tilemap_add_dirty_tile(
    struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    struct TILEMAP_POSITION* pos = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    pos = mem_alloc( 1, struct TILEMAP_POSITION );
    scaffold_check_null( pos );
@@ -787,7 +795,7 @@ void tilemap_add_dirty_tile(
    pos->y = y;
 
    verr = vector_add( &(t->dirty_tiles), pos );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       mem_free( pos );
       goto cleanup;
    }
@@ -830,7 +838,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
 ) {
    struct TILEMAP_ITEM_CACHE* cache = NULL;
    struct TILEMAP_POSITION pos;
-   VECTOR_ERR verr = FALSE;
+   SCAFFOLD_SIZE_SIGNED verr = 0;
 
    pos.x = x;
    pos.y = y;
@@ -841,7 +849,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
       tilemap_item_cache_new( cache, t, x, y );
       scaffold_check_null( cache );
       verr = vector_add( &(t->item_caches), cache );
-      if( VECTOR_ERR_NONE != verr ) {
+      if( 0 > verr ) {
          tilemap_item_cache_free( cache );
          cache = NULL;
          goto cleanup;
@@ -856,7 +864,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    }
 
    verr = vector_add( &(cache->items), e );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       item_free( e );
       goto cleanup;
    }
@@ -881,7 +889,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 ) {
    struct TILEMAP_POSITION tile_map_pos;
    struct TILEMAP_ITEM_CACHE* cache_out = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    tile_map_pos.x = x;
    tile_map_pos.y = y;
@@ -894,7 +902,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
       tilemap_item_cache_new( cache_out, t, x, y );
       scaffold_check_null( cache_out );
       verr = vector_add( &(t->item_caches), cache_out );
-      if( VECTOR_ERR_NONE != verr ) {
+      if( 0 > verr ) {
          tilemap_item_cache_free( cache_out );
          cache_out = NULL;
          goto cleanup;

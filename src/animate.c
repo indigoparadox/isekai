@@ -6,7 +6,9 @@ void animate_init() {
    hashmap_init( &animations );
 }
 
-static BOOL animate_del_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static BOOL animate_del_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    bstring key_search = (bstring)arg;
    struct ANIMATION* a = (struct ANIMATION*)iter;
    if( NULL == arg || 0 == bstrcmp( idx->value.key, key_search ) ) {
@@ -286,8 +288,9 @@ void animate_free_animation( struct ANIMATION** a ) {
    }
 }
 
-static
-BOOL animate_cyc_ani_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static BOOL animate_cyc_ani_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    BOOL remove = FALSE;
@@ -327,8 +330,9 @@ void animate_cycle_animations( struct GRAPHICS_TILE_WINDOW* twindow ) {
    hashmap_remove_cb( &animations, animate_cyc_ani_cb, twindow );
 }
 
-static
-void* animate_draw_ani_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* animate_draw_ani_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    GFX_COORD_PIXEL
@@ -361,8 +365,9 @@ void animate_draw_animations( struct GRAPHICS_TILE_WINDOW* twindow ) {
    hashmap_iterate( &animations, animate_draw_ani_cb, twindow );
 }
 
-static
-void* animate_blocker_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* animate_blocker_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    if( FALSE != a->blocking ) {
       return a;

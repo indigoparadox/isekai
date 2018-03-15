@@ -210,7 +210,7 @@ void files_list_dir(
    DIR* dir = NULL;
    struct dirent* entry = NULL;
    int bstr_result;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
    struct stat stat_buff;
    BOOL is_dir = FALSE;
    int stat_result;
@@ -274,7 +274,7 @@ void files_list_dir(
          ) {
             /* We're tracking files, so add this, too. */
             verr = vector_add( list, child_path );
-            if( VECTOR_ERR_NONE != verr ) {
+            if( 0 > verr ) {
                bdestroy( child_path );
             }
          } else {
@@ -290,7 +290,7 @@ void files_list_dir(
 
          /* Always add directories. */
          verr = vector_add( list, child_path );
-         if( VECTOR_ERR_NONE != verr ) {
+         if( 0 > verr ) {
             bdestroy( child_path );
          }
       }
@@ -391,7 +391,9 @@ cleanup:
    return path_out;
 }
 
-static void* files_search_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* files_search_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    bstring file_iter = (bstring)iter,
       file_iter_short = NULL,
       file_search = (bstring)arg;

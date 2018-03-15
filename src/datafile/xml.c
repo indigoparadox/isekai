@@ -140,7 +140,7 @@ static void datafile_mobile_parse_animation_ezxml(
    struct MOBILE_ANI_DEF* animation = NULL;
    bstring name_dir = NULL;
    struct MOBILE_SPRITE_DEF* sprite = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    scaffold_check_null( xml_animation );
 
@@ -166,7 +166,7 @@ static void datafile_mobile_parse_animation_ezxml(
       }
 
       verr = vector_add( &(animation->frames), sprite );
-      if( VECTOR_ERR_NONE != verr ) {
+      if( 0 > verr ) {
          scaffold_print_error(
             &module, "Unable to add frame to mobile animation: %d\n", frame_id
          );
@@ -526,7 +526,7 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    const char* xml_attr;
    ezxml_t xml_props = NULL,
       xml_prop_iter = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    terrain_info = mem_alloc( 1, struct TILEMAP_TERRAIN_DATA );
    scaffold_check_null( terrain_info );
@@ -569,7 +569,7 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    terrain_info->id = id;
 
    verr = vector_add( &(set->terrain), terrain_info );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;
    }
@@ -823,7 +823,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    ezxml_t xml_prop_iter = NULL;
    struct TILEMAP_SPAWNER* obj_out = NULL;
    int bstr_res = 0;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    tilemap_spawner_new( obj_out, t, TILEMAP_SPAWNER_TYPE_MOBILE );
 
@@ -903,7 +903,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    );
 
    verr = vector_add( &(t->spawners), obj_out );
-   if( VECTOR_ERR_NONE != verr ) {
+   if( 0 > verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;
    }

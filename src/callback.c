@@ -27,7 +27,7 @@ extern struct UI* last_ui;
 extern struct CLIENT* main_client;
 
 #if 0
-void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    SCAFFOLD_SIZE last_read_count = 0;
    struct SERVER* s = (struct SERVER*)arg;
    static bstring buffer = NULL;
@@ -95,14 +95,14 @@ cleanup:
 #endif
 
 /* Append all clients to the bstrlist arg. */
-void* callback_concat_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_concat_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct VECTOR* list = (struct VECTOR*)arg;
    vector_add( list, bstrcpy( c->nick ) );
    return NULL;
 }
 
-void* callback_concat_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_concat_strings( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    bstring str_out = (bstring)arg;
    bstring str_cat = (bstring)iter;
 
@@ -112,7 +112,7 @@ void* callback_concat_strings( struct CONTAINER_IDX* idx, void* iter, void* arg 
 }
 
 /* Return only the client arg if present. */
-void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
@@ -122,7 +122,7 @@ void* callback_search_clients( struct CONTAINER_IDX* idx, void* iter, void* arg 
 }
 
 /* Return all clients EXCEPT the client arg. */
-void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == nick || 0 != bstrcmp( nick, c->nick ) ) {
@@ -132,7 +132,7 @@ void* callback_search_clients_r( struct CONTAINER_IDX* idx, void* iter, void* ar
 }
 
 void* callback_search_bstring_i(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    bstring str = (bstring)iter;
    bstring compare = (bstring)arg;
@@ -145,7 +145,7 @@ void* callback_search_bstring_i(
 }
 
 /* Return any client that is in the bstrlist arg. */
-void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct VECTOR* list = (struct VECTOR*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
    return vector_iterate( list, callback_search_bstring_i, c->nick );
@@ -154,7 +154,7 @@ void* callback_search_clients_l( struct CONTAINER_IDX* idx, void* iter, void* ar
 /** \brief If the iterated spawner is of the ID specified in arg, then return
  *         it. Otherwise, return NULL.
  */
-void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_spawners( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    bstring spawner_id = (bstring)arg;
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
 
@@ -166,7 +166,7 @@ void* callback_search_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg
 }
 
 void* callback_search_item_caches(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
@@ -184,7 +184,7 @@ void* callback_search_item_caches(
 }
 
 void* callback_search_items(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ITEM* e_search = (struct ITEM*)arg;
    struct ITEM* e_iter = (struct ITEM*)iter;
@@ -196,7 +196,7 @@ void* callback_search_items(
    return NULL;
 }
 
-void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_channels( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
    if( 0 == bstrcmp( l->name, name ) ) {
@@ -205,7 +205,7 @@ void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg
    return NULL;
 }
 
-void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP* t = layer->tilemap;
@@ -234,7 +234,7 @@ void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* iter, void* ar
 
 /** \brief Try to download any tilesets that have not yet been downloaded.
  */
-void* callback_download_tileset( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_download_tileset( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
@@ -251,7 +251,7 @@ cleanup:
 
 /** \brief Same idea as callback_download_tileset(), but server-side.
  */
-void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
    SCAFFOLD_SIZE bytes_read = 0,
@@ -290,7 +290,7 @@ cleanup:
 }
 
 void* callback_load_spawner_catalogs(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
    struct CLIENT* client_or_server = (struct CLIENT*)arg;
@@ -344,7 +344,7 @@ cleanup:
    return NULL;
 }
 
-void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct MOBILE* o_out = NULL;
@@ -359,7 +359,7 @@ cleanup:
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_windows( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    bstring wid = (bstring)arg;
    if( 0 == bstrcmp( win->id, wid ) ) {
@@ -377,7 +377,7 @@ void* callback_search_windows( struct CONTAINER_IDX* idx, void* iter, void* arg 
  *
  */
 
-void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if(
       NULL != set &&
@@ -397,7 +397,7 @@ void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* iter, 
  * \return The channel with the map containing the specified image.
  *
  */
-void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct TILEMAP* t = &(l->tilemap);
    if( NULL != vector_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
@@ -406,7 +406,7 @@ void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void
    return NULL;
 }
 
-void* callback_search_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_graphics( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)iter;
    bstring s_key = (bstring)arg;
 
@@ -424,7 +424,7 @@ void* callback_search_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg
    return NULL;
 }
 
-void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    bstring name = (bstring)arg;
 
@@ -439,7 +439,7 @@ void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* iter, void
 #ifdef USE_CHUNKS
 
 void* callback_proc_client_chunkers(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -457,7 +457,7 @@ void* callback_proc_client_chunkers(
 #endif /* USE_CHUNKS */
 
 BOOL callback_proc_client_delayed_files(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -476,7 +476,7 @@ BOOL callback_proc_client_delayed_files(
 
 #ifdef USE_CHUNKS
 
-void* callback_send_chunkers_l( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_send_chunkers_l( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
    bstring chunk_out = NULL;
@@ -497,7 +497,7 @@ cleanup:
    return NULL;
 }
 
-void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 
    /* Process some compression chunks. */
@@ -515,7 +515,7 @@ void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* iter, void* arg )
 
 #ifdef USE_VM
 
-void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 
    scaffold_assert_server();
@@ -538,7 +538,7 @@ void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* iter, void* arg
    return NULL;
 }
 
-void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    scaffold_assert_server();
@@ -557,7 +557,7 @@ void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* iter, void* ar
 #endif /* USE_VM */
 
 void* callback_proc_channel_spawners(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_SPAWNER* ts = (struct TILEMAP_SPAWNER*)iter;
    struct SERVER* s = (struct SERVER*)arg;
@@ -633,7 +633,7 @@ cleanup:
 }
 
 void* callback_proc_server_spawners(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct SERVER* s = (struct SERVER*)arg;
@@ -647,7 +647,7 @@ cleanup:
 }
 
 void* callback_search_item_type(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    ITEM_TYPE type = *((ITEM_TYPE*)arg);
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
@@ -659,7 +659,7 @@ void* callback_search_item_type(
    return NULL;
 }
 
-void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    SCAFFOLD_SIZE* gid = (SCAFFOLD_SIZE*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
@@ -676,7 +676,7 @@ void* callback_search_tilesets_gid( struct CONTAINER_IDX* idx, void* iter, void*
 #ifdef ENABLE_LOCAL_CLIENT
 
 void* callback_search_tilesets_small(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* temp = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
@@ -694,7 +694,7 @@ void* callback_search_tilesets_small(
 
 /*
 void* callback_load_delayed_tilesets(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    GRAPHICS* g_tileset = (GRAPHICS*)iter;
@@ -708,7 +708,7 @@ void* callback_load_delayed_tilesets(
 */
 
 void* callback_search_tileset_img_gid(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    GRAPHICS* g_tileset = (GRAPHICS*)iter;
@@ -742,7 +742,7 @@ void* callback_search_tileset_img_gid(
 }
 
 void* callback_proc_tileset_img_gs(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 
@@ -755,14 +755,14 @@ cleanup:
    return NULL;
 }
 
-void* callback_proc_tileset_imgs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_proc_tileset_imgs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
    return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, c );
 }
 
-void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
 
@@ -776,7 +776,7 @@ void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct MOBILE* o = (struct MOBILE*)iter;
 
@@ -789,7 +789,7 @@ void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* iter, void*
    return NULL;
 }
 
-void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
 
@@ -798,7 +798,7 @@ void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* iter, void
    return NULL;
 }
 
-void* callback_send_updates_to_client( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_send_updates_to_client( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct MOBILE_UPDATE_PACKET* update = (struct MOBILE_UPDATE_PACKET*)arg;
 
@@ -811,7 +811,7 @@ void* callback_send_updates_to_client( struct CONTAINER_IDX* idx, void* iter, vo
    return NULL;
 }
 
-void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_parse_mobs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
@@ -841,7 +841,7 @@ cleanup:
    return NULL;
 }
 
-void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 #ifdef USE_EZXML
    ezxml_t xml_data = (ezxml_t)arg;
@@ -854,7 +854,7 @@ void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* iter, void* 
 }
 
 void* callback_attach_mob_sprites(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -874,7 +874,7 @@ cleanup:
 }
 
 void* callback_attach_channel_mob_sprites(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -883,7 +883,7 @@ void* callback_attach_channel_mob_sprites(
 }
 
 
-void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_stop_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
@@ -894,7 +894,7 @@ void* callback_stop_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    return NULL;
 }
 
-BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
 
@@ -915,7 +915,7 @@ BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 
 /** \brief Kick and free clients on all channels in the given list.
  **/
-void* callback_remove_clients( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_remove_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring nick = (bstring)arg;
 
@@ -925,7 +925,7 @@ void* callback_remove_clients( struct CONTAINER_IDX* idx, void* iter, void* arg 
    return NULL;
 }
 
-BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
 
@@ -937,7 +937,7 @@ BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    return FALSE;
 }
 
-BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    if( 0 >= hashmap_count( &(l->clients) ) ) {
@@ -948,7 +948,7 @@ BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* iter, void* 
    return FALSE;
 }
 
-BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
    if( NULL == arg || *serial == o->serial ) {
@@ -958,7 +958,7 @@ BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL == arg ) {
       tilemap_tileset_free( set );
@@ -967,7 +967,7 @@ BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    return FALSE;
 }
 
-BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
       item_sprite_free( sprite );
@@ -976,7 +976,7 @@ BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
       item_spritesheet_free( cat );
@@ -986,7 +986,7 @@ BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 }
 
 BOOL callback_free_item_cache_items(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
    SCAFFOLD_SIZE serial = *((SCAFFOLD_SIZE*)arg);
@@ -998,7 +998,7 @@ BOOL callback_free_item_cache_items(
 }
 
 BOOL callback_free_item_caches(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
    if( NULL == arg ) {
@@ -1011,7 +1011,7 @@ BOOL callback_free_item_caches(
 #ifdef USE_CHUNKS
 
 BOOL callback_free_chunkers(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    bstring filename = (bstring)arg;
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
@@ -1024,7 +1024,7 @@ BOOL callback_free_chunkers(
 }
 
 BOOL callback_free_finished_chunkers(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
 
@@ -1044,21 +1044,21 @@ BOOL callback_free_finished_chunkers(
 #endif /* USE_CHUNKS */
 
 /*
-BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
    irc_command_free( cmd );
    return TRUE;
 }
 */
 
-BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    mem_free( iter );
    return TRUE;
 }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-BOOL callback_free_controls( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_controls( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    bstring key_search = (bstring)arg;
    SCAFFOLD_SIZE* idx_search = (SCAFFOLD_SIZE*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
@@ -1080,7 +1080,7 @@ BOOL callback_free_controls( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       bdestroy( (bstring)iter );
       return TRUE;
@@ -1088,7 +1088,7 @@ BOOL callback_free_strings( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    return FALSE;
 }
 
-BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
    /* TODO: Implement retroactively deleting lines by ID or something. */
    if( NULL == arg ) {
@@ -1102,7 +1102,7 @@ BOOL callback_free_backlog( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( (bstring)iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
       return TRUE;
@@ -1110,7 +1110,7 @@ BOOL callback_free_graphics( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    return FALSE;
 }
 
-BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
@@ -1123,7 +1123,7 @@ BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
 }
 
 #ifdef DEBUG
-void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+void* callback_assert_windows( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
@@ -1134,7 +1134,7 @@ void* callback_assert_windows( struct CONTAINER_IDX* idx, void* iter, void* arg 
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
       mobile_animation_free( animation );
@@ -1143,7 +1143,7 @@ BOOL callback_free_ani_defs( struct CONTAINER_IDX* idx, void* iter, void* arg ) 
    return FALSE;
 }
 
-BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, spawner->id ) ) {
       bdestroy( spawner->id );

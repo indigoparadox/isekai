@@ -200,7 +200,7 @@ void ui_control_init(
 void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 ) {
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 #ifdef DEBUG
    struct UI_CONTROL* control_test = NULL;
 
@@ -223,7 +223,7 @@ void ui_control_add(
 
    if( TRUE == control->can_focus ) {
       verr = vector_add( &(win->controls_active), control );
-      if( VECTOR_ERR_NONE == verr && NULL == win->active_control ) {
+      if( 0 <= verr && NULL == win->active_control ) {
          win->active_control = control;
       }
    }
@@ -274,7 +274,7 @@ cleanup:
 }
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    #ifdef DEBUG
    ui_debug_stack( ui );
@@ -286,7 +286,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    scaffold_assert( &global_ui == win->ui );
    scaffold_assert( &global_ui == ui );
    verr = vector_insert( &(ui->windows), 0, win );
-   scaffold_check_equal( VECTOR_ERR_NONE, verr );
+   scaffold_check_negative( verr );
 
 cleanup:
    #ifdef DEBUG
@@ -497,7 +497,7 @@ static void ui_window_reset_grid( struct UI_WINDOW* win ) {
    assert( win->ui == &global_ui );
 }
 
-static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS_RECT* largest_control = NULL;
@@ -602,7 +602,7 @@ cleanup:
 
 
 static void* ui_control_draw_backlog_line(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct UI_CONTROL* control = (struct UI_CONTROL*)arg;
    struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
@@ -681,7 +681,7 @@ static void ui_draw_item_sprite(
 }
 
 static void* ui_control_draw_inventory_item(
-   struct CONTAINER_IDX* idx, void* iter, void* arg
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
    struct UI_CONTROL* inv_pane = (struct UI_CONTROL*)arg;
@@ -832,7 +832,7 @@ static void ui_control_draw_button(
    ui_window_advance_grid( (struct UI_WINDOW*)win, button );
 }
 
-static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
 #ifdef DEBUG
@@ -914,7 +914,7 @@ static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
    );
 }
 
-static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    SCAFFOLD_SIZE_SIGNED
@@ -1046,6 +1046,6 @@ cleanup:
 
 #ifdef DEBUG
 void ui_debug_stack( struct UI* ui ) {
-   vector_iterate_nolock( &(ui->windows), callback_assert_windows, NULL );
+   vector_iterate_nolock( &(ui->windows), callback_assert_windows, NULL, NULL );
 }
 #endif /* DEBUG */

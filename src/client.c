@@ -338,7 +338,9 @@ void client_clear_puppet( struct CLIENT* c ) {
    client_set_puppet( c, NULL );
 }
 
-static void* client_dr_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* client_dr_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    bstring filename = (bstring)arg;
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
 
@@ -353,7 +355,7 @@ void client_request_file_later(
    struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
-   VECTOR_ERR verr;
+   SCAFFOLD_SIZE_SIGNED verr;
 
    /* Make sure request wasn't made already. */
    request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
@@ -369,7 +371,7 @@ void client_request_file_later(
    request->type = type;
 
    verr = vector_add( &(c->delayed_files), request );
-   scaffold_check_equal( VECTOR_ERR_NONE, verr );
+   scaffold_check_negative( verr );
 
 cleanup:
    return;
