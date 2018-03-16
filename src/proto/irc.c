@@ -612,7 +612,7 @@ static void irc_server_user(
          scaffold_check_nonzero( bstr_result );
       } else if( 1 == consumed && scaffold_is_numeric( (bstring)vector_get( args, i ) ) ) {
          /* Second arg: Mode */
-         c->mode = bgtoi( (bstring)vector_get( args, i ) );
+         c->irc_mode = bgtoi( (bstring)vector_get( args, i ) );
       } else if( 1 == consumed || 2 == consumed ) {
          /* Second or Third arg: * */
          if( 1 == consumed ) {

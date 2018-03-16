@@ -1,6 +1,6 @@
 
-#define CLIENT_LOCAL_C
-#include "../client.h"
+#define MODE_C
+#include "../mode.h"
 
 #include "../callback.h"
 #include "../ui.h"
@@ -9,7 +9,7 @@
 
 extern bstring client_input_from_ui;
 
-void client_local_draw(
+void mode_topdown_draw(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
@@ -18,7 +18,7 @@ void client_local_draw(
    vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
 }
 
-void client_local_update(
+void mode_topdown_update(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
@@ -28,7 +28,7 @@ void client_local_update(
    );
 }
 
-static BOOL client_local_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
@@ -158,30 +158,24 @@ static BOOL client_local_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    return FALSE;
 }
 
-void client_local_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
       proto_client_stop( c );
    } else if( INPUT_TYPE_KEY == p->type ) {
       if( !client_poll_ui( c, l, p ) ) {
-         client_local_poll_keyboard( c, p );
+         mode_topdown_poll_keyboard( c, p );
       }
    }
    return;
 }
 
-void client_local_free( struct CLIENT* c ) {
+void mode_topdown_free( struct CLIENT* c ) {
    if(
       TRUE == ipc_is_local_client( c->link ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
-}
-
-GRAPHICS* client_local_get_screen( struct CLIENT* c ) {
-   scaffold_assert_client();
-
-   return c->ui->screen_g;
 }
