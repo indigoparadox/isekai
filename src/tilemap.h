@@ -113,7 +113,6 @@ struct TILEMAP_LAYER {
    struct VECTOR tiles;
    struct TILEMAP* tilemap;
    bstring name;
-   //struct TILEMAP_LAYER* next_layer;
 };
 
 struct TILEMAP {
@@ -130,7 +129,6 @@ struct TILEMAP {
    bstring lname;
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
-   //struct TILEMAP_LAYER* first_layer;
    SCAFFOLD_ERROR scaffold_error;
 #ifdef DEBUG
    uint16_t sentinal;

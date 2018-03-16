@@ -11,7 +11,6 @@ static void item_free_final( const struct REF* ref ) {
    struct ITEM* e = scaffold_container_of( ref, struct ITEM, refcount );
 
    bdestroy( e->display_name );
-   //item_spritesheet_free( e->catalog );
    bdestroy( e->catalog_name );
 
 }
@@ -85,7 +84,6 @@ static void item_spritesheet_free_final( const struct REF* ref ) {
 
       graphics_surface_free( catalog->sprites_image );
 
-      //bdestroy( catalog->name );
       bdestroy( catalog->sprites_filename );
 
       mem_free( catalog );
@@ -98,7 +96,6 @@ void item_spritesheet_init(
    struct CLIENT* client_or_server
 ) {
    ref_init( &(catalog->refcount), item_spritesheet_free_final );
-   //catalog->name = bstrcpy( name );
    catalog->client_or_server = client_or_server;
 }
 
@@ -123,7 +120,7 @@ ITEM_TYPE item_type_from_c( const char* c_string ) {
 
    for( i = 0 ; ITEM_TYPE_MAX > i ; i++ ) {
       if( 0 == scaffold_strcmp_caseless(
-         item_type_strings[i].data, c_string
+         (const char*)(item_type_strings[i].data), c_string
       ) ) {
          type_out = i;
          break;

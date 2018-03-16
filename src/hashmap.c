@@ -821,7 +821,8 @@ BOOL hashmap_remove_internal( struct HASHMAP* m, struct HASHMAP_ELEMENT* e ) {
  *
  */
 SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg ) {
-   SCAFFOLD_SIZE_SIGNED i, j;
+   SCAFFOLD_SIZE_SIGNED i;
+   SCAFFOLD_SIZE j;
    SCAFFOLD_SIZE removed = 0;
    void* data;
 #ifndef HASHMAP_NO_LOCK_REMOVE
@@ -931,7 +932,6 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
             refcount_test_dec( m->data[curr].data );
 #endif /* HASHMAP_NO_LOCK_REMOVE */
 
-            //vector_remove( &(m->iterators), m->data[curr].iterator_index );
             iterator_index = m->data[curr].iterator_index;
             if( TRUE == hashmap_remove_internal( m, &(m->data[curr]) ) ) {
                removed++;

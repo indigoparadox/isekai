@@ -190,8 +190,6 @@ extern FILE* scaffold_log_handle_err;
 #define scaffold_log_handle_err stderr
 #endif /* SCAFFOLD_LOG_FILE */
 
-//#ifdef DEBUG
-
 void scaffold_print_debug( const bstring module, const char* message, ... );
 void scaffold_print_info( const bstring module, const char* message, ... );
 void scaffold_print_error( const bstring module, const char* message, ... );

@@ -158,8 +158,10 @@ HSD_poll_res heatshrink_decoder_poll(
    oi.output_size = output_size;
 
    while (1) {
+#ifdef DEBUG
       scaffold_print_debug( &module, "-- poll, state is %d (%s), input_size %d\n",
           hsd->state, state_names[hsd->state], hsd->input_size);
+#endif /* DEBUG */
       in_state = hsd->state;
       switch (in_state) {
       case HSDS_TAG_BIT:
