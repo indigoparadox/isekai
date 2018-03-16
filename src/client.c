@@ -654,3 +654,9 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
 cleanup:
    return;
 }
+
+GRAPHICS* client_get_screen( struct CLIENT* c ) {
+   scaffold_assert_client();
+
+   return c->ui->screen_g;
+}

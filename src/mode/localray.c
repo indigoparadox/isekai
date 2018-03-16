@@ -1,6 +1,6 @@
 
-#define CLIENT_LOCAL_C
-#include "../client.h"
+#define MODE_C
+#include "../mode.h"
 
 #include <stdlib.h>
 
@@ -18,11 +18,7 @@ static GFX_RAY_WALL* cl_walls = NULL;
 static GFX_RAY_FLOOR* cl_floors = NULL;
 static GRAPHICS* ray_view = NULL;
 
-static void* client_local_raylay_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-
-}
-
-static void* client_local_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct GFX_RAY_WALL* pos = (struct GFX_RAY_WALL*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = twindow->t;
@@ -68,7 +64,7 @@ static BOOL check_ray_wall_collision(
       }
    }
 
-   //res = vector_iterate( &(twindow->t->layers), client_local_raycol_cb, twindow );
+   //res = vector_iterate( &(twindow->t->layers), mode_pov_raycol_cb, twindow );
 
 cleanup:
    return res;
@@ -103,7 +99,7 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
  * \return
  *
  */
-static void client_local_update_view(
+static void mode_pov_update_view(
    GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
    struct CLIENT* c
 ) {
@@ -336,7 +332,7 @@ static void client_local_update_view(
    }
 }
 
-void client_local_draw(
+void mode_pov_draw(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
@@ -364,7 +360,7 @@ void client_local_draw(
       player->y != last.y ||
       player->facing != last.facing
    ) {
-      client_local_update_view(
+      mode_pov_update_view(
          ray_view, player->x, player->y, player->facing, twindow->t, twindow->local_client
       );
       last.x = player->x;
@@ -380,7 +376,7 @@ cleanup:
    return;
 }
 
-void client_local_update(
+void mode_pov_update(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
@@ -395,7 +391,7 @@ cleanup:
    return;
 }
 
-static BOOL client_local_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
@@ -525,20 +521,20 @@ static BOOL client_local_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    return FALSE;
 }
 
-void client_local_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
       proto_client_stop( c );
    } else if( INPUT_TYPE_KEY == p->type ) {
       if( !client_poll_ui( c, l, p ) ) {
-         client_local_poll_keyboard( c, p );
+         mode_pov_poll_keyboard( c, p );
       }
    }
    return;
 }
 
-void client_local_free( struct CLIENT* c ) {
+void mode_pov_free( struct CLIENT* c ) {
    if(
       TRUE == ipc_is_local_client( c->link ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
@@ -550,10 +546,4 @@ void client_local_free( struct CLIENT* c ) {
       graphics_surface_free( ray_view );
       ray_view = NULL;
    }
-}
-
-GRAPHICS* client_local_get_screen( struct CLIENT* c ) {
-   scaffold_assert_client();
-
-   return c->ui->screen_g;
 }

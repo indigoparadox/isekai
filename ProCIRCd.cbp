@@ -434,6 +434,7 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DSTRICT_DEBUG" />
 					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DUSE_RAYCASTING" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -761,6 +762,7 @@
 					<Add option="-DxUSE_NETWORK" />
 					<Add option="-DxDEBUG_NETWORK" />
 					<Add option="-DxUSE_INLINE" />
+					<Add option="-DDISABLE_MODE_RAYCAST" />
 				</Compiler>
 				<MakeCommands>
 					<Build command="" />
@@ -1135,37 +1137,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
-		<Unit filename="src/client/local2d.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Strict (Linux-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Palm-SB)" />
-		</Unit>
-		<Unit filename="src/client/localray.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
-		</Unit>
 		<Unit filename="src/colors.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />
@@ -1550,6 +1521,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
+			<Option target="Release (Linux-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ipc/shmipc.c">
 			<Option compilerVar="CC" />
@@ -1606,6 +1578,66 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/mobile.h" />
+		<Unit filename="src/mode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/mode.h" />
+		<Unit filename="src/mode/local2d.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
+			<Option target="Strict (Linux-SB-Allegro4)" />
+			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-SB-Curses)" />
+			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
+		</Unit>
+		<Unit filename="src/mode/localray.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug (Ray-Linux-NET-Allegro4)" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Check (Linux-C99)" />
+			<Option target="Check (Linux-C89)" />
+			<Option target="Strict (Linux-SB-Allegro4)" />
+			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-SB-Curses)" />
+			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
+		</Unit>
+		<Unit filename="src/mode/pov.h" />
+		<Unit filename="src/mode/topdown.h" />
 		<Unit filename="src/proto.h" />
 		<Unit filename="src/proto/irc.c">
 			<Option compilerVar="CC" />

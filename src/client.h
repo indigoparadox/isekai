@@ -7,6 +7,7 @@
 #include "hashmap.h"
 #include "input.h"
 #include "datafile.h"
+#include "mode.h"
 
 struct CHANNEL;
 struct MOBILE;
@@ -43,7 +44,7 @@ struct CLIENT {
    bstring remote;
    bstring away;
    bstring mobile_sprite;
-   uint8_t mode;
+   uint8_t irc_mode;
    uint16_t flags;
    struct UI* ui;
    struct HASHMAP channels; /*!< All channels the client is in now, or all
@@ -60,6 +61,7 @@ struct CLIENT {
    BOOL tilesets_loaded;
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
+   MODE gfx_mode;
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542
@@ -133,20 +135,7 @@ struct ITEM_SPRITESHEET* client_get_catalog(
    struct CLIENT* c, const bstring name
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
-
-GRAPHICS* client_local_get_screen( struct CLIENT* c );
-void client_local_update(
-   struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
-);
-void client_local_draw(
-   struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
-);
-void client_local_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
-void client_local_free( struct CLIENT* c );
+GRAPHICS* client_get_screen( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
@@ -161,19 +150,6 @@ struct tagbstring str_client_window_title_inv = bsStatic( "Inventory" );
 struct tagbstring str_client_control_id_inv_self = bsStatic( "inv_pane_self" );
 struct tagbstring str_client_control_id_inv_ground = bsStatic( "inv_pane_ground" );
 SCAFFOLD_MODULE( "client.c" );
-#else
-#ifdef CLIENT_LOCAL_C
-extern struct tagbstring str_client_cache_path;
-extern struct tagbstring str_wid_debug_tiles_pos;
-extern struct tagbstring str_client_window_id_chat;
-extern struct tagbstring str_client_window_title_chat;
-extern struct tagbstring str_client_control_id_chat;
-extern struct tagbstring str_client_window_id_inv;
-extern struct tagbstring str_client_window_title_inv;
-extern struct tagbstring str_client_control_id_inv_self;
-extern struct tagbstring str_client_control_id_inv_ground;
-SCAFFOLD_MODULE( "client_local.c" );
-#endif /* CLIENT_LOCAL_C */
 #endif /* CLIENT_C */
 
 #endif /* CLIENT_H */
