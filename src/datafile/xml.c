@@ -782,14 +782,6 @@ static void datafile_tilemap_parse_layer_ezxml(
    //scaffold_check_nonzero( bstr_res );
 
    vector_set( &(t->layers), layer_index, layer, TRUE );
-#if 0
-   if( vector_set( &(t->layers), buffer, layer, TRUE ) ) {
-      scaffold_print_error( &module, "Attempted to double-put layer: %b\n" ,
-         buffer );
-      tilemap_layer_free( layer );
-      goto cleanup;
-   }
-#endif // 0
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
@@ -1077,7 +1069,7 @@ void datafile_parse_ezxml_string(
       datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );
       break;
       */
-   case DATAFILE_TYPE_MISC:
+   default:
       scaffold_print_error( &module, "Invalid data type specified.\n" );
       break;
    }

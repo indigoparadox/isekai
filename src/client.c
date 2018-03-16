@@ -202,12 +202,14 @@ void client_free_chunkers( struct CLIENT* c ) {
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
+#ifdef DEBUG
    scaffold_print_debug(
       &module,
       "Removed %d chunkers. %d remaining.\n",
       deleted, hashmap_count( &(c->chunkers) )
    );
    scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
+#endif /* DEBUG */
 cleanup:
    return;
 }
@@ -579,11 +581,13 @@ BOOL client_poll_ui(
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
          /* Process collected input. */
+         /* TODO: ?
 
-         //proto_send_msg_channel( c, l, client_input_from_ui );
-         //mobile_speak( c->puppet, client_input_from_ui );
+         proto_send_msg_channel( c, l, client_input_from_ui );
+         mobile_speak( c->puppet, client_input_from_ui );
 
-         //goto reset_buffer;
+         goto reset_buffer;
+         */
       }
       goto cleanup;
    }

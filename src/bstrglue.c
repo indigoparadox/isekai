@@ -20,7 +20,6 @@ struct VECTOR* bgsplit( const_bstring str, char split ) {
 
    current_str = bfromcstr( "" );
    scaffold_check_null( current_str );
-   //vector_add( v, current_str );
 
    while( str->slen > i ) {
       chr = &(str->data[i]);
@@ -34,7 +33,6 @@ struct VECTOR* bgsplit( const_bstring str, char split ) {
          vector_add( v, current_str );
          current_str = bfromcstr( "" );
          scaffold_check_null( current_str );
-         //vector_add( v, current_str );
       } else {
          bconchar( current_str, *chr );
       }

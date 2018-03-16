@@ -261,7 +261,9 @@ HSE_poll_res heatshrink_encoder_poll(
       case HSES_DONE:
          return HSER_POLL_EMPTY;
       default:
+#ifdef DEBUG
          scaffold_print_debug( &module, "-- bad state %s\n", state_names[hse->state]);
+#endif /* DEBUG */
          return HSER_POLL_ERROR_MISUSE;
       }
 
