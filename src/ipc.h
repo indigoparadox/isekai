@@ -28,6 +28,7 @@ void ipc_stop( struct CONNECTION* n );
 IPC_END ipc_get_type( struct CONNECTION* n );
 BOOL ipc_is_local_client( struct CONNECTION* n );
 BOOL ipc_is_listening( struct CONNECTION* n );
+uint16_t ipc_get_port( struct CONNECTION* n );
 
 #ifdef IPC_C
 SCAFFOLD_MODULE( "ipc.c" );
