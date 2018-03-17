@@ -2,6 +2,8 @@
 #define MODE_C
 #include "../mode.h"
 
+#ifdef USE_RAYCASTING
+
 #include <stdlib.h>
 
 #include "../callback.h"
@@ -547,3 +549,5 @@ void mode_pov_free( struct CLIENT* c ) {
       ray_view = NULL;
    }
 }
+
+#endif /* USE_RAYCASTING */

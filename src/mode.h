@@ -7,16 +7,45 @@ typedef enum {
    MODE_POV
 }MODE;
 
+#include "input.h"
 #include "bstrlib/bstrlib.h"
 #include "vector.h"
 #include "graphics.h"
 #include "client.h"
 
+struct CHANNEL;
+
+void mode_topdown_update(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_topdown_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
+void mode_topdown_free( struct CLIENT* c );
+
+void mode_pov_update(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_pov_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
+void mode_pov_free( struct CLIENT* c );
 void client_local_update(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 );
+
 void client_local_draw(
    struct CLIENT* c,
    struct CHANNEL* l,

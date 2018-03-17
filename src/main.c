@@ -47,8 +47,17 @@ struct INPUT* input = NULL;
 struct UI* ui = NULL;
 struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 struct CHANNEL* l = NULL;
-bstring buffer = NULL;
+bstring buffer_host = NULL;
+bstring buffer_channel = NULL;
 #endif /* ENABLE_LOCAL_CLIENT */
+
+static struct tagbstring str_top_down = bsStatic( "Top Down" );
+static struct tagbstring str_pov = bsStatic( "POV" );
+static bstring mode_list[] = {
+   &str_top_down,
+   &str_pov,
+   NULL
+};
 
 #ifdef USE_RANDOM_PORT
 bstring str_service = NULL;
@@ -66,6 +75,8 @@ static struct tagbstring str_wid_debug_fps = bsStatic( "debug_fps" );
 static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_cid_connect_host = bsStatic( "connect_host" );
 static struct tagbstring str_cid_connect_nick = bsStatic( "connect_nick" );
+static struct tagbstring str_cid_connect_channel = bsStatic( "connect_channel" );
+static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading..." );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -227,8 +238,11 @@ static BOOL loop_connect() {
 
    graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
 
-   if( NULL == buffer ) {
-      buffer = bfromcstr( "" );
+   if( NULL == buffer_host ) {
+      buffer_host = bfromcstr( "" );
+   }
+   if( NULL == buffer_channel ) {
+      buffer_channel = bfromcstr( "" );
    }
 
    if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
@@ -253,17 +267,33 @@ static BOOL loop_connect() {
          &str_cdialog_title, &str_cdialog_prompt,
          -1, -1, -1, -1
       );
+
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer, -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer_host, -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_host, control );
+
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer_channel, -1, -1, -1, -1
+      );
+      ui_control_add( win, &str_cid_connect_channel, control );
+
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, main_client->nick, -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_nick, control );
+
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_LIST, TRUE, NULL, -1, -1, -1, -1
+      );
+      control->list = mode_list;
+      control->self.attachment = &(main_client->gfx_mode);
+      ui_control_add( win, &str_cid_connect_gfxmode, control );
+
       ui_window_push( ui, win );
       bstr_result =
-         bassignformat( buffer, "%s:%d", bdata( &str_localhost ), server_port );
+         bassignformat( buffer_host, "%s:%d", bdata( &str_localhost ), server_port );
+      bstr_result = bassign( buffer_channel, &str_default_channel );
       scaffold_check_nonzero( bstr_result );
    }
 
@@ -283,13 +313,13 @@ static BOOL loop_connect() {
    if( 0 != ui_poll_input( ui, input, &str_cdialog_id ) ) {
       scaffold_print_info(
          &module, "Connecting to: %b\n",
-         buffer
+         buffer_host
       );
       /* Dismiss the connect dialog. */
       ui_window_destroy( ui, &str_cdialog_id );
 
       /* Split up the address and port. */
-      server_tuple = bgsplit( buffer, ':' );
+      server_tuple = bgsplit( buffer_host, ':' );
       if( 2 < vector_count( server_tuple ) ) {
          scaffold_print_error( &module, "Invalid host string.\n" );
          goto cleanup;
@@ -472,7 +502,8 @@ cleanup:
    ipc_shutdown();
    animate_shutdown();
 #ifdef USE_CONNECT_DIALOG
-   bdestroy( buffer );
+   bdestroy( buffer_host );
+   bdestroy( buffer_channel );
 #endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
 #ifdef USE_RAYCASTING

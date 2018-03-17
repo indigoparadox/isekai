@@ -18,6 +18,7 @@
 #define UI_BUTTON_FG       GRAPHICS_COLOR_WHITE
 #define UI_LABEL_FG        GRAPHICS_COLOR_WHITE
 #define UI_SELECTED_BG     GRAPHICS_COLOR_PURPLE
+#define UI_SELECTED_FG     GRAPHICS_COLOR_YELLOW
 
 #define UI_TEXT_MARGIN     5
 #define UI_WINDOW_MARGIN   5
@@ -57,8 +58,19 @@ typedef enum {
    UI_CONTROL_TYPE_CHECKBOX,
    UI_CONTROL_TYPE_TILEGRID,
    UI_CONTROL_TYPE_BACKLOG,
-   UI_CONTROL_TYPE_INVENTORY
+   UI_CONTROL_TYPE_INVENTORY,
+   UI_CONTROL_TYPE_SPINNER,
+   UI_CONTROL_TYPE_LIST
 } UI_CONTROL_TYPE;
+
+typedef enum {
+   UI_OPTION_NEW_ROW
+} UI_OPTION;
+
+typedef enum {
+   UI_OPT_STATE_DISABLE,
+   UI_OPT_STATE_ENABLE
+} UI_OPT_STATE;
 
 struct UI_WINDOW {
    struct UI* ui;
@@ -72,10 +84,11 @@ struct UI_WINDOW {
    GRAPHICS_RECT grid_pos;
    bstring id;
    struct VECTOR controls_active;
-   void* attachment;
+   void* attachment; /*!< Struct to draw data from. */
    SCAFFOLD_SIZE selection;
    SCAFFOLD_SIZE grid_iter;
    BOOL dirty;
+   struct UI_CONTROL* first_control;
 #ifdef DEBUG
    uint32_t sentinal;
 #endif /* DEBUG */
@@ -88,6 +101,11 @@ struct UI_CONTROL {
    UI_CONTROL_TYPE type;
    struct UI_WINDOW* owner;
    BOOL borrowed_text_field;
+   SCAFFOLD_SIZE min;
+   SCAFFOLD_SIZE max;
+   UI_OPT_STATE new_row;
+   bstring* list;
+   struct UI_CONTROL* next_control;
 };
 
 struct UI {
@@ -132,6 +150,7 @@ void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 );
 void ui_control_free( struct UI_CONTROL* control );
+void ui_control_set( struct UI_CONTROL* ctrl, UI_OPTION opt, UI_OPT_STATE state );
 void ui_window_transform(
    struct UI_WINDOW* win, const GRAPHICS_RECT* new_area
 );

@@ -1,6 +1,23 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <stdint.h>
+
+typedef enum _INPUT_TYPE {
+   INPUT_TYPE_NONE,
+   INPUT_TYPE_KEY,
+   INPUT_TYPE_MOUSE,
+   INPUT_TYPE_CLOSE
+} INPUT_TYPE;
+
+struct INPUT {
+   void* event;
+   uint16_t character;
+   uint16_t scancode;
+   INPUT_TYPE type;
+   uint16_t repeat;
+};
+
 #include "scaffold.h"
 #include "client.h"
 
@@ -24,13 +41,6 @@ typedef enum INPUT_SCANCODE {
 #endif
 } INPUT_SCANCODE;
 
-typedef enum _INPUT_TYPE {
-   INPUT_TYPE_NONE,
-   INPUT_TYPE_KEY,
-   INPUT_TYPE_MOUSE,
-   INPUT_TYPE_CLOSE
-} INPUT_TYPE;
-
 typedef enum INPUT_ASSIGNMENT {
    INPUT_ASSIGNMENT_ATTACK = ' ',
    INPUT_ASSIGNMENT_LEFT = 'a',
@@ -40,14 +50,6 @@ typedef enum INPUT_ASSIGNMENT {
    INPUT_ASSIGNMENT_QUIT = 'q',
    INPUT_ASSIGNMENT_UP = 'w'
 } INPUT_ASSIGNMENT;
-
-struct INPUT {
-   void* event;
-   uint16_t character;
-   uint16_t scancode;
-   INPUT_TYPE type;
-   uint16_t repeat;
-};
 
 void input_init( struct INPUT* p );
 void input_get_event( struct INPUT* input );
