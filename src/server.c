@@ -180,6 +180,10 @@ cleanup:
    return;
 }
 
+uint16_t server_get_port( struct SERVER* s ) {
+   return ipc_get_port( s->self.link );
+}
+
 struct CLIENT* server_get_client( struct SERVER* s, const bstring nick ) {
    return hashmap_get( &(s->clients), nick );
 }

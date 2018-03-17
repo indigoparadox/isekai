@@ -47,6 +47,7 @@ struct CONNECTION {
    BOOL listening;
    IPC_END type;
    BOOL local_client;
+   uint16_t port;
    void* (*callback)( void* client );
    void* arg;
 #ifdef USE_MBED_TLS
@@ -240,6 +241,7 @@ cleanup:
    );
 
    if( 0 > connect_result ) {
+      scaffold_print_error( &module, "Connect error: %s\n", strerror( errno ) );
       net_ipc_cleanup_socket( n );
       goto cleanup;
    }
@@ -252,6 +254,7 @@ cleanup:
 #endif /* _WIN32 */
 
    connected = TRUE;
+   n->port = port;
 
 cleanup:
 
@@ -344,6 +347,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
 #endif /* !USE_MBED_TLS */
 
    if( TRUE == n->listening ) {
+      scaffold_print_error( &module, "Server already listening!\n" );
       goto cleanup;
    }
 
@@ -395,7 +399,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    n->listening = TRUE;
    n->local_client = FALSE;
    n->type = IPC_END_SERVER;
-   scaffold_print_debug( &module, "Now listening for connections...\n" );
+   scaffold_print_debug( &module, "Now listening for connection on port %d...\n", port );
 
 cleanup:
    return n->listening;
@@ -449,4 +453,8 @@ BOOL ipc_is_local_client( struct CONNECTION* n ) {
 
 BOOL ipc_is_listening( struct CONNECTION* n ) {
    return n->listening;
+}
+
+uint16_t ipc_get_port( struct CONNECTION* n ) {
+   return n->port;
 }

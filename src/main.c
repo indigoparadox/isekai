@@ -1,4 +1,5 @@
 
+#include "ipc.h"
 #include "scaffold.h"
 #include "input.h"
 #include "server.h"
@@ -9,7 +10,6 @@
 #include "animate.h"
 #include "rng.h"
 #include "channel.h"
-#include "ipc.h"
 #include "proto.h"
 
 #ifdef USE_CRYPTO
@@ -249,7 +249,12 @@ static BOOL loop_connect() {
 #endif /* USE_CONNECT_DIALOG */
 
 #ifdef USE_RANDOM_PORT
-      server_port = 30000 + rng_max( 30000 );
+      if( FALSE == ipc_is_listening( main_server->self.link ) ) {
+         server_port = 30000 + rng_max( 30000 );
+      } else {
+         /* Join the running server in progress by default. */
+         server_get_port( main_server );
+      }
 #endif /* USE_RANDOM_PORT */
 
       /* TODO: Add fields for these to connect dialog. */
