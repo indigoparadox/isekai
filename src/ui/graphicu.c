@@ -182,6 +182,8 @@ void ui_control_init(
    } else {
       control->text = NULL;
    }
+   control->min = 0;
+   control->max = 0;
    control->self.area.x = x;
    control->self.area.y = y;
    control->self.area.w = width;
@@ -326,6 +328,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
    int bstr_result = 0;
    SCAFFOLD_SIZE_SIGNED input_length = 0;
    struct VECTOR* items_list = NULL;
+   SCAFFOLD_SIZE_SIGNED* numbuff = NULL;
 
    control = win->active_control;
    if( NULL == control ) {
@@ -340,7 +343,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
             control->self.selection--;
             win->dirty = TRUE;
          }
-         break;
+         goto cleanup;
 
       case INPUT_ASSIGNMENT_RIGHT:
          items_list = (struct VECTOR*)control->self.attachment;
@@ -349,19 +352,50 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
             control->self.selection = 0;
          }
          win->dirty = TRUE;
-         break;
+         goto cleanup;
       }
-   }
 
-   switch( p->character ) {
-   case INPUT_ASSIGNMENT_ATTACK:
-      bstr_result = bconchar( control->text, p->character );
-      win->dirty = TRUE;
-      scaffold_check_nonzero( bstr_result );
-#ifdef DEBUG_KEYS
-      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
-#endif /* DEBUG_KEYS */
-      goto cleanup;
+   } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
+      numbuff = (SCAFFOLD_SIZE*)(control->self.attachment);
+      switch( p->character ) {
+      case INPUT_ASSIGNMENT_LEFT:
+         (*numbuff)--;
+         if( control->min > *numbuff ) {
+            *numbuff = control->max;
+         }
+         win->dirty = TRUE;
+         goto cleanup;
+
+      case INPUT_ASSIGNMENT_RIGHT:
+         (*numbuff)++;
+         if( control->max < *numbuff ) {
+            *numbuff = 0;
+         }
+         win->dirty = TRUE;
+         goto cleanup;
+      }
+
+   } else if( UI_CONTROL_TYPE_LIST == control->type ) {
+      numbuff = (SCAFFOLD_SIZE*)(control->self.attachment);
+      switch( p->character ) {
+      case INPUT_ASSIGNMENT_LEFT:
+         (*numbuff)--;
+         if( 0 > *numbuff ) {
+            while( NULL != control->list[*numbuff + 1] ) {
+               (*numbuff)++;
+            }
+         }
+         win->dirty = TRUE;
+         goto cleanup;
+
+      case INPUT_ASSIGNMENT_RIGHT:
+         (*numbuff)++;
+         if( NULL == control->list[*numbuff] ) {
+            *numbuff = 0;
+         }
+         win->dirty = TRUE;
+         goto cleanup;
+      }
    }
 
    switch( p->scancode ) {
@@ -369,17 +403,29 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       bstr_result = btrunc( control->text, blength( control->text ) - 1 );
       win->dirty = TRUE;
       scaffold_check_nonzero( bstr_result );
-      break;
+      goto cleanup;
 
    case INPUT_SCANCODE_ENTER:
       input_length = blength( control->text );
       ui_window_destroy( win->ui, win->id );
-      break;
+      goto cleanup;
 
    case INPUT_SCANCODE_TAB:
       ui_window_next_active_control( win );
       win->dirty = TRUE;
-      break;
+      goto cleanup;
+   }
+
+   switch( p->character ) {
+   /* case INPUT_ASSIGNMENT_ATTACK: */
+   default:
+      bstr_result = bconchar( control->text, p->character );
+      win->dirty = TRUE;
+      scaffold_check_nonzero( bstr_result );
+#ifdef DEBUG_KEYS
+      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
+#endif /* DEBUG_KEYS */
+      goto cleanup;
    }
 
 control_optional:
@@ -445,9 +491,23 @@ cleanup:
 static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control ) {
    SCAFFOLD_SIZE control_w = 0;
    GRAPHICS_RECT control_size = { 0 };
+   bstring list_item = NULL;
+   SCAFFOLD_SIZE_SIGNED num,
+      i = 0;
+
    if( UI_CONTROL_TYPE_TEXT == control->type ) {
       /* Text boxes are wider than their input. */
       control_w = UI_TEXT_DEF_CONTROL_SIZE + (2 * UI_TEXT_MARGIN);
+   } else if( UI_CONTROL_TYPE_LIST == control->type ) {
+      while( NULL != control->list[i] ) {
+         list_item = &(control->list[i]);
+         graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
+         num = control_size.w + (2 * UI_TEXT_MARGIN);
+         if( num > control_w ) {
+            control_w = num;
+         }
+         i++;
+      }
    } else {
       graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, control->text );
       control_w = control_size.w + (2 * UI_TEXT_MARGIN);
@@ -457,6 +517,14 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
 
 static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* control ) {
    return UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
+}
+
+void ui_control_set( struct UI_CONTROL* ctrl, UI_OPTION opt, UI_OPT_STATE state ) {
+   switch( opt ) {
+   case UI_OPTION_NEW_ROW:
+      ctrl->new_row = state;
+      break;
+   }
 }
 
 static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTROL* control ) {
@@ -473,7 +541,9 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       win->grid_pos.h = text.h;
    }
 
-   if( NULL != control && UI_CONTROL_TYPE_BUTTON == control->type ) {
+   if( NULL != control &&
+      (UI_CONTROL_TYPE_BUTTON == control->type || UI_CONTROL_TYPE_SPINNER == control->type)
+   ) {
       win->grid_previous_button = TRUE;
    } else {
       win->grid_previous_button = FALSE;
@@ -541,10 +611,10 @@ static void ui_control_auto_size(
 
    switch( x ) {
    case UI_CONST_WIDTH_FULL:
-      size_out->x = 0;
+      size_out->x = UI_WINDOW_GRID_X_START;
       break;
    case UI_CONST_WIDTH_HALF:
-      size_out->x = win->area.w / 2; /* TODO: What if it's auto-sized? */
+      size_out->x = (win->area.w / 2) + UI_WINDOW_GRID_X_START; /* TODO: What if it's auto-sized? */
       break;
    default:
       size_out->x = x;
@@ -554,7 +624,7 @@ static void ui_control_auto_size(
    switch( y ) {
    case UI_CONST_HEIGHT_FULL:
       /* This translated for the title bar in the primitive stage. */
-      size_out->y = 0;
+      size_out->y = UI_WINDOW_GRID_Y_START;
       break;
    case UI_CONST_HEIGHT_HALF:
       /* TODO: What if it's auto-sized? */
@@ -567,10 +637,10 @@ static void ui_control_auto_size(
 
    switch( w ) {
    case UI_CONST_WIDTH_FULL:
-      size_out->w = win->area.w; /* TODO: What if it's auto-sized? */
+      size_out->w = win->area.w - (2 * UI_WINDOW_MARGIN); /* TODO: What if it's auto-sized? */
       break;
    case UI_CONST_WIDTH_HALF:
-      size_out->w = win->area.w / 2; /* TODO: What if it's auto-sized? */
+      size_out->w = (win->area.w / 2) - (2 * UI_WINDOW_MARGIN); /* TODO: What if it's auto-sized? */
       break;
    default:
       size_out->w = w;
@@ -585,11 +655,11 @@ static void ui_control_auto_size(
    switch( h ) {
    case UI_CONST_HEIGHT_FULL:
       /* TODO: What if it's auto-sized? */
-      size_out->h = win->area.h - UI_WINDOW_GRID_Y_START;
+      size_out->h = win->area.h - (2 * UI_WINDOW_GRID_Y_START);
       break;
    case UI_CONST_HEIGHT_HALF:
       /* TODO: What if it's auto-sized? */
-      size_out->h = (win->area.h / 2) - UI_WINDOW_GRID_Y_START;
+      size_out->h = (win->area.h / 2) - ( 2 * UI_WINDOW_GRID_Y_START);
       break;
    default:
       size_out->h = h;
@@ -742,18 +812,23 @@ static void ui_control_draw_inventory(
    GRAPHICS_RECT bg_rect;
    struct VECTOR* items = NULL;
 
+   /* Draw special out-of-grid BG because items coming. */
+
    memcpy( &bg_rect, &(inv_pane->self.area), sizeof( GRAPHICS_RECT ) );
 
    ui_control_auto_size( inv_pane, &bg_rect, win, -1 );
 
    graphics_shrink_rect( &bg_rect, UI_BAR_WIDTH );
+   //bg_rect.y -= UI_WINDOW_GRID_Y_START; /* TODO: Why is this needed? */
 
    ui_draw_rect( win, &bg_rect, GRAPHICS_COLOR_DARK_BLUE, TRUE );
 
+   /*
    memcpy(
       &(inv_pane->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
    );
-   inv_pane->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
+   */
+   //inv_pane->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
    inv_pane->self.grid_iter = 0;
    items = inv_pane->self.attachment;
    scaffold_check_null_msg( items, "Item list invalid." );
@@ -776,9 +851,16 @@ static void ui_control_draw_textfield(
    GRAPHICS* g = win->element;
    GRAPHICS_RECT bg_rect;
 
+   if( textfield == win->active_control ) {
+      fg = UI_SELECTED_FG;
+   }
+
    memcpy( &bg_rect, &(textfield->self.area), sizeof( GRAPHICS_RECT ) );
 
    ui_control_auto_size( textfield, &bg_rect, win, 1 );
+
+   win->grid_pos.w = bg_rect.w;
+   win->grid_pos.h = bg_rect.h;
 
    ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, TRUE );
 
@@ -816,6 +898,10 @@ static void ui_control_draw_button(
    GRAPHICS_COLOR fg = UI_BUTTON_FG;
    GRAPHICS* g = win->element;
 
+   if( button == win->active_control ) {
+      fg = UI_SELECTED_FG;
+   }
+
    win->grid_pos.w = ui_control_get_draw_width( button );
    win->grid_pos.h = ui_control_get_draw_height( button );
 
@@ -832,7 +918,82 @@ static void ui_control_draw_button(
    ui_window_advance_grid( (struct UI_WINDOW*)win, button );
 }
 
-static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
+static void ui_control_draw_spinner(
+   struct UI_WINDOW* win, struct UI_CONTROL* spinner
+) {
+   GRAPHICS_COLOR fg = UI_BUTTON_FG;
+   GRAPHICS* g = win->element;
+   bstring numbuf = NULL;
+   SCAFFOLD_SIZE* num = spinner->self.attachment;
+
+   if( spinner == win->active_control ) {
+      fg = UI_SELECTED_FG;
+   }
+
+   win->grid_pos.w = ui_control_get_draw_width( spinner );
+   win->grid_pos.h = ui_control_get_draw_height( spinner );
+
+   ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, FALSE );
+
+   numbuf = bformat( "%d", *num );
+   graphics_draw_text(
+      g,
+      win->grid_pos.x + UI_TEXT_MARGIN,
+      /* TODO: Why does text float back up relative to background? */
+      win->grid_pos.y + (/* Temp */ win->grid_pos.h) + UI_TEXT_MARGIN,
+      GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, numbuf,
+      spinner == win->active_control ? TRUE : FALSE
+   );
+   bdestroy( numbuf );
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, spinner );
+}
+
+static void ui_control_draw_list(
+   struct UI_WINDOW* win, struct UI_CONTROL* listbox
+) {
+   GRAPHICS_COLOR fg = UI_BUTTON_FG;
+   GRAPHICS* g = win->element;
+   bstring list_item = NULL;;
+   SCAFFOLD_SIZE_SIGNED* num = listbox->self.attachment;
+
+   if( listbox == win->active_control ) {
+      fg = UI_SELECTED_FG;
+   }
+
+#ifdef DEBUG
+   list_item = listbox->list[*num];
+   list_item = bformat( "%s (%d)", bdata( list_item ), *num );
+#else
+   list_item = listbox->list[*num];
+#endif /* DEBUG */
+
+   win->grid_pos.w = ui_control_get_draw_width( listbox );
+   win->grid_pos.h = ui_control_get_draw_height( listbox );
+
+   ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, FALSE );
+
+   graphics_draw_text(
+      g,
+      win->grid_pos.x + UI_TEXT_MARGIN,
+      /* TODO: Why does text float back up relative to background? */
+      win->grid_pos.y + (/* Temp */ win->grid_pos.h) + UI_TEXT_MARGIN,
+      GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE,
+      list_item,
+      listbox == win->active_control ? TRUE : FALSE
+   );
+
+#ifdef DEBUG
+   bdestroy( list_item );
+   list_item = NULL;
+#endif /* DEBUG */
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, listbox );
+}
+
+static void* ui_control_draw_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
 #ifdef DEBUG
@@ -846,6 +1007,8 @@ static void* ui_control_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* 
       case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
       case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
       case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
+      case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
+      case UI_CONTROL_TYPE_LIST: ui_control_draw_list( win, control ); break;
       case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
    }
 

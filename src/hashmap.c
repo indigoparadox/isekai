@@ -859,7 +859,10 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
          idx.value.key = m->data[i].key;
          if( FALSE != callback( &idx, m, data, arg ) ) {
 
+#ifdef USE_ITERATOR_CACHE
             iterator_index = m->data[i].iterator_index;
+#endif /* USE_ITERATOR_CACHE */
+
             if( TRUE == hashmap_remove_internal( m, &(m->data[i]) ) ) {
                removed++;
             }
@@ -932,7 +935,10 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
             refcount_test_dec( m->data[curr].data );
 #endif /* HASHMAP_NO_LOCK_REMOVE */
 
+#ifdef USE_ITERATOR_CACHE
             iterator_index = m->data[curr].iterator_index;
+#endif /* USE_ITERATOR_CACHE */
+
             if( TRUE == hashmap_remove_internal( m, &(m->data[curr]) ) ) {
                removed++;
             }
