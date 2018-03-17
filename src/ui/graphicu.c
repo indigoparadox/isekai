@@ -203,6 +203,7 @@ void ui_control_add(
    struct UI_WINDOW* win, bstring id, struct UI_CONTROL* control
 ) {
    SCAFFOLD_SIZE_SIGNED verr;
+   struct UI_CONTROL* control_last = NULL;
 #ifdef DEBUG
    struct UI_CONTROL* control_test = NULL;
 
@@ -214,6 +215,7 @@ void ui_control_add(
       scaffold_assert( NULL == control_test );
    }
 #endif /* DEBUG */
+
    scaffold_assert( NULL != win );
    scaffold_assert( NULL != control );
    scaffold_assert( &global_ui == win->ui );
@@ -221,6 +223,16 @@ void ui_control_add(
    if( hashmap_put( &(win->controls), id, control, FALSE ) ) {
       scaffold_print_error( &module,
          "Attempted to double-add control: %b\n", id );
+   }
+
+   if( NULL == win->first_control ) {
+      win->first_control = control;
+   } else {
+      control_last = win->first_control;
+      while( NULL != control_last->next_control ) {
+         control_last = control_last->next_control;
+      }
+      control_last->next_control = control;
    }
 
    if( TRUE == control->can_focus ) {
@@ -500,7 +512,7 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
       control_w = UI_TEXT_DEF_CONTROL_SIZE + (2 * UI_TEXT_MARGIN);
    } else if( UI_CONTROL_TYPE_LIST == control->type ) {
       while( NULL != control->list[i] ) {
-         list_item = &(control->list[i]);
+         list_item = control->list[i];
          graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
          num = control_size.w + (2 * UI_TEXT_MARGIN);
          if( num > control_w ) {
@@ -969,6 +981,9 @@ static void ui_control_draw_list(
 #endif /* DEBUG */
 
    win->grid_pos.w = ui_control_get_draw_width( listbox );
+#ifdef DEBUG
+   win->grid_pos.w += (UI_TEXT_SIZE * 5);
+#endif /* DEBUG */
    win->grid_pos.h = ui_control_get_draw_height( listbox );
 
    ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, FALSE );
@@ -989,31 +1004,6 @@ static void ui_control_draw_list(
 #endif /* DEBUG */
 
    ui_window_advance_grid( (struct UI_WINDOW*)win, listbox );
-}
-
-static void* ui_control_draw_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-   struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
-   struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
-#ifdef DEBUG
-   const char* win_id_c = bdata( win->id ),
-      * control_id_c = bdata( control->self.id );
-#endif /* DEBUG */
-
-   switch( control->type ) {
-      case UI_CONTROL_TYPE_NONE: break;
-      case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
-      case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
-      case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
-      case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
-      case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
-      case UI_CONTROL_TYPE_LIST: ui_control_draw_list( win, control ); break;
-      case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
-   }
-
-cleanup:
-   return NULL;
 }
 
 static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
@@ -1097,7 +1087,21 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* i
       /* Draw the controls on to the window surface. */
       ui_window_draw_furniture( win );
       ui_window_reset_grid( win );
-      hashmap_iterate( &(win->controls), ui_control_draw_cb, win );
+      control = win->first_control;
+      while( NULL != control ) {
+         switch( control->type ) {
+            case UI_CONTROL_TYPE_NONE: break;
+            case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
+            case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
+            case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
+            case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
+            case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
+            case UI_CONTROL_TYPE_LIST: ui_control_draw_list( win, control ); break;
+            case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
+         }
+
+         control = control->next_control;
+      }
 
       win->dirty = FALSE;
 
