@@ -20,6 +20,81 @@ static GFX_RAY_WALL* cl_walls = NULL;
 static GFX_RAY_FLOOR* cl_floors = NULL;
 static GRAPHICS* ray_view = NULL;
 
+static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) {
+   bstring buffer = NULL;
+   int facing = o->facing;
+   struct MOBILE* puppet = c->puppet;
+
+   if( NULL == puppet ) {
+      goto cleanup;
+   }
+
+   if( o->animation_reset || puppet->animation_reset ) {
+      if( MOBILE_FACING_DOWN == puppet->facing ) {
+         switch( o->facing ) {
+         case MOBILE_FACING_DOWN:
+            facing =  MOBILE_FACING_UP;
+            break;
+         case MOBILE_FACING_UP:
+            facing = MOBILE_FACING_DOWN;
+            break;
+         case MOBILE_FACING_LEFT:
+            facing = MOBILE_FACING_RIGHT;
+            break;
+         case MOBILE_FACING_RIGHT:
+            facing = MOBILE_FACING_LEFT;
+            break;
+         }
+      } else if( MOBILE_FACING_LEFT == puppet->facing ) {
+         switch( o->facing ) {
+         case MOBILE_FACING_DOWN:
+            facing =  MOBILE_FACING_LEFT;
+            break;
+         case MOBILE_FACING_UP:
+            facing = MOBILE_FACING_RIGHT;
+            break;
+         case MOBILE_FACING_LEFT:
+            facing = MOBILE_FACING_UP;
+            break;
+         case MOBILE_FACING_RIGHT:
+            facing = MOBILE_FACING_DOWN;
+            break;
+         }
+      } else if( MOBILE_FACING_RIGHT == puppet->facing ) {
+         switch( o->facing ) {
+         case MOBILE_FACING_DOWN:
+            facing =  MOBILE_FACING_RIGHT;
+            break;
+         case MOBILE_FACING_UP:
+            facing = MOBILE_FACING_LEFT;
+            break;
+         case MOBILE_FACING_LEFT:
+            facing = MOBILE_FACING_DOWN;
+            break;
+         case MOBILE_FACING_RIGHT:
+            facing = MOBILE_FACING_UP;
+            break;
+         }
+      }
+   }
+
+   if( NULL != o->current_animation ) {
+      buffer = bformat(
+         "%s-%s",
+         bdata( o->current_animation->name ),
+         str_mobile_facing[facing].data
+      );
+      if( NULL != hashmap_get( &(o->ani_defs), buffer ) ) {
+         o->current_animation = hashmap_get( &(o->ani_defs), buffer );
+      }
+   }
+
+   o->animation_reset = FALSE;
+
+cleanup:
+   bdestroy( buffer );
+}
+
 static
 void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    double sprite_x;
@@ -150,6 +225,9 @@ void* mode_pov_draw_mobile_cb(
       goto cleanup; /* Silently. */
    }
 
+   if( TRUE == o->animation_reset ) {
+      mode_pov_mobile_set_animation( o, twindow->local_client );
+   }
    mobile_animate( o );
    mode_pov_draw_sprite( o, c, twindow->g );
 

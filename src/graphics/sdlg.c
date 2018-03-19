@@ -26,12 +26,27 @@ SDL_Color graphics_stock_colors[16] = {   /*  r,   g,   b   */
    /* GRAPHICS_COLOR_WHITE       = 14  */ { 255, 255, 255, 0 }
 };
 
-static void SDL_PutPixel(
-   SDL_Surface *surface, SCAFFOLD_SIZE_SIGNED x, SCAFFOLD_SIZE_SIGNED y,
-   uint32_t pixel
+#define GRAPHICS_C
+#define graphics_get_color( color_i ) (graphics_stock_colors[color_i])
+#define graphics_lock( surface ) SDL_LockSurface( surface )
+#define graphics_unlock( surface ) SDL_UnlockSurface( surface )
+#include "../graphics.h"
+
+void graphics_set_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GRAPHICS_COLOR pixel
 ) {
-   int bpp = surface->format->BytesPerPixel;
-   uint8_t* p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
+   SDL_Surface* surface;
+   int bpp;
+   uint8_t* p;
+
+   if( NULL == g || NULL == g->surface ) {
+      return;
+   }
+
+   surface = g->surface;
+   bpp = surface->format->BytesPerPixel;
+   p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
 
    if( 0 > x || 0 > y || surface->w <= x || surface->h <= y ) {
       return;
@@ -64,13 +79,51 @@ static void SDL_PutPixel(
    }
 }
 
-#define GRAPHICS_C
-#define graphics_get_color( color_i ) (graphics_stock_colors[color_i])
-#define graphics_lock( surface ) SDL_LockSurface( surface )
-#define graphics_unlock( surface ) SDL_UnlockSurface( surface )
-#define graphics_put_pixel( surface, x, y, color ) \
-   SDL_PutPixel( surface, x, y, color )
-#include "../graphics.h"
+GRAPHICS_COLOR graphics_get_pixel(
+   const GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+) {
+   SDL_Surface* surface;
+   int bpp;
+   uint8_t* p;
+   GRAPHICS_COLOR pout;
+
+   if( NULL == g || NULL == g->surface ) {
+      return;
+   }
+
+   if( 0 > x || g->w <= x || 0 > y || g->h <= y ) {
+      return;
+   }
+
+   surface = g->surface;
+   bpp = surface->format->BytesPerPixel;
+   p = (uint8_t*)surface->pixels + y * surface->pitch + x * bpp;
+
+   switch( bpp ) {
+   case 1:
+      return *p;
+
+   case 2:
+      return *(uint16_t*)p;
+
+      /*
+   case 3:
+      if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
+         pout->r = (pixel >> 16) & 0xff;
+         pout->g = (pixel >> 8) & 0xff;
+         pout->b = pixel & 0xff;
+      } else {
+         pout->b = pixel & 0xff;
+         pout->g = (pixel >> 8) & 0xff;
+         pout->r = (pixel >> 16) & 0xff;
+      }
+      return pout;
+      */
+
+   case 4:
+      return *(uint32_t*)p;
+   }
+}
 
 void graphics_surface_cleanup( GRAPHICS* g ) {
    if( NULL != g->surface ) {
@@ -332,7 +385,8 @@ void graphics_draw_line(
       x1 < 0 ||
       x1 >= g->w
    ) {
-      return 0; /* No single point of the line is on screen. */
+      //return 0; /* No single point of the line is on screen. */
+      return;
    }
 
    /* Clipping. */
@@ -350,9 +404,10 @@ void graphics_draw_line(
       /* *bufp = colorSDL;
       bufp += g->surface->pitch / 4; */
       /* TODO: Horizontal travel. */
-      SDL_PutPixel( surface, x1, y, color );
+      graphics_set_pixel( g, x1, y, color );
    }
-   return 1;
+   //return 1;
+   return;
 }
 
 void graphics_draw_triangle(
@@ -391,7 +446,7 @@ void graphics_draw_char(
    for( y = 0 ; size > y ; y++ ) {
       for( x = 0 ; size > x ; x++ ) {
          if( font8x8_basic[c][(uint8_t)(y / divisor)] & 1 << (uint8_t)(x / divisor) ) {
-            SDL_PutPixel( g->surface, x_start + x, y_start + y, *((uint32_t*)color) );
+            graphics_set_pixel( g, x_start + x, y_start + y, *((uint32_t*)color) );
          }
       }
    }

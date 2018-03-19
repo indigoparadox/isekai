@@ -9,7 +9,27 @@
 
 extern bstring client_input_from_ui;
 
-void* mode_topdown_draw_mobile_cb(
+static void mode_topdown_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) {
+   bstring buffer = NULL;
+
+   if( NULL != o->current_animation ) {
+      buffer = bformat(
+         "%s-%s",
+         bdata( o->current_animation->name ),
+         str_mobile_facing[o->facing].data
+      );
+      if( NULL != hashmap_get( &(o->ani_defs), buffer ) ) {
+         o->current_animation = hashmap_get( &(o->ani_defs), buffer );
+      }
+   }
+
+   o->animation_reset = FALSE;
+
+cleanup:
+   bdestroy( buffer );
+}
+
+static void* mode_topdown_draw_mobile_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -17,6 +37,9 @@ void* mode_topdown_draw_mobile_cb(
 
    if( NULL == o ) { return NULL; }
 
+   if( TRUE == o->animation_reset ) {
+      mode_topdown_mobile_set_animation( o, twindow->local_client );
+   }
    mobile_animate( o );
    mobile_draw_ortho( o, twindow );
 

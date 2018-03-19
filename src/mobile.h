@@ -67,6 +67,7 @@ struct MOBILE {
    MOBILE_FRAME frame; */
    uint8_t current_frame;
    MOBILE_FACING facing;
+   BOOL animation_reset;
    bstring display_name;
    bstring def_filename;
    bstring mob_id;
@@ -110,19 +111,6 @@ struct MOBILE_UPDATE_PACKET {
     o = mem_alloc( 1, struct MOBILE ); \
     scaffold_check_null( o ); \
     mobile_init( o, mob_id, x, y );
-
-#define mobile_set_animation_facing( o, buffer, facing ) \
-   if( NULL != o->current_animation ) { \
-      buffer = bformat( \
-         "%s-%s", \
-         bdata( o->current_animation->name ), \
-         str_mobile_facing[facing].data \
-      ); \
-      if( NULL != hashmap_get( &(o->ani_defs), buffer ) ) { \
-         o->current_animation = \
-            hashmap_get( &(o->ani_defs), buffer ); \
-      } \
-   }
 
 void mobile_free( struct MOBILE* o );
 void mobile_init(

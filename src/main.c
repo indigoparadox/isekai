@@ -52,10 +52,14 @@ bstring buffer_channel = NULL;
 #endif /* ENABLE_LOCAL_CLIENT */
 
 static struct tagbstring str_top_down = bsStatic( "Top Down" );
+#ifdef USE_RAYCASTING
 static struct tagbstring str_pov = bsStatic( "POV" );
+#endif /* USE_RAYCASTING */
 static bstring mode_list[] = {
    &str_top_down,
+#ifdef USE_RAYCASTING
    &str_pov,
+#endif /* USE_RAYCASTING */
    NULL
 };
 
