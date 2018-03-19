@@ -87,9 +87,10 @@ struct MOBILE {
 #ifdef USE_TURNS
    SCAFFOLD_SIZE vm_tick_prev;
 #endif /* USE_TURNS */
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
    double ray_distance;
-#endif /* USE_RAYCASTING */
+   BOOL animation_flipped; /*!< TRUE if looking in - direction in POV. */
+#endif /* !DISABLE_MODE_POV */
 };
 
 struct MOBILE_UPDATE_PACKET {

@@ -2,11 +2,6 @@
 #define GRAPHICS_C
 #include "graphics.h"
 
-#ifdef USE_RAYCASTING
-
-
-#endif /* USE_RAYCASTING */
-
 #ifdef USE_CLOCK
 #include <time.h>
 #endif /* USE_CLOCK */
@@ -72,7 +67,7 @@ void graphics_bitmap_load(
 
    scaffold_assert( 'B' == data[0] && 'M' == data[1] );
    scaffold_assert( file_header->size == data_sz );
-   scaffold_assert( 4 == header->bpp );
+   scaffold_assert( 4 == header->bpp ); /* TODO: Polite error message. */
    scaffold_assert( 0 == header->compression );
    scaffold_assert( (file_header->offset + pixels_sz) <= data_sz );
 
@@ -243,7 +238,7 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
    rect->w -= (2 * shrink_by);
 }
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 
 GFX_RAY_FLOOR* graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
@@ -380,84 +375,6 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
    }
 }
 
-#if 0
-
-double graphics_raycast_get_distance(
-   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray, int j
-) {
-   /* Calculate distance projected on camera direction
-      (Euclidean distance will give fisheye effect!). */
-   if( 0 == wall_pos->side ) {
-      return
-         (wall_pos->x - cam_pos->x + (1 - ray->step_x) / 2) / ray->direction_x;
-   } else {
-      return
-         (wall_pos->y - cam_pos->y + (1 - ray->step_y) / 2) / ray->direction_y;
-   }
-}
-
-/** \brief
- *
- * \param
- * \param wall_pos A rectangle with W set to the map width. The wall collision
- * will be returned via X and Y. The wall side (NE/SW) will be returned via H.
- * X and Y are in map tiles.
- * \return
- *
- */
-int graphics_raycast_wall_throw(
-   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
-   const GFX_DELTA* cam_pos, const GRAPHICS* g,
-   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
-) {
-   BOOL wall_hit = FALSE;
-
-   /* Do the actual casting. */
-   while( FALSE == wall_hit ) {
-      /* Jump to next map square, OR in x-direction, OR in y-direction. */
-      if( ray->side_dist_x < ray->side_dist_y ) {
-         ray->side_dist_x += ray->delta_dist_x;
-         wall_pos->x += ray->step_x;
-         wall_pos->side = 0;
-      } else {
-         ray->side_dist_y += ray->delta_dist_y;
-         wall_pos->y += ray->step_y;
-         wall_pos->side = 1;
-      }
-
-      /* Don't draw walls outside of the map. */
-      if(
-         wall_pos->x > wall_pos->map_w ||
-         wall_pos->y > wall_pos->map_h ||
-         0 > wall_pos->x ||
-         0 > wall_pos->y
-      ) {
-         ray->infinite_dist = TRUE;
-         break;
-      }
-
-      /* Check if ray has hit a wall. */
-      if( collision_check( wall_pos, data ) ) {
-         wall_hit = TRUE;
-      }
-   }
-
-   /* Calculate distance projected on camera direction
-      (Euclidean distance will give fisheye effect!). */
-   if( 0 == wall_pos->side ) {
-      wall_pos->perpen_dist =
-         (wall_pos->x - cam_pos->x + (1 - ray->step_x) / 2) / ray->direction_x;
-   } else {
-      wall_pos->perpen_dist =
-         (wall_pos->y - cam_pos->y + (1 - ray->step_y) / 2) / ray->direction_y;
-   }
-
-   /* Calculate height of line to draw on screen. */
-   return (int)(g->h / wall_pos->perpen_dist);
-}
-
-#endif
-
 /** \brief Calculate lowest and highest pixel to fill in current stripe.
  *
  * \param
@@ -488,4 +405,4 @@ int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g ) {
    return draw_start;
 }
 
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */

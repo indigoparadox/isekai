@@ -2,7 +2,7 @@
 #define MODE_C
 #include "../mode.h"
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 
 #include <stdlib.h>
 
@@ -19,6 +19,7 @@ extern bstring client_input_from_ui;
 static GFX_RAY_WALL* cl_walls = NULL;
 static GFX_RAY_FLOOR* cl_floors = NULL;
 static GRAPHICS* ray_view = NULL;
+struct HASHMAP tileset_status;
 
 static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) {
    bstring buffer = NULL;
@@ -31,6 +32,7 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
 
    if( o->animation_reset || puppet->animation_reset ) {
       if( MOBILE_FACING_DOWN == puppet->facing ) {
+         o->animation_flipped = TRUE;
          switch( o->facing ) {
          case MOBILE_FACING_DOWN:
             facing =  MOBILE_FACING_UP;
@@ -61,6 +63,7 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
             break;
          }
       } else if( MOBILE_FACING_RIGHT == puppet->facing ) {
+         o->animation_flipped = TRUE;
          switch( o->facing ) {
          case MOBILE_FACING_DOWN:
             facing =  MOBILE_FACING_RIGHT;
@@ -112,6 +115,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    GRAPHICS_RECT current_sprite;
    int d;
    struct MOBILE_SPRITE_DEF* current_frame;
+   int stepped_x, stepped_y;
 
    if( NULL == o || NULL == o->sprites ) {
       goto cleanup;
@@ -132,7 +136,8 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    inv_det = 1.0 / (c->plane_pos.x * c->cam_pos.dy.facing - c->cam_pos.dx.facing * c->plane_pos.y);
 
    transform_x = inv_det * (c->cam_pos.dy.facing * sprite_x - c->cam_pos.dx.facing * sprite_y);
-   transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y); //this is actually the depth inside the screen, that what Z is in 3D
+   /* This is actually the depth inside the screen, what Z is in 3D. */
+   transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y);
 
    int spriteScreenX = ((int)(g->w / 2) * (1 + transform_x / transform_y));
 
@@ -145,7 +150,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
       goto cleanup;
    }
 
-   //calculate lowest and highest pixel to fill in current stripe
+   /* Calculate lowest and highest pixel to fill in in the current stripe. */
    draw_rect.y = -sprite_height / 2 + g->h / 2;
    if( 0 > draw_rect.y ) {
       draw_rect.y = 0;
@@ -155,7 +160,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
       draw_rect.h = g->h - 1;
    }
 
-   //calculate width of the sprite
+   /* Calculate width of the sprite on the screen. */
    int spriteWidth = abs( (int)(g->h / (transform_y)));
    draw_rect.x = -spriteWidth / 2 + spriteScreenX;
    if( draw_rect.x < 0 ) {
@@ -177,10 +182,22 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
 
    /* Loop through every vertical stripe of the sprite on screen. */
    for( stripe = draw_rect.x ; stripe < draw_rect.w ; stripe++ ) {
+
+      stepped_x = stripe;
+      if(
+         MOBILE_FACING_LEFT == o->facing && FALSE == o->animation_flipped ||
+         MOBILE_FACING_RIGHT == o->facing && FALSE == o->animation_flipped
+      ) {
+         stepped_x = (stripe - spriteWidth) + o->steps_remaining;
+      } else {
+         stepped_x = (stripe + spriteWidth) - o->steps_remaining;
+      }
+
       spritesheet.x =
          ((int)(256 * (stripe - (-spriteWidth / 2 + spriteScreenX))
                      * spritesheet.w / spriteWidth) / 256);
 
+      /* Select the correct sprite column. */
       spritesheet.x += current_sprite.x;
 
       /* Ensure things are visible with these conditions: */
@@ -199,11 +216,16 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
             d = y * 256 - g->h * 128 + sprite_height * 128;
             spritesheet.y = (((d * spritesheet.h) / sprite_height) / 256);
 
+            /* Select the correct sprite row. */
             spritesheet.y += current_sprite.y;
 
+            stepped_y = y;
+
+            /* Perform the pixel-by-pixel stretch blit from spritesheet to
+             * output canvas. */
             color = graphics_get_pixel( o->sprites, spritesheet.x, spritesheet.y );
             if( GRAPHICS_COLOR_TRANSPARENT != color ) {
-               graphics_set_pixel( g, stripe, y, color );
+               graphics_set_pixel( g, stepped_x, stepped_y, color );
             }
          }
       }
@@ -279,6 +301,8 @@ static void* mode_pov_mob_sort_dist_cb(
 
    scaffold_check_null( t );
 
+   /* TODO: Sort by distance. */
+
 cleanup:
    return NULL;
 }
@@ -342,29 +366,48 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
 }
 
 static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
+   double old_dir_x;
+
    switch( facing ) {
       case MOBILE_FACING_LEFT:
-         c->cam_pos.dx.facing = -1; /* TODO */
-         c->cam_pos.dy.facing = 0;
-         c->plane_pos.x = 0;
-         c->plane_pos.y = 0.66;
+         old_dir_x = 0;
+         c->cam_pos.dx.facing = old_dir_x * cos( GRAPHICS_RAY_ROTATE_INC ) -
+            -1 * sin( GRAPHICS_RAY_ROTATE_INC );
+         c->cam_pos.dy.facing = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
+            -1 * cos( GRAPHICS_RAY_ROTATE_INC );
+
+         old_dir_x = GRAPHICS_RAY_FOV;
+         c->plane_pos.x = old_dir_x * cos(GRAPHICS_RAY_ROTATE_INC ) -
+            0 * sin( GRAPHICS_RAY_ROTATE_INC );
+         c->plane_pos.y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
+            0 * cos( GRAPHICS_RAY_ROTATE_INC );
          break;
+
       case MOBILE_FACING_RIGHT:
-         c->cam_pos.dx.facing = 1; /* TODO */
-         c->cam_pos.dy.facing = 0;
-         c->plane_pos.x = 0;
-         c->plane_pos.y = -0.66;
+         old_dir_x = 0;
+         c->cam_pos.dx.facing = old_dir_x * cos( -GRAPHICS_RAY_ROTATE_INC ) -
+            -1 * sin( -GRAPHICS_RAY_ROTATE_INC );
+         c->cam_pos.dy.facing = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
+            -1 * cos( -GRAPHICS_RAY_ROTATE_INC );
+
+         old_dir_x = GRAPHICS_RAY_FOV;
+         c->plane_pos.x = old_dir_x * cos(-GRAPHICS_RAY_ROTATE_INC ) -
+            0 * sin( -GRAPHICS_RAY_ROTATE_INC );
+         c->plane_pos.y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
+            0 * cos( -GRAPHICS_RAY_ROTATE_INC );
          break;
+
       case MOBILE_FACING_UP:
          c->cam_pos.dx.facing = 0; /* TODO */
          c->cam_pos.dy.facing = -1;
-         c->plane_pos.x = 0.66;
+         c->plane_pos.x = GRAPHICS_RAY_FOV;
          c->plane_pos.y = 0;
          break;
+
       case MOBILE_FACING_DOWN:
          c->cam_pos.dx.facing = 0; /* TODO */
          c->cam_pos.dy.facing = 1;
-         c->plane_pos.x = -0.66;
+         c->plane_pos.x = -GRAPHICS_RAY_FOV;
          c->plane_pos.y = 0;
          break;
    }
@@ -375,10 +418,10 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
  *
  * \param
  * \param
- * \return
+ * \return TRUE on error, FALSE otherwise.
  *
  */
-static void mode_pov_update_view(
+static BOOL mode_pov_update_view(
    GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
    struct CLIENT* c
 ) {
@@ -401,10 +444,9 @@ static void mode_pov_update_view(
    int layer_index = 0,
       layer_max = 0;
    BOOL wall_hit = FALSE;
+   BOOL ret_error = FALSE;
 
-   if( NULL == t ) {
-      return;
-   }
+   scaffold_check_null( t );
 
    c->cam_pos.x = x;
    c->cam_pos.y = y;
@@ -528,6 +570,8 @@ static void mode_pov_update_view(
                c
             );
             if( NULL == g_tileset ) {
+               //scaffold_print_error( &module, "Unable to draw from tileset: %b", set->def_path );
+               ret_error = TRUE;
                continue;
             }
 
@@ -543,6 +587,9 @@ static void mode_pov_update_view(
          }
       }
    }
+
+cleanup:
+   return ret_error;
 }
 
 void mode_pov_draw(
@@ -553,6 +600,7 @@ void mode_pov_draw(
    GRAPHICS* g = twindow->g;
    struct MOBILE* player = NULL;
    static struct TILEMAP_POSITION last;
+   static BOOL draw_failed = FALSE;
 
    if(
       NULL == twindow->local_client ||
@@ -569,11 +617,12 @@ void mode_pov_draw(
    }
 
    if(
+      TRUE == draw_failed ||
       player->x != last.x ||
       player->y != last.y ||
       player->facing != last.facing
    ) {
-      mode_pov_update_view(
+      draw_failed = mode_pov_update_view(
          ray_view, player->x, player->y, player->facing, twindow->t, twindow->local_client
       );
       last.x = player->x;
@@ -581,13 +630,14 @@ void mode_pov_draw(
       last.facing = player->facing;
    }
 
-   graphics_blit( g, 0, 0, ray_view );
-
-   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
-   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );
+   if( FALSE == draw_failed ) {
+      /* Draw the cached background. */
+      graphics_blit( g, 0, 0, ray_view );
+   }
 
    /* Begin drawing sprites. */
-   //vector_iterate( &(l->mobiles), mode_pov_mob_draw_cb, twindow );
+   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
+   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );
 
 cleanup:
    return;
@@ -767,4 +817,4 @@ void mode_pov_free( struct CLIENT* c ) {
    }
 }
 
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
