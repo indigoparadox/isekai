@@ -61,6 +61,7 @@ void graphics_set_pixel(
       *(uint16_t*)p = pixel;
       break;
 
+#ifdef USE_HICOLOR
    case 3:
       if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
          p[0] = (pixel >> 16) & 0xff;
@@ -72,6 +73,7 @@ void graphics_set_pixel(
          p[2] = (pixel >> 16) & 0xff;
       }
       break;
+#endif /* USE_HICOLOR */
 
    case 4:
       *(uint32_t*)p = pixel;
@@ -106,7 +108,7 @@ GRAPHICS_COLOR graphics_get_pixel(
    case 2:
       return *(uint16_t*)p;
 
-      /*
+#ifdef USE_HICOLOR
    case 3:
       if( SDL_BYTEORDER == SDL_BIG_ENDIAN ) {
          pout->r = (pixel >> 16) & 0xff;
@@ -118,7 +120,7 @@ GRAPHICS_COLOR graphics_get_pixel(
          pout->r = (pixel >> 16) & 0xff;
       }
       return pout;
-      */
+#endif /* USE_HICOLOR */
 
    case 4:
       return *(uint32_t*)p;
@@ -379,13 +381,7 @@ void graphics_draw_line(
       x1 -= x2;
    }
 
-   if(
-      y2 < 0 ||
-      y1 >= g->h ||
-      x1 < 0 ||
-      x1 >= g->w
-   ) {
-      //return 0; /* No single point of the line is on screen. */
+   if( y2 < 0 || y1 >= g->h || x1 < 0 || x1 >= g->w ) {
       return;
    }
 
@@ -406,7 +402,7 @@ void graphics_draw_line(
       /* TODO: Horizontal travel. */
       graphics_set_pixel( g, x1, y, color );
    }
-   //return 1;
+
    return;
 }
 
@@ -516,18 +512,3 @@ void graphics_sleep( uint16_t milliseconds ) {
 uint32_t graphics_get_ticks() {
    return SDL_GetTicks();
 }
-
-#if 0
-void graphics_wait_for_fps_timer() {
-   //SDL_Delay( 1000 / GRAPHICS_TIMER_FPS );
-   if( GRAPHICS_TIMER_FPS > (SDL_GetTicks() - graphics_time) ) {
-      /* Subtract the time since graphics_Start_fps_timer() was last called
-       * from the nominal delay required to maintain our FPS.
-       */
-      SDL_Delay( graphics_fps_delay  - (SDL_GetTicks() - graphics_time) );
-   }
-   /*
-   scaffold_print_debug( &module, "%d\n", (SDL_GetTicks() - graphics_time) );
-   */
-}
-#endif

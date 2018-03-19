@@ -63,11 +63,11 @@ struct CLIENT {
    struct VECTOR unique_items;
    MODE gfx_mode;
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
    GFX_DELTA cam_pos;
    GFX_DELTA plane_pos;
    double* z_buffer;
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };

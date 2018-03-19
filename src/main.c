@@ -52,14 +52,14 @@ bstring buffer_channel = NULL;
 #endif /* ENABLE_LOCAL_CLIENT */
 
 static struct tagbstring str_top_down = bsStatic( "Top Down" );
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 static struct tagbstring str_pov = bsStatic( "POV" );
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 static bstring mode_list[] = {
    &str_top_down,
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
    &str_pov,
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
    NULL
 };
 
@@ -519,11 +519,11 @@ cleanup:
    bdestroy( buffer_channel );
 #endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
    if( NULL != main_client && NULL != main_client->z_buffer ) {
       mem_free( main_client->z_buffer );
    }
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
    mem_free( twindow );
    input_shutdown( input );
    mem_free( input );

@@ -1,9 +1,9 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 #include <math.h>
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
 #include "bstrlib/bstrlib.h"
 #include "scaffold.h"
@@ -16,19 +16,21 @@
 #define GRAPHICS_SPRITE_HEIGHT 32
 #define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
 #define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
+#define GRAPHICS_RAY_FOV 0.66
+#define GRAPHICS_RAY_ROTATE_INC (3 * 1.5708)
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 #define GRAPHICS_RAY_INITIAL_STEP_X 1
 #define GRAPHICS_RAY_INITIAL_STEP_Y 1
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
 #include "colors.h"
 
 COLOR_TABLE( GRAPHICS )
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 /* #define USE_HICOLOR */
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
 #ifdef USE_HICOLOR
 typedef uint32_t GRAPHICS_HICOLOR;
@@ -85,7 +87,7 @@ typedef struct {
    GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 
 typedef struct {
    double x;
@@ -143,7 +145,7 @@ typedef struct {
    int line_height;
 } GFX_RAY_FLOOR;
 
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
 struct GRAPHICS_TILE_WINDOW {
    struct CLIENT* local_client;
@@ -159,9 +161,9 @@ struct GRAPHICS_TILE_WINDOW {
    GFX_COORD_TILE min_y;    /*!< Top-most window tile. */
    uint8_t grid_w;
    uint8_t grid_h;
-#ifdef USE_RAYCASTING
+#ifdef DISABLE_MODE_POV
    BOOL dirty;
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 };
 
 #define graphics_clear_screen( g, color ) \
@@ -271,7 +273,7 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 );
 #endif /* USE_HICOLOR */
 
-#ifdef USE_RAYCASTING
+#ifndef DISABLE_MODE_POV
 
 GFX_RAY* graphics_raycast_wall_create(
    GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GFX_DELTA* plane_pos,
@@ -281,11 +283,6 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray );
 double graphics_raycast_get_distance(
    const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray
 );
-/* int graphics_raycast_wall_throw(
-   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
-   const GFX_DELTA* cam_pos, const GRAPHICS* g,
-   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
-); */
 GFX_RAY_FLOOR* graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
