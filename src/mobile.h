@@ -86,6 +86,9 @@ struct MOBILE {
 #ifdef USE_TURNS
    SCAFFOLD_SIZE vm_tick_prev;
 #endif /* USE_TURNS */
+#ifdef USE_RAYCASTING
+   double ray_distance;
+#endif /* USE_RAYCASTING */
 };
 
 struct MOBILE_UPDATE_PACKET {

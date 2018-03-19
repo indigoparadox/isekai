@@ -762,18 +762,6 @@ void* callback_proc_tileset_imgs( struct CONTAINER_IDX* idx, void* parent, void*
    return hashmap_iterate( &(set->images), callback_proc_tileset_img_gs, c );
 }
 
-void* callback_draw_mobiles( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct MOBILE* o = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-
-   if( NULL == o ) { return NULL; }
-
-   mobile_animate( o );
-   mobile_draw_ortho( o, twindow );
-
-   return NULL;
-}
-
 #endif /* ENABLE_LOCAL_CLIENT */
 
 void* callback_send_mobs_to_client( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {

@@ -80,7 +80,6 @@ struct UI_WINDOW {
    BOOL modal;
    struct UI_CONTROL* active_control;
    GRAPHICS_RECT area;
-   SCAFFOLD_SIZE_SIGNED grid_previous_button;
    GRAPHICS_RECT grid_pos;
    bstring id;
    struct VECTOR controls_active;
@@ -122,14 +121,14 @@ struct UI {
    ui_window_init( win, ui, id, title, prompt, x, y, w, h );
 
 #define ui_control_new( \
-      ui, control, text, type, can_focus, buffer, x, y, w, h \
+      ui, control, text, type, can_focus, new_row, buffer, x, y, w, h \
 ) \
    control = mem_alloc( 1, struct UI_CONTROL ); \
    if( NULL == control ) { \
       scaffold_error = SCAFFOLD_ERROR_NULLPO; \
       goto cleanup; \
    } \
-   ui_control_init( control, text, type, can_focus, buffer, x, y, w, h );
+   ui_control_init( control, text, type, can_focus, new_row, buffer, x, y, w, h );
 
 void ui_cleanup( struct UI* ui );
 void ui_window_init(
@@ -142,8 +141,8 @@ void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
    struct UI_CONTROL* control,
-   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
-   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, BOOL new_row,
+   bstring buffer, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 );
 void ui_control_add(

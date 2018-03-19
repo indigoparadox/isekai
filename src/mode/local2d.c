@@ -9,13 +9,27 @@
 
 extern bstring client_input_from_ui;
 
+void* mode_topdown_draw_mobile_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+
+   if( NULL == o ) { return NULL; }
+
+   mobile_animate( o );
+   mobile_draw_ortho( o, twindow );
+
+   return NULL;
+}
+
 void mode_topdown_draw(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
    tilemap_draw_ortho( twindow );
-   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+   vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, twindow );
 }
 
 void mode_topdown_update(
@@ -105,13 +119,15 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_inv, NULL, -1, -1, 600, 380
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         0, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         client_input_from_ui, 0, UI_CONST_HEIGHT_FULL, 300,
+         UI_CONST_HEIGHT_FULL
       );
       ui_control_add( win, &str_client_control_id_inv_self, control );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         client_input_from_ui, 300, UI_CONST_HEIGHT_FULL, 300,
+         UI_CONST_HEIGHT_FULL
       );
       cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
       ui_set_inventory_pane_list( control, &(cache->items) );
@@ -129,8 +145,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, client_input_from_ui,
-         -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE,
+         client_input_from_ui, -1, -1, -1, -1
       );
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );

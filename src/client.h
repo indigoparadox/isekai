@@ -62,6 +62,13 @@ struct CLIENT {
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
    MODE gfx_mode;
+
+#ifdef USE_RAYCASTING
+   GFX_DELTA cam_pos;
+   GFX_DELTA plane_pos;
+   double* z_buffer;
+#endif /* USE_RAYCASTING */
+
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542

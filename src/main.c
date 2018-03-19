@@ -274,22 +274,26 @@ static BOOL loop_connect() {
       );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer_host, -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_host,
+         -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_host, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, buffer_channel, -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_channel,
+         -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_channel, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, main_client->nick, -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, main_client->nick,
+         -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_nick, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_LIST, TRUE, NULL, -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_LIST, TRUE, TRUE, NULL,
+         -1, -1, -1, -1
       );
       control->list = mode_list;
       control->self.attachment = &(main_client->gfx_mode);
@@ -512,8 +516,8 @@ cleanup:
 #endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
 #ifdef USE_RAYCASTING
-   if( NULL != twindow && NULL != twindow->z_buffer ) {
-      mem_free( twindow->z_buffer );
+   if( NULL != main_client && NULL != main_client->z_buffer ) {
+      mem_free( main_client->z_buffer );
    }
 #endif /* USE_RAYCASTING */
    mem_free( twindow );
