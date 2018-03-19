@@ -322,26 +322,6 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       goto cleanup;
    }
 
-#if 0
-   /* If the current mobile spritesheet doesn't exist, then load it. */
-   if(
-      NULL == o->sprites &&
-      NULL == hashmap_get( &(local_client->sprites), o->sprites_filename )
-   ) {
-      /* No sprites and no request yet, so make one! */
-      client_request_file( local_client, CHUNKER_DATA_TYPE_MOBSPRITES, o->sprites_filename );
-      goto cleanup;
-   } else if(
-      NULL == o->sprites &&
-      NULL != hashmap_get( &(local_client->sprites), o->sprites_filename )
-   ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(local_client->sprites), o->sprites_filename );
-   } else if( NULL == o->sprites ) {
-      /* Sprites must not be ready yet. */
-      goto cleanup;
-   }
-#endif
-
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
    /* TODO: This should use tilemap tile size. */

@@ -113,7 +113,7 @@ void ui_window_init(
 
    if( NULL != prompt ) {
       ui_control_new(
-         ui, control, prompt, UI_CONTROL_TYPE_LABEL, FALSE, NULL,
+         ui, control, prompt, UI_CONTROL_TYPE_LABEL, FALSE, FALSE, NULL,
          UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL,
          UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL
       );
@@ -167,8 +167,8 @@ void ui_window_free( struct UI_WINDOW* win ) {
 
 void ui_control_init(
    struct UI_CONTROL* control,
-   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, bstring buffer,
-   GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, BOOL new_row,
+   bstring buffer, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 ) {
    control->type = type;
@@ -193,6 +193,7 @@ void ui_control_init(
    control->self.attachment = NULL;
    control->self.grid_iter = 0;
    control->self.selection = 0;
+   control->new_row = new_row;
 #ifdef DEBUG
    control->self.sentinal = UI_SENTINAL_CONTROL;
 #endif /* DEBUG */
@@ -553,6 +554,7 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       win->grid_pos.h = text.h;
    }
 
+   #if 0
    if( NULL != control &&
       (UI_CONTROL_TYPE_BUTTON == control->type || UI_CONTROL_TYPE_SPINNER == control->type)
    ) {
@@ -560,14 +562,16 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
    } else {
       win->grid_previous_button = FALSE;
    }
+   #endif // 0
 
-   if( TRUE == win->grid_previous_button ) {
-      win->grid_pos.x += win->grid_pos.w + UI_WINDOW_MARGIN;
-   } else {
+   if( NULL == control || TRUE == control->new_row ) {
       win->grid_pos.x = UI_WINDOW_MARGIN;
       win->grid_pos.y += win->grid_pos.h + UI_WINDOW_MARGIN;
+   } else {
+      win->grid_pos.x += win->grid_pos.w + UI_WINDOW_MARGIN;
    }
 
+cleanup:
    assert( win->ui == &global_ui );
 }
 
@@ -575,7 +579,6 @@ static void ui_window_reset_grid( struct UI_WINDOW* win ) {
    assert( win->ui == &global_ui );
    win->grid_pos.x = UI_WINDOW_GRID_X_START;
    win->grid_pos.y = 0;
-   win->grid_previous_button = FALSE;
    assert( win->ui == &global_ui );
 }
 
@@ -584,6 +587,8 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* parent,
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS_RECT* largest_control = NULL;
    GRAPHICS* g = NULL;
+
+   ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
    win->grid_pos.w = ui_control_get_draw_width( control );
    win->grid_pos.h = ui_control_get_draw_height( control );
@@ -605,8 +610,6 @@ static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* parent,
       }
       largest_control->h = win->grid_pos.y + win->grid_pos.h + UI_WINDOW_MARGIN;
    }
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
    return largest_control;
 }
@@ -682,7 +685,6 @@ cleanup:
    return;
 }
 
-
 static void* ui_control_draw_backlog_line(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
@@ -692,6 +694,8 @@ static void* ui_control_draw_backlog_line(
    GRAPHICS_RECT nick_size = { 0, 0, 0, 0 };
    GRAPHICS_COLOR msg_fg = UI_TEXT_FG;
    GRAPHICS_RECT* pos = &(control->self.grid_pos);
+
+   ui_window_advance_grid( &(control->self), NULL );
 
    /* TODO: Divide multiline lines. */
 
@@ -726,8 +730,6 @@ static void* ui_control_draw_backlog_line(
       GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, FALSE
    );
 
-   ui_window_advance_grid( &(control->self), NULL );
-
    bdestroy( nick_decorated );
    return NULL;
 }
@@ -746,7 +748,7 @@ static void ui_control_draw_backlog(
       &(backlog->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
    );
 
-   backlog->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
+   backlog->self.grid_pos.y += UI_WINDOW_MARGIN;
 
    backlog_iter( ui_control_draw_backlog_line, backlog );
 
@@ -883,8 +885,6 @@ static void ui_control_draw_textfield(
          textfield == win->active_control ? TRUE : FALSE, TRUE
       );
    }
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, textfield );
 }
 
 static void ui_control_draw_label(
@@ -900,8 +900,6 @@ static void ui_control_draw_label(
          label == win->active_control ? TRUE : FALSE, TRUE
       );
    }
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, label );
 }
 
 static void ui_control_draw_button(
@@ -926,8 +924,6 @@ static void ui_control_draw_button(
          button == win->active_control ? TRUE : FALSE
       );
    }
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, button );
 }
 
 static void ui_control_draw_spinner(
@@ -957,8 +953,6 @@ static void ui_control_draw_spinner(
       spinner == win->active_control ? TRUE : FALSE
    );
    bdestroy( numbuf );
-
-   ui_window_advance_grid( (struct UI_WINDOW*)win, spinner );
 }
 
 static void ui_control_draw_list(
@@ -1089,6 +1083,11 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* i
       ui_window_reset_grid( win );
       control = win->first_control;
       while( NULL != control ) {
+         /* After the first control, start advancing the grid. */
+         if( control != win->first_control ) {
+            ui_window_advance_grid( (struct UI_WINDOW*)win, control );
+         }
+
          switch( control->type ) {
             case UI_CONTROL_TYPE_NONE: break;
             case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
@@ -1203,7 +1202,7 @@ void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {
    control_debug = ui_control_by_id( win_debug, id );
    if( NULL == control_debug ) {
       ui_control_new( ui, control_debug, NULL,
-         UI_CONTROL_TYPE_LABEL, FALSE, buffer, 310, 110,
+         UI_CONTROL_TYPE_LABEL, FALSE, TRUE, buffer, 310, 110,
          UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL );
       ui_control_add( win_debug, id, control_debug );
    }

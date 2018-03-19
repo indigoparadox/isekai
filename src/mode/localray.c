@@ -20,7 +20,145 @@ static GFX_RAY_WALL* cl_walls = NULL;
 static GFX_RAY_FLOOR* cl_floors = NULL;
 static GRAPHICS* ray_view = NULL;
 
-static void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
+static
+void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
+   double sprite_x;
+   double sprite_y;
+   int sprite_height;
+   double inv_det;
+   GRAPHICS_COLOR color;
+   GRAPHICS_RECT draw_rect; /* H and W are really EndY and EndX. */
+   int stripe;
+   int y;
+   double sprite_height_theory;
+   double transform_x;
+   double transform_y;
+   GRAPHICS_RECT spritesheet;
+   GRAPHICS_RECT current_sprite;
+   int d;
+   struct MOBILE_SPRITE_DEF* current_frame;
+
+   if( NULL == o || NULL == o->sprites ) {
+      goto cleanup;
+   }
+
+   /* Translate sprite position to relative to camera. */
+   sprite_x = o->x - c->cam_pos.x;
+   sprite_y = o->y - c->cam_pos.y;
+
+   /* Transform sprite with the inverse camera matrix:
+    *
+    * [ plane.x  cam.dir.x ] -1       1 /              [ cam.dir.x  -cam.dir.x ]
+    * [                    ] = (plane.x * cam.dir.y -  [                       ]
+    * [ plane.y  cam.dir.y ]    cam.dir.x * plane.y) * [ -plane.y   plane.x    ]
+    */
+
+   /* Required for correct matrix multiplication. */
+   inv_det = 1.0 / (c->plane_pos.x * c->cam_pos.dy.facing - c->cam_pos.dx.facing * c->plane_pos.y);
+
+   transform_x = inv_det * (c->cam_pos.dy.facing * sprite_x - c->cam_pos.dx.facing * sprite_y);
+   transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y); //this is actually the depth inside the screen, that what Z is in 3D
+
+   int spriteScreenX = ((int)(g->w / 2) * (1 + transform_x / transform_y));
+
+   /* Calculate height of the sprite on screen.
+    * Using "transform_y" instead of the real distance prevents fisheye effect. */
+   sprite_height_theory = g->h / transform_y;
+   if( 0 < sprite_height_theory ) {
+      sprite_height = abs( (int)sprite_height_theory );
+   } else {
+      goto cleanup;
+   }
+
+   //calculate lowest and highest pixel to fill in current stripe
+   draw_rect.y = -sprite_height / 2 + g->h / 2;
+   if( 0 > draw_rect.y ) {
+      draw_rect.y = 0;
+   }
+   draw_rect.h = sprite_height / 2 + g->h / 2;
+   if( draw_rect.h >= g->h ) {
+      draw_rect.h = g->h - 1;
+   }
+
+   //calculate width of the sprite
+   int spriteWidth = abs( (int)(g->h / (transform_y)));
+   draw_rect.x = -spriteWidth / 2 + spriteScreenX;
+   if( draw_rect.x < 0 ) {
+      draw_rect.x = 0;
+   }
+   draw_rect.w = spriteWidth / 2 + spriteScreenX;
+   if( draw_rect.w >= g->w) {
+      draw_rect.w = g->w - 1;
+   }
+
+   current_frame = (struct MOBILE_SPRITE_DEF*)
+      vector_get( &(o->current_animation->frames), o->current_frame );
+   scaffold_check_null( current_frame );
+   current_sprite.w = spritesheet.w = o->sprite_width;
+   current_sprite.h = spritesheet.h = o->sprite_height;
+   graphics_get_spritesheet_pos_ortho(
+      o->sprites, &current_sprite, current_frame->id
+   );
+
+   /* Loop through every vertical stripe of the sprite on screen. */
+   for( stripe = draw_rect.x ; stripe < draw_rect.w ; stripe++ ) {
+      spritesheet.x =
+         ((int)(256 * (stripe - (-spriteWidth / 2 + spriteScreenX))
+                     * spritesheet.w / spriteWidth) / 256);
+
+      spritesheet.x += current_sprite.x;
+
+      /* Ensure things are visible with these conditions: */
+      if(
+         transform_y > 0 && /* 1) It's in front of camera plane. */
+         stripe > 0 &&      /* 2) It's on the screen (left). */
+         stripe < g->w &&   /* 3) It's on the screen (right). */
+         /* 4) ZBuffer, with perpendicular distance. */
+         transform_y < c->z_buffer[stripe]
+      ) {
+
+         /* For every pixel of the current stripe: */
+         for( y = draw_rect.y ; y < draw_rect.h; y++ ) {
+            /* Grab the pixel from the currently selected sprite region.
+             * Use 256 and 128 factors to avoid floats. */
+            d = y * 256 - g->h * 128 + sprite_height * 128;
+            spritesheet.y = (((d * spritesheet.h) / sprite_height) / 256);
+
+            spritesheet.y += current_sprite.y;
+
+            color = graphics_get_pixel( o->sprites, spritesheet.x, spritesheet.y );
+            if( GRAPHICS_COLOR_TRANSPARENT != color ) {
+               graphics_set_pixel( g, stripe, y, color );
+            }
+         }
+      }
+   }
+
+cleanup:
+   return;
+}
+
+static
+void* mode_pov_draw_mobile_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct CLIENT* c = twindow->local_client;
+
+   if( NULL == o ) {
+      goto cleanup; /* Silently. */
+   }
+
+   mobile_animate( o );
+   mode_pov_draw_sprite( o, c, twindow->g );
+
+cleanup:
+   return NULL;
+}
+
+static
+void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct GFX_RAY_WALL* pos = (struct GFX_RAY_WALL*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP* t = twindow->t;
@@ -29,7 +167,39 @@ static void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* ar
 
    scaffold_check_null( t );
 
+cleanup:
+   return NULL;
+}
 
+static void* mode_pov_mob_calc_dist_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct MOBILE* m = (struct MOBILE*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TILEMAP* t = twindow->t;
+   struct CLIENT* c = twindow->local_client;
+
+   scaffold_check_null( t );
+   if( NULL == m ) {
+      goto cleanup; /* Silently. */
+   }
+
+   m->ray_distance =
+      ((c->cam_pos.x - m->x) * (c->cam_pos.x - m->x) +
+         (c->cam_pos.y - m->y) * (c->cam_pos.y - m->y));
+
+cleanup:
+   return NULL;
+}
+
+static void* mode_pov_mob_sort_dist_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct MOBILE* m = (struct MOBILE*)iter;
+   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TILEMAP* t = twindow->t;
+
+   scaffold_check_null( t );
 
 cleanup:
    return NULL;
@@ -93,6 +263,35 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
    }
 }
 
+static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
+   switch( facing ) {
+      case MOBILE_FACING_LEFT:
+         c->cam_pos.dx.facing = -1; /* TODO */
+         c->cam_pos.dy.facing = 0;
+         c->plane_pos.x = 0;
+         c->plane_pos.y = 0.66;
+         break;
+      case MOBILE_FACING_RIGHT:
+         c->cam_pos.dx.facing = 1; /* TODO */
+         c->cam_pos.dy.facing = 0;
+         c->plane_pos.x = 0;
+         c->plane_pos.y = -0.66;
+         break;
+      case MOBILE_FACING_UP:
+         c->cam_pos.dx.facing = 0; /* TODO */
+         c->cam_pos.dy.facing = -1;
+         c->plane_pos.x = 0.66;
+         c->plane_pos.y = 0;
+         break;
+      case MOBILE_FACING_DOWN:
+         c->cam_pos.dx.facing = 0; /* TODO */
+         c->cam_pos.dy.facing = 1;
+         c->plane_pos.x = -0.66;
+         c->plane_pos.y = 0;
+         break;
+   }
+}
+
 /** \brief Create the first-person view and walls to draw on screen beneath the
  *         sprites.
  *
@@ -108,11 +307,8 @@ static void mode_pov_update_view(
    int i_x, i_y, draw_start, draw_end, j, k;
    struct INPUT p;
    int done = 0;
-   GFX_DELTA cam_pos;
-   GFX_DELTA plane_pos;
    GFX_RAY_WALL wall_map_pos; /* The position of the found wall. */
    GFX_RAY ray;
-   //GFX_DELTA* wall_scr_pos;
    GFX_RAY_FLOOR floor_pos;
    int line_height;
    struct TILEMAP_TILESET* set;
@@ -128,82 +324,20 @@ static void mode_pov_update_view(
       layer_max = 0;
    BOOL wall_hit = FALSE;
 
-   /*
-   static BOOL pos_dirty = TRUE;
-   static GRAPHICS_RECT former_pos;
-*/
-
    if( NULL == t ) {
       return;
    }
 
-   cam_pos.x = x;
-   cam_pos.y = y;
+   c->cam_pos.x = x;
+   c->cam_pos.y = y;
 
-#if 0
-   if( pos_dirty ) {
-      memset( &former_pos, '\0', sizeof( struct TILEMAP_POSITION ) );
-      pos_dirty = FALSE;
+   if( NULL == c->z_buffer ) {
+      c->z_buffer = calloc( g->w, sizeof( double ) );
    }
-
-   if( former_pos.x ) {
-
-   }
-
-   if( 0 < player->steps_remaining ) {
-      switch( player->facing )  {
-         case MOBILE_FACING_LEFT:
-            steps_remaining = 10 / player->steps_remaining;
-            cam_pos.x -= steps_remaining;
-            break;
-         case MOBILE_FACING_RIGHT:
-            steps_remaining = 10 - (10 / player->steps_remaining);
-            cam_pos.x += steps_remaining;
-            break;
-         case MOBILE_FACING_DOWN:
-            steps_remaining = 10 - (10 / player->steps_remaining);
-            cam_pos.y += steps_remaining;
-            break;
-         case MOBILE_FACING_UP:
-            steps_remaining = 10 / player->steps_remaining;
-            cam_pos.y -= steps_remaining;
-            break;
-      }
-   }
-#endif // 0
-
-   /*if( NULL == twindow->z_buffer ) {
-      twindow->z_buffer = calloc( twindow->g->w, sizeof( double ) );
-   }*/
 
    wall_map_pos.map_w = t->width;
    wall_map_pos.map_h = t->height;
-   switch( facing ) {
-      case MOBILE_FACING_LEFT:
-         cam_pos.dx.facing = -1; /* TODO */
-         cam_pos.dy.facing = 0;
-         plane_pos.x = 0;
-         plane_pos.y = 0.66;
-         break;
-      case MOBILE_FACING_RIGHT:
-         cam_pos.dx.facing = 1; /* TODO */
-         cam_pos.dy.facing = 0;
-         plane_pos.x = 0;
-         plane_pos.y = -0.66;
-         break;
-      case MOBILE_FACING_UP:
-         cam_pos.dx.facing = 0; /* TODO */
-         cam_pos.dy.facing = -1;
-         plane_pos.x = 0.66;
-         plane_pos.y = 0;
-         break;
-      case MOBILE_FACING_DOWN:
-         cam_pos.dx.facing = 0; /* TODO */
-         cam_pos.dy.facing = 1;
-         plane_pos.x = -0.66;
-         plane_pos.y = 0;
-         break;
-   }
+   mode_pov_set_facing( c, facing );
    floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
    floor_pos.tex_h = 32;
 
@@ -216,11 +350,12 @@ static void mode_pov_update_view(
 
       for( i_x = 0; i_x < g->w; i_x++ ) {
 
-         wall_map_pos.x = (int)cam_pos.x;
-         wall_map_pos.y = (int)cam_pos.y;
+         wall_map_pos.x = (int)(c->cam_pos.x);
+         wall_map_pos.y = (int)(c->cam_pos.y);
 
          /* Calculate ray position and direction. */
-         graphics_raycast_wall_create( &ray, i_x, &wall_map_pos, &plane_pos, &cam_pos, g );
+         graphics_raycast_wall_create(
+            &ray, i_x, &wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
 
          /* Do the actual casting. */
          wall_hit = FALSE;
@@ -251,15 +386,13 @@ static void mode_pov_update_view(
 
          if( 0 == wall_map_pos.side ) {
             wall_map_pos.perpen_dist =
-               (wall_map_pos.x - cam_pos.x + (-1 - ray.step_x) / 2) / ray.direction_x;
+               (wall_map_pos.x - c->cam_pos.x + (-1 - ray.step_x) / 2) / ray.direction_x;
          } else {
             wall_map_pos.perpen_dist =
-               (wall_map_pos.y - cam_pos.y + (-1 - ray.step_y) / 2) / ray.direction_y;
+               (wall_map_pos.y - c->cam_pos.y + (-1 - ray.step_y) / 2) / ray.direction_y;
          }
 
-         /* wall_map_pos.perpen_dist =
-            graphics_raycast_get_distance( &wall_map_pos, &cam_pos, &ray ); */
-         //twindow->z_buffer[i_x] = wall_map_pos.perpen_dist;
+         c->z_buffer[i_x] = wall_map_pos.perpen_dist;
          line_height = (int)(g->h / wall_map_pos.perpen_dist);
 
          draw_end = graphics_get_ray_stripe_end( line_height, g );
@@ -283,7 +416,7 @@ static void mode_pov_update_view(
          }
 
          graphics_floorcast_create(
-            &floor_pos, &ray, i_x, &cam_pos,
+            &floor_pos, &ray, i_x, &(c->cam_pos),
             &wall_map_pos, g
          );
 
@@ -296,7 +429,7 @@ static void mode_pov_update_view(
          for( i_y = draw_end +1; i_y < g->h; i_y++ ) {
             graphics_floorcast_throw(
                &floor_pos, i_x, i_y, line_height,
-               &cam_pos, &wall_map_pos,
+               &(c->cam_pos), &wall_map_pos,
                g
             );
 
@@ -372,7 +505,11 @@ void mode_pov_draw(
 
    graphics_blit( g, 0, 0, ray_view );
 
-   vector_iterate( &(l->mobiles), callback_draw_mobiles, twindow );
+   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
+   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );
+
+   /* Begin drawing sprites. */
+   //vector_iterate( &(l->mobiles), mode_pov_mob_draw_cb, twindow );
 
 cleanup:
    return;
@@ -470,13 +607,15 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_inv, NULL, -1, -1, 600, 380
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         0, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         client_input_from_ui, 0, UI_CONST_HEIGHT_FULL, 300,
+         UI_CONST_HEIGHT_FULL
       );
       ui_control_add( win, &str_client_control_id_inv_self, control );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, client_input_from_ui,
-         300, UI_CONST_HEIGHT_FULL, 300, UI_CONST_HEIGHT_FULL
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         client_input_from_ui, 300, UI_CONST_HEIGHT_FULL, 300,
+         UI_CONST_HEIGHT_FULL
       );
       cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
       ui_set_inventory_pane_list( control, &(cache->items) );
@@ -494,8 +633,8 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, client_input_from_ui,
-         -1, -1, -1, -1
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE,
+         client_input_from_ui, -1, -1, -1, -1
       );
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );

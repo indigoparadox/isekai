@@ -160,7 +160,6 @@ struct GRAPHICS_TILE_WINDOW {
    uint8_t grid_w;
    uint8_t grid_h;
 #ifdef USE_RAYCASTING
-   double* z_buffer;
    BOOL dirty;
 #endif /* USE_RAYCASTING */
 };
