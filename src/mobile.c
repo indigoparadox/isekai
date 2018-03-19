@@ -630,12 +630,10 @@ MOBILE_UPDATE mobile_apply_update(
       o->y = update->y;
       o->x = update->x;
       o->facing = MOBILE_FACING_UP;
-      //mobile_set_animation_facing( o, animation_key, MOBILE_FACING_UP );
       /* We'll calculate the actual animation frames to use in the per-mode
        * update() function, where we have access to the current camera rotation
        * and stuff like that. */
       o->animation_reset = TRUE;
-      //client_local_mobile_set_animation( o, c );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -662,7 +660,6 @@ MOBILE_UPDATE mobile_apply_update(
       o->y = update->y;
       o->x = update->x;
       o->facing = MOBILE_FACING_DOWN;
-      //mobile_set_animation_facing( o, animation_key, MOBILE_FACING_DOWN );
       /* We'll calculate the actual animation frames to use in the per-mode
        * update() function, where we have access to the current camera rotation
        * and stuff like that. */
@@ -694,7 +691,6 @@ MOBILE_UPDATE mobile_apply_update(
       o->y = update->y;
       o->x = update->x;
       o->facing = MOBILE_FACING_LEFT;
-      //mobile_set_animation_facing( o, animation_key, MOBILE_FACING_LEFT );
       /* We'll calculate the actual animation frames to use in the per-mode
        * update() function, where we have access to the current camera rotation
        * and stuff like that. */
@@ -726,7 +722,6 @@ MOBILE_UPDATE mobile_apply_update(
       o->y = update->y;
       o->x = update->x;
       o->facing = MOBILE_FACING_RIGHT;
-      //mobile_set_animation_facing( o, animation_key, MOBILE_FACING_RIGHT );
       /* We'll calculate the actual animation frames to use in the per-mode
        * update() function, where we have access to the current camera rotation
        * and stuff like that. */

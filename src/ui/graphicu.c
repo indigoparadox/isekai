@@ -368,6 +368,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          goto cleanup;
       }
 
+      goto control_optional;
+
    } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
       numbuff = (SCAFFOLD_SIZE*)(control->self.attachment);
       switch( p->character ) {
@@ -389,7 +391,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       }
 
    } else if( UI_CONTROL_TYPE_LIST == control->type ) {
-      numbuff = (SCAFFOLD_SIZE*)(control->self.attachment);
+      numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
       switch( p->character ) {
       case INPUT_ASSIGNMENT_LEFT:
          (*numbuff)--;
@@ -411,6 +413,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       }
    }
 
+control_scancodes:
+
    switch( p->scancode ) {
    case INPUT_SCANCODE_BACKSPACE:
       bstr_result = btrunc( control->text, blength( control->text ) - 1 );
@@ -428,6 +432,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       win->dirty = TRUE;
       goto cleanup;
    }
+
+control_type:
 
    switch( p->character ) {
    /* case INPUT_ASSIGNMENT_ATTACK: */
@@ -505,7 +511,7 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
    SCAFFOLD_SIZE control_w = 0;
    GRAPHICS_RECT control_size = { 0 };
    bstring list_item = NULL;
-   SCAFFOLD_SIZE_SIGNED num,
+   SCAFFOLD_SIZE num,
       i = 0;
 
    if( UI_CONTROL_TYPE_TEXT == control->type ) {
@@ -553,16 +559,6 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       win->grid_pos.w = 0;
       win->grid_pos.h = text.h;
    }
-
-   #if 0
-   if( NULL != control &&
-      (UI_CONTROL_TYPE_BUTTON == control->type || UI_CONTROL_TYPE_SPINNER == control->type)
-   ) {
-      win->grid_previous_button = TRUE;
-   } else {
-      win->grid_previous_button = FALSE;
-   }
-   #endif // 0
 
    if( NULL == control || TRUE == control->new_row ) {
       win->grid_pos.x = UI_WINDOW_MARGIN;

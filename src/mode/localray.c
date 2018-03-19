@@ -116,6 +116,8 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    int d;
    struct MOBILE_SPRITE_DEF* current_frame;
    int stepped_x, stepped_y;
+   int sprite_screen_x;
+   int sprite_screen_w;
 
    if( NULL == o || NULL == o->sprites ) {
       goto cleanup;
@@ -139,7 +141,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    /* This is actually the depth inside the screen, what Z is in 3D. */
    transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y);
 
-   int spriteScreenX = ((int)(g->w / 2) * (1 + transform_x / transform_y));
+   sprite_screen_x = ((int)(g->w / 2) * (1 + transform_x / transform_y));
 
    /* Calculate height of the sprite on screen.
     * Using "transform_y" instead of the real distance prevents fisheye effect. */
@@ -161,12 +163,12 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    }
 
    /* Calculate width of the sprite on the screen. */
-   int spriteWidth = abs( (int)(g->h / (transform_y)));
-   draw_rect.x = -spriteWidth / 2 + spriteScreenX;
+   sprite_screen_w = abs( (int)(g->h / (transform_y)));
+   draw_rect.x = -sprite_screen_w / 2 + sprite_screen_x;
    if( draw_rect.x < 0 ) {
       draw_rect.x = 0;
    }
-   draw_rect.w = spriteWidth / 2 + spriteScreenX;
+   draw_rect.w = sprite_screen_w / 2 + sprite_screen_x;
    if( draw_rect.w >= g->w) {
       draw_rect.w = g->w - 1;
    }
@@ -188,14 +190,14 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
          MOBILE_FACING_LEFT == o->facing && FALSE == o->animation_flipped ||
          MOBILE_FACING_RIGHT == o->facing && FALSE == o->animation_flipped
       ) {
-         stepped_x = (stripe - spriteWidth) + o->steps_remaining;
+         stepped_x = (stripe - sprite_screen_w) + o->steps_remaining;
       } else {
-         stepped_x = (stripe + spriteWidth) - o->steps_remaining;
+         stepped_x = (stripe + sprite_screen_w) - o->steps_remaining;
       }
 
       spritesheet.x =
-         ((int)(256 * (stripe - (-spriteWidth / 2 + spriteScreenX))
-                     * spritesheet.w / spriteWidth) / 256);
+         ((int)(256 * (stripe - (-sprite_screen_w / 2 + sprite_screen_x))
+                     * spritesheet.w / sprite_screen_w) / 256);
 
       /* Select the correct sprite column. */
       spritesheet.x += current_sprite.x;
@@ -338,17 +340,18 @@ static BOOL check_ray_wall_collision(
       }
    }
 
-   //res = vector_iterate( &(twindow->t->layers), mode_pov_raycol_cb, twindow );
-
 cleanup:
    return res;
 }
 
 static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
-//#ifdef TECHNICOLOR_RAYS
+#ifdef TECHNICOLOR_RAYS
    switch( (rand() + 1) % 4 ) {
-//#endif /* TECHNICOLOR_RAYS */
-//   switch( worldMap[x][y] ) {
+#endif /* TECHNICOLOR_RAYS */
+   /* TODO: Wall colors? */
+   return 1 == wall_pos->side ? GRAPHICS_COLOR_WHITE : GRAPHICS_COLOR_GRAY;
+#if 0
+   switch( worldMap[x][y] ) {
       case -1:
          return GRAPHICS_COLOR_DARK_GREEN;
          break;
@@ -363,6 +366,7 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
       default:
          return 1 == wall_pos->side ? GRAPHICS_COLOR_YELLOW : GRAPHICS_COLOR_BROWN;
    }
+#endif /* 0 */
 }
 
 static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
@@ -555,7 +559,7 @@ static BOOL mode_pov_update_view(
 
             /* Ensure we have everything needed to draw the tile. */
             tile = tilemap_get_tile( layer, (int)floor_pos.x, (int)floor_pos.y  );
-            if( 0 > tile ) {
+            if( 0 == tile ) {
                continue;
             }
 
@@ -570,7 +574,7 @@ static BOOL mode_pov_update_view(
                c
             );
             if( NULL == g_tileset ) {
-               //scaffold_print_error( &module, "Unable to draw from tileset: %b", set->def_path );
+               /* Tileset not yet loaded, so fail gracefully. */
                ret_error = TRUE;
                continue;
             }

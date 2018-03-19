@@ -100,8 +100,8 @@ struct UI_CONTROL {
    UI_CONTROL_TYPE type;
    struct UI_WINDOW* owner;
    BOOL borrowed_text_field;
-   SCAFFOLD_SIZE min;
-   SCAFFOLD_SIZE max;
+   SCAFFOLD_SIZE_SIGNED min;
+   SCAFFOLD_SIZE_SIGNED max;
    UI_OPT_STATE new_row;
    bstring* list;
    struct UI_CONTROL* next_control;
