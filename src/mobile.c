@@ -71,8 +71,7 @@ void mobile_free( struct MOBILE* o ) {
 }
 
 void mobile_animation_free( struct MOBILE_ANI_DEF* animation ) {
-   animation->frames.count = 0;
-   vector_cleanup( &(animation->frames) );
+   vector_cleanup_force( &(animation->frames) );
    bdestroy( animation->name );
 }
 
@@ -212,9 +211,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
 
 cleanup:
    if( NULL != tiles_end ) {
-      /* Force thMOBILE_SPRITE_SIZEe count to 0 so we can delete it. */
-      tiles_end->count = 0;
-      vector_cleanup( tiles_end );
+      vector_cleanup_force( tiles_end );
       mem_free( tiles_end );
    }
    return sprite_height_out;
@@ -406,24 +403,6 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       o->sprites
    );
 
-   /*
-   if( mobile_is_local_player( o ) ) {
-      graphics_draw_rect( twindow->g, pix_x, pix_y, o->sprite_width, o->sprite_height, GRAPHICS_COLOR_BLUE );
-   }
-   */
-
-#if 0
-   /* FIXME */
-   pix_y -= o->sprite_height;
-
-   if( 0 < vector_count( &(o->speech_backlog) ) ) {
-      graphics_set_color( twindow->g, GRAPHICS_COLOR_CYAN);
-      graphics_draw_text(
-         twindow->g, pix_x, pix_y, GRAPHICS_TEXT_ALIGN_CENTER,
-         (bstring)vector_get( &(o->speech_backlog), 0 )
-      );
-   }
-#endif
 cleanup:
    return;
 }
@@ -511,8 +490,7 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
 cleanup:
    if( NULL != tiles_end ) {
       /* Force the count to 0 so we can delete it. */
-      tiles_end->count = 0;
-      vector_cleanup( tiles_end );
+      vector_cleanup_force( tiles_end );
       mem_free( tiles_end );
    }
    return update_out;
@@ -592,9 +570,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
 
 cleanup:
    if( NULL != tiles_end ) {
-      /* Force the count to 0 so we can delete it. */
-      tiles_end->count = 0;
-      vector_cleanup( tiles_end );
+      vector_cleanup_force( tiles_end );
       mem_free( tiles_end );
    }
    return steps_inc_out;

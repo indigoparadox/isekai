@@ -145,8 +145,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 cleanup:
    if( NULL != player_spawns) {
       /* These don't have garbage refs, so just free the vector forcibly. */
-      player_spawns->count = 0;
-      vector_free( &player_spawns );
+      vector_free_force( &player_spawns );
    }
    return;
 }
@@ -301,6 +300,7 @@ cleanup:
 
 BOOL channel_is_loaded( struct CHANNEL* l ) {
    BOOL retval = FALSE;
+   SCAFFOLD_SIZE tilesets_count;
 
    if( NULL == l ) {
       goto cleanup;
@@ -326,7 +326,8 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if( 0 >= hashmap_count( &(l->client_or_server->tilesets) ) ) {
+   tilesets_count = hashmap_count( &(l->client_or_server->tilesets) );
+   if( 0 >= tilesets_count ) {
       goto cleanup;
    }
 
@@ -338,10 +339,7 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if(
-      l->client_or_server->tilesets_loaded <
-      hashmap_count( &(l->client_or_server->tilesets) )
-   ) {
+   if( l->client_or_server->tilesets_loaded < tilesets_count ) {
       goto cleanup;
    }
 

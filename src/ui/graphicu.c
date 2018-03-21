@@ -145,8 +145,7 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
       graphics_surface_free( win->element );
       win->element = NULL;
    }
-   win->controls_active.count = 0; /* Force remove. */
-   vector_cleanup( &(win->controls_active) );
+   vector_cleanup_force( &(win->controls_active) );
 }
 
 void ui_window_free( struct UI_WINDOW* win ) {

@@ -44,7 +44,9 @@ typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
    vector_init( v );
 
 void vector_init( struct VECTOR* v );
+void vector_cleanup_force( struct VECTOR* v );
 void vector_cleanup( struct VECTOR* v );
+void vector_free_force( struct VECTOR** v );
 void vector_free( struct VECTOR** v );
 SCAFFOLD_SIZE_SIGNED vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data )
 #ifdef USE_GNUC_EXTENSIONS

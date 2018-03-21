@@ -253,6 +253,7 @@ static void tilemap_layer_draw_tile_debug(
    int bstr_result;
    struct TILEMAP* t = layer->tilemap;
    SCAFFOLD_SIZE set_firstgid = 0;
+   SCAFFOLD_SIZE layers_count;
 
    bnum = bfromcstralloc( 10, "" );
    scaffold_check_null( bnum );
@@ -265,7 +266,8 @@ static void tilemap_layer_draw_tile_debug(
    scaffold_check_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
 
-   if( vector_count( &(t->layers) ) <= tilemap_dt_layer ) {
+   layers_count = vector_count( &(t->layers) );
+   if( layers_count <= tilemap_dt_layer ) {
       tilemap_dt_layer = 0;
    }
 
@@ -277,7 +279,7 @@ static void tilemap_layer_draw_tile_debug(
    tile_info = vector_get( &(set->tiles), gid - 1 );
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_COORDS:
-      if( vector_count( &(t->layers) ) - 1 == layer->z ) {
+      if( layers_count - 1 == layer->z ) {
          bstr_result = bassignformat( bnum, "%d,", tile_x );
          scaffold_check_nonzero( bstr_result );
          graphics_draw_text(
