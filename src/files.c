@@ -137,8 +137,8 @@ SCAFFOLD_SIZE_SIGNED files_write(
       goto write_file;
    }
 
+   /* TODO: Why... are we doing this this way? */
    true_qty = vector_count( path_dirs );
-
    for( path_dirs->count = 1 ; path_dirs->count < true_qty ; path_dirs->count++ ) {
       test_path = bfromcstr( "" );
       scaffold_check_null( test_path );

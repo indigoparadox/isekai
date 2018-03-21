@@ -1464,6 +1464,7 @@ static IRC_COMMAND* irc_dispatch(
    SCAFFOLD_SIZE i;
    bstring cmd_test = NULL; /* Don't free this. */
    IRC_COMMAND* out = NULL;
+   SCAFFOLD_SIZE args_count;
 
    args = bgsplit( line, ' ' );
    scaffold_check_null( args );
@@ -1476,11 +1477,12 @@ static IRC_COMMAND* irc_dispatch(
 #endif /* ENABLE_LOCAL_CLIENT */
    }
 
-   for( i = 0 ; vector_count( args ) > i ; i++ ) {
+   args_count = vector_count( args );
+   for( i = 0 ; args_count > i ; i++ ) {
       bwriteprotect( *((bstring)vector_get( args, i )) );
    }
 
-   for( i = 0 ; i < vector_count( args ) && IRC_LINE_CMD_SEARCH_RANGE > i ; i++ ) {
+   for( i = 0 ; i < args_count && IRC_LINE_CMD_SEARCH_RANGE > i ; i++ ) {
       cmd_test = (bstring)vector_get( args, i );
       for(
          command = &(table[0]);
@@ -1544,7 +1546,7 @@ static IRC_COMMAND* irc_dispatch(
 
 cleanup:
    if( NULL == out ) {
-      for( i = 0 ; vector_count( args ) > i ; i++ ) {
+      for( i = 0 ; args_count > i ; i++ ) {
          bwriteallow( *((bstring)vector_get( args, i )) );
       }
       vector_remove_cb( args, callback_free_strings, NULL );

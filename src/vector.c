@@ -13,6 +13,15 @@ void vector_init( struct VECTOR* v ) {
    v->sentinal = VECTOR_SENTINAL;
 }
 
+void vector_cleanup_force( struct VECTOR* v ) {
+   scaffold_check_null( v );
+   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   v->count = 0;
+   vector_cleanup( v );
+cleanup:
+   return;
+}
+
 void vector_cleanup( struct VECTOR* v ) {
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -24,6 +33,15 @@ void vector_cleanup( struct VECTOR* v ) {
       mem_free( v->data );
    }
 
+cleanup:
+   return;
+}
+
+void vector_free_force( struct VECTOR** v ) {
+   scaffold_check_null( *v );
+   scaffold_assert( VECTOR_SENTINAL == (*v)->sentinal );
+   (*v)->count = 0;
+   vector_free( v );
 cleanup:
    return;
 }
@@ -566,6 +584,7 @@ void* vector_iterate_nolock(
    void* current_iter = NULL;
    SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
+   SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -579,7 +598,8 @@ void* vector_iterate_nolock(
       parent = v;
    }
 
-   for( i = 0 ; vector_count( v ) > i ; i++ ) {
+   v_count = vector_count( v );
+   for( i = 0 ; v_count > i ; i++ ) {
       current_iter = vector_get( v, i );
       idx.value.index = i;
       cb_return = callback( &idx, parent, current_iter, arg );
@@ -637,6 +657,7 @@ struct VECTOR* vector_iterate_v(
    SCAFFOLD_SIZE i;
    struct CONTAINER_IDX idx = { 0 };
    SCAFFOLD_SIZE_SIGNED add_err = 0;
+   SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -651,7 +672,8 @@ struct VECTOR* vector_iterate_v(
    }
 
    /* Linear probing */
-   for( i = 0 ; vector_count( v ) > i ; i++ ) {
+   v_count = vector_count( v );
+   for( i = 0 ; v_count > i ; i++ ) {
       current_iter = vector_get( v, i );
       idx.value.index = i;
       cb_return = callback( &idx, parent, current_iter, arg );
@@ -682,6 +704,7 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    SCAFFOLD_SIZE i;
    VECTOR_SORT_ORDER o;
    BOOL ok = FALSE;
+   SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
@@ -697,7 +720,8 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    vector_lock( v, TRUE );
    ok = TRUE;
 
-   for( i = 1 ; vector_count( v ) > i ; i++ ) {
+   v_count = vector_count( v );
+   for( i = 1 ; v_count > i ; i++ ) {
       current_iter = vector_get( v, i );
       previous_iter = vector_get( v, (i - 1) );
       o = callback( previous_iter, current_iter );

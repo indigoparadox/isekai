@@ -148,8 +148,7 @@ SCAFFOLD_SIZE item_random_sprite_id_of_type(
 cleanup:
    if( NULL != candidates ) {
       /* Sprites are not garbage collected. */
-      candidates->count = 0;
-      vector_cleanup( candidates );
+      vector_cleanup_force( candidates );
       mem_free( candidates );
    }
    return selection;
