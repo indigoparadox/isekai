@@ -273,9 +273,6 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
       goto cleanup;
    } else {
 
-      /* Add some details to c before stowing it. */
-      //connection_assign_remote_name( c->link, c->remote );
-
       server_add_client( s, c );
 
 #ifdef DEBUG
@@ -313,7 +310,6 @@ static void* server_srv_cb(
  * \return TRUE if a command was executed, or FALSE otherwise.
  */
 BOOL server_service_clients( struct SERVER* s ) {
-   //IRC_COMMAND* cmd = NULL;
    BOOL retval = FALSE;
    struct CLIENT* c_stop = NULL;
 
@@ -332,26 +328,7 @@ BOOL server_service_clients( struct SERVER* s ) {
          &module, "Remote client disconnected: %b\n", c_stop->nick
       );
       server_drop_client( s, c_stop->nick );
-      //bdestroy( cmd->line );
-      //mem_free( cmd );
-      //cmd = NULL;
    }
-
-#if 0
-   if( NULL != cmd ) {
-      /* A presumably real command was returned. */
-      retval = TRUE;
-      if( NULL != cmd->callback ) {
-         cmd->callback( cmd->client, cmd->server, cmd->args, cmd->line );
-      } else {
-         scaffold_print_error(
-            &module, "Server: Invalid command: %s\n", bdata( &(cmd->command) )
-         );
-      }
-      irc_command_free( cmd );
-      retval = TRUE;
-   }
-#endif // 0
 
 #ifdef USE_CHUNKS
 

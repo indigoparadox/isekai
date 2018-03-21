@@ -296,7 +296,7 @@ static BOOL loop_connect() {
       ui_control_add( win, &str_cid_connect_nick, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_LIST, TRUE, TRUE, NULL,
+         ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
          -1, -1, -1, -1
       );
       control->list = mode_list;

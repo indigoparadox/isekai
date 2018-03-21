@@ -214,7 +214,7 @@ SCAFFOLD_INLINE uint32_t tilemap_get_tile(
    const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
-   if( 0 > index || vector_count( &(layer->tiles) ) <= index ) {
+   if( vector_count( &(layer->tiles) ) <= index ) {
       return -1;
    }
    return vector_get_scalar( &(layer->tiles), index );

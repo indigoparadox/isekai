@@ -777,28 +777,18 @@ static void datafile_tilemap_parse_layer_ezxml(
    layer->tilemap = t;
    layer->z = layer_index;
 
-   /* TODO: Error checking. */
-   layer->name = bfromcstr( ezxml_attr( xml_layer, "name" ) );
-   //scaffold_check_nonzero( bstr_res );
+   if( NULL != ezxml_attr( xml_layer, "name" ) ) {
+      layer->name = bfromcstr( ezxml_attr( xml_layer, "name" ) );
+      scaffold_check_null( layer->name );
+   } else {
+      layer->name = bfromcstr( "" );
+   }
 
    vector_set( &(t->layers), layer_index, layer, TRUE );
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
    if( layer->height > t->height ) { t->height = layer->height; }
-
-#if 0
-   /* Add to the layers linked list. */
-   if( NULL == t->first_layer ) {
-      t->first_layer = layer;
-   } else {
-      prev_layer = t->first_layer;
-      while( NULL != prev_layer->next_layer ) {
-         prev_layer = prev_layer->next_layer;
-      }
-      prev_layer->next_layer = layer;
-   }
-#endif // 0
 
 cleanup:
    if( SCAFFOLD_ERROR_NONE != scaffold_error ) {

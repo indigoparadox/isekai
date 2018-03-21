@@ -6,6 +6,7 @@
 #include "../ui.h"
 #include "../ipc.h"
 #include "../channel.h"
+#include "../proto.h"
 
 extern bstring client_input_from_ui;
 
