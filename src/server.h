@@ -39,6 +39,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 void server_add_connection( struct SERVER* s, struct CLIENT* n );
 struct CHANNEL* server_get_channel_by_name( struct SERVER* s, bstring nick );
 void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c );
+uint16_t server_get_port( struct SERVER* s );
 struct CLIENT* server_get_client( struct SERVER* s, const bstring nick );
 struct CLIENT* server_get_client_by_ptr( struct SERVER* s, struct CLIENT* c );
 void server_cleanup_client_channels( struct SERVER* s, struct CLIENT* c );

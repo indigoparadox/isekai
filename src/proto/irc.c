@@ -311,9 +311,7 @@ void proto_send_chunk(
    );
 
 cleanup:
-   //if( NULL == h ) {
-      bdestroy( data_sent );
-   //}
+   bdestroy( data_sent );
    return;
 }
 
@@ -577,25 +575,6 @@ static void* irc_callback_reply_who(
    );
    return NULL;
 }
-
-#if 0
-static void irc_server_reply_motd( struct CLIENT* c, struct SERVER* s ) {
-   if( 1 > blength( c->nick ) ) {
-      goto cleanup;
-   }
-
-   if( c->flags & CLIENT_FLAGS_HAVE_MOTD ) {
-      goto cleanup;
-   }
-
-   irc_error( ERR_NOMOTD );
-
-   c->flags |= CLIENT_FLAGS_HAVE_MOTD;
-
-cleanup:
-   return;
-}
-#endif
 
 static void irc_server_user(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
@@ -1071,7 +1050,7 @@ static void irc_server_debugvm(
    l = server_get_channel_by_name( s, lname );
    scaffold_check_null( l );
 
-   // FIXME: channel_vm_start( l, code );
+   /* FIXME: channel_vm_start( l, code ); */
 
 cleanup:
    bdestroy( code );
@@ -1281,7 +1260,6 @@ static void irc_client_item(
    bstring display_name;
    struct ITEM_SPRITESHEET* catalog = NULL;
    bstring catalog_name = NULL;
-   //struct ITEM_SPRITE* sprite = NULL;
 
    irc_detect_malformed( 6, "ITEM", line );
 
@@ -1293,7 +1271,6 @@ static void irc_client_item(
 
    catalog_name = (bstring)vector_get( args, 4 );
    catalog = client_get_catalog( c, catalog_name );
-   //scaffold_check_null_msg( catalog, "Catalog not found on client." );
    if( NULL == catalog ) {
       scaffold_print_debug(
          &module, "Client: Catalog not present in cache: %b\n", catalog_name
@@ -1306,13 +1283,6 @@ static void irc_client_item(
    e->serial = serial;
 
    tilemap_drop_item_in_cache( last_item_cache, e );
-
-   /*
-   scaffold_assert( NULL != catalog->sprites_filename );
-   client_request_file(
-      c, CHUNKER_DATA_TYPE_ITEM_CATALOG_SPRITES, catalog->sprites_filename
-   );
-   */
 
    scaffold_print_debug(
       &module, "Client: Local instance of item updated: %b (%d, %b, %d)\n",
@@ -1416,17 +1386,7 @@ static void irc_client_privmsg(
    /* TODO: Authentication. */
    nick = /* Start at 1 to filter the : */
       bmidstr( line, 1, binchr( line, 0, &scaffold_exclamation_string ) - 1 );
-/*
-   c_sender = channel_get_client_by_name( l, nick );
-   if( NULL != c_sender ) {
-      o = c_sender->puppet;
-      scaffold_check_null( o );
-
-      mobile_speak( o, msg );
-   } else {
-*/
-      backlog_speak( nick, msg );
-/*   } */
+   backlog_speak( nick, msg );
 
 cleanup:
    return;

@@ -371,7 +371,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       goto control_optional;
 
    } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
-      numbuff = (SCAFFOLD_SIZE*)(control->self.attachment);
+      numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
       switch( p->character ) {
       case INPUT_ASSIGNMENT_LEFT:
          (*numbuff)--;
@@ -390,7 +390,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          goto cleanup;
       }
 
-   } else if( UI_CONTROL_TYPE_LIST == control->type ) {
+   } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
       numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
       switch( p->character ) {
       case INPUT_ASSIGNMENT_LEFT:
@@ -517,7 +517,7 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
    if( UI_CONTROL_TYPE_TEXT == control->type ) {
       /* Text boxes are wider than their input. */
       control_w = UI_TEXT_DEF_CONTROL_SIZE + (2 * UI_TEXT_MARGIN);
-   } else if( UI_CONTROL_TYPE_LIST == control->type ) {
+   } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
       while( NULL != control->list[i] ) {
          list_item = control->list[i];
          graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
@@ -829,16 +829,9 @@ static void ui_control_draw_inventory(
    ui_control_auto_size( inv_pane, &bg_rect, win, -1 );
 
    graphics_shrink_rect( &bg_rect, UI_BAR_WIDTH );
-   //bg_rect.y -= UI_WINDOW_GRID_Y_START; /* TODO: Why is this needed? */
 
    ui_draw_rect( win, &bg_rect, GRAPHICS_COLOR_DARK_BLUE, TRUE );
 
-   /*
-   memcpy(
-      &(inv_pane->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
-   );
-   */
-   //inv_pane->self.grid_pos.y += UI_WINDOW_GRID_Y_START;
    inv_pane->self.grid_iter = 0;
    items = inv_pane->self.attachment;
    scaffold_check_null_msg( items, "Item list invalid." );
@@ -951,13 +944,15 @@ static void ui_control_draw_spinner(
    bdestroy( numbuf );
 }
 
-static void ui_control_draw_list(
+static void ui_control_draw_dropdown(
    struct UI_WINDOW* win, struct UI_CONTROL* listbox
 ) {
    GRAPHICS_COLOR fg = UI_BUTTON_FG;
    GRAPHICS* g = win->element;
-   bstring list_item = NULL;;
-   SCAFFOLD_SIZE_SIGNED* num = listbox->self.attachment;
+   bstring list_item = NULL;
+   SCAFFOLD_SIZE_SIGNED* num = NULL;
+
+   num = listbox->self.attachment;
 
    if( listbox == win->active_control ) {
       fg = UI_SELECTED_FG;
@@ -1091,7 +1086,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* i
             case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
             case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
             case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
-            case UI_CONTROL_TYPE_LIST: ui_control_draw_list( win, control ); break;
+            case UI_CONTROL_TYPE_DROPDOWN: ui_control_draw_dropdown( win, control ); break;
             case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
          }
 
