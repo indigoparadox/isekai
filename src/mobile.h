@@ -127,9 +127,7 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
 );
-void mobile_draw_ortho(
-   struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow
-);
+void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GRAPHICS_TILE_WINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
 MOBILE_UPDATE
 mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );

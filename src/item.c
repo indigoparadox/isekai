@@ -83,8 +83,10 @@ static void item_spritesheet_free_final( const struct REF* ref ) {
       vector_cleanup( &(catalog->sprites) );
 
       graphics_surface_free( catalog->sprites_image );
+      catalog->sprites_image = NULL;
 
       bdestroy( catalog->sprites_filename );
+      catalog->sprites_filename = NULL;
 
       mem_free( catalog );
    }
@@ -97,6 +99,7 @@ void item_spritesheet_init(
 ) {
    ref_init( &(catalog->refcount), item_spritesheet_free_final );
    catalog->client_or_server = client_or_server;
+   catalog->sprites_image = NULL;
 }
 
 void item_spritesheet_free( struct ITEM_SPRITESHEET* catalog ) {

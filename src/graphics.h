@@ -150,7 +150,6 @@ typedef struct {
 struct GRAPHICS_TILE_WINDOW {
    struct CLIENT* local_client;
    GRAPHICS* g;            /*!< Graphics element to draw on. */
-   struct TILEMAP* t;
    GFX_COORD_TILE x;        /*!< Window left in tiles. */
    GFX_COORD_TILE y;        /*!< Window top in tiles. */
    GFX_COORD_TILE width;    /*!< Window width in tiles. */

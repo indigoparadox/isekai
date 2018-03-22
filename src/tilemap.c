@@ -380,8 +380,8 @@ static void* tilemap_layer_draw_tile(
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS_RECT tile_tilesheet_pos;
    GRAPHICS_RECT tile_screen_rect;
-   struct TILEMAP* t = twindow->t;
    struct CLIENT* local_client = twindow->local_client;
+   struct TILEMAP* t = local_client->active_t;
    const struct MOBILE* o = local_client->puppet;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
@@ -514,7 +514,7 @@ static void* tilemap_pos_draw_cb(
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    struct TILEMAP_LAYER* layer = NULL;
-   struct TILEMAP* t =  twindow->t;
+   struct TILEMAP* t =  twindow->local_client->active_t;
    int layer_idx = 0;
    int layer_max;
    uint32_t tile;
@@ -534,24 +534,25 @@ static void* tilemap_pos_draw_cb(
 void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
    struct CLIENT* local_client = twindow->local_client;
    struct MOBILE* o = local_client->puppet;
+   struct TILEMAP* t = local_client->active_t;
 
-   if( NULL == twindow->t ) {
+   if( NULL == t ) {
       return;
    }
 
    if(
-      TILEMAP_REDRAW_ALL == twindow->t->redraw_state
+      TILEMAP_REDRAW_ALL == t->redraw_state
 #ifdef DEBUG_TILES
       || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
 #endif /* DEBUG_TILES */
    ) {
-      vector_iterate( &(twindow->t->layers), tilemap_layer_draw_cb, twindow );
+      vector_iterate( &(t->layers), tilemap_layer_draw_cb, twindow );
    } else if(
-      TILEMAP_REDRAW_DIRTY == twindow->t->redraw_state &&
-      0 < vector_count( &(twindow->t->dirty_tiles ) )
+      TILEMAP_REDRAW_DIRTY == t->redraw_state &&
+      0 < vector_count( &(t->dirty_tiles ) )
    ) {
       vector_iterate(
-         &(twindow->t->dirty_tiles), tilemap_pos_draw_cb, twindow
+         &(t->dirty_tiles), tilemap_pos_draw_cb, twindow
       );
    }
 
@@ -559,14 +560,14 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
     * tiles.                                                                  */
    if(
       0 != o->steps_remaining &&
-      TILEMAP_REDRAW_ALL != twindow->t->redraw_state
+      TILEMAP_REDRAW_ALL != t->redraw_state
    ) {
-      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_ALL );
+      tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if(
       0 == o->steps_remaining &&
-      TILEMAP_REDRAW_DIRTY != twindow->t->redraw_state
+      TILEMAP_REDRAW_DIRTY != t->redraw_state
    ) {
-      tilemap_set_redraw_state( twindow->t, TILEMAP_REDRAW_DIRTY );
+      tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
    }
 
    /* Draw masks. */
@@ -604,7 +605,7 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
    if( x < ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
    } else if( x >= t->width - ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
@@ -622,7 +623,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
    GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
    if(
       y < ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y)
    ) {
@@ -673,7 +674,7 @@ void tilemap_update_window_ortho(
    GFX_COORD_TILE
       border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
    TILEMAP_EXCLUSION exclusion;
    struct TILEMAP_TILESET* smallest_tileset = NULL;
    struct TILEMAP_POSITION temp = { 0 };
@@ -770,7 +771,7 @@ void tilemap_update_window_ortho(
 
    /* Only calculate these when window moves and store them. */
    twindow->max_x = twindow->x + twindow->width + border_x < t->width ?
-      twindow->x + twindow->width + border_x : twindow->t->width;
+      twindow->x + twindow->width + border_x : t->width;
    twindow->max_y = twindow->y + twindow->height + border_y < t->height ?
       twindow->y + twindow->height + border_y : t->height;
 

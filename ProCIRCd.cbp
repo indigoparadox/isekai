@@ -161,6 +161,8 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DUSE_RANDOM_PORT" />
+					<Add option="-DUSE_RAYCASTING" />
+					<Add option="-DUSE_CONNECT_DIALOG" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -780,7 +782,6 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 			<Add option="-DBACKLOG_PRESENT" />
-			<Add option="-DHASHMAP_NO_LOCK_REMOVE" />
 			<Add option="-DUSE_ITERATOR_CACHE" />
 		</Compiler>
 		<Unit filename="procircd.def">

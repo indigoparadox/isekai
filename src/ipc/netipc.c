@@ -139,7 +139,7 @@ BOOL ipc_connected( struct CONNECTION* n ) {
 #ifdef USE_MBED_TLS
 #error TODO
 #else
-   if( 0 < n->socket ) {
+   if( NULL != n && 0 < n->socket ) {
       return TRUE;
    } else {
       return FALSE;
@@ -412,6 +412,9 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    char read_char = '\0';
 
    while( '\n' != read_char ) {
+      if( NULL == n ) {
+         break;
+      }
       last_read_count = recv( n->socket, &read_char, 1, 0 );
 
       if( 0 == last_read_count ) {
@@ -448,6 +451,10 @@ IPC_END ipc_get_type( struct CONNECTION* n ) {
 }
 
 BOOL ipc_is_local_client( struct CONNECTION* n ) {
+   if( NULL == n ) {
+      /* The local client wouldn't ever be at this point. */
+      return FALSE;
+   }
    return n->local_client;
 }
 

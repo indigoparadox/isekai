@@ -413,7 +413,7 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
       /* The delete callback should call the object-specific free() function, *
        * which decreases its refcount naturally. So there's no need to do it  *
        * manually here.                                                       */
-      if( FALSE != callback( NULL, v, v->data[i], arg ) ) {
+      if( NULL == callback || FALSE != callback( NULL, v, v->data[i], arg ) ) {
          removed++;
          for( j = i ; v->count - 1 > j ; j++ ) {
             v->data[j] = v->data[j + 1];
@@ -435,6 +435,10 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
 cleanup:
    scaffold_assert( 0 == v->lock_count );
    return removed;
+}
+
+void vector_remove_all( struct VECTOR* v ) {
+   return vector_remove_cb( v, NULL, NULL );
 }
 
 void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {

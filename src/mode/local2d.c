@@ -42,7 +42,7 @@ static void* mode_topdown_draw_mobile_cb(
       mode_topdown_mobile_set_animation( o, twindow->local_client );
    }
    mobile_animate( o );
-   mobile_draw_ortho( o, twindow );
+   mobile_draw_ortho( o, twindow->local_client, twindow );
 
    return NULL;
 }
@@ -216,6 +216,7 @@ void mode_topdown_free( struct CLIENT* c ) {
       TRUE == ipc_is_local_client( c->link ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
-      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+      /* FIXME: This causes crash on re-login. */
+      //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 }
