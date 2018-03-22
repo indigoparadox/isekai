@@ -64,9 +64,11 @@ void ui_cleanup( struct UI* ui ) {
    vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
    */
 
+   vector_lock( &(ui->windows), TRUE );
    while( 0 < vector_count( &(ui->windows) ) ) {
       ui_window_pop( ui );
    }
+   vector_lock( &(ui->windows), FALSE );
 
    vector_cleanup( &(ui->windows) );
 }
@@ -325,7 +327,9 @@ void ui_window_pop( struct UI* ui ) {
    scaffold_assert( &global_ui == win->ui );
 
    ui_window_free( win );
+   vector_lock( &(ui->windows), FALSE );
    vector_remove( &(ui->windows), 0);
+   vector_lock( &(ui->windows), TRUE );
 
 cleanup:
    #ifdef DEBUG

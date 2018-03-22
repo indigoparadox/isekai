@@ -760,7 +760,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    adp.callback = callback;
    adp.arg = arg;
 
-   vector_iterate_v( &(m->iterators), hashvector_search_cb, m, &adp );
+   found = vector_iterate_v( &(m->iterators), hashvector_search_cb, m, &adp );
 #else
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
@@ -850,6 +850,10 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
       goto cleanup; /* Quietly. */
    }
 
+   if( NULL == m->data ) {
+      goto cleanup; /* Quietly. */
+   }
+
    idx.type = CONTAINER_IDX_STRING;
 
    /* Linear probing */
@@ -857,29 +861,31 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
          idx.value.key = m->data[i].key;
-         if( FALSE != callback( &idx, m, data, arg ) ) {
+         if( NULL == callback || FALSE != callback( &idx, m, data, arg ) ) {
 
 #ifdef USE_ITERATOR_CACHE
-            iterator_index = m->data[i].iterator_index;
+            /* Borrow e_iterator to break this into two lines for easier debugging. */
+            e_iterator = &(m->data[i]);
+            iterator_index = e_iterator->iterator_index;
 #endif /* USE_ITERATOR_CACHE */
 
             if( TRUE == hashmap_remove_internal( m, &(m->data[i]) ) ) {
                removed++;
-            }
 
 #ifdef USE_ITERATOR_CACHE
-            /* Tighten up the slack in the iterator order. */
-            vector_lock( &(m->iterators), TRUE );
-            for(
-               j = iterator_index ;
-               vector_count( &(m->iterators) ) > j ;
-               j++
-            ) {
-               e_iterator = ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ));
-               e_iterator->iterator_index--;
-            }
-            vector_lock( &(m->iterators), FALSE );
+               /* Tighten up the slack in the iterator order. */
+               vector_lock( &(m->iterators), TRUE );
+               for(
+                  j = iterator_index ;
+                  vector_count( &(m->iterators) ) > j ;
+                  j++
+               ) {
+                  e_iterator = ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ));
+                  e_iterator->iterator_index--;
+               }
+               vector_lock( &(m->iterators), FALSE );
 #endif /* USE_ITERATOR_CACHE */
+            }
          }
       }
    }
@@ -941,21 +947,21 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
 
             if( TRUE == hashmap_remove_internal( m, &(m->data[curr]) ) ) {
                removed++;
-            }
 
 #ifdef USE_ITERATOR_CACHE
-            /* Tighten up the slack in the iterator order. */
-            vector_lock( &(m->iterators), TRUE );
-            for(
-               j = iterator_index ;
-               vector_count( &(m->iterators) ) > j ;
-               j++
-            ) {
-               ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ))
-                  ->iterator_index--;
-            }
-            vector_lock( &(m->iterators), FALSE );
+               /* Tighten up the slack in the iterator order. */
+               vector_lock( &(m->iterators), TRUE );
+               for(
+                  j = iterator_index ;
+                  vector_count( &(m->iterators) ) > j ;
+                  j++
+               ) {
+                  ((struct HASHMAP_ELEMENT*)vector_get( &(m->iterators), j ))
+                     ->iterator_index--;
+               }
+               vector_lock( &(m->iterators), FALSE );
 #endif /* USE_ITERATOR_CACHE */
+            }
 
             goto cleanup;
          }
@@ -972,6 +978,10 @@ cleanup:
    hashmap_verify_size( m );
 #endif /* DEBUG */
    return removed;
+}
+
+SCAFFOLD_SIZE hashmap_remove_all( struct HASHMAP* m ) {
+   return hashmap_remove_cb( m, NULL, NULL );
 }
 
 /* Deallocate the hashmap */

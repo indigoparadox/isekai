@@ -289,7 +289,7 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
    return steps_out;
 }
 
-void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow ) {
+void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GRAPHICS_TILE_WINDOW* twindow ) {
    GFX_COORD_PIXEL
       pix_x,
       pix_y,
@@ -297,7 +297,6 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
       steps_remaining_y;
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
    struct MOBILE* o_player = NULL;
-   struct CLIENT* local_client = twindow->local_client;
    GRAPHICS_RECT sprite_rect;
 
 #ifdef DEBUG_TILES
@@ -392,8 +391,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct GRAPHICS_TILE_WINDOW* twindow )
    );
 
    /* Add dirty tiles to list before drawing. */
-   tilemap_add_dirty_tile( twindow->t, o->x, o->y );
-   tilemap_add_dirty_tile( twindow->t, o->prev_x, o->prev_y );
+   tilemap_add_dirty_tile( local_client->active_t, o->x, o->y );
+   tilemap_add_dirty_tile( local_client->active_t, o->prev_x, o->prev_y );
 
    graphics_blit_partial(
       twindow->g,

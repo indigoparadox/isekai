@@ -17,6 +17,30 @@
 
 bstring client_input_from_ui = NULL;
 
+static BOOL callback_remove_chunkers(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+   struct CHUNKER* h = (struct CHUNKER*)iter;
+
+   client_handle_finished_chunker( c, h );
+
+   return TRUE;
+}
+
+static BOOL callback_remove_items(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+   struct ITEM* e = (struct ITEM*)iter;
+
+   if( NULL != e ) {
+      item_free( e );
+   }
+
+   return TRUE;
+}
+
 static void client_cleanup( const struct REF *ref ) {
    struct CLIENT* c =
       (struct CLIENT*)scaffold_container_of( ref, struct CLIENT, refcount );
@@ -29,7 +53,7 @@ static void client_cleanup( const struct REF *ref ) {
    bdestroy( c->username );
    hashmap_cleanup( &(c->sprites) );
 
-   /* client_stop( c ); */
+   client_stop( c );
 
    hashmap_cleanup( &(c->chunkers) );
    vector_cleanup( &(c->delayed_files) );
@@ -40,6 +64,12 @@ static void client_cleanup( const struct REF *ref ) {
 
    hashmap_remove_cb( &(c->item_catalogs), callback_free_catalogs, NULL );
    hashmap_cleanup( &(c->item_catalogs) );
+
+   vector_remove_cb( &(c->unique_items), callback_remove_items, NULL );
+   vector_cleanup( &(c->unique_items ) );
+
+   /* vector_remove_cb( &(c->chunker_removal_queue), callback_free_chunkers, c );
+   vector_cleanup( &(c->chunker_removal_queue) ); */
 
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
@@ -58,6 +88,7 @@ void client_init( struct CLIENT* c ) {
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
+   //vector_init( &(c->chunker_removal_queue) );
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -79,13 +110,24 @@ void client_init( struct CLIENT* c ) {
 BOOL client_free_from_server( struct CLIENT* c ) {
    /* Kind of a hack, but make sure "running" is set to true to fool the      *
     * client_stop() call that comes later.                                    */
-   c->running = TRUE;
-   client_cleanup( &(c->refcount) );
+   //c->running = TRUE;
+   //client_cleanup( &(c->refcount) );
    return TRUE;
 }
 
 BOOL client_free( struct CLIENT* c ) {
    return refcount_dec( c, "client" );
+}
+
+void client_set_active_t( struct CLIENT* c, const struct TILEMAP* t ) {
+   if( NULL != c->active_t ) { /* Take care of existing map before anything. */
+      tilemap_free( c->active_t );
+      c->active_t = NULL;
+   }
+   if( NULL != t ) {
+      refcount_inc( t, "tilemap" ); /* Add first, to avoid deletion. */
+   }
+   c->active_t = t; /* Assign to client last, to activate. */
 }
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
@@ -129,6 +171,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    static bstring pos = NULL;
 #endif /* DEBUG_TILES */
    BOOL keep_going = FALSE;
+   struct VECTOR* chunker_removal_queue = NULL;
 
    scaffold_set_client();
 
@@ -163,7 +206,11 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    /* Deal with chunkers that will never receive blocks that are finished via
     * their cache.
     */
-   hashmap_iterate( &(c->chunkers), callback_proc_client_chunkers, c );
+   chunker_removal_queue = hashmap_iterate_v( &(c->chunkers), callback_proc_client_chunkers, c );
+   if( NULL != chunker_removal_queue ) {
+      vector_remove_cb( chunker_removal_queue, callback_remove_chunkers, c );
+      vector_free( &chunker_removal_queue );
+   }
 #endif /* USE_CHUNKS */
 
 cleanup:
@@ -219,6 +266,7 @@ void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
+   SCAFFOLD_SIZE test_count = 0;
 
    scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
@@ -255,12 +303,47 @@ void client_stop( struct CLIENT* c ) {
    proto_empty_buffer( c );
 
    client_clear_puppet( c );
+   client_set_active_t( c, NULL );
 #ifdef ENABLE_LOCAL_CLIENT
-   client_local_free( c );
+   if( TRUE == ipc_is_local_client( c->link ) ) {
+      client_local_free( c );
+      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+      hashmap_remove_all( &(c->tilesets) );
+      hashmap_remove_all( &(c->item_catalogs) );
+      vector_remove_all( &(c->unique_items) );
+   }
 #endif /* ENABLE_LOCAL_CLIENT */
 
    scaffold_assert( FALSE == ipc_connected( c->link ) );
    c->running = FALSE;
+
+#ifdef DEBUG
+
+   if( TRUE == ipc_is_local_client( c->link ) ) {
+      scaffold_assert( FALSE == c->running );
+
+      test_count = hashmap_count( &(c->channels) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->sprites) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->chunkers) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = vector_count( &(c->delayed_files) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->tilesets) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->item_catalogs) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = vector_count( &(c->unique_items) );
+      scaffold_assert( 0 == test_count );
+   }
+#endif // DEBUG
 
 cleanup:
    bdestroy( buffer );

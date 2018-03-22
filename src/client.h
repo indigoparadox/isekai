@@ -50,7 +50,7 @@ struct CLIENT {
    struct HASHMAP channels; /*!< All channels the client is in now, or all
                              *   channels available if this is a server.
                              */
-   struct HASHMAP chunkers;
+
    struct VECTOR delayed_files;
    struct MOBILE* puppet;
    struct HASHMAP sprites; /*!< Contains sprites for all mobiles/items this
@@ -62,6 +62,12 @@ struct CLIENT {
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
    MODE gfx_mode;
+   struct TILEMAP* active_t;
+
+#ifdef USE_CHUNKS
+   struct HASHMAP chunkers;
+   //struct VECTOR chunker_removal_queue;
+#endif /* USE_CHUNKS */
 
 #ifndef DISABLE_MODE_POV
    GFX_DELTA cam_pos;

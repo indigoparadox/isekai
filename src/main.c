@@ -187,8 +187,8 @@ static BOOL loop_game() {
 #endif /* USE_NETWORK */
       goto cleanup;
 
-   } else if( NULL == twindow->t ) {
-      twindow->t = &(l->tilemap);
+   } else if( NULL == main_client->active_t ) {
+      client_set_active_t( main_client, &(l->tilemap) );
       client_local_update( main_client, l, twindow );
    }
 
@@ -202,7 +202,7 @@ static BOOL loop_game() {
    if(
       0 != main_client->puppet->steps_remaining ||
       twindow->max_x == twindow->min_x ||
-      TILEMAP_REDRAW_ALL == twindow->t->redraw_state
+      TILEMAP_REDRAW_ALL == main_client->active_t->redraw_state
    ) {
       tilemap_update_window_ortho(
          twindow, main_client->puppet->x, main_client->puppet->y
@@ -415,7 +415,7 @@ static BOOL loop_master() {
       twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
       twindow->g = g_screen;
       twindow->local_client = main_client;
-      twindow->t = NULL;
+      client_set_active_t( main_client, NULL );
       proto_client_join( main_client, &str_default_channel );
       retval = TRUE;
 

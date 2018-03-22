@@ -263,7 +263,7 @@ static
 void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct GFX_RAY_WALL* pos = (struct GFX_RAY_WALL*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    int i;
 
@@ -278,7 +278,7 @@ static void* mode_pov_mob_calc_dist_cb(
 ) {
    struct MOBILE* m = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
    struct CLIENT* c = twindow->local_client;
 
    scaffold_check_null( t );
@@ -299,7 +299,7 @@ static void* mode_pov_mob_sort_dist_cb(
 ) {
    struct MOBILE* m = (struct MOBILE*)iter;
    struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->t;
+   struct TILEMAP* t = twindow->local_client->active_t;
 
    scaffold_check_null( t );
 
@@ -325,7 +325,7 @@ static BOOL check_ray_wall_collision(
       goto cleanup;
    }
 
-   set = tilemap_get_tileset( twindow->t, tile, NULL );
+   set = tilemap_get_tileset( twindow->local_client->active_t, tile, NULL );
    if( NULL == set ) {
       goto cleanup;
    }
@@ -627,7 +627,7 @@ void mode_pov_draw(
       player->facing != last.facing
    ) {
       draw_failed = mode_pov_update_view(
-         ray_view, player->x, player->y, player->facing, twindow->t, twindow->local_client
+         ray_view, player->x, player->y, player->facing, c->active_t, c
       );
       last.x = player->x;
       last.y = player->y;

@@ -450,8 +450,10 @@ void* callback_proc_client_chunkers(
          proto_abort_chunker( c, h );
       }
 
-      client_handle_finished_chunker( c, h );
+      return h;
    }
+
+   return NULL;
 }
 
 #endif /* USE_CHUNKS */
@@ -692,21 +694,6 @@ void* callback_search_tilesets_small(
    return NULL;
 }
 
-/*
-void* callback_load_delayed_tilesets(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-   GRAPHICS* g_tileset = (GRAPHICS*)iter;
-
-   if(
-      NULL == iter &&
-      NULL == hashmap_get( &(c->chunkers), idx->value.key )
-   ) {
-      client_request_file( c, CHUNKER_DATA_TYPE_TILESET_IMG, idx->value.key );
-}
-*/
-
 void* callback_search_tileset_img_gid(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
@@ -895,7 +882,7 @@ BOOL callback_free_clients( struct CONTAINER_IDX* idx, void* parent, void* iter,
       scaffold_print_debug( &module, "Freeing client: %p\n", c );
 #endif /* DEBUG_VERBOSE */
       /* This is just a refdec. */
-      client_free( c );
+      //client_free( c );
       return TRUE;
    }
    return FALSE;
@@ -918,6 +905,17 @@ BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* parent, void* iter
    bstring name = (bstring)arg;
 
    if( NULL == arg || 0 == bstrcmp( l->name, name ) ) {
+
+      /* Free channel constituents, first. */
+      /* if( HASHMAP_SENTINAL == l->clients.sentinal ) {
+         hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
+         hashmap_cleanup( &(l->clients) );
+      } */
+      if( VECTOR_SENTINAL == l->mobiles.sentinal ) {
+         vector_remove_cb( &(l->mobiles), callback_free_mobiles, NULL );
+         vector_cleanup( &(l->mobiles) );
+      }
+
       channel_free( l );
       return TRUE;
    }
@@ -939,6 +937,9 @@ BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* parent, void
 BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
+   if( NULL == 0 ) {
+      return TRUE;
+   }
    if( NULL == arg || *serial == o->serial ) {
       mobile_free( o );
       return TRUE;
@@ -958,7 +959,7 @@ BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* parent, void* iter
 BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
-      item_sprite_free( sprite );
+      //item_sprite_free( sprite );
       return TRUE;
    }
    return FALSE;
@@ -967,7 +968,7 @@ BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* parent, void* iter,
 BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
-      item_spritesheet_free( cat );
+      //item_spritesheet_free( cat );
       return TRUE;
    }
    return FALSE;

@@ -32,11 +32,9 @@ static void channel_free_final( const struct REF *ref ) {
    vm_channel_end( l );
    #endif /* USE_VM */
 
-   /* Actually free stuff. */
-   hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
-   hashmap_cleanup( &(l->clients) );
-   vector_remove_cb( &(l->mobiles), callback_free_mobiles, NULL );
-   vector_cleanup( &(l->mobiles) );
+   /* These need to be freed first! */
+   scaffold_assert( 0 == hashmap_count( &(l->clients) ) );
+   scaffold_assert( 0 == vector_count( &(l->mobiles) ) );
 
    bdestroy( l->name );
    bdestroy( l->topic );
