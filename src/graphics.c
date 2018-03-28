@@ -338,19 +338,22 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 
 #ifdef RAYCAST_OLD_DOUBLE
 
+#if 0
+
 void graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
    const GRAPHICS_DELTA* wall_map_pos, const GRAPHICS* g
 ) {
-   double wall_x_hit; /* Where, exactly, the wall was hit. */
+   //double wall_x_hit; /* Where, exactly, the wall was hit. */
 
    if( 0 == wall_map_pos->side ) {
-      wall_x_hit = cam_pos->precise_y + wall_map_pos->perpen_dist * ray->direction_y;
+      wall_map_pos->stripe_x_hit = cam_pos->precise_y + wall_map_pos->perpen_dist * ray->direction_y;
    } else {
-      wall_x_hit = cam_pos->precise_x + wall_map_pos->perpen_dist * ray->direction_x;
+      wall_map_pos->stripe_x_hit = cam_pos->precise_x + wall_map_pos->perpen_dist * ray->direction_x;
    }
-   wall_x_hit -= floor( wall_x_hit );
+   wall_map_pos->stripe_x_hit -= floor( wall_map_pos->stripe_x_hit );
 
+   /*
    if( wall_map_pos->side == 0 && 0 < ray->direction_x ) {
       floor_pos->wall_x = wall_map_pos->map_x;
       floor_pos->wall_y = wall_map_pos->map_y + wall_x_hit;
@@ -364,9 +367,12 @@ void graphics_floorcast_create(
       floor_pos->wall_x = wall_map_pos->map_x + wall_x_hit;
       floor_pos->wall_y = wall_map_pos->map_y + 1.0;
    }
+   */
 
    //return floor_pos;
 }
+
+#endif // 0
 
 /** \brief
  *
@@ -378,17 +384,34 @@ void graphics_floorcast_create(
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
-   const GRAPHICS* g
+   const GRAPHICS_RAY* ray, const GRAPHICS* g
 ) {
-   double current_dist;
+   double current_dist,
+      wall_x,
+      wall_y;
 
+   /* Grab the distance and a weight factor to help below. */
    current_dist = g->h / (2.0 * y - g->h);
-
    floor_pos->weight = current_dist / wall_map_pos->perpen_dist;
 
-   floor_pos->x = floor_pos->weight * floor_pos->wall_x +
+   /* Figure out the precise spot on the texture to copy. */
+   if( wall_map_pos->side == 0 && 0 < ray->direction_x ) {
+      wall_x = wall_map_pos->map_x;
+      wall_y = wall_map_pos->map_y + wall_map_pos->stripe_x_hit;
+   } else if( 0 == wall_map_pos->side && 0 > ray->direction_x ) {
+      wall_x = wall_map_pos->map_x + 1.0;
+      wall_y = wall_map_pos->map_y + wall_map_pos->stripe_x_hit;
+   } else if( 1 == wall_map_pos->side && 0 < ray->direction_y ) {
+      wall_x = wall_map_pos->map_x + wall_map_pos->stripe_x_hit;
+      wall_y = wall_map_pos->map_y;
+   } else {
+      wall_x = wall_map_pos->map_x + wall_map_pos->stripe_x_hit;
+      wall_y = wall_map_pos->map_y + 1.0;
+   }
+
+   floor_pos->x = floor_pos->weight * wall_x +
       (1.0 - floor_pos->weight) * cam_pos->precise_x;
-   floor_pos->y = floor_pos->weight * floor_pos->wall_y +
+   floor_pos->y = floor_pos->weight * wall_y +
       (1.0 - floor_pos->weight) * cam_pos->precise_y;
 
    floor_pos->tex_x =
@@ -426,6 +449,8 @@ GFX_COORD_FPP graphics_divide_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b )
 
    return value_out;
 }
+
+#if 0
 
 void graphics_raycast_create(
    GRAPHICS_RAY_FPP* ray, GFX_COORD_PIXEL stripe,
@@ -614,6 +639,8 @@ void graphics_raycast_floor_texture(
       (fp_floor_spot_y * GRAPHICS_SPRITE_HEIGHT) % GRAPHICS_SPRITE_HEIGHT );
 }
 
+ #endif // 0
+
 #ifdef RAYCAST_OLD_DOUBLE
 
 void graphics_raycast_wall_create(
@@ -657,8 +684,6 @@ void graphics_raycast_wall_create(
       wall_pos->side_dist_y =
          (cam_map_pos_y + 1.0 - cam_pos->precise_y) * ray->delta_dist_y;
    }
-
-   return ray;
 }
 
 #if 0
@@ -767,6 +792,15 @@ void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* r
       dist_tmp = point->map_y - ray->origin_y + (-1 - ray->step_y) / 2;
       point->perpen_dist = dist_tmp / ray->direction_y;
    }
+
+   /* Figure out the precise pixel on the wall hit by this stripe, for
+    * texture-mapping purposes. */
+   if( 0 == point->side ) {
+      point->stripe_x_hit = ray->origin_x + point->perpen_dist * ray->direction_y;
+   } else {
+      point->stripe_x_hit = ray->origin_x + point->perpen_dist * ray->direction_x;
+   }
+   point->stripe_x_hit -= floor( point->stripe_x_hit );
 }
 
 #endif /* RAYCAST_OLD_DOUBLE */
