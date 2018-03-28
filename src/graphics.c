@@ -338,8 +338,8 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 
 #ifdef RAYCAST_OLD_DOUBLE
 
-GFX_RAY_FLOOR* graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
+void graphics_floorcast_create(
+   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GFX_DELTA* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 ) {
    double wall_x_hit; /* Where, exactly, the wall was hit. */
@@ -375,7 +375,7 @@ GFX_RAY_FLOOR* graphics_floorcast_create(
  * \return
  *
  */
-GFX_RAY_FLOOR* graphics_floorcast_throw(
+void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
    const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
    const GRAPHICS* g
@@ -616,8 +616,8 @@ void graphics_raycast_floor_texture(
 
 #ifdef RAYCAST_OLD_DOUBLE
 
-GFX_RAY* graphics_raycast_wall_create(
-   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+void graphics_raycast_wall_create(
+   GRAPHICS_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
@@ -656,7 +656,7 @@ GFX_RAY* graphics_raycast_wall_create(
 }
 
 int graphics_raycast_wall_throw(
-   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
+   GRAPHICS_RAY* ray, GFX_RAY_WALL* wall_pos,
    const GFX_DELTA* cam_pos, const GRAPHICS* g,
    BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
 ) {
@@ -709,7 +709,7 @@ int graphics_raycast_wall_throw(
    return (int)(g->h / wall_pos->perpen_dist);
 }
 
-void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
+void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) {
    /* Jump to next map square, OR in x-direction, OR in y-direction. */
    if( ray->side_dist_x < ray->side_dist_y ) {
       ray->side_dist_x += ray->delta_dist_x;

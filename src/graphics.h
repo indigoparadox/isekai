@@ -129,6 +129,7 @@ typedef struct {
    GFX_COORD_PIXEL fp_h;
 } GRAPHICS_RECT_FPP;
 
+#if 0
 typedef struct {
    double direction_x;
    double direction_y;
@@ -143,6 +144,7 @@ typedef struct {
    BOOL infinite_dist;
    int steps;
 } GFX_RAY;
+#endif // 0
 
 #ifndef DISABLE_MODE_POV
 
@@ -165,6 +167,27 @@ typedef enum {
    RAY_SIDE_NORTH_SOUTH,
    RAY_SIDE_EAST_WEST
 } GRAPHICS_RAY_SIDE;
+
+typedef struct {
+   double direction_x;
+   double direction_y;
+   /* Length of ray from one side to next x or y-side. */
+   double delta_dist_x;
+   double delta_dist_y;
+   /* Length of ray to next x or y-side. */
+   double side_dist_x;
+   double side_dist_y;
+   int step_x;
+   int step_y;
+   double perpen_dist;
+   BOOL infinite_dist;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
+   GFX_COORD_TILE map_w;
+   GFX_COORD_TILE map_h;
+   int steps;
+   GRAPHICS_RAY_SIDE side;
+} GRAPHICS_RAY;
 
 typedef struct {
    GFX_COORD_FPP fp_direction_x;
@@ -355,19 +378,19 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 
 #ifndef DISABLE_MODE_POV
 
-GFX_RAY* graphics_raycast_wall_create(
-   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+void graphics_raycast_wall_create(
+   GRAPHICS_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
-void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray );
+void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray );
 double graphics_raycast_get_distance(
-   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GFX_RAY* ray
+   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GRAPHICS_RAY* ray
 );
-GFX_RAY_FLOOR* graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
+void graphics_floorcast_create(
+   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GFX_DELTA* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 );
-GFX_RAY_FLOOR* graphics_floorcast_throw(
+void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
    const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
    const GRAPHICS* g
