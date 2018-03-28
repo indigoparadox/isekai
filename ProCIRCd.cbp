@@ -415,6 +415,7 @@
 					<Add option="-Winline" />
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
+					<Add option="-Wunused" />
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-std=gnu99" />
@@ -441,6 +442,8 @@
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DUSE_RAYCASTING" />
 					<Add option="-DxRAY_WIREFRAME" />
+					<Add option="-DRAYCAST_OLD_DOUBLE" />
+					<Add option="-DRAYCAST_FOG" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
