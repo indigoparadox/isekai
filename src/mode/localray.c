@@ -460,7 +460,7 @@ static BOOL mode_pov_update_view(
    struct INPUT p;
    int done = 0;
    GFX_RAY_WALL wall_map_pos; /* The position of the found wall. */
-   GFX_RAY ray;
+   GRAPHICS_RAY ray;
    GFX_RAY_FLOOR floor_pos;
    int line_height;
    struct TILEMAP_TILESET* set;
@@ -478,9 +478,6 @@ static BOOL mode_pov_update_view(
    BOOL ret_error = FALSE;
 
    scaffold_check_null( t );
-
-   c->cam_pos.x = x;
-   c->cam_pos.y = y;
 
    if( NULL == c->z_buffer ) {
       c->z_buffer = calloc( g->w, sizeof( double ) );
