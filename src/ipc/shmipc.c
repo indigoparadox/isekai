@@ -47,6 +47,10 @@ void ipc_stop( struct CONNECTION* n ) {
 IPC_END ipc_get_type( struct CONNECTION* n ) {
 }
 
+uint16_t ipc_get_port( struct CONNECTION* n ) {
+   return 0;
+}
+
 BOOL ipc_is_local_client( struct CONNECTION* n ) {
 }
 

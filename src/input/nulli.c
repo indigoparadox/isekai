@@ -10,5 +10,8 @@ void input_get_event( struct INPUT* input ) {
    return;
 }
 
+void input_clear_buffer( struct INPUT* input ) {
+}
+
 void input_shutdown( struct INPUT* input ) {
 }

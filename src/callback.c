@@ -702,12 +702,15 @@ void* callback_search_tileset_img_gid(
 
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
+#ifdef USE_CHUNKS
    if(
       NULL == iter &&
       NULL == hashmap_get( &(c->chunkers), idx->value.key )
    ) {
       client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
-   } else if( NULL != iter ) {
+   } else
+#endif /* USE_CHUNKS */
+   if( NULL != iter ) {
       return iter;
    }
 
@@ -927,7 +930,7 @@ BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* parent, void
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    if( 0 >= hashmap_count( &(l->clients) ) ) {
-      channel_free( l );
+      //channel_free( l );
       return TRUE;
    }
 

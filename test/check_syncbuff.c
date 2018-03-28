@@ -3,7 +3,7 @@
 #include <check.h>
 #include <stdio.h>
 
-#include "../src/ipc/syncbuff.h"
+//#include "../src/ipc/syncbuff.h"
 #include "check_data.h"
 
 extern struct tagbstring str_key_also1;
@@ -14,8 +14,9 @@ void check_syncbuff_setup_unchecked() {
 }
 
 void check_syncbuff_setup_checked() {
-   syncbuff_listen();
-   syncbuff_connect();
+   ipc_setup();
+   ipc_listen();
+   ipc_connect();
 }
 
 void check_syncbuff_teardown_checked() {
@@ -38,7 +39,7 @@ START_TEST( test_syncbuff_write_to_server ) {
    res = ipc_write( ipc_test, &str_key_also1, FALSE );
    ck_assert_int_eq( res, str_key_also1.slen );
    ck_assert_int_eq( 1, syncbuff_get_count( FALSE ) );
-   res = syncbuff_write( ipc_test, &str_key_also2, FALSE );
+   res = ipc_write( ipc_test, &str_key_also2, FALSE );
    ck_assert_int_eq( res, str_key_also2.slen );
    ck_assert_int_eq( 2, syncbuff_get_count( FALSE ) );
 
@@ -56,9 +57,9 @@ START_TEST( test_syncbuff_write_to_client ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = syncbuff_write( ipc_test, &str_key_also1, TRUE );
+   res = ipc_write( ipc_test, &str_key_also1, TRUE );
    ck_assert_int_eq( res, str_key_also1.slen );
-   res = syncbuff_write( ipc_test, &str_key_also2, TRUE );
+   res = ipc_write( ipc_test, &str_key_also2, TRUE );
    ck_assert_int_eq( res, str_key_also2.slen );
 
    mem_free( ipc_test );
@@ -76,19 +77,19 @@ START_TEST( test_syncbuff_read_from_server ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = syncbuff_read( ipc_test, buffer, TRUE );
+   res = ipc_read( ipc_test, buffer, TRUE );
    bdata_c = bdata( buffer );
    ck_assert_str_eq( bdata_c, (const char*)str_key_also1.data );
    ck_assert_int_eq( res, str_key_also1.slen );
    ck_assert_int_eq( 1, syncbuff_get_count( TRUE ) );
 
-   res = syncbuff_read( ipc_test, buffer, TRUE );
+   res = ipc_read( ipc_test, buffer, TRUE );
    bdata_c = bdata( buffer );
    ck_assert_str_eq( bdata_c, (const char*)str_key_also2.data );
    ck_assert_int_eq( res, str_key_also2.slen );
    ck_assert_int_eq( 0, syncbuff_get_count( TRUE ) );
 
-   res = syncbuff_read( ipc_test, buffer, TRUE );
+   res = ipc_read( ipc_test, buffer, TRUE );
    ck_assert_int_eq( res, 0 );
 
    mem_free( ipc_test );
@@ -105,11 +106,11 @@ START_TEST( test_syncbuff_read_from_client ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = syncbuff_read( ipc_test, buffer, FALSE );
+   res = ipc_read( ipc_test, buffer, FALSE );
    ck_assert_int_eq( res, str_key_also1.slen );
-   res = syncbuff_read( ipc_test, buffer, FALSE );
+   res = ipc_read( ipc_test, buffer, FALSE );
    ck_assert_int_eq( res, str_key_also2.slen );
-   res = syncbuff_read( ipc_test, buffer, FALSE );
+   res = ipc_read( ipc_test, buffer, FALSE );
    ck_assert_int_eq( res, 0 );
 
    mem_free( ipc_test );
@@ -117,7 +118,7 @@ START_TEST( test_syncbuff_read_from_client ) {
 }
 END_TEST
 
-Suite*syncbuff_suite( void ) {
+Suite* syncbuff_suite( void ) {
    Suite* s;
    TCase* tc_core;
 

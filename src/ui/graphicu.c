@@ -733,6 +733,8 @@ static void* ui_control_draw_backlog_line(
    return NULL;
 }
 
+#ifndef DISABLE_BACKLOG
+
 static void ui_control_draw_backlog(
    struct UI_WINDOW* win, struct UI_CONTROL* backlog
 ) {
@@ -754,6 +756,8 @@ static void ui_control_draw_backlog(
 cleanup:
    return;
 }
+
+#endif /* !DISABLE_BACKLOG */
 
 static void ui_draw_item_sprite(
    struct UI_CONTROL* inv_pane, GRAPHICS_RECT* rect, struct ITEM* e
@@ -1087,7 +1091,9 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* i
             case UI_CONTROL_TYPE_LABEL: ui_control_draw_label( win, control ); break;
             case UI_CONTROL_TYPE_BUTTON: ui_control_draw_button( win, control ); break;
             case UI_CONTROL_TYPE_TEXT: ui_control_draw_textfield( win, control ); break;
+#ifndef DISABLE_BACKLOG
             case UI_CONTROL_TYPE_BACKLOG: ui_control_draw_backlog( win, control ); break;
+#endif /* DISABLE_BACKLOG */
             case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
             case UI_CONTROL_TYPE_DROPDOWN: ui_control_draw_dropdown( win, control ); break;
             case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;

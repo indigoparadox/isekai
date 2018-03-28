@@ -90,11 +90,11 @@ GRAPHICS_COLOR graphics_get_pixel(
    GRAPHICS_COLOR pout;
 
    if( NULL == g || NULL == g->surface ) {
-      return;
+      return GRAPHICS_COLOR_TRANSPARENT;
    }
 
    if( 0 > x || g->w <= x || 0 > y || g->h <= y ) {
-      return;
+      return GRAPHICS_COLOR_TRANSPARENT;
    }
 
    surface = g->surface;
@@ -159,6 +159,8 @@ void graphics_screen_new(
    scaffold_check_null( (*g)->surface );
    (*g)->w = w;
    (*g)->h = h;
+   (*g)->fp_w = graphics_precise( w );
+   (*g)->fp_h = graphics_precise( h );
    (*g)->virtual_x = vw;
    (*g)->virtual_y = vh;
    (*g)->palette = NULL;
@@ -197,6 +199,8 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
    g->virtual_y = 0;
    g->w = w;
    g->h = h;
+   g->fp_w = graphics_precise( w );
+   g->fp_h = graphics_precise( h );
 cleanup:
    return;
 }
@@ -262,6 +266,8 @@ void graphics_set_image_data(
    surface = (SDL_Surface*)g->surface;
    g->w = surface->w;
    g->h = surface->h;
+   //g->fp_w = graphics_precise( g->w );
+   //g->fp_h = graphics_precise( g->h );
 
    scaffold_check_null( g->surface );
 
@@ -287,6 +293,8 @@ cleanup:
    scaffold_check_null( g->surface );
    g->w = bitmap->w;
    g->h = bitmap->h;
+   g->fp_w = graphics_precise( g->w );
+   g->fp_h = graphics_precise( g->h );
    sdl_ret = SDL_LockSurface( g->surface );
    scaffold_check_nonzero( sdl_ret );
    surface = (SDL_Surface*)g->surface;
@@ -354,55 +362,6 @@ void graphics_draw_rect(
    }
 
 cleanup:
-   return;
-}
-
-void graphics_draw_line(
-   GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
-   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
-) {
-   /* TODO */
-   /* Uint32 colorSDL; */
-   Uint32* bufp;
-   GFX_COORD_PIXEL y;
-   SDL_Surface* surface = g->surface;
-
-   /* Ensure y2 > y1 at all times. */
-   if( y2 < y1 ) {
-      y1 += y2;
-      y2 = y1 - y2;
-      y1 -= y2;
-   }
-
-   /* Ensure x2 > x1 at all times. */
-   if( x2 < x1 ) {
-      x1 += x2;
-      x2 = x1 - x2;
-      x1 -= x2;
-   }
-
-   if( y2 < 0 || y1 >= g->h || x1 < 0 || x1 >= g->w ) {
-      return;
-   }
-
-   /* Clipping. */
-   if( y1 < 0 ) {
-      y1 = 0;
-   }
-   if( y2 >= g->w ) {
-      y2 = g->h - 1;
-   }
-
-   /* colorSDL =  SDL_MapRGB( surface->format, color->r, color->g, color->b ); */
-
-   /* bufp = (Uint32*)(surface->pixels) + y1 * surface->pitch / 4 + x1; */
-   for( y = y1; y <= y2; y++ ) {
-      /* *bufp = colorSDL;
-      bufp += g->surface->pitch / 4; */
-      /* TODO: Horizontal travel. */
-      graphics_set_pixel( g, x1, y, color );
-   }
-
    return;
 }
 

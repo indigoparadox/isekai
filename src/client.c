@@ -17,6 +17,7 @@
 
 bstring client_input_from_ui = NULL;
 
+#ifdef USE_CHUNKS
 static BOOL callback_remove_chunkers(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
@@ -27,6 +28,7 @@ static BOOL callback_remove_chunkers(
 
    return TRUE;
 }
+#endif /* USE_CHUNKS */
 
 static BOOL callback_remove_items(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
@@ -55,14 +57,18 @@ static void client_cleanup( const struct REF *ref ) {
 
    client_stop( c );
 
+#ifdef USE_CHUNKS
    hashmap_cleanup( &(c->chunkers) );
+#endif /* USE_CHUNKS */
    vector_cleanup( &(c->delayed_files) );
    hashmap_cleanup( &(c->channels) );
 
-   hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
+   //hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
+   hashmap_remove_all( &(c->tilesets) );
    hashmap_cleanup( &(c->tilesets) );
 
-   hashmap_remove_cb( &(c->item_catalogs), callback_free_catalogs, NULL );
+   //hashmap_remove_cb( &(c->item_catalogs), callback_free_catalogs, NULL );
+   hashmap_remove_all( &(c->item_catalogs) );
    hashmap_cleanup( &(c->item_catalogs) );
 
    vector_remove_cb( &(c->unique_items), callback_remove_items, NULL );
@@ -83,8 +89,10 @@ void client_init( struct CLIENT* c ) {
 
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
+#ifdef USE_CHUNKS
    hashmap_init( &(c->chunkers) );
    vector_init( &(c->delayed_files) );
+#endif /* USE_CHUNKS */
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
@@ -119,7 +127,7 @@ BOOL client_free( struct CLIENT* c ) {
    return refcount_dec( c, "client" );
 }
 
-void client_set_active_t( struct CLIENT* c, const struct TILEMAP* t ) {
+void client_set_active_t( struct CLIENT* c, struct TILEMAP* t ) {
    if( NULL != c->active_t ) { /* Take care of existing map before anything. */
       tilemap_free( c->active_t );
       c->active_t = NULL;
@@ -216,7 +224,9 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 cleanup:
 #endif /* DEBUG_TILES */
 
+#ifdef USE_CHUNKS
    vector_remove_cb( &(c->delayed_files), callback_proc_client_delayed_files, c );
+#endif /* USE_CHUNKS */
 
    return retval;
 }
@@ -227,7 +237,8 @@ void client_free_channels( struct CLIENT* c ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+      hashmap_remove_all( &(c->channels) );
+      //hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
 #ifdef DEBUG
    scaffold_print_debug(
       &module,
@@ -248,7 +259,8 @@ void client_free_chunkers( struct CLIENT* c ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
+      hashmap_remove_all( &(c->chunkers) );
+      //hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
 #ifdef DEBUG
    scaffold_print_debug(
       &module,
@@ -328,11 +340,13 @@ void client_stop( struct CLIENT* c ) {
       test_count = hashmap_count( &(c->sprites) );
       scaffold_assert( 0 == test_count );
 
+   #ifdef USE_CHUNKS
       test_count = hashmap_count( &(c->chunkers) );
       scaffold_assert( 0 == test_count );
 
       test_count = vector_count( &(c->delayed_files) );
       scaffold_assert( 0 == test_count );
+#endif /* USE_CHUNKS */
 
       test_count = hashmap_count( &(c->tilesets) );
       scaffold_assert( 0 == test_count );

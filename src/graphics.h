@@ -17,7 +17,13 @@
 #define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
 #define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 #define GRAPHICS_RAY_FOV 0.66
+#define GRAPHICS_RAY_FOV_FP 6600
 #define GRAPHICS_RAY_ROTATE_INC (3 * 1.5708)
+#define GRAPHICS_RAY_ROTATE_INC_FP 47142
+#define GRAPHICS_RAY_ROTATE_INC_FP_COS 18
+#define GRAPHICS_RAY_ROTATE_INC_FP_SIN 9999
+
+#define GRAPHICS_FIXED_PRECISION 10000
 
 #ifndef DISABLE_MODE_POV
 #define GRAPHICS_RAY_INITIAL_STEP_X 1
@@ -38,6 +44,7 @@ typedef uint32_t GRAPHICS_HICOLOR;
 
 typedef int GFX_COORD_TILE;
 typedef long GFX_COORD_PIXEL;
+typedef int64_t GFX_COORD_FPP;
 
 typedef enum GRAPHICS_TIMER {
    GRAPHICS_TIMER_FPS = 15
@@ -73,6 +80,8 @@ struct GRAPHICS_BITMAP {
 typedef struct GRAPHICS {
    GFX_COORD_PIXEL w;
    GFX_COORD_PIXEL h;
+   GFX_COORD_PIXEL fp_w;
+   GFX_COORD_PIXEL fp_h;
    void* surface;
    void* palette;
    void* font;
@@ -83,9 +92,57 @@ typedef struct GRAPHICS {
 typedef struct {
    GFX_COORD_PIXEL x;
    GFX_COORD_PIXEL y;
+} GRAPHICS_POINT;
+
+typedef struct {
+   GFX_COORD_PIXEL fp_x;
+   GFX_COORD_PIXEL fp_y;
+} GRAPHICS_POINT_FPP;
+
+typedef struct {
+   double x;
+   double y;
+   double facing_x;
+   double facing_y;
+   uint8_t facing;
+} GRAPHICS_PLANE;
+
+typedef struct {
+   GFX_COORD_PIXEL fp_x;
+   GFX_COORD_PIXEL fp_y;
+   GFX_COORD_PIXEL fp_facing_x;
+   GFX_COORD_PIXEL fp_facing_y;
+   uint8_t facing;
+} GRAPHICS_PLANE_FPP;
+
+typedef struct {
+   GFX_COORD_PIXEL x;
+   GFX_COORD_PIXEL y;
    GFX_COORD_PIXEL w;
    GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
+
+typedef struct {
+   GFX_COORD_PIXEL fp_x;
+   GFX_COORD_PIXEL fp_y;
+   GFX_COORD_PIXEL fp_w;
+   GFX_COORD_PIXEL fp_h;
+} GRAPHICS_RECT_FPP;
+
+typedef struct {
+   double direction_x;
+   double direction_y;
+   /* Length of ray from one side to next x or y-side. */
+   double delta_dist_x;
+   double delta_dist_y;
+   /* Length of ray to next x or y-side. */
+   double side_dist_x;
+   double side_dist_y;
+   int step_x;
+   int step_y;
+   BOOL infinite_dist;
+   int steps;
+} GFX_RAY;
 
 #ifndef DISABLE_MODE_POV
 
@@ -104,20 +161,31 @@ typedef struct {
    } dy;
 } GFX_DELTA;
 
+typedef enum {
+   RAY_SIDE_NORTH_SOUTH,
+   RAY_SIDE_EAST_WEST
+} GRAPHICS_RAY_SIDE;
+
 typedef struct {
-   double direction_x;
-   double direction_y;
+   GFX_COORD_FPP fp_direction_x;
+   GFX_COORD_FPP fp_direction_y;
    /* Length of ray from one side to next x or y-side. */
-   double delta_dist_x;
-   double delta_dist_y;
+   GFX_COORD_FPP fp_delta_dist_x;
+   GFX_COORD_FPP fp_delta_dist_y;
    /* Length of ray to next x or y-side. */
-   double side_dist_x;
-   double side_dist_y;
+   GFX_COORD_FPP fp_side_dist_x;
+   GFX_COORD_FPP fp_side_dist_y;
    int step_x;
    int step_y;
+   GFX_COORD_FPP fp_perpen_dist;
    BOOL infinite_dist;
+   GFX_COORD_TILE x;
+   GFX_COORD_TILE y;
+   GFX_COORD_TILE map_w;
+   GFX_COORD_TILE map_h;
    int steps;
-} GFX_RAY;
+   GRAPHICS_RAY_SIDE side;
+} GRAPHICS_RAY_FPP;
 
 typedef struct {
    int x;
@@ -126,6 +194,7 @@ typedef struct {
    int map_h;
    int side;
    double perpen_dist;
+   uint32_t data;
 } GFX_RAY_WALL;
 
 typedef struct {
@@ -133,8 +202,8 @@ typedef struct {
    double y;
    int tex_x;
    int tex_y;
-   int tex_w;
-   int tex_h;
+   //int tex_w;
+   //int tex_h;
    /* x, y position of the floor texel at the bottom of the wall. */
    double wall_x;
    double wall_y;
@@ -172,6 +241,12 @@ struct GRAPHICS_TILE_WINDOW {
     g = mem_alloc( 1, GRAPHICS ); \
     scaffold_check_null( g ); \
     graphics_surface_init( g, w, h );
+
+#define graphics_precise( num ) \
+   (num * (GRAPHICS_FIXED_PRECISION))
+
+#define graphics_unprecise( num ) \
+   (num / (GRAPHICS_FIXED_PRECISION))
 
 void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
@@ -222,6 +297,10 @@ void graphics_draw_circle(
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 );
+struct VECTOR* graphics_get_line(
+   GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2
+);
 void graphics_draw_char(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GRAPHICS_COLOR color, GRAPHICS_FONT_SIZE size, char c
@@ -265,6 +344,8 @@ GRAPHICS_COLOR graphics_get_pixel(
 void graphics_set_pixel(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
 );
+GFX_COORD_FPP graphics_multiply_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b );
+GFX_COORD_FPP graphics_divide_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b );
 
 #ifdef USE_HICOLOR
 GRAPHICS_HICOLOR graphics_get_hipixel(
@@ -275,8 +356,8 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 #ifndef DISABLE_MODE_POV
 
 GFX_RAY* graphics_raycast_wall_create(
-   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GFX_DELTA* plane_pos,
-   const GFX_DELTA* cam_pos, const GRAPHICS* g
+   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
 void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray );
 double graphics_raycast_get_distance(

@@ -299,8 +299,10 @@ static BOOL loop_connect() {
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
          -1, -1, -1, -1
       );
+      main_client->gfx_mode = MODE_POV;
       control->list = mode_list;
       control->self.attachment = &(main_client->gfx_mode);
+      main_client->gfx_mode = MODE_POV;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
 
       ui_window_push( ui, win );
@@ -311,6 +313,7 @@ static BOOL loop_connect() {
    }
 
    ui_draw( ui, g_screen );
+   //graphics_draw_line( g_screen, 200, 0, 200, 200, GRAPHICS_COLOR_RED );
    input_get_event( input );
 
    if(

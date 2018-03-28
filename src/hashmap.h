@@ -125,6 +125,7 @@ BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key );
  * Remove an element from the hashmap. Return MAP_OK or MAP_MISSING.
  */
 BOOL hashmap_remove( struct HASHMAP* m, const bstring key );
+SCAFFOLD_SIZE hashmap_remove_all( struct HASHMAP* m );
 
 /*
  * Get any element. Return MAP_OK or MAP_MISSING.
