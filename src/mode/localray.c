@@ -124,8 +124,8 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    }
 
    /* Translate sprite position to relative to camera. */
-   sprite_x = o->x - c->cam_pos.x;
-   sprite_y = o->y - c->cam_pos.y;
+   sprite_x = o->x - c->cam_pos.precise_x;
+   sprite_y = o->y - c->cam_pos.precise_y;
 
    /* Transform sprite with the inverse camera matrix:
     *
@@ -135,11 +135,11 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
     */
 
    /* Required for correct matrix multiplication. */
-   inv_det = 1.0 / (c->plane_pos.x * c->cam_pos.facing_y - c->cam_pos.facing_x * c->plane_pos.y);
+   inv_det = 1.0 / (c->plane_pos.precise_x * c->cam_pos.facing_y - c->cam_pos.facing_x * c->plane_pos.precise_y);
 
    transform_x = inv_det * (c->cam_pos.facing_y * sprite_x - c->cam_pos.facing_x * sprite_y);
    /* This is actually the depth inside the screen, what Z is in 3D. */
-   transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y);
+   transform_y = inv_det * (-c->plane_pos.precise_y * sprite_x + c->plane_pos.precise_x * sprite_y);
 
    sprite_screen_x = ((int)(g->w / 2) * (1 + transform_x / transform_y));
 
@@ -287,8 +287,8 @@ static void* mode_pov_mob_calc_dist_cb(
    }
 
    m->ray_distance =
-      ((c->cam_pos.x - m->x) * (c->cam_pos.x - m->x) +
-         (c->cam_pos.y - m->y) * (c->cam_pos.y - m->y));
+      ((c->cam_pos.precise_x - m->x) * (c->cam_pos.precise_x - m->x) +
+         (c->cam_pos.precise_y - m->y) * (c->cam_pos.precise_y - m->y));
 
 cleanup:
    return NULL;
@@ -394,9 +394,9 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             -1 * cos( GRAPHICS_RAY_ROTATE_INC );
 
          old_dir_x = GRAPHICS_RAY_FOV;
-         c->plane_pos.x = old_dir_x * cos(GRAPHICS_RAY_ROTATE_INC ) -
+         c->plane_pos.precise_x = old_dir_x * cos(GRAPHICS_RAY_ROTATE_INC ) -
             0 * sin( GRAPHICS_RAY_ROTATE_INC );
-         c->plane_pos.y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
+         c->plane_pos.precise_y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( GRAPHICS_RAY_ROTATE_INC );
 #else
          fp_old_dir_x = 0;
@@ -422,24 +422,24 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             -1 * cos( -GRAPHICS_RAY_ROTATE_INC );
 
          old_dir_x = GRAPHICS_RAY_FOV;
-         c->plane_pos.x = old_dir_x * cos(-GRAPHICS_RAY_ROTATE_INC ) -
+         c->plane_pos.precise_x = old_dir_x * cos(-GRAPHICS_RAY_ROTATE_INC ) -
             0 * sin( -GRAPHICS_RAY_ROTATE_INC );
-         c->plane_pos.y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
+         c->plane_pos.precise_y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( -GRAPHICS_RAY_ROTATE_INC );
          break;
 
       case MOBILE_FACING_UP:
          c->cam_pos.facing_x = 0; /* TODO */
          c->cam_pos.facing_y = -1;
-         c->plane_pos.x = GRAPHICS_RAY_FOV;
-         c->plane_pos.y = 0;
+         c->plane_pos.precise_x = GRAPHICS_RAY_FOV;
+         c->plane_pos.precise_y = 0;
          break;
 
       case MOBILE_FACING_DOWN:
          c->cam_pos.facing_x = 0; /* TODO */
          c->cam_pos.facing_y = 1;
-         c->plane_pos.x = -GRAPHICS_RAY_FOV;
-         c->plane_pos.y = 0;
+         c->plane_pos.precise_x = -GRAPHICS_RAY_FOV;
+         c->plane_pos.precise_y = 0;
          break;
    }
 }
@@ -498,8 +498,8 @@ static BOOL mode_pov_update_view(
 
       for( i_x = 0; i_x < g->w; i_x++ ) {
 
-         wall_map_pos.x = (int)(c->cam_pos.x);
-         wall_map_pos.y = (int)(c->cam_pos.y);
+         wall_map_pos.x = (int)(c->cam_pos.precise_x);
+         wall_map_pos.y = (int)(c->cam_pos.precise_y);
 
          /* Calculate ray position and direction. */
          graphics_raycast_wall_create(
@@ -534,10 +534,10 @@ static BOOL mode_pov_update_view(
 
          if( 0 == wall_map_pos.side ) {
             wall_map_pos.perpen_dist =
-               (wall_map_pos.x - c->cam_pos.x + (-1 - ray.step_x) / 2) / ray.direction_x;
+               (wall_map_pos.x - c->cam_pos.precise_x + (-1 - ray.step_x) / 2) / ray.direction_x;
          } else {
             wall_map_pos.perpen_dist =
-               (wall_map_pos.y - c->cam_pos.y + (-1 - ray.step_y) / 2) / ray.direction_y;
+               (wall_map_pos.y - c->cam_pos.precise_y + (-1 - ray.step_y) / 2) / ray.direction_y;
          }
 
          c->z_buffer[i_x] = wall_map_pos.perpen_dist;

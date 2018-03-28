@@ -46,6 +46,11 @@ typedef int GFX_COORD_TILE;
 typedef long GFX_COORD_PIXEL;
 typedef int64_t GFX_COORD_FPP;
 
+typedef enum {
+   RAY_SIDE_NORTH_SOUTH,
+   RAY_SIDE_EAST_WEST
+} GRAPHICS_RAY_SIDE;
+
 typedef enum GRAPHICS_TIMER {
    GRAPHICS_TIMER_FPS = 15
 } GRAPHICS_TIMER;
@@ -100,8 +105,8 @@ typedef struct {
 } GRAPHICS_POINT_FPP;
 
 typedef struct {
-   double x;
-   double y;
+   double precise_x;
+   double precise_y;
    double facing_x;
    double facing_y;
    uint8_t facing;
@@ -149,24 +154,11 @@ typedef struct {
 #ifndef DISABLE_MODE_POV
 
 typedef struct {
-   double x;
-   double y;
-   union {
-      int direction;
-      double facing;
-      double width;
-   } dx;
-   union {
-      int direction;
-      double facing;
-      double height;
-   } dy;
+   double precise_x;
+   double precise_y;
+   double perpen_dist;
+   GRAPHICS_RAY_SIDE side;
 } GFX_DELTA;
-
-typedef enum {
-   RAY_SIDE_NORTH_SOUTH,
-   RAY_SIDE_EAST_WEST
-} GRAPHICS_RAY_SIDE;
 
 typedef struct {
    double direction_x;
@@ -179,14 +171,12 @@ typedef struct {
    double side_dist_y;
    int step_x;
    int step_y;
-   double perpen_dist;
    BOOL infinite_dist;
    GFX_COORD_TILE x;
    GFX_COORD_TILE y;
    GFX_COORD_TILE map_w;
    GFX_COORD_TILE map_h;
    int steps;
-   GRAPHICS_RAY_SIDE side;
 } GRAPHICS_RAY;
 
 typedef struct {
@@ -384,15 +374,15 @@ void graphics_raycast_wall_create(
 );
 void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray );
 double graphics_raycast_get_distance(
-   const GFX_RAY_WALL* wall_pos, const GFX_DELTA* cam_pos, const GRAPHICS_RAY* ray
+   const GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
 );
 void graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GFX_DELTA* cam_pos,
+   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 );
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
-   const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
+   const GRAPHICS_PLANE* cam_pos, const GFX_RAY_WALL* wall_map_pos,
    const GRAPHICS* g
 );
 int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
