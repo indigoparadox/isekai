@@ -544,7 +544,7 @@ cleanup:
  */
 static BOOL mode_pov_update_view(
    GRAPHICS_DELTA* wall_map_pos, POV_LAYER opaque_index,
-   struct TILEMAP_LAYER* layer, int x, int y,
+   struct TILEMAP_LAYER* layer,
    struct CLIENT* c, GRAPHICS* g
 ) {
    int i_x, draw_start, draw_end;
@@ -557,7 +557,8 @@ static BOOL mode_pov_update_view(
    GRAPHICS_COLOR color;
    //double steps_remaining = 0;
    BOOL wall_hit = FALSE;
-   BOOL ret_error = FALSE;
+   BOOL ret_error = FALSE,
+      ret_tmp = FALSE;
     //= POV_LAYER_LEVEL_RAISED;
 
    if( NULL == c->z_buffer ) {
@@ -568,80 +569,83 @@ static BOOL mode_pov_update_view(
    //floor_pos.tex_h = 32;
 
 
-      for( i_x = 0; i_x < g->w; i_x++ ) {
+   for( i_x = 0; i_x < g->w; i_x++ ) {
 
-         wall_map_pos->map_x = (int)(c->cam_pos.precise_x);
-         wall_map_pos->map_y = (int)(c->cam_pos.precise_y);
-         wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
+      wall_map_pos->map_x = (int)(c->cam_pos.precise_x);
+      wall_map_pos->map_y = (int)(c->cam_pos.precise_y);
+      wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
 
-         /* Calculate ray position and direction. */
-         graphics_raycast_wall_create(
-            &ray, i_x, wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
+      /* Calculate ray position and direction. */
+      graphics_raycast_wall_create(
+         &ray, i_x, wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
 
-         /* Do the actual casting. */
-         wall_hit = FALSE;
-         while( FALSE == wall_hit ) {
-            graphics_raycast_wall_iterate( wall_map_pos, &ray );
+      /* Do the actual casting. */
+      wall_hit = FALSE;
+      while( FALSE == wall_hit ) {
+         graphics_raycast_wall_iterate( wall_map_pos, &ray );
 
-            //if( ray.infinite_dist ) {
+         //if( ray.infinite_dist ) {
 
-            if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
-               /*if(
-                  MOBILE_FACING_LEFT == facing ||
-                  MOBILE_FACING_RIGHT == facing
-               ) {
-                  //ray.side_dist_x += ray.delta_dist_x;
-                  //wall_map_pos.map_x += ray.step_x;
-                  wall_map_pos->side = 0;
-               }*/
+         if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
+            /*if(
+               MOBILE_FACING_LEFT == facing ||
+               MOBILE_FACING_RIGHT == facing
+            ) {
+               //ray.side_dist_x += ray.delta_dist_x;
+               //wall_map_pos.map_x += ray.step_x;
+               wall_map_pos->side = 0;
+            }*/
 
-               break;
-            }
-
-            /* Check if ray has hit a wall. */
-            /* if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
-               wall_hit = TRUE;
-            } */
-            if( 0 != wall_map_pos->data && opaque_index <= layer->z ) {
-               wall_hit = TRUE;
-            }
+            break;
          }
 
-         c->z_buffer[i_x] = wall_map_pos->perpen_dist;
-         line_height = (int)(g->h / wall_map_pos->perpen_dist);
-
-         draw_end = graphics_get_ray_stripe_end( line_height, g );
-         draw_start = graphics_get_ray_stripe_start( line_height, g );
-
-         /* graphics_floorcast_create(
-            &floor_pos, &ray, i_x, &(c->cam_pos),
-            &wall_map_pos, g
-         ); */
-
-         if( 0 > draw_end ) {
-            /* Become < 0 if the integer overflows. */
-            draw_end = g->h;
+         /* Check if ray has hit a wall. */
+         /* if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
+            wall_hit = TRUE;
+         } */
+         if( 0 != wall_map_pos->data && opaque_index <= layer->z ) {
+            wall_hit = TRUE;
          }
-
-         /* Draw the pixels of the stripe as a vertical line. */
-         if( 0 < line_height ) {
-            if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
-               /* Choose wall color. */
-               color = get_wall_color( wall_map_pos );
-#ifdef RAYCAST_FOG
-            } else {
-               /* Fog. */
-               color = GRAPHICS_COLOR_WHITE;
-            }
-#endif /* RAYCAST_FOG */
-            graphics_draw_line( g, i_x, draw_start, i_x, draw_end, color );
-#ifndef RAYCAST_FOG
-            }
-#endif /* RAYCAST_FOG */
-         }
-
-         mode_pov_draw_floor( &floor_pos, i_x, draw_end, wall_map_pos, layer, &ray, c, g );
       }
+
+      c->z_buffer[i_x] = wall_map_pos->perpen_dist;
+      line_height = (int)(g->h / wall_map_pos->perpen_dist);
+
+      draw_end = graphics_get_ray_stripe_end( line_height, g );
+      draw_start = graphics_get_ray_stripe_start( line_height, g );
+
+      /* graphics_floorcast_create(
+         &floor_pos, &ray, i_x, &(c->cam_pos),
+         &wall_map_pos, g
+      ); */
+
+      if( 0 > draw_end ) {
+         /* Become < 0 if the integer overflows. */
+         draw_end = g->h;
+      }
+
+      /* Draw the pixels of the stripe as a vertical line. */
+      if( 0 < line_height ) {
+         if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
+            /* Choose wall color. */
+            color = get_wall_color( wall_map_pos );
+#ifdef RAYCAST_FOG
+         } else {
+            /* Fog. */
+            color = GRAPHICS_COLOR_WHITE;
+         }
+#endif /* RAYCAST_FOG */
+         graphics_draw_line( g, i_x, draw_start, i_x, draw_end, color );
+#ifndef RAYCAST_FOG
+         }
+#endif /* RAYCAST_FOG */
+      }
+
+      ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, draw_end, wall_map_pos, layer, &ray, c, g );
+      if( TRUE == ret_tmp ) {
+         ret_error = TRUE;
+      }
+   }
 
 cleanup:
    return ret_error;/* Draw the floor from draw_end to the bottom of the screen. */
@@ -714,7 +718,7 @@ void mode_pov_draw(
    for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
       layer = vector_get( &(t->layers), layer_index );
       mode_pov_update_view(
-         &wall_map_pos, POV_LAYER_LEVEL_RAISED, layer, player->x, player->y, c, g
+         &wall_map_pos, POV_LAYER_LEVEL_RAISED, layer, c, g
       );
    }
    /* Begin drawing sprites. */
