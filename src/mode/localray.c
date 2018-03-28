@@ -480,6 +480,15 @@ static BOOL mode_pov_draw_floor(
       goto cleanup;
    }
 
+   switch( layer->z ) {
+   case POV_LAYER_LEVEL_NONE:
+      floor_pos->floor_height = 0;
+      break;
+   case POV_LAYER_LEVEL_RAISED:
+      floor_pos->floor_height = 8;
+      break;
+   }
+
    /* Draw the floor from draw_end to the bottom of the screen. */
    for( i_y = i_start_y +1; i_y < g->h; i_y++ ) {
       graphics_floorcast_throw(
@@ -534,70 +543,57 @@ cleanup:
  *
  */
 static BOOL mode_pov_update_view(
-   GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
-   struct CLIENT* c
+   GRAPHICS_DELTA* wall_map_pos, POV_LAYER opaque_index,
+   struct TILEMAP_LAYER* layer, int x, int y,
+   struct CLIENT* c, GRAPHICS* g
 ) {
    int i_x, draw_start, draw_end;
    //struct INPUT p;
    int done = 0;
-   GRAPHICS_DELTA wall_map_pos; /* The position of the found wall. */
    GRAPHICS_RAY ray;
    GFX_RAY_FLOOR floor_pos;
    int line_height;
-   struct TILEMAP_LAYER* layer;
    uint32_t tile;
    GRAPHICS_COLOR color;
    //double steps_remaining = 0;
-   int layer_index = 0,
-      layer_max = 0;
    BOOL wall_hit = FALSE;
    BOOL ret_error = FALSE;
-   POV_LAYER opaque_index = POV_LAYER_LEVEL_RAISED;
-
-   scaffold_check_null( t );
+    //= POV_LAYER_LEVEL_RAISED;
 
    if( NULL == c->z_buffer ) {
       c->z_buffer = calloc( g->w, sizeof( double ) );
    }
 
-   wall_map_pos.map_w = t->width;
-   wall_map_pos.map_h = t->height;
-   mode_pov_set_facing( c, facing );
    //floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
    //floor_pos.tex_h = 32;
 
-   /* Draw a sky. */
-   graphics_draw_rect( g, 0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, TRUE );
-
-   layer_max = vector_count( &(t->layers) );
-   for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
-      layer = vector_get( &(t->layers), layer_index );
 
       for( i_x = 0; i_x < g->w; i_x++ ) {
 
-         wall_map_pos.map_x = (int)(c->cam_pos.precise_x);
-         wall_map_pos.map_y = (int)(c->cam_pos.precise_y);
-         wall_map_pos.data = tilemap_get_tile( layer, wall_map_pos.map_x, wall_map_pos.map_y );
+         wall_map_pos->map_x = (int)(c->cam_pos.precise_x);
+         wall_map_pos->map_y = (int)(c->cam_pos.precise_y);
+         wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
 
          /* Calculate ray position and direction. */
          graphics_raycast_wall_create(
-            &ray, i_x, &wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
+            &ray, i_x, wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
 
          /* Do the actual casting. */
          wall_hit = FALSE;
          while( FALSE == wall_hit ) {
-            graphics_raycast_wall_iterate( &wall_map_pos, &ray );
+            graphics_raycast_wall_iterate( wall_map_pos, &ray );
 
             //if( ray.infinite_dist ) {
-            if( graphics_raycast_point_is_infinite( &wall_map_pos ) ) {
-               if(
+
+            if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
+               /*if(
                   MOBILE_FACING_LEFT == facing ||
                   MOBILE_FACING_RIGHT == facing
                ) {
                   //ray.side_dist_x += ray.delta_dist_x;
                   //wall_map_pos.map_x += ray.step_x;
-                  wall_map_pos.side = 0;
-               }
+                  wall_map_pos->side = 0;
+               }*/
 
                break;
             }
@@ -606,13 +602,13 @@ static BOOL mode_pov_update_view(
             /* if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
                wall_hit = TRUE;
             } */
-            if( 0 != wall_map_pos.data && opaque_index <= layer_index ) {
+            if( 0 != wall_map_pos->data && opaque_index <= layer->z ) {
                wall_hit = TRUE;
             }
          }
 
-         c->z_buffer[i_x] = wall_map_pos.perpen_dist;
-         line_height = (int)(g->h / wall_map_pos.perpen_dist);
+         c->z_buffer[i_x] = wall_map_pos->perpen_dist;
+         line_height = (int)(g->h / wall_map_pos->perpen_dist);
 
          draw_end = graphics_get_ray_stripe_end( line_height, g );
          draw_start = graphics_get_ray_stripe_start( line_height, g );
@@ -629,9 +625,9 @@ static BOOL mode_pov_update_view(
 
          /* Draw the pixels of the stripe as a vertical line. */
          if( 0 < line_height ) {
-            if( graphics_raycast_point_is_infinite( &wall_map_pos ) ) {
+            if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
                /* Choose wall color. */
-               color = get_wall_color( &wall_map_pos );
+               color = get_wall_color( wall_map_pos );
 #ifdef RAYCAST_FOG
             } else {
                /* Fog. */
@@ -644,9 +640,8 @@ static BOOL mode_pov_update_view(
 #endif /* RAYCAST_FOG */
          }
 
-         mode_pov_draw_floor( &floor_pos, i_x, draw_end, &wall_map_pos, layer, &ray, c, g );
+         mode_pov_draw_floor( &floor_pos, i_x, draw_end, wall_map_pos, layer, &ray, c, g );
       }
-   }
 
 cleanup:
    return ret_error;/* Draw the floor from draw_end to the bottom of the screen. */
@@ -661,16 +656,28 @@ void mode_pov_draw(
    struct MOBILE* player = NULL;
    static struct TILEMAP_POSITION last;
    static BOOL draw_failed = FALSE;
+   GRAPHICS_DELTA wall_map_pos; /* The position of the found wall. */
+   struct TILEMAP* t = twindow->local_client->active_t;
+   struct TILEMAP_LAYER* layer = NULL;
+   int layer_index = 0,
+      layer_max = 0;
 
-   if(
+   /* if(
       NULL == twindow->local_client ||
       NULL == twindow->local_client->puppet
    ) {
       memset( &last, '\0', sizeof( struct TILEMAP_POSITION ) );
       return;
-   }
+   } */
+
+   scaffold_check_null( t );
 
    player = twindow->local_client->puppet;
+
+   scaffold_check_null( player );
+
+   /* Draw a sky. */
+   graphics_draw_rect( g, 0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, TRUE );
 
 #if 0
 
@@ -699,10 +706,17 @@ void mode_pov_draw(
 
    #endif // 0
 
-   mode_pov_update_view(
-      g, player->x, player->y, player->facing, c->active_t, c
-   );
+   wall_map_pos.map_w = t->width;
+   wall_map_pos.map_h = t->height;
+   mode_pov_set_facing( c, player->facing );
 
+   layer_max = vector_count( &(t->layers) );
+   for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
+      layer = vector_get( &(t->layers), layer_index );
+      mode_pov_update_view(
+         &wall_map_pos, POV_LAYER_LEVEL_RAISED, layer, player->x, player->y, c, g
+      );
+   }
    /* Begin drawing sprites. */
    vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
    vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );

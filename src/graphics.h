@@ -158,7 +158,6 @@ typedef struct {
    int map_y;
    int map_w;
    int map_h;
-   int floor_height;
    double precise_x;
    double precise_y;
    double perpen_dist;
@@ -230,6 +229,7 @@ typedef struct {
    /* x, y position of the floor texel at the bottom of the wall. */
    //double wall_x;
    //double wall_y;
+   int floor_height;
    int map_w;
    int map_h;
    int side;
