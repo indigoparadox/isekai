@@ -135,9 +135,9 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
     */
 
    /* Required for correct matrix multiplication. */
-   inv_det = 1.0 / (c->plane_pos.x * c->cam_pos.dy.facing - c->cam_pos.dx.facing * c->plane_pos.y);
+   inv_det = 1.0 / (c->plane_pos.x * c->cam_pos.facing_y - c->cam_pos.facing_x * c->plane_pos.y);
 
-   transform_x = inv_det * (c->cam_pos.dy.facing * sprite_x - c->cam_pos.dx.facing * sprite_y);
+   transform_x = inv_det * (c->cam_pos.facing_y * sprite_x - c->cam_pos.facing_x * sprite_y);
    /* This is actually the depth inside the screen, what Z is in 3D. */
    transform_y = inv_det * (-c->plane_pos.y * sprite_x + c->plane_pos.x * sprite_y);
 
@@ -369,15 +369,28 @@ static GRAPHICS_COLOR get_wall_color( GFX_RAY_WALL* wall_pos ) {
 #endif /* 0 */
 }
 
-static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
-   double old_dir_x;
+#endif // 0
 
+static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
+#ifdef RAYCAST_OLD_DOUBLE
+   double old_dir_x = 0;
+#else
+   GFX_COORD_FPP fp_old_dir_x;
+#endif /* RAYCAST_OLD_DOUBLE */
+   double cos_dbl,
+      sin_dbl;
+/*
+   if( facing == c->cam_pos.facing ) {
+      goto cleanup;
+   }
+*/
    switch( facing ) {
       case MOBILE_FACING_LEFT:
+#ifdef RAYCAST_OLD_DOUBLE
          old_dir_x = 0;
-         c->cam_pos.dx.facing = old_dir_x * cos( GRAPHICS_RAY_ROTATE_INC ) -
+         c->cam_pos.facing_x = old_dir_x * cos( GRAPHICS_RAY_ROTATE_INC ) -
             -1 * sin( GRAPHICS_RAY_ROTATE_INC );
-         c->cam_pos.dy.facing = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
+         c->cam_pos.facing_y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
             -1 * cos( GRAPHICS_RAY_ROTATE_INC );
 
          old_dir_x = GRAPHICS_RAY_FOV;
@@ -385,13 +398,27 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             0 * sin( GRAPHICS_RAY_ROTATE_INC );
          c->plane_pos.y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( GRAPHICS_RAY_ROTATE_INC );
+#else
+         fp_old_dir_x = 0;
+         c->cam_pos.fp_facing_x = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_COS -
+            -1 * GRAPHICS_RAY_ROTATE_INC_FP_SIN;
+         c->cam_pos.fp_facing_y = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_SIN +
+            -1 * GRAPHICS_RAY_ROTATE_INC_FP_COS;
+
+         fp_old_dir_x = GRAPHICS_RAY_FOV_FP;
+         c->plane_pos.fp_x = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_COS -
+            0 * GRAPHICS_RAY_ROTATE_INC_FP_SIN;
+         c->plane_pos.fp_y = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_SIN +
+            0 * GRAPHICS_RAY_ROTATE_INC_FP_COS;
+#endif /* RAYCAST_OLD_DOUBLE */
          break;
 
       case MOBILE_FACING_RIGHT:
+#ifdef RAYCAST_OLD_DOUBLE
          old_dir_x = 0;
-         c->cam_pos.dx.facing = old_dir_x * cos( -GRAPHICS_RAY_ROTATE_INC ) -
+         c->cam_pos.facing_x = old_dir_x * cos( -GRAPHICS_RAY_ROTATE_INC ) -
             -1 * sin( -GRAPHICS_RAY_ROTATE_INC );
-         c->cam_pos.dy.facing = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
+         c->cam_pos.facing_y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
             -1 * cos( -GRAPHICS_RAY_ROTATE_INC );
 
          old_dir_x = GRAPHICS_RAY_FOV;
@@ -402,15 +429,15 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
          break;
 
       case MOBILE_FACING_UP:
-         c->cam_pos.dx.facing = 0; /* TODO */
-         c->cam_pos.dy.facing = -1;
+         c->cam_pos.facing_x = 0; /* TODO */
+         c->cam_pos.facing_y = -1;
          c->plane_pos.x = GRAPHICS_RAY_FOV;
          c->plane_pos.y = 0;
          break;
 
       case MOBILE_FACING_DOWN:
-         c->cam_pos.dx.facing = 0; /* TODO */
-         c->cam_pos.dy.facing = 1;
+         c->cam_pos.facing_x = 0; /* TODO */
+         c->cam_pos.facing_y = 1;
          c->plane_pos.x = -GRAPHICS_RAY_FOV;
          c->plane_pos.y = 0;
          break;
@@ -462,8 +489,8 @@ static BOOL mode_pov_update_view(
    wall_map_pos.map_w = t->width;
    wall_map_pos.map_h = t->height;
    mode_pov_set_facing( c, facing );
-   floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
-   floor_pos.tex_h = 32;
+   //floor_pos.tex_w = 32; /* TODO: Get this dynamically. */
+   //floor_pos.tex_h = 32;
 
    /* Draw a sky. */
    graphics_draw_rect( g, 0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, TRUE );
@@ -812,13 +839,13 @@ void mode_pov_free( struct CLIENT* c ) {
       TRUE == ipc_is_local_client( c->link ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
-      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
+      //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 
-   if( NULL != ray_view ) {
+   /* if( NULL != ray_view ) {
       graphics_surface_free( ray_view );
       ray_view = NULL;
-   }
+   } */
 }
 
 #endif /* !DISABLE_MODE_POV */

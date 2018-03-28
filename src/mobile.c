@@ -773,7 +773,9 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
    }
    scaffold_assert( NULL != line_nick );
 
+#ifndef DISABLE_BACKLOG
    backlog_speak( line_nick, speech );
+#endif /* !DISABLE_BACKLOG */
 
 cleanup:
    return;

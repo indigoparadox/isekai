@@ -181,6 +181,102 @@ cleanup:
    return;
 }
 
+struct VECTOR* graphics_get_line(
+   GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2
+) {
+   GFX_COORD_FPP fp_delta_x,
+      fp_delta_y,
+      delta_err,
+      error = 0,
+      tolerance = graphics_precise( 0.5 );
+   GFX_COORD_PIXEL xi = 0,
+      yi = y1,
+      delta_x,
+      delta_y,
+      y_diff = 1;
+   GRAPHICS_POINT* point_i = NULL;
+   struct VECTOR* points = NULL;
+
+   vector_new( points );
+
+   delta_x = x2 - x1;
+   delta_y = y2 - y1;
+
+   fp_delta_x = graphics_precise( delta_x );
+   fp_delta_y = graphics_precise( delta_y );
+
+   /* Special Case: Vertical Line */
+   if( 0 == fp_delta_x ) {
+      xi = x1;
+      for( yi = y1 ; y2 > yi ; yi++ ) {
+         point_i = mem_alloc( 1, GRAPHICS_POINT );
+         point_i->x = xi;
+         point_i->y = yi;
+         vector_add( points, point_i );
+      }
+      goto cleanup;
+   }
+
+   /* Special Case: Horizontal Line */
+   if( 0 == fp_delta_y ) {
+      yi = y1;
+      for( xi = x1 ; x2 > xi ; xi++ ) {
+         point_i = mem_alloc( 1, GRAPHICS_POINT );
+         point_i->x = xi;
+         point_i->y = yi;
+         vector_add( points, point_i );
+      }
+      goto cleanup;
+   }
+
+   /* They're both in FPP mode, so division should work? */
+   /* TODO: Vertical line? */
+   delta_err = abs( graphics_divide_fp( fp_delta_y, fp_delta_x ) );
+
+   if( 0 > fp_delta_y ) {
+      y_diff = -1;
+   }
+
+   for( xi = x1 ; x2 > xi ; xi++ ) {
+      point_i = mem_alloc( 1, GRAPHICS_POINT );
+      point_i->x = xi;
+      point_i->y = yi;
+
+      vector_add( points, point_i );
+
+      error += delta_err;
+      while( error >= tolerance ) { /* 0.5 */
+         yi += y_diff;
+         error -= 100;
+      }
+   }
+
+cleanup:
+   return points;
+}
+
+void graphics_draw_line(
+   GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
+   GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
+) {
+   struct VECTOR* points = NULL;
+   int i = 0;
+   GRAPHICS_POINT* point_i = NULL;
+
+   points = graphics_get_line( x1, y1, x2, y2 );
+   point_i = vector_get( points, i );
+   while( NULL != point_i ) {
+      graphics_set_pixel( g, point_i->x, point_i->y, color );
+      mem_free( point_i );
+      i++;
+      point_i = vector_get( points, i );
+   }
+
+   /* Individual points freed in the loop. */
+   vector_free_force( &points );
+}
+
 void graphics_surface_free( GRAPHICS* g ) {
    scaffold_check_null( g );
    graphics_surface_cleanup( g );
@@ -240,6 +336,8 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 
 #ifndef DISABLE_MODE_POV
 
+#ifdef RAYCAST_OLD_DOUBLE
+
 GFX_RAY_FLOOR* graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GFX_RAY* ray, int x, const GFX_DELTA* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
@@ -294,16 +392,233 @@ GFX_RAY_FLOOR* graphics_floorcast_throw(
       (1.0 - floor_pos->weight) * cam_pos->y;
 
    floor_pos->tex_x =
-      (int)(floor_pos->x * floor_pos->tex_w) % floor_pos->tex_w;
+      (int)(floor_pos->x * GRAPHICS_SPRITE_WIDTH) % GRAPHICS_SPRITE_WIDTH;
    floor_pos->tex_y =
-      (int)(floor_pos->y * floor_pos->tex_h) % floor_pos->tex_h;
+      (int)(floor_pos->y * GRAPHICS_SPRITE_HEIGHT) % GRAPHICS_SPRITE_HEIGHT;
 
    return floor_pos;
 }
 
+#endif /* RAYCAST_OLD_DOUBLE */
+
+GFX_COORD_FPP graphics_multiply_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b ) {
+   GFX_COORD_FPP value_out;
+
+   /* Additional layer of precision since we're multiplying. */
+   value_out = graphics_precise( value_a );
+   value_out *= value_b;
+
+   value_out = graphics_unprecise( value_out );
+   value_out = graphics_unprecise( value_out );
+
+   return value_out;
+}
+
+GFX_COORD_FPP graphics_divide_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b ) {
+   GFX_COORD_FPP value_out;
+
+   /* Additional layer of precision since we're multiplying. */
+   value_out = graphics_precise( value_a );
+   value_out /= value_b;
+
+   //value_out = graphics_unprecise( value_out );
+   //value_out = graphics_unprecise( value_out );
+
+   return value_out;
+}
+
+void graphics_raycast_create(
+   GRAPHICS_RAY_FPP* ray, GFX_COORD_PIXEL stripe,
+   const GRAPHICS_PLANE_FPP* plane_pos, const GRAPHICS_PLANE_FPP* cam_pos,
+   const GRAPHICS* g
+) {
+   GFX_COORD_FPP fp_cam_map_floor_x,
+      fp_cam_map_floor_y,
+      fp_camera_x;
+   GFX_COORD_PIXEL delta_tmp;
+
+   ray->x = graphics_unprecise( cam_pos->fp_x );
+   ray->y = graphics_unprecise( cam_pos->fp_y );
+
+   /* This is the mathematical floor, not the ground. i.e. floor() */
+   fp_cam_map_floor_x = graphics_precise( ray->x );
+   fp_cam_map_floor_y = graphics_precise( ray->y );
+
+   //camera_x = 2 * x / (double)(g->w) - 1;
+   fp_camera_x = graphics_precise( 2 * stripe );
+   fp_camera_x = graphics_divide_fp( fp_camera_x, g->fp_w );
+   fp_camera_x -= graphics_precise( 1 );
+
+   /* Get the direction vector for this stripe. */
+   ray->fp_direction_x = cam_pos->fp_facing_x +
+      graphics_multiply_fp( plane_pos->fp_x, fp_camera_x );
+   ray->fp_direction_y = cam_pos->fp_facing_y +
+      graphics_multiply_fp( plane_pos->fp_y, fp_camera_x );
+   if( 0 == ray->fp_direction_x ) {
+      ray->fp_delta_dist_x = 0;
+   } else {
+      delta_tmp =
+         graphics_divide_fp( graphics_precise( 1 ), ray->fp_direction_x );
+      ray->fp_delta_dist_x = abs( delta_tmp );
+   }
+   if( 0 == ray->fp_direction_y ) {
+      ray->fp_delta_dist_x = 0;
+   } else {
+      delta_tmp =
+         graphics_divide_fp( graphics_precise( 1 ), ray->fp_direction_y );
+      ray->fp_delta_dist_y = abs( delta_tmp );
+   }
+   ray->steps = 0;
+   ray->infinite_dist = FALSE;
+
+   /* Calculate step and initial side_dist. */
+   if( 0 > ray->fp_direction_x ) {
+      ray->step_x = -GRAPHICS_RAY_INITIAL_STEP_X;
+      ray->fp_side_dist_x = graphics_multiply_fp(
+         cam_pos->fp_x - fp_cam_map_floor_x, ray->fp_delta_dist_x );
+   } else {
+      ray->step_x = GRAPHICS_RAY_INITIAL_STEP_X;
+      ray->fp_side_dist_x = graphics_multiply_fp(
+         fp_cam_map_floor_x + graphics_precise( 1 ) - cam_pos->fp_x,
+         ray->fp_delta_dist_x );
+   }
+   if( 0 > ray->fp_direction_y ) {
+      ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
+      ray->fp_side_dist_y = graphics_multiply_fp(
+         cam_pos->fp_y - fp_cam_map_floor_y,
+         ray->fp_delta_dist_y );
+   } else {
+      ray->step_y = GRAPHICS_RAY_INITIAL_STEP_Y;
+      ray->fp_side_dist_y = graphics_multiply_fp(
+         fp_cam_map_floor_y + graphics_precise( 1 ) - cam_pos->fp_y,
+         ray->fp_delta_dist_y );
+   }
+}
+
+void graphics_raycast_iterate(
+   GRAPHICS_RAY_FPP* ray, const GRAPHICS_PLANE_FPP* plane_pos,
+   const GRAPHICS_PLANE_FPP* cam_pos, const GRAPHICS* g
+) {
+   GFX_COORD_FPP
+      fp_ray_tile_x,
+      fp_ray_tile_y,
+      fp_ray_step_x,
+      fp_ray_step_y,
+      dist_tmp;
+
+   /* Jump to next map square, OR in x-direction, OR in y-direction. */
+   if( ray->fp_side_dist_x < ray->fp_side_dist_y ) {
+      ray->fp_side_dist_x += ray->fp_delta_dist_x;
+      ray->x += ray->step_x;
+      ray->side = RAY_SIDE_NORTH_SOUTH;
+   } else {
+      ray->fp_side_dist_y += ray->fp_delta_dist_y;
+      ray->y += ray->step_y;
+      ray->side = RAY_SIDE_EAST_WEST;
+   }
+
+   /* Assume distance is finite to start. */
+   ray->infinite_dist = FALSE;
+
+#ifdef LIMIT_RAY_STEPS
+   ray->steps++;
+   if( 10 < ray->steps ) {
+      if( ray->side_dist_x >= ray->side_dist_y ) {
+         ray->side_dist_y += ray->delta_dist_y;
+         wall_pos->y += ray->step_y;
+         wall_pos->side = 1;
+      }
+      ray->infinite_dist = TRUE;
+   }
+#endif /* LIMIT_RAY_STEPS */
+
+   /* Don't draw walls outside of the map. */
+   if(
+      ray->x > ray->map_w ||
+      ray->y > ray->map_h ||
+      0 > ray->x ||
+      0 > ray->y
+   ) {
+      ray->infinite_dist = TRUE;
+   }
+
+   fp_ray_tile_x = graphics_precise( ray->x );
+   fp_ray_tile_y = graphics_precise( ray->y );
+   fp_ray_step_x = graphics_precise( ray->step_x );
+   fp_ray_step_y = graphics_precise( ray->step_y );
+   if( RAY_SIDE_NORTH_SOUTH == ray->side ) {
+      if( 0 < ray->fp_direction_x ) {
+         //wall_pos->perpen_dist =
+         //   (wall_pos->x - cam_pos->x + (-1 - ray->step_x) / 2) / ray->direction_x;
+         dist_tmp = fp_ray_tile_x - cam_pos->fp_x +
+            graphics_divide_fp( graphics_precise( -1 ) - fp_ray_step_x,
+               graphics_precise( 2 ) );
+         ray->fp_perpen_dist = graphics_divide_fp(
+            dist_tmp,
+            ray->fp_direction_x
+         );
+      } else {
+         ray->fp_perpen_dist = 0;
+      }
+   } else {
+      if( 0 < ray->fp_direction_y ) {
+         //wall_pos->perpen_dist =
+         //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
+         dist_tmp = fp_ray_tile_y - cam_pos->fp_y +
+            graphics_divide_fp( graphics_precise( -1 ) - fp_ray_step_y,
+               graphics_precise( 2 ) );
+         ray->fp_perpen_dist = graphics_divide_fp(
+            dist_tmp,
+            ray->fp_direction_y
+         );
+      } else {
+         ray->fp_perpen_dist = 0;
+      }
+   }
+}
+
+void graphics_raycast_floor_texture(
+   GRAPHICS_POINT* tex, GRAPHICS_RAY_FPP* ray, const GRAPHICS_PLANE_FPP* cam_pos,
+   GFX_COORD_PIXEL y, GRAPHICS* g
+) {
+   GFX_COORD_FPP fp_current_dist,
+      fp_weight,
+      fp_floor_spot_x,
+      fp_floor_spot_y,
+      fp_y_times_2;
+
+   fp_y_times_2 = graphics_multiply_fp( graphics_precise( 2 ), graphics_precise( y ) );
+   fp_y_times_2 -= g->fp_h;
+   if( 0 == fp_y_times_2 ) {
+      fp_current_dist = 0;
+   } else {
+      fp_current_dist = graphics_divide_fp( g->fp_h, fp_y_times_2 );
+   }
+
+   if( 0 == ray->fp_perpen_dist ) {
+      return;
+   }
+
+   fp_weight = graphics_divide_fp( fp_current_dist, ray->fp_perpen_dist );
+
+   fp_floor_spot_x = (fp_weight * ray->x) +
+      graphics_multiply_fp(
+         graphics_precise( 1 ) - fp_weight, cam_pos->fp_x );
+   fp_floor_spot_y = (fp_weight * ray->y) +
+      graphics_multiply_fp(
+         graphics_precise( 1 ) - fp_weight, cam_pos->fp_y );
+
+   tex->x = graphics_unprecise(
+      (fp_floor_spot_x * GRAPHICS_SPRITE_WIDTH) % GRAPHICS_SPRITE_WIDTH );
+   tex->x = graphics_unprecise(
+      (fp_floor_spot_y * GRAPHICS_SPRITE_HEIGHT) % GRAPHICS_SPRITE_HEIGHT );
+}
+
+#ifdef RAYCAST_OLD_DOUBLE
+
 GFX_RAY* graphics_raycast_wall_create(
-   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GFX_DELTA* plane_pos,
-   const GFX_DELTA* cam_pos, const GRAPHICS* g
+   GFX_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
    int cam_map_pos_x = (int)(cam_pos->x);
@@ -312,8 +627,8 @@ GFX_RAY* graphics_raycast_wall_create(
    memset( wall_pos, sizeof( GFX_RAY_WALL ), '\0' );
 
    camera_x = 2 * x / (double)(g->w) - 1;
-   ray->direction_x = cam_pos->dx.facing + plane_pos->x * camera_x;
-   ray->direction_y = cam_pos->dy.facing + plane_pos->y * camera_x;
+   ray->direction_x = cam_pos->facing_x + plane_pos->x * camera_x;
+   ray->direction_y = cam_pos->facing_y + plane_pos->y * camera_x;
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
    ray->steps = 0;
@@ -333,11 +648,65 @@ GFX_RAY* graphics_raycast_wall_create(
       ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
       ray->side_dist_y = (cam_pos->y - cam_map_pos_y) * ray->delta_dist_y;
    } else {
-      ray->step_y = GRAPHICS_RAY_INITIAL_STEP_X;
+      ray->step_y = GRAPHICS_RAY_INITIAL_STEP_Y;
       ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->y) * ray->delta_dist_y;
    }
 
    return ray;
+}
+
+int graphics_raycast_wall_throw(
+   GFX_RAY* ray, GFX_RAY_WALL* wall_pos,
+   const GFX_DELTA* cam_pos, const GRAPHICS* g,
+   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
+) {
+   BOOL wall_hit = FALSE;
+   double dist_tmp;
+
+   /* Do the actual casting. */
+   while( FALSE == wall_hit ) {
+      /* Jump to next map square, OR in x-direction, OR in y-direction. */
+      if( ray->side_dist_x < ray->side_dist_y ) {
+         ray->side_dist_x += ray->delta_dist_x;
+         wall_pos->x += ray->step_x;
+         wall_pos->side = 0;
+      } else {
+         ray->side_dist_y += ray->delta_dist_y;
+         wall_pos->y += ray->step_y;
+         wall_pos->side = 1;
+      }
+
+      /* Don't draw walls outside of the map. */
+      if(
+         wall_pos->x > wall_pos->map_w ||
+         wall_pos->y > wall_pos->map_h ||
+         0 > wall_pos->x ||
+         0 > wall_pos->y
+      ) {
+         ray->infinite_dist = TRUE;
+         break;
+      }
+
+     /* Check if ray has hit a wall. */
+      if( collision_check( wall_pos, data ) ) {
+         wall_hit = TRUE;
+      }
+   }
+
+   /* Calculate distance projected on camera direction
+      (Euclidean distance will give fisheye effect!). */
+   if( 0 == wall_pos->side ) {
+      dist_tmp = wall_pos->x - cam_pos->x + (-1 - ray->step_x) / 2;
+      wall_pos->perpen_dist = dist_tmp / ray->direction_x;
+   } else {
+      //wall_pos->perpen_dist =
+      //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
+      dist_tmp = wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2;
+      wall_pos->perpen_dist = dist_tmp / ray->direction_y;
+   }
+
+   /* Calculate height of line to draw on screen. */
+   return (int)(g->h / wall_pos->perpen_dist);
 }
 
 void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
@@ -351,6 +720,9 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
       wall_pos->y += ray->step_y;
       wall_pos->side = 1;
    }
+
+   /* Assume distance is finite to start. */
+   ray->infinite_dist = FALSE;
 
 #ifdef LIMIT_RAY_STEPS
    ray->steps++;
@@ -374,6 +746,8 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GFX_RAY* ray ) {
       ray->infinite_dist = TRUE;
    }
 }
+
+#endif /* RAYCAST_OLD_DOUBLE */
 
 /** \brief Calculate lowest and highest pixel to fill in current stripe.
  *

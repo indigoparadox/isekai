@@ -39,6 +39,8 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    g->surface = newwin( w, h, 0, 0 );
    g->w = w;
    g->h = h;
+   g->fp_w = graphics_precise( g->w );
+   g->fp_h = graphics_precise( g->h );
 }
 
 void graphics_surface_free( GRAPHICS* g ) {

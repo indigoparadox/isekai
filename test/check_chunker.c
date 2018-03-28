@@ -14,12 +14,12 @@ struct tagbstring chunker_test_map_filename = bsStatic( "testdata/server/testcha
 struct tagbstring chunker_test_img_filename = bsStatic( "testdata/server/images/terrain.bmp" );
 struct tagbstring chunker_test_cachepath = bsStatic( "testdata/cache" );
 
-struct bstrList* chunker_mapchunks = NULL;
+struct VECTOR* chunker_mapchunks = NULL;
 struct VECTOR* chunker_mapchunk_starts = NULL;
 BYTE* chunker_mapdata = NULL;
 SCAFFOLD_SIZE chunker_mapsize;
 
-struct bstrList* chunker_imgchunks = NULL;
+struct VECTOR* chunker_imgchunks = NULL;
 struct VECTOR* chunker_imgchunk_starts = NULL;
 BYTE* chunker_imgdata = NULL;
 SCAFFOLD_SIZE chunker_imgsize;
@@ -61,7 +61,8 @@ void check_chunker_setup_unchecked() {
       &chunker_test_img_filename, &chunker_imgdata, &chunker_imgsize );
 
    /* Prepare the chunk list. */
-   chunker_mapchunks = bstrListCreate();
+   //chunker_mapchunks = bstrListCreate();
+   vector_new( chunker_mapchunks );
    chunker_mapchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
    vector_init( chunker_mapchunk_starts );
    if( NULL == chunker_mapchunks || NULL == chunker_mapchunk_starts ) {
@@ -69,7 +70,8 @@ void check_chunker_setup_unchecked() {
    }
 
    /* Prepare the chunk list. */
-   chunker_imgchunks = bstrListCreate();
+   //chunker_imgchunks = bstrListCreate();
+   vector_new( chunker_imgchunks );
    chunker_imgchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
    vector_init( chunker_imgchunk_starts );
    if( NULL == chunker_imgchunks || NULL == chunker_imgchunk_starts ) {
@@ -85,7 +87,7 @@ void check_chunker_chunk_checked(
    DATAFILE_TYPE type,
    BYTE* data_source,
    SCAFFOLD_SIZE data_source_len,
-   struct bstrList* chunks,
+   struct VECTOR* chunks,
    struct VECTOR* v_starts,
    SCAFFOLD_SIZE chunk_len
 ) {
@@ -128,7 +130,8 @@ void check_chunker_chunk_checked(
          }
          previous_pos = h->raw_position;
       }
-      scaffold_list_append_string_cpy( chunks, chunk_buffer );
+      // XXX
+      //scaffold_list_append_string_cpy( chunks, chunk_buffer );
       bstr_res = btrunc( chunk_buffer, 0 );
       scaffold_check_nonzero( bstr_res );
    }
@@ -151,7 +154,7 @@ void check_chunker_unchunk_checked(
    DATAFILE_TYPE type,
    BYTE* data_source,
    SCAFFOLD_SIZE data_source_len,
-   struct bstrList* chunks,
+   struct VECTOR* chunks,
    struct VECTOR* v_starts,
    SCAFFOLD_SIZE chunk_len
 ) {

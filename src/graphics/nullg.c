@@ -6,6 +6,16 @@ void graphics_screen_new(
    GRAPHICS** g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h,
    SCAFFOLD_SIZE vw, SCAFFOLD_SIZE vh, int32_t arg1, void* arg2
 ) {
+   (*g) = mem_alloc( 1, GRAPHICS );
+   (*g)->surface = NULL;
+   (*g)->w = w;
+   (*g)->h = h;
+   (*g)->fp_w = graphics_precise( w );
+   (*g)->fp_h = graphics_precise( h );
+   (*g)->virtual_x = vw;
+   (*g)->virtual_y = vh;
+   (*g)->palette = NULL;
+   (*g)->font = NULL;
 }
 
 void graphics_surface_cleanup( GRAPHICS* g ) {
@@ -53,6 +63,23 @@ void graphics_blit_partial(
    GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL s_x, GFX_COORD_PIXEL s_y,
    GFX_COORD_PIXEL s_w, GFX_COORD_PIXEL s_h, const GRAPHICS* src
+) {
+}
+
+void graphics_blit_stretch(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
+   GFX_COORD_PIXEL w, GFX_COORD_PIXEL h, const GRAPHICS* src
+) {
+}
+
+GRAPHICS_COLOR graphics_get_pixel(
+   const GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+) {
+   return GRAPHICS_COLOR_TRANSPARENT;
+}
+
+void graphics_set_pixel(
+   GRAPHICS* g, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
 ) {
 }
 

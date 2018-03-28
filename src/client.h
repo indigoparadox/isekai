@@ -70,9 +70,14 @@ struct CLIENT {
 #endif /* USE_CHUNKS */
 
 #ifndef DISABLE_MODE_POV
-   GFX_DELTA cam_pos;
-   GFX_DELTA plane_pos;
-   double* z_buffer;
+#ifdef RAYCAST_OLD_DOUBLE
+   GRAPHICS_PLANE cam_pos;
+   GRAPHICS_PLANE plane_pos;
+#else
+   GRAPHICS_PLANE_FPP cam_pos;
+   GRAPHICS_PLANE_FPP plane_pos;
+#endif /* RAYCAST_OLD_DOUBLE */
+   GFX_COORD_FPP* z_buffer;
 #endif /* !DISABLE_MODE_POV */
 
    int sentinal;     /*!< Used in release version to distinguish from server. */
@@ -99,6 +104,7 @@ void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void*
 void client_init( struct CLIENT* c );
 BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
+void client_set_active_t( struct CLIENT* c, struct TILEMAP* t );
 short client_add_channel( struct CLIENT* c, struct CHANNEL* l )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))

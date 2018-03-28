@@ -24,7 +24,8 @@ void server_free_clients( struct SERVER* s ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
+      hashmap_remove_all( &(s->clients) );
+      //hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
 #ifdef DEBUG
    scaffold_print_debug(
       &module, "Removed %d clients from server. %d remaining.\n",

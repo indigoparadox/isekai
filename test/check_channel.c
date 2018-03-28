@@ -33,6 +33,9 @@ void check_channel_setup_checked() {
       client_ret = FALSE;
    int attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
 
+   ipc_setup();
+   proto_setup();
+
    nick = bfromcstr( "" );
    uname = bfromcstr( "" );
    rname = bfromcstr( "" );
@@ -57,7 +60,7 @@ void check_channel_setup_checked() {
       /* Setup the client and connect. */
       memset( &clients[i], '\0', sizeof( struct CLIENT ) );
       scaffold_set_client();
-      client_init( &clients[i], TRUE );
+      client_init( &clients[i] );
       bassignformat( nick, "TestNick%d", i );
       bassignformat( uname, "Test Username %d", i );
       bassignformat( rname, "Test Real Name %d", i );
@@ -168,7 +171,7 @@ START_TEST( test_channel_server_channel ) {
 
       /* Join the channel. */
       scaffold_set_client();
-      client_join_channel( &clients[i], &testchannel  );
+      //client_join_channel( &clients[i], &testchannel  );
 
       /* Finish server processing. */
       scaffold_set_server();

@@ -258,3 +258,7 @@ BOOL ipc_is_listening( struct CONNECTION* n ) {
    }
    return FALSE;
 }
+
+uint16_t ipc_get_port( struct CONNECTION* n ) {
+   return 0;
+}

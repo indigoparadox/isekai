@@ -1386,7 +1386,10 @@ static void irc_client_privmsg(
    /* TODO: Authentication. */
    nick = /* Start at 1 to filter the : */
       bmidstr( line, 1, binchr( line, 0, &scaffold_exclamation_string ) - 1 );
+
+#ifndef DISABLE_BACKLOG
    backlog_speak( nick, msg );
+#endif /* DISABLE_BACKLOG */
 
 cleanup:
    return;

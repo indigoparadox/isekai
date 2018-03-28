@@ -252,6 +252,8 @@ void graphics_screen_new(
    (*g)->surface = create_bitmap( w, h );
    (*g)->w = w;
    (*g)->h = h;
+   (*g)->fp_w = graphics_precise( w );
+   (*g)->fp_h = graphics_precise( h );
    scaffold_check_null( (*g)->surface );
 
    clear_bitmap( (*g)->surface );
@@ -283,6 +285,8 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
    }
    g->w = w;
    g->h = h;
+   g->fp_w = graphics_precise( w );
+   g->fp_h = graphics_precise( h );
    g->palette = NULL;
    return;
 }
@@ -333,6 +337,8 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
    }
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;
+   g->fp_w = graphics_precise( g->w );
+   g->fp_h = graphics_precise( g->h );
 cleanup:
    return;
 }
@@ -434,6 +440,8 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    scaffold_check_null( g->surface );
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;
+   g->fp_w = graphics_precise( g->w );
+   g->fp_h = graphics_precise( g->h );
 
 #ifdef USE_BITMAP_PALETTE
    set_pallete( g->palette );
@@ -453,6 +461,8 @@ cleanup:
    g->surface = create_bitmap( bitmap->w, bitmap->h );
    g->w = bitmap->w;
    g->h = bitmap->h;
+   g->fp_w = graphics_precise( bitmap->w );
+   g->fp_h = graphics_precise( bitmap->h );
    for( y = bitmap->h - 1 ; 0 <= y ; y-- ) {
       for( x = 0 ; bitmap->w > x ; x++ ) {
          putpixel( g->surface, x, y, (int)(bitmap->pixels[i++]) );
@@ -517,12 +527,14 @@ cleanup:
    return;
 }
 
+#if 0
 void graphics_draw_line(
    GRAPHICS* g, GFX_COORD_PIXEL x1, GFX_COORD_PIXEL y1,
    GFX_COORD_PIXEL x2, GFX_COORD_PIXEL y2, GRAPHICS_COLOR color
 ) {
    line( g->surface, x1, y1, x2, y2, color );
 }
+#endif // 0
 
 void graphics_draw_triangle(
    GRAPHICS* g,

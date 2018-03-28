@@ -2,9 +2,9 @@
 #define SCAFFOLD_C
 #include "scaffold.h"
 
-#ifdef BACKLOG_PRESENT
+#ifndef DISABLE_BACKLOG
 #include "backlog.h"
-#endif /* BACKLOG_PRESENT */
+#endif /* !DISABLE_BACKLOG */
 
 static struct tagbstring str_scaffold_trace[3] = {
    bsStatic( "T_NONE" ),
@@ -228,9 +228,9 @@ void scaffold_print_info( const bstring mod_in, const char* message, ... ) {
       bdata( mod_in ), bdata( scaffold_print_buffer ) );
 #endif /* DEBUG */
 
-#ifdef BACKLOG_PRESENT
+#ifndef DISABLE_BACKLOG
    backlog_system( scaffold_print_buffer );
-#endif /* BACKLOG_PRESENT */
+#endif /* DISABLE_BACKLOG */
 
 cleanup:
    return;
