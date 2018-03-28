@@ -382,7 +382,7 @@ void graphics_floorcast_create(
  *
  */
 void graphics_floorcast_throw(
-   GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
+   GFX_RAY_FLOOR* floor_pos, int x, int y,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
    const GRAPHICS_RAY* ray, const GRAPHICS* g
 ) {

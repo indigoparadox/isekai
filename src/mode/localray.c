@@ -319,6 +319,7 @@ cleanup:
    return NULL;
 }
 
+#if 0
 static BOOL check_ray_wall_collision(
    GRAPHICS_DELTA* wall_map_pos, const struct TILEMAP_LAYER* layer,
    const struct GRAPHICS_TILE_WINDOW* twindow
@@ -353,6 +354,7 @@ static BOOL check_ray_wall_collision(
 cleanup:
    return res;
 }
+#endif // 0
 
 static GRAPHICS_COLOR get_wall_color( GRAPHICS_DELTA* wall_pos ) {
 #ifdef TECHNICOLOR_RAYS
@@ -454,6 +456,75 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
    }
 }
 
+static BOOL mode_pov_draw_floor(
+   GFX_RAY_FLOOR* floor_pos,
+   GFX_COORD_PIXEL i_x, GFX_COORD_PIXEL i_start_y,
+   const GRAPHICS_DELTA* wall_map_pos,
+   const struct TILEMAP_LAYER* layer,
+   const GRAPHICS_RAY* ray, const struct CLIENT* c, GRAPHICS* g
+) {
+   GFX_COORD_PIXEL i_y;
+   struct TILEMAP_TILESET* set;
+   struct TILEMAP* t;
+   SCAFFOLD_SIZE set_firstgid = 0;
+   GRAPHICS* g_tileset;
+   BOOL ret_error = FALSE;
+   GRAPHICS_RECT tile_tilesheet_pos;
+   int tex_x, tex_y;
+   GRAPHICS_COLOR color;
+   uint32_t tile;
+
+   if( NULL != c->active_t ) {
+      t = c->active_t;
+   } else {
+      goto cleanup;
+   }
+
+   /* Draw the floor from draw_end to the bottom of the screen. */
+   for( i_y = i_start_y +1; i_y < g->h; i_y++ ) {
+      graphics_floorcast_throw(
+         floor_pos, i_x, i_y,
+         &(c->cam_pos), wall_map_pos, ray,
+         g
+      );
+
+      /* Ensure we have everything needed to draw the tile. */
+      tile = tilemap_get_tile( layer, (int)floor_pos->x, (int)floor_pos->y  );
+      if( 0 == tile ) {
+         continue;
+      }
+
+      set = tilemap_get_tileset( t, tile, &set_firstgid );
+      if( NULL == set ) {
+         continue;
+      }
+
+      g_tileset = hashmap_iterate(
+         &(set->images),
+         callback_search_tileset_img_gid,
+         c
+      );
+      if( NULL == g_tileset ) {
+         /* Tileset not yet loaded, so fail gracefully. */
+         ret_error = TRUE;
+         continue;
+      }
+
+      /* Move the source region on the tilesheet. */
+      tilemap_get_tile_tileset_pos(
+         set, set_firstgid, g_tileset, tile, &tile_tilesheet_pos );
+      tex_x = floor_pos->tex_x + tile_tilesheet_pos.x;
+      tex_y = floor_pos->tex_y + tile_tilesheet_pos.y;
+      color = graphics_get_pixel( g_tileset, tex_x, tex_y );
+      if( GRAPHICS_COLOR_TRANSPARENT != color ) {
+         graphics_set_pixel( g, i_x, i_y, color );
+      }
+   }
+
+cleanup:
+   return ret_error;
+}
+
 /** \brief Create the first-person view and walls to draw on screen beneath the
  *         sprites.
  *
@@ -466,22 +537,17 @@ static BOOL mode_pov_update_view(
    GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
    struct CLIENT* c
 ) {
-   int i_x, i_y, draw_start, draw_end;
+   int i_x, draw_start, draw_end;
    //struct INPUT p;
    int done = 0;
    GRAPHICS_DELTA wall_map_pos; /* The position of the found wall. */
    GRAPHICS_RAY ray;
    GFX_RAY_FLOOR floor_pos;
    int line_height;
-   struct TILEMAP_TILESET* set;
    struct TILEMAP_LAYER* layer;
    uint32_t tile;
-   GRAPHICS* g_tileset;
-   GRAPHICS_RECT tile_tilesheet_pos;
-   SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS_COLOR color;
    //double steps_remaining = 0;
-   int tex_x, tex_y;
    int layer_index = 0,
       layer_max = 0;
    BOOL wall_hit = FALSE;
@@ -578,51 +644,12 @@ static BOOL mode_pov_update_view(
 #endif /* RAYCAST_FOG */
          }
 
-         /* Draw the floor from draw_end to the bottom of the screen. */
-         for( i_y = draw_end +1; i_y < g->h; i_y++ ) {
-            graphics_floorcast_throw(
-               &floor_pos, i_x, i_y, line_height,
-               &(c->cam_pos), &wall_map_pos, &ray,
-               g
-            );
-
-            /* Ensure we have everything needed to draw the tile. */
-            tile = tilemap_get_tile( layer, (int)floor_pos.x, (int)floor_pos.y  );
-            if( 0 == tile ) {
-               continue;
-            }
-
-            set = tilemap_get_tileset( t, tile, &set_firstgid );
-            if( NULL == set ) {
-               continue;
-            }
-
-            g_tileset = hashmap_iterate(
-               &(set->images),
-               callback_search_tileset_img_gid,
-               c
-            );
-            if( NULL == g_tileset ) {
-               /* Tileset not yet loaded, so fail gracefully. */
-               ret_error = TRUE;
-               continue;
-            }
-
-            /* Move the source region on the tilesheet. */
-            tilemap_get_tile_tileset_pos(
-               set, set_firstgid, g_tileset, tile, &tile_tilesheet_pos );
-            tex_x = floor_pos.tex_x + tile_tilesheet_pos.x;
-            tex_y = floor_pos.tex_y + tile_tilesheet_pos.y;
-            color = graphics_get_pixel( g_tileset, tex_x, tex_y );
-            if( GRAPHICS_COLOR_TRANSPARENT != color ) {
-               graphics_set_pixel( g, i_x, i_y, color );
-            }
-         }
+         mode_pov_draw_floor( &floor_pos, i_x, draw_end, &wall_map_pos, layer, &ray, c, g );
       }
    }
 
 cleanup:
-   return ret_error;
+   return ret_error;/* Draw the floor from draw_end to the bottom of the screen. */
 }
 
 void mode_pov_draw(
@@ -644,6 +671,8 @@ void mode_pov_draw(
    }
 
    player = twindow->local_client->puppet;
+
+#if 0
 
    if( NULL == ray_view ) {
       graphics_surface_new( ray_view, 0, 0, g->w, g->h );
@@ -667,6 +696,12 @@ void mode_pov_draw(
       /* Draw the cached background. */
       graphics_blit( g, 0, 0, ray_view );
    }
+
+   #endif // 0
+
+   mode_pov_update_view(
+      g, player->x, player->y, player->facing, c->active_t, c
+   );
 
    /* Begin drawing sprites. */
    vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
