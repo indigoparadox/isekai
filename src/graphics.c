@@ -365,7 +365,7 @@ void graphics_floorcast_create(
       floor_pos->wall_y = wall_map_pos->y + 1.0;
    }
 
-   return floor_pos;
+   //return floor_pos;
 }
 
 /** \brief
@@ -396,7 +396,7 @@ void graphics_floorcast_throw(
    floor_pos->tex_y =
       (int)(floor_pos->y * GRAPHICS_SPRITE_HEIGHT) % GRAPHICS_SPRITE_HEIGHT;
 
-   return floor_pos;
+   //return floor_pos;
 }
 
 #endif /* RAYCAST_OLD_DOUBLE */
@@ -632,6 +632,8 @@ void graphics_raycast_wall_create(
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
    ray->steps = 0;
+   ray->origin_x = cam_pos->precise_x;
+   ray->origin_y = cam_pos->precise_y;
 
    /* Assume distance is finite to start. */
    ray->infinite_dist = FALSE;
@@ -655,7 +657,8 @@ void graphics_raycast_wall_create(
    return ray;
 }
 
-int graphics_raycast_wall_throw(
+#if 0
+void graphics_raycast_wall_throw(
    GRAPHICS_RAY* ray, GFX_RAY_WALL* wall_pos,
    const GFX_DELTA* cam_pos, const GRAPHICS* g,
    BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
@@ -706,10 +709,13 @@ int graphics_raycast_wall_throw(
    }
 
    /* Calculate height of line to draw on screen. */
-   return (int)(g->h / wall_pos->perpen_dist);
+   //return (int)(g->h / wall_pos->perpen_dist);
 }
+#endif // 0
 
-void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) {
+void graphics_raycast_wall_iterate( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) {
+   double dist_tmp;
+
    /* Jump to next map square, OR in x-direction, OR in y-direction. */
    if( ray->side_dist_x < ray->side_dist_y ) {
       ray->side_dist_x += ray->delta_dist_x;
@@ -744,6 +750,16 @@ void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) {
       0 > wall_pos->y
    ) {
       ray->infinite_dist = TRUE;
+   }
+
+   if( 0 == wall_pos->side ) {
+      dist_tmp = wall_pos->x - ray->origin_x + (-1 - ray->step_x) / 2;
+      wall_pos->perpen_dist = dist_tmp / ray->direction_x;
+   } else {
+      //wall_pos->perpen_dist =
+      //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
+      dist_tmp = wall_pos->y - ray->origin_y + (-1 - ray->step_y) / 2;
+      wall_pos->perpen_dist = dist_tmp / ray->direction_y;
    }
 }
 

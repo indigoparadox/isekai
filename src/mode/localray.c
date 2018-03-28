@@ -508,7 +508,7 @@ static BOOL mode_pov_update_view(
          /* Do the actual casting. */
          wall_hit = FALSE;
          while( FALSE == wall_hit ) {
-            graphics_raycast_wall_iter( &wall_map_pos, &ray );
+            graphics_raycast_wall_iterate( &wall_map_pos, &ray );
 
             if( ray.infinite_dist ) {
                if(
