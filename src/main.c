@@ -139,6 +139,7 @@ static BOOL loop_game() {
    if( FALSE == animate_is_blocking() ) {
       client_local_poll_input( main_client, l, input );
       client_update( main_client, g_screen );
+      client_local_update( main_client, l, twindow );
    }
 
    /* Do drawing. */
@@ -189,7 +190,6 @@ static BOOL loop_game() {
 
    } else if( NULL == main_client->active_t ) {
       client_set_active_t( main_client, &(l->tilemap) );
-      client_local_update( main_client, l, twindow );
    }
 
    /* If we're this far, we must be done loading! */

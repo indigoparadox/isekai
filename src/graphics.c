@@ -339,15 +339,15 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 #ifdef RAYCAST_OLD_DOUBLE
 
 void graphics_floorcast_create(
-   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GFX_DELTA* cam_pos,
+   GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 ) {
    double wall_x_hit; /* Where, exactly, the wall was hit. */
 
    if( 0 == wall_map_pos->side ) {
-      wall_x_hit = cam_pos->y + wall_map_pos->perpen_dist * ray->direction_y;
+      wall_x_hit = cam_pos->precise_y + wall_map_pos->perpen_dist * ray->direction_y;
    } else {
-      wall_x_hit = cam_pos->x + wall_map_pos->perpen_dist * ray->direction_x;
+      wall_x_hit = cam_pos->precise_x + wall_map_pos->perpen_dist * ray->direction_x;
    }
    wall_x_hit -= floor( wall_x_hit );
 
@@ -377,7 +377,7 @@ void graphics_floorcast_create(
  */
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
-   const GFX_DELTA* cam_pos, const GFX_RAY_WALL* wall_map_pos,
+   const GRAPHICS_PLANE* cam_pos, const GFX_RAY_WALL* wall_map_pos,
    const GRAPHICS* g
 ) {
    double current_dist;
@@ -387,9 +387,9 @@ void graphics_floorcast_throw(
    floor_pos->weight = current_dist / wall_map_pos->perpen_dist;
 
    floor_pos->x = floor_pos->weight * floor_pos->wall_x +
-      (1.0 - floor_pos->weight) * cam_pos->x;
+      (1.0 - floor_pos->weight) * cam_pos->precise_x;
    floor_pos->y = floor_pos->weight * floor_pos->wall_y +
-      (1.0 - floor_pos->weight) * cam_pos->y;
+      (1.0 - floor_pos->weight) * cam_pos->precise_y;
 
    floor_pos->tex_x =
       (int)(floor_pos->x * GRAPHICS_SPRITE_WIDTH) % GRAPHICS_SPRITE_WIDTH;
@@ -621,14 +621,14 @@ void graphics_raycast_wall_create(
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
-   int cam_map_pos_x = (int)(cam_pos->x);
-   int cam_map_pos_y = (int)(cam_pos->y);
+   int cam_map_pos_x = (int)(cam_pos->precise_x);
+   int cam_map_pos_y = (int)(cam_pos->precise_y);
 
    memset( wall_pos, sizeof( GFX_RAY_WALL ), '\0' );
 
    camera_x = 2 * x / (double)(g->w) - 1;
-   ray->direction_x = cam_pos->facing_x + plane_pos->x * camera_x;
-   ray->direction_y = cam_pos->facing_y + plane_pos->y * camera_x;
+   ray->direction_x = cam_pos->facing_x + plane_pos->precise_x * camera_x;
+   ray->direction_y = cam_pos->facing_y + plane_pos->precise_y * camera_x;
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
    ray->steps = 0;
@@ -639,17 +639,17 @@ void graphics_raycast_wall_create(
    /* Calculate step and initial sideDist. */
    if( 0 > ray->direction_x ) {
       ray->step_x = -GRAPHICS_RAY_INITIAL_STEP_X;
-      ray->side_dist_x = (cam_pos->x - cam_map_pos_x) * ray->delta_dist_x;
+      ray->side_dist_x = (cam_pos->precise_x - cam_map_pos_x) * ray->delta_dist_x;
    } else {
       ray->step_x = GRAPHICS_RAY_INITIAL_STEP_X;
-      ray->side_dist_x = (cam_map_pos_x + 1.0 - cam_pos->x) * ray->delta_dist_x;
+      ray->side_dist_x = (cam_map_pos_x + 1.0 - cam_pos->precise_x) * ray->delta_dist_x;
    }
    if( 0 > ray->direction_y ) {
       ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
-      ray->side_dist_y = (cam_pos->y - cam_map_pos_y) * ray->delta_dist_y;
+      ray->side_dist_y = (cam_pos->precise_y - cam_map_pos_y) * ray->delta_dist_y;
    } else {
       ray->step_y = GRAPHICS_RAY_INITIAL_STEP_Y;
-      ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->y) * ray->delta_dist_y;
+      ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->precise_y) * ray->delta_dist_y;
    }
 
    return ray;
@@ -696,12 +696,12 @@ int graphics_raycast_wall_throw(
    /* Calculate distance projected on camera direction
       (Euclidean distance will give fisheye effect!). */
    if( 0 == wall_pos->side ) {
-      dist_tmp = wall_pos->x - cam_pos->x + (-1 - ray->step_x) / 2;
+      dist_tmp = wall_pos->x - cam_pos->precise_x + (-1 - ray->step_x) / 2;
       wall_pos->perpen_dist = dist_tmp / ray->direction_x;
    } else {
       //wall_pos->perpen_dist =
       //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
-      dist_tmp = wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2;
+      dist_tmp = wall_pos->y - cam_pos->precise_y + (-1 - ray->step_y) / 2;
       wall_pos->perpen_dist = dist_tmp / ray->direction_y;
    }
 
