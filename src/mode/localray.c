@@ -683,7 +683,11 @@ void mode_pov_draw(
    /* Draw a sky. */
    graphics_draw_rect( g, 0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, TRUE );
 
-#if 0
+   wall_map_pos.map_w = t->width;
+   wall_map_pos.map_h = t->height;
+   mode_pov_set_facing( c, player->facing );
+
+#ifdef RAYCAST_CACHE
 
    if( NULL == ray_view ) {
       graphics_surface_new( ray_view, 0, 0, g->w, g->h );
@@ -695,9 +699,22 @@ void mode_pov_draw(
       player->y != last.y ||
       player->facing != last.facing
    ) {
+#endif /* RAYCAST_CACHE */
+
+   layer_max = vector_count( &(t->layers) );
+   for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
+      layer = vector_get( &(t->layers), layer_index );
       draw_failed = mode_pov_update_view(
-         ray_view, player->x, player->y, player->facing, c->active_t, c
+         &wall_map_pos, POV_LAYER_LEVEL_RAISED, layer, c,
+#ifdef RAYCAST_CACHE
+         ray_view
+#else
+         g
+#endif /* RAYCAST_CACHE */
       );
+   }
+
+#ifdef RAYCAST_CACHE
       last.x = player->x;
       last.y = player->y;
       last.facing = player->facing;
@@ -708,19 +725,8 @@ void mode_pov_draw(
       graphics_blit( g, 0, 0, ray_view );
    }
 
-   #endif // 0
+#endif /* RAYCAST_CACHE */
 
-   wall_map_pos.map_w = t->width;
-   wall_map_pos.map_h = t->height;
-   mode_pov_set_facing( c, player->facing );
-
-   layer_max = vector_count( &(t->layers) );
-   for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
-      layer = vector_get( &(t->layers), layer_index );
-      mode_pov_update_view(
-         &wall_map_pos, POV_LAYER_LEVEL_RAISED, layer, c, g
-      );
-   }
    /* Begin drawing sprites. */
    vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
    vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );
