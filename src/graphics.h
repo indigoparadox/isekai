@@ -161,6 +161,8 @@ typedef struct {
 } GFX_DELTA;
 
 typedef struct {
+   double origin_x;
+   double origin_y;
    double direction_x;
    double direction_y;
    /* Length of ray from one side to next x or y-side. */
@@ -372,7 +374,7 @@ void graphics_raycast_wall_create(
    GRAPHICS_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
-void graphics_raycast_wall_iter( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray );
+void graphics_raycast_wall_iterate( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray );
 double graphics_raycast_get_distance(
    const GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
 );
@@ -380,11 +382,13 @@ void graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
    const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
 );
+#if 0
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
    const GRAPHICS_PLANE* cam_pos, const GFX_RAY_WALL* wall_map_pos,
    const GRAPHICS* g
 );
+#endif // 0
 int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
 int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
 
