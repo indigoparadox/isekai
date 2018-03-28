@@ -325,22 +325,22 @@ static BOOL check_ray_wall_collision(
 ) {
    int res = 0,
       i;
-   uint32_t tile;
+   //uint32_t tile;
    struct TILEMAP_TILESET* set;
    struct TILEMAP_TILE_DATA* tile_info;
    struct TILEMAP_TERRAIN_DATA* terrain_iter;
 
-   tile = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
-   if( 0 == tile ) {
+   //tile = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
+   if( 0 == wall_map_pos->data ) {
       goto cleanup;
    }
 
-   set = tilemap_get_tileset( twindow->local_client->active_t, tile, NULL );
+   set = tilemap_get_tileset( twindow->local_client->active_t, wall_map_pos->data, NULL );
    if( NULL == set ) {
       goto cleanup;
    }
 
-   tile_info = vector_get( &(set->tiles), tile - 1 );
+   tile_info = vector_get( &(set->tiles), wall_map_pos->data - 1 );
    for( i = 0 ; 4 > i ; i++ ) {
       terrain_iter = tile_info->terrain[i];
       if( NULL == terrain_iter ) { continue; }
@@ -466,8 +466,8 @@ static BOOL mode_pov_update_view(
    GRAPHICS* g, int x, int y, MOBILE_FACING facing, struct TILEMAP* t,
    struct CLIENT* c
 ) {
-   int i_x, i_y, draw_start, draw_end, j, k;
-   struct INPUT p;
+   int i_x, i_y, draw_start, draw_end;
+   //struct INPUT p;
    int done = 0;
    GRAPHICS_DELTA wall_map_pos; /* The position of the found wall. */
    GRAPHICS_RAY ray;
@@ -480,7 +480,7 @@ static BOOL mode_pov_update_view(
    GRAPHICS_RECT tile_tilesheet_pos;
    SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS_COLOR color;
-   double steps_remaining = 0;
+   //double steps_remaining = 0;
    int tex_x, tex_y;
    int layer_index = 0,
       layer_max = 0;
@@ -511,6 +511,7 @@ static BOOL mode_pov_update_view(
 
          wall_map_pos.map_x = (int)(c->cam_pos.precise_x);
          wall_map_pos.map_y = (int)(c->cam_pos.precise_y);
+         wall_map_pos.data = tilemap_get_tile( layer, wall_map_pos.map_x, wall_map_pos.map_y );
 
          /* Calculate ray position and direction. */
          graphics_raycast_wall_create(
@@ -539,7 +540,7 @@ static BOOL mode_pov_update_view(
             /* if( check_ray_wall_collision( &wall_map_pos, layer, twindow ) ) {
                wall_hit = TRUE;
             } */
-            if( 0 != tile && opaque_index <= layer_index ) {
+            if( 0 != wall_map_pos.data && opaque_index <= layer_index ) {
                wall_hit = TRUE;
             }
          }
