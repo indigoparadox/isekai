@@ -154,11 +154,20 @@ typedef struct {
 #ifndef DISABLE_MODE_POV
 
 typedef struct {
+   int map_x;
+   int map_y;
+   int map_w;
+   int map_h;
    double precise_x;
    double precise_y;
    double perpen_dist;
+   /* Length of ray to next x or y-side. */
+   double side_dist_x;
+   double side_dist_y;
    GRAPHICS_RAY_SIDE side;
-} GFX_DELTA;
+   uint32_t data;
+   int steps;
+} GRAPHICS_DELTA;
 
 typedef struct {
    double origin_x;
@@ -168,17 +177,14 @@ typedef struct {
    /* Length of ray from one side to next x or y-side. */
    double delta_dist_x;
    double delta_dist_y;
-   /* Length of ray to next x or y-side. */
-   double side_dist_x;
-   double side_dist_y;
    int step_x;
    int step_y;
-   BOOL infinite_dist;
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
-   GFX_COORD_TILE map_w;
-   GFX_COORD_TILE map_h;
-   int steps;
+   //BOOL infinite_dist;
+   //GFX_COORD_TILE x;
+   //GFX_COORD_TILE y;
+   //GFX_COORD_TILE map_w;
+   //GFX_COORD_TILE map_h;
+   //int steps;
 } GRAPHICS_RAY;
 
 typedef struct {
@@ -202,7 +208,7 @@ typedef struct {
    GRAPHICS_RAY_SIDE side;
 } GRAPHICS_RAY_FPP;
 
-typedef struct {
+/* typedef struct {
    int x;
    int y;
    int map_w;
@@ -210,7 +216,7 @@ typedef struct {
    int side;
    double perpen_dist;
    uint32_t data;
-} GFX_RAY_WALL;
+} GFX_RAY_WALL; */
 
 typedef struct {
    double x;
@@ -371,16 +377,16 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 #ifndef DISABLE_MODE_POV
 
 void graphics_raycast_wall_create(
-   GRAPHICS_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   GRAPHICS_RAY* ray, int x, GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
-void graphics_raycast_wall_iterate( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray );
+void graphics_raycast_wall_iterate( GRAPHICS_DELTA* wall_pos, const GRAPHICS_RAY* ray );
 double graphics_raycast_get_distance(
-   const GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
+   const GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
 );
 void graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
-   const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
+   const GRAPHICS_DELTA* wall_map_pos, const GRAPHICS* g
 );
 #if 0
 void graphics_floorcast_throw(

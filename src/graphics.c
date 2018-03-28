@@ -340,7 +340,7 @@ void graphics_shrink_rect( GRAPHICS_RECT* rect, GFX_COORD_PIXEL shrink_by ) {
 
 void graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
-   const GFX_RAY_WALL* wall_map_pos, const GRAPHICS* g
+   const GRAPHICS_DELTA* wall_map_pos, const GRAPHICS* g
 ) {
    double wall_x_hit; /* Where, exactly, the wall was hit. */
 
@@ -352,17 +352,17 @@ void graphics_floorcast_create(
    wall_x_hit -= floor( wall_x_hit );
 
    if( wall_map_pos->side == 0 && 0 < ray->direction_x ) {
-      floor_pos->wall_x = wall_map_pos->x;
-      floor_pos->wall_y = wall_map_pos->y + wall_x_hit;
+      floor_pos->wall_x = wall_map_pos->map_x;
+      floor_pos->wall_y = wall_map_pos->map_y + wall_x_hit;
    } else if( 0 == wall_map_pos->side && 0 > ray->direction_x ) {
-      floor_pos->wall_x = wall_map_pos->x + 1.0;
-      floor_pos->wall_y = wall_map_pos->y + wall_x_hit;
+      floor_pos->wall_x = wall_map_pos->map_x + 1.0;
+      floor_pos->wall_y = wall_map_pos->map_y + wall_x_hit;
    } else if( 1 == wall_map_pos->side && 0 < ray->direction_y ) {
-      floor_pos->wall_x = wall_map_pos->x + wall_x_hit;
-      floor_pos->wall_y = wall_map_pos->y;
+      floor_pos->wall_x = wall_map_pos->map_x + wall_x_hit;
+      floor_pos->wall_y = wall_map_pos->map_y;
    } else {
-      floor_pos->wall_x = wall_map_pos->x + wall_x_hit;
-      floor_pos->wall_y = wall_map_pos->y + 1.0;
+      floor_pos->wall_x = wall_map_pos->map_x + wall_x_hit;
+      floor_pos->wall_y = wall_map_pos->map_y + 1.0;
    }
 
    //return floor_pos;
@@ -377,7 +377,7 @@ void graphics_floorcast_create(
  */
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
-   const GRAPHICS_PLANE* cam_pos, const GFX_RAY_WALL* wall_map_pos,
+   const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
    const GRAPHICS* g
 ) {
    double current_dist;
@@ -617,41 +617,45 @@ void graphics_raycast_floor_texture(
 #ifdef RAYCAST_OLD_DOUBLE
 
 void graphics_raycast_wall_create(
-   GRAPHICS_RAY* ray, int x, GFX_RAY_WALL* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   GRAPHICS_RAY* ray, int x, GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
    int cam_map_pos_x = (int)(cam_pos->precise_x);
    int cam_map_pos_y = (int)(cam_pos->precise_y);
 
-   memset( wall_pos, sizeof( GFX_RAY_WALL ), '\0' );
+   memset( wall_pos, sizeof( GRAPHICS_DELTA ), '\0' );
 
    camera_x = 2 * x / (double)(g->w) - 1;
    ray->direction_x = cam_pos->facing_x + plane_pos->precise_x * camera_x;
    ray->direction_y = cam_pos->facing_y + plane_pos->precise_y * camera_x;
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
-   ray->steps = 0;
+   wall_pos->steps = 0;
    ray->origin_x = cam_pos->precise_x;
    ray->origin_y = cam_pos->precise_y;
 
    /* Assume distance is finite to start. */
-   ray->infinite_dist = FALSE;
+   //ray->infinite_dist = FALSE;
 
    /* Calculate step and initial sideDist. */
    if( 0 > ray->direction_x ) {
       ray->step_x = -GRAPHICS_RAY_INITIAL_STEP_X;
-      ray->side_dist_x = (cam_pos->precise_x - cam_map_pos_x) * ray->delta_dist_x;
+      wall_pos->side_dist_x =
+         (cam_pos->precise_x - cam_map_pos_x) * ray->delta_dist_x;
    } else {
       ray->step_x = GRAPHICS_RAY_INITIAL_STEP_X;
-      ray->side_dist_x = (cam_map_pos_x + 1.0 - cam_pos->precise_x) * ray->delta_dist_x;
+      wall_pos->side_dist_x =
+         (cam_map_pos_x + 1.0 - cam_pos->precise_x) * ray->delta_dist_x;
    }
    if( 0 > ray->direction_y ) {
       ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
-      ray->side_dist_y = (cam_pos->precise_y - cam_map_pos_y) * ray->delta_dist_y;
+      wall_pos->side_dist_y =
+         (cam_pos->precise_y - cam_map_pos_y) * ray->delta_dist_y;
    } else {
       ray->step_y = GRAPHICS_RAY_INITIAL_STEP_Y;
-      ray->side_dist_y = (cam_map_pos_y + 1.0 - cam_pos->precise_y) * ray->delta_dist_y;
+      wall_pos->side_dist_y =
+         (cam_map_pos_y + 1.0 - cam_pos->precise_y) * ray->delta_dist_y;
    }
 
    return ray;
@@ -713,22 +717,34 @@ void graphics_raycast_wall_throw(
 }
 #endif // 0
 
-void graphics_raycast_wall_iterate( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) {
+BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
+   if(
+      point->map_x > point->map_w ||
+      point->map_y > point->map_h ||
+      0 > point->map_x ||
+      0 > point->map_y
+   ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* ray ) {
    double dist_tmp;
 
    /* Jump to next map square, OR in x-direction, OR in y-direction. */
-   if( ray->side_dist_x < ray->side_dist_y ) {
-      ray->side_dist_x += ray->delta_dist_x;
-      wall_pos->x += ray->step_x;
-      wall_pos->side = 0;
+   if( point->side_dist_x < point->side_dist_y ) {
+      point->side_dist_x += ray->delta_dist_x;
+      point->map_x += ray->step_x;
+      point->side = RAY_SIDE_NORTH_SOUTH;
    } else {
-      ray->side_dist_y += ray->delta_dist_y;
-      wall_pos->y += ray->step_y;
-      wall_pos->side = 1;
+      point->side_dist_y += ray->delta_dist_y;
+      point->map_y += ray->step_y;
+      point->side = RAY_SIDE_EAST_WEST;
    }
 
    /* Assume distance is finite to start. */
-   ray->infinite_dist = FALSE;
+   //ray->infinite_dist = FALSE;
 
 #ifdef LIMIT_RAY_STEPS
    ray->steps++;
@@ -742,24 +758,14 @@ void graphics_raycast_wall_iterate( GFX_RAY_WALL* wall_pos, GRAPHICS_RAY* ray ) 
    }
 #endif /* LIMIT_RAY_STEPS */
 
-   /* Don't draw walls outside of the map. */
-   if(
-      wall_pos->x > wall_pos->map_w ||
-      wall_pos->y > wall_pos->map_h ||
-      0 > wall_pos->x ||
-      0 > wall_pos->y
-   ) {
-      ray->infinite_dist = TRUE;
-   }
-
-   if( 0 == wall_pos->side ) {
-      dist_tmp = wall_pos->x - ray->origin_x + (-1 - ray->step_x) / 2;
-      wall_pos->perpen_dist = dist_tmp / ray->direction_x;
+   if( RAY_SIDE_NORTH_SOUTH == point->side ) {
+      dist_tmp = point->map_x - ray->origin_x + (-1 - ray->step_x) / 2;
+      point->perpen_dist = dist_tmp / ray->direction_x;
    } else {
       //wall_pos->perpen_dist =
       //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
-      dist_tmp = wall_pos->y - ray->origin_y + (-1 - ray->step_y) / 2;
-      wall_pos->perpen_dist = dist_tmp / ray->direction_y;
+      dist_tmp = point->map_y - ray->origin_y + (-1 - ray->step_y) / 2;
+      point->perpen_dist = dist_tmp / ray->direction_y;
    }
 }
 
