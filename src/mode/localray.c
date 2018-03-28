@@ -545,24 +545,16 @@ static BOOL mode_pov_update_view(
             }
          }
 
-         /* if( 0 == wall_map_pos.side ) {
-            wall_map_pos.perpen_dist =
-               (wall_map_pos.x - c->cam_pos.precise_x + (-1 - ray.step_x) / 2) / ray.direction_x;
-         } else {
-            wall_map_pos.perpen_dist =
-               (wall_map_pos.y - c->cam_pos.precise_y + (-1 - ray.step_y) / 2) / ray.direction_y;
-         } */
-
          c->z_buffer[i_x] = wall_map_pos.perpen_dist;
          line_height = (int)(g->h / wall_map_pos.perpen_dist);
 
          draw_end = graphics_get_ray_stripe_end( line_height, g );
          draw_start = graphics_get_ray_stripe_start( line_height, g );
 
-         graphics_floorcast_create(
+         /* graphics_floorcast_create(
             &floor_pos, &ray, i_x, &(c->cam_pos),
             &wall_map_pos, g
-         );
+         ); */
 
          if( 0 > draw_end ) {
             /* Become < 0 if the integer overflows. */
@@ -590,7 +582,7 @@ static BOOL mode_pov_update_view(
          for( i_y = draw_end +1; i_y < g->h; i_y++ ) {
             graphics_floorcast_throw(
                &floor_pos, i_x, i_y, line_height,
-               &(c->cam_pos), &wall_map_pos,
+               &(c->cam_pos), &wall_map_pos, &ray,
                g
             );
 

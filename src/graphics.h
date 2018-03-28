@@ -158,12 +158,14 @@ typedef struct {
    int map_y;
    int map_w;
    int map_h;
+   int floor_height;
    double precise_x;
    double precise_y;
    double perpen_dist;
    /* Length of ray to next x or y-side. */
    double side_dist_x;
    double side_dist_y;
+   double stripe_x_hit;
    GRAPHICS_RAY_SIDE side;
    uint32_t data;
    int steps;
@@ -226,8 +228,8 @@ typedef struct {
    //int tex_w;
    //int tex_h;
    /* x, y position of the floor texel at the bottom of the wall. */
-   double wall_x;
-   double wall_y;
+   //double wall_x;
+   //double wall_y;
    int map_w;
    int map_h;
    int side;
@@ -388,13 +390,11 @@ void graphics_floorcast_create(
    GFX_RAY_FLOOR* floor_pos, const GRAPHICS_RAY* ray, int x, const GRAPHICS_PLANE* cam_pos,
    const GRAPHICS_DELTA* wall_map_pos, const GRAPHICS* g
 );
-#if 0
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int line_height,
-   const GRAPHICS_PLANE* cam_pos, const GFX_RAY_WALL* wall_map_pos,
-   const GRAPHICS* g
+   const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
+   const GRAPHICS_RAY* ray, const GRAPHICS* g
 );
-#endif // 0
 int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
 int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
 
