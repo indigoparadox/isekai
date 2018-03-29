@@ -744,8 +744,8 @@ void graphics_raycast_wall_throw(
 
 BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
    if(
-      point->map_x > point->map_w ||
-      point->map_y > point->map_h ||
+      point->map_x >= point->map_w ||
+      point->map_y >= point->map_h ||
       0 > point->map_x ||
       0 > point->map_y
    ) {
@@ -783,6 +783,8 @@ void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* r
    }
 #endif /* LIMIT_RAY_STEPS */
 
+   /* Calculate distance projected on camera direction
+      (Euclidean distance will give fisheye effect!). */
    if( RAY_SIDE_NORTH_SOUTH == point->side ) {
       dist_tmp = point->map_x - ray->origin_x + (-1 - ray->step_x) / 2;
       point->perpen_dist = dist_tmp / ray->direction_x;
