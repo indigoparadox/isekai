@@ -305,6 +305,17 @@ cleanup:
    return g_out;
 }
 
+void graphics_surface_set_h( GRAPHICS* g, GFX_COORD_PIXEL h ) {
+   g->h = h;
+   g->half_h = h / 2;
+   g->fp_h = graphics_precise( h );
+}
+
+void graphics_surface_set_w( GRAPHICS* g, GFX_COORD_PIXEL w ) {
+   g->w = w;
+   g->fp_w = graphics_precise( w );
+}
+
 /** \brief Put the spritesheet position for gid on the spritesheet g_sprites in
  *         the rectangle sprite_frame. The rectangle must already have the
  *         correct sprite width and height set when passed.
@@ -754,7 +765,9 @@ BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
    return FALSE;
 }
 
-void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* ray ) {
+void graphics_raycast_wall_iterate(
+   GRAPHICS_DELTA* point, const GRAPHICS_RAY* ray, const GRAPHICS* g
+) {
    double dist_tmp;
 
    /* Jump to next map square, OR in x-direction, OR in y-direction. */
@@ -794,6 +807,7 @@ void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* r
       dist_tmp = point->map_y - ray->origin_y + (-1 - ray->step_y) / 2;
       point->perpen_dist = dist_tmp / ray->direction_y;
    }
+   point->cell_height = (int)(g->h / point->perpen_dist);
 
    /* Figure out the precise pixel on the wall hit by this stripe, for
     * texture-mapping purposes. */
@@ -806,6 +820,8 @@ void graphics_raycast_wall_iterate( GRAPHICS_DELTA* point, const GRAPHICS_RAY* r
 }
 
 #endif /* RAYCAST_OLD_DOUBLE */
+
+#if 0
 
 /** \brief Calculate lowest and highest pixel to fill in current stripe.
  *
@@ -836,5 +852,7 @@ int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g ) {
    }
    return draw_start;
 }
+
+#endif // 0
 
 #endif /* !DISABLE_MODE_POV */

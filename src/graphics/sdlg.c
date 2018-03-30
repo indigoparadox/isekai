@@ -157,10 +157,8 @@ void graphics_screen_new(
       | SDL_DOUBLEBUF
    );
    scaffold_check_null( (*g)->surface );
-   (*g)->w = w;
-   (*g)->h = h;
-   (*g)->fp_w = graphics_precise( w );
-   (*g)->fp_h = graphics_precise( h );
+   graphics_surface_set_h( *g, h );
+   graphics_surface_set_w( *g, w );
    (*g)->virtual_x = vw;
    (*g)->virtual_y = vh;
    (*g)->palette = NULL;
@@ -197,10 +195,8 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
    }
    g->virtual_x = 0;
    g->virtual_y = 0;
-   g->w = w;
-   g->h = h;
-   g->fp_w = graphics_precise( w );
-   g->fp_h = graphics_precise( h );
+   graphics_surface_set_h( g, h );
+   graphics_surface_set_w( g, w );
 cleanup:
    return;
 }
@@ -291,10 +287,8 @@ cleanup:
       screen->format->Amask
    );
    scaffold_check_null( g->surface );
-   g->w = bitmap->w;
-   g->h = bitmap->h;
-   g->fp_w = graphics_precise( g->w );
-   g->fp_h = graphics_precise( g->h );
+   graphics_surface_set_h( g, bitmap->h );
+   graphics_surface_set_w( g, bitmap->w );
    sdl_ret = SDL_LockSurface( g->surface );
    scaffold_check_nonzero( sdl_ret );
    surface = (SDL_Surface*)g->surface;

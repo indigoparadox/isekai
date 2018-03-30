@@ -443,7 +443,7 @@
 					<Add option="-DUSE_RAYCASTING" />
 					<Add option="-DxRAY_WIREFRAME" />
 					<Add option="-DRAYCAST_OLD_DOUBLE" />
-					<Add option="-DRAYCAST_FOG" />
+					<Add option="-DxRAYCAST_FOG" />
 					<Add option="-DRAYCAST_CACHE" />
 				</Compiler>
 				<Linker>

@@ -8,10 +8,8 @@ void graphics_screen_new(
 ) {
    (*g) = mem_alloc( 1, GRAPHICS );
    (*g)->surface = NULL;
-   (*g)->w = w;
-   (*g)->h = h;
-   (*g)->fp_w = graphics_precise( w );
-   (*g)->fp_h = graphics_precise( h );
+   graphics_surface_set_h( *g, h );
+   graphics_surface_set_w( *g, w );
    (*g)->virtual_x = vw;
    (*g)->virtual_y = vh;
    (*g)->palette = NULL;

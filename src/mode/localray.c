@@ -408,7 +408,7 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             -1 * cos( GRAPHICS_RAY_ROTATE_INC );
 
          old_dir_x = GRAPHICS_RAY_FOV;
-         c->plane_pos.precise_x = old_dir_x * cos(GRAPHICS_RAY_ROTATE_INC ) -
+         c->plane_pos.precise_x = old_dir_x * cos( GRAPHICS_RAY_ROTATE_INC ) -
             0 * sin( GRAPHICS_RAY_ROTATE_INC );
          c->plane_pos.precise_y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( GRAPHICS_RAY_ROTATE_INC );
@@ -589,7 +589,7 @@ static BOOL mode_pov_update_view(
    /* Do the actual casting. */
    wall_hit = FALSE;
    while( FALSE == wall_hit ) {
-      graphics_raycast_wall_iterate( wall_map_pos, &ray );
+      graphics_raycast_wall_iterate( wall_map_pos, &ray, g );
 
       if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
          /* The ray has to stop at some point, or this will become an
@@ -639,7 +639,7 @@ static BOOL mode_pov_update_view(
 
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < line_height ) {
-      if( graphics_raycast_point_is_infinite( wall_map_pos ) ) {
+      if( !graphics_raycast_point_is_infinite( wall_map_pos ) ) {
          /* Choose wall color. */
          color = get_wall_color( wall_map_pos );
 #ifdef RAYCAST_FOG
