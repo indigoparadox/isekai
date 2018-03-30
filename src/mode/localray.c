@@ -562,21 +562,11 @@ static BOOL mode_pov_update_view(
    BOOL wall_hit = FALSE;
    BOOL ret_error = FALSE,
       ret_tmp = FALSE;
-   GRAPHICS_DELTA* wall_map_pos = &(wall_positions[layer->z][i_x]);
+   GRAPHICS_DELTA* wall_map_pos = &(wall_positions[layer->z][i_x]),
+      old_map_pos = { 0 };
 
    wall_map_pos->map_w = c->active_t->width;
    wall_map_pos->map_h = c->active_t->height;
-
-   if( g->w > i_x ) {
-      ret_tmp = mode_pov_update_view(
-         wall_positions, opaque_index, i_x + 1, layer, c, g
-      );
-      if( ret_tmp ) {
-         ret_error = TRUE;
-      }
-   } else {
-      goto cleanup;
-   };
 
    wall_map_pos->map_x = (int)(c->cam_pos.precise_x);
    wall_map_pos->map_y = (int)(c->cam_pos.precise_y);
@@ -637,15 +627,28 @@ static BOOL mode_pov_update_view(
       draw_end = g->h;
    }
 
+   memcpy( &old_map_pos, wall_map_pos, sizeof( GRAPHICS_DELTA ) );
+
+   if( g->w > i_x ) {
+      ret_tmp = mode_pov_update_view(
+         wall_positions, opaque_index, i_x + 1, layer, c, g
+      );
+      if( ret_tmp ) {
+         ret_error = TRUE;
+      }
+   } else {
+      goto cleanup;
+   };
+
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < line_height ) {
-      if( !graphics_raycast_point_is_infinite( wall_map_pos ) ) {
+      if( !graphics_raycast_point_is_infinite( &old_map_pos ) ) {
          /* Choose wall color. */
-         color = get_wall_color( wall_map_pos );
+         color = get_wall_color( &old_map_pos );
 #ifdef RAYCAST_FOG
       } else {
          /* Fog. */
-         color = GRAPHICS_COLOR_WHITE;
+         color = RAY_SIDE_EAST_WEST == old_map_pos.side ? GRAPHICS_COLOR_GRAY : GRAPHICS_COLOR_WHITE;
       }
 #endif /* RAYCAST_FOG */
       graphics_draw_line( g, i_x, draw_start, i_x, draw_end, color );
@@ -654,7 +657,7 @@ static BOOL mode_pov_update_view(
 #endif /* RAYCAST_FOG */
    }
 
-   ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, draw_end, wall_map_pos, layer, &ray, c, g );
+   ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, draw_end, &old_map_pos, layer, &ray, c, g );
    if( TRUE == ret_tmp ) {
       ret_error = TRUE;
    }
