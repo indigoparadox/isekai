@@ -670,6 +670,8 @@ void graphics_raycast_wall_create(
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
    wall_pos->steps = 0;
+   wall_pos->map_x = cam_map_pos_x;
+   wall_pos->map_y = cam_map_pos_y;
    ray->origin_x = cam_pos->precise_x;
    ray->origin_y = cam_pos->precise_y;
 
