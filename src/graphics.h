@@ -9,6 +9,8 @@
 #include "scaffold.h"
 #include "ref.h"
 
+#define GRAPHICS_90DEG_RADS 1.5708
+
 #define GRAPHICS_RASTER_EXTENSION ".bmp"
 #define GRAPHICS_SCREEN_WIDTH 640
 #define GRAPHICS_SCREEN_HEIGHT 480
@@ -18,7 +20,7 @@
 #define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 #define GRAPHICS_RAY_FOV 0.66
 #define GRAPHICS_RAY_FOV_FP 6600
-#define GRAPHICS_RAY_ROTATE_INC (3 * 1.5708)
+#define GRAPHICS_RAY_ROTATE_INC (3 * GRAPHICS_90DEG_RADS)
 #define GRAPHICS_RAY_ROTATE_INC_FP 47142
 #define GRAPHICS_RAY_ROTATE_INC_FP_COS 18
 #define GRAPHICS_RAY_ROTATE_INC_FP_SIN 9999
@@ -92,6 +94,7 @@ typedef struct GRAPHICS {
    void* font;
    GFX_COORD_PIXEL virtual_x;
    GFX_COORD_PIXEL virtual_y;
+   GFX_COORD_PIXEL half_h;
 } GRAPHICS;
 
 typedef struct {
@@ -168,11 +171,14 @@ typedef struct {
    GRAPHICS_RAY_SIDE side;
    uint32_t data;
    int steps;
+   GFX_COORD_PIXEL wall_draw_start;
+   GFX_COORD_PIXEL wall_draw_end;
+   GFX_COORD_PIXEL cell_height;
 } GRAPHICS_DELTA;
 
 typedef struct {
-   double origin_x;
-   double origin_y;
+   double origin_x; /*!< Copied from camera pos at creation. */
+   double origin_y; /*!< Copied from camera pos at creation. */
    double direction_x;
    double direction_y;
    /* Length of ray from one side to next x or y-side. */
@@ -180,13 +186,9 @@ typedef struct {
    double delta_dist_y;
    int step_x;
    int step_y;
-   //BOOL infinite_dist;
-   //GFX_COORD_TILE x;
-   //GFX_COORD_TILE y;
-   //GFX_COORD_TILE map_w;
-   //GFX_COORD_TILE map_h;
-   //int steps;
 } GRAPHICS_RAY;
+
+#ifdef RAYCAST_FPP
 
 typedef struct {
    GFX_COORD_FPP fp_direction_x;
@@ -209,7 +211,11 @@ typedef struct {
    GRAPHICS_RAY_SIDE side;
 } GRAPHICS_RAY_FPP;
 
-/* typedef struct {
+#endif /* RAYCAST_FPP */
+
+#if 0
+
+typedef struct {
    int x;
    int y;
    int map_w;
@@ -217,7 +223,9 @@ typedef struct {
    int side;
    double perpen_dist;
    uint32_t data;
-} GFX_RAY_WALL; */
+} GFX_RAY_WALL;
+
+#endif // 0
 
 typedef struct {
    double x;
@@ -278,6 +286,8 @@ void graphics_screen_new(
 void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h );
 void graphics_surface_free( GRAPHICS* g );
 void graphics_surface_cleanup( GRAPHICS* g );
+void graphics_surface_set_w( GRAPHICS* g, GFX_COORD_PIXEL w );
+void graphics_surface_set_h( GRAPHICS* g, GFX_COORD_PIXEL h );
 void graphics_flip_screen( GRAPHICS* g );
 void graphics_shutdown( GRAPHICS* g );
 void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon );
@@ -382,7 +392,9 @@ void graphics_raycast_wall_create(
    GRAPHICS_RAY* ray, int x, GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
-void graphics_raycast_wall_iterate( GRAPHICS_DELTA* wall_pos, const GRAPHICS_RAY* ray );
+void graphics_raycast_wall_iterate(
+   GRAPHICS_DELTA* wall_pos, const GRAPHICS_RAY* ray, const GRAPHICS* g
+);
 double graphics_raycast_get_distance(
    const GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
 );

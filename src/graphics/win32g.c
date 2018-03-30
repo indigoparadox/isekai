@@ -94,8 +94,8 @@ void graphics_surface_init( GRAPHICS* g, SCAFFOLD_SIZE w, SCAFFOLD_SIZE h ) {
    } else {
       g->surface = NULL;
    }
-   g->w = w;
-   g->h = h;
+   graphics_surface_set_h( g, h );
+   graphics_surface_set_w( g, w );
    g->palette = NULL;
    return;
 }
