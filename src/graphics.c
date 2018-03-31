@@ -655,23 +655,26 @@ void graphics_raycast_floor_texture(
 #ifdef RAYCAST_OLD_DOUBLE
 
 void graphics_raycast_wall_create(
-   GRAPHICS_RAY* ray, int x, GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   GRAPHICS_RAY* ray, int x, int map_w, int map_h,
+   const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 ) {
    double camera_x;
    int cam_map_pos_x = (int)(cam_pos->precise_x);
    int cam_map_pos_y = (int)(cam_pos->precise_y);
 
-   memset( wall_pos, sizeof( GRAPHICS_DELTA ), '\0' );
+   //memset( wall_pos, sizeof( GRAPHICS_DELTA ), '\0' );
 
    camera_x = 2 * x / (double)(g->w) - 1;
    ray->direction_x = cam_pos->facing_x + plane_pos->precise_x * camera_x;
    ray->direction_y = cam_pos->facing_y + plane_pos->precise_y * camera_x;
    ray->delta_dist_x = fabs( 1 / ray->direction_x );
    ray->delta_dist_y = fabs( 1 / ray->direction_y );
-   wall_pos->steps = 0;
-   wall_pos->map_x = cam_map_pos_x;
-   wall_pos->map_y = cam_map_pos_y;
+   //wall_pos->steps = 0;
+   ray->map_x = cam_map_pos_x;
+   ray->map_y = cam_map_pos_y;
+   ray->map_w = map_w;
+   ray->map_h = map_h;
    ray->origin_x = cam_pos->precise_x;
    ray->origin_y = cam_pos->precise_y;
 
@@ -681,79 +684,23 @@ void graphics_raycast_wall_create(
    /* Calculate step and initial sideDist. */
    if( 0 > ray->direction_x ) {
       ray->step_x = -GRAPHICS_RAY_INITIAL_STEP_X;
-      wall_pos->side_dist_x =
+      ray->side_dist_x =
          (cam_pos->precise_x - cam_map_pos_x) * ray->delta_dist_x;
    } else {
       ray->step_x = GRAPHICS_RAY_INITIAL_STEP_X;
-      wall_pos->side_dist_x =
+      ray->side_dist_x =
          (cam_map_pos_x + 1.0 - cam_pos->precise_x) * ray->delta_dist_x;
    }
    if( 0 > ray->direction_y ) {
       ray->step_y = -GRAPHICS_RAY_INITIAL_STEP_Y;
-      wall_pos->side_dist_y =
+      ray->side_dist_y =
          (cam_pos->precise_y - cam_map_pos_y) * ray->delta_dist_y;
    } else {
       ray->step_y = GRAPHICS_RAY_INITIAL_STEP_Y;
-      wall_pos->side_dist_y =
+      ray->side_dist_y =
          (cam_map_pos_y + 1.0 - cam_pos->precise_y) * ray->delta_dist_y;
    }
 }
-
-#if 0
-void graphics_raycast_wall_throw(
-   GRAPHICS_RAY* ray, GFX_RAY_WALL* wall_pos,
-   const GFX_DELTA* cam_pos, const GRAPHICS* g,
-   BOOL (collision_check)( GFX_RAY_WALL*, void* ), void* data
-) {
-   BOOL wall_hit = FALSE;
-   double dist_tmp;
-
-   /* Do the actual casting. */
-   while( FALSE == wall_hit ) {
-      /* Jump to next map square, OR in x-direction, OR in y-direction. */
-      if( ray->side_dist_x < ray->side_dist_y ) {
-         ray->side_dist_x += ray->delta_dist_x;
-         wall_pos->x += ray->step_x;
-         wall_pos->side = 0;
-      } else {
-         ray->side_dist_y += ray->delta_dist_y;
-         wall_pos->y += ray->step_y;
-         wall_pos->side = 1;
-      }
-
-      /* Don't draw walls outside of the map. */
-      if(
-         wall_pos->x > wall_pos->map_w ||
-         wall_pos->y > wall_pos->map_h ||
-         0 > wall_pos->x ||
-         0 > wall_pos->y
-      ) {
-         ray->infinite_dist = TRUE;
-         break;
-      }
-
-     /* Check if ray has hit a wall. */
-      if( collision_check( wall_pos, data ) ) {
-         wall_hit = TRUE;
-      }
-   }
-
-   /* Calculate distance projected on camera direction
-      (Euclidean distance will give fisheye effect!). */
-   if( 0 == wall_pos->side ) {
-      dist_tmp = wall_pos->x - cam_pos->precise_x + (-1 - ray->step_x) / 2;
-      wall_pos->perpen_dist = dist_tmp / ray->direction_x;
-   } else {
-      //wall_pos->perpen_dist =
-      //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
-      dist_tmp = wall_pos->y - cam_pos->precise_y + (-1 - ray->step_y) / 2;
-      wall_pos->perpen_dist = dist_tmp / ray->direction_y;
-   }
-
-   /* Calculate height of line to draw on screen. */
-   //return (int)(g->h / wall_pos->perpen_dist);
-}
-#endif // 0
 
 BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
    if(
@@ -768,35 +715,24 @@ BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
 }
 
 void graphics_raycast_wall_iterate(
-   GRAPHICS_DELTA* point, const GRAPHICS_RAY* ray, const GRAPHICS* g
+   GRAPHICS_DELTA* point, GRAPHICS_RAY* ray, const GRAPHICS* g
 ) {
    double dist_tmp;
 
    /* Jump to next map square, OR in x-direction, OR in y-direction. */
-   if( point->side_dist_x < point->side_dist_y ) {
-      point->side_dist_x += ray->delta_dist_x;
-      point->map_x += ray->step_x;
+   if( ray->side_dist_x < ray->side_dist_y ) {
+      ray->side_dist_x += ray->delta_dist_x;
+      ray->map_x += ray->step_x;
       point->side = RAY_SIDE_NORTH_SOUTH;
    } else {
-      point->side_dist_y += ray->delta_dist_y;
-      point->map_y += ray->step_y;
+      ray->side_dist_y += ray->delta_dist_y;
+      ray->map_y += ray->step_y;
       point->side = RAY_SIDE_EAST_WEST;
    }
-
-   /* Assume distance is finite to start. */
-   //ray->infinite_dist = FALSE;
-
-#ifdef LIMIT_RAY_STEPS
-   ray->steps++;
-   if( 10 < ray->steps ) {
-      if( ray->side_dist_x >= ray->side_dist_y ) {
-         ray->side_dist_y += ray->delta_dist_y;
-         wall_pos->y += ray->step_y;
-         wall_pos->side = 1;
-      }
-      ray->infinite_dist = TRUE;
-   }
-#endif /* LIMIT_RAY_STEPS */
+   point->map_x = ray->map_x;
+   point->map_y = ray->map_y;
+   point->map_w = ray->map_w;
+   point->map_h = ray->map_h;
 
    /* Calculate distance projected on camera direction
       (Euclidean distance will give fisheye effect!). */
@@ -809,14 +745,16 @@ void graphics_raycast_wall_iterate(
       dist_tmp = point->map_y - ray->origin_y + (-1 - ray->step_y) / 2;
       point->perpen_dist = dist_tmp / ray->direction_y;
    }
-   point->cell_height = (int)(g->h / point->perpen_dist);
+   //point->cell_height = (int)(g->h / point->perpen_dist);
 
    /* Figure out the precise pixel on the wall hit by this stripe, for
     * texture-mapping purposes. */
    if( 0 == point->side ) {
-      point->stripe_x_hit = ray->origin_x + point->perpen_dist * ray->direction_y;
+      point->stripe_x_hit =
+         ray->origin_x + point->perpen_dist * ray->direction_y;
    } else {
-      point->stripe_x_hit = ray->origin_x + point->perpen_dist * ray->direction_x;
+      point->stripe_x_hit =
+         ray->origin_x + point->perpen_dist * ray->direction_x;
    }
    point->stripe_x_hit -= floor( point->stripe_x_hit );
 }
