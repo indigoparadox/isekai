@@ -534,14 +534,13 @@ cleanup:
  */
 static BOOL mode_pov_update_view(
    GRAPHICS_DELTA wall_positions[POV_LAYER_LEVEL_MAX][GRAPHICS_SCREEN_WIDTH],
-   GFX_COORD_PIXEL i_x,
+   GFX_COORD_PIXEL i_x, GRAPHICS_RAY* ray,
    const struct TILEMAP_LAYER* layer, const struct TILEMAP_LAYER* opaque_layer,
    struct CLIENT* c, GRAPHICS* g
 ) {
    //int draw_start = 0,
    //   draw_end = 0;
    int done = 0;
-   GRAPHICS_RAY ray = { 0 };
    GFX_RAY_FLOOR floor_pos = { 0 };
    //int line_height = 0;
    uint32_t tile = 0;
@@ -561,14 +560,10 @@ static BOOL mode_pov_update_view(
 
    //wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
 
-   /* Calculate ray position and direction. */
-   graphics_raycast_wall_create(
-      &ray, i_x, t->width, t->height, &(c->plane_pos), &(c->cam_pos), g );
-
    /* Do the actual casting. */
    wall_hit = FALSE;
-   while( FALSE == wall_hit ) {
-      graphics_raycast_wall_iterate( wall_map_pos, &ray, g );
+   //while( FALSE == wall_hit ) {
+      graphics_raycast_wall_iterate( wall_map_pos, ray, g );
 
       if( NULL != opaque_layer ) {
          scaffold_assert( opaque_layer->z == layer->z + 1 );
@@ -588,14 +583,23 @@ static BOOL mode_pov_update_view(
             wall_map_pos->side = 0;
          }*/
 
-         break;
+         goto start_drawing;
       }
 
       /* Check if ray has hit a wall. */
       if( NULL != opaque_layer && 0 != opaque_map_pos->data ) {
          wall_hit = TRUE;
+         goto start_drawing;
       }
+   //}
+
+   ret_tmp = mode_pov_update_view( wall_positions, i_x, ray, layer, opaque_layer, c, g );
+   if( TRUE == ret_tmp ) {
+      ret_error = TRUE;
+      goto cleanup;
    }
+
+start_drawing:
 
    c->z_buffer[i_x] = wall_map_pos->perpen_dist;
    cell_height = (int)(g->h / wall_map_pos->perpen_dist);
@@ -624,9 +628,10 @@ static BOOL mode_pov_update_view(
 
    //memcpy( &old_map_pos, wall_map_pos, sizeof( GRAPHICS_DELTA ) );
 
+   /*
    if( g->w > i_x ) {
       ret_tmp = mode_pov_update_view(
-         wall_positions, i_x + 1, layer, opaque_layer, c, g
+         wall_positions, i_x + 1, &ray, layer, opaque_layer, c, g
       );
       if( ret_tmp ) {
          ret_error = TRUE;
@@ -634,6 +639,7 @@ static BOOL mode_pov_update_view(
    } else {
       goto cleanup;
    };
+   */
 
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < cell_height ) {
@@ -675,8 +681,10 @@ void mode_pov_draw(
    struct TILEMAP_LAYER* layer = NULL,
       * opaque_layer = NULL;
    int layer_index = 0,
-      layer_max = 0;
+      layer_max = 0,
+      i_x = 0;
    GRAPHICS_DELTA wall_positions[POV_LAYER_LEVEL_MAX][GRAPHICS_SCREEN_WIDTH] = { 0 };
+   GRAPHICS_RAY ray = { 0 };
 
    /* if(
       NULL == twindow->local_client ||
@@ -723,6 +731,7 @@ void mode_pov_draw(
    );
 
    layer_max = vector_count( &(t->layers) );
+   for( i_x = 0 ; g->w > i_x ; i_x++ ) {
    for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
       layer = vector_get( &(t->layers), layer_index );
       if( layer_index + 1 >= layer_max || POV_LAYER_LEVEL_INSET == layer_index ) {
@@ -730,14 +739,20 @@ void mode_pov_draw(
       } else {
          opaque_layer = vector_get( &(t->layers), layer_index + 1 );
       }
+
+      /* Calculate ray position and direction. */
+      graphics_raycast_wall_create(
+         &ray, i_x, t->width, t->height, &(c->plane_pos), &(c->cam_pos), g );
+
       draw_failed = mode_pov_update_view(
-         wall_positions, 0, layer, opaque_layer, c,
+         wall_positions, i_x, &ray, layer, opaque_layer, c,
 #ifdef RAYCAST_CACHE
          ray_view
 #else
          g
 #endif /* RAYCAST_CACHE */
       );
+   }
    }
 
 #ifdef RAYCAST_CACHE
