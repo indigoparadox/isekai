@@ -160,7 +160,6 @@ cleanup:
 void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 ) {
-   struct MOBILE* o_player = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
    GRAPHICS_RECT sprite_rect = { 0, 0, 0, 0 };
    struct ITEM_SPRITE* sprite = NULL;
