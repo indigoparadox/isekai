@@ -161,19 +161,16 @@ typedef struct {
    int map_y;
    int map_w;
    int map_h;
-   double precise_x;
-   double precise_y;
+   //double precise_x;
+   //double precise_y;
    double perpen_dist;
-   /* Length of ray to next x or y-side. */
-   double side_dist_x;
-   double side_dist_y;
    double stripe_x_hit;
    GRAPHICS_RAY_SIDE side;
    uint32_t data;
-   int steps;
-   GFX_COORD_PIXEL wall_draw_start;
-   GFX_COORD_PIXEL wall_draw_end;
-   GFX_COORD_PIXEL cell_height;
+   //int steps;
+   //GFX_COORD_PIXEL wall_draw_start;
+   //GFX_COORD_PIXEL wall_draw_end;
+   //GFX_COORD_PIXEL cell_height;
 } GRAPHICS_DELTA;
 
 typedef struct {
@@ -184,8 +181,15 @@ typedef struct {
    /* Length of ray from one side to next x or y-side. */
    double delta_dist_x;
    double delta_dist_y;
+   /* Length of ray to next x or y-side. */
+   double side_dist_x;
+   double side_dist_y;
    int step_x;
    int step_y;
+   int map_x;
+   int map_y;
+   int map_w;
+   int map_h;
 } GRAPHICS_RAY;
 
 #ifdef RAYCAST_FPP
@@ -389,11 +393,12 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 #ifndef DISABLE_MODE_POV
 
 void graphics_raycast_wall_create(
-   GRAPHICS_RAY* ray, int x, GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* plane_pos,
+   GRAPHICS_RAY* ray, int x, int map_w, int map_h,
+   const GRAPHICS_PLANE* plane_pos,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
 void graphics_raycast_wall_iterate(
-   GRAPHICS_DELTA* wall_pos, const GRAPHICS_RAY* ray, const GRAPHICS* g
+   GRAPHICS_DELTA* wall_pos, GRAPHICS_RAY* ray, const GRAPHICS* g
 );
 double graphics_raycast_get_distance(
    const GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray

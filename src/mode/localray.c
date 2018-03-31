@@ -461,6 +461,7 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
 static BOOL mode_pov_draw_floor(
    GFX_RAY_FLOOR* floor_pos,
    GFX_COORD_PIXEL i_x,
+   GFX_COORD_PIXEL wall_draw_end,
    const GRAPHICS_DELTA* wall_map_pos,
    const struct TILEMAP_LAYER* layer,
    const GRAPHICS_RAY* ray, const struct CLIENT* c, GRAPHICS* g
@@ -493,7 +494,7 @@ static BOOL mode_pov_draw_floor(
    }
 
    /* Draw the floor from draw_end to the bottom of the screen. */
-   for( i_y = wall_map_pos->wall_draw_end +1; i_y < g->h; i_y++ ) {
+   for( i_y = wall_draw_end +1; i_y < g->h; i_y++ ) {
       graphics_floorcast_throw(
          floor_pos, i_x, i_y,
          &(c->cam_pos), wall_map_pos, ray,
@@ -565,15 +566,18 @@ static BOOL mode_pov_update_view(
    GRAPHICS_DELTA* wall_map_pos = &(wall_positions[layer->z][i_x]),
       * opaque_map_pos = NULL;
       //old_map_pos = { 0 };
+   struct TILEMAP* t = c->active_t;
+   GFX_COORD_PIXEL cell_height = 0,
+      wall_draw_end = 0,
+      wall_draw_start = 0;
 
-   wall_map_pos->map_w = c->active_t->width;
-   wall_map_pos->map_h = c->active_t->height;
+   scaffold_check_null( t );
 
    //wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
 
    /* Calculate ray position and direction. */
    graphics_raycast_wall_create(
-      &ray, i_x, wall_map_pos, &(c->plane_pos), &(c->cam_pos), g );
+      &ray, i_x, t->width, t->height, &(c->plane_pos), &(c->cam_pos), g );
 
    /* Do the actual casting. */
    wall_hit = FALSE;
@@ -608,18 +612,18 @@ static BOOL mode_pov_update_view(
    }
 
    c->z_buffer[i_x] = wall_map_pos->perpen_dist;
-   wall_map_pos->cell_height = (int)(g->h / wall_map_pos->perpen_dist);
+   cell_height = (int)(g->h / wall_map_pos->perpen_dist);
 
-   wall_map_pos->wall_draw_end = (wall_map_pos->cell_height / 2) + (g->h / 2);
+   wall_draw_end = (cell_height / 2) + (g->h / 2);
    //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
-   if( wall_map_pos->wall_draw_end >= g->h ) {
-      wall_map_pos->wall_draw_end = g->h - 1;
+   if( wall_draw_end >= g->h ) {
+      wall_draw_end = g->h - 1;
    }/*
    draw_start = (-line_height / 2) + (g->h / 2);
    */
-   wall_map_pos->wall_draw_start = wall_map_pos->wall_draw_end - wall_map_pos->cell_height;
-   if( 0 > wall_map_pos->wall_draw_start ) {
-      wall_map_pos->wall_draw_start = 0;
+   wall_draw_start = wall_draw_end - cell_height;
+   if( 0 > wall_draw_start ) {
+      wall_draw_start = 0;
    }
 
    /* graphics_floorcast_create(
@@ -627,9 +631,9 @@ static BOOL mode_pov_update_view(
       &wall_map_pos, g
    ); */
 
-   if( 0 > wall_map_pos->wall_draw_end ) {
+   if( 0 > wall_draw_end ) {
       /* Clamp line bottom to the screen bottom. */
-      wall_map_pos->wall_draw_end = g->h;
+      wall_draw_end = g->h;
    }
 
    //memcpy( &old_map_pos, wall_map_pos, sizeof( GRAPHICS_DELTA ) );
@@ -646,7 +650,7 @@ static BOOL mode_pov_update_view(
    };
 
    /* Draw the pixels of the stripe as a vertical line. */
-   if( 0 < wall_map_pos->cell_height ) {
+   if( 0 < cell_height ) {
       if( !graphics_raycast_point_is_infinite( wall_map_pos ) ) {
          /* Choose wall color. */
          color = get_wall_color( wall_map_pos );
@@ -656,13 +660,13 @@ static BOOL mode_pov_update_view(
          color = RAY_SIDE_EAST_WEST == wall_map_pos->side ? GRAPHICS_COLOR_GRAY : GRAPHICS_COLOR_WHITE;
       }
 #endif /* RAYCAST_FOG */
-      graphics_draw_line( g, i_x, wall_map_pos->wall_draw_start, i_x, wall_map_pos->wall_draw_end, color );
+      graphics_draw_line( g, i_x, wall_draw_start, i_x, wall_draw_end, color );
 #ifndef RAYCAST_FOG
       }
 #endif /* RAYCAST_FOG */
    }
 
-   ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, wall_map_pos, layer, &ray, c, g );
+   ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, wall_draw_end, wall_map_pos, layer, &ray, c, g );
    if( TRUE == ret_tmp ) {
       ret_error = TRUE;
    }

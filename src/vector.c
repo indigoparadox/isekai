@@ -437,7 +437,7 @@ cleanup:
    return removed;
 }
 
-void vector_remove_all( struct VECTOR* v ) {
+SCAFFOLD_SIZE vector_remove_all( struct VECTOR* v ) {
    return vector_remove_cb( v, NULL, NULL );
 }
 
@@ -565,8 +565,6 @@ void vector_lock( struct VECTOR* v, BOOL lock ) {
  */
 void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
-   void* current_iter = NULL;
-   SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
    scaffold_assert( VECTOR_SENTINAL == v->sentinal );
