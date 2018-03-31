@@ -999,7 +999,7 @@ static void ui_control_draw_dropdown(
 }
 
 static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
-   GRAPHICS_RECT* largest_control;
+   GRAPHICS_RECT* largest_control = NULL;
    BOOL auto_h = FALSE;
    BOOL auto_w = FALSE;
 
