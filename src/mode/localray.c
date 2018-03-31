@@ -271,20 +271,6 @@ cleanup:
    return NULL;
 }
 
-static
-void* mode_pov_raycol_cb( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   struct GFX_RAY_WALL* pos = (struct GFX_RAY_WALL*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->local_client->active_t;
-   struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   int i;
-
-   scaffold_check_null( t );
-
-cleanup:
-   return NULL;
-}
-
 static void* mode_pov_mob_calc_dist_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
@@ -745,7 +731,7 @@ void mode_pov_draw(
          opaque_layer = vector_get( &(t->layers), layer_index + 1 );
       }
       draw_failed = mode_pov_update_view(
-         &wall_positions, 0, layer, opaque_layer, c,
+         wall_positions, 0, layer, opaque_layer, c,
 #ifdef RAYCAST_CACHE
          ray_view
 #else
@@ -792,7 +778,7 @@ cleanup:
 
 static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
-   struct MOBILE_UPDATE_PACKET update;
+   struct MOBILE_UPDATE_PACKET update = { 0 };
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
@@ -918,7 +904,7 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 #endif /* DEBUG_TILES */
    }
 
-   cleanup:
+cleanup:
    return FALSE;
 }
 

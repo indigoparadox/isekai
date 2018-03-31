@@ -250,10 +250,8 @@ void graphics_screen_new(
    *g = mem_alloc( 1, GRAPHICS );
    scaffold_check_null( *g );
    (*g)->surface = create_bitmap( w, h );
-   (*g)->w = w;
-   (*g)->h = h;
-   (*g)->fp_w = graphics_precise( w );
-   (*g)->fp_h = graphics_precise( h );
+   graphics_surface_set_w( *g, w );
+   graphics_surface_set_h( *g, h );
    scaffold_check_null( (*g)->surface );
 
    clear_bitmap( (*g)->surface );
@@ -283,10 +281,8 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
    } else {
       g->surface = NULL;
    }
-   g->w = w;
-   g->h = h;
-   g->fp_w = graphics_precise( w );
-   g->fp_h = graphics_precise( h );
+   graphics_surface_set_w( g, w );
+   graphics_surface_set_h( g, h );
    g->palette = NULL;
    return;
 }
@@ -335,10 +331,8 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
          &module, "Image load error: %s: %s\n", bdata( path ), allegro_error );
       goto cleanup;
    }
-   g->w = ((BITMAP*)g->surface)->w;
-   g->h = ((BITMAP*)g->surface)->h;
-   g->fp_w = graphics_precise( g->w );
-   g->fp_h = graphics_precise( g->h );
+   graphics_surface_set_w( g, ((BITMAP*)g->surface)->w );
+   graphics_surface_set_h( g, ((BITMAP*)g->surface)->h );
 cleanup:
    return;
 }
@@ -459,10 +453,8 @@ cleanup:
    scaffold_check_null( bitmap );
    scaffold_check_null( bitmap->pixels );
    g->surface = create_bitmap( bitmap->w, bitmap->h );
-   g->w = bitmap->w;
-   g->h = bitmap->h;
-   g->fp_w = graphics_precise( bitmap->w );
-   g->fp_h = graphics_precise( bitmap->h );
+   graphics_surface_set_w( g, bitmap->w );
+   graphics_surface_set_h( g, bitmap->h );
    for( y = bitmap->h - 1 ; 0 <= y ; y-- ) {
       for( x = 0 ; bitmap->w > x ; x++ ) {
          putpixel( g->surface, x, y, (int)(bitmap->pixels[i++]) );
