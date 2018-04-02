@@ -393,7 +393,7 @@ void graphics_floorcast_create(
  *
  */
 void graphics_floorcast_throw(
-   GFX_RAY_FLOOR* floor_pos, int x, int y,
+   GFX_RAY_FLOOR* floor_pos, int x, int y, int below_wall_height,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
    const GRAPHICS_RAY* ray, const GRAPHICS* g
 ) {
@@ -402,7 +402,7 @@ void graphics_floorcast_throw(
       wall_y;
 
    /* Grab the distance and a weight factor to help below. */
-   current_dist = g->h / (2.0 * y - g->h);
+   current_dist = g->h / (2.0 * y - g->h); // + below_wall_height;
    floor_pos->weight = current_dist / wall_map_pos->perpen_dist;
 
    /* Figure out the precise spot on the texture to copy. */
@@ -715,7 +715,8 @@ BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point ) {
 }
 
 void graphics_raycast_wall_iterate(
-   GRAPHICS_DELTA* point, GRAPHICS_RAY* ray, const GRAPHICS* g
+   GRAPHICS_DELTA* point, GRAPHICS_RAY* ray, int prev_wall_height,
+   const GRAPHICS* g
 ) {
    double dist_tmp;
 

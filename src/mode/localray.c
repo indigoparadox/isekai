@@ -410,7 +410,9 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
 static BOOL mode_pov_draw_floor(
    GFX_RAY_FLOOR* floor_pos,
    GFX_COORD_PIXEL i_x,
-   GFX_COORD_PIXEL wall_draw_end,
+   GFX_COORD_PIXEL above_wall_draw_end,
+   GFX_COORD_PIXEL below_wall_draw_start,
+   GFX_COORD_PIXEL below_wall_height,
    const GRAPHICS_DELTA* wall_map_pos,
    const struct TILEMAP_LAYER* layer,
    const GRAPHICS_RAY* ray, const struct CLIENT* c, GRAPHICS* g
@@ -443,9 +445,9 @@ static BOOL mode_pov_draw_floor(
    }
 
    /* Draw the floor from draw_end to the bottom of the screen. */
-   for( i_y = wall_draw_end +1; i_y < g->h; i_y++ ) {
+   for( i_y = above_wall_draw_end ; i_y < below_wall_draw_start ; i_y++ ) {
       graphics_floorcast_throw(
-         floor_pos, i_x, i_y,
+         floor_pos, i_x, i_y, below_wall_height,
          &(c->cam_pos), wall_map_pos, ray,
          g
       );
@@ -497,41 +499,36 @@ cleanup:
  */
 static BOOL mode_pov_update_view(
    GFX_COORD_PIXEL i_x, int layer_max, int layer_pov, GRAPHICS_RAY* ray,
+   GFX_COORD_PIXEL prev_wall_top, GFX_COORD_PIXEL prev_wall_height,
    struct CLIENT* c, GRAPHICS* g
 ) {
-   //int draw_start = 0,
-   //   draw_end = 0;
    int done = 0;
    GFX_RAY_FLOOR floor_pos = { 0 };
-   //int line_height = 0;
    uint32_t tile = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
    BOOL wall_hit = FALSE;
    BOOL ret_error = FALSE,
       ret_tmp = FALSE;
    GRAPHICS_DELTA wall_map_pos = { 0 };
-   //GRAPHICS_DELTA* wall_map_pos = &(wall_positions[0][i_x]),
-      //* opaque_map_pos = NULL;
-      //old_map_pos = { 0 };
    struct TILEMAP* t = c->active_t;
    GFX_COORD_PIXEL cell_height = 0,
-      wall_draw_end = 0,
-      wall_draw_start = 0;
+      cell_height_qtr = 0,
+      wall_draw_bottom = 0,
+      wall_draw_top = 0;
    struct TILEMAP_LAYER* layer = NULL,
       * opaque_layer = NULL;
    int layer_index = 0,
-      opaque_index = 0;
-
-   //&(wall_positions[layer->z][i_x])
+      opaque_index = 0,
+      pov_incr = 0;
+   //GRAPHICS_RAY ray_current = { 0 };
+   BOOL recurse = TRUE;
 
    scaffold_check_null( t );
-
-   //wall_map_pos->data = tilemap_get_tile( layer, wall_map_pos->map_x, wall_map_pos->map_y );
 
    /* Do the actual casting. */
    wall_hit = FALSE;
    while( FALSE == wall_hit ) {
-      graphics_raycast_wall_iterate( &wall_map_pos, ray, g );
+      graphics_raycast_wall_iterate( &wall_map_pos, ray, prev_wall_height, g );
 
       if( graphics_raycast_point_is_infinite( &wall_map_pos ) ) {
          /* The ray has to stop at some point, or this will become an
@@ -545,10 +542,14 @@ static BOOL mode_pov_update_view(
             wall_map_pos->side = 0;
          }*/
 
-         goto start_drawing;
+         //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
+         recurse = FALSE;
+         //goto start_drawing;
+         break;
       }
 
       for( layer_index = layer_pov ; layer_max > layer_index ; layer_index++ ) {
+         /* Detect if the opaque layer exists. */
          opaque_index = layer_index + 1;
          layer = vector_get( &(t->layers), layer_index );
          if( opaque_index >= layer_max || POV_LAYER_LEVEL_INSET == layer_index ) {
@@ -557,51 +558,65 @@ static BOOL mode_pov_update_view(
             opaque_layer = vector_get( &(t->layers), opaque_index );
          }
 
+         /* Detect raised terrain as a wall hit. */
          if( NULL != opaque_layer ) {
-            //scaffold_assert( opaque_layer->z == layer->z + 1 );
-            //opaque_map_pos = &(wall_positions[opaque_layer->z][i_x]);
-            //wall_map_pos.data =
             tile = tilemap_get_tile( opaque_layer, wall_map_pos.map_x, wall_map_pos.map_y );
-
             if( 0 != tile ) {
                wall_hit = TRUE;
-               goto start_drawing;
+               //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
+               //goto start_drawing;
+               if( POV_LAYER_LEVEL_WALL <= opaque_index ) {
+                  recurse = FALSE;
+               }
+               break;
             }
          }
       }
    }
 
-   ret_tmp = mode_pov_update_view( i_x, layer_max, layer_pov, ray, c, g );
-   if( TRUE == ret_tmp ) {
-      ret_error = TRUE;
-      goto cleanup;
-   }
+   //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
 
-start_drawing:
+//start_drawing:
 
    c->z_buffer[i_x] = wall_map_pos.perpen_dist;
 
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
+   //cell_height_qtr = cell_height / 4;
+
+   /* if( POV_LAYER_LEVEL_RAISED == opaque_index ) {
+      cell_height /= 4;
+   } */
+
+   wall_draw_bottom = (cell_height / 2) + (g->h / 2);
+   //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
+   if( wall_draw_bottom >= g->h ) {
+      wall_draw_bottom = g->h - 1;
+   }
 
    if( POV_LAYER_LEVEL_RAISED == opaque_index ) {
       cell_height /= 4;
+      pov_incr = 1;
+   }
+   wall_draw_top = wall_draw_bottom - cell_height;
+   if( 0 > wall_draw_top ) {
+      wall_draw_top = 0;
    }
 
-   wall_draw_end = (cell_height / 2) + (g->h / 2);
-   //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
-   if( wall_draw_end >= g->h ) {
-      wall_draw_end = g->h - 1;
+   if( recurse ) {
+      ret_tmp = mode_pov_update_view(
+         i_x, layer_max, layer_pov + pov_incr, ray, wall_draw_top, cell_height, c, g );
+      if( TRUE == ret_tmp ) {
+         ret_error = TRUE;
+         goto cleanup;
+      }
    }
 
-   wall_draw_start = wall_draw_end - cell_height + (3 * cell_height);
-   if( 0 > wall_draw_start ) {
-      wall_draw_start = 0;
-   }
-
-   if( 0 > wall_draw_end ) {
+   #if 0
+   if( 0 > wall_draw_bottom ) {
       /* Clamp line bottom to the screen bottom. */
-      wall_draw_end = g->h;
+      wall_draw_bottom = g->h;
    }
+   #endif // 0
 
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < cell_height ) {
@@ -614,7 +629,7 @@ start_drawing:
          color = RAY_SIDE_EAST_WEST == wall_map_pos->side ? GRAPHICS_COLOR_GRAY : GRAPHICS_COLOR_WHITE;
       }
 #endif /* RAYCAST_FOG */
-      graphics_draw_line( g, i_x, wall_draw_start, i_x, wall_draw_end, color );
+      graphics_draw_line( g, i_x, wall_draw_top, i_x, wall_draw_bottom, color );
 #ifndef RAYCAST_FOG
       }
 #endif /* RAYCAST_FOG */
@@ -622,7 +637,9 @@ start_drawing:
 
    for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
       layer = vector_get( &(t->layers), layer_index );
-      ret_tmp = mode_pov_draw_floor( &floor_pos, i_x, wall_draw_end, &wall_map_pos, layer, &ray, c, g );
+      ret_tmp = mode_pov_draw_floor(
+         &floor_pos, i_x, wall_draw_bottom, prev_wall_top, prev_wall_height,
+         &wall_map_pos, layer, ray, c, g );
       if( TRUE == ret_tmp ) {
          ret_error = TRUE;
       }
@@ -700,7 +717,7 @@ void mode_pov_draw(
          &ray, i_x, t->width, t->height, &(c->plane_pos), &(c->cam_pos), g );
 
       draw_failed = mode_pov_update_view(
-         i_x, layer_max, i_layer, &ray, c,
+         i_x, layer_max, i_layer, &ray, g->h, 0, c,
 #ifdef RAYCAST_CACHE
          ray_view
 #else
