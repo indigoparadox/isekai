@@ -398,7 +398,8 @@ void graphics_raycast_wall_create(
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS* g
 );
 void graphics_raycast_wall_iterate(
-   GRAPHICS_DELTA* wall_pos, GRAPHICS_RAY* ray, const GRAPHICS* g
+   GRAPHICS_DELTA* wall_pos, GRAPHICS_RAY* ray, int prev_wall_height,
+   const GRAPHICS* g
 );
 double graphics_raycast_get_distance(
    const GRAPHICS_DELTA* wall_pos, const GRAPHICS_PLANE* cam_pos, const GRAPHICS_RAY* ray
@@ -408,7 +409,7 @@ void graphics_floorcast_create(
    const GRAPHICS_DELTA* wall_map_pos, const GRAPHICS* g
 );
 void graphics_floorcast_throw(
-   GFX_RAY_FLOOR* floor_pos, int x, int y,
+   GFX_RAY_FLOOR* floor_pos, int x, int y, int below_wall_height,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
    const GRAPHICS_RAY* ray, const GRAPHICS* g
 );
