@@ -496,7 +496,7 @@ cleanup:
  *
  */
 static BOOL mode_pov_update_view(
-   GFX_COORD_PIXEL i_x, int layer_max, GRAPHICS_RAY* ray,
+   GFX_COORD_PIXEL i_x, int layer_max, int layer_pov, GRAPHICS_RAY* ray,
    struct CLIENT* c, GRAPHICS* g
 ) {
    //int draw_start = 0,
@@ -548,7 +548,7 @@ static BOOL mode_pov_update_view(
          goto start_drawing;
       }
 
-      for( layer_index = 0 ; layer_max > layer_index ; layer_index++ ) {
+      for( layer_index = layer_pov ; layer_max > layer_index ; layer_index++ ) {
          opaque_index = layer_index + 1;
          layer = vector_get( &(t->layers), layer_index );
          if( opaque_index >= layer_max || POV_LAYER_LEVEL_INSET == layer_index ) {
@@ -571,7 +571,7 @@ static BOOL mode_pov_update_view(
       }
    }
 
-   ret_tmp = mode_pov_update_view( i_x, layer_max, ray, c, g );
+   ret_tmp = mode_pov_update_view( i_x, layer_max, layer_pov, ray, c, g );
    if( TRUE == ret_tmp ) {
       ret_error = TRUE;
       goto cleanup;
@@ -583,14 +583,17 @@ start_drawing:
 
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
 
+   if( POV_LAYER_LEVEL_RAISED == opaque_index ) {
+      cell_height /= 4;
+   }
+
    wall_draw_end = (cell_height / 2) + (g->h / 2);
    //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
    if( wall_draw_end >= g->h ) {
       wall_draw_end = g->h - 1;
-   }/*
-   draw_start = (-line_height / 2) + (g->h / 2);
-   */
-   wall_draw_start = wall_draw_end - cell_height;
+   }
+
+   wall_draw_start = wall_draw_end - cell_height + (3 * cell_height);
    if( 0 > wall_draw_start ) {
       wall_draw_start = 0;
    }
@@ -640,8 +643,11 @@ void mode_pov_draw(
    static BOOL draw_failed = FALSE;
    struct TILEMAP* t = twindow->local_client->active_t;
    int i_x = 0,
-      layer_max = 0;
+      layer_max = 0,
+      i_layer = 0;
    GRAPHICS_RAY ray = { 0 };
+   struct TILEMAP_LAYER* layer_player = NULL;
+   uint32_t tile_player = 0;
 
    scaffold_check_null( t );
 
@@ -679,13 +685,22 @@ void mode_pov_draw(
    );
 
    layer_max = vector_count( &(t->layers) );
+   for( i_layer = layer_max - 1 ; 0 <= i_layer ; i_layer-- ) {
+      layer_player = vector_get( &(t->layers), i_layer );
+      tile_player = tilemap_get_tile( layer_player, player->x, player->y );
+      if( 0 != tile_player ) {
+         /* Found highest non-empty layer presently under player. */
+         break;
+      }
+   }
+
    for( i_x = 0 ; g->w > i_x ; i_x++ ) {
       /* Calculate ray position and direction. */
       graphics_raycast_wall_create(
          &ray, i_x, t->width, t->height, &(c->plane_pos), &(c->cam_pos), g );
 
       draw_failed = mode_pov_update_view(
-         i_x, layer_max, &ray, c,
+         i_x, layer_max, i_layer, &ray, c,
 #ifdef RAYCAST_CACHE
          ray_view
 #else
