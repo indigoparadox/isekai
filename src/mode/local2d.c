@@ -61,6 +61,9 @@ void mode_topdown_update(
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
+   if( NULL == c || NULL == c->puppet ) {
+      return;
+   }
    tilemap_update_window_ortho(
       twindow, c->puppet->x, c->puppet->y
    );

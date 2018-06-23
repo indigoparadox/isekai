@@ -28,6 +28,8 @@ void mode_topdown_draw(
 void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void mode_topdown_free( struct CLIENT* c );
 
+#ifndef DISABLE_MODE_POV
+
 void mode_pov_update(
    struct CLIENT* c,
    struct CHANNEL* l,
@@ -40,6 +42,9 @@ void mode_pov_draw(
 );
 void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void mode_pov_free( struct CLIENT* c );
+
+#endif /* !DISABLE_MODE_POV */
+
 void client_local_update(
    struct CLIENT* c,
    struct CHANNEL* l,
