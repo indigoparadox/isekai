@@ -332,8 +332,6 @@ static GRAPHICS_COLOR get_wall_color( GRAPHICS_DELTA* wall_pos ) {
 #endif /* 0 */
 }
 
-#endif // 0
-
 static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
 #ifdef RAYCAST_OLD_DOUBLE
    double old_dir_x = 0;
@@ -389,6 +387,7 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             0 * sin( -GRAPHICS_RAY_ROTATE_INC );
          c->plane_pos.precise_y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( -GRAPHICS_RAY_ROTATE_INC );
+#endif /* RAYCAST_OLD_DOUBLE */
          break;
 
       case MOBILE_FACING_UP:
@@ -577,18 +576,9 @@ static BOOL mode_pov_update_view(
       }
    }
 
-   //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
-
-//start_drawing:
-
    c->z_buffer[i_x] = wall_map_pos.perpen_dist;
 
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
-   //cell_height_qtr = cell_height / 4;
-
-   /* if( POV_LAYER_LEVEL_RAISED == opaque_index ) {
-      cell_height /= 4;
-   } */
 
    wall_draw_bottom = (cell_height / 2) + (g->h / 2);
    //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
@@ -614,13 +604,6 @@ static BOOL mode_pov_update_view(
       }
    }
 
-   #if 0
-   if( 0 > wall_draw_bottom ) {
-      /* Clamp line bottom to the screen bottom. */
-      wall_draw_bottom = g->h;
-   }
-   #endif // 0
-
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < cell_height ) {
       if( TRUE == wall_hit ) {
@@ -635,7 +618,7 @@ static BOOL mode_pov_update_view(
       graphics_draw_line( g, i_x, wall_draw_top, i_x, wall_draw_bottom, color );
 #ifndef RAYCAST_FOG
       }
-#endif /* RAYCAST_FOG */
+#endif /* !RAYCAST_FOG */
    }
 
    for( layer_index = 0 ; layer_index < layer_max ; layer_index++ ) {
@@ -758,8 +741,6 @@ void mode_pov_update(
    /* tilemap_update_window_ortho(
       twindow, c->puppet->x, c->puppet->y
    ); */
-
-
 
 cleanup:
    return;

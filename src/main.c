@@ -199,14 +199,14 @@ static BOOL loop_game() {
    scaffold_set_client();
 
    /* If we're on the move then update the window frame. */
+   /* Allows for smooth-scrolling view window with bonus that action is    *
+    * technically paused while doing so.                                   */
    if(
       0 != main_client->puppet->steps_remaining ||
       twindow->max_x == twindow->min_x ||
       TILEMAP_REDRAW_ALL == main_client->active_t->redraw_state
    ) {
-      tilemap_update_window_ortho(
-         twindow, main_client->puppet->x, main_client->puppet->y
-      );
+      client_local_update( main_client, l, twindow );
    }
 
    animate_cycle_animations( twindow );
@@ -299,10 +299,10 @@ static BOOL loop_connect() {
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
          -1, -1, -1, -1
       );
-      main_client->gfx_mode = MODE_POV;
+      main_client->gfx_mode = MODE_TOPDOWN;
       control->list = mode_list;
       control->self.attachment = &(main_client->gfx_mode);
-      main_client->gfx_mode = MODE_POV;
+      main_client->gfx_mode = MODE_TOPDOWN;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
 
       ui_window_push( ui, win );

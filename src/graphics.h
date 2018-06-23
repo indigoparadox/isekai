@@ -416,7 +416,7 @@ void graphics_floorcast_throw(
 int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
 int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
 
-#endif /* USE_RAYCASTING */
+#endif /* !DISABLE_MODE_POV */
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );

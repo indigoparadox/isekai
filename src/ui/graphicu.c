@@ -371,6 +371,13 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          goto cleanup;
       }
 
+      if( INPUT_SCANCODE_ENTER == p->scancode ) {
+         /* Some logic checks for the length of the current control's input   *
+          * to know whether to proceed. Dropdowns and spinners will always    *
+          * have valid input.                                                 */
+         input_length = 1;
+      }
+
       goto control_optional;
 
    } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
@@ -391,6 +398,13 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          }
          win->dirty = TRUE;
          goto cleanup;
+      }
+
+      if( INPUT_SCANCODE_ENTER == p->scancode ) {
+         /* Some logic checks for the length of the current control's input   *
+          * to know whether to proceed. Dropdowns and spinners will always    *
+          * have valid input.                                                 */
+         input_length = 1;
       }
 
    } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
@@ -414,6 +428,19 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          win->dirty = TRUE;
          goto cleanup;
       }
+
+      if( INPUT_SCANCODE_ENTER == p->scancode ) {
+         /* Some logic checks for the length of the current control's input   *
+          * to know whether to proceed. Dropdowns and spinners will always    *
+          * have valid input.                                                 */
+         input_length = 1;
+      }
+   } else if( UI_CONTROL_TYPE_TEXT == control->type ) {
+      switch(p->character) {
+      case INPUT_ASSIGNMENT_ATTACK:
+         input_length = blength( control->text );
+         break;
+      }
    }
 
 control_scancodes:
@@ -426,7 +453,6 @@ control_scancodes:
       goto cleanup;
 
    case INPUT_SCANCODE_ENTER:
-      input_length = blength( control->text );
       ui_window_destroy( win->ui, win->id );
       goto cleanup;
 
