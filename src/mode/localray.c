@@ -445,6 +445,9 @@ static BOOL mode_pov_draw_floor(
    }
 
    /* Draw the floor from draw_end to the bottom of the screen. */
+   if( 0 > above_wall_draw_end ) {
+      above_wall_draw_end = g->h - 1;
+   }
    for( i_y = above_wall_draw_end ; i_y < below_wall_draw_start ; i_y++ ) {
       graphics_floorcast_throw(
          floor_pos, i_x, i_y, below_wall_height,
