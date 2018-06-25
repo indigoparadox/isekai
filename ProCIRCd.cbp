@@ -415,9 +415,9 @@
 					<Add option="-Winline" />
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
-					<Add option="-Wunused" />
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-Wunused" />
 					<Add option="-std=gnu99" />
 					<Add option="-Wstack-protector" />
 					<Add option="-fstack-protector-all" />
@@ -440,11 +440,11 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DSTRICT_DEBUG" />
 					<Add option="-DUSE_DUKTAPE" />
-					<Add option="-DUSE_RAYCASTING" />
 					<Add option="-DxRAY_WIREFRAME" />
 					<Add option="-DRAYCAST_OLD_DOUBLE" />
 					<Add option="-DxRAYCAST_FOG" />
 					<Add option="-DRAYCAST_CACHE" />
+					<Add option="-DxDISABLE_MODE_POV" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
