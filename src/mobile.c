@@ -608,7 +608,7 @@ MOBILE_UPDATE mobile_apply_update(
       /* We'll calculate the actual animation frames to use in the per-mode
        * update() function, where we have access to the current camera rotation
        * and stuff like that. */
-      o->animation_reset = TRUE;
+      mobile_call_reset_animation( o );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
             &(l->tilemap), o->steps_inc_default,
@@ -811,4 +811,38 @@ struct CHANNEL* mobile_get_channel( struct MOBILE* o ) {
       return NULL;
    }
    return o->channel;
+}
+
+/** \brief The next time the mobile is drawn, start from the first frame of the
+ *         animation named by its current_animation. Useful when changing
+ *         directions or attacking.
+ */
+void mobile_call_reset_animation( struct MOBILE* o ) {
+   o->animation_reset = TRUE;
+}
+
+/** \brief Perform a requested reset in a 2D (topdown/iso) mode. */
+void mobile_do_reset_2d_animation( struct MOBILE* o ) {
+   bstring ani_key_buffer = NULL;
+
+   /* A mobile should almost always be playing an animation (walking, if      *
+    * nothing else).                                                          */
+   if( NULL != o->current_animation ) {
+      /* The mobile should play an animation, so build its hash key. */
+      ani_key_buffer = bformat(
+         "%s-%s",
+         bdata( o->current_animation->name ),
+         str_mobile_facing[o->facing].data
+      );
+      /* Grab the animation from the mobiles linked animation list, if any. */
+      if( NULL != hashmap_get( &(o->ani_defs), ani_key_buffer ) ) {
+         o->current_animation = hashmap_get( &(o->ani_defs), ani_key_buffer );
+      }
+   }
+
+   /* No more need to reset. It's done. */
+   o->animation_reset = FALSE;
+
+cleanup:
+   bdestroy( ani_key_buffer );
 }

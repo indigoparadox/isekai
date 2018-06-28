@@ -1590,6 +1590,9 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 		</Unit>
+		<Unit filename="src/mode/localiso.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/mode/localray.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
