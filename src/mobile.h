@@ -143,6 +143,8 @@ BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c );
 BOOL mobile_is_occupied( struct MOBILE* o );
 void mobile_add_item( struct MOBILE* o, struct ITEM* e );
 struct CHANNEL* mobile_get_channel( struct MOBILE* o );
+void mobile_call_reset_animation( struct MOBILE* o );
+void mobile_do_reset_2d_animation( struct MOBILE* o );
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );

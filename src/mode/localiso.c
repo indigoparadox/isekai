@@ -10,7 +10,7 @@
 
 extern bstring client_input_from_ui;
 
-static void* mode_topdown_draw_mobile_cb(
+static void* mode_isometric_draw_mobile_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -22,21 +22,23 @@ static void* mode_topdown_draw_mobile_cb(
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
-   mobile_draw_ortho( o, twindow->local_client, twindow );
+   // XXX
+   //mobile_draw_ortho( o, twindow->local_client, twindow );
 
    return NULL;
 }
 
-void mode_topdown_draw(
+void mode_isometric_draw(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   tilemap_draw_ortho( twindow );
-   vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, twindow );
+   // XXX
+   //tilemap_draw_ortho( twindow );
+   vector_iterate( &(l->mobiles), mode_isometric_draw_mobile_cb, twindow );
 }
 
-void mode_topdown_update(
+void mode_isometric_update(
    struct CLIENT* c,
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
@@ -49,7 +51,7 @@ void mode_topdown_update(
    );
 }
 
-static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
@@ -181,20 +183,20 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    return FALSE;
 }
 
-void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+void mode_isometric_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
       proto_client_stop( c );
    } else if( INPUT_TYPE_KEY == p->type ) {
       if( !client_poll_ui( c, l, p ) ) {
-         mode_topdown_poll_keyboard( c, p );
+         mode_isometric_poll_keyboard( c, p );
       }
    }
    return;
 }
 
-void mode_topdown_free( struct CLIENT* c ) {
+void mode_isometric_free( struct CLIENT* c ) {
    if(
       TRUE == client_is_local( c ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
