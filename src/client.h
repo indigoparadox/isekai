@@ -80,6 +80,8 @@ struct CLIENT {
    GFX_COORD_FPP* z_buffer;
 #endif /* !DISABLE_MODE_POV */
 
+   BOOL local_client;
+
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };
 #define CLIENT_SENTINAL 254542
@@ -112,6 +114,8 @@ __attribute__ ((warn_unused_result))
 ;
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
 BOOL client_connect( struct CLIENT* c, const bstring server, int port );
+void client_set_local( struct CLIENT* c, BOOL val );
+BOOL client_is_local( struct CLIENT* c );
 void client_remove_all_channels( struct CLIENT* c );
 BOOL client_update( struct CLIENT* c, GRAPHICS* g );
 void client_free_channels( struct CLIENT* c );

@@ -53,6 +53,7 @@ BOOL server_free( struct SERVER* s ) {
 
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
+   s->self.local_client = FALSE;
    client_init( &(s->self) );
    s->self.refcount.gc_free = server_free_final;
    hashmap_init( &(s->clients) );

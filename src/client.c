@@ -53,9 +53,10 @@ static void client_cleanup( const struct REF *ref ) {
    bdestroy( c->realname );
    bdestroy( c->remote );
    bdestroy( c->username );
-   hashmap_cleanup( &(c->sprites) );
 
    client_stop( c );
+
+   hashmap_cleanup( &(c->sprites) );
 
 #ifdef USE_CHUNKS
    hashmap_cleanup( &(c->chunkers) );
@@ -106,6 +107,16 @@ void client_init( struct CLIENT* c ) {
 
    c->sentinal = CLIENT_SENTINAL;
    c->running = TRUE;
+}
+
+/** \brief Mark this struct as the MAIN local client.
+ */
+void client_set_local( struct CLIENT* c, BOOL val ) {
+   c->local_client = val;
+}
+
+BOOL client_is_local( struct CLIENT* c ) {
+   return c->local_client;
 }
 
  /** \brief This should ONLY be called from server_free in order to avoid
@@ -289,7 +300,7 @@ void client_stop( struct CLIENT* c ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-   if( TRUE == ipc_is_local_client( c->link ) ) {
+   if( TRUE == client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -317,7 +328,7 @@ void client_stop( struct CLIENT* c ) {
    client_clear_puppet( c );
    client_set_active_t( c, NULL );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( TRUE == ipc_is_local_client( c->link ) ) {
+   if( TRUE == client_is_local( c ) ) {
       client_local_free( c );
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
       hashmap_remove_all( &(c->tilesets) );
@@ -331,7 +342,7 @@ void client_stop( struct CLIENT* c ) {
 
 #ifdef DEBUG
 
-   if( TRUE == ipc_is_local_client( c->link ) ) {
+   if( TRUE == client_is_local( c ) ) {
       scaffold_assert( FALSE == c->running );
 
       test_count = hashmap_count( &(c->channels) );

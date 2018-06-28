@@ -509,6 +509,7 @@ int main( int argc, char** argv ) {
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_set_client();
    client_new( main_client );
+   client_set_local( main_client, TRUE );
 #endif /* ENABLE_LOCAL_CLIENT */
 
    while( loop_master() );
