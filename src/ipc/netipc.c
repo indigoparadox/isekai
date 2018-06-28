@@ -450,6 +450,7 @@ IPC_END ipc_get_type( struct CONNECTION* n ) {
    return n->type;
 }
 
+#if 0
 BOOL ipc_is_local_client( struct CONNECTION* n ) {
    if( NULL == n ) {
       /* The local client wouldn't ever be at this point. */
@@ -457,6 +458,7 @@ BOOL ipc_is_local_client( struct CONNECTION* n ) {
    }
    return n->local_client;
 }
+#endif // 0
 
 BOOL ipc_is_listening( struct CONNECTION* n ) {
    return n->listening;

@@ -207,7 +207,7 @@ void channel_set_mobile(
       mobile_set_channel( o, l );
       vector_set( &(l->mobiles), o->serial, o, TRUE );
 #ifdef ENABLE_LOCAL_CLIENT
-      if( ipc_is_local_client( l->client_or_server->link ) ) {
+      if( client_is_local( l->client_or_server ) ) {
          client_request_file(
             l->client_or_server, DATAFILE_TYPE_MOBILE, o->def_filename
          );

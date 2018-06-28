@@ -216,7 +216,7 @@ void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT*
 
 void mode_topdown_free( struct CLIENT* c ) {
    if(
-      TRUE == ipc_is_local_client( c->link ) &&
+      TRUE == client_is_local( c ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
       /* FIXME: This causes crash on re-login. */

@@ -138,7 +138,7 @@ static void proto_send( struct CLIENT* c, const bstring buffer ) {
 cleanup:
    bdestroy( buffer_copy );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( ipc_is_local_client( c->link ) ) {
+   if( client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -152,7 +152,7 @@ static void proto_printf( struct CLIENT* c, const char* message, ... ) {
    va_list varg;
 
 #ifdef ENABLE_LOCAL_CLIENT
-   if( ipc_is_local_client( c->link ) ) {
+   if( client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       struct CONNECTION* n = c->link;
@@ -1567,7 +1567,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
    /* Figure out if we're being called from a client or server. */
-   if( FALSE != ipc_is_local_client( c->link ) ) {
+   if( FALSE != client_is_local( c ) ) {
       table = proto_table_client;
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */

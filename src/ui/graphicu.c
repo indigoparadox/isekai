@@ -530,6 +530,10 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 
    if( INPUT_TYPE_KEY == input->type ) {
       input_length = ui_poll_keys( win, input );
+
+      scaffold_print_debug(
+         &module, "Input length returned: %d\n", input_length
+      );
    }
 
 cleanup:

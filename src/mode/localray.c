@@ -893,7 +893,7 @@ void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p )
 
 void mode_pov_free( struct CLIENT* c ) {
    if(
-      TRUE == ipc_is_local_client( c->link ) &&
+      TRUE == client_is_local( c ) &&
       HASHMAP_SENTINAL == c->sprites.sentinal
    ) {
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
