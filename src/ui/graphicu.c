@@ -348,8 +348,10 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
 
    control = win->active_control;
    if( NULL == control ) {
-      goto control_optional;
+      goto cleanup;
    }
+
+   /* Handle control-specific responses to keys. */
 
    if( UI_CONTROL_TYPE_INVENTORY == control->type ) {
       switch( p->character ) {
@@ -369,21 +371,21 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          }
          win->dirty = TRUE;
          goto cleanup;
-      }
 
-      if( INPUT_SCANCODE_ENTER == p->scancode ) {
-         /* Some logic checks for the length of the current control's input   *
-          * to know whether to proceed. Dropdowns and spinners will always    *
-          * have valid input.                                                 */
-         input_length = 1;
-      }
+      case INPUT_ASSIGNMENT_ATTACK:
+         input_length = UI_INPUT_RETURN_KEY_ENTER;
+         break;
 
-      goto control_optional;
+      case INPUT_ASSIGNMENT_QUIT:
+         input_length = UI_INPUT_RETURN_KEY_ESC;
+         break;
+      }
 
    } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
       numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
-      switch( p->character ) {
-      case INPUT_ASSIGNMENT_LEFT:
+      switch( p->scancode ) {
+      case INPUT_SCANCODE_UP:
+      case INPUT_SCANCODE_LEFT:
          (*numbuff)--;
          if( control->min > *numbuff ) {
             *numbuff = control->max;
@@ -391,26 +393,35 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          win->dirty = TRUE;
          goto cleanup;
 
-      case INPUT_ASSIGNMENT_RIGHT:
+      case INPUT_SCANCODE_DOWN:
+      case INPUT_SCANCODE_RIGHT:
          (*numbuff)++;
          if( control->max < *numbuff ) {
             *numbuff = 0;
          }
          win->dirty = TRUE;
          goto cleanup;
-      }
 
-      if( INPUT_SCANCODE_ENTER == p->scancode ) {
-         /* Some logic checks for the length of the current control's input   *
-          * to know whether to proceed. Dropdowns and spinners will always    *
-          * have valid input.                                                 */
-         input_length = 1;
+      case INPUT_SCANCODE_ENTER:
+         /* Return spinner value. */
+         /* (This could bite us if spinner value is 0? */
+         input_length = *numbuff;
+         break;
+
+      case INPUT_SCANCODE_TAB:
+         input_length = UI_INPUT_RETURN_KEY_NEXT;
+         break;
+
+      case INPUT_SCANCODE_ESC:
+         input_length = UI_INPUT_RETURN_KEY_ESC;
+         break;
       }
 
    } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
       numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
-      switch( p->character ) {
-      case INPUT_ASSIGNMENT_LEFT:
+      switch( p->scancode ) {
+      case INPUT_SCANCODE_UP:
+      case INPUT_SCANCODE_LEFT:
          (*numbuff)--;
          if( 0 > *numbuff ) {
             while( NULL != control->list[*numbuff + 1] ) {
@@ -420,38 +431,76 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          win->dirty = TRUE;
          goto cleanup;
 
-      case INPUT_ASSIGNMENT_RIGHT:
+      case INPUT_SCANCODE_DOWN:
+      case INPUT_SCANCODE_RIGHT:
          (*numbuff)++;
          if( NULL == control->list[*numbuff] ) {
             *numbuff = 0;
          }
          win->dirty = TRUE;
          goto cleanup;
+
+      case INPUT_SCANCODE_ENTER:
+         input_length = UI_INPUT_RETURN_KEY_ENTER;
+         break;
+
+      case INPUT_SCANCODE_TAB:
+         input_length = UI_INPUT_RETURN_KEY_NEXT;
+         break;
+
+      case INPUT_SCANCODE_ESC:
+         input_length = UI_INPUT_RETURN_KEY_ESC;
+         break;
       }
 
-      if( INPUT_SCANCODE_ENTER == p->scancode ) {
-         /* Some logic checks for the length of the current control's input   *
-          * to know whether to proceed. Dropdowns and spinners will always    *
-          * have valid input.                                                 */
-         input_length = 1;
-      }
    } else if( UI_CONTROL_TYPE_TEXT == control->type ) {
-      switch(p->character) {
-      case INPUT_ASSIGNMENT_ATTACK:
+
+      /* This is different from above as the text is freely editable. */
+      switch( p->scancode ) {
+      case INPUT_SCANCODE_BACKSPACE:
+         bstr_result = btrunc( control->text, blength( control->text ) - 1 );
+         win->dirty = TRUE; /* Check can shunt to cleanup, so dirty first. */
+         scaffold_check_nonzero( bstr_result );
+         break;
+
+      case INPUT_SCANCODE_ENTER:
+         /* Text fields have a length, so use that. */
          input_length = blength( control->text );
+         break;
+
+      case INPUT_SCANCODE_TAB:
+         /* Don't concat it by default, and set special return. */
+         input_length = UI_INPUT_RETURN_KEY_NEXT;
+         break;
+
+      case INPUT_SCANCODE_ESC:
+         /* Don't concat it by default, and set special return. */
+         input_length = UI_INPUT_RETURN_KEY_ESC;
+         break;
+
+      default:
+         /* Append printable characters to text buffer. */
+         if( !p->character ) {
+#ifdef DEBUG_KEYS
+            scaffold_print_debug( &module, "Field input char unprintable.\n" );
+#endif /* DEBUG_KEYS */
+         } else {
+#ifdef DEBUG_KEYS
+            scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
+#endif /* DEBUG_KEYS */
+            bstr_result = bconchar( control->text, p->character );
+            win->dirty = TRUE; /* Check can shunt to cleanup, so dirty first. */
+            scaffold_check_nonzero( bstr_result );
+         }
          break;
       }
    }
 
-control_scancodes:
+control_scancodes_common:
+
+   /* Handle common actions for special keys that apply to ALL controls. */
 
    switch( p->scancode ) {
-   case INPUT_SCANCODE_BACKSPACE:
-      bstr_result = btrunc( control->text, blength( control->text ) - 1 );
-      win->dirty = TRUE;
-      scaffold_check_nonzero( bstr_result );
-      goto cleanup;
-
    case INPUT_SCANCODE_ENTER:
       ui_window_destroy( win->ui, win->id );
       goto cleanup;
@@ -460,27 +509,8 @@ control_scancodes:
       ui_window_next_active_control( win );
       win->dirty = TRUE;
       goto cleanup;
-   }
 
-control_type:
-
-   switch( p->character ) {
-   /* case INPUT_ASSIGNMENT_ATTACK: */
-   default:
-      bstr_result = bconchar( control->text, p->character );
-      win->dirty = TRUE;
-      scaffold_check_nonzero( bstr_result );
-#ifdef DEBUG_KEYS
-      scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
-#endif /* DEBUG_KEYS */
-      goto cleanup;
-   }
-
-control_optional:
-
-   switch( p->scancode ) {
    case INPUT_SCANCODE_ESC:
-      input_length = -1;
       ui_window_destroy( win->ui, win->id );
       goto cleanup;
    }

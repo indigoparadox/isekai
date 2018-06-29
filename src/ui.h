@@ -48,6 +48,10 @@
 #define UI_SENTINAL_CONTROL 45454
 #endif /* DEBUG */
 
+#define UI_INPUT_RETURN_KEY_ESC -1
+#define UI_INPUT_RETURN_KEY_ENTER -2
+#define UI_INPUT_RETURN_KEY_NEXT -3
+
 struct UI;
 
 typedef enum {
