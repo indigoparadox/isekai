@@ -42,9 +42,11 @@ void datafile_handle_stream(
 #endif /* USE_EZXML */
 
       l = client_get_channel_by_name( c, lname );
+      /* TODO: Make this dump us back at the menu. */
       scaffold_check_null_msg(
          l, "Unable to find channel to attach loaded tileset."
       );
+      channel_set_error( l, "Unable to load channel; missing data." );
 
 #ifdef USE_EZXML
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );

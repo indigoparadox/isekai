@@ -27,6 +27,7 @@ struct SERVER {
 
 void server_free_clients( struct SERVER* s );
 void server_init( struct SERVER* s, const bstring myhost );
+void server_stop_clients( struct SERVER* s );
 #ifdef USE_INLINES
 inline
 #endif /* USE_INLINES */

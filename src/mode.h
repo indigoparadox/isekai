@@ -25,8 +25,27 @@ void mode_topdown_draw(
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 );
-void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
+void mode_topdown_poll_input(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void mode_topdown_free( struct CLIENT* c );
+
+#ifndef DISABLE_MODE_ISO
+
+void mode_isometric_update(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_isometric_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l,
+   struct GRAPHICS_TILE_WINDOW* twindow
+);
+void mode_isometric_poll_input(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
+void mode_isometric_free( struct CLIENT* c );
+
+#endif /* !DISABLE_MODE_ISO */
 
 #ifndef DISABLE_MODE_POV
 

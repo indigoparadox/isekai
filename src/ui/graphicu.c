@@ -10,6 +10,10 @@
 
 static struct UI global_ui;
 
+/* Count of all mboxes created so far. */
+/* Appended to mbox names to make them unique/allow multiple mboxes. */
+static int ui_mbox_global_iter = 0;
+
 const struct tagbstring str_dialog_control_default_id =
    bsStatic( "dialog_text" );
 const struct tagbstring str_dialog_label_default_id =
@@ -291,6 +295,7 @@ cleanup:
 
 void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    SCAFFOLD_SIZE_SIGNED verr;
+   struct UI_WINDOW* top_window = NULL;
 
    #ifdef DEBUG
    ui_debug_stack( ui );
@@ -301,7 +306,28 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    scaffold_assert( NULL != ui );
    scaffold_assert( &global_ui == win->ui );
    scaffold_assert( &global_ui == ui );
-   verr = vector_insert( &(ui->windows), 0, win );
+   top_window = vector_get( &(ui->windows), 0 );
+   if(
+      NULL != top_window &&
+      0 != bstrncmp( win->id, &str_wid_mbox, blength( &str_wid_mbox ) ) &&
+      0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
+   ) {
+      /* Message boxes always stay on top of normals like these. */
+      scaffold_print_debug( &module, "Pushing new dialog: %b", win->id );
+      verr = vector_insert( &(ui->windows), 1, win );
+   } else if(
+      NULL != top_window &&
+      0 == bstrncmp( win->id, &str_wid_mbox, blength( &str_wid_mbox ) ) &&
+      0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
+   ) {
+      /* Must be /another/ new messagebox. */
+      scaffold_print_debug( &module, "Pushing new mbox: %b", win->id );
+      verr = vector_insert( &(ui->windows), 1, win );
+   } else {
+      /* Must be a new dialog. */
+      scaffold_print_debug( &module, "Pushing dialog or mbox: %b", win->id );
+      verr = vector_insert( &(ui->windows), 0, win );
+   }
    scaffold_check_negative( verr );
 
 cleanup:
@@ -544,6 +570,25 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    }
 #endif /* DEBUG */
 
+   /* Special case: message boxes. */
+   win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+   if(
+      INPUT_TYPE_KEY == input->type &&
+      NULL != win &&
+      0 == bstrncmp( win->id, &str_wid_mbox, blength( &str_wid_mbox ) )
+   ) {
+      switch( input->scancode ) {
+         case INPUT_SCANCODE_ENTER:
+         case INPUT_SCANCODE_ESC:
+            ui_window_destroy( win->ui, win->id );
+            goto cleanup;
+
+         default:
+            goto cleanup;
+      }
+   }
+
+   /* No message box, so grab the top or requested dialog. */
    if( NULL == id ) {
       win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
    } else {
@@ -1247,6 +1292,36 @@ void ui_window_next_active_control( struct UI_WINDOW* win ) {
 cleanup:
    return;
 }
+
+void ui_message_box( struct UI* ui, const bstring message ) {
+   struct UI_WINDOW* win_mbox = NULL;
+   struct UI_CONTROL* control = NULL;
+   bstring iter_mbox_id = NULL;
+
+   ui_mbox_global_iter++;
+   iter_mbox_id = bformat( "%s-%d", str_wid_mbox.data, ui_mbox_global_iter );
+
+   ui_window_new( ui, win_mbox, iter_mbox_id,
+      &str_wid_mbox, NULL, -1, -1,
+      UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL );
+
+   ui_control_new( ui, control, message,
+      UI_CONTROL_TYPE_LABEL, FALSE, TRUE, NULL, -1, -1,
+      UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL );
+   ui_control_add( win_mbox, &str_cid_mbox_l, control );
+
+   ui_control_new( ui, control, &str_ok,
+      UI_CONTROL_TYPE_BUTTON, FALSE, TRUE, NULL, -1, -1,
+      UI_CONST_WIDTH_FULL, UI_CONST_HEIGHT_FULL );
+   ui_control_add( win_mbox, &str_cid_mbox_b, control );
+
+   ui_window_push( ui, win_mbox );
+
+cleanup:
+   bdestroy( iter_mbox_id );
+   return;
+}
+
 
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer ) {
    struct UI_WINDOW* win_debug = NULL;

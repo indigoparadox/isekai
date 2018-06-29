@@ -182,7 +182,11 @@ void ui_debug_stack( struct UI* ui );
 
 #ifdef UI_C
 SCAFFOLD_MODULE( "ui.c" );
-static struct tagbstring str_wid_debug = bsStatic( "debug" );
+static struct tagbstring str_wid_debug = bsStatic( "_debug" );
+static struct tagbstring str_wid_mbox = bsStatic( "_messagebox" );
+static struct tagbstring str_cid_mbox_l = bsStatic( "_message_lbl" );
+static struct tagbstring str_cid_mbox_b = bsStatic( "_message_btn" );
+static struct tagbstring str_ok = bsStatic( "OK" );
 #endif /* UI_C */
 
 #endif /* CURSES_RPG_H */

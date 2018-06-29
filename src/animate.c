@@ -351,7 +351,7 @@ static void* animate_draw_ani_cb(
 
    /* TODO: Blit fill color masked with shape. */
 
-#ifdef GRAPHICS_C
+//#ifdef GRAPHICS_C
    graphics_blit_stretch(
       twindow->g,
       centered_x,
@@ -360,7 +360,7 @@ static void* animate_draw_ani_cb(
       a->current_frame->height,
       a->target
    );
-#endif /* GRAPHICS_C */
+//#endif /* GRAPHICS_C */
 }
 
 void animate_draw_animations( struct GRAPHICS_TILE_WINDOW* twindow ) {

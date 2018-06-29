@@ -29,6 +29,7 @@ struct CHANNEL {
    struct VM_CADDY* vm_caddy;
    BOOL vm_started;
    struct HASHMAP vm_globals;
+   bstring error;
 #ifdef USE_TINYPY
    struct tp_vm* vm;
    int vm_cur;

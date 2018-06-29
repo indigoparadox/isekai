@@ -82,9 +82,13 @@ static struct tagbstring str_cid_connect_nick = bsStatic( "connect_nick" );
 static struct tagbstring str_cid_connect_channel = bsStatic( "connect_channel" );
 static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" );
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
-static struct tagbstring str_loading = bsStatic( "Loading..." );
+static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
+#ifndef DISABLE_MODE_ISO
+static struct tagbstring str_default_channel = bsStatic( "#isotest" );
+#else
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
+#endif /* !DISABLE_MODE_ISO */
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO
@@ -144,7 +148,21 @@ static BOOL loop_game() {
 
    /* Do drawing. */
    l = hashmap_get_first( &(main_client->channels) );
-   if( FALSE == channel_is_loaded( l ) ) {
+   if( TRUE == channel_has_error( l ) ) {
+      /* Abort and go back to connect dialog. */
+      /* We need to stop both client AND server, 'cause the data is bad! */
+      // TODO
+      //scaffold_print_debug( &module, "Stopping server...\n" );
+      //scaffold_set_server();
+      //server_stop_clients( main_server );
+      //server_stop( main_server );
+      ui_message_box( ui, l->error );
+      client_stop( main_client );
+      scaffold_print_debug( &module, "Unloading loading animation...\n" );
+      animate_cancel_animation( NULL, &str_loading );
+      goto cleanup;
+
+   } else if( FALSE == channel_is_loaded( l ) ) {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
          scaffold_print_debug( &module, "Creating loading animation...\n" );
@@ -182,6 +200,7 @@ static BOOL loop_game() {
 
    } else if( TRUE != main_client->running ) {
       /* We're stopping, not starting. */
+      scaffold_print_debug( &module, "Stopping server...\n" );
       server_stop( main_server );
 #ifndef USE_NETWORK
       keep_going = FALSE;
@@ -189,10 +208,12 @@ static BOOL loop_game() {
       goto cleanup;
 
    } else if( NULL == main_client->active_t ) {
+      scaffold_print_debug( &module, "Setting main client...\n" );
       client_set_active_t( main_client, &(l->tilemap) );
    }
 
    /* If we're this far, we must be done loading! */
+   scaffold_print_debug( &module, "Unloading loading animation...\n" );
    animate_cancel_animation( NULL, &str_loading );
 
    /* Client drawing stuff after this. */
@@ -271,6 +292,9 @@ static BOOL loop_connect() {
       scaffold_check_nonzero( bstr_result );
 
 #ifdef USE_CONNECT_DIALOG
+
+      scaffold_print_debug( &module, "Creating connect dialog...\n" );
+
       /* Prompt for an address and port. */
       ui_window_new(
          ui, win, &str_cdialog_id,
