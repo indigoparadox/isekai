@@ -64,6 +64,11 @@ cleanup:
    return;
 }
 
+void server_stop_clients( struct SERVER* s ) {
+   // This is kind of a hack..?
+   server_drop_client( s, NULL );
+}
+
 void server_stop( struct SERVER* s ) {
    if( ipc_is_listening( s->self.link ) ) {
       scaffold_print_info( &module, "Server shutting down...\n" );
@@ -150,6 +155,8 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
    scaffold_assert( 0 < l->refcount.count );
 
 #ifdef DEBUG
+   /* TODO: Make this dump us back at the menu. */
+   /* Problem is: couldn't find map file! */
    old_count = c_first->refcount.count;
    server_channel_add_client( l, c_first );
    scaffold_assert( c_first->refcount.count > old_count );

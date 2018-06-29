@@ -39,6 +39,11 @@ static void channel_free_final( const struct REF *ref ) {
    bdestroy( l->name );
    bdestroy( l->topic );
 
+   if( NULL != l->error ) {
+      bdestroy( l->error );
+      l->error = NULL;
+   }
+
    tilemap_free( &(l->tilemap) );
 
    /* Free channel. */
@@ -65,6 +70,7 @@ void channel_init(
    l->topic = bfromcstr( "No topic" );
    l->sentinal = CHANNEL_SENTINAL;
    l->client_or_server = server;
+   l->error = NULL;
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images, server );
@@ -296,6 +302,17 @@ cleanup:
    return;
 }
 
+BOOL channel_has_error( struct CHANNEL* l ) {
+   if( NULL != l && NULL != l->error ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+void channel_set_error( struct CHANNEL* l, const char* error ) {
+   l->error = bfromcstr( error );
+}
+
 BOOL channel_is_loaded( struct CHANNEL* l ) {
    BOOL retval = FALSE;
    SCAFFOLD_SIZE tilesets_count;
@@ -343,6 +360,7 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
+   /* We made it this far... */
    retval = TRUE;
 
 cleanup:
