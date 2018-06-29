@@ -231,7 +231,8 @@ cleanup:
 static BOOL loop_connect() {
    BOOL keep_going = TRUE;
    bstring server_address = NULL;
-   int bstr_result = 0;
+   int bstr_result = 0,
+      input_res = 0;
    struct VECTOR* server_tuple = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
@@ -326,7 +327,12 @@ static BOOL loop_connect() {
       return FALSE;
    }
 
-   if( 0 != ui_poll_input( ui, input, &str_cdialog_id ) ) {
+
+   input_res = ui_poll_input( ui, input, &str_cdialog_id );
+   if(
+      UI_INPUT_RETURN_KEY_ENTER == input_res ||
+      0 < input_res
+   ) {
       scaffold_print_info(
          &module, "Connecting to: %b\n",
          buffer_host
