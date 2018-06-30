@@ -58,7 +58,7 @@ struct CLIENT {
                             *   server-side.
                             */
    struct HASHMAP tilesets;
-   BOOL tilesets_loaded;
+   SCAFFOLD_SIZE tilesets_loaded;
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
    MODE gfx_mode;

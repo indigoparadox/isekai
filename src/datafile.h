@@ -39,14 +39,14 @@ ezxml_t datafile_mobile_ezxml_peek_mob_id(
 void datafile_parse_mobile_ezxml_t(
    struct MOBILE* o, ezxml_t xml_data, bstring def_path, BOOL local_images
 );
-void datafile_tilemap_parse_tileset_ezxml(
+BOOL datafile_tilemap_parse_tileset_ezxml(
    struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path,
    BOOL local_images
 );
 ezxml_t datafile_tilemap_ezxml_peek_lname(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
 );
-void datafile_parse_tilemap_ezxml_t(
+SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    struct TILEMAP* t, ezxml_t xml_data, bstring def_path, BOOL local_images
 );
 void datafile_parse_ezxml_string(
