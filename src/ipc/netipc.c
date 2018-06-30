@@ -87,9 +87,9 @@ void ipc_setup() {
       );
       scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
    }
-#endif /* _WIN32 && USE_NETWORK */
 
 cleanup:
+#endif /* _WIN32 && USE_NETWORK */
    return;
 }
 

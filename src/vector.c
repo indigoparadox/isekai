@@ -109,9 +109,6 @@ cleanup:
 SCAFFOLD_SIZE_SIGNED vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void* data ) {
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
-#ifdef DEBUG
-   SCAFFOLD_SIZE old_size = 0;
-#endif /* DEBUG */
    SCAFFOLD_SIZE_SIGNED err = -1;
 
    scaffold_check_null( v );

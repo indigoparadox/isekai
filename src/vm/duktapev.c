@@ -339,8 +339,6 @@ void vm_channel_end( struct CHANNEL* l ) {
 }
 
 void vm_mobile_start( struct MOBILE* o ) {
-   const char* code_c = NULL;
-   int duk_result = 0;
 
    scaffold_check_not_null( OBJECT_VM( o ) );
 

@@ -6,6 +6,8 @@
 #include <time.h>
 #endif /* USE_CLOCK */
 
+#include <math.h>
+
 static uint32_t graphics_time = 0;
 static uint32_t graphics_fps_delay = 0;
 
@@ -112,9 +114,6 @@ void graphics_wait_for_fps_timer() {
       graphics_sleep( graphics_fps_delay - elapsed );
    }
 #else
-#ifdef DEBUG_FPS
-   int bstr_ret;
-#endif /* DEBUG_FPS */
    int32_t rest_time,
       difference;
 
@@ -530,3 +529,42 @@ void graphics_raycast_wall_iterate(
 #endif /* RAYCAST_OLD_DOUBLE */
 
 #endif /* !DISABLE_MODE_POV */
+
+#ifndef DISABLE_ISOMETRIC
+
+void graphics_isometric_tile_rotate(
+   int* x, int* y, int width, int height, GRAPHICS_ISO_ROTATE rotation
+) {
+   switch( rotation ) {
+      case GRAPHICS_ISO_ROTATE_90:
+         *x = *x ^ *y;
+         *y = *x ^ *y;
+         *x = *x ^ *y;
+         *y = height - *y;
+         break;
+      case GRAPHICS_ISO_ROTATE_180:
+         *x = width - *x;
+         *y = height - *y;
+         break;
+      case GRAPHICS_ISO_ROTATE_270:
+         *x = *x ^ *y;
+         *y = *x ^ *y;
+         *x = *x ^ *y;
+         *x = width - *x;
+         break;
+   }
+}
+
+void graphics_transform_isometric(
+   GRAPHICS* g, float tile_x, float tile_y, int* screen_x, int* screen_y
+) {
+   SCAFFOLD_SIZE vp_x = g->virtual_x;
+   SCAFFOLD_SIZE vp_y = g->virtual_y;
+
+   *screen_x = vp_x + (tile_x * GRAPHICS_ISO_TILE_WIDTH / 2) + \
+      (tile_y * GRAPHICS_ISO_TILE_WIDTH / 2); \
+   *screen_y = vp_y + ((tile_y * GRAPHICS_ISO_TILE_OFFSET_X / 2) - \
+         (tile_x * GRAPHICS_ISO_TILE_OFFSET_X / 2));
+}
+
+#endif // DISABLE_ISOMETRIC

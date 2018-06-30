@@ -248,7 +248,6 @@ static void tilemap_layer_draw_tile_debug(
    struct TILEMAP_TILESET* set = NULL;
    bstring bnum = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
-   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
    SCAFFOLD_SIZE td_i;
    int bstr_result;
    struct TILEMAP* t = layer->tilemap;
@@ -373,7 +372,7 @@ static void* tilemap_layer_draw_tile_items_cb(
    item_draw_ortho( e, rect->x, rect->y, g_screen );
 }
 
-static void* tilemap_layer_draw_tile(
+static void tilemap_layer_draw_tile_ortho(
    struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
    GFX_COORD_TILE x, GFX_COORD_TILE y, SCAFFOLD_SIZE gid
 ) {
@@ -473,10 +472,79 @@ static void* tilemap_layer_draw_tile(
 #endif /* DEBUG_TILES */
 
 cleanup:
-   return NULL;
+   return;
 }
 
-static void* tilemap_layer_draw_cb(
+#ifndef DISABLE_ISOMETRIC
+
+static void tilemap_layer_draw_tile_iso(
+   struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
+   GFX_COORD_TILE x, GFX_COORD_TILE y, SCAFFOLD_SIZE gid
+) {
+
+   /*const struct isomap_tile* tile,
+   const OG_Rect* viewport,
+   const GRAPHICS_ROTATE rotation
+) {*/
+#if 0
+   int i = 0, screen_x, screen_y, tile_x, tile_y;
+   OG_Texture* sprite_texture = NULL;
+   struct isomap_render_texture texture_selection;
+
+   tile_x = tile->x;
+   tile_y = tile->y;
+
+   /* Perform transformations. */
+
+   isomap_render_select_terrain( tile, rotation, &texture_selection );
+
+   graphics_isometric_tile_rotate(
+      &tile_x, &tile_y,
+      tile->map->width,
+      tile->map->height,
+      rotation
+   );
+
+   graphics_transform_isometric(
+      tile_x,
+      tile_y,
+      &screen_x,
+      &screen_y,
+      viewport
+   );
+
+   sprite_texture = isomap_render_terrain_textures[texture_selection.texture_index];
+   if( NULL == sprite_texture ) {
+      /* TODO: Draw a placeholder. */
+      goto cleanup;
+   }
+
+   /* Don't draw stuff off-screen. */
+   if(
+      -GRAPHICS_TILE_WIDTH > screen_x || -GRAPHICS_TILE_WIDTH > screen_y ||
+      GRAPHICS_SCREEN_WIDTH < screen_x || GRAPHICS_SCREEN_HEIGHT < screen_y
+   ) {
+      goto cleanup;
+   }
+
+   graphics_draw_tile(
+      sprite_texture,
+      texture_selection.sprite_rect.x,
+      texture_selection.sprite_rect.y,
+      screen_x,
+      screen_y
+   );
+#endif // 0
+cleanup:
+
+   return;
+}
+
+#endif /* !DISABLE_ISOMETRIC */
+
+/** \brief Callback: Draw iterated layer.
+ */
+static void* tilemap_draw_layer_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
@@ -493,6 +561,7 @@ static void* tilemap_layer_draw_cb(
       goto cleanup;
    }
 
+   /* TODO: Do culling in iso-friendly way. */
    for( x = twindow->min_x ; twindow->max_x > x ; x++ ) {
       for( y = twindow->min_y ; twindow->max_y > y ; y++ ) {
          tile = tilemap_get_tile( layer, x, y );
@@ -500,7 +569,19 @@ static void* tilemap_layer_draw_cb(
             continue;
          }
 
-         tilemap_layer_draw_tile( layer,twindow, x, y, tile );
+         switch( layer->tilemap->orientation ) {
+         case TILEMAP_ORIENTATION_ORTHO:
+            tilemap_layer_draw_tile_ortho(
+               layer, twindow, x, y, tile );
+            break;
+
+#ifndef DISABLE_ISOMETRIC
+         case TILEMAP_ORIENTATION_ISO:
+            tilemap_layer_draw_tile_iso(
+               layer, twindow, x, y, tile );
+            break;
+#endif /* DISABLE_ISOMETRIC */
+         }
       }
    }
 
@@ -508,7 +589,10 @@ cleanup:
    return NULL;
 }
 
-static void* tilemap_pos_draw_cb(
+/** \brief Callback: Draw all of the layers for the iterated individual
+ *         tile/position (kind of the opposite of tilemap_draw_layer_cb.)
+ */
+static void* tilemap_draw_pos_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
@@ -525,13 +609,25 @@ static void* tilemap_pos_draw_cb(
       layer = vector_get( &(t->layers), layer_idx );
       tile = tilemap_get_tile( layer, pos->x, pos->y );
       if( 0 < tile ) {
-         tilemap_layer_draw_tile( layer, twindow, pos->x, pos->y, tile );
+         switch( t->orientation ) {
+         case TILEMAP_ORIENTATION_ORTHO:
+            tilemap_layer_draw_tile_ortho(
+               layer, twindow, pos->x, pos->y, tile );
+            break;
+
+#ifndef DISABLE_ISOMETRIC
+         case TILEMAP_ORIENTATION_ISO:
+            tilemap_layer_draw_tile_iso(
+               layer, twindow, pos->x, pos->y, tile );
+            break;
+#endif /* DISABLE_ISOMETRIC */
+         }
       }
    }
    vector_lock( &(t->layers), FALSE );
 }
 
-void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
+void tilemap_draw_tilemap( struct GRAPHICS_TILE_WINDOW* twindow ) {
    struct CLIENT* local_client = twindow->local_client;
    struct MOBILE* o = local_client->puppet;
    struct TILEMAP* t = local_client->active_t;
@@ -540,19 +636,21 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
       return;
    }
 
+   /* Redraw all tiles if requested. */
    if(
       TILEMAP_REDRAW_ALL == t->redraw_state
 #ifdef DEBUG_TILES
       || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
 #endif /* DEBUG_TILES */
    ) {
-      vector_iterate( &(t->layers), tilemap_layer_draw_cb, twindow );
+      vector_iterate( &(t->layers), tilemap_draw_layer_cb, twindow );
    } else if(
       TILEMAP_REDRAW_DIRTY == t->redraw_state &&
       0 < vector_count( &(t->dirty_tiles ) )
    ) {
+      /* Just redraw dirty tiles. */
       vector_iterate(
-         &(t->dirty_tiles), tilemap_pos_draw_cb, twindow
+         &(t->dirty_tiles), tilemap_draw_pos_cb, twindow
       );
    }
 
@@ -570,7 +668,8 @@ void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* twindow ) {
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
    }
 
-   /* Draw masks. */
+   /* Draw masks to cover up garbage from mismatch between viewport and window.
+    */
    if( twindow->width < (GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) ) {
       graphics_draw_rect(
          twindow->g,

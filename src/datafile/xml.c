@@ -904,12 +904,8 @@ cleanup:
 }
 
 static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t xml_layer ) {
-   ezxml_t xml_object = NULL,
-      xml_object_props = NULL;
+   ezxml_t xml_object = NULL;
    bstring buffer = NULL;
-   const char* xml_attr = NULL;
-   struct TILEMAP_POSITION* obj_out = NULL;
-   int bstr_res = 0;
 
    scaffold_check_null( xml_layer );
 

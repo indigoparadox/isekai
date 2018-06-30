@@ -24,6 +24,12 @@
 #define GRAPHICS_RAY_ROTATE_INC_FP 47142
 #define GRAPHICS_RAY_ROTATE_INC_FP_COS 18
 #define GRAPHICS_RAY_ROTATE_INC_FP_SIN 9999
+#define GRAPHICS_ISO_TILE_WIDTH 48
+#define GRAPHICS_ISO_TILE_HEIGHT 48
+#define GRAPHICS_ISO_TILE_OFFSET_X 24
+#define GRAPHICS_ISO_TILE_OFFSET_Y 24
+#define GRAPHICS_ISO_TILES_X_COUNT 4
+#define GRAPHICS_ISO_TILES_Y_COUNT 4
 
 #define GRAPHICS_FIXED_PRECISION 10000
 
@@ -47,6 +53,12 @@ typedef uint32_t GRAPHICS_HICOLOR;
 typedef int GFX_COORD_TILE;
 typedef long GFX_COORD_PIXEL;
 typedef int64_t GFX_COORD_FPP;
+
+typedef enum {
+   GRAPHICS_ISO_ROTATE_90 = 90,
+   GRAPHICS_ISO_ROTATE_180 = 180,
+   GRAPHICS_ISO_ROTATE_270 = 270
+} GRAPHICS_ISO_ROTATE;
 
 typedef enum {
    RAY_SIDE_NORTH_SOUTH,
@@ -392,6 +404,7 @@ GRAPHICS_HICOLOR graphics_get_hipixel(
 
 #ifndef DISABLE_MODE_POV
 
+BOOL graphics_raycast_point_is_infinite( const GRAPHICS_DELTA* point );
 void graphics_raycast_wall_create(
    GRAPHICS_RAY* ray, int x, int map_w, int map_h,
    const GRAPHICS_PLANE* plane_pos,
@@ -417,6 +430,17 @@ int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
 int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
 
 #endif /* !DISABLE_MODE_POV */
+
+#ifndef DISABLE_ISOMETRIC
+
+void graphics_isometric_tile_rotate(
+   int* x, int* y, int width, int height, GRAPHICS_ISO_ROTATE rotation
+);
+void graphics_transform_isometric(
+   GRAPHICS* g, float tile_x, float tile_y, int* screen_x, int* screen_y
+);
+
+#endif /* DISABLE_ISOMETRIC */
 
 #ifdef GRAPHICS_C
 SCAFFOLD_MODULE( "graphics.c" );

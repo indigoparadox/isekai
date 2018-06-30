@@ -36,7 +36,9 @@ typedef enum {
 
 typedef enum {
    TILEMAP_ORIENTATION_ORTHO,
+#ifndef DISABLE_ISOMETRIC
    TILEMAP_ORIENTATION_ISO
+#endif /* DISABLE_ISOMETRIC */
 } TILEMAP_ORIENTATION;
 
 typedef enum TILEMAP_MOVEMENT_MOD {
@@ -222,7 +224,7 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 SCAFFOLD_INLINE uint32_t tilemap_get_tile(
    const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
 );
-void tilemap_draw_ortho( struct GRAPHICS_TILE_WINDOW* window );
+void tilemap_draw_tilemap( struct GRAPHICS_TILE_WINDOW* window );
 void tilemap_update_window_ortho(
    struct GRAPHICS_TILE_WINDOW* twindow,
    GFX_COORD_TILE focal_x, GFX_COORD_TILE focal_y

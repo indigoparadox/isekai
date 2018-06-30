@@ -43,7 +43,6 @@ void item_random_init(
    struct CLIENT* c
 ) {
    SCAFFOLD_SIZE sprite_id = 0;
-   BIG_SERIAL serial;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct ITEM_SPRITE* sprite = NULL;
 
@@ -136,7 +135,6 @@ ITEM_TYPE item_type_from_c( const char* c_string ) {
 SCAFFOLD_SIZE item_random_sprite_id_of_type(
    ITEM_TYPE type, struct ITEM_SPRITESHEET* catalog
 ) {
-   struct ITEM_SPRITE* sprite_out = NULL;
    struct VECTOR* candidates = NULL;
    SCAFFOLD_SIZE selection = 0;
 
@@ -167,17 +165,17 @@ void item_draw_ortho(
    scaffold_assert_client();
 
    if( NULL == e || NULL == g ) {
-      return;
+      goto cleanup;
    }
 
    catalog = client_get_catalog( e->client_or_server, e->catalog_name );
    if( NULL == catalog ) {
-      return;
+      goto cleanup;
    }
 
    sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
    if( NULL == sprite ) {
-      return;
+      goto cleanup;
    }
 
    /*

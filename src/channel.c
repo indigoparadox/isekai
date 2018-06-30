@@ -85,8 +85,6 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
    struct TILEMAP_SPAWNER* spawner = NULL;
-   SCAFFOLD_SIZE_SIGNED bytes_read = 0,
-      v_count = 0;
    struct VECTOR* player_spawns = NULL;
 
    scaffold_check_null( c );
