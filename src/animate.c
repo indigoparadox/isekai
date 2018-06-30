@@ -198,8 +198,8 @@ void animate_create_blink_color(
    struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
    INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, BOOL block
 ) {
-   struct ANIMATION_FRAME* last_frame = NULL,
-      * new_frame = NULL;
+   struct ANIMATION_FRAME* last_frame = NULL;
+      /* * new_frame = NULL; */
 
    /* TODO: Copy graphic target. */
 
@@ -207,7 +207,7 @@ void animate_create_blink_color(
    a->indefinite = FALSE;
 
    last_frame = animate_get_last_frame( a, target );
-   new_frame = animate_new_last_frame( a, target, ms_per_frame );
+   /* new_frame = animate_new_last_frame( a, target, ms_per_frame ); */
 
    if( NULL == last_frame ) {
       /* This must be the first frame. Assume a rep is a cycle of 1 on/1 off. */
@@ -268,14 +268,14 @@ void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
 static void animate_free_animation_frame( struct ANIMATION_FRAME** frame ) {
    struct ANIMATION_FRAME* next_frame = (*frame)->next_frame;
 
+   /* Free the current frame. */
    mem_free( *frame );
 
    if( NULL != next_frame ) {
+      /* Recurse into the next frame we saved above. */
       animate_free_animation_frame( &next_frame );
    }
 
-cleanup:
-   next_frame = NULL;
    return;
 }
 
@@ -292,7 +292,6 @@ static BOOL animate_cyc_ani_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
    BOOL remove = FALSE;
    struct ANIMATION_FRAME* current_frame = NULL;
 
