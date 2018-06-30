@@ -368,7 +368,6 @@ static void html_tree_cleanup( struct html_tree_tag* tag ) {
    struct html_tree_tag* tag_parent = NULL;
    bstring str_test = NULL;
    int attr_count;
-   int i;
 
    tag_iter = tag;
    while( NULL != tag_iter ) {

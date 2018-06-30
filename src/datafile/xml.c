@@ -26,11 +26,10 @@ void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
    bstring def_path, BOOL local_images
 ) {
-   ezxml_t xml_sprite;
-   const char* xml_attr;
+   ezxml_t xml_sprite = NULL;
+   const char* xml_attr = NULL;
    struct ITEM_SPRITE* sprite = NULL;
-   SCAFFOLD_SIZE_SIGNED i;
-   SCAFFOLD_SIZE sprite_id;
+   SCAFFOLD_SIZE sprite_id = 0;
 
    scaffold_check_null( xml_sprites );
 
@@ -589,21 +588,18 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path, BOOL local_images
 ) {
    ezxml_t
-      xml_image,
-      xml_tile,
-      xml_terraintypes,
-      xml_terrain;
-   const char* xml_attr;
+      xml_image = NULL,
+      xml_tile = NULL,
+      xml_terraintypes = NULL,
+      xml_terrain = NULL;
+   const char* xml_attr = NULL;
    struct TILEMAP_TILE_DATA* tile_info = NULL;
-   int i,
-      terrain_id_c_i,
-      bstr_retval;
+   int i = 0,
+      terrain_id_c_i = 0;
    SCAFFOLD_SIZE terrain_id = 0;
    struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    const char* terrain_c = NULL;
    char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1] = { 0 };
-   BOOL tileset_put = TRUE;
-   BOOL first_pass = FALSE;
 #ifdef DEBUG_TILES_VERBOSE
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
@@ -616,7 +612,6 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    xml_attr = ezxml_attr( xml_tileset, "source" );
    if( NULL != xml_attr && NULL == def_path ) {
-      first_pass = TRUE;
       def_path = bfromcstr( xml_attr );
       scaffold_print_debug(
          &module, "Loading external tileset: %s\n", xml_attr );
@@ -751,8 +746,6 @@ static void datafile_tilemap_parse_layer_ezxml(
    struct VECTOR* tiles_list = NULL;
    SCAFFOLD_SIZE i;
    const char* xml_attr = NULL;
-   int bstr_res = 0;
-   struct TILEMAP_LAYER* prev_layer = NULL;
 
    scaffold_check_null( xml_layer );
 
@@ -809,7 +802,6 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    const char* xml_attr = NULL;
    ezxml_t xml_prop_iter = NULL;
    struct TILEMAP_SPAWNER* obj_out = NULL;
-   int bstr_res = 0;
    SCAFFOLD_SIZE_SIGNED verr;
 
    tilemap_spawner_new( obj_out, t, TILEMAP_SPAWNER_TYPE_MOBILE );

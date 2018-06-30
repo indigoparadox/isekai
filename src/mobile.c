@@ -299,10 +299,6 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GR
    struct MOBILE* o_player = NULL;
    GRAPHICS_RECT sprite_rect;
 
-#ifdef DEBUG_TILES
-   bstring bnum = NULL;
-#endif /* DEBUG_TILES */
-
    scaffold_assert_client();
 
    if( NULL == o || NULL == o->sprites_filename || NULL == o->sprites ) {
@@ -834,6 +830,7 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
          bdata( o->current_animation->name ),
          str_mobile_facing[o->facing].data
       );
+      scaffold_assert( NULL != ani_key_buffer );
       /* Grab the animation from the mobiles linked animation list, if any. */
       if( NULL != hashmap_get( &(o->ani_defs), ani_key_buffer ) ) {
          o->current_animation = hashmap_get( &(o->ani_defs), ani_key_buffer );
@@ -843,6 +840,6 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
    /* No more need to reset. It's done. */
    o->animation_reset = FALSE;
 
-cleanup:
+/* cleanup: */
    bdestroy( ani_key_buffer );
 }

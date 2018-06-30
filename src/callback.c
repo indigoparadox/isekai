@@ -253,7 +253,6 @@ cleanup:
  */
 void* callback_load_local_tilesets( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-   struct CLIENT* c = (struct CLIENT*)arg;
    SCAFFOLD_SIZE bytes_read = 0,
       setdata_size = 0;
    BYTE* setdata_buffer = NULL;
@@ -353,7 +352,6 @@ void* callback_search_mobs_by_pos( struct CONTAINER_IDX* idx, void* parent, void
       o_out = o;
    }
 
-cleanup:
    return o_out;
 }
 
@@ -644,7 +642,6 @@ void* callback_proc_server_spawners(
 
    vector_iterate( &(l->tilemap.spawners), callback_proc_channel_spawners, s );
 
-cleanup:
    return NULL;
 }
 
@@ -698,7 +695,6 @@ void* callback_search_tileset_img_gid(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)arg;
-   GRAPHICS* g_tileset = (GRAPHICS*)iter;
 
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
