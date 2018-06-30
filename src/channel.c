@@ -316,6 +316,9 @@ void channel_set_error( struct CHANNEL* l, const char* error ) {
 BOOL channel_is_loaded( struct CHANNEL* l ) {
    BOOL retval = FALSE;
    SCAFFOLD_SIZE tilesets_count;
+#ifdef DEBUG
+   static SCAFFOLD_SIZE tilesets_loaded_last_pass = -1;
+#endif /* DEBUG */
 
    if( NULL == l ) {
       goto cleanup;
@@ -357,6 +360,15 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
 #endif /* USE_CHUNKS */
 
    if( l->client_or_server->tilesets_loaded < tilesets_count ) {
+#ifdef DEBUG
+      if( tilesets_loaded_last_pass != l->client_or_server->tilesets_loaded ) {
+         tilesets_loaded_last_pass = l->client_or_server->tilesets_loaded;
+         scaffold_print_debug(
+            &module, "Tilesets loaded for %b: %d out of %d...\n",
+            l->name, l->client_or_server->tilesets_loaded, tilesets_count
+         );
+      }
+#endif /* DEBUG */
       goto cleanup;
    }
 

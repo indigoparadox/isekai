@@ -116,6 +116,7 @@ static BOOL loop_game() {
    struct ANIMATION* a = NULL;
    GRAPHICS* throbber = NULL;
    GRAPHICS_RECT r;
+   static BOOL load_complete = FALSE;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
@@ -165,6 +166,7 @@ static BOOL loop_game() {
    } else if( FALSE == channel_is_loaded( l ) ) {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
+         load_complete = FALSE;
          scaffold_print_debug( &module, "Creating loading animation...\n" );
          graphics_surface_new( throbber, 0, 0, 32, 32 );
          graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_WHITE, TRUE );
@@ -212,9 +214,12 @@ static BOOL loop_game() {
       client_set_active_t( main_client, &(l->tilemap) );
    }
 
-   /* If we're this far, we must be done loading! */
-   scaffold_print_debug( &module, "Unloading loading animation...\n" );
-   animate_cancel_animation( NULL, &str_loading );
+   if( !load_complete ) {
+      /* If we're this far, we must be done loading! */
+      scaffold_print_debug( &module, "Unloading loading animation...\n" );
+      animate_cancel_animation( NULL, &str_loading );
+      load_complete = TRUE;
+   }
 
    /* Client drawing stuff after this. */
    scaffold_set_client();

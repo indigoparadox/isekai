@@ -30,6 +30,8 @@ void datafile_handle_stream(
       datafile_parse_ezxml_string(
          set, data, length, TRUE, DATAFILE_TYPE_TILESET, filename
       );
+
+      /* External tileset loaded. */
       c->tilesets_loaded++;
       break;
 
@@ -46,11 +48,13 @@ void datafile_handle_stream(
       scaffold_check_null_msg(
          l, "Unable to find channel to attach loaded tileset."
       );
-      channel_set_error( l, "Unable to load channel; missing data." );
+      if( NULL == l ) {
+         channel_set_error( l, "Unable to load channel; missing data." );
+      }
 
 #ifdef USE_EZXML
       scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
-      datafile_parse_tilemap_ezxml_t(
+      c->tilesets_loaded += datafile_parse_tilemap_ezxml_t(
          &(l->tilemap), xml_data, filename, TRUE
       );
       scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );

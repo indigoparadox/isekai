@@ -585,7 +585,7 @@ cleanup:
 
 #define TERRAIN_ID_C_BUFFER_LENGTH 4
 
-void datafile_tilemap_parse_tileset_ezxml(
+BOOL datafile_tilemap_parse_tileset_ezxml(
    struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path, BOOL local_images
 ) {
    ezxml_t
@@ -608,6 +608,7 @@ void datafile_tilemap_parse_tileset_ezxml(
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
 #endif /* DEBUG_TILES_VERBOSE */
+   BOOL loaded_fully = FALSE;
 
    scaffold_error = 0;
 
@@ -639,9 +640,13 @@ void datafile_tilemap_parse_tileset_ezxml(
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+   /* We can live without terrain information. */
+   loaded_fully = TRUE;
+
    /* Parse the terrain information. */
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
-   scaffold_check_null( xml_terraintypes );
+   scaffold_check_null_msg(
+      xml_terraintypes, "No terraintypes found for this tileset.\n" );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
    while( NULL != xml_terrain ) {
 
@@ -734,7 +739,7 @@ cleanup:
    if( NULL != tile_info ) {
       /* TODO: Delete tile info. */
    }
-   return;
+   return loaded_fully;
 }
 
 static void datafile_tilemap_parse_layer_ezxml(
@@ -923,7 +928,7 @@ cleanup:
    return;
 }
 
-void datafile_parse_tilemap_ezxml_t(
+SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    struct TILEMAP* t, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
    ezxml_t xml_layer = NULL,
@@ -935,6 +940,11 @@ void datafile_parse_tilemap_ezxml_t(
    SCAFFOLD_SIZE firstgid = 0;
    struct TILEMAP_TILESET* set = NULL;
    struct CHANNEL* l = NULL;
+   SCAFFOLD_SIZE tilesets_loaded_fully = 0;
+
+   /* Any tilesets not loaded fully here are external and might be loaded
+    * later.
+    */
 
    SCAFFOLD_SIZE z = 0;
    tileset_id = bfromcstr( "" );
@@ -981,8 +991,12 @@ void datafile_parse_tilemap_ezxml_t(
          /* Don't have to check since the hashmap_get above is a check. */
          hashmap_put( &(l->client_or_server->tilesets), tileset_id, set, TRUE );
 
-         datafile_tilemap_parse_tileset_ezxml(
-            set, xml_tileset, tileset_id, local_images );
+        if( datafile_tilemap_parse_tileset_ezxml(
+            set, xml_tileset, tileset_id, local_images )
+         ) {
+            /* This tileset was loaded enough to be considered done. */
+            tilesets_loaded_fully++;
+         }
       }
 
       ezxml_int( firstgid, xml_attr, xml_tileset, "firstgid" );
@@ -1019,7 +1033,7 @@ void datafile_parse_tilemap_ezxml_t(
 
 cleanup:
    bdestroy( tileset_id );
-   return;
+   return tilesets_loaded_fully;
 }
 
 void datafile_parse_ezxml_string(
