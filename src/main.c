@@ -24,6 +24,8 @@
 
 SCAFFOLD_MODULE( "main.c" );
 
+static struct tagbstring str_readme_id = bsStatic( "readme" );
+static struct tagbstring str_readme_title = bsStatic( "Readme" );
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
@@ -32,7 +34,6 @@ static struct tagbstring str_cdialog_prompt =
 #if defined( USE_CONNECT_DIALOG ) && !defined( USE_NETWORK )
 #error Connect dialog requires network to be enabled!
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
-
 
 #ifndef USE_CONNECT_DIALOG
 SCAFFOLD_SIZE loop_count = 0;
@@ -49,6 +50,7 @@ struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 struct CHANNEL* l = NULL;
 bstring buffer_host = NULL;
 bstring buffer_channel = NULL;
+BOOL showed_readme = FALSE;
 #endif /* ENABLE_LOCAL_CLIENT */
 
 static struct tagbstring str_top_down = bsStatic( "Top Down" );
@@ -276,7 +278,28 @@ static BOOL loop_connect() {
       buffer_channel = bfromcstr( "" );
    }
 
-   if( NULL == ui_window_by_id( ui, &str_cdialog_id ) ) {
+   if(
+      !showed_readme &&
+      NULL == ui_window_by_id( ui, &str_readme_id )
+   ) {
+      /* Show the readme first thing. */
+      ui_window_new(
+         ui, win, &str_readme_id,
+         &str_readme_title, NULL,
+         -1, -1, 300, 400
+      );
+
+      ui_control_new(
+         ui, control, NULL, UI_CONTROL_TYPE_HTML, TRUE, TRUE, NULL,
+         -1, -1, -1, -1
+      );
+      ui_control_add( win, &str_readme_id, control );
+
+      ui_window_push( ui, win );
+   } else if(
+      showed_readme &&
+      NULL == ui_window_by_id( ui, &str_cdialog_id )
+   ) {
 #endif /* USE_CONNECT_DIALOG */
 
 #ifdef USE_RANDOM_PORT
@@ -357,6 +380,17 @@ static BOOL loop_connect() {
    }
 
 
+   /* Notice that we are polling against two different cases below. If we poll
+    * the connect dialog and get something, that means it's open and in focus.
+    * Same for the readme dialog. Note the dialog_id param to ui_poll_input().
+    */
+   input_res = ui_poll_input( ui, input, &str_readme_id );
+   if( UI_INPUT_RETURN_KEY_ENTER == input_res  ) {
+      showed_readme = TRUE;
+      ui_window_destroy( ui, &str_readme_id );
+      goto cleanup;
+   }
+
    input_res = ui_poll_input( ui, input, &str_cdialog_id );
    if(
       UI_INPUT_RETURN_KEY_ENTER == input_res ||
@@ -403,6 +437,7 @@ static BOOL loop_connect() {
       client_connect( main_client, server_address, server_port );
 
 #ifdef USE_CONNECT_DIALOG
+      goto cleanup;
    }
 #else
       /* One successful connection. */

@@ -88,7 +88,6 @@ void ui_window_init(
    GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 ) {
    struct UI_CONTROL* control = NULL;
-   GRAPHICS_RECT sizing_rect = { 0 };
 
    scaffold_assert( &global_ui == ui );
 
@@ -313,7 +312,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
       0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
    ) {
       /* Message boxes always stay on top of normals like these. */
-      scaffold_print_debug( &module, "Pushing new dialog: %b", win->id );
+      scaffold_print_debug( &module, "Pushing new dialog: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 1, win );
    } else if(
       NULL != top_window &&
@@ -321,11 +320,11 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
       0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
    ) {
       /* Must be /another/ new messagebox. */
-      scaffold_print_debug( &module, "Pushing new mbox: %b", win->id );
+      scaffold_print_debug( &module, "Pushing new mbox: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 1, win );
    } else {
       /* Must be a new dialog. */
-      scaffold_print_debug( &module, "Pushing dialog or mbox: %b", win->id );
+      scaffold_print_debug( &module, "Pushing dialog or mbox: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 0, win );
    }
    scaffold_check_negative( verr );
@@ -379,7 +378,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
 
    /* Handle control-specific responses to keys. */
 
-   if( UI_CONTROL_TYPE_INVENTORY == control->type ) {
+   switch( control->type ) {
+   case UI_CONTROL_TYPE_INVENTORY:
       switch( p->character ) {
       case INPUT_ASSIGNMENT_LEFT:
          items_list = (struct VECTOR*)control->self.attachment;
@@ -406,8 +406,9 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          input_length = UI_INPUT_RETURN_KEY_ESC;
          break;
       }
+      break;
 
-   } else if( UI_CONTROL_TYPE_SPINNER == control->type ) {
+   case UI_CONTROL_TYPE_SPINNER:
       numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
       switch( p->scancode ) {
       case INPUT_SCANCODE_UP:
@@ -442,8 +443,9 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          input_length = UI_INPUT_RETURN_KEY_ESC;
          break;
       }
+      break;
 
-   } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
+   case UI_CONTROL_TYPE_DROPDOWN:
       numbuff = (SCAFFOLD_SIZE_SIGNED*)(control->self.attachment);
       switch( p->scancode ) {
       case INPUT_SCANCODE_UP:
@@ -478,9 +480,26 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          input_length = UI_INPUT_RETURN_KEY_ESC;
          break;
       }
+      break;
 
-   } else if( UI_CONTROL_TYPE_TEXT == control->type ) {
+   case UI_CONTROL_TYPE_HTML:
+      /* TODO */
+      switch( p->scancode ) {
+      case INPUT_SCANCODE_ENTER:
+         input_length = UI_INPUT_RETURN_KEY_ENTER;
+         break;
 
+      case INPUT_SCANCODE_TAB:
+         input_length = UI_INPUT_RETURN_KEY_NEXT;
+         break;
+
+      case INPUT_SCANCODE_ESC:
+         input_length = UI_INPUT_RETURN_KEY_ESC;
+         break;
+      }
+      break;
+
+   case UI_CONTROL_TYPE_TEXT:
       /* This is different from above as the text is freely editable. */
       switch( p->scancode ) {
       case INPUT_SCANCODE_BACKSPACE:
@@ -520,6 +539,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          }
          break;
       }
+      break;
    }
 
 control_scancodes_common:
@@ -622,10 +642,13 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
    SCAFFOLD_SIZE num,
       i = 0;
 
-   if( UI_CONTROL_TYPE_TEXT == control->type ) {
+   switch( control->type ) {
+   case UI_CONTROL_TYPE_TEXT:
       /* Text boxes are wider than their input. */
       control_w = UI_TEXT_DEF_CONTROL_SIZE + (2 * UI_TEXT_MARGIN);
-   } else if( UI_CONTROL_TYPE_DROPDOWN == control->type ) {
+      break;
+
+   case UI_CONTROL_TYPE_DROPDOWN:
       while( NULL != control->list[i] ) {
          list_item = control->list[i];
          graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
@@ -635,10 +658,14 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
          }
          i++;
       }
-   } else {
+      break;
+
+   default:
       graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, control->text );
       control_w = control_size.w + (2 * UI_TEXT_MARGIN);
+      break;
    }
+
    return control_w;
 }
 
@@ -686,11 +713,12 @@ static void ui_window_reset_grid( struct UI_WINDOW* win ) {
    assert( win->ui == &global_ui );
 }
 
-static void* ui_control_window_size_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
+static void* ui_control_window_size_cb(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
    GRAPHICS_RECT* largest_control = NULL;
-   GRAPHICS* g = NULL;
 
    ui_window_advance_grid( (struct UI_WINDOW*)win, control );
 
@@ -843,10 +871,6 @@ static void* ui_control_draw_backlog_line(
 static void ui_control_draw_backlog(
    struct UI_WINDOW* win, struct UI_CONTROL* backlog
 ) {
-   GRAPHICS_COLOR fg = UI_TEXT_FG;
-   GRAPHICS* g = win->element;
-   struct CHANNEL* l = NULL;
-
    win->grid_pos.w = ui_control_get_draw_width( backlog );
    win->grid_pos.h = ui_control_get_draw_height( backlog );
 
@@ -857,9 +881,6 @@ static void ui_control_draw_backlog(
    backlog->self.grid_pos.y += UI_WINDOW_MARGIN;
 
    backlog_iter( ui_control_draw_backlog_line, backlog );
-
-cleanup:
-   return;
 }
 
 #endif /* !DISABLE_BACKLOG */
@@ -879,7 +900,6 @@ static void* ui_control_draw_inventory_item(
    struct UI_CONTROL* inv_pane = (struct UI_CONTROL*)arg;
    struct UI_WINDOW* win = inv_pane->owner;
    struct ITEM_SPRITESHEET* catalog = NULL;
-   struct ITEM_SPRITE* sprite = NULL;
    GRAPHICS_RECT label_size;
    GRAPHICS_RECT* inv_grid = &(inv_pane->self.grid_pos);
    GFX_COORD_PIXEL label_icon_offset;
@@ -963,7 +983,6 @@ static void ui_control_draw_textfield(
    struct UI_WINDOW* win, struct UI_CONTROL* textfield
 ) {
    GRAPHICS_COLOR fg = UI_TEXT_FG;
-   GRAPHICS* g = win->element;
    GRAPHICS_RECT bg_rect;
 
    if( textfield == win->active_control ) {
@@ -992,7 +1011,6 @@ static void ui_control_draw_label(
    struct UI_WINDOW* win, struct UI_CONTROL* label
 ) {
    GRAPHICS_COLOR fg = UI_LABEL_FG;
-   GRAPHICS* g = win->element;
 
    if( NULL != label->text ) {
       ui_draw_text(
@@ -1103,6 +1121,37 @@ static void ui_control_draw_dropdown(
    ui_window_advance_grid( (struct UI_WINDOW*)win, listbox );
 }
 
+static void ui_control_draw_html(
+   struct UI_WINDOW* win, struct UI_CONTROL* html
+) {
+   GRAPHICS_COLOR fg = UI_TEXT_FG;
+   GRAPHICS* g = win->element;
+   GRAPHICS_RECT bg_rect;
+
+#if 0
+   if( textfield == win->active_control ) {
+      fg = UI_SELECTED_FG;
+   }
+
+   memcpy( &bg_rect, &(textfield->self.area), sizeof( GRAPHICS_RECT ) );
+
+   ui_control_auto_size( textfield, &bg_rect, win, 1 );
+
+   win->grid_pos.w = bg_rect.w;
+   win->grid_pos.h = bg_rect.h;
+
+   ui_draw_rect( win, &(win->grid_pos), UI_TEXT_BG, TRUE );
+
+   if( NULL != textfield->text ) {
+      ui_draw_text(
+         win, &(win->grid_pos),
+         GRAPHICS_TEXT_ALIGN_LEFT, fg, UI_TEXT_SIZE, textfield->text,
+         textfield == win->active_control ? TRUE : FALSE, TRUE
+      );
+   }
+#endif // 0
+}
+
 static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    GRAPHICS_RECT* largest_control = NULL;
    BOOL auto_h = FALSE;
@@ -1123,16 +1172,24 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
    do {
       /* A pointer was returned, so update. */
-      if( largest_control->w < win->area.w ) {
+      if(
+         0 >= largest_control->w &&
+         largest_control->w < win->area.w
+      ) {
          largest_control->w = win->area.w;
       }
-      if( largest_control->h < win->area.h ) {
+      if(
+         0 >= largest_control->h &&
+         largest_control->h < win->area.h
+      ) {
          largest_control->h = win->area.h;
       }
 
+      /* Make sure the control is drawn on top of the window. */
       largest_control->x = win->area.x;
       largest_control->y = win->area.y;
 
+      /* Apply changes. */
       ui_window_transform( win, largest_control );
       mem_free( largest_control );
       ui_window_reset_grid( win );
@@ -1202,6 +1259,7 @@ static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* i
             case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
             case UI_CONTROL_TYPE_DROPDOWN: ui_control_draw_dropdown( win, control ); break;
             case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
+            case UI_CONTROL_TYPE_HTML: ui_control_draw_html( win, control ); break;
          }
 
          control = control->next_control;
@@ -1258,7 +1316,9 @@ void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindo
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
    scaffold_assert( &global_ui == ui );
-   return vector_iterate( &(ui->windows), callback_search_windows, wid );
+   struct UI_WINDOW* found = NULL;
+   found = vector_iterate( &(ui->windows), callback_search_windows, wid );
+   return found;
 }
 
 BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
