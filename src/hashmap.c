@@ -655,14 +655,8 @@ BOOL hashmap_contains_key_nolock( struct HASHMAP* m, const bstring key ) {
 
 
 void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
-   SCAFFOLD_SIZE i;
    void* found = NULL;
-   void* data = NULL;
-   void* test = NULL;
    BOOL ok = FALSE;
-#ifdef DEBUG
-   const char* key_c = NULL;
-#endif /* DEBUG */
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -693,11 +687,7 @@ void* hashmap_iterate_nolock(
    void* found = NULL;
    void* data = NULL;
    void* test = NULL;
-   BOOL ok = FALSE;
    struct CONTAINER_IDX idx = { 0 };
-#ifdef DEBUG
-   const char* key_c = NULL;
-#endif /* DEBUG */
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -710,9 +700,6 @@ void* hashmap_iterate_nolock(
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {
          data = (void*)(m->data[i].data);
-#ifdef DEBUG
-         key_c = bdata( m->data[i].key );
-#endif /* DEBUG */
          idx.value.key = m->data[i].key;
          test = callback( &idx, m, data, arg );
          if( NULL != test ) {
@@ -735,14 +722,11 @@ cleanup:
  */
 struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
    struct VECTOR* found = NULL;
-   void* data = NULL;
-   void* test = NULL;
    BOOL ok = FALSE;
-   int i;
-   struct CONTAINER_IDX idx = { 0 };
-   SCAFFOLD_SIZE_SIGNED verr;
 #ifdef USE_ITERATOR_CACHE
    struct HASHMAP_VECTOR_ADAPTER adp;
+#else
+   struct CONTAINER_IDX* idx = { 0 };
 #endif /* USE_ITERATOR_CACHE */
 
    scaffold_check_null( m );
@@ -754,14 +738,14 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
    hashmap_lock( m, TRUE );
    ok = TRUE;
 
-   idx.type = CONTAINER_IDX_STRING;
-
 #ifdef USE_ITERATOR_CACHE
    adp.callback = callback;
    adp.arg = arg;
 
    found = vector_iterate_v( &(m->iterators), hashvector_search_cb, m, &adp );
 #else
+   idx.type = CONTAINER_IDX_STRING;
+
    /* Linear probing */
    for( i = 0; m->table_size > i ; i++ ) {
       if( 0 != m->data[i].in_use ) {

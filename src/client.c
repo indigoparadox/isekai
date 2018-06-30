@@ -33,7 +33,6 @@ static BOOL callback_remove_chunkers(
 static BOOL callback_remove_items(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
    struct ITEM* e = (struct ITEM*)iter;
 
    if( NULL != e ) {
@@ -258,9 +257,6 @@ void client_free_channels( struct CLIENT* c ) {
    );
 #endif /* DEBUG */
    scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
-
-cleanup:
-   return;
 }
 
 #ifdef USE_CHUNKS
@@ -280,15 +276,12 @@ void client_free_chunkers( struct CLIENT* c ) {
    );
    scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
 #endif /* DEBUG */
-cleanup:
-   return;
 }
 #endif /* USE_CHUNKS */
 
 void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
 #ifdef DEBUG
-   SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE test_count = 0;
 
    scaffold_assert( CLIENT_SENTINAL == c->sentinal );
@@ -492,7 +485,6 @@ void client_request_file(
 ) {
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
-   BOOL force_finished = FALSE;
 
    hashmap_lock( &(c->chunkers), TRUE );
 
@@ -614,7 +606,7 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
    datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
 
-cleanup:
+/* cleanup: */
    scaffold_print_debug(
       &module,
       "Client: Removing finished chunker for: %s\n", bdata( h->filename )

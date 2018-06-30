@@ -192,6 +192,7 @@ int i, l, c, bstr_ret;
 
 #endif /* USE_BSTRING_CALLBACKS */
 
+#if 0
 static size_t readNothing (void *buff, size_t elsize, size_t nelem, void *parm) {
 	UNUSED(buff);
 	UNUSED(elsize);
@@ -199,6 +200,7 @@ static size_t readNothing (void *buff, size_t elsize, size_t nelem, void *parm) 
 	UNUSED(parm);
 	return 0; /* Immediately indicate EOF. */
 }
+#endif /* 0 */
 
 #ifdef USE_BSTRING_STREAMS
 
@@ -213,6 +215,7 @@ struct bStream * s = bsopen ((bNread) readNothing, NULL);
 
 #endif /* USE_BSTRING_STREAMS */
 
+#if 0
 static size_t readRef (void *buff, size_t elsize, size_t nelem, void *parm) {
 struct tagbstring * t = (struct tagbstring *) parm;
 size_t tsz = elsize * nelem;
@@ -226,6 +229,7 @@ size_t tsz = elsize * nelem;
 	}
 	return 0;
 }
+#endif /* 0 */
 
 #ifdef USE_BSTRING_STREAMS
 

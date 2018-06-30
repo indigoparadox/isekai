@@ -7,6 +7,13 @@
 #define REF_SENTINAL 170
 #define REF_DISABLED {0, NULL, 0}
 
+/* This is a hack to turn on inline for the ref_* static functions to avoid
+ * -Wunused-function in gcc. as it ignores inline functions. Still lets us
+ * turn off inlines for ancient compilers without messing with other inlines,
+ * though.
+ */
+#define REF_INLINE inline
+
 #ifndef USE_THREADS
 
 struct REF {
@@ -15,7 +22,7 @@ struct REF {
    SCAFFOLD_SIZE count;
 };
 
-static SCAFFOLD_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
+static REF_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF* ) ) {
    ref->count = 1;
    ref->gc_free = free;
    ref->sentinal = REF_SENTINAL;
@@ -30,7 +37,7 @@ static struct tagbstring ref_module = bsStatic( "ref.h" );
 #define refcount_test_inc( obj ) ref_test_inc( obj, __FUNCTION__ )
 #define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
 
-static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, const char* func ) {
+static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
    ((struct REF*)ref)->count++;
 #ifdef DEBUG_REF
@@ -43,7 +50,7 @@ static SCAFFOLD_INLINE void ref_inc( const struct REF* ref, const char* type, co
 #endif /* DEBUG_REF */
 }
 
-static SCAFFOLD_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
+static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
 
    if( 1 == ((struct REF*)ref)->count ) {

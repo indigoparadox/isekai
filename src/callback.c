@@ -1116,7 +1116,6 @@ BOOL callback_free_windows( struct CONTAINER_IDX* idx, void* parent, void* iter,
 
 #ifdef DEBUG
 void* callback_assert_windows( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   bstring wid = (bstring)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
    scaffold_assert( ui_get_local() == win->ui );

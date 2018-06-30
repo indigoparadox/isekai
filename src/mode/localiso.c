@@ -33,8 +33,7 @@ void mode_isometric_draw(
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   // XXX
-   //tilemap_draw_ortho( twindow );
+   tilemap_draw_tilemap( twindow );
    vector_iterate( &(l->mobiles), mode_isometric_draw_mobile_cb, twindow );
 }
 

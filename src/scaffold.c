@@ -161,7 +161,6 @@ cleanup:
 void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #ifdef DEBUG
    va_list varg;
-   int bstr_ret;
    SCAFFOLD_COLOR color;
 #ifndef HEATSHRINK_DEBUGGING_LOGS
    const char* mod_in_c = NULL;
@@ -368,9 +367,6 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
    bstring str_color = NULL;
    int color_i = (int)color;
    int bstr_ret;
-   volatile int mlen;
-   volatile int slen;
-   volatile const unsigned char* data;
 
    if( color_i > 6 ) {
       color_i -= 9;
@@ -379,10 +375,6 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
       goto cleanup;
    }
    str_color = &(ansi_color_strs[color_i]);
-
-   mlen = str_color->mlen;
-   slen = str_color->slen;
-   data = str_color->data;
 
    bstr_ret = binsert( str, 0, str_color, '\0' );
    if( 0 != bstr_ret ) {

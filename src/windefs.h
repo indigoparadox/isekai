@@ -2,6 +2,8 @@
 #ifndef WINDEFS_H
 #define WINDEFS_H
 
+/* TODO: Consider removing this header, as it may be obsolete. */
+
 #define windef_window( type, id, title, prompt, x, y, w, h ) \
    win = (struct UI_WINDOW*)calloc( 1, sizeof( struct UI_WINDOW ) ); \
    if( NULL == win ) { \
@@ -43,16 +45,5 @@ cleanup: return;
 }
 
 #endif /* DEBUG_VM */
-
-#ifdef USE_CONNECT_DIALOG
-
-SCAFFOLD_INLINE
-static void windef_show_connect( struct UI* ui ) {
-cleanup: return;
-}
-
-#endif /* USE_CONNECT_DIALOG */
-
-
 
 #endif /* WINDEFS_H */

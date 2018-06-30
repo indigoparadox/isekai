@@ -155,7 +155,6 @@ static void proto_printf( struct CLIENT* c, const char* message, ... ) {
    if( client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
-      struct CONNECTION* n = c->link;
       scaffold_assert_server();
    }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -310,7 +309,7 @@ void proto_send_chunk(
       chunk_len, raw_len, data_sent
    );
 
-cleanup:
+/* cleanup: */
    bdestroy( data_sent );
    return;
 }
@@ -956,7 +955,6 @@ static void irc_server_gamerequestfile(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
    DATAFILE_TYPE type;
-   int bstr_result;
    bstring file_path_found = NULL,
       filename = NULL;
 
@@ -985,11 +983,6 @@ cleanup:
 static void irc_server_gameupdate(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   char* serial_c,
-      * target_c,
-      * update_c,
-      * x_c,
-      * y_c;
    SCAFFOLD_SIZE serial,
       target_serial;
    struct MOBILE_UPDATE_PACKET update;
@@ -1160,7 +1153,7 @@ void proto_empty_buffer( struct CLIENT* c ) {
       c->link,
       buffer
    ) );
-cleanup:
+/* cleanup: */
    bdestroy( buffer );
    return;
 }
@@ -1172,11 +1165,6 @@ cleanup:
 static void irc_client_gamedatablock(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   const char* progress_c,
-      * total_c,
-      * length_c,
-      * filename_c,
-      * type_c;
    struct CHUNKER_PROGRESS progress;
 
    irc_detect_malformed( 11, "GDB", line );
@@ -1255,8 +1243,6 @@ static void irc_client_item(
       count,
       sprite_id;
    struct ITEM* e = NULL;
-   struct TILEMAP_ITEM_CACHE* cache = NULL;
-   int retval;
    bstring display_name;
    struct ITEM_SPRITESHEET* catalog = NULL;
    bstring catalog_name = NULL;
@@ -1320,9 +1306,6 @@ static void irc_client_gamenewsprite(
 static void irc_client_mob(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
-   char* serial_c = NULL,
-      * x_c = NULL,
-      * y_c = NULL;
    uint8_t serial = 0;
    bstring def_filename = NULL,
       mob_id = NULL,
@@ -1363,8 +1346,6 @@ static void irc_client_privmsg(
    bstring msg = NULL,
       nick = NULL;
    struct CHANNEL* l = NULL;
-   struct MOBILE* o = NULL;
-   struct CLIENT* c_sender = NULL;
 
    if( 3 > vector_count( args ) ) {
       goto cleanup;

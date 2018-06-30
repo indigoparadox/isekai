@@ -32,7 +32,7 @@ void mode_topdown_draw(
    struct CHANNEL* l,
    struct GRAPHICS_TILE_WINDOW* twindow
 ) {
-   tilemap_draw_ortho( twindow );
+   tilemap_draw_tilemap( twindow );
    vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, twindow );
 }
 

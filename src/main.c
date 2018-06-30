@@ -454,7 +454,7 @@ static BOOL loop_master() {
       twindow->g = g_screen;
       twindow->local_client = main_client;
       client_set_active_t( main_client, NULL );
-      proto_client_join( main_client, &str_default_channel );
+      proto_client_join( main_client, buffer_channel );
       retval = TRUE;
 
 #ifdef DEBUG_FPS
