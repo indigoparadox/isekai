@@ -141,8 +141,10 @@ static uint32_t hashmap_crc32( bstring string ) {
    uint32_t crc32val = 0;
    const unsigned char* s = NULL;
 
+   scaffold_assert( NULL != string );
    scaffold_check_null( string );
    s = (const unsigned char*)bdata( string );
+   scaffold_assert( NULL != s );
    scaffold_check_null( s );
 
    crc32val = 0;
@@ -162,7 +164,7 @@ cleanup:
 static uint32_t hashmap_hash_int( struct HASHMAP* m, const bstring keystring ) {
    uint32_t key = 0;
 
-   scaffold_check_null( m );
+   scaffold_check_null_warning( m );
    scaffold_check_null( keystring );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
 
@@ -436,7 +438,7 @@ static void* hashmap_get_internal( struct HASHMAP* m, const bstring key, BOOL lo
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during get." );
 
    if( FALSE != lock ) {
@@ -500,7 +502,7 @@ void* hashmap_get_first( struct HASHMAP* m ) {
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during get first." );
 
    hashmap_lock( m, TRUE );
@@ -533,7 +535,7 @@ static BOOL hashmap_contains_key_internal( struct HASHMAP* m, const bstring key,
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during key search." );
 
    if( FALSE != lock ) {
@@ -660,7 +662,7 @@ void* hashmap_iterate( struct HASHMAP* m, hashmap_search_cb callback, void* arg 
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during iteration." );
 
    hashmap_lock( m, TRUE );
@@ -691,7 +693,7 @@ void* hashmap_iterate_nolock(
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during iteration." );
 
    idx.type = CONTAINER_IDX_STRING;
@@ -731,7 +733,7 @@ struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback,
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ),
       "Hashmap empty during vector iteration."
    );
@@ -822,7 +824,7 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during remove_cb." );
 
 #ifndef HASHMAP_NO_LOCK_REMOVE
@@ -903,7 +905,7 @@ BOOL hashmap_remove( struct HASHMAP* m, const bstring key ) {
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against(
+   scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during remove." );
 
 #ifndef HASHMAP_NO_LOCK_REMOVE

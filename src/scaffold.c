@@ -25,6 +25,7 @@ FILE* scaffold_log_handle_err = NULL;
 
 int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;
+BOOL scaffold_warning_silent = FALSE;
 bstring scaffold_print_buffer = NULL;
 
 static char scaffold_random_chars[] =
@@ -176,7 +177,7 @@ void scaffold_print_debug( const bstring mod_in, const char* message, ... ) {
 #endif /* HEATSHRINK_DEBUGGING_LOGS */
 
    if( SCAFFOLD_TRACE_SERVER == scaffold_trace_path ) {
-      color = SCAFFOLD_COLOR_YELLOW;
+      color = SCAFFOLD_COLOR_MAGENTA;
    } else {
       color = SCAFFOLD_COLOR_CYAN;
    }
@@ -241,6 +242,17 @@ void scaffold_print_error( const bstring mod_in, const char* message, ... ) {
    va_start( varg, message );
    scaffold_log(
       scaffold_log_handle_err, mod_in, SCAFFOLD_COLOR_RED, message, varg
+   );
+   va_end( varg );
+#endif /* DEBUG */
+}
+
+void scaffold_print_warning( const bstring mod_in, const char* message, ... ) {
+   va_list varg;
+#ifdef DEBUG
+   va_start( varg, message );
+   scaffold_log(
+      scaffold_log_handle_err, mod_in, SCAFFOLD_COLOR_YELLOW, message, varg
    );
    va_end( varg );
 #endif /* DEBUG */
