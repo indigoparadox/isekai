@@ -76,7 +76,7 @@ void mobile_animation_free( struct MOBILE_ANI_DEF* animation ) {
 }
 
 void mobile_init(
-   struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct MOBILE* o, const bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    int bstr_ret = 0;
 
@@ -174,7 +174,7 @@ cleanup:
 
 static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
    struct TILEMAP* t, GFX_COORD_PIXEL sprite_height_in,
-   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
+   TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
@@ -289,7 +289,7 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
    return steps_out;
 }
 
-void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GRAPHICS_TILE_WINDOW* twindow ) {
+void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TWINDOW* twindow ) {
    GFX_COORD_PIXEL
       pix_x,
       pix_y,
@@ -387,8 +387,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GR
    );
 
    /* Add dirty tiles to list before drawing. */
-   tilemap_add_dirty_tile( local_client->active_t, o->x, o->y );
-   tilemap_add_dirty_tile( local_client->active_t, o->prev_x, o->prev_y );
+   tilemap_add_dirty_tile( local_client->active_tilemap, o->x, o->y );
+   tilemap_add_dirty_tile( local_client->active_tilemap, o->prev_x, o->prev_y );
 
    graphics_blit_partial(
       twindow->g,
@@ -434,7 +434,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
  */
 static MOBILE_UPDATE mobile_calculate_terrain_result(
    struct TILEMAP* t, MOBILE_UPDATE update_in,
-   GFX_COORD_TILE x_1, GFX_COORD_TILE y_1, GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
+   TILEMAP_COORD_TILE x_1, TILEMAP_COORD_TILE y_1, TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
@@ -530,7 +530,7 @@ cleanup:
 
 static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
    struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_in,
-   GFX_COORD_TILE x_2, GFX_COORD_TILE y_2
+   TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;

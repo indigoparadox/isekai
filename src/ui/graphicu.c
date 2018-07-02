@@ -1303,7 +1303,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
 #endif /* DEBUG_PALETTE */
 }
 
-void ui_window_draw_tilegrid( struct UI* ui, struct GRAPHICS_TILE_WINDOW* twindow ) {
+void ui_window_draw_tilegrid( struct UI* ui, struct TWINDOW* twindow ) {
    SCAFFOLD_SIZE_SIGNED grid_x = 0,
       grid_y = 0;
 

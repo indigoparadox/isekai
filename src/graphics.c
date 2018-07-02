@@ -324,7 +324,7 @@ void graphics_surface_set_w( GRAPHICS* g, GFX_COORD_PIXEL w ) {
 SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
    GRAPHICS* g_sprites, GRAPHICS_RECT* sprite_frame, SCAFFOLD_SIZE gid
 ) {
-   GFX_COORD_TILE tiles_wide = 0;
+   int tiles_wide = 0;
 
    scaffold_check_null( g_sprites );
 

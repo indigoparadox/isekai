@@ -50,7 +50,6 @@ COLOR_TABLE( GRAPHICS )
 typedef uint32_t GRAPHICS_HICOLOR;
 #endif /* USE_HICOLOR */
 
-typedef int GFX_COORD_TILE;
 typedef long GFX_COORD_PIXEL;
 typedef int64_t GFX_COORD_FPP;
 
@@ -219,10 +218,10 @@ typedef struct {
    int step_y;
    GFX_COORD_FPP fp_perpen_dist;
    BOOL infinite_dist;
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
-   GFX_COORD_TILE map_w;
-   GFX_COORD_TILE map_h;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
+   TILEMAP_COORD_TILE map_w;
+   TILEMAP_COORD_TILE map_h;
    int steps;
    GRAPHICS_RAY_SIDE side;
 } GRAPHICS_RAY_FPP;
@@ -262,24 +261,6 @@ typedef struct {
 } GFX_RAY_FLOOR;
 
 #endif /* !DISABLE_MODE_POV */
-
-struct GRAPHICS_TILE_WINDOW {
-   struct CLIENT* local_client;
-   GRAPHICS* g;            /*!< Graphics element to draw on. */
-   GFX_COORD_TILE x;        /*!< Window left in tiles. */
-   GFX_COORD_TILE y;        /*!< Window top in tiles. */
-   GFX_COORD_TILE width;    /*!< Window width in tiles. */
-   GFX_COORD_TILE height;   /*!< Window height in tiles. */
-   GFX_COORD_TILE max_x;    /*!< Right-most window tile. */
-   GFX_COORD_TILE max_y;    /*!< Bottom-most window tile. */
-   GFX_COORD_TILE min_x;    /*!< Left-most window tile. */
-   GFX_COORD_TILE min_y;    /*!< Top-most window tile. */
-   uint8_t grid_w;
-   uint8_t grid_h;
-#ifdef DISABLE_MODE_POV
-   BOOL dirty;
-#endif /* !DISABLE_MODE_POV */
-};
 
 #define graphics_clear_screen( g, color ) \
    graphics_draw_rect( g, 0, 0, g->w, g->h, color, TRUE )

@@ -17,13 +17,11 @@ struct CHANNEL;
 
 void mode_topdown_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_topdown_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_topdown_poll_input(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
@@ -33,13 +31,11 @@ void mode_topdown_free( struct CLIENT* c );
 
 void mode_isometric_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_isometric_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_isometric_poll_input(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
@@ -51,13 +47,11 @@ void mode_isometric_free( struct CLIENT* c );
 
 void mode_pov_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_pov_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void mode_pov_free( struct CLIENT* c );
@@ -66,14 +60,12 @@ void mode_pov_free( struct CLIENT* c );
 
 void client_local_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 
 void client_local_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 );
 void client_local_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void client_local_free( struct CLIENT* c );

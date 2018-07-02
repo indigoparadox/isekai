@@ -418,7 +418,6 @@
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
 					<Add option="-Wswitch-enum" />
-					<Add option="-Wzero-as-null-pointer-constant" />
 					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-Wunused" />
@@ -1766,6 +1765,10 @@
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
 		</Unit>
+		<Unit filename="src/twindow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/twindow.h" />
 		<Unit filename="src/ui.h" />
 		<Unit filename="src/ui/cursesu.c">
 			<Option compilerVar="CC" />

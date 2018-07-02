@@ -5,6 +5,7 @@
 #include "scaffold.h"
 #include "graphics.h"
 #include "hashmap.h"
+#include "client.h"
 
 struct ANIMATION_FRAME {
    INTERVAL duration;
@@ -50,8 +51,8 @@ __attribute__ ((warn_unused_result))
 struct ANIMATION* animate_get_animation( bstring key );
 void animate_cancel_animation( struct ANIMATION** a, bstring key );
 void animate_free_animation( struct ANIMATION** a );
-void animate_cycle_animations( struct GRAPHICS_TILE_WINDOW* twindow );
-void animate_draw_animations( struct GRAPHICS_TILE_WINDOW* twindow );
+void animate_cycle_animations( GRAPHICS* g );
+void animate_draw_animations( GRAPHICS* g );
 BOOL animate_is_blocking();
 
 #ifdef ANIMATE_C

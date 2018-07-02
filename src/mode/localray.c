@@ -35,8 +35,9 @@ struct HASHMAP tileset_status;
 static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) {
    bstring buffer = NULL;
    int facing = o->facing;
-   struct MOBILE* puppet = c->puppet;
+   struct MOBILE* puppet = NULL;
 
+   puppet = client_get_puppet( c );
    if( NULL == puppet ) {
       goto cleanup;
    }
@@ -254,15 +255,17 @@ void* mode_pov_draw_mobile_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct CLIENT* c = twindow->local_client;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
+   struct CLIENT* c = NULL;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
 
    if( NULL == o ) {
       goto cleanup; /* Silently. */
    }
 
    if( TRUE == o->animation_reset ) {
-      mode_pov_mobile_set_animation( o, twindow->local_client );
+      mode_pov_mobile_set_animation( o, c );
    }
    mobile_animate( o );
    mode_pov_draw_sprite( o, c, twindow->g );
@@ -275,9 +278,12 @@ static void* mode_pov_mob_calc_dist_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* m = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->local_client->active_t;
-   struct CLIENT* c = twindow->local_client;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
+   struct TILEMAP* t = NULL;
+   struct CLIENT* c = NULL;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
 
    scaffold_check_null( t );
    if( NULL == m ) {
@@ -296,8 +302,12 @@ static void* mode_pov_mob_sort_dist_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* m = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
-   struct TILEMAP* t = twindow->local_client->active_t;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
+   struct TILEMAP* t = NULL;
+   struct CLIENT* c = NULL;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
 
    scaffold_check_null( t );
 
@@ -428,8 +438,8 @@ static BOOL mode_pov_draw_floor(
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
    uint32_t tile = 0;
 
-   if( NULL != c->active_t ) {
-      t = c->active_t;
+   if( NULL != c->active_tilemap ) {
+      t = c->active_tilemap;
    } else {
       goto cleanup;
    }
@@ -512,7 +522,7 @@ static BOOL mode_pov_update_view(
    BOOL ret_error = FALSE,
       ret_tmp = FALSE;
    GRAPHICS_DELTA wall_map_pos = { 0 };
-   struct TILEMAP* t = c->active_t;
+   struct TILEMAP* t = c->active_tilemap;
    GFX_COORD_PIXEL cell_height = 0,
       cell_height_qtr = 0,
       wall_draw_bottom = 0,
@@ -637,24 +647,26 @@ cleanup:
 
 void mode_pov_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
-   GRAPHICS* g = twindow->g;
+   GRAPHICS* g = NULL;
    struct MOBILE* player = NULL;
    static struct TILEMAP_POSITION last;
    static BOOL draw_failed = FALSE;
-   struct TILEMAP* t = twindow->local_client->active_t;
+   struct TILEMAP* t = NULL;
    int i_x = 0,
       layer_max = 0,
       i_layer = 0;
    GRAPHICS_RAY ray = { 0 };
    struct TILEMAP_LAYER* layer_player = NULL;
    uint32_t tile_player = 0;
+   struct TWINDOW* twindow = &(c->local_window);
 
+   g = twindow->g;
+   t = c->active_tilemap;
    scaffold_check_null( t );
 
-   player = twindow->local_client->puppet;
+   player = c->puppet;
    scaffold_check_null( player );
 
    mode_pov_set_facing( c, player->facing );
@@ -726,8 +738,8 @@ void mode_pov_draw(
 #endif /* RAYCAST_CACHE */
 
    /* Begin drawing sprites. */
-   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, twindow );
-   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, twindow );
+   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, &(c->local_window) );
+   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, &(c->local_window) );
 
 cleanup:
    return;
@@ -735,8 +747,7 @@ cleanup:
 
 void mode_pov_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
    /* tilemap_update_window_ortho(
       twindow, c->puppet->x, c->puppet->y
@@ -746,6 +757,7 @@ cleanup:
    return;
 }
 
+#if 0
 static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update = { 0 };
@@ -877,7 +889,9 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 cleanup:
    return FALSE;
 }
+#endif
 
+#if 0
 void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
@@ -890,6 +904,7 @@ void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p )
    }
    return;
 }
+#endif // 0
 
 void mode_pov_free( struct CLIENT* c ) {
    if(

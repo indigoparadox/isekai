@@ -14,7 +14,7 @@ static void* mode_isometric_draw_mobile_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
 
    if( NULL == o ) { return NULL; }
 
@@ -30,26 +30,27 @@ static void* mode_isometric_draw_mobile_cb(
 
 void mode_isometric_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
-   tilemap_draw_tilemap( twindow );
-   vector_iterate( &(l->mobiles), mode_isometric_draw_mobile_cb, twindow );
+   tilemap_draw_tilemap( &(c->local_window) );
+   vector_iterate( &(l->mobiles), mode_isometric_draw_mobile_cb, &(c->local_window) );
 }
 
 void mode_isometric_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
-   if( NULL == c || NULL == c->puppet ) {
+   struct MOBILE* o = NULL;
+   o = client_get_puppet( c );
+   if( NULL == o ) {
       return;
    }
    tilemap_update_window_ortho(
-      twindow, c->puppet->x, c->puppet->y
+      &(c->local_window), o->x, o->y
    );
 }
 
+#if 0
 static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
@@ -194,6 +195,7 @@ void mode_isometric_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPU
    }
    return;
 }
+#endif // 0
 
 void mode_isometric_free( struct CLIENT* c ) {
    if(

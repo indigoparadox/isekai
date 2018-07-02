@@ -325,15 +325,15 @@ cleanup:
    return remove;
 }
 
-void animate_cycle_animations( struct GRAPHICS_TILE_WINDOW* twindow ) {
-   hashmap_remove_cb( &animations, animate_cyc_ani_cb, twindow );
+void animate_cycle_animations( GRAPHICS* g ) {
+   hashmap_remove_cb( &animations, animate_cyc_ani_cb, g );
 }
 
 static void* animate_draw_ani_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   GRAPHICS* g = (GRAPHICS*)arg;
    GFX_COORD_PIXEL
       centered_x,
       centered_y,
@@ -352,7 +352,7 @@ static void* animate_draw_ani_cb(
 
 //#ifdef GRAPHICS_C
    graphics_blit_stretch(
-      twindow->g,
+      g,
       centered_x,
       centered_y,
       a->current_frame->width,
@@ -362,8 +362,8 @@ static void* animate_draw_ani_cb(
 //#endif /* GRAPHICS_C */
 }
 
-void animate_draw_animations( struct GRAPHICS_TILE_WINDOW* twindow ) {
-   hashmap_iterate( &animations, animate_draw_ani_cb, twindow );
+void animate_draw_animations( GRAPHICS* g ) {
+   hashmap_iterate( &animations, animate_draw_ani_cb, g );
 }
 
 static void* animate_blocker_cb(
