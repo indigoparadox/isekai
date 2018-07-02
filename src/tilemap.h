@@ -1,11 +1,14 @@
 #ifndef TILEMAP_H
 #define TILEMAP_H
 
+typedef int TILEMAP_COORD_TILE;
+
 #include "bstrlib/bstrlib.h"
 #include "ezxml.h"
 #include "vector.h"
 #include "hashmap.h"
 #include "graphics.h"
+#include "twindow.h"
 #include "item.h"
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
@@ -83,8 +86,8 @@ struct TILEMAP_TILESET {
 };
 
 struct TILEMAP_POSITION {
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
    uint8_t facing;
 };
 
@@ -107,11 +110,11 @@ struct TILEMAP_SPAWNER {
 };
 
 struct TILEMAP_LAYER {
-   GFX_COORD_TILE x;        /*!< Layer left in tiles. */
-   GFX_COORD_TILE y;        /*!< Layer top in tiles. */
-   GFX_COORD_TILE z;
-   GFX_COORD_TILE width;    /*!< Layer width in tiles. */
-   GFX_COORD_TILE height;   /*!< Layer height in tiles. */
+   TILEMAP_COORD_TILE x;        /*!< Layer left in tiles. */
+   TILEMAP_COORD_TILE y;        /*!< Layer top in tiles. */
+   TILEMAP_COORD_TILE z;
+   TILEMAP_COORD_TILE width;    /*!< Layer width in tiles. */
+   TILEMAP_COORD_TILE height;   /*!< Layer height in tiles. */
    struct VECTOR tiles;
    struct TILEMAP* tilemap;
    bstring name;
@@ -119,8 +122,8 @@ struct TILEMAP_LAYER {
 
 struct TILEMAP {
    struct REF refcount; /*!< Parent "class". */
-   GFX_COORD_TILE width;
-   GFX_COORD_TILE height;
+   TILEMAP_COORD_TILE width;
+   TILEMAP_COORD_TILE height;
    struct VECTOR item_caches;
    struct VECTOR layers;
    struct VECTOR tilesets;
@@ -203,8 +206,8 @@ void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts );
 void tilemap_item_cache_init(
    struct TILEMAP_ITEM_CACHE* cache,
    struct TILEMAP* t,
-   GFX_COORD_TILE x,
-   GFX_COORD_TILE y
+   TILEMAP_COORD_TILE x,
+   TILEMAP_COORD_TILE y
 );
 void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache );
 void tilemap_layer_init( struct TILEMAP_LAYER* layer );
@@ -221,28 +224,30 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
    SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 );
+SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t );
+SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t );
 SCAFFOLD_INLINE uint32_t tilemap_get_tile(
-   const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
+   const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
-void tilemap_draw_tilemap( struct GRAPHICS_TILE_WINDOW* window );
+void tilemap_draw_tilemap( struct TWINDOW* window );
 void tilemap_update_window_ortho(
-   struct GRAPHICS_TILE_WINDOW* twindow,
-   GFX_COORD_TILE focal_x, GFX_COORD_TILE focal_y
+   struct TWINDOW* twindow,
+   TILEMAP_COORD_TILE focal_x, TILEMAP_COORD_TILE focal_y
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
-   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
-   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
-   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
-   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow
 );
 void tilemap_add_dirty_tile(
-   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
 void tilemap_toggle_debug_state();
@@ -250,11 +255,11 @@ void tilemap_add_tileset(
    struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
 );
 struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
-   struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct TILEMAP* t, struct ITEM* e, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e );
 struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
-   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y, BOOL force
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
 );
 
 #ifdef TILEMAP_C

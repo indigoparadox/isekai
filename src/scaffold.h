@@ -451,6 +451,13 @@ struct CONTAINER_IDX {
 #define scaffold_char_is_printable( c ) \
     (0x7f > (c) && 0x20 < (c))
 
+/** \brief Get the container struct of the given struct. Useful for structs
+ *         that only ever exist inside of other structs.
+ *(struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
+ * \param ptr        Instance pointer to struct to find container of.
+ * \param type       Type of the container (e.g. struct SERVER).
+ * \param member     Name of the class member in the container that ptr is.
+ */
 #define scaffold_container_of( ptr, type, member ) \
     ((type *)((char *)(ptr) - offsetof( type, member )))
 

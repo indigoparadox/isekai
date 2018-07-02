@@ -90,8 +90,8 @@ void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
 void tilemap_item_cache_init(
    struct TILEMAP_ITEM_CACHE* cache,
    struct TILEMAP* t,
-   GFX_COORD_TILE x,
-   GFX_COORD_TILE y
+   TILEMAP_COORD_TILE x,
+   TILEMAP_COORD_TILE y
 ) {
    vector_init( &(cache->items) );
    cache->position.x = x;
@@ -185,7 +185,7 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
    SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 ) {
-   GFX_COORD_TILE tiles_wide = 0;
+   TILEMAP_COORD_TILE tiles_wide = 0;
 
    scaffold_check_null( g_set );
 
@@ -211,13 +211,39 @@ cleanup:
  * \return A GID that can be used to find the tile's image or terrain info.
  */
 SCAFFOLD_INLINE uint32_t tilemap_get_tile(
-   const struct TILEMAP_LAYER* layer, GFX_COORD_TILE x, GFX_COORD_TILE y
+   const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
    if( vector_count( &(layer->tiles) ) <= index ) {
       return -1;
    }
    return vector_get_scalar( &(layer->tiles), index );
+}
+
+SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t ) {
+   struct TILEMAP_TILESET* set = NULL;
+   SCAFFOLD_SIZE set_firstgid = 0;
+
+   set = tilemap_get_tileset( t, 1, &set_firstgid );
+
+   if( NULL != set ) {
+      return set->tilewidth;
+   } else {
+      return 0;
+   }
+}
+
+SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t ) {
+   struct TILEMAP_TILESET* set = NULL;
+   SCAFFOLD_SIZE set_firstgid = 0;
+
+   set = tilemap_get_tileset( t, 1, &set_firstgid );
+
+   if( NULL != set ) {
+      return set->tileheight;
+   } else {
+      return 0;
+   }
 }
 
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
@@ -241,7 +267,7 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
 #ifdef DEBUG_TILES
 
 static void tilemap_layer_draw_tile_debug(
-   struct TILEMAP_LAYER* layer, GRAPHICS* g, struct GRAPHICS_TILE_WINDOW* twin,
+   struct TILEMAP_LAYER* layer, GRAPHICS* g, struct TWINDOW* twin,
    SCAFFOLD_SIZE_SIGNED tile_x, SCAFFOLD_SIZE_SIGNED tile_y,
    SCAFFOLD_SIZE_SIGNED pix_x, SCAFFOLD_SIZE_SIGNED pix_y, uint32_t gid
 ) {
@@ -373,19 +399,22 @@ static void* tilemap_layer_draw_tile_items_cb(
 }
 
 static void tilemap_layer_draw_tile_ortho(
-   struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
-   GFX_COORD_TILE x, GFX_COORD_TILE y, SCAFFOLD_SIZE gid
+   struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
+   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
 ) {
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS_RECT tile_tilesheet_pos;
    GRAPHICS_RECT tile_screen_rect;
-   struct CLIENT* local_client = twindow->local_client;
-   struct TILEMAP* t = local_client->active_t;
-   const struct MOBILE* o = local_client->puppet;
+   struct CLIENT* local_client = NULL;
+   struct TILEMAP* t = NULL;
+   const struct MOBILE* o = NULL;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
+   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = local_client->active_tilemap;
+   o = local_client->puppet;
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
@@ -478,42 +507,85 @@ cleanup:
 #ifndef DISABLE_ISOMETRIC
 
 static void tilemap_layer_draw_tile_iso(
-   struct TILEMAP_LAYER* layer, struct GRAPHICS_TILE_WINDOW* twindow,
-   GFX_COORD_TILE x, GFX_COORD_TILE y, SCAFFOLD_SIZE gid
+   struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
+   TILEMAP_COORD_TILE tile_x, TILEMAP_COORD_TILE tile_y, SCAFFOLD_SIZE gid
 ) {
 
    /*const struct isomap_tile* tile,
    const OG_Rect* viewport,
    const GRAPHICS_ROTATE rotation
 ) {*/
-#if 0
-   int i = 0, screen_x, screen_y, tile_x, tile_y;
-   OG_Texture* sprite_texture = NULL;
-   struct isomap_render_texture texture_selection;
+   SCAFFOLD_SIZE i = 0;
+   GFX_COORD_PIXEL
+      screen_x, /* Actual screen X (pixel, minus viewport. */
+      screen_y, /* Actual screen Y (pixel, minus viewport. */
+      iso_dest_offset_x,
+      iso_dest_offset_y;
+   GRAPHICS* g = twindow->g;
+   struct TILEMAP* t = layer->tilemap;
+   struct TILEMAP_TILESET* set = NULL;
+   GRAPHICS_RECT tile_tilesheet_pos = { 0 };
+   SCAFFOLD_SIZE set_firstgid = 0;
+   GRAPHICS* g_tileset = NULL;
+   struct CLIENT* local_client = NULL;
 
-   tile_x = tile->x;
-   tile_y = tile->y;
+   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
+
+   set = tilemap_get_tileset( t, gid, &set_firstgid );
+   /* If the current tileset doesn't exist, then load it. */
+   g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, local_client );
+   if( NULL == g_tileset ) {
+      /* TODO: Use a built-in placeholder tileset. */
+      goto cleanup;
+   }
+
+   scaffold_check_null( t );
+
+   iso_dest_offset_x = set->tilewidth / 2;
+   iso_dest_offset_y = set->tileheight / 2;
+
+   /* isomap_render_select_terrain( tile, rotation, &texture_selection ); */
+   g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
+   tilemap_get_tile_tileset_pos(
+      set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
 
    /* Perform transformations. */
 
-   isomap_render_select_terrain( tile, rotation, &texture_selection );
-
-   graphics_isometric_tile_rotate(
+   /*graphics_isometric_tile_rotate(
       &tile_x, &tile_y,
       tile->map->width,
       tile->map->height,
       rotation
-   );
+   );*/
 
-   graphics_transform_isometric(
+   /*graphics_transform_isometric(
       tile_x,
       tile_y,
       &screen_x,
       &screen_y,
       viewport
+   );*/
+
+   screen_x = ((tile_x - tile_y) * iso_dest_offset_x) - g->virtual_x;
+   screen_y = ((tile_x + tile_y) * iso_dest_offset_y) - g->virtual_y;
+   /*
+   screen_x = (g->virtual_x * iso_dest_offset_y) + (g->virtual_y * iso_dest_offset_y);
+      (tile_y * iso_dest_offset_y); \
+   screen_y = g->virtual_y + ((tile_y * iso_dest_offset_y / 2) - \
+         (tile_x * iso_dest_offset_x / 2));
+   */
+
+   /* sprite_texture = isomap_render_terrain_textures[texture_selection.texture_index]; */
+
+   graphics_blit_partial(
+      twindow->g,
+      screen_x, screen_y,
+      tile_tilesheet_pos.x, tile_tilesheet_pos.y,
+      set->tilewidth, set->tileheight,
+      g_tileset
    );
 
-   sprite_texture = isomap_render_terrain_textures[texture_selection.texture_index];
+   #if 0
    if( NULL == sprite_texture ) {
       /* TODO: Draw a placeholder. */
       goto cleanup;
@@ -534,7 +606,7 @@ static void tilemap_layer_draw_tile_iso(
       screen_x,
       screen_y
    );
-#endif // 0
+   #endif // 0
 cleanup:
 
    return;
@@ -548,7 +620,7 @@ static void* tilemap_draw_layer_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
    SCAFFOLD_SIZE_SIGNED
       x = 0,
       y = 0;
@@ -596,12 +668,16 @@ static void* tilemap_draw_pos_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct TILEMAP_LAYER* layer = NULL;
-   struct TILEMAP* t =  twindow->local_client->active_t;
+   struct CLIENT* c = NULL;
+   struct TILEMAP* t = NULL;
    int layer_idx = 0;
    int layer_max;
    uint32_t tile;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
 
    vector_lock( &(t->layers), TRUE );
    layer_max = vector_count( &(t->layers) );
@@ -627,10 +703,14 @@ static void* tilemap_draw_pos_cb(
    vector_lock( &(t->layers), FALSE );
 }
 
-void tilemap_draw_tilemap( struct GRAPHICS_TILE_WINDOW* twindow ) {
-   struct CLIENT* local_client = twindow->local_client;
-   struct MOBILE* o = local_client->puppet;
-   struct TILEMAP* t = local_client->active_t;
+void tilemap_draw_tilemap( struct TWINDOW* twindow ) {
+   struct CLIENT* local_client = NULL;
+   struct MOBILE* o = NULL;
+   struct TILEMAP* t = NULL;
+
+   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
+   o = local_client->puppet;
+   t = local_client->active_tilemap;
 
    if( NULL == t ) {
       return;
@@ -702,9 +782,14 @@ void tilemap_draw_tilemap( struct GRAPHICS_TILE_WINDOW* twindow ) {
  * \return
  */
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
-   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow
 ) {
-   struct TILEMAP* t = twindow->local_client->active_t;
+   struct CLIENT* c;
+   struct TILEMAP* t = NULL;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
+
    if( x < ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
    } else if( x >= t->width - ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
@@ -720,9 +805,14 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
  * \return
  */
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
-   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow
 ) {
-   struct TILEMAP* t = twindow->local_client->active_t;
+   struct CLIENT* c = NULL;
+   struct TILEMAP* t = NULL;
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
+
    if(
       y < ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y)
    ) {
@@ -735,9 +825,9 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
 }
 
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
-   GFX_COORD_TILE x, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow
 ) {
-   GFX_COORD_TILE twindow_middle_x = 0;
+   TILEMAP_COORD_TILE twindow_middle_x = 0;
 
    twindow_middle_x = (twindow->x + (twindow->width / 2));
 
@@ -751,9 +841,9 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
 }
 
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
-   GFX_COORD_TILE y, struct GRAPHICS_TILE_WINDOW* twindow
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow
 ) {
-   GFX_COORD_TILE twindow_middle_y = 0;
+   TILEMAP_COORD_TILE twindow_middle_y = 0;
 
    twindow_middle_y = (twindow->y + (twindow->height / 2));
 
@@ -767,16 +857,18 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
 }
 
 void tilemap_update_window_ortho(
-   struct GRAPHICS_TILE_WINDOW* twindow,
-   GFX_COORD_TILE focal_x, GFX_COORD_TILE focal_y
+   struct TWINDOW* twindow,
+   TILEMAP_COORD_TILE focal_x, TILEMAP_COORD_TILE focal_y
 ) {
-   GFX_COORD_TILE
+   TILEMAP_COORD_TILE
       border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
       border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
-   struct TILEMAP* t = twindow->local_client->active_t;
+   struct CLIENT* c = NULL;
+   struct TILEMAP* t = NULL;
    TILEMAP_EXCLUSION exclusion;
-   struct TILEMAP_TILESET* smallest_tileset = NULL;
-   struct TILEMAP_POSITION temp = { 0 };
+
+   c = scaffold_container_of( twindow, struct CLIENT, local_window );
+   t = c->active_tilemap;
 
    if( NULL == t ) {
       return;
@@ -790,16 +882,6 @@ void tilemap_update_window_ortho(
    }
    if( focal_y < twindow->y || focal_y > twindow->y + twindow->height ) {
       twindow->y = focal_y - (twindow->height / 2);
-   }
-
-   smallest_tileset =
-      vector_iterate( &(t->tilesets), callback_search_tilesets_small, &temp );
-   if( NULL != smallest_tileset ) {
-      twindow->grid_w = smallest_tileset->tilewidth;
-      twindow->grid_h = smallest_tileset->tileheight;
-   } else {
-      twindow->grid_w = 0;
-      twindow->grid_h = 0;
    }
 
    /* Scroll the window to follow the focal point. */
@@ -885,7 +967,7 @@ void tilemap_update_window_ortho(
 }
 
 void tilemap_add_dirty_tile(
-   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    struct TILEMAP_POSITION* pos = NULL;
    SCAFFOLD_SIZE_SIGNED verr;
@@ -936,7 +1018,7 @@ void tilemap_toggle_debug_state() {
 #endif /* DEBUG_TILES */
 
 struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
-   struct TILEMAP* t, struct ITEM* e, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct TILEMAP* t, struct ITEM* e, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    struct TILEMAP_ITEM_CACHE* cache = NULL;
    struct TILEMAP_POSITION pos;
@@ -987,7 +1069,7 @@ void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* 
  * \return The cache for the given tile or a new, empty cache if none exists.
  */
 struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
-   struct TILEMAP* t, GFX_COORD_TILE x, GFX_COORD_TILE y, BOOL force
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
 ) {
    struct TILEMAP_POSITION tile_map_pos;
    struct TILEMAP_ITEM_CACHE* cache_out = NULL;

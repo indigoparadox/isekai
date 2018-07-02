@@ -1207,8 +1207,8 @@ static void irc_client_item_cache_start(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
    struct CHANNEL* l = NULL;
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
    irc_detect_malformed( 4, "IC_S", line );

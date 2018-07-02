@@ -14,7 +14,8 @@ static void* mode_topdown_draw_mobile_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
-   struct GRAPHICS_TILE_WINDOW* twindow = (struct GRAPHICS_TILE_WINDOW*)arg;
+   struct TWINDOW* twindow = (struct TWINDOW*)arg;
+   struct CLIENT* local_client = NULL;
 
    if( NULL == o ) { return NULL; }
 
@@ -22,30 +23,31 @@ static void* mode_topdown_draw_mobile_cb(
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
-   mobile_draw_ortho( o, twindow->local_client, twindow );
+   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
+   mobile_draw_ortho( o, local_client, twindow );
 
    return NULL;
 }
 
 void mode_topdown_draw(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
-   tilemap_draw_tilemap( twindow );
-   vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, twindow );
+   tilemap_draw_tilemap( &(c->local_window) );
+   vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, &(c->local_window) );
 }
 
 void mode_topdown_update(
    struct CLIENT* c,
-   struct CHANNEL* l,
-   struct GRAPHICS_TILE_WINDOW* twindow
+   struct CHANNEL* l
 ) {
-   if( NULL == c || NULL == c->puppet ) {
+   struct MOBILE* o = NULL;
+   o = client_get_puppet( c );
+   if( NULL == o ) {
       return;
    }
    tilemap_update_window_ortho(
-      twindow, c->puppet->x, c->puppet->y
+      &(c->local_window), o->x, o->y
    );
 }
 
@@ -59,16 +61,17 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct TILEMAP* t = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
+   puppet = client_get_puppet( c );
+
    /* Make sure the buffer that all windows share is available. */
    if(
-      NULL == c->puppet ||
-      (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
+      NULL == puppet ||
+      (puppet->steps_remaining < -8 || puppet->steps_remaining > 8)
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
-      puppet = c->puppet;
       ui = c->ui;
       update.o = puppet;
       update.l = puppet->channel;
@@ -84,29 +87,29 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
    case INPUT_ASSIGNMENT_UP:
       update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y - 1;
+      update.x = puppet->x;
+      update.y = puppet->y - 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
       update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = c->puppet->x - 1;
-      update.y = c->puppet->y;
+      update.x = puppet->x - 1;
+      update.y = puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
       update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y + 1;
+      update.x = puppet->x;
+      update.y = puppet->y + 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
       update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = c->puppet->x + 1;
-      update.y = c->puppet->y;
+      update.x = puppet->x + 1;
+      update.y = puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 

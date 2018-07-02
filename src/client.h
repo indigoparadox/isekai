@@ -8,6 +8,7 @@
 #include "input.h"
 #include "datafile.h"
 #include "mode.h"
+#include "twindow.h"
 
 struct CHANNEL;
 struct MOBILE;
@@ -62,7 +63,8 @@ struct CLIENT {
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
    MODE gfx_mode;
-   struct TILEMAP* active_t;
+   struct TILEMAP* active_tilemap;
+   struct TWINDOW local_window;
 
 #ifdef USE_CHUNKS
    struct HASHMAP chunkers;
@@ -153,6 +155,7 @@ void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 void client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 );
+struct MOBILE* client_get_puppet( struct CLIENT* c );
 struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial );
 struct ITEM_SPRITESHEET* client_get_catalog(
    struct CLIENT* c, const bstring name

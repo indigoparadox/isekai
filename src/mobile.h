@@ -51,10 +51,10 @@ struct MOBILE {
    struct REF refcount;
    SERIAL serial;
    struct CLIENT* owner;
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
-   GFX_COORD_TILE prev_x;
-   GFX_COORD_TILE prev_y;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
+   TILEMAP_COORD_TILE prev_x;
+   TILEMAP_COORD_TILE prev_y;
    GFX_COORD_PIXEL sprite_width;
    GFX_COORD_PIXEL sprite_height;
    GFX_COORD_PIXEL sprite_display_height;
@@ -97,8 +97,8 @@ struct MOBILE_UPDATE_PACKET {
    struct MOBILE* o;
    struct CHANNEL* l;
    MOBILE_UPDATE update;
-   GFX_COORD_TILE x;
-   GFX_COORD_TILE y;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
    struct MOBILE* target;
 };
 
@@ -115,7 +115,7 @@ struct MOBILE_UPDATE_PACKET {
 
 void mobile_free( struct MOBILE* o );
 void mobile_init(
-   struct MOBILE* o, const bstring mob_id, GFX_COORD_TILE x, GFX_COORD_TILE y
+   struct MOBILE* o, const bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void mobile_animation_free( struct MOBILE_ANI_DEF* animation );
 void mobile_load_local( struct MOBILE* o );
@@ -127,7 +127,7 @@ SCAFFOLD_INLINE void mobile_get_spritesheet_pos_ortho(
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
 );
-void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct GRAPHICS_TILE_WINDOW* twindow );
+void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TWINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
 MOBILE_UPDATE
 mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );

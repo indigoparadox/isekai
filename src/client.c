@@ -138,14 +138,15 @@ BOOL client_free( struct CLIENT* c ) {
 }
 
 void client_set_active_t( struct CLIENT* c, struct TILEMAP* t ) {
-   if( NULL != c->active_t ) { /* Take care of existing map before anything. */
-      tilemap_free( c->active_t );
-      c->active_t = NULL;
+   if( NULL != c->active_tilemap ) {
+      /* Take care of existing map before anything. */
+      tilemap_free( c->active_tilemap );
+      c->active_tilemap = NULL;
    }
    if( NULL != t ) {
       refcount_inc( t, "tilemap" ); /* Add first, to avoid deletion. */
    }
-   c->active_t = t; /* Assign to client last, to activate. */
+   c->active_tilemap = t; /* Assign to client last, to activate. */
 }
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
@@ -187,6 +188,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    SCAFFOLD_SIZE steps_remaining_x,
       steps_remaining_y;
    static bstring pos = NULL;
+   struct MOBILE* o = NULL;
 #endif /* DEBUG_TILES */
    BOOL keep_going = FALSE;
    struct VECTOR* chunker_removal_queue = NULL;
@@ -203,18 +205,20 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    }
 
 #ifdef DEBUG_TILES
+   o = client_get_puppet( c );
+
    if( NULL == pos ) {
       pos = bfromcstr( "" );
    }
 
-   if( NULL != c->puppet ) {
-      steps_remaining_x = mobile_get_steps_remaining_x( c->puppet, FALSE );
-      steps_remaining_y = mobile_get_steps_remaining_y( c->puppet, FALSE );
+   if( NULL != o ) {
+      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
 
       bstr_ret = bassignformat( pos,
          "Player: %d (%d)[%d], %d (%d)[%d]",
-         c->puppet->x, c->puppet->prev_x, steps_remaining_x,
-         c->puppet->y, c->puppet->prev_y, steps_remaining_y
+         o->x, o->prev_x, steps_remaining_x,
+         o->y, o->prev_y, steps_remaining_y
       );
       scaffold_check_nonzero( bstr_ret );
       ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
@@ -717,6 +721,13 @@ void client_set_names(
    bstr_result = bassign( c->username, rname );
    scaffold_assert( BSTR_ERR != bstr_result );
    return;
+}
+
+struct MOBILE* client_get_puppet( struct CLIENT* c ) {
+   if( NULL == c ) {
+      return NULL;
+   }
+   return c->puppet;
 }
 
 struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial ) {

@@ -940,6 +940,19 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    l = scaffold_container_of( t, struct CHANNEL, tilemap );
    scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
 
+   xml_attr = ezxml_attr( xml_data, "orientation" );
+   if( 0 == strncmp( "orthogonal", xml_attr, 10 ) ) {
+      t->orientation = TILEMAP_ORIENTATION_ORTHO;
+   } else if( 0 == strncmp( "isometric", xml_attr, 9 ) ) {
+      t->orientation = TILEMAP_ORIENTATION_ISO;
+   } else {
+      l->error = bfromcstr( "Unrecognized map orientation." );
+      scaffold_print_error(
+         &module, "Unrecognized map orientation: %s\n", xml_attr
+      );
+      goto cleanup;
+   }
+
    xml_tileset = ezxml_child( xml_data, "tileset" );
    scaffold_check_null( xml_tileset );
    while( NULL != xml_tileset ) {

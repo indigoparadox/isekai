@@ -46,7 +46,6 @@ struct CLIENT* main_client = NULL;
 GRAPHICS* g_screen = NULL;
 struct INPUT* input = NULL;
 struct UI* ui = NULL;
-struct GRAPHICS_TILE_WINDOW* twindow = NULL;
 struct CHANNEL* l = NULL;
 bstring buffer_host = NULL;
 bstring buffer_channel = NULL;
@@ -86,7 +85,7 @@ static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" )
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
-#ifndef DISABLE_MODE_ISO
+#ifdef DISABLE_MODE_ISO
 static struct tagbstring str_default_channel = bsStatic( "#isotest" );
 #else
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
@@ -146,7 +145,7 @@ static BOOL loop_game() {
    if( FALSE == animate_is_blocking() ) {
       client_local_poll_input( main_client, l, input );
       client_update( main_client, g_screen );
-      client_local_update( main_client, l, twindow );
+      client_local_update( main_client, l );
    }
 
    /* Do drawing. */
@@ -197,8 +196,8 @@ static BOOL loop_game() {
       ui_draw( ui, g_screen );
 
       /* Animations are drawn on top of everything. */
-      animate_cycle_animations( twindow );
-      animate_draw_animations( twindow );
+      animate_cycle_animations( g_screen );
+      animate_draw_animations( g_screen );
 
       goto cleanup;
 
@@ -211,8 +210,8 @@ static BOOL loop_game() {
 #endif /* USE_NETWORK */
       goto cleanup;
 
-   } else if( NULL == main_client->active_t ) {
-      scaffold_print_debug( &module, "Setting main client...\n" );
+   } else if( NULL == main_client->active_tilemap ) {
+      scaffold_print_debug( &module, "Unsetting main client...\n" );
       client_set_active_t( main_client, &(l->tilemap) );
    }
 
@@ -221,7 +220,11 @@ static BOOL loop_game() {
       scaffold_print_debug( &module, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
       load_complete = TRUE;
-   }
+
+      /* Setup the window for drawing tiles, etc. */
+      twindow_update_details( &(main_client->local_window) );
+      main_client->local_window.height -= 3; /* Dialog window dead zone. */
+  }
 
    /* Client drawing stuff after this. */
    scaffold_set_client();
@@ -231,26 +234,27 @@ static BOOL loop_game() {
     * technically paused while doing so.                                   */
    if(
       0 != main_client->puppet->steps_remaining ||
-      twindow->max_x == twindow->min_x ||
-      TILEMAP_REDRAW_ALL == main_client->active_t->redraw_state
+      main_client->local_window.max_x == main_client->local_window.min_x ||
+      TILEMAP_REDRAW_ALL == main_client->active_tilemap->redraw_state
    ) {
-      client_local_update( main_client, l, twindow );
+      client_local_update( main_client, l );
    }
 
-   animate_cycle_animations( twindow );
+   animate_cycle_animations( g_screen );
 
    /* If there's no puppet then there should be a load screen. */
    scaffold_assert( NULL != main_client->puppet );
 
-   client_local_draw( main_client, l, twindow );
+   client_local_draw( main_client, l );
 
+   /* XXX Tilegrid support.
    if( NULL != twindow ) {
       ui_window_draw_tilegrid( ui, twindow );
-   }
+   } */
    ui_draw( ui, g_screen );
 
    /* Animations are drawn on top of everything. */
-   animate_draw_animations( twindow );
+   animate_draw_animations( g_screen );
 #endif /* ENABLE_LOCAL_CLIENT */
 cleanup:
    return keep_going;
@@ -477,17 +481,17 @@ static BOOL loop_master() {
    } else if( FALSE == connected && 0 < loop_count ) {
       retval = FALSE;
 #endif /* !USE_CONNECT_DIALOG */
-   } else if( connected && (!main_client_joined || NULL == twindow) ) {
+   } else if( connected && (!main_client_joined) ) {
       backlog_ensure_window( ui );
       scaffold_print_debug(
          &module, "Server connected; joining client to channel...\n"
       );
       main_client->ui = ui;
-      twindow = mem_alloc( 1, struct GRAPHICS_TILE_WINDOW );
-      twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
-      twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
-      twindow->g = g_screen;
-      twindow->local_client = main_client;
+      //twindow = mem_alloc( 1, struct GRAPHICS_TILE_WINDOW );
+      //twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
+      //twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
+      main_client->local_window.g = g_screen;
+      //twindow->local_client = main_client;
       client_set_active_t( main_client, NULL );
       proto_client_join( main_client, buffer_channel );
       retval = TRUE;
@@ -598,7 +602,6 @@ cleanup:
       mem_free( main_client->z_buffer );
    }
 #endif /* !DISABLE_MODE_POV */
-   mem_free( twindow );
    input_shutdown( input );
    mem_free( input );
    backlog_shutdown();
