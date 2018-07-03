@@ -25,16 +25,21 @@ void backlog_line_free( struct BACKLOG_LINE* line ) {
    mem_free( line );
 }
 
-void backlog_ensure_window( struct UI* ui ) {
+void backlog_ensure_window( struct UI* ui, GFX_COORD_PIXEL height ) {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
 
+   scaffold_assert( 0 < height );
+
    win = ui_window_by_id( ui, &str_backlog_id );
    if( NULL == win ) {
+      scaffold_print_debug(
+         &module, "Creating backlog window, height: %d\n", height
+      );
       ui_window_new(
          ui, win, &str_backlog_id,
          &str_backlog_title, NULL,
-         0, GRAPHICS_SCREEN_HEIGHT - (3 * GRAPHICS_SPRITE_HEIGHT), 460, 3 * GRAPHICS_SPRITE_HEIGHT
+         0, GRAPHICS_SCREEN_HEIGHT - height, 460, height
       );
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, FALSE, FALSE, NULL,
@@ -42,6 +47,18 @@ void backlog_ensure_window( struct UI* ui ) {
       );
       ui_control_add( win, &str_backlog_id, control );
       ui_window_push( ui, win );
+   }
+cleanup:
+   return;
+}
+
+void backlog_close_window( struct UI* ui ) {
+   struct UI_WINDOW* win = NULL;
+
+   win = ui_window_by_id( ui, &str_backlog_id );
+   if( NULL != win ) {
+      scaffold_print_debug( &module, "Closing backlog window.\n" );
+      ui_window_destroy( ui, &str_backlog_id );
    }
 cleanup:
    return;
