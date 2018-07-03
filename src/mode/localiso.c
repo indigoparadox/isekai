@@ -2,6 +2,8 @@
 #define MODE_C
 #include "../mode.h"
 
+#ifndef DISABLE_MODE_ISO
+
 #include "../callback.h"
 #include "../ui.h"
 #include "../ipc.h"
@@ -206,3 +208,5 @@ void mode_isometric_free( struct CLIENT* c ) {
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 }
+
+#endif /* DISABLE_MODE_ISO */

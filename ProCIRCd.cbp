@@ -570,6 +570,7 @@
 					<Add option="-DDEBUG" />
 					<Add option="-DUSE_SHM" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DDISABLE_MODE_ISO" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -1142,6 +1143,7 @@
 		</Unit>
 		<Unit filename="src/client.h" />
 		<Unit filename="src/colors.h" />
+		<Unit filename="src/config.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1666,6 +1668,16 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/rng.h" />
+		<Unit filename="src/savestat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/savestat.h" />
+		<Unit filename="src/savestat/s_bindmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/savestat/s_sqlite.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/scaffold.c">
 			<Option compilerVar="CC" />
 		</Unit>
