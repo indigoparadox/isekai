@@ -1,4 +1,5 @@
 
+#include "config.h"
 #include "ipc.h"
 #include "scaffold.h"
 #include "input.h"
@@ -85,7 +86,7 @@ static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" )
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
-#ifdef DISABLE_MODE_ISO
+#ifndef DISABLE_MODE_ISO
 static struct tagbstring str_default_channel = bsStatic( "#isotest" );
 #else
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
@@ -118,6 +119,8 @@ static BOOL loop_game() {
    GRAPHICS* throbber = NULL;
    GRAPHICS_RECT r;
    static BOOL load_complete = FALSE;
+   GFX_COORD_PIXEL backlog_height_tiles = CONFIG_BACKLOG_TILES_HEIGHT;
+   GFX_COORD_PIXEL backlog_height_px = 0;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
@@ -215,6 +218,9 @@ static BOOL loop_game() {
       client_set_active_t( main_client, &(l->tilemap) );
    }
 
+   /* Client drawing stuff after this. */
+   scaffold_set_client();
+
    if( !load_complete ) {
       /* If we're this far, we must be done loading! */
       scaffold_print_debug( &module, "Unloading loading animation...\n" );
@@ -223,11 +229,20 @@ static BOOL loop_game() {
 
       /* Setup the window for drawing tiles, etc. */
       twindow_update_details( &(main_client->local_window) );
-      main_client->local_window.height -= 3; /* Dialog window dead zone. */
-  }
 
-   /* Client drawing stuff after this. */
-   scaffold_set_client();
+      backlog_height_px =
+         backlog_height_tiles * main_client->local_window.grid_h;
+
+      /* Show the backlog at the bottom, shrinking the map to fit. */
+      main_client->local_window.height -= backlog_height_tiles;
+      backlog_ensure_window( ui, backlog_height_px );
+   } else {
+      /* We need this for the one-time stuff under !load_complete AND for        *
+       * drawing the mask below.
+       */
+      backlog_height_px =
+         backlog_height_tiles * main_client->local_window.grid_h;
+   }
 
    /* If we're on the move then update the window frame. */
    /* Allows for smooth-scrolling view window with bonus that action is    *
@@ -246,6 +261,32 @@ static BOOL loop_game() {
    scaffold_assert( NULL != main_client->puppet );
 
    client_local_draw( main_client, l );
+
+   /* Draw masks to cover up garbage from mismatch between viewport and window.
+    */
+   //if( main_client->local_window.width < (GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) ) {
+   /* graphics_draw_rect(
+      g_screen,
+      twindow->width * GRAPHICS_SPRITE_WIDTH,
+      0,
+      ((GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) - twindow->width)
+         * GRAPHICS_SPRITE_WIDTH,
+      GRAPHICS_SCREEN_HEIGHT,
+      GRAPHICS_COLOR_CHARCOAL,
+      TRUE
+   ); */
+   //}
+   //if( twindow->height < (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) ) {
+   graphics_draw_rect(
+      g_screen,
+      0,
+      GRAPHICS_SCREEN_HEIGHT - backlog_height_px,
+      GRAPHICS_SCREEN_WIDTH,
+      backlog_height_px,
+      GRAPHICS_COLOR_CHARCOAL,
+      TRUE
+   );
+   //}
 
    /* XXX Tilegrid support.
    if( NULL != twindow ) {
@@ -268,6 +309,8 @@ static BOOL loop_connect() {
    struct VECTOR* server_tuple = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
+
+   backlog_close_window( ui );
 
 #ifdef USE_CONNECT_DIALOG
    struct UI_WINDOW* win = NULL;
@@ -482,16 +525,11 @@ static BOOL loop_master() {
       retval = FALSE;
 #endif /* !USE_CONNECT_DIALOG */
    } else if( connected && (!main_client_joined) ) {
-      backlog_ensure_window( ui );
       scaffold_print_debug(
          &module, "Server connected; joining client to channel...\n"
       );
       main_client->ui = ui;
-      //twindow = mem_alloc( 1, struct GRAPHICS_TILE_WINDOW );
-      //twindow->width = GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH;
-      //twindow->height = (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) - 3;
       main_client->local_window.g = g_screen;
-      //twindow->local_client = main_client;
       client_set_active_t( main_client, NULL );
       proto_client_join( main_client, buffer_channel );
       retval = TRUE;
@@ -553,7 +591,7 @@ int main( int argc, char** argv ) {
 #else
    graphics_screen_new(
       &g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
-      GRAPHICS_VIRTUAL_SCREEN_WIDTH, GRAPHICS_VIRTUAL_SCREEN_HEIGHT, 0, NULL
+      0, 0, 0, NULL
    );
 #endif /* _WIN32 */
 

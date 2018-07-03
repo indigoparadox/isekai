@@ -461,6 +461,7 @@ static BOOL mode_pov_draw_floor(
       graphics_floorcast_throw(
          floor_pos, i_x, i_y, below_wall_height,
          &(c->cam_pos), wall_map_pos, ray,
+         c->local_window.grid_w, c->local_window.grid_h,
          g
       );
 

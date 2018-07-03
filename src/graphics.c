@@ -384,7 +384,9 @@ GFX_COORD_FPP graphics_divide_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b )
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int below_wall_height,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
-   const GRAPHICS_RAY* ray, const GRAPHICS* g
+   const GRAPHICS_RAY* ray,
+   GFX_COORD_PIXEL tile_width, GFX_COORD_PIXEL tile_height,
+   const GRAPHICS* g
 ) {
    double current_dist,
       wall_x,
@@ -415,9 +417,9 @@ void graphics_floorcast_throw(
       (1.0 - floor_pos->weight) * cam_pos->precise_y;
 
    floor_pos->tex_x =
-      (int)(floor_pos->x * GRAPHICS_SPRITE_WIDTH) % GRAPHICS_SPRITE_WIDTH;
+      (int)(floor_pos->x * tile_width) % tile_width;
    floor_pos->tex_y =
-      (int)(floor_pos->y * GRAPHICS_SPRITE_HEIGHT) % GRAPHICS_SPRITE_HEIGHT;
+      (int)(floor_pos->y * tile_height) % tile_height;
 
    //return floor_pos;
 }

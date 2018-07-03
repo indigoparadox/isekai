@@ -14,10 +14,10 @@
 #define GRAPHICS_RASTER_EXTENSION ".bmp"
 #define GRAPHICS_SCREEN_WIDTH 640
 #define GRAPHICS_SCREEN_HEIGHT 480
-#define GRAPHICS_SPRITE_WIDTH 32
-#define GRAPHICS_SPRITE_HEIGHT 32
-#define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
-#define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
+//#define GRAPHICS_SPRITE_WIDTH 32
+//#define GRAPHICS_SPRITE_HEIGHT 32
+//#define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
+//#define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 #define GRAPHICS_RAY_FOV 0.66
 #define GRAPHICS_RAY_FOV_FP 6600
 #define GRAPHICS_RAY_ROTATE_INC (3 * GRAPHICS_90DEG_RADS)
@@ -405,7 +405,9 @@ void graphics_floorcast_create(
 void graphics_floorcast_throw(
    GFX_RAY_FLOOR* floor_pos, int x, int y, int below_wall_height,
    const GRAPHICS_PLANE* cam_pos, const GRAPHICS_DELTA* wall_map_pos,
-   const GRAPHICS_RAY* ray, const GRAPHICS* g
+   const GRAPHICS_RAY* ray,
+   GFX_COORD_PIXEL tile_width, GFX_COORD_PIXEL tile_height,
+   const GRAPHICS* g
 );
 int graphics_get_ray_stripe_end( int line_height, const GRAPHICS* g );
 int graphics_get_ray_stripe_start( int line_height, const GRAPHICS* g );
