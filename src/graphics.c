@@ -372,8 +372,6 @@ GFX_COORD_FPP graphics_divide_fp( GFX_COORD_FPP value_a, GFX_COORD_FPP value_b )
 
 #ifndef DISABLE_MODE_POV
 
-#ifdef RAYCAST_OLD_DOUBLE
-
 /** \brief
  *
  * \param floor_pos
@@ -420,13 +418,7 @@ void graphics_floorcast_throw(
       (int)(floor_pos->x * tile_width) % tile_width;
    floor_pos->tex_y =
       (int)(floor_pos->y * tile_height) % tile_height;
-
-   //return floor_pos;
 }
-
-#endif /* RAYCAST_OLD_DOUBLE */
-
-#ifdef RAYCAST_OLD_DOUBLE
 
 void graphics_raycast_wall_create(
    GRAPHICS_RAY* ray, int x, int map_w, int map_h,
@@ -509,12 +501,9 @@ void graphics_raycast_wall_iterate(
       dist_tmp = point->map_x - ray->origin_x + (-1 - ray->step_x) / 2;
       point->perpen_dist = dist_tmp / ray->direction_x;
    } else {
-      //wall_pos->perpen_dist =
-      //   (wall_pos->y - cam_pos->y + (-1 - ray->step_y) / 2) / ray->direction_y;
       dist_tmp = point->map_y - ray->origin_y + (-1 - ray->step_y) / 2;
       point->perpen_dist = dist_tmp / ray->direction_y;
    }
-   //point->cell_height = (int)(g->h / point->perpen_dist);
 
    /* Figure out the precise pixel on the wall hit by this stripe, for
     * texture-mapping purposes. */
@@ -527,8 +516,6 @@ void graphics_raycast_wall_iterate(
    }
    point->stripe_x_hit -= floor( point->stripe_x_hit );
 }
-
-#endif /* RAYCAST_OLD_DOUBLE */
 
 #endif /* !DISABLE_MODE_POV */
 
@@ -569,4 +556,4 @@ void graphics_transform_isometric(
          (tile_x * GRAPHICS_ISO_TILE_OFFSET_X / 2));
 }
 
-#endif // DISABLE_ISOMETRIC
+#endif /* DISABLE_ISOMETRIC */

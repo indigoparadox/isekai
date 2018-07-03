@@ -15,6 +15,7 @@ typedef int TILEMAP_COORD_TILE;
 
 struct CLIENT;
 struct TILEMAP;
+struct TWINDOW;
 
 typedef enum TILEMAP_SPAWNER_TYPE {
    TILEMAP_SPAWNER_TYPE_MOBILE,
