@@ -22,13 +22,8 @@ typedef enum {
    POV_LAYER_LEVEL_INSET = 0
 } POV_LAYER;
 
-#define POV_RAISED_DIVISOR 8
-#define POV_RAISED_DIVISOR_PENULT (POV_RAISED_DIVISOR - 1)
-
 extern bstring client_input_from_ui;
 
-//static GFX_RAY_WALL* cl_walls = NULL;
-//static GFX_RAY_FLOOR* cl_floors = NULL;
 static GRAPHICS* ray_view = NULL;
 struct HASHMAP tileset_status;
 
@@ -343,21 +338,12 @@ static GRAPHICS_COLOR get_wall_color( GRAPHICS_DELTA* wall_pos ) {
 }
 
 static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
-#ifdef RAYCAST_OLD_DOUBLE
    double old_dir_x = 0;
-#else
-   GFX_COORD_FPP fp_old_dir_x;
-#endif /* RAYCAST_OLD_DOUBLE */
    double cos_dbl = 0,
       sin_dbl = 0;
-/*
-   if( facing == c->cam_pos.facing ) {
-      goto cleanup;
-   }
-*/
+
    switch( facing ) {
       case MOBILE_FACING_LEFT:
-#ifdef RAYCAST_OLD_DOUBLE
          old_dir_x = 0;
          c->cam_pos.facing_x = old_dir_x * cos( GRAPHICS_RAY_ROTATE_INC ) -
             -1 * sin( GRAPHICS_RAY_ROTATE_INC );
@@ -369,23 +355,9 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             0 * sin( GRAPHICS_RAY_ROTATE_INC );
          c->plane_pos.precise_y = old_dir_x * sin( GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( GRAPHICS_RAY_ROTATE_INC );
-#else
-         fp_old_dir_x = 0;
-         c->cam_pos.fp_facing_x = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_COS -
-            -1 * GRAPHICS_RAY_ROTATE_INC_FP_SIN;
-         c->cam_pos.fp_facing_y = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_SIN +
-            -1 * GRAPHICS_RAY_ROTATE_INC_FP_COS;
-
-         fp_old_dir_x = GRAPHICS_RAY_FOV_FP;
-         c->plane_pos.fp_x = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_COS -
-            0 * GRAPHICS_RAY_ROTATE_INC_FP_SIN;
-         c->plane_pos.fp_y = fp_old_dir_x * GRAPHICS_RAY_ROTATE_INC_FP_SIN +
-            0 * GRAPHICS_RAY_ROTATE_INC_FP_COS;
-#endif /* RAYCAST_OLD_DOUBLE */
          break;
 
       case MOBILE_FACING_RIGHT:
-#ifdef RAYCAST_OLD_DOUBLE
          old_dir_x = 0;
          c->cam_pos.facing_x = old_dir_x * cos( -GRAPHICS_RAY_ROTATE_INC ) -
             -1 * sin( -GRAPHICS_RAY_ROTATE_INC );
@@ -397,7 +369,6 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
             0 * sin( -GRAPHICS_RAY_ROTATE_INC );
          c->plane_pos.precise_y = old_dir_x * sin( -GRAPHICS_RAY_ROTATE_INC ) +
             0 * cos( -GRAPHICS_RAY_ROTATE_INC );
-#endif /* RAYCAST_OLD_DOUBLE */
          break;
 
       case MOBILE_FACING_UP:
@@ -533,7 +504,6 @@ static BOOL mode_pov_update_view(
    int layer_index = 0,
       opaque_index = 0,
       pov_incr = 0;
-   //GRAPHICS_RAY ray_current = { 0 };
    BOOL recurse = TRUE;
 
    scaffold_check_null( t );
@@ -546,18 +516,7 @@ static BOOL mode_pov_update_view(
       if( graphics_raycast_point_is_infinite( &wall_map_pos ) ) {
          /* The ray has to stop at some point, or this will become an
           * infinite loop! */
-         /*if(
-            MOBILE_FACING_LEFT == facing ||
-            MOBILE_FACING_RIGHT == facing
-         ) {
-            //ray.side_dist_x += ray.delta_dist_x;
-            //wall_map_pos.map_x += ray.step_x;
-            wall_map_pos->side = 0;
-         }*/
-
-         //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
          recurse = FALSE;
-         //goto start_drawing;
          break;
       }
 
@@ -576,8 +535,6 @@ static BOOL mode_pov_update_view(
             tile = tilemap_get_tile( opaque_layer, wall_map_pos.map_x, wall_map_pos.map_y );
             if( 0 != tile ) {
                wall_hit = TRUE;
-               //memcpy( &ray_current, ray, sizeof( GRAPHICS_RAY ) );
-               //goto start_drawing;
                if( POV_LAYER_LEVEL_WALL <= opaque_index ) {
                   recurse = FALSE;
                }
@@ -592,7 +549,6 @@ static BOOL mode_pov_update_view(
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
 
    wall_draw_bottom = (cell_height / 2) + (g->h / 2);
-   //draw_end = ray.origin_x + wall_map_pos->perpen_dist * ray.direction_y;
    if( wall_draw_bottom >= g->h ) {
       wall_draw_bottom = g->h - 1;
    }

@@ -51,8 +51,5 @@ uint16_t ipc_get_port( struct CONNECTION* n ) {
    return 0;
 }
 
-BOOL ipc_is_local_client( struct CONNECTION* n ) {
-}
-
 BOOL ipc_is_listening( struct CONNECTION* n ) {
 }

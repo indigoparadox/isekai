@@ -72,13 +72,8 @@ struct CLIENT {
 #endif /* USE_CHUNKS */
 
 #ifndef DISABLE_MODE_POV
-#ifdef RAYCAST_OLD_DOUBLE
    GRAPHICS_PLANE cam_pos;
    GRAPHICS_PLANE plane_pos;
-#else
-   GRAPHICS_PLANE_FPP cam_pos;
-   GRAPHICS_PLANE_FPP plane_pos;
-#endif /* RAYCAST_OLD_DOUBLE */
    GFX_COORD_FPP* z_buffer;
 #endif /* !DISABLE_MODE_POV */
 

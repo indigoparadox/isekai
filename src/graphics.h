@@ -114,11 +114,6 @@ typedef struct {
 } GRAPHICS_POINT;
 
 typedef struct {
-   GFX_COORD_PIXEL fp_x;
-   GFX_COORD_PIXEL fp_y;
-} GRAPHICS_POINT_FPP;
-
-typedef struct {
    double precise_x;
    double precise_y;
    double facing_x;
@@ -127,43 +122,11 @@ typedef struct {
 } GRAPHICS_PLANE;
 
 typedef struct {
-   GFX_COORD_PIXEL fp_x;
-   GFX_COORD_PIXEL fp_y;
-   GFX_COORD_PIXEL fp_facing_x;
-   GFX_COORD_PIXEL fp_facing_y;
-   uint8_t facing;
-} GRAPHICS_PLANE_FPP;
-
-typedef struct {
    GFX_COORD_PIXEL x;
    GFX_COORD_PIXEL y;
    GFX_COORD_PIXEL w;
    GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
-
-typedef struct {
-   GFX_COORD_PIXEL fp_x;
-   GFX_COORD_PIXEL fp_y;
-   GFX_COORD_PIXEL fp_w;
-   GFX_COORD_PIXEL fp_h;
-} GRAPHICS_RECT_FPP;
-
-#if 0
-typedef struct {
-   double direction_x;
-   double direction_y;
-   /* Length of ray from one side to next x or y-side. */
-   double delta_dist_x;
-   double delta_dist_y;
-   /* Length of ray to next x or y-side. */
-   double side_dist_x;
-   double side_dist_y;
-   int step_x;
-   int step_y;
-   BOOL infinite_dist;
-   int steps;
-} GFX_RAY;
-#endif // 0
 
 #ifndef DISABLE_MODE_POV
 
@@ -172,16 +135,10 @@ typedef struct {
    int map_y;
    int map_w;
    int map_h;
-   //double precise_x;
-   //double precise_y;
    double perpen_dist;
    double stripe_x_hit;
    GRAPHICS_RAY_SIDE side;
    uint32_t data;
-   //int steps;
-   //GFX_COORD_PIXEL wall_draw_start;
-   //GFX_COORD_PIXEL wall_draw_end;
-   //GFX_COORD_PIXEL cell_height;
 } GRAPHICS_DELTA;
 
 typedef struct {
@@ -202,45 +159,6 @@ typedef struct {
    int map_w;
    int map_h;
 } GRAPHICS_RAY;
-
-#ifdef RAYCAST_FPP
-
-typedef struct {
-   GFX_COORD_FPP fp_direction_x;
-   GFX_COORD_FPP fp_direction_y;
-   /* Length of ray from one side to next x or y-side. */
-   GFX_COORD_FPP fp_delta_dist_x;
-   GFX_COORD_FPP fp_delta_dist_y;
-   /* Length of ray to next x or y-side. */
-   GFX_COORD_FPP fp_side_dist_x;
-   GFX_COORD_FPP fp_side_dist_y;
-   int step_x;
-   int step_y;
-   GFX_COORD_FPP fp_perpen_dist;
-   BOOL infinite_dist;
-   TILEMAP_COORD_TILE x;
-   TILEMAP_COORD_TILE y;
-   TILEMAP_COORD_TILE map_w;
-   TILEMAP_COORD_TILE map_h;
-   int steps;
-   GRAPHICS_RAY_SIDE side;
-} GRAPHICS_RAY_FPP;
-
-#endif /* RAYCAST_FPP */
-
-#if 0
-
-typedef struct {
-   int x;
-   int y;
-   int map_w;
-   int map_h;
-   int side;
-   double perpen_dist;
-   uint32_t data;
-} GFX_RAY_WALL;
-
-#endif // 0
 
 typedef struct {
    double x;
