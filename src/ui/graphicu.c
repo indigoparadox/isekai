@@ -1315,8 +1315,8 @@ void ui_window_draw_tilegrid( struct UI* ui, struct TWINDOW* twindow ) {
 }
 
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
-   scaffold_assert( &global_ui == ui );
    struct UI_WINDOW* found = NULL;
+   scaffold_assert( &global_ui == ui );
    found = vector_iterate( &(ui->windows), callback_search_windows, wid );
    return found;
 }

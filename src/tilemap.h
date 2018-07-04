@@ -39,6 +39,7 @@ typedef enum {
 } TILEMAP_REDRAW_STATE;
 
 typedef enum {
+   TILEMAP_ORIENTATION_UNDEFINED,
    TILEMAP_ORIENTATION_ORTHO,
 #ifndef DISABLE_ISOMETRIC
    TILEMAP_ORIENTATION_ISO
@@ -225,13 +226,14 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
    SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 );
+TILEMAP_ORIENTATION tilemap_get_orientation( struct TILEMAP* t );
 SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t );
 SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t );
 SCAFFOLD_INLINE uint32_t tilemap_get_tile(
    const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void tilemap_draw_tilemap( struct TWINDOW* window );
-void tilemap_update_window_ortho(
+/* void tilemap_update_window_ortho(
    struct TWINDOW* twindow,
    TILEMAP_COORD_TILE focal_x, TILEMAP_COORD_TILE focal_y
 );
@@ -246,7 +248,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
 );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
    TILEMAP_COORD_TILE y, struct TWINDOW* twindow
-);
+);*/
 void tilemap_add_dirty_tile(
    struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
