@@ -136,6 +136,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       );
       scaffold_check_nonzero( scaffold_error );
    } else {
+      /* Use the channel we just found. */
       scaffold_print_debug(
          &module, "Server: Channel found on server: %s\n", bdata( l->name ) );
    }
@@ -151,19 +152,37 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       goto cleanup;
    }
 
-   scaffold_assert( 0 < c_first->refcount.count );
-   scaffold_assert( 0 < l->refcount.count );
-
-#ifdef DEBUG
+   /* Add this user to the channel. */
+//#ifdef DEBUG
    /* TODO: Make this dump us back at the menu. */
    /* Problem is: couldn't find map file! */
    old_count = c_first->refcount.count;
-   server_channel_add_client( l, c_first );
+   /* scaffold_assert( 0 < c_first->refcount.count );
+   scaffold_assert( 0 < l->refcount.count );
+   scaffold_assert( c_first->refcount.count > old_count ); */
+   if(
+      0 < c_first->refcount.count &&
+      0 < l->refcount.count
+   ) {
+      scaffold_print_debug(
+         &module, "Adding %b to channel %b on server...\n",
+         c_first->nick, l->name
+      );
+      server_channel_add_client( l, c_first );
+      //client_add_channel( c_first, l );
+   } else {
+      l->error = bformat(
+         "Unable to add %s to channel %s on server.",
+         bdata( c_first->nick ), bdata( l->name )
+      );
+      scaffold_print_error(
+         &module, "Unable to add %b to channel %b on server.\n",
+         c_first->nick, l->name
+      );
+      scaffold_assert( NULL != l->error );
+   }
    scaffold_assert( c_first->refcount.count > old_count );
-   old_count = l->refcount.count;
-   client_add_channel( c_first, l );
-   scaffold_assert( l->refcount.count > old_count );
-#endif /* DEBUG */
+//#endif /* DEBUG */
 
 cleanup:
    if( NULL != l ) {
