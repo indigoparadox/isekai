@@ -440,7 +440,8 @@ static void tilemap_layer_draw_tile_ortho(
    g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
    /* FIXME */
    /* If the current tileset doesn't exist, then load it. */
-   g_tileset = hashmap_iterate( &(set->images), callback_search_tileset_img_gid, local_client );
+   g_tileset = hashmap_iterate(
+      &(set->images), callback_search_tileset_img_gid, local_client );
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;

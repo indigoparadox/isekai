@@ -503,6 +503,10 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    /* The key with NULL means we need to load this image. */
+   scaffold_print_debug(
+      &module, "Adding tile image name %b to set %b...\n",
+      buffer, set->def_path
+   );
    if( hashmap_put( &(set->images), buffer, NULL, FALSE ) ) {
       scaffold_print_error( &module, "Attempted to add existing image: %b\n",
          buffer );

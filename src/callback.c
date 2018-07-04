@@ -698,14 +698,14 @@ void* callback_search_tileset_img_gid(
 
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
 
-#ifdef USE_CHUNKS
    if(
-      NULL == iter &&
-      NULL == hashmap_get( &(c->chunkers), idx->value.key )
+      NULL == iter
+#ifdef USE_CHUNKS
+      && NULL == hashmap_get( &(c->chunkers), idx->value.key )
+#endif /* USE_CHUNKS */
    ) {
       client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
-   } else
-#endif /* USE_CHUNKS */
+   }
    if( NULL != iter ) {
       return iter;
    }

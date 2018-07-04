@@ -351,11 +351,11 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
    if( 0 < hashmap_count( &(l->client_or_server->chunkers) ) ) {
       goto cleanup;
    }
+#endif /* USE_CHUNKS */
 
    if( 0 < vector_count( &(l->client_or_server->delayed_files) ) ) {
       goto cleanup;
    }
-#endif /* USE_CHUNKS */
 
    if( l->client_or_server->tilesets_loaded < tilesets_count ) {
 #ifdef DEBUG

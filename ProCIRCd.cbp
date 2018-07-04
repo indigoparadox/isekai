@@ -395,6 +395,7 @@
 					<Add option="-DUSE_DUKTAPE" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DDISABLE_MODE_ISO" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

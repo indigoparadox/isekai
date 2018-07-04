@@ -52,7 +52,12 @@ struct CLIENT {
                              *   channels available if this is a server.
                              */
 
-   struct VECTOR delayed_files;
+   struct VECTOR delayed_files; /*!< Requests for files to be executed "later"
+                                 *   as a way of getting around locks on
+                                 *   resource holders due to dependencies
+                                 *   (e.g. tileset needed by tilemap).
+                                 *   NOT to be confused with chunkers!
+                                 */
    struct MOBILE* puppet;
    struct HASHMAP sprites; /*!< Contains sprites for all mobiles/items this
                             *   client encounters on client-side. Not used
@@ -68,7 +73,6 @@ struct CLIENT {
 
 #ifdef USE_CHUNKS
    struct HASHMAP chunkers;
-   //struct VECTOR chunker_removal_queue;
 #endif /* USE_CHUNKS */
 
 #ifndef DISABLE_MODE_POV
