@@ -78,6 +78,7 @@ BOOL channel_has_error( struct CHANNEL* l );
 void channel_set_error( struct CHANNEL* l, const char* error );
 BOOL channel_is_loaded( struct CHANNEL* l );
 bstring channel_get_name( struct CHANNEL* l );
+struct TILEMAP* channel_get_tilemap( struct CHANNEL* l );
 
 #ifdef CHANNEL_C
 SCAFFOLD_MODULE( "channel.c" );

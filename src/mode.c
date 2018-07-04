@@ -32,9 +32,21 @@ void client_local_draw(
    struct CLIENT* c,
    struct CHANNEL* l
 ) {
+   struct TILEMAP* t = NULL;
+   if( NULL == l ) {
+      goto cleanup; /* Quietly. */
+   }
+   t = channel_get_tilemap( l );
    switch( c->gfx_mode ) {
    case MODE_TOPDOWN:
-      mode_topdown_draw( c, l );
+      switch( tilemap_get_orientation( t ) ) {
+      case TILEMAP_ORIENTATION_ORTHO:
+         mode_topdown_draw( c, l );
+         break;
+      case TILEMAP_ORIENTATION_ISO:
+         mode_isometric_draw( c, l );
+         break;
+      }
       break;
 #ifndef DISABLE_MODE_POV
    case MODE_POV:
@@ -42,6 +54,8 @@ void client_local_draw(
       break;
 #endif /* !DISABLE_MODE_POV */
    }
+cleanup:
+   return;
 }
 
 void client_local_poll_input(

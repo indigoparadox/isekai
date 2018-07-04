@@ -383,3 +383,10 @@ bstring channel_get_name( struct CHANNEL* l ) {
    }
    return l->name;
 }
+
+struct TILEMAP* channel_get_tilemap( struct CHANNEL* l ) {
+   if( NULL == l ) {
+      return NULL;
+   }
+   return &(l->tilemap);
+}
