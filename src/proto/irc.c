@@ -241,6 +241,8 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
    int bstr_retval;
    /* We won't record the channel in our list until the server confirms it. */
 
+   scaffold_assert( NULL != name );
+
    scaffold_set_client();
 
    buffer = bfromcstr( "JOIN " );

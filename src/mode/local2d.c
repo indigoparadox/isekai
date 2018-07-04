@@ -162,7 +162,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_window_push( ui, win );
       return TRUE;
 #ifdef DEBUG_VM
-   case 'p': windef_show_repl( ui ); return TRUE;
+   //case 'p': windef_show_repl( ui ); return TRUE;
 #endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
    case 't':

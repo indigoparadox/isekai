@@ -74,9 +74,6 @@ static void client_cleanup( const struct REF *ref ) {
    vector_remove_cb( &(c->unique_items), callback_remove_items, NULL );
    vector_cleanup( &(c->unique_items ) );
 
-   /* vector_remove_cb( &(c->chunker_removal_queue), callback_free_chunkers, c );
-   vector_cleanup( &(c->chunker_removal_queue) ); */
-
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
    /* mem_free( c ); */
@@ -91,12 +88,11 @@ void client_init( struct CLIENT* c ) {
    hashmap_init( &(c->sprites) );
 #ifdef USE_CHUNKS
    hashmap_init( &(c->chunkers) );
-   vector_init( &(c->delayed_files) );
 #endif /* USE_CHUNKS */
+   vector_init( &(c->delayed_files) );
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
-   //vector_init( &(c->chunker_removal_queue) );
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -238,9 +234,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 cleanup:
 #endif /* DEBUG_TILES */
 
-#ifdef USE_CHUNKS
    vector_remove_cb( &(c->delayed_files), callback_proc_client_delayed_files, c );
-#endif /* USE_CHUNKS */
 
    return retval;
 }
@@ -348,13 +342,13 @@ void client_stop( struct CLIENT* c ) {
       test_count = hashmap_count( &(c->sprites) );
       scaffold_assert( 0 == test_count );
 
-   #ifdef USE_CHUNKS
+#ifdef USE_CHUNKS
       test_count = hashmap_count( &(c->chunkers) );
       scaffold_assert( 0 == test_count );
+#endif /* USE_CHUNKS */
 
       test_count = vector_count( &(c->delayed_files) );
       scaffold_assert( 0 == test_count );
-#endif /* USE_CHUNKS */
 
       test_count = hashmap_count( &(c->tilesets) );
       scaffold_assert( 0 == test_count );
@@ -458,6 +452,33 @@ static void* client_dr_cb(
    return NULL;
 }
 
+#ifndef USE_CHUNKS
+
+static void client_request_file_local(
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
+) {
+   /* FIXME: No file receiving method implemented! */
+   BYTE* data = NULL;
+   SCAFFOLD_SIZE length;
+   bstring filepath = NULL;
+   SCAFFOLD_SIZE bytes_read;
+
+   filepath = files_root( filename );
+
+   scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
+
+   bytes_read = files_read_contents( filepath, &data, &length );
+   scaffold_assert( 0 < bytes_read );
+   scaffold_check_null_msg( data, "Unable to load resource data." );
+   scaffold_check_zero( bytes_read, "Resource is empty." );
+   datafile_handle_stream( type, filename, data, length, c );
+
+cleanup:
+   return;
+}
+
+#endif /* USE_CHUNKS */
+
 void client_request_file_later(
    struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 ) {
@@ -521,20 +542,7 @@ cleanup:
    hashmap_lock( &(c->chunkers), FALSE );
 #else
    /* FIXME: No file receiving method implemented! */
-   BYTE* data = NULL;
-   SCAFFOLD_SIZE length;
-   bstring filepath = NULL;
-   SCAFFOLD_SIZE bytes_read;
-
-   filepath = files_root( filename );
-
-   scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
-
-   bytes_read = files_read_contents( filepath, &data, &length );
-   scaffold_assert( 0 < bytes_read );
-   scaffold_check_null_msg( data, "Unable to load resource data." );
-   scaffold_check_zero( bytes_read, "Resource is empty." );
-   datafile_handle_stream( type, filename, data, length, c );
+   client_request_file_local( c, type, filename );
 
 cleanup:
 #endif /* USE_CHUNKS */

@@ -22,7 +22,10 @@ struct TWINDOW {
 #endif /* !DISABLE_MODE_POV */
 };
 
-
 void twindow_update_details( struct TWINDOW* twindow );
+
+#ifdef TWINDOW_C
+SCAFFOLD_MODULE( "twindow.c" );
+#endif /* TWINDOW_C */
 
 #endif /* !TWINDOW_H */

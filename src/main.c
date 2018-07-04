@@ -463,7 +463,9 @@ static BOOL loop_connect() {
          goto cleanup;
       }
 #else
+      /* TODO: Specify these via command line or config. */
       server_address = &str_localhost;
+      buffer_channel = &str_default_channel;
 #endif /* USE_CONNECT_DIALOG */
 
       if( FALSE == ipc_is_listening( main_server->self.link ) ) {
