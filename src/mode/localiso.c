@@ -120,7 +120,7 @@ cleanup:
 
 static void mode_isometric_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
-   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
+   TILEMAP_COORD_TILE tile_x, TILEMAP_COORD_TILE tile_y, SCAFFOLD_SIZE gid
 ) {
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS_RECT tile_tilesheet_pos;
@@ -131,6 +131,9 @@ static void mode_isometric_tilemap_draw_tile(
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+   GFX_COORD_PIXEL
+      iso_dest_offset_x,
+      iso_dest_offset_y;
 
    local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = local_client->active_tilemap;
@@ -149,8 +152,13 @@ static void mode_isometric_tilemap_draw_tile(
    }
 
    /* Figure out the window position to draw to. */
-   tile_screen_rect.x = set->tilewidth * (x - twindow->x);
-   tile_screen_rect.y = set->tileheight * (y - twindow->y);
+   //tile_screen_rect.x = set->tilewidth * (x - twindow->x);
+   //tile_screen_rect.y = set->tileheight * (y - twindow->y);
+
+   iso_dest_offset_x = set->tilewidth / 2;
+   iso_dest_offset_y = set->tileheight / 2;
+   tile_screen_rect.x = ((tile_x - tile_y) * iso_dest_offset_x) - twindow->x;
+   tile_screen_rect.y = ((tile_x + tile_y) * iso_dest_offset_y) - twindow->y;
 
    if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
       goto cleanup; /* Silently. */
@@ -170,6 +178,7 @@ static void mode_isometric_tilemap_draw_tile(
    tilemap_get_tile_tileset_pos(
       set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
 
+      /*
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
          tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
@@ -199,6 +208,7 @@ static void mode_isometric_tilemap_draw_tile(
    ) {
       tile_screen_rect.y += mobile_get_steps_remaining_y( o, TRUE );
    }
+   */
 
    graphics_blit_partial(
       twindow->g,
@@ -208,7 +218,7 @@ static void mode_isometric_tilemap_draw_tile(
       g_tileset
    );
 
-   cache = tilemap_get_item_cache( t, x, y, FALSE );
+   cache = tilemap_get_item_cache( t, tile_x, tile_y, FALSE );
    if( NULL != cache ) {
       vector_iterate(
          &(cache->items), mode_isometric_tilemap_draw_items_cb, &tile_screen_rect
