@@ -13,7 +13,6 @@ SCAFFOLD_MODULE( "duktapev.c" );
 #include "../channel.h"
 
 #define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
-//#define OBJECT_VM( o ) (duk_context*)( o->vm )
 
 #include "../duktape/duktape.h"
 
@@ -55,22 +54,17 @@ void* duktape_set_globals_cb(
    return NULL;
 }
 
-static duk_bool_t duktape_use_exec_timeout_check( void* udata ) {
+/** \brief Callback for Duktape to check exec timeout. Defined and referenced
+ *         by Duktape, itself.
+ *
+ * \param
+ * \return TRUE if timeout, FALSE otherwise.
+ */
+duk_bool_t duktape_use_exec_timeout_check( void* udata ) {
    struct VM_CADDY* caddy = (struct VM_CADDY*)udata;
    uint64_t now;
-   struct MOBILE* caller_o = NULL;
-   struct CHANNEL* caller_l = NULL;
 
    now = graphics_get_ticks();
-
-   switch( caddy->caller_type ) {
-   case VM_CALLER_MOBILE:
-      caller_o = (struct MOBILE*)caddy->caller;
-      break;
-   case VM_CALLER_CHANNEL:
-      caller_l = (struct CHANNEL*)caddy->caller;
-      break;
-   }
 
    if(
       0 != caddy->exec_start &&
@@ -115,11 +109,9 @@ static duk_ret_t duk_cb_vm_speak( duk_context* vm ) {
    case VM_CALLER_MOBILE:
       o = (struct MOBILE*)caddy->caller;
 
-      //mobile_speak( o, b_text );
-
-      /* TODO: This assumes all scripts are server-side, sort of... */
-
+      /* This assumes all scripts are server-side, which they are. */
       b_text = bfromcstr( text );
+      scaffold_check_null_msg( b_text, "Mobile tried to speak invalid text." );
       proto_server_send_msg_channel( main_server, o->channel, o->display_name, b_text );
       break;
    }
@@ -184,7 +176,6 @@ static duk_ret_t duk_cb_vm_update( duk_context* vm ) {
 }
 
 static duk_ret_t vm_unsafe( duk_context* vm, void* udata ) {
-   //VM_CADDY* caddy = (VM_CADDY*)udata;
    const char* code_c = (const char*)udata;
 
    duk_push_string( vm, code_c );
@@ -196,8 +187,10 @@ static duk_ret_t vm_unsafe( duk_context* vm, void* udata ) {
 void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    char* code_c = bdata( code );
    int duk_result = 0;
+   struct MOBILE* o = vmc->caller;
 
    scaffold_assert( NULL != code_c );
+   scaffold_assert( NULL != o );
 
    duk_push_global_object( (duk_context*)vmc->vm );
    duk_push_object( (duk_context*)vmc->vm );
@@ -239,9 +232,9 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    duk_get_prop_string( (duk_context*)vmc->vm, 0, "stack" );
 
    scaffold_print_error(
-      &module, "Script error: %s: %s (%s:%s)\n",
+      &module, "Script error: %s: %d, %s (%s:%s)\n",
       duk_safe_to_string( (duk_context*)vmc->vm, 1 ),
-      //o->mob_id,
+      o->mob_id,
       duk_safe_to_string( (duk_context*)vmc->vm, 2 ),
       duk_safe_to_string( (duk_context*)vmc->vm, 3 ),
       duk_safe_to_string( (duk_context*)vmc->vm, 4 )
@@ -256,59 +249,5 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
 cleanup:
    return;
 }
-
-#if 0
-void vm_channel_start( struct CHANNEL* l ) {
-   const char* code_c = NULL;
-   int duk_result = 0;
-
-   scaffold_check_not_null( OBJECT_VM( l ) );
-
-   l->vm_started = FALSE;
-   l->vm_caddy = mem_alloc( 1, struct VM_CADDY );
-   scaffold_check_null( l->vm_caddy );
-
-   scaffold_print_debug(
-      &module, "Starting script VM for channel: %b\n", l->name
-   );
-
-   /* Setup the script caddy. */
-   ((struct VM_CADDY*)l->vm_caddy)->exec_start = 0;
-   ((struct VM_CADDY*)l->vm_caddy)->caller = l;
-   ((struct VM_CADDY*)l->vm_caddy)->caller_type = VM_CALLER_CHANNEL;
-
-   /* Setup the VM. */
-   l->vm = (struct VM*)duk_create_heap(
-      NULL, NULL, NULL,
-      l->vm_caddy,
-      duktape_helper_channel_crash
-   );
-
-   /* hashmap_iterate( &(l->vm_globals), vm_global_set_cb, l ); */
-
-cleanup:
-   return;
-}
-
-void vm_channel_exec( struct CHANNEL* l, bstring code ) {
-}
-
-void vm_channel_end( struct CHANNEL* l ) {
-   scaffold_print_debug(
-      &module, "Stopping script VM for channel: %b\n", l->name
-   );
-
-   if( NULL != OBJECT_VM( l ) ) {
-      duk_destroy_heap( OBJECT_VM( l ) );
-      l->vm = NULL;
-   }
-
-   if( NULL != l->vm_caddy ) {
-      free( l->vm_caddy );
-      l->vm_caddy = NULL;
-   }
-}
-
-#endif // 0
 
 #endif /* USE_DUKTAPE */
