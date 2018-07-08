@@ -859,46 +859,4 @@ cleanup:
    return;
 }
 
-#if 0
-void mobile_vm_do_event( struct MOBILE* o, const char* event ) {
-   int duk_result = 0;
-   bstring tick_script = NULL;
-
-   if( NULL == OBJECT_VM( o ) ) {
-      goto cleanup; /* Silently. Not all mobs have scripts. */
-   }
-
-   ((struct VM_CADDY*)o->vm_caddy)->exec_start = graphics_get_ticks();
-
-   tick_script = hashmap_get_c( &(o->vm_scripts), event );
-   const char* tick_script_c = bdata( tick_script );
-   if( NULL != tick_script ) {
-      vm_mobile_run( o, tick_script );
-   }
-
-cleanup:
-   return;
-}
-
-BOOL mobile_vm_put_c(
-   struct MOBILE* o, const char* key, const char* bstring val
-) {
-   bstring b_key = NULL;
-   bstring b_val = NULL;
-   BOOL retval = FALSE;
-
-   b_key = bfromcstr( key );
-   scaffold_check_null( b_key );
-   b_val = bfromcstr( val );
-   scaffold_check_null( b_val );
-
-   retval = mobile_vm_put( o, b_key, b_val );
-
-cleanup:
-   bdestroy( b_key );
-   bdestroy( b_val );
-   return retval;
-}
-#endif // 0
-
 #endif /* USE_VM */
