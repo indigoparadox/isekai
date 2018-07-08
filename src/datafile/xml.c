@@ -329,6 +329,10 @@ next_global:
          )
       ) {
          /* TODO: Make lang per-script, not per-object/mobile/caddy. */
+         if( VM_LANG_NONE != o->vm_caddy->lang ) {
+            /* For now, crash if we try to mix languages in a mobile. */
+            scaffold_assert( VM_LANG_JS == o->vm_caddy->lang );
+         }
          o->vm_caddy->lang = VM_LANG_JS;
          vm_caddy_put(
             o->vm_caddy, VM_MEMBER_SCRIPT, vm_key_buffer, vm_val_buffer );
