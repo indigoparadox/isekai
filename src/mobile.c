@@ -50,12 +50,6 @@ static void mobile_cleanup( const struct REF* ref ) {
    hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
    hashmap_cleanup( &(o->ani_defs) );
 
-   hashmap_remove_cb( &(o->vm_scripts), callback_free_strings, NULL );
-   hashmap_cleanup( &(o->vm_scripts) );
-
-   hashmap_remove_cb( &(o->vm_globals), callback_free_strings, NULL );
-   hashmap_cleanup( &(o->vm_globals) );
-
    scaffold_print_debug(
       &module,
       "Mobile %b (%d) destroyed.\n",
@@ -90,18 +84,17 @@ void mobile_init(
    o->display_name = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    o->current_frame = 0;
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
-   o->vm = NULL;
    o->owner = NULL;
    o->animation_reset = FALSE;
 #ifdef USE_TURNS
    o->vm_tick_prev = 0;
 #endif /* USE_TURNS */
 
+   vm_caddy_new( o->vm_caddy );
+
    vector_init( &(o->sprite_defs) );
    hashmap_init( &(o->ani_defs) );
    hashmap_init( &(o->script_defs) );
-   hashmap_init( &(o->vm_scripts) );
-   hashmap_init( &(o->vm_globals) );
    vector_init( &(o->items) );
 
    o->x = x;
@@ -843,3 +836,69 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
 /* cleanup: */
    bdestroy( ani_key_buffer );
 }
+
+#ifdef USE_VM
+
+void mobile_vm_start( struct MOBILE* o ) {
+
+   scaffold_check_null( o->vm_caddy );
+
+   scaffold_print_debug(
+      &module, "Starting script VM for mobile: %d (%b)\n",
+      o->serial, o->mob_id
+   );
+
+   /* Setup the script caddy. */
+   ((struct VM_CADDY*)o->vm_caddy)->exec_start = 0;
+   ((struct VM_CADDY*)o->vm_caddy)->caller = o;
+   ((struct VM_CADDY*)o->vm_caddy)->caller_type = VM_CALLER_MOBILE;
+
+   vm_caddy_start( o->vm_caddy );
+
+cleanup:
+   return;
+}
+
+#if 0
+void mobile_vm_do_event( struct MOBILE* o, const char* event ) {
+   int duk_result = 0;
+   bstring tick_script = NULL;
+
+   if( NULL == OBJECT_VM( o ) ) {
+      goto cleanup; /* Silently. Not all mobs have scripts. */
+   }
+
+   ((struct VM_CADDY*)o->vm_caddy)->exec_start = graphics_get_ticks();
+
+   tick_script = hashmap_get_c( &(o->vm_scripts), event );
+   const char* tick_script_c = bdata( tick_script );
+   if( NULL != tick_script ) {
+      vm_mobile_run( o, tick_script );
+   }
+
+cleanup:
+   return;
+}
+
+BOOL mobile_vm_put_c(
+   struct MOBILE* o, const char* key, const char* bstring val
+) {
+   bstring b_key = NULL;
+   bstring b_val = NULL;
+   BOOL retval = FALSE;
+
+   b_key = bfromcstr( key );
+   scaffold_check_null( b_key );
+   b_val = bfromcstr( val );
+   scaffold_check_null( b_val );
+
+   retval = mobile_vm_put( o, b_key, b_val );
+
+cleanup:
+   bdestroy( b_key );
+   bdestroy( b_val );
+   return retval;
+}
+#endif // 0
+
+#endif /* USE_VM */

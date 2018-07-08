@@ -30,11 +30,11 @@ struct CHANNEL {
    BOOL vm_started;
    struct HASHMAP vm_globals;
    bstring error;
-#ifdef USE_TINYPY
+/* #ifdef USE_TINYPY
    struct tp_vm* vm;
    int vm_cur;
    int vm_step_ret;
-#endif /* USE_TINYPY */
+#endif  */ /* USE_TINYPY */
 };
 
 struct CHANNEL_CLIENT {

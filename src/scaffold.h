@@ -148,7 +148,9 @@ typedef uint16_t BIG_SERIAL;
 #define SCAFFOLD_PRINT_BUFFER_ALLOC 110
 
 #if defined( USE_DUKTAPE ) || defined( USE_TINYPY )
+#ifndef USE_VM
 #define USE_VM
+#endif /* !USE_VM */
 #endif /* USE_DUKTAPE || USE_TINYPY */
 
 typedef enum {

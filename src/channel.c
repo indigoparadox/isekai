@@ -29,7 +29,7 @@ static void channel_free_final( const struct REF *ref ) {
    );
 
    #ifdef USE_VM
-   vm_channel_end( l );
+   vm_caddy_end( l->vm_caddy );
    #endif /* USE_VM */
 
    /* These need to be freed first! */
@@ -75,7 +75,7 @@ void channel_init(
    scaffold_check_null( l->topic );
    tilemap_init( &(l->tilemap), local_images, server );
 #ifdef USE_VM
-   vm_channel_start( l );
+   vm_caddy_new( l->vm_caddy );
 #endif /* USE_VM */
 cleanup:
    return;

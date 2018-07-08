@@ -73,11 +73,7 @@ struct MOBILE {
    bstring mob_id;
    struct CHANNEL* channel;
    MOBILE_TYPE type;
-   struct VM* vm;
    struct VM_CADDY* vm_caddy;
-   BOOL vm_started;
-   struct HASHMAP vm_scripts;
-   struct HASHMAP vm_globals;
    struct VECTOR sprite_defs;
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
@@ -145,6 +141,9 @@ void mobile_add_item( struct MOBILE* o, struct ITEM* e );
 struct CHANNEL* mobile_get_channel( struct MOBILE* o );
 void mobile_call_reset_animation( struct MOBILE* o );
 void mobile_do_reset_2d_animation( struct MOBILE* o );
+#ifdef USE_VM
+void mobile_vm_start( struct MOBILE* o );
+#endif /* USE_VM */
 
 #ifdef MOBILE_C
 SCAFFOLD_MODULE( "mobile.c" );
