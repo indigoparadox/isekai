@@ -2137,7 +2137,6 @@ tp_obj tp_builtins(TP) {
    return ctx;
 }
 
-
 void tp_args(TP,int argc, char* argv[]) {
    tp_obj self = tp_list(tp);
    int i;
@@ -2151,6 +2150,7 @@ void tp_args(TP,int argc, char* argv[]) {
 tp_obj tp_main(TP,char* fname, void* code) {
    return tp_import(tp,fname,"__main__",code);
 }
+
 tp_obj tp_compile(TP, tp_obj text, tp_obj fname) {
    return tp_call(tp,"BUILTINS","compile",tp_params_v(tp,2,text,fname));
 }

@@ -521,15 +521,16 @@ void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* parent, void* i
    scaffold_assert_server();
 
    if(
+      NULL != o &&
       !mobile_is_occupied( o ) &&
-      vm_mobile_has_event( o, "tick" ) &&
+      vm_caddy_has_event( o->vm_caddy, &str_vm_tick ) &&
 #ifdef USE_TURNS
       vm_get_tick( o->vm_tick_prev )
 #else
       vm_get_tick( 0 )
 #endif /* USE_TURNS */
    ) {
-      vm_mobile_do_event( o, "tick" );
+      vm_caddy_do_event( o->vm_caddy, &str_vm_tick );
 #ifdef USE_TURNS
       o->vm_tick_prev++;
 #endif /* USE_TURNS */

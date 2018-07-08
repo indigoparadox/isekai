@@ -449,6 +449,8 @@
 					<Add option="-DxRAYCAST_FOG" />
 					<Add option="-DRAYCAST_CACHE" />
 					<Add option="-DxDISABLE_MODE_POV" />
+					<Add option="-DxUSE_TINYPY" />
+					<Add option="-DUSE_VM" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -1820,6 +1822,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/vector.h" />
+		<Unit filename="src/vm.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/vm.h">
 			<Option target="Debug" />
 			<Option target="Release" />

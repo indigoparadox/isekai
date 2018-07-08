@@ -255,6 +255,8 @@ void datafile_parse_mobile_ezxml_t(
       xml_animation_iter = ezxml_next( xml_animation_iter );
    }
 
+#ifdef USE_VM
+
    xml_scripts = ezxml_child( xml_data, "scripts" );
 
    /* Store script globals. */
@@ -283,22 +285,12 @@ void datafile_parse_mobile_ezxml_t(
          goto next_global;
       }
 
-      /* Load the script into the hashmap. */
+      /* Load the global into the hashmap. */
       if(
          0 == scaffold_strcmp_caseless( "global", xml_script_iter->name )
       ) {
-         if( hashmap_put(
-            &(o->vm_globals), vm_key_buffer, bstrcpy( vm_val_buffer ), FALSE
-         ) ) {
-            scaffold_print_error( &module,
-               "Attempted to double-put script: %d: %b\n",
-               o->serial, vm_key_buffer );
-         } else {
-            scaffold_print_debug(
-               &module, "Stored global \"%b\" for mobile: %d\n",
-               vm_key_buffer, o->serial
-            );
-         }
+         vm_caddy_put(
+            o->vm_caddy, VM_MEMBER_GLOBAL, vm_key_buffer, vm_val_buffer );
       }
 
 next_global:
@@ -336,12 +328,10 @@ next_global:
             "text/javascript", ezxml_attr( xml_script_iter, "type" )
          )
       ) {
-         hashmap_put(
-            &(o->vm_scripts), vm_key_buffer, bstrcpy( vm_val_buffer ), TRUE );
-         scaffold_print_debug(
-            &module, "Stored \"%b\" script for mobile: %d\n",
-            vm_key_buffer, o->serial
-         );
+         /* TODO: Make lang per-script, not per-object/mobile/caddy. */
+         o->vm_caddy->lang = VM_LANG_JS;
+         vm_caddy_put(
+            o->vm_caddy, VM_MEMBER_SCRIPT, vm_key_buffer, vm_val_buffer );
       }
 #endif /* USE_DUKTAPE */
 
@@ -349,9 +339,8 @@ next_script:
       xml_script_iter = ezxml_next( xml_script_iter );
    }
 
-#ifdef USE_VM
-   if( 0 != hashmap_count( &(o->vm_scripts) ) ) {
-      vm_mobile_start( o );
+   if( 0 != vm_caddy_scripts_count( o->vm_caddy ) ) {
+      mobile_vm_start( o );
    }
 #endif /* USE_VM */
 
