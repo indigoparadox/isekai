@@ -26,7 +26,7 @@ static void tilemap_cleanup( const struct REF* ref ) {
    struct CHANNEL* l;
 
    t = scaffold_container_of( ref, struct TILEMAP, refcount );
-   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+   l = tilemap_get_channel( t );
 
    scaffold_print_debug(
       &module, "Destroying tilemap for channel: %b\n", l->name
@@ -45,7 +45,8 @@ static void tilemap_cleanup( const struct REF* ref ) {
 }
 
 void tilemap_init(
-   struct TILEMAP* t, BOOL local_images, struct CLIENT* server
+   struct TILEMAP* t, BOOL local_images, struct CLIENT* server,
+   struct CHANNEL* l
 ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
@@ -60,6 +61,7 @@ void tilemap_init(
 
    t->orientation = TILEMAP_ORIENTATION_ORTHO;
    t->lname = bfromcstr( "" );
+   t->channel = l;
 }
 
 void tilemap_free( struct TILEMAP* t ) {
@@ -480,6 +482,10 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 
 cleanup:
    return cache_out;
+}
+
+struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t ) {
+   return t->channel;
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */

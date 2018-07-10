@@ -21,10 +21,10 @@ struct CHANNEL {
    uint16_t sentinal;
    bstring name;
    bstring topic;
-   struct HASHMAP clients;
+   struct HASHMAP* clients;
    struct CLIENT* client_or_server;
-   struct VECTOR mobiles;
-   struct TILEMAP tilemap;
+   struct VECTOR* mobiles;
+   struct TILEMAP* tilemap;
    struct VM* vm;
    struct VM_CADDY* vm_caddy;
    BOOL vm_started;
@@ -63,7 +63,8 @@ void channel_set_mobile(
    const bstring nick, SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 );
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c );
-struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick );
+struct CLIENT* channel_get_client_by_name(
+   const struct CHANNEL* l, bstring nick );
 struct bstrList* channel_list_clients( struct CHANNEL* l );
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o );
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial );
@@ -74,7 +75,7 @@ BOOL channel_has_error( const struct CHANNEL* l );
 void channel_set_error( struct CHANNEL* l, const char* error );
 BOOL channel_is_loaded( struct CHANNEL* l );
 bstring channel_get_name( const struct CHANNEL* l );
-struct TILEMAP* channel_get_tilemap( struct CHANNEL* l );
+struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l );
 
 #ifdef CHANNEL_C
 SCAFFOLD_MODULE( "channel.c" );

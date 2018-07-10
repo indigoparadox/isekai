@@ -15,7 +15,7 @@ void vector_init( struct VECTOR* v ) {
 
 void vector_cleanup_force( struct VECTOR* v ) {
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    v->count = 0;
    vector_cleanup( v );
 cleanup:
@@ -24,7 +24,7 @@ cleanup:
 
 void vector_cleanup( struct VECTOR* v ) {
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( 0 >= vector_count( v ) );
 
    if( FALSE != v->scalar ) {
@@ -112,7 +112,7 @@ SCAFFOLD_SIZE_SIGNED vector_insert( struct VECTOR* v, SCAFFOLD_SIZE index, void*
    SCAFFOLD_SIZE_SIGNED err = -1;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    scaffold_assert( FALSE == v->scalar );
 
@@ -158,7 +158,7 @@ SCAFFOLD_SIZE_SIGNED vector_add( struct VECTOR* v, void* data ) {
    SCAFFOLD_SIZE_SIGNED err = 0;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    scaffold_assert( FALSE == v->scalar );
 
@@ -206,7 +206,7 @@ void vector_add_scalar( struct VECTOR* v, int32_t value, BOOL allow_dupe ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    vector_lock( v, TRUE );
    ok = TRUE;
@@ -257,7 +257,7 @@ void vector_set( struct VECTOR* v, SCAFFOLD_SIZE index, void* data, BOOL force )
 
    scaffold_check_null( v );
 
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -300,7 +300,7 @@ void vector_set_scalar( struct VECTOR* v, SCAFFOLD_SIZE index, int32_t value ) {
    BOOL ok = FALSE;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    vector_lock( v, TRUE );
    ok = TRUE;
@@ -337,7 +337,7 @@ void* vector_get( const struct VECTOR* v, SCAFFOLD_SIZE index ) {
    if( NULL == v ) {
       goto cleanup; /* Quietly. */
    }
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( FALSE == v->scalar );
 
    if( v->count <= index ) {
@@ -355,7 +355,7 @@ int32_t vector_get_scalar( const struct VECTOR* v, SCAFFOLD_SIZE index ) {
    int32_t retval = -1;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( TRUE == v->scalar );
 
    scaffold_check_bounds( index, v->count );
@@ -372,7 +372,7 @@ int32_t vector_get_scalar_value( const struct VECTOR* v, int32_t value ) {
    SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( TRUE == v->scalar );
 
    if( v->count <= 0 ) {
@@ -400,7 +400,7 @@ SCAFFOLD_SIZE vector_remove_cb( struct VECTOR* v, vector_delete_cb callback, voi
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -445,7 +445,7 @@ void vector_remove( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    /* FIXME: Delete dynamic arrays and reset when empty. */
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( FALSE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -475,7 +475,7 @@ void vector_remove_scalar( struct VECTOR* v, SCAFFOLD_SIZE index ) {
    SCAFFOLD_SIZE i;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( TRUE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -503,7 +503,7 @@ SCAFFOLD_SIZE vector_remove_scalar_value( struct VECTOR* v, int32_t value ) {
 
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    scaffold_assert( TRUE == v->scalar );
 
    vector_lock( v, TRUE );
@@ -564,7 +564,7 @@ void* vector_iterate( struct VECTOR* v, vector_search_cb callback, void* arg ) {
    void* cb_return = NULL;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    /* TODO: This can work for scalars too, can't it? */
    scaffold_assert( FALSE == v->scalar );
 
@@ -586,7 +586,7 @@ void* vector_iterate_nolock(
    SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    /* TODO: This can work for scalars too, can't it? */
    scaffold_assert( FALSE == v->scalar );
 
@@ -625,7 +625,7 @@ void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg )
    struct CONTAINER_IDX idx = { 0 };
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
    /* TODO: This can work for scalars too, can't it? */
    scaffold_assert( FALSE == v->scalar );
 
@@ -659,7 +659,7 @@ struct VECTOR* vector_iterate_v(
    SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    vector_lock( v, TRUE );
    ok = TRUE;
@@ -706,7 +706,7 @@ void vector_sort_cb( struct VECTOR* v, vector_sorter_cb callback ) {
    SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
-   scaffold_assert( VECTOR_SENTINAL == v->sentinal );
+   scaffold_assert( vector_is_valid( v ) );
 
    if( 2 > vector_count( v ) ) {
       /* Not enough to sort! */
@@ -744,4 +744,8 @@ cleanup:
    }
    scaffold_assert( 0 == v->lock_count );
    return;
+}
+
+BOOL vector_is_valid( const struct VECTOR* v ) {
+   return NULL != v && VECTOR_SENTINAL == v->sentinal;
 }

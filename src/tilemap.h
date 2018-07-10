@@ -137,6 +137,7 @@ struct TILEMAP {
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
    SCAFFOLD_ERROR scaffold_error;
+   struct CHANNEL* channel;
 #ifdef DEBUG
    uint16_t sentinal;
 #endif /* DEBUG */
@@ -169,10 +170,10 @@ struct TILEMAP {
     scaffold_check_null( ts ); \
     tilemap_spawner_init( ts, t, type );
 
-#define tilemap_new( t, local_images, server ) \
+#define tilemap_new( t, local_images, server, channel ) \
     t = mem_alloc( 1, struct TILEMAP ); \
     scaffold_check_null( t ); \
-    tilemap_init( t, local_images, server );
+    tilemap_init( t, local_images, server, channel );
 
 #define tilemap_layer_new( t ) \
     t = mem_alloc( 1, struct TILEMAP_LAYER ); \
@@ -198,7 +199,8 @@ struct TILEMAP {
     mem_free( position );
 
 void tilemap_init(
-   struct TILEMAP* t, BOOL local_images, struct CLIENT* server
+   struct TILEMAP* t, BOOL local_images, struct CLIENT* server,
+   struct CHANNEL* l
 );
 void tilemap_free( struct TILEMAP* t );
 void tilemap_spawner_init(
@@ -264,6 +266,7 @@ void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* 
 struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
    struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
 );
+struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );
 
 #ifdef TILEMAP_C
 

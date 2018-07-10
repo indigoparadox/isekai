@@ -115,7 +115,7 @@ static void* mode_isometric_tilemap_draw_layer_cb(
    }
 
 cleanup:
-   return;
+   return NULL;
 }
 
 static void mode_isometric_tilemap_draw_tile(
@@ -127,7 +127,7 @@ static void mode_isometric_tilemap_draw_tile(
    GRAPHICS_RECT tile_screen_rect;
    struct CLIENT* local_client = NULL;
    struct TILEMAP* t = NULL;
-   const struct MOBILE* o = NULL;
+   //const struct MOBILE* o = NULL;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
@@ -137,7 +137,7 @@ static void mode_isometric_tilemap_draw_tile(
 
    local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = local_client->active_tilemap;
-   o = local_client->puppet;
+   //o = local_client->puppet;
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
@@ -391,7 +391,7 @@ void mode_isometric_draw(
    struct CHANNEL* l
 ) {
    mode_isometric_tilemap_draw_tilemap( &(c->local_window) );
-   vector_iterate( &(l->mobiles), mode_isometric_draw_mobile_cb, &(c->local_window) );
+   vector_iterate( l->mobiles, mode_isometric_draw_mobile_cb, &(c->local_window) );
 }
 
 void mode_isometric_update(
@@ -558,7 +558,7 @@ void mode_isometric_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPU
 void mode_isometric_free( struct CLIENT* c ) {
    if(
       TRUE == client_is_local( c ) &&
-      HASHMAP_SENTINAL == c->sprites.sentinal
+      hashmap_is_valid( &(c->sprites) )
    ) {
       /* FIXME: This causes crash on re-login. */
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );

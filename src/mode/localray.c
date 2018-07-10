@@ -296,7 +296,7 @@ cleanup:
 static void* mode_pov_mob_sort_dist_cb(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
-   struct MOBILE* m = (struct MOBILE*)iter;
+   //struct MOBILE* m = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct TILEMAP* t = NULL;
    struct CLIENT* c = NULL;
@@ -695,8 +695,8 @@ void mode_pov_draw(
 #endif /* RAYCAST_CACHE */
 
    /* Begin drawing sprites. */
-   vector_iterate( &(l->mobiles), mode_pov_mob_calc_dist_cb, &(c->local_window) );
-   vector_iterate( &(l->mobiles), mode_pov_draw_mobile_cb, &(c->local_window) );
+   vector_iterate( l->mobiles, mode_pov_mob_calc_dist_cb, &(c->local_window) );
+   vector_iterate( l->mobiles, mode_pov_draw_mobile_cb, &(c->local_window) );
 
 cleanup:
    return;
@@ -866,7 +866,7 @@ void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p )
 void mode_pov_free( struct CLIENT* c ) {
    if(
       TRUE == client_is_local( c ) &&
-      HASHMAP_SENTINAL == c->sprites.sentinal
+      hashmap_is_valid( &(c->sprites) )
    ) {
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }

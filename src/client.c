@@ -643,7 +643,7 @@ BOOL client_poll_ui(
    BOOL retval = FALSE;
 
    if( NULL != c && NULL != c->puppet && NULL != c->puppet->channel ) {
-      t = &(c->puppet->channel->tilemap);
+      t = c->puppet->channel->tilemap;
    }
 
 #ifdef DEBUG_VM

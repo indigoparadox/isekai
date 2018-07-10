@@ -195,7 +195,7 @@ static void proto_channel_send(
    }
 
    l_clients =
-      hashmap_iterate_v( &(l->clients), callback_search_clients_r, skip_nick );
+      hashmap_iterate_v( l->clients, callback_search_clients_r, skip_nick );
    scaffold_check_null( l_clients );
 
    vector_iterate( l_clients, proto_send_cb, buffer );
@@ -443,7 +443,7 @@ void proto_send_tile_cache_channel(
    struct CHANNEL* l, struct TILEMAP_ITEM_CACHE* cache
 ) {
    hashmap_iterate(
-      &(l->clients),
+      l->clients,
       proto_send_tile_cache_channel_cb,
       cache
    );
@@ -820,7 +820,7 @@ static void irc_server_join(
    );
 
    vector_new( cat_names );
-   hashmap_iterate( &(l->clients), callback_concat_clients, cat_names );
+   hashmap_iterate( l->clients, callback_concat_clients, cat_names );
    names = bfromcstr( "" );
    scaffold_check_null( names );
    vector_iterate( cat_names, callback_concat_strings, names );
@@ -923,13 +923,13 @@ static void irc_server_who(
    who.c = c;
    who.l = l;
    who.s = s;
-   hashmap_iterate( &(l->clients), irc_callback_reply_who, &who );
+   hashmap_iterate( l->clients, irc_callback_reply_who, &who );
    proto_printf(
       c, ":server 315 %b :End of /WHO list.",
       c->nick, l->name
    );
 
-   hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
+   hashmap_iterate( l->clients, callback_send_mobs_to_channel, l );
 
 cleanup:
    return;
@@ -1000,11 +1000,11 @@ static void irc_server_gameupdate(
    update.y = bgtoi( (bstring)vector_get( args, 5 ) );
    target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
-   update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
+   update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
    scaffold_check_null( update.o );
 
    update.target =
-      (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
+      (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
    /* No NULL check. If it's NULL, it's NULL. */
 
    if( c == update.o->owner ) {
@@ -1068,7 +1068,7 @@ static void irc_client_gu(
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
 
-   update.o = (struct MOBILE*)vector_get( &(update.l->mobiles), serial );
+   update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
    scaffold_check_null( update.o );
 
    update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
@@ -1077,7 +1077,7 @@ static void irc_client_gu(
    target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
    update.target =
-      (struct MOBILE*)vector_get( &(update.l->mobiles), target_serial );
+      (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
    /* No NULL check. If it's NULL, it's NULL. */
 
    /* The client always trusts the server. */
@@ -1228,7 +1228,7 @@ static void irc_client_item_cache_start(
       );
    }
 
-   cache = tilemap_get_item_cache( &(l->tilemap), x, y, TRUE );
+   cache = tilemap_get_item_cache( l->tilemap, x, y, TRUE );
 
    /* Empty the cache in preparation for a refresh. */
    vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );

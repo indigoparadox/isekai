@@ -33,8 +33,17 @@ static void channel_free_final( const struct REF *ref ) {
    #endif /* USE_VM */
 
    /* These need to be freed first! */
-   scaffold_assert( 0 == hashmap_count( &(l->clients) ) );
-   scaffold_assert( 0 == vector_count( &(l->mobiles) ) );
+   if( hashmap_is_valid( l->clients ) ) {
+      scaffold_assert( 0 == hashmap_count( l->clients ) );
+      hashmap_free( &(l->clients) );
+   }
+
+   if( vector_is_valid( l->mobiles ) ) {
+      vector_remove_cb( l->mobiles, callback_free_mobiles, NULL );
+      scaffold_assert( 0 == vector_count( l->mobiles ) );
+      //vector_cleanup( l->mobiles );
+      vector_free( &(l->mobiles) );
+   }
 
    bdestroy( l->name );
    bdestroy( l->topic );
@@ -44,7 +53,8 @@ static void channel_free_final( const struct REF *ref ) {
       l->error = NULL;
    }
 
-   tilemap_free( &(l->tilemap) );
+   tilemap_free( l->tilemap );
+   l->tilemap = NULL;
 
    /* Free channel. */
    mem_free( l );
@@ -64,8 +74,8 @@ void channel_init(
    struct CLIENT* server
 ) {
    ref_init( &(l->refcount), channel_free_final );
-   hashmap_init( &(l->clients) );
-   vector_init( &(l->mobiles ) );
+   hashmap_new( l->clients );
+   vector_new( l->mobiles );
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
    l->sentinal = CHANNEL_SENTINAL;
@@ -73,7 +83,7 @@ void channel_init(
    l->error = NULL;
    scaffold_check_null( l->name );
    scaffold_check_null( l->topic );
-   tilemap_init( &(l->tilemap), local_images, server );
+   tilemap_new( l->tilemap, local_images, server, l );
 #ifdef USE_VM
    vm_caddy_new( l->vm_caddy );
 #endif /* USE_VM */
@@ -95,7 +105,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    if( TRUE == spawn ) {
       scaffold_assert_server();
-      t = &(l->tilemap);
+      t = l->tilemap;
 
       /* Make a list of player-capable spawns and pick one at pseudo-random. */
       player_spawns = vector_iterate_v(
@@ -119,7 +129,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       );
       mobile_load_local( o );
 
-      rng_gen_serial( o, &(l->mobiles), SERIAL_MIN, SERIAL_MAX );
+      rng_gen_serial( o, l->mobiles, SERIAL_MIN, SERIAL_MAX );
 
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
@@ -139,7 +149,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    client_add_channel( c, l  );
 
-   if( hashmap_put( &(l->clients), c->nick, c, FALSE ) ) {
+   if( hashmap_put( l->clients, c->nick, c, FALSE ) ) {
       scaffold_print_error( &module, "Attempted to double-add client.\n" );
       client_free( c );
    }
@@ -154,29 +164,29 @@ cleanup:
 
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    struct CLIENT* c_test = NULL;
-   c_test = hashmap_get( &(l->clients), c->nick );
-   if( NULL != c_test && TRUE == hashmap_remove( &(l->clients), c->nick ) ) {
+   c_test = hashmap_get( l->clients, c->nick );
+   if( NULL != c_test && TRUE == hashmap_remove( l->clients, c->nick ) ) {
       if( NULL != c->puppet ) {
          channel_remove_mobile( l, c->puppet->serial );
       }
 
       scaffold_print_debug(
          &module, "Removed 1 clients from channel %s. %d remaining.\n",
-         bdata( l->name ), hashmap_count( &(l->clients) )
+         bdata( l->name ), hashmap_count( l->clients )
       );
    }
 }
 
 struct CLIENT* channel_get_client_by_name(
-   struct CHANNEL* l, const bstring nick
+   const struct CHANNEL* l, const bstring nick
 ) {
-   return hashmap_get( &(l->clients), nick );
+   return hashmap_get( l->clients, nick );
 }
 
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
    assert( 0 != o->serial );
-   vector_set( &(l->mobiles), o->serial, o, TRUE );
+   vector_set( l->mobiles, o->serial, o, TRUE );
 }
 
 void channel_set_mobile(
@@ -201,7 +211,7 @@ void channel_set_mobile(
 
    scaffold_assert( 0 != serial );
 
-   o = vector_get( &(l->mobiles), serial );
+   o = vector_get( l->mobiles, serial );
    if( NULL == o ) {
       mobile_new( o, mob_id, x, y );
       o->serial = serial;
@@ -211,7 +221,7 @@ void channel_set_mobile(
       );
       scaffold_assert( NULL != o->def_filename );
       mobile_set_channel( o, l );
-      vector_set( &(l->mobiles), o->serial, o, TRUE );
+      vector_set( l->mobiles, o->serial, o, TRUE );
 #ifdef ENABLE_LOCAL_CLIENT
       if( client_is_local( l->client_or_server ) ) {
          client_request_file(
@@ -230,7 +240,7 @@ void channel_set_mobile(
       o->prev_y = y;
    }
 
-   scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
+   scaffold_assert( 0 < hashmap_count( l->clients ) );
    mobile_c = channel_get_client_by_name( l, mob_nick );
    if( NULL != mobile_c && 0 == bstrcmp( mobile_c->nick, mob_nick ) ) {
       client_set_puppet( mobile_c, o );
@@ -240,14 +250,14 @@ void channel_set_mobile(
    scaffold_assert( NULL != o->display_name );
    scaffold_check_nonzero( bstr_res );
 
-   tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
+   tilemap_set_redraw_state( l->tilemap, TILEMAP_REDRAW_ALL );
 
 cleanup:
    return;
 }
 
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial ) {
-   vector_remove( &(l->mobiles), serial );
+   vector_remove( l->mobiles, serial );
 }
 
 void channel_load_tilemap( struct CHANNEL* l ) {
@@ -283,12 +293,12 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
 
    datafile_parse_ezxml_string(
-      &(l->tilemap), mapdata_buffer, mapdata_size, FALSE,
+      l->tilemap, mapdata_buffer, mapdata_size, FALSE,
       DATAFILE_TYPE_TILEMAP, mapdata_path
    );
 
    vector_iterate(
-      &(l->tilemap.spawners), callback_load_spawner_catalogs,
+      &(l->tilemap->spawners), callback_load_spawner_catalogs,
       l->client_or_server
    );
 #endif /* USE_EZXML */
@@ -332,11 +342,11 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if( 0 >= hashmap_count( &(l->clients) ) ) {
+   if( 0 >= hashmap_count( l->clients ) ) {
       goto cleanup;
    }
 
-   if( 0 >= vector_count( &(l->mobiles) ) ) {
+   if( 0 >= vector_count( l->mobiles ) ) {
       goto cleanup;
    }
 
@@ -386,10 +396,10 @@ bstring channel_get_name( const struct CHANNEL* l ) {
    return l->name;
 }
 
-struct TILEMAP* channel_get_tilemap( struct CHANNEL* l ) {
+struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l ) {
    if( NULL == l ) {
       return NULL;
    }
    /* The tilemap is INSIDE the channel struct, so we can't declare l const. */
-   return &(l->tilemap);
+   return l->tilemap;
 }

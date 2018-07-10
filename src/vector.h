@@ -29,14 +29,10 @@ typedef enum VECTOR_ERR {
 */
 
 #define VECTOR_ERR_FULL -1
-#define VECTOR_SENTINAL 12121
 
 typedef void* (*vector_search_cb)( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg );
 typedef BOOL (*vector_delete_cb)( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg );
 typedef VECTOR_SORT_ORDER (*vector_sorter_cb)( void* a, void* b );
-
-#define vector_ready( v ) \
-   (VECTOR_SENTINAL == (v)->sentinal)
 
 #define vector_new( v ) \
    v = mem_alloc( 1, struct VECTOR ); \
@@ -80,8 +76,10 @@ struct VECTOR* vector_iterate_v(
    struct VECTOR* v, vector_search_cb callback, void* parent, void* arg
 );
 void vector_sort_cb( struct VECTOR* v, vector_sorter_cb );
+BOOL vector_is_valid( const struct VECTOR* v );
 
 #ifdef VECTOR_C
+#define VECTOR_SENTINAL 12121
 SCAFFOLD_MODULE( "vector.c" );
 #endif /* VECTOR_C */
 
