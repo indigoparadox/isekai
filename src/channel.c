@@ -401,6 +401,5 @@ struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l ) {
    if( NULL == l ) {
       return NULL;
    }
-   /* The tilemap is INSIDE the channel struct, so we can't declare l const. */
    return l->tilemap;
 }
