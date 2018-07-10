@@ -447,7 +447,7 @@ static BOOL mode_pov_draw_floor(
          continue;
       }
 
-      g_tileset = hashmap_iterate(
+      g_tileset = (GRAPHICS*)hashmap_iterate(
          &(set->images),
          callback_search_tileset_img_gid,
          c

@@ -86,11 +86,11 @@ static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" )
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
-#ifndef DISABLE_MODE_ISO
-static struct tagbstring str_default_channel = bsStatic( "#isotest" );
-#else
+//#ifndef DISABLE_MODE_ISO
+//static struct tagbstring str_default_channel = bsStatic( "#isotest" );
+//#else
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
-#endif /* !DISABLE_MODE_ISO */
+//#endif /* !DISABLE_MODE_ISO */
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO

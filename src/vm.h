@@ -67,7 +67,7 @@ void vm_caddy_start( struct VM_CADDY* vmc );
 void vm_caddy_do_event( struct VM_CADDY* vmc, const bstring event );
 void vm_caddy_end( struct VM_CADDY* vmc );
 void vm_caddy_free( struct VM_CADDY* vmc );
-BOOL vm_caddy_has_event( const struct VM_CADDY* vmc, const bstring event );
+BOOL vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event );
 BOOL vm_caddy_put(
    struct VM_CADDY* vmc, VM_MEMBER type, const bstring key, const bstring val
 );

@@ -931,6 +931,7 @@ BOOL callback_free_empty_channels(
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    if( 0 >= hashmap_count( l->clients ) ) {
+      channel_free( l );
       return TRUE;
    }
 
@@ -944,9 +945,9 @@ BOOL callback_free_mobiles(
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
-   if( NULL == 0 ) {
+   /*if( NULL == 0 ) {
       return TRUE;
-   }
+   }*/
    if( NULL == arg || *serial == o->serial ) {
       mobile_free( o );
       return TRUE;

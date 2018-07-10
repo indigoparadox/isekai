@@ -995,7 +995,7 @@ void hashmap_free( struct HASHMAP** m ) {
 }
 
 /* Return the length of the hashmap */
-SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m ) {
+SCAFFOLD_SIZE_SIGNED hashmap_count( const struct HASHMAP* m ) {
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
    return m->size;

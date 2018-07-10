@@ -171,8 +171,9 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
       }
 
       scaffold_print_debug(
-         &module, "Removed 1 clients from channel %s. %d remaining.\n",
-         bdata( l->name ), hashmap_count( l->clients )
+         &module,
+         "Removed 1 clients from channel %s. %d clients, %d refs remaining.\n",
+         bdata( l->name ), hashmap_count( l->clients ), l->refcount.count
       );
    }
 }

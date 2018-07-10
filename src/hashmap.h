@@ -146,7 +146,7 @@ void hashmap_free( struct HASHMAP** m );
 /*
  * Get the current size of a hashmap
  */
-SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m);
+SCAFFOLD_SIZE_SIGNED hashmap_count( const struct HASHMAP* m);
 /* int hashmap_active_count( struct HASHMAP* m ); */
 
 void hashmap_lock( struct HASHMAP* m, BOOL lock );

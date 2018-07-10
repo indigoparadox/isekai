@@ -90,7 +90,9 @@ void mobile_init(
    o->vm_tick_prev = 0;
 #endif /* USE_TURNS */
 
+#ifdef USE_VM
    vm_caddy_new( o->vm_caddy );
+#endif /* USE_VM */
 
    vector_init( &(o->sprite_defs) );
    hashmap_init( &(o->ani_defs) );
