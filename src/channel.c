@@ -167,7 +167,9 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    }
 }
 
-struct CLIENT* channel_get_client_by_name( struct CHANNEL* l, bstring nick ) {
+struct CLIENT* channel_get_client_by_name(
+   struct CHANNEL* l, const bstring nick
+) {
    return hashmap_get( &(l->clients), nick );
 }
 
@@ -300,7 +302,7 @@ cleanup:
    return;
 }
 
-BOOL channel_has_error( struct CHANNEL* l ) {
+BOOL channel_has_error( const struct CHANNEL* l ) {
    if( NULL != l && NULL != l->error ) {
       return TRUE;
    }
@@ -377,7 +379,7 @@ cleanup:
    return retval;
 }
 
-bstring channel_get_name( struct CHANNEL* l ) {
+bstring channel_get_name( const struct CHANNEL* l ) {
    if( NULL == l ) {
       return NULL;
    }
@@ -388,5 +390,6 @@ struct TILEMAP* channel_get_tilemap( struct CHANNEL* l ) {
    if( NULL == l ) {
       return NULL;
    }
+   /* The tilemap is INSIDE the channel struct, so we can't declare l const. */
    return &(l->tilemap);
 }

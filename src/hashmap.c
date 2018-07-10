@@ -161,7 +161,9 @@ cleanup:
 /*
  * Hashing function for a string
  */
-static uint32_t hashmap_hash_int( struct HASHMAP* m, const bstring keystring ) {
+static uint32_t hashmap_hash_int(
+   const struct HASHMAP* m, const bstring keystring
+) {
    uint32_t key = 0;
 
    scaffold_check_null_warning( m );
@@ -429,22 +431,21 @@ short hashmap_put_nolock(
 /*
  * Get your pointer out of the hashmap with a key
  */
-static void* hashmap_get_internal( struct HASHMAP* m, const bstring key, BOOL lock ) {
+static void* hashmap_get_internal(
+   const struct HASHMAP* m, const bstring key
+) {
    int curr;
    int i;
    int in_use;
    void* element_out = NULL;
-   BOOL ok = FALSE;
+   //BOOL ok = FALSE;
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
+   /*
    scaffold_check_zero_against_warning(
       m->last_error, hashmap_count( m ), "Hashmap empty during get." );
-
-   if( FALSE != lock ) {
-      hashmap_lock( m, TRUE );
-   }
-   ok = TRUE;
+   */
 
    /* Find data location */
    curr = hashmap_hash_int( m, key );
@@ -466,14 +467,21 @@ static void* hashmap_get_internal( struct HASHMAP* m, const bstring key, BOOL lo
    }
 
 cleanup:
-   if( FALSE != lock && FALSE != ok ) {
+   /*if( FALSE != lock && FALSE != ok ) {
       hashmap_lock( m, FALSE );
-   }
+   }*/
    return element_out;
 }
 
 void* hashmap_get( struct HASHMAP* m, const bstring key ) {
-   return hashmap_get_internal( m, key, TRUE );
+   BOOL ok = TRUE;
+   void* out = NULL;
+
+   hashmap_lock( m, TRUE );
+   out = hashmap_get_internal( m, key );
+   hashmap_lock( m, FALSE );
+
+   return out;
 }
 
 void* hashmap_get_c( struct HASHMAP* m, const char* key_c ) {
@@ -483,15 +491,17 @@ void* hashmap_get_c( struct HASHMAP* m, const char* key_c ) {
    key = bfromcstr( key_c );
    scaffold_check_null( key );
 
-   val = hashmap_get_internal( m, key, TRUE );
+   hashmap_lock( m, TRUE );
+   val = hashmap_get_internal( m, key );
+   hashmap_lock( m, FALSE );
 
 cleanup:
    bdestroy( key );
    return val;
 }
 
-void* hashmap_get_nolock( struct HASHMAP* m, const bstring key ) {
-   return hashmap_get_internal( m, key, FALSE );
+void* hashmap_get_nolock( const struct HASHMAP* m, const bstring key ) {
+   return hashmap_get_internal( m, key );
 }
 
 void* hashmap_get_first( struct HASHMAP* m ) {

@@ -70,14 +70,10 @@ void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial );
 void channel_load_tilemap( struct CHANNEL* l );
 void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg );
 void* channel_backlog_iter( struct CHANNEL* l, vector_search_cb cb, void* arg );
-void channel_vm_start( struct CHANNEL* l, bstring code );
-void channel_vm_step( struct CHANNEL* l );
-void channel_vm_end( struct CHANNEL* l );
-BOOL channel_vm_can_step( struct CHANNEL* l );
-BOOL channel_has_error( struct CHANNEL* l );
+BOOL channel_has_error( const struct CHANNEL* l );
 void channel_set_error( struct CHANNEL* l, const char* error );
 BOOL channel_is_loaded( struct CHANNEL* l );
-bstring channel_get_name( struct CHANNEL* l );
+bstring channel_get_name( const struct CHANNEL* l );
 struct TILEMAP* channel_get_tilemap( struct CHANNEL* l );
 
 #ifdef CHANNEL_C

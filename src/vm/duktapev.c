@@ -12,9 +12,11 @@ SCAFFOLD_MODULE( "duktapev.c" );
 #include "../proto.h"
 #include "../channel.h"
 
-#define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
-
 #include "../duktape/duktape.h"
+
+duk_bool_t duktape_use_exec_timeout_check( void* udata );
+
+#define DUK_USE_EXEC_TIMEOUT_CHECK duktape_use_exec_timeout_check
 
 extern struct SERVER* main_server;
 

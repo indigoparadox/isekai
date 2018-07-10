@@ -493,7 +493,7 @@ cleanup:
  * \return A MOBILE_UPDATE indicating action resulting.
  */
 static MOBILE_UPDATE mobile_calculate_mobile_result(
-   struct CHANNEL* l, MOBILE_UPDATE update_in,
+   const struct CHANNEL* l, MOBILE_UPDATE update_in,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 ) {
    struct TILEMAP_POSITION pos;

@@ -105,7 +105,7 @@ cleanup:
    return;
 }
 
-BOOL vm_caddy_has_event( struct VM_CADDY* vmc, bstring event ) {
+BOOL vm_caddy_has_event( const struct VM_CADDY* vmc, const bstring event ) {
    BOOL retval = FALSE;
 
    if(
@@ -120,7 +120,7 @@ BOOL vm_caddy_has_event( struct VM_CADDY* vmc, bstring event ) {
    return retval;
 }
 
-void vm_caddy_do_event( struct VM_CADDY* vmc, bstring event ) {
+void vm_caddy_do_event( struct VM_CADDY* vmc, const bstring event ) {
    bstring tick_script = NULL;
 
    if( NULL == vmc->vm ) {
@@ -149,10 +149,9 @@ cleanup:
 }
 
 BOOL vm_caddy_put(
-   struct VM_CADDY* vmc, VM_MEMBER type, bstring key, bstring val
+   struct VM_CADDY* vmc, VM_MEMBER type, const bstring key, const bstring val
 ) {
    struct HASHMAP* dest = NULL;
-   bstring b_type = NULL;
    BOOL retval = FALSE;
 
    scaffold_assert( NULL != vmc );
@@ -160,11 +159,9 @@ BOOL vm_caddy_put(
    switch( type ) {
    case VM_MEMBER_GLOBAL:
       dest = &(vmc->vm_globals);
-      b_type = &(str_vm_global);
       break;
    case VM_MEMBER_SCRIPT:
       dest = &(vmc->vm_scripts);
-      b_type = &(str_vm_script);
       break;
    }
 
@@ -174,21 +171,18 @@ BOOL vm_caddy_put(
       dest, key, bstrcpy( val ), FALSE
    ) ) {
       scaffold_print_error( &module,
-         "Attempted to double-put %b \"%b\"\n",
-         b_type, key );
+         "Attempted to double-put script element \"%b\"\n", key );
       retval = FALSE;
    }
 
    scaffold_print_debug(
-      &module, "Stored %b \"%b\"\n",
-      b_type, key
-   );
+      &module, "Stored script element \"%b\"\n", key );
 
 /* cleanup: */
    return retval;
 }
 
-SCAFFOLD_SIZE vm_caddy_scripts_count( struct VM_CADDY* vmc ) {
+SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc ) {
    SCAFFOLD_SIZE count = 0;
    scaffold_check_null( vmc );
    count = hashmap_count( &(vmc->vm_scripts) );
