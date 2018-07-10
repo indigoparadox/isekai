@@ -507,7 +507,7 @@ void mode_topdown_draw(
    struct CHANNEL* l
 ) {
    mode_topdown_tilemap_draw_tilemap( &(c->local_window) );
-   vector_iterate( &(l->mobiles), mode_topdown_draw_mobile_cb, &(c->local_window) );
+   vector_iterate( l->mobiles, mode_topdown_draw_mobile_cb, &(c->local_window) );
 }
 
 void mode_topdown_update(
@@ -551,7 +551,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       scaffold_check_null( update.l );
       l = puppet->channel;
       scaffold_check_null_msg( l, "No channel loaded." );
-      t = &(l->tilemap);
+      t = l->tilemap;
       scaffold_check_null_msg( t, "No tilemap loaded." );
    }
 
@@ -673,7 +673,7 @@ void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT*
 void mode_topdown_free( struct CLIENT* c ) {
    if(
       TRUE == client_is_local( c ) &&
-      HASHMAP_SENTINAL == c->sprites.sentinal
+      hashmap_is_valid( &(c->sprites ) )
    ) {
       /* FIXME: This causes crash on re-login. */
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );

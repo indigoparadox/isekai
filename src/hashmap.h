@@ -41,11 +41,16 @@ struct HASHMAP {
 #endif /* USE_ITERATOR_CACHE */
 };
 
-#define HASHMAP_SENTINAL 12345
 #define HASHMAP_FULL -2  /* Hashmap is full */
 
 #define hashmap_ready( m ) \
    (HASHMAP_SENTINAL == (m)->sentinal)
+
+
+#define hashmap_new( m ) \
+   m = mem_alloc( 1, struct HASHMAP ); \
+   scaffold_check_null( m ); \
+   hashmap_init( m );
 
 #if 0
 #define MAP_MISSING -3  /* No such element */
@@ -136,6 +141,7 @@ void* hashmap_pop( struct HASHMAP* m, BOOL do_remove );
  * Free the hashmap
  */
 void hashmap_cleanup( struct HASHMAP* m );
+void hashmap_free( struct HASHMAP** m );
 
 /*
  * Get the current size of a hashmap
@@ -145,7 +151,10 @@ SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m);
 
 void hashmap_lock( struct HASHMAP* m, BOOL lock );
 
+BOOL hashmap_is_valid( const struct HASHMAP* m);
+
 #ifdef HASHMAP_C
+#define HASHMAP_SENTINAL 12345
 SCAFFOLD_MODULE( "hashmap.c" );
 #endif /* HASHMAP_C */
 

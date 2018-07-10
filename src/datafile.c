@@ -53,11 +53,11 @@ void datafile_handle_stream(
       }
 
 #ifdef USE_EZXML
-      scaffold_assert( TILEMAP_SENTINAL != l->tilemap.sentinal );
+      scaffold_assert( TILEMAP_SENTINAL != l->tilemap->sentinal );
       c->tilesets_loaded += datafile_parse_tilemap_ezxml_t(
-         &(l->tilemap), xml_data, filename, TRUE
+         l->tilemap, xml_data, filename, TRUE
       );
-      scaffold_assert( TILEMAP_SENTINAL == l->tilemap.sentinal );
+      scaffold_assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
 
       /* Download missing tilesets. */
       hashmap_iterate( &(c->tilesets), callback_download_tileset, c );
@@ -89,7 +89,7 @@ void datafile_handle_stream(
       scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
 
       set = vector_iterate(
-         &(l->tilemap.tilesets), callback_search_tilesets_img_name, filename
+         &(l->tilemap->tilesets), callback_search_tilesets_img_name, filename
       );
       scaffold_check_null( set );
 
@@ -108,7 +108,7 @@ void datafile_handle_stream(
 #ifdef USE_CHUNKS
       proto_client_request_mobs( c, l );
 #endif /* USE_CHUNKS */
-      tilemap_set_redraw_state( &(l->tilemap), TILEMAP_REDRAW_ALL );
+      tilemap_set_redraw_state( l->tilemap, TILEMAP_REDRAW_ALL );
       break;
 
    case DATAFILE_TYPE_MOBILE:

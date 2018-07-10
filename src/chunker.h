@@ -76,7 +76,7 @@ struct CHUNKER {
    SCAFFOLD_SIZE tx_chunk_length;
    BOOL force_finish;
    DATAFILE_TYPE type;
-   struct VECTOR tracks;
+   struct VECTOR* tracks;
    bstring filecache_path;
    bstring filename;
    bstring serverpath;

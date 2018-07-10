@@ -215,7 +215,7 @@ static BOOL loop_game() {
 
    } else if( NULL == main_client->active_tilemap ) {
       scaffold_print_debug( &module, "Unsetting main client...\n" );
-      client_set_active_t( main_client, &(l->tilemap) );
+      client_set_active_t( main_client, l->tilemap );
    }
 
    /* Client drawing stuff after this. */

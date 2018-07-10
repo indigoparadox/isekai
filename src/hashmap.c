@@ -273,13 +273,6 @@ static void* hashvector_search_cb(
    return adp->callback( &idx_wrapper, m, void_iter, adp->arg );
 }
 
-
-static void* hashvector_remove_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-
-}
-
 #endif /* USE_ITERATOR_CACHE */
 
 void hashmap_rehash( struct HASHMAP* m );
@@ -474,7 +467,6 @@ cleanup:
 }
 
 void* hashmap_get( struct HASHMAP* m, const bstring key ) {
-   BOOL ok = TRUE;
    void* out = NULL;
 
    hashmap_lock( m, TRUE );
@@ -994,6 +986,14 @@ cleanup:
    return;
 }
 
+void hashmap_free( struct HASHMAP** m ) {
+   if( NULL != *m ) {
+      hashmap_cleanup( *m );
+      mem_free( *m );
+      *m = NULL;
+   }
+}
+
 /* Return the length of the hashmap */
 SCAFFOLD_SIZE_SIGNED hashmap_count( struct HASHMAP* m ) {
    scaffold_check_null( m );
@@ -1039,4 +1039,8 @@ void hashmap_lock( struct HASHMAP* m, BOOL lock ) {
       m->lock_count--;
    }
    #endif /* USE_THREADS */
+}
+
+BOOL hashmap_is_valid( const struct HASHMAP* m ) {
+   return NULL != m && HASHMAP_SENTINAL == m->sentinal;
 }

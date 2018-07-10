@@ -22,9 +22,11 @@ static void chunker_destroy( const struct REF* ref ) {
       &module, "Destroying chunker for: %s\n", bdata( h->filename )
    );
 
-   /* Cleanup tracks. */
-   vector_remove_cb( &(h->tracks), callback_free_generic, NULL );
-   vector_cleanup( &(h->tracks) );
+   if( NULL != h->tracks ) {
+      /* Cleanup tracks. */
+      vector_remove_cb( h->tracks, callback_free_generic, NULL );
+      vector_cleanup( h->tracks );
+   }
 
    if( NULL != h->raw_ptr ) {
       mem_free( h->raw_ptr );
@@ -80,8 +82,8 @@ static void chunker_chunk_setup_internal(
    heatshrink_encoder_reset( &(h->encoder) );
 #endif /* HEATSHRINK_DYNAMIC_ALLOC  */
 
-   if( VECTOR_SENTINAL != h->tracks.sentinal ) {
-      vector_init( &(h->tracks) );
+   if( NULL == h->tracks ) {
+      vector_new( h->tracks );
    }
 
    h->force_finish = FALSE;
@@ -103,6 +105,9 @@ static void chunker_chunk_setup_internal(
    h->raw_ptr = NULL;
 
    h->last_percent = 0;
+
+cleanup:
+   return;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -254,8 +259,8 @@ void chunker_unchunk_start(
    }
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
-   if( VECTOR_SENTINAL != h->tracks.sentinal ) {
-      vector_init( &(h->tracks) );
+   if( NULL == h->tracks ) {
+      vector_new( h->tracks );
    }
 
    /* TODO: Shouldn't need to check for NULL here since chunker should be     *
@@ -335,7 +340,7 @@ void chunker_unchunk_pass(
       );
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
       h->raw_length = src_len;
-      h->raw_ptr = (BYTE*)calloc( src_len, sizeof( BYTE ) );
+      h->raw_ptr = (BYTE*)mem_alloc( src_len, BYTE );
    } else {
 #if HEATSHRINK_DYNAMIC_ALLOC
       scaffold_assert( NULL != h->decoder );
@@ -345,7 +350,7 @@ void chunker_unchunk_pass(
       scaffold_assert( src_len == h->raw_length );
    }
 
-   mid_buffer = (uint8_t*)calloc( mid_buffer_length, sizeof( uint8_t ) );
+   mid_buffer = (uint8_t*)mem_alloc( mid_buffer_length, uint8_t );
    scaffold_check_null( mid_buffer );
 
    h->raw_position = src_chunk_start;
@@ -359,10 +364,10 @@ void chunker_unchunk_pass(
    heatshrink_decoder_reset( chunker_get_decoder( h ) );
 
    /* Add a tracker to the list. */
-   track = (CHUNKER_TRACK*)calloc( 1, sizeof( CHUNKER_TRACK ) );
+   track = (CHUNKER_TRACK*)mem_alloc( 1, CHUNKER_TRACK );
    track->start = src_chunk_start;
    track->length = src_chunk_len;
-   verr = vector_add( &(h->tracks), track );
+   verr = vector_add( h->tracks, track );
    if( 0 > verr ) {
       mem_free( track );
       track = NULL;
@@ -541,17 +546,17 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 #endif /* USE_FILE_CACHE */
 
    /* Ensure chunks are contiguous and complete. */
-   vector_sort_cb( &(h->tracks), callback_sort_chunker_tracks );
-   vector_lock( &(h->tracks), TRUE );
-   tracks_count = vector_count( &(h->tracks) );
+   vector_sort_cb( h->tracks, callback_sort_chunker_tracks );
+   vector_lock( h->tracks, TRUE );
+   tracks_count = vector_count( h->tracks );
    chunks_locked = TRUE;
    if( 0  == tracks_count ) {
       finished = FALSE;
       goto cleanup;
    }
    for( i = 0 ; tracks_count > i ; i++ ) {
-      prev_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
-      iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i + 1 );
+      prev_track = (CHUNKER_TRACK*)vector_get( h->tracks, i );
+      iter_track = (CHUNKER_TRACK*)vector_get( h->tracks, i + 1 );
       if(
          (NULL != iter_track && NULL != prev_track &&
             (prev_track->start + prev_track->length) < iter_track->start) ||
@@ -575,7 +580,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 #endif /* USE_FILE_CACHE */
 cleanup:
    if( FALSE != chunks_locked ){
-      vector_lock( &(h->tracks), FALSE );
+      vector_lock( h->tracks, FALSE );
    }
 
    return finished;
@@ -595,8 +600,8 @@ int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force ) {
    CHUNKER_TRACK* iter_track;
    SCAFFOLD_SIZE i;
 
-   for( i = 0 ; vector_count( &(h->tracks) ) > i ; i++ ) {
-      iter_track = (CHUNKER_TRACK*)vector_get( &(h->tracks), i );
+   for( i = 0 ; vector_count( h->tracks ) > i ; i++ ) {
+      iter_track = (CHUNKER_TRACK*)vector_get( h->tracks, i );
       current_bytes += iter_track->length;
    }
 

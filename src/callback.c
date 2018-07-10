@@ -397,7 +397,7 @@ void* callback_search_tilesets_img_name( struct CONTAINER_IDX* idx, void* parent
  */
 void* callback_search_channels_tilemap_img_name( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
-   struct TILEMAP* t = &(l->tilemap);
+   struct TILEMAP* t = l->tilemap;
    if( NULL != vector_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
       return l;
    }
@@ -550,7 +550,7 @@ void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* parent, void* 
    }
    */
 
-   vector_iterate( &(l->mobiles), callback_proc_mobile_vms, NULL );
+   vector_iterate( l->mobiles, callback_proc_mobile_vms, NULL );
 
    return NULL;
 }
@@ -569,7 +569,7 @@ void* callback_proc_channel_spawners(
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
-   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+   l = tilemap_get_channel( t );
    scaffold_assert( CHANNEL_SENTINAL == l->sentinal );
 
    if( -1 >= ts->countdown_remaining ) {
@@ -591,7 +591,7 @@ void* callback_proc_channel_spawners(
       scaffold_print_debug( &module, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
-      rng_gen_serial( o, &(l->mobiles), SERIAL_MIN, SERIAL_MAX );
+      rng_gen_serial( o, l->mobiles, SERIAL_MIN, SERIAL_MAX );
       channel_add_mobile( l, o );
       if( TILEMAP_SPAWNER_TYPE_PLAYER == ts->type ) {
          o->type = MOBILE_TYPE_PLAYER;
@@ -617,7 +617,7 @@ void* callback_proc_channel_spawners(
       }
       scaffold_assert( 0 != e->sprite_id );
       scaffold_assert( 0 < blength( e->catalog_name ) );
-      cache = tilemap_drop_item( &(l->tilemap), e, ts->pos.x, ts->pos.y );
+      cache = tilemap_drop_item( l->tilemap, e, ts->pos.x, ts->pos.y );
       scaffold_assert( NULL != cache );
       /* TODO: Only send item updates to those nearby. */
       if( NULL != cache ) {
@@ -641,7 +641,7 @@ void* callback_proc_server_spawners(
 
    scaffold_assert_server();
 
-   vector_iterate( &(l->tilemap.spawners), callback_proc_channel_spawners, s );
+   vector_iterate( &(l->tilemap->spawners), callback_proc_channel_spawners, s );
 
    return NULL;
 }
@@ -768,7 +768,7 @@ void* callback_send_mobs_to_channel( struct CONTAINER_IDX* idx, void* parent, vo
    struct CHANNEL* l = (struct CHANNEL*)arg;
    struct CLIENT* c = (struct CLIENT*)iter;
 
-   vector_iterate( &(l->mobiles), callback_send_mobs_to_client, c );
+   vector_iterate( l->mobiles, callback_send_mobs_to_client, c );
 
    return NULL;
 }
@@ -823,7 +823,7 @@ void* callback_parse_mob_channels( struct CONTAINER_IDX* idx, void* parent, void
 
    /* TODO: Return a condensed vector, somehow? */
 
-   return vector_iterate( &(l->mobiles), callback_parse_mobs, xml_data );
+   return vector_iterate( l->mobiles, callback_parse_mobs, xml_data );
 #endif /* USE_EZXML */
    return NULL;
 }
@@ -854,7 +854,7 @@ void* callback_attach_channel_mob_sprites(
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   return vector_iterate( &(l->mobiles), callback_attach_mob_sprites, c );
+   return vector_iterate( l->mobiles, callback_attach_mob_sprites, c );
 }
 
 
@@ -894,8 +894,8 @@ void* callback_remove_clients( struct CONTAINER_IDX* idx, void* parent, void* it
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring nick = (bstring)arg;
 
-   hashmap_iterate( &(l->clients), callback_stop_clients, nick );
-   hashmap_remove_cb( &(l->clients), callback_free_clients, nick );
+   hashmap_iterate( l->clients, callback_stop_clients, nick );
+   hashmap_remove_cb( l->clients, callback_free_clients, nick );
 
    return NULL;
 }
@@ -911,10 +911,10 @@ BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* parent, void* iter
          hashmap_remove_cb( &(l->clients), callback_free_clients, NULL );
          hashmap_cleanup( &(l->clients) );
       } */
-      if( VECTOR_SENTINAL == l->mobiles.sentinal ) {
-         vector_remove_cb( &(l->mobiles), callback_free_mobiles, NULL );
-         vector_cleanup( &(l->mobiles) );
-      }
+      /* if( vector_is_valid( l->mobiles ) ) {
+         vector_remove_cb( l->mobiles, callback_free_mobiles, NULL );
+         vector_cleanup( l->mobiles );
+      } */
 
       channel_free( l );
       return TRUE;
@@ -923,18 +923,25 @@ BOOL callback_free_channels( struct CONTAINER_IDX* idx, void* parent, void* iter
    return FALSE;
 }
 
-BOOL callback_free_empty_channels( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
+/** \brief To be used with hashmap_remove_cb()
+ */
+BOOL callback_free_empty_channels(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
-   if( 0 >= hashmap_count( &(l->clients) ) ) {
-      //channel_free( l );
+   if( 0 >= hashmap_count( l->clients ) ) {
       return TRUE;
    }
 
    return FALSE;
 }
 
-BOOL callback_free_mobiles( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
+/** \brief To be used with hashmap_remove_cb()
+ */
+BOOL callback_free_mobiles(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
    struct MOBILE* o = (struct MOBILE*)iter;
    SCAFFOLD_SIZE* serial = (SCAFFOLD_SIZE*)arg;
    if( NULL == 0 ) {

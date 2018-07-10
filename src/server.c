@@ -186,7 +186,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 
 cleanup:
    if( NULL != l ) {
-      scaffold_assert( 0 < hashmap_count( &(l->clients) ) );
+      scaffold_assert( 0 < hashmap_count( l->clients ) );
       scaffold_assert( 0 < hashmap_count( &(c_first->channels) ) );
    }
    return l;
@@ -202,7 +202,7 @@ void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
 
    channel_add_client( l, c, TRUE );
 
-   hashmap_iterate( &(l->clients), callback_send_mobs_to_channel, l );
+   hashmap_iterate( l->clients, callback_send_mobs_to_channel, l );
 
 cleanup:
    return;

@@ -473,7 +473,7 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
 
    scaffold_check_null( set );
 
-   if( !vector_ready( &(set->images) ) ) {
+   if( !hashmap_is_valid( &(set->images) ) ) {
       hashmap_init( &(set->images) );
    }
 
@@ -652,7 +652,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    /* Parse the tile information. */
 
-   if( !vector_ready( &(set->tiles) ) ) {
+   if( !vector_is_valid( &(set->tiles) ) ) {
       vector_init( &(set->tiles) );
    }
 
@@ -934,7 +934,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    SCAFFOLD_SIZE z = 0;
    tileset_id = bfromcstr( "" );
 
-   l = scaffold_container_of( t, struct CHANNEL, tilemap );
+   l = tilemap_get_channel( t );
    scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
 
    xml_attr = ezxml_attr( xml_data, "orientation" );
@@ -972,6 +972,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
           * that, OK?
           */
          bstr_retval = bassign( tileset_id, t->lname );
+         scaffold_assert( 0 == bstr_retval );
          scaffold_check_nonzero( bstr_retval );
          bstr_retval = bconchar( tileset_id, ':' );
          scaffold_check_nonzero( bstr_retval );

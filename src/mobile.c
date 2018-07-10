@@ -239,7 +239,7 @@ void mobile_animate( struct MOBILE* o ) {
       ) {
          o->sprite_display_height =
             mobile_calculate_terrain_sprite_height(
-               &(o->channel->tilemap), o->sprite_height,
+               o->channel->tilemap, o->sprite_height,
                o->x, o->y );
       }
 
@@ -509,7 +509,7 @@ static MOBILE_UPDATE mobile_calculate_mobile_result(
    pos.y = y_2;
 
    o_test =
-      vector_iterate_nolock( &(l->mobiles), callback_search_mobs_by_pos, NULL, &pos );
+      vector_iterate_nolock( l->mobiles, callback_search_mobs_by_pos, NULL, &pos );
 
    if( NULL != o_test ) {
       /* TODO: Default to something else for friendlies? */
@@ -582,7 +582,7 @@ MOBILE_UPDATE mobile_apply_update(
    case MOBILE_UPDATE_MOVEUP:
       if( (update->x != o->x || update->y != o->y - 1) ||
          (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+         mobile_calculate_terrain_result( l->tilemap, update->update,
             o->x, o->y, update->x, update->y )) ||
          (MOBILE_UPDATE_NONE ==
          mobile_calculate_mobile_result( l, update->update,
@@ -600,7 +600,7 @@ MOBILE_UPDATE mobile_apply_update(
       mobile_call_reset_animation( o );
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
-            &(l->tilemap), o->steps_inc_default,
+            l->tilemap, o->steps_inc_default,
             o->x, o->y ) * -1;
       if( TRUE == instant ) {
          o->prev_y = o->y;
@@ -612,7 +612,7 @@ MOBILE_UPDATE mobile_apply_update(
    case MOBILE_UPDATE_MOVEDOWN:
       if( (update->x != o->x || update->y != o->y + 1) ||
          (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+         mobile_calculate_terrain_result( l->tilemap, update->update,
             o->x, o->y, update->x, update->y )) ||
          (MOBILE_UPDATE_NONE ==
          mobile_calculate_mobile_result( l, update->update,
@@ -630,7 +630,7 @@ MOBILE_UPDATE mobile_apply_update(
       o->animation_reset = TRUE;
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
-            &(l->tilemap), o->steps_inc_default,
+            l->tilemap, o->steps_inc_default,
             o->x, o->y );
       if( TRUE == instant ) {
          o->prev_y = o->y;
@@ -643,7 +643,7 @@ MOBILE_UPDATE mobile_apply_update(
       if(
          (update->x != o->x - 1 || update->y != o->y) ||
          (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+         mobile_calculate_terrain_result( l->tilemap, update->update,
             o->x, o->y, update->x, update->y )) ||
          (MOBILE_UPDATE_NONE ==
          mobile_calculate_mobile_result( l, update->update,
@@ -661,7 +661,7 @@ MOBILE_UPDATE mobile_apply_update(
       o->animation_reset = TRUE;
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
-            &(l->tilemap), o->steps_inc_default,
+            l->tilemap, o->steps_inc_default,
             o->x, o->y ) * -1;
       if( TRUE == instant ) {
          o->prev_x = o->x;
@@ -674,7 +674,7 @@ MOBILE_UPDATE mobile_apply_update(
       if(
          (update->x != o->x + 1 || update->y != o->y) ||
          (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( &(l->tilemap), update->update,
+         mobile_calculate_terrain_result( l->tilemap, update->update,
             o->x, o->y, update->x, update->y )) ||
          (MOBILE_UPDATE_NONE ==
          mobile_calculate_mobile_result( l, update->update,
@@ -692,7 +692,7 @@ MOBILE_UPDATE mobile_apply_update(
       o->animation_reset = TRUE;
       o->steps_inc =
          mobile_calculate_terrain_steps_inc(
-            &(l->tilemap), o->steps_inc_default,
+            l->tilemap, o->steps_inc_default,
             o->x, o->y );
       if( TRUE == instant ) {
          o->prev_x = o->x;
@@ -726,12 +726,12 @@ MOBILE_UPDATE mobile_apply_update(
       /* Local Client */
       /* o->sprite_display_height =
          mobile_calculate_terrain_sprite_height(
-            &(l->tilemap), o->sprite_height,
+            l->tilemap, o->sprite_height,
             o->x, o->y ); */
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
       /* Server */
-      hashmap_iterate( &(l->clients), callback_send_updates_to_client, update );
+      hashmap_iterate( l->clients, callback_send_updates_to_client, update );
 #ifdef ENABLE_LOCAL_CLIENT
    }
 #endif /* ENABLE_LOCAL_CLIENT */

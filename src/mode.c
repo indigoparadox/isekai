@@ -2,6 +2,9 @@
 #define MODE_C
 #include "mode.h"
 
+#include "channel.h"
+#include "tilemap.h"
+
 void client_local_update(
    struct CLIENT* c,
    struct CHANNEL* l
