@@ -25,10 +25,9 @@ struct CHANNEL {
    struct CLIENT* client_or_server;
    struct VECTOR* mobiles;
    struct TILEMAP* tilemap;
-   struct VM* vm;
+#ifdef USE_VM
    struct VM_CADDY* vm_caddy;
-   BOOL vm_started;
-   struct HASHMAP vm_globals;
+#endif /* USE_VM */
    bstring error;
 /* #ifdef USE_TINYPY
    struct tp_vm* vm;

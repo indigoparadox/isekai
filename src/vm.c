@@ -2,6 +2,8 @@
 #define VM_C
 #include "vm.h"
 
+#ifdef USE_VM
+
 /* This module contains glue applicable to all VMs. A small amount of
  * VM-specific code is allowed, but if there are more than a couple lines
  * of VM-specific code then they should go in that VM's glue module to
@@ -105,7 +107,7 @@ cleanup:
    return;
 }
 
-BOOL vm_caddy_has_event( const struct VM_CADDY* vmc, const bstring event ) {
+BOOL vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event ) {
    BOOL retval = FALSE;
 
    if(
@@ -189,3 +191,5 @@ SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc ) {
 cleanup:
    return count;
 }
+
+#endif /* USE_VM */

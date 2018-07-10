@@ -72,16 +72,18 @@ struct MOBILE {
    bstring mob_id;
    struct CHANNEL* channel;
    MOBILE_TYPE type;
-   struct VM_CADDY* vm_caddy;
    struct VECTOR sprite_defs;
    struct HASHMAP ani_defs;
    struct HASHMAP script_defs;
    struct MOBILE_ANI_DEF* current_animation;
    struct VECTOR items;
    BOOL initialized;
+#ifdef USE_VM
+   struct VM_CADDY* vm_caddy;
 #ifdef USE_TURNS
    SCAFFOLD_SIZE vm_tick_prev;
 #endif /* USE_TURNS */
+#endif /* USE_VM */
 #ifndef DISABLE_MODE_POV
    double ray_distance;
    BOOL animation_flipped; /*!< TRUE if looking in - direction in POV. */
