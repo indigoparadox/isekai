@@ -64,13 +64,13 @@ void vm_tick();
 BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev );
 void vm_caddy_init( struct VM_CADDY* vmc );
 void vm_caddy_start( struct VM_CADDY* o );
-void vm_caddy_do_event( struct VM_CADDY* o, bstring event );
+void vm_caddy_do_event( struct VM_CADDY* o, const bstring event );
 void vm_caddy_end( struct VM_CADDY* o );
-BOOL vm_caddy_has_event( struct VM_CADDY* o, bstring event );
+BOOL vm_caddy_has_event( const struct VM_CADDY* o, const bstring event );
 BOOL vm_caddy_put(
-   struct VM_CADDY* vmc, VM_MEMBER type, bstring key, bstring val
+   struct VM_CADDY* vmc, VM_MEMBER type, const bstring key, const bstring val
 );
-SCAFFOLD_SIZE vm_caddy_scripts_count( struct VM_CADDY* vmc );
+SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc );
 #endif /* USE_VM */
 
 #ifdef USE_DUKTAPE

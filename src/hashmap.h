@@ -113,8 +113,7 @@ __attribute__ ((warn_unused_result))
  */
 void* hashmap_get( struct HASHMAP* m, const bstring key );
 void* hashmap_get_c( struct HASHMAP* m, const char* key_c );
-void* hashmap_get_nolock( struct HASHMAP* m, const bstring key );
-
+void* hashmap_get_nolock( const struct HASHMAP* m, const bstring key );
 void* hashmap_get_first( struct HASHMAP* m );
 
 /* bstring hashmap_next_key( struct HASHMAP* m, const bstring key ); */

@@ -6,7 +6,6 @@
 #include "client.h"
 
 struct VM_CADDY;
-struct VM;
 
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,
