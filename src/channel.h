@@ -9,13 +9,6 @@
 
 #define CHANNEL_SENTINAL 888
 
-#ifdef USE_TINYPY
-struct tp_vm;
-#endif /* USE_TINYPY */
-#ifdef USE_DUKTAPE
-struct duk_hthread;
-#endif /* USE_DUKTAPE */
-
 struct CHANNEL {
    struct REF refcount;
    uint16_t sentinal;
@@ -29,16 +22,6 @@ struct CHANNEL {
    struct VM_CADDY* vm_caddy;
 #endif /* USE_VM */
    bstring error;
-/* #ifdef USE_TINYPY
-   struct tp_vm* vm;
-   int vm_cur;
-   int vm_step_ret;
-#endif  */ /* USE_TINYPY */
-};
-
-struct CHANNEL_CLIENT {
-   struct CHANNEL* l;
-   struct CLIENT* c;
 };
 
 #define channel_new( l, name, local_graphics, server ) \

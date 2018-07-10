@@ -581,8 +581,6 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 ) {
    struct UI_WINDOW* win = NULL;
    SCAFFOLD_SIZE_SIGNED input_length = 0;
-   struct UI_CONTROL* control = NULL;
-   int bstr_result;
 
 #ifdef DEBUG
    if( NULL != win ) {
@@ -617,7 +615,6 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    if( NULL == win ) { goto cleanup; }
 
    assert( win->ui == &global_ui );
-   control = win->active_control;
 
    if( 0 < input->repeat ) {
       goto cleanup;
@@ -702,7 +699,7 @@ static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTR
       win->grid_pos.x += win->grid_pos.w + UI_WINDOW_MARGIN;
    }
 
-cleanup:
+/* cleanup: */
    assert( win->ui == &global_ui );
 }
 
@@ -948,9 +945,6 @@ cleanup:
 static void ui_control_draw_inventory(
    struct UI_WINDOW* win, struct UI_CONTROL* inv_pane
 ) {
-   GRAPHICS_COLOR fg = UI_TEXT_FG;
-   GRAPHICS* g = win->element;
-   struct CHANNEL* l = NULL;
    GRAPHICS_RECT bg_rect;
    struct VECTOR* items = NULL;
 

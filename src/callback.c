@@ -967,7 +967,7 @@ BOOL callback_free_tilesets( struct CONTAINER_IDX* idx, void* parent, void* iter
 BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
-      //item_sprite_free( sprite );
+      item_sprite_free( sprite );
       return TRUE;
    }
    return FALSE;
@@ -976,7 +976,7 @@ BOOL callback_free_sprites( struct CONTAINER_IDX* idx, void* parent, void* iter,
 BOOL callback_free_catalogs( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
-      //item_spritesheet_free( cat );
+      item_spritesheet_free( cat );
       return TRUE;
    }
    return FALSE;
@@ -1039,14 +1039,6 @@ BOOL callback_free_finished_chunkers(
 }
 
 #endif /* USE_CHUNKS */
-
-/*
-BOOL callback_free_commands( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   IRC_COMMAND* cmd = (IRC_COMMAND*)iter;
-   irc_command_free( cmd );
-   return TRUE;
-}
-*/
 
 BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    mem_free( iter );
