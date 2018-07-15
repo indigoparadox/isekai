@@ -283,7 +283,8 @@ void ui_window_transform(
    old_element = win->element;
    win->element = NULL;
    graphics_surface_new( win->element, 0, 0, win->area.w, win->area.h );
-   graphics_blit_stretch( win->element, 0, 0, win->area.w, win->area.h, old_element );
+   graphics_blit_stretch(
+      win->element, 0, 0, win->area.w, win->area.h, old_element );
    #ifdef DEBUG
    ui_debug_stack( win->ui );
    #endif /* DEBUG */
@@ -632,7 +633,9 @@ cleanup:
    return input_length;
 }
 
-static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control ) {
+static SCAFFOLD_SIZE ui_control_get_draw_width(
+   const struct UI_CONTROL* control
+) {
    SCAFFOLD_SIZE control_w = 0;
    GRAPHICS_RECT control_size = { 0 };
    bstring list_item = NULL;
@@ -666,11 +669,15 @@ static SCAFFOLD_SIZE ui_control_get_draw_width( const struct UI_CONTROL* control
    return control_w;
 }
 
-static SCAFFOLD_SIZE ui_control_get_draw_height( const struct UI_CONTROL* control ) {
+static SCAFFOLD_SIZE ui_control_get_draw_height(
+   const struct UI_CONTROL* control
+) {
    return UI_TEXT_SIZE + (2 * UI_TEXT_MARGIN);
 }
 
-void ui_control_set( struct UI_CONTROL* ctrl, UI_OPTION opt, UI_OPT_STATE state ) {
+void ui_control_set(
+   struct UI_CONTROL* ctrl, UI_OPTION opt, UI_OPT_STATE state
+) {
    switch( opt ) {
    case UI_OPTION_NEW_ROW:
       ctrl->new_row = state;
@@ -678,7 +685,9 @@ void ui_control_set( struct UI_CONTROL* ctrl, UI_OPTION opt, UI_OPT_STATE state 
    }
 }
 
-static void ui_window_advance_grid( struct UI_WINDOW* win, const struct UI_CONTROL* control ) {
+static void ui_window_advance_grid(
+   struct UI_WINDOW* win, const struct UI_CONTROL* control
+) {
    GRAPHICS_RECT text;
 
    assert( win->ui == &global_ui );
@@ -834,25 +843,16 @@ static void* ui_control_draw_backlog_line(
 
       graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
 
-      /*ui_draw_text(
-         win, &nick_size,
-         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE, TRUE
-      );*/
-
       graphics_draw_text(
          control->owner->element, pos->x, pos->y,
-         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE, nick_decorated, FALSE
+         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE,
+         nick_decorated, FALSE
       );
 
       pos->x += nick_size.w;
    } else {
       msg_fg = GRAPHICS_COLOR_MAGENTA;
    }
-
-   /*ui_draw_text(
-      win, &nick_size,
-      GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, FALSE, TRUE
-   );*/
 
    graphics_draw_text(
       control->owner->element, pos->x, pos->y,
@@ -1122,6 +1122,14 @@ static void ui_control_draw_html(
    GRAPHICS* g = win->element;
    GRAPHICS_RECT bg_rect;
 
+   if( NULL == html->self.attachment ) {
+      scaffold_print_debug( &module, "Parsing HTML: %b\n", html->text );
+      html_tree_parse_string(
+         html->text, (struct html_tree*)&(html->self.attachment) );
+   }
+
+   htmlrend_draw( g, (struct html_tree*)(html->self.attachment) );
+
 #if 0
    if( textfield == win->active_control ) {
       fg = UI_SELECTED_FG;
@@ -1164,6 +1172,18 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
    largest_control = mem_alloc( 1, GRAPHICS_RECT );
    scaffold_check_null( largest_control );
    memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
+
+   #if 0
+   // XXX Doesn't work!
+   /* Make sure the window isn't bigger than the screen. */
+   if( GRAPHICS_SCREEN_WIDTH < largest_control->w ) {
+      largest_control->w = GRAPHICS_SCREEN_WIDTH - 10;
+   }
+   if( GRAPHICS_SCREEN_HEIGHT < largest_control->h ) {
+      largest_control->h = GRAPHICS_SCREEN_HEIGHT - 10;
+   }
+   #endif // 0
+
    do {
       /* A pointer was returned, so update. */
       if(

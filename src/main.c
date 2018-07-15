@@ -27,6 +27,7 @@ SCAFFOLD_MODULE( "main.c" );
 
 static struct tagbstring str_readme_id = bsStatic( "readme" );
 static struct tagbstring str_readme_title = bsStatic( "Readme" );
+static struct tagbstring str_readme_filename = bsStatic( "readme.htm" );
 static struct tagbstring str_cdialog_id = bsStatic( "connect" );
 static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
@@ -307,6 +308,7 @@ static BOOL loop_connect() {
    int bstr_result = 0,
       input_res = 0;
    struct VECTOR* server_tuple = NULL;
+   bstring html_buffer = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -336,11 +338,13 @@ static BOOL loop_connect() {
          -1, -1, 300, 400
       );
 
+      html_buffer = files_read_contents_b( &str_readme_filename );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_HTML, TRUE, TRUE, NULL,
-         -1, -1, -1, -1
+         ui, control, html_buffer, UI_CONTROL_TYPE_HTML, TRUE, TRUE,
+         NULL, -1, -1, -1, -1
       );
       ui_control_add( win, &str_readme_id, control );
+      scaffold_assert( NULL == control->self.attachment );
 
       ui_window_push( ui, win );
    } else if(

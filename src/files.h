@@ -4,8 +4,9 @@
 
 #include "scaffold.h"
 
+bstring files_read_contents_b( const bstring path );
 SCAFFOLD_SIZE files_read_contents(
-   bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
+   const bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
 )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))

@@ -1464,6 +1464,7 @@
 		<Unit filename="src/htmlrend.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/htmlrend.h" />
 		<Unit filename="src/htmtree.c">
 			<Option compilerVar="CC" />
 		</Unit>
