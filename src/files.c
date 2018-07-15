@@ -18,6 +18,20 @@ static struct tagbstring str_server_data_path =
 
 #include "callback.h"
 
+bstring files_read_contents_b( const bstring path ) {
+   BYTE* buffer = NULL;
+   SCAFFOLD_SIZE len = 0;
+   bstring out = NULL;
+
+   files_read_contents( path, &buffer, &len );
+
+   out = bfromcstr( buffer );
+
+   mem_free( buffer );
+
+   return out;
+}
+
 /** \brief Provide a block of memory that contains a given file's contents.
  *         May be pulled from weird special storage/ROM or mmap'ed.
  * \param[in] path   The path to identify the file to open.
@@ -26,7 +40,7 @@ static struct tagbstring str_server_data_path =
  * \return The number of bytes read, or -1 on failure.
  */
 SCAFFOLD_SIZE files_read_contents(
-   bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
+   const bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
 ) {
    struct stat inputstat;
    char* path_c = NULL;

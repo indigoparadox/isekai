@@ -447,4 +447,3 @@ void html_tree_free_tag( struct html_tree_tag* tag ) {
 
    free( tag );
 }
-
