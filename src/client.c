@@ -18,9 +18,7 @@
 bstring client_input_from_ui = NULL;
 
 #ifdef USE_CHUNKS
-static BOOL callback_remove_chunkers(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static BOOL callback_remove_chunkers( size_t idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
 
@@ -30,9 +28,7 @@ static BOOL callback_remove_chunkers(
 }
 #endif /* USE_CHUNKS */
 
-static BOOL callback_remove_items(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static BOOL callback_remove_items( size_t idx, void* iter, void* arg ) {
    struct ITEM* e = (struct ITEM*)iter;
 
    if( NULL != e ) {
@@ -439,9 +435,7 @@ void client_clear_puppet( struct CLIENT* c ) {
    client_set_puppet( c, NULL );
 }
 
-static void* client_dr_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* client_dr_cb( size_t idx, void* iter, void* arg ) {
    bstring filename = (bstring)arg;
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
 
@@ -513,12 +507,13 @@ void client_request_file(
 
    hashmap_lock( &(c->chunkers), TRUE );
 
-   if( FALSE != hashmap_contains_key_nolock( &(c->chunkers), filename ) ) {
+   // XXX: NOLOCK
+   if( FALSE != hashmap_contains_key( &(c->chunkers), filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
 
-   h = hashmap_get_nolock( &(c->chunkers), filename );
+   h = hashmap_get( &(c->chunkers), filename );
    if( NULL == h ) {
       /* Create a chunker and get it started, since one is not in progress. */
       /* TODO: Verify cached file hash from server. */
@@ -529,7 +524,8 @@ void client_request_file(
       scaffold_print_debug(
          &module, "Adding unchunker to receive: %s\n", bdata( filename )
       );
-      hashmap_put_nolock( &(c->chunkers), filename, h, TRUE );
+      // XXX: NOLOCK
+      hashmap_put( &(c->chunkers), filename, h, TRUE );
       scaffold_check_nonzero( scaffold_error );
 
       if( !chunker_unchunk_finished( h ) ) {

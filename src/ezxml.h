@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 
 #ifdef __cplusplus

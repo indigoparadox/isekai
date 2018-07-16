@@ -2,7 +2,6 @@
 #define BACKLOG_C
 #include "backlog.h"
 
-#include "vector.h"
 #include "callback.h"
 
 static struct VECTOR global_backlog;
@@ -15,7 +14,7 @@ void backlog_init() {
 }
 
 void backlog_shutdown() {
-   vector_remove_cb(  &global_backlog, callback_free_backlog, NULL );
+   vector_remove_cb( &global_backlog, callback_free_backlog, NULL );
    vector_cleanup( &global_backlog );
 }
 
@@ -54,17 +53,15 @@ cleanup:
 
 void backlog_close_window( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
-
    win = ui_window_by_id( ui, &str_backlog_id );
    if( NULL != win ) {
       scaffold_print_debug( &module, "Closing backlog window.\n" );
       ui_window_destroy( ui, &str_backlog_id );
    }
-cleanup:
    return;
 }
 
-void* backlog_iter( vector_search_cb cb, void* arg ) {
+void* backlog_iter( vector_iter_cb cb, void* arg ) {
    return vector_iterate( &global_backlog, cb, arg );
 }
 

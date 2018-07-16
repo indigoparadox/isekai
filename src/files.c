@@ -202,7 +202,7 @@ write_file:
 cleanup:
    bdestroy( zero_error );
    bdestroy( test_path );
-   vector_remove_cb( path_dirs, callback_free_strings, NULL );
+   vector_remove_cb( path_dirs, callback_v_free_strings, NULL );
    vector_free( &path_dirs );
    if( NULL != outputfile ) {
       fclose( outputfile );
@@ -371,7 +371,7 @@ bstring files_basename( bstring path ) {
    basename_out = vector_get( path_elements, vector_count( path_elements ) - 1 );
 
 cleanup:
-   vector_remove_cb( path_elements, callback_free_strings, NULL );
+   vector_remove_cb( path_elements, callback_v_free_strings, NULL );
    vector_free( &path_elements );
    return basename_out;
 }
@@ -405,9 +405,7 @@ cleanup:
    return path_out;
 }
 
-static void* files_search_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* files_search_cb( size_t idx, void* iter, void* arg ) {
    bstring file_iter = (bstring)iter,
       file_iter_short = NULL,
       file_search = (bstring)arg;
@@ -445,7 +443,7 @@ bstring files_search( bstring search_filename ) {
 
 cleanup:
    if( NULL != files ) {
-      vector_remove_cb( files, callback_free_strings, NULL );
+      vector_remove_cb( files, callback_v_free_strings, NULL );
    }
    vector_cleanup( files );
    mem_free( files );

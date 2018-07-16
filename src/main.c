@@ -501,7 +501,7 @@ static BOOL loop_connect() {
 
 cleanup:
    if( NULL != server_tuple ) {
-      vector_remove_cb( server_tuple, callback_free_strings, NULL );
+      vector_remove_cb( server_tuple, callback_v_free_strings, NULL );
       vector_free( &server_tuple );
    }
    return keep_going; /* TODO: ESC to quit. */

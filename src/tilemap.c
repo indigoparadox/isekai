@@ -7,7 +7,7 @@
 #include "channel.h"
 
 static BOOL tilemap_layer_free_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    tilemap_layer_free( layer );
@@ -15,7 +15,7 @@ static BOOL tilemap_layer_free_cb(
 }
 
 static BOOL tilemap_tileset_free_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    tilemap_tileset_free( (struct TILEMAP_TILESET*)iter );
    return TRUE;

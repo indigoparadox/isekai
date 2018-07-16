@@ -6,18 +6,18 @@ void animate_init() {
    hashmap_init( &animations );
 }
 
-static BOOL animate_del_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static BOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
    bstring key_search = (bstring)arg;
+   BOOL remove = FALSE;
    struct ANIMATION* a = (struct ANIMATION*)iter;
-   if( NULL == arg || 0 == bstrcmp( idx->value.key, key_search ) ) {
+   if( NULL == arg || 0 == bstrcmp( idx, key_search ) ) {
       if( NULL != a ) {
          animate_free_animation( &a );
       }
-      return TRUE;
+      remove = TRUE;
    }
-   return FALSE;
+cleanup:
+   return remove;
 }
 
 void animate_shutdown() {
@@ -279,18 +279,28 @@ static void animate_free_animation_frame( struct ANIMATION_FRAME** frame ) {
    return;
 }
 
-void animate_free_animation( struct ANIMATION** a ) {
-   if( NULL != *a ) {
-      graphics_surface_free( (*a)->target );
-      animate_free_animation_frame( &((*a)->first_frame) );
-      mem_free( *a );
-      *a = NULL;
+void animate_cleanup_animation( struct ANIMATION* a ) {
+   if( NULL == a ) {
+      goto cleanup;
    }
+   graphics_surface_free( a->target );
+   animate_free_animation_frame( &(a->first_frame) );
+cleanup:
+   return;
 }
 
-static BOOL animate_cyc_ani_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+void animate_free_animation( struct ANIMATION** a ) {
+   if( NULL != *a ) {
+      goto cleanup;
+   }
+   animate_cleanup_animation( *a );
+   mem_free( *a );
+   *a = NULL;
+cleanup:
+   return;
+}
+
+static BOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    BOOL remove = FALSE;
    struct ANIMATION_FRAME* current_frame = NULL;
@@ -313,8 +323,9 @@ static BOOL animate_cyc_ani_cb(
    if( NULL == a->current_frame && FALSE == a->indefinite ) {
       /* The animation has expired. */
       scaffold_print_debug(
-         &module, "Animation finished: %b", idx->value.key
+         &module, "Animation finished: %b", idx
       );
+      animate_free_animation( &a );
       remove = TRUE;
       goto cleanup;
    } else if( NULL == a->current_frame && FALSE != a->indefinite ) {
@@ -329,9 +340,7 @@ void animate_cycle_animations( GRAPHICS* g ) {
    hashmap_remove_cb( &animations, animate_cyc_ani_cb, g );
 }
 
-static void* animate_draw_ani_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    GRAPHICS* g = (GRAPHICS*)arg;
    GFX_COORD_PIXEL
@@ -366,9 +375,7 @@ void animate_draw_animations( GRAPHICS* g ) {
    hashmap_iterate( &animations, animate_draw_ani_cb, g );
 }
 
-static void* animate_blocker_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* animate_blocker_cb( bstring idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
    if( FALSE != a->blocking ) {
       return a;

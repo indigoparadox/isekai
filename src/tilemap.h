@@ -3,10 +3,8 @@
 
 typedef int TILEMAP_COORD_TILE;
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 #include "ezxml.h"
-#include "vector.h"
-#include "hashmap.h"
 #include "graphics.h"
 #include "twindow.h"
 #include "item.h"

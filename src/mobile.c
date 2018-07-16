@@ -4,13 +4,13 @@
 
 #include "proto.h"
 #include "chunker.h"
-#include "hashmap.h"
 #include "callback.h"
 #include "datafile.h"
 #include "vm.h"
 #include "backlog.h"
 #include "channel.h"
 #include "ipc.h"
+#include "files.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -185,7 +185,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
 
    /* Fetch the destination tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, NULL, &pos_end );
+      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
@@ -453,7 +453,7 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
 
    /* Fetch the source tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, NULL, &pos_end );
+      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
    if( NULL == tiles_end ) {
 #ifdef DEBUG_VERBOSE
       scaffold_print_error(
@@ -511,7 +511,8 @@ static MOBILE_UPDATE mobile_calculate_mobile_result(
    pos.y = y_2;
 
    o_test =
-      vector_iterate_nolock( l->mobiles, callback_search_mobs_by_pos, NULL, &pos );
+      // XXX: NOLOCK
+      vector_iterate( l->mobiles, callback_search_mobs_by_pos, &pos );
 
    if( NULL != o_test ) {
       /* TODO: Default to something else for friendlies? */
@@ -539,7 +540,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
 
    /* Fetch the destination tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, NULL, &pos_end );
+      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );

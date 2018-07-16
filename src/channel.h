@@ -1,10 +1,8 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#include "bstrlib/bstrlib.h"
-#include "vector.h"
+#include "libvcol.h"
 #include "client.h"
-#include "hashmap.h"
 #include "tilemap.h"
 
 #define CHANNEL_SENTINAL 888
@@ -52,7 +50,7 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o );
 void channel_remove_mobile( struct CHANNEL* l, SCAFFOLD_SIZE serial );
 void channel_load_tilemap( struct CHANNEL* l );
 void channel_speak( struct CHANNEL* l, const bstring nick, const bstring msg );
-void* channel_backlog_iter( struct CHANNEL* l, vector_search_cb cb, void* arg );
+void* channel_backlog_iter( struct CHANNEL* l, vector_iter_cb cb, void* arg );
 BOOL channel_has_error( const struct CHANNEL* l );
 void channel_set_error( struct CHANNEL* l, const char* error );
 BOOL channel_is_loaded( struct CHANNEL* l );
