@@ -7,9 +7,8 @@ typedef enum {
    MODE_POV
 }MODE;
 
+#include "libvcol.h"
 #include "input.h"
-#include "bstrlib/bstrlib.h"
-#include "vector.h"
 #include "graphics.h"
 #include "client.h"
 

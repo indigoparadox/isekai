@@ -3,7 +3,6 @@
 #define VM_H
 
 #include "scaffold.h"
-#include "hashmap.h"
 
 #ifdef USE_DUKTAPE
 #ifndef USE_VM
@@ -45,7 +44,7 @@ struct VM_CADDY {
    void* arg;
    SCAFFOLD_SIZE exec_start; /** When the current script started in ticks. */
    VM_LANG lang;
-   struct VM* vm;
+   void* vm;
    BOOL vm_started;
    struct HASHMAP vm_scripts;
    struct HASHMAP vm_globals;
@@ -77,8 +76,7 @@ SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc );
 #ifdef USE_DUKTAPE
 void duktape_helper_channel_crash( void* udata, const char* msg );
 void duktape_helper_mobile_crash( void* udata, const char* msg );
-void* duktape_set_globals_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg );
+void* duktape_set_globals_cb( bstring idx, void* iter, void* arg );
 void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code );
 #endif /* USE_DUKTAPE */
 

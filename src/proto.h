@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 #include "client.h"
 #include "server.h"
 #include "ref.h"

@@ -1,9 +1,8 @@
 #ifndef CHUNKER_H
 #define CHUNKER_H
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 #include "ref.h"
-#include "vector.h"
 #include "datafile.h"
 
 #include "hs/hs_com.h"

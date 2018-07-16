@@ -246,9 +246,7 @@ cleanup:
 }
 
 static
-void* mode_pov_draw_mobile_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+void* mode_pov_draw_mobile_cb( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct CLIENT* c = NULL;
@@ -269,9 +267,7 @@ cleanup:
    return NULL;
 }
 
-static void* mode_pov_mob_calc_dist_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* mode_pov_mob_calc_dist_cb( size_t idx, void* iter, void* arg ) {
    struct MOBILE* m = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct TILEMAP* t = NULL;
@@ -293,8 +289,9 @@ cleanup:
    return NULL;
 }
 
+#if 0
 static void* mode_pov_mob_sort_dist_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    //struct MOBILE* m = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
@@ -311,6 +308,7 @@ static void* mode_pov_mob_sort_dist_cb(
 cleanup:
    return NULL;
 }
+#endif // 0
 
 static GRAPHICS_COLOR get_wall_color( GRAPHICS_DELTA* wall_pos ) {
 #ifdef TECHNICOLOR_RAYS
@@ -710,7 +708,7 @@ void mode_pov_update(
       twindow, c->puppet->x, c->puppet->y
    ); */
 
-cleanup:
+//cleanup:
    return;
 }
 

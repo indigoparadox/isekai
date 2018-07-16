@@ -1,10 +1,8 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include "bstrlib/bstrlib.h"
-#include "vector.h"
+#include "libvcol.h"
 #include "graphics.h"
-#include "hashmap.h"
 #include "input.h"
 #include "datafile.h"
 #include "mode.h"

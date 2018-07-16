@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include "vector.h"
+#include "libvcol.h"
 #include "client.h"
 
 struct CLIENT;

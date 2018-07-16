@@ -2,7 +2,7 @@
 #ifndef BSTRGLUE_H
 #define BSTRGLUE_H
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 
 struct VECTOR;
 

@@ -37,20 +37,20 @@ void duktape_helper_mobile_crash( void* udata, const char* msg ) {
    );
 }
 
-void* duktape_set_globals_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+void* duktape_set_globals_cb( bstring idx, void* iter, void* arg ) {
    struct VM_CADDY* vmc = (struct VM_CADDY*)arg;
    bstring value = (bstring)iter;
 
+   /*
    scaffold_assert( NULL != value );
    scaffold_assert( NULL != arg );
    scaffold_assert( CONTAINER_IDX_STRING == idx->type );
+   */
 
    /* Push each global onto the stack with its identifier. */
    duk_push_global_object( (duk_context*)vmc->vm );
    duk_push_string( (duk_context*)vmc->vm, bdata( value ) );
-   duk_put_prop_string( (duk_context*)vmc->vm, -2, bdata( idx->value.key ) );
+   duk_put_prop_string( (duk_context*)vmc->vm, -2, bdata( idx ) );
    duk_pop( (duk_context*)vmc->vm );
 
    return NULL;

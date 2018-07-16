@@ -9,11 +9,11 @@
 #include "hs/hsdecode.h"
 #include "hs/hsencode.h"
 
-#include "vector.h"
 #include "scaffold.h"
 #include "b64.h"
 #include "callback.h"
 #include "ref.h"
+#include "files.h"
 
 static void chunker_destroy( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );

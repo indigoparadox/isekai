@@ -13,6 +13,10 @@
 #include "mobile.h"
 #include "callback.h"
 
+#ifdef USE_DUKTAPE
+#include "duktape/duktape.h"
+#endif /* USE_DUKTAPE */
+
 static SCAFFOLD_SIZE vm_tick_count = 0;
 
 /** \brief Create a VM caddy, but don't start it.
@@ -32,16 +36,20 @@ void vm_caddy_start( struct VM_CADDY* vmc ) {
    scaffold_assert( NULL != vmc );
 
    switch( vmc->lang ) {
+   case VM_LANG_NONE:
+      goto cleanup;
 #ifdef USE_DUKTAPE
    case VM_LANG_JS:
       /* Setup the VM depending on caller type. */
       switch( vmc->caller_type ) {
+      case VM_CALLER_NONE:
+         goto cleanup;
       case VM_CALLER_MOBILE:
-         vmc->vm = (struct VM*)duk_create_heap(
+         vmc->vm = (duk_context*)duk_create_heap(
             NULL, NULL, NULL, vmc, duktape_helper_mobile_crash );
          break;
       case VM_CALLER_CHANNEL:
-         vmc->vm = (struct VM*)duk_create_heap(
+         vmc->vm = (duk_context*)duk_create_heap(
             NULL, NULL, NULL, vmc, duktape_helper_channel_crash );
          break;
       }
@@ -61,6 +69,8 @@ void vm_caddy_end( struct VM_CADDY* vmc ) {
    scaffold_assert( NULL != vmc );
 
    switch( vmc->lang ) {
+   case VM_LANG_NONE:
+      goto cleanup;
 #ifdef USE_DUKTAPE
    case VM_LANG_JS:
       if( NULL != vmc->vm ) {
@@ -97,10 +107,10 @@ void vm_caddy_free( struct VM_CADDY* vmc ) {
 
    scaffold_check_null( vmc );
 
-   hashmap_remove_cb( &(vmc->vm_scripts), callback_free_strings, NULL );
+   hashmap_remove_cb( &(vmc->vm_scripts), callback_h_free_strings, NULL );
    hashmap_cleanup( &(vmc->vm_scripts) );
 
-   hashmap_remove_cb( &(vmc->vm_globals), callback_free_strings, NULL );
+   hashmap_remove_cb( &(vmc->vm_globals), callback_h_free_strings, NULL );
    hashmap_cleanup( &(vmc->vm_globals) );
 
 cleanup:
@@ -134,9 +144,13 @@ void vm_caddy_do_event( struct VM_CADDY* vmc, const bstring event ) {
    tick_script = hashmap_get( &(vmc->vm_scripts), event );
    if( NULL != tick_script ) {
       switch( vmc->lang ) {
+      case VM_LANG_NONE:
+         goto cleanup;
 #ifdef USE_DUKTAPE
       case VM_LANG_JS:
          switch( vmc->caller_type ) {
+         case VM_CALLER_NONE:
+            goto cleanup;
          case VM_CALLER_MOBILE:
             duk_vm_mobile_run( vmc, tick_script );
             break;
@@ -159,6 +173,8 @@ BOOL vm_caddy_put(
    scaffold_assert( NULL != vmc );
 
    switch( type ) {
+   case VM_MEMBER_NONE:
+      goto cleanup;
    case VM_MEMBER_GLOBAL:
       dest = &(vmc->vm_globals);
       break;
@@ -180,7 +196,7 @@ BOOL vm_caddy_put(
    scaffold_print_debug(
       &module, "Stored script element \"%b\"\n", key );
 
-/* cleanup: */
+cleanup:
    return retval;
 }
 

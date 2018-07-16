@@ -2,7 +2,6 @@
 #define TWINDOW_C
 #include "twindow.h"
 
-#include "vector.h"
 #include "tilemap.h"
 #include "client.h"
 #include "callback.h"

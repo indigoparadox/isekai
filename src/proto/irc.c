@@ -8,6 +8,7 @@
 #include "../backlog.h"
 #include "../channel.h"
 #include "../ipc.h"
+#include "../files.h"
 
 typedef struct _IRC_COMMAND {
    struct REF refcount;
@@ -123,15 +124,10 @@ static void proto_send( struct CLIENT* c, const bstring buffer ) {
    ipc_write( c->link, buffer_copy );
 
 #ifdef DEBUG_NETWORK
-   if( TRUE == c->client_side ) {
-      scaffold_print_debug(
-         &module, "Client sent to server: %s\n", bdata( buffer )
-      );
+   if( TRUE == client_is_local( c ) ) {
+      scaffold_print_debug( &module, "Client sent to server: %b\n", buffer );
    } else {
-      scaffold_print_debug(
-         &module, "Server sent to client %d: %s\n",
-         c->link.socket, bdata( buffer )
-      );
+      scaffold_print_debug( &module, "Server sent to client: %b\n", buffer );
    }
 #endif /* DEBUG_NETWORK */
 
@@ -176,7 +172,7 @@ cleanup:
 }
 
 static void* proto_send_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring buffer = (bstring)arg;
@@ -202,7 +198,7 @@ static void proto_channel_send(
 
 cleanup:
    if( NULL != l_clients ) {
-      vector_remove_cb( l_clients, callback_free_clients, NULL );
+      vector_remove_cb( l_clients, callback_v_free_clients, NULL );
       vector_cleanup( l_clients );
       mem_free( l_clients );
    }
@@ -376,7 +372,7 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
 }
 
 static void* proto_send_item_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -431,7 +427,7 @@ cleanup:
 }
 
 static void* proto_send_tile_cache_channel_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   bstring idx, void* iter, void* arg
 ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)arg;
@@ -558,9 +554,7 @@ struct IRC_WHO_REPLY {
    struct SERVER* s;
 };
 
-static void* irc_callback_reply_who(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* irc_callback_reply_who( bstring idx, void* iter, void* arg ) {
    struct IRC_WHO_REPLY* who = (struct IRC_WHO_REPLY*)arg;
    struct CLIENT* c_iter = (struct CLIENT*)iter;
    proto_printf(
@@ -760,7 +754,7 @@ static void irc_server_ison(
 
 cleanup:
    if( NULL != ison ) {
-      vector_remove_cb( ison, callback_free_clients, NULL );
+      vector_remove_cb( ison, callback_v_free_clients, NULL );
       vector_cleanup( ison );
       mem_free( ison );
    }
@@ -845,7 +839,7 @@ static void irc_server_join(
 
 cleanup:
    if( NULL != cat_names ) {
-      vector_remove_cb( cat_names, callback_free_strings, NULL );
+      vector_remove_cb( cat_names, callback_v_free_strings, NULL );
       vector_free( &cat_names );
    }
    bdestroy( names );
@@ -1436,7 +1430,7 @@ static void irc_command_cleanup( const struct REF* ref ) {
    for( i = 0 ; vector_count( cmd->args ) > i ; i++ ) {
       bwriteallow( *((bstring)vector_get( cmd->args, i )) );
    }
-   vector_remove_cb( cmd->args, callback_free_strings, NULL );
+   vector_remove_cb( cmd->args, callback_v_free_strings, NULL );
    vector_free( &(cmd->args) );
 
    mem_free( cmd );
@@ -1535,7 +1529,7 @@ cleanup:
       for( i = 0 ; args_count > i ; i++ ) {
          bwriteallow( *((bstring)vector_get( args, i )) );
       }
-      vector_remove_cb( args, callback_free_strings, NULL );
+      vector_remove_cb( args, callback_v_free_strings, NULL );
       vector_free( &args );
    }
    return out;
@@ -1565,10 +1559,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    scaffold_check_nonzero( bstr_result );
 
    /* Get the next line and clean it up. */
-   last_read_count = ipc_read(
-      c->link,
-      irc_line_buffer
-   );
+   last_read_count = ipc_read( c->link, irc_line_buffer );
 
    if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
       /* Return an empty command to force abortion of the iteration. */
@@ -1590,9 +1581,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
 
 #ifdef DEBUG_NETWORK
    scaffold_print_debug(
-      &module,
-      "Server: Line received from %d: %s\n",
-      c->link.socket, bdata( irc_line_buffer )
+      &module, "Server: Line received: %b\n", irc_line_buffer
    );
 #endif /* DEBUG_NETWORK */
 
@@ -1604,7 +1593,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
 cleanup:
    if( NULL != cmd ) {
       if( NULL != cmd->args ) {
-         vector_remove_cb( cmd->args, callback_free_strings, NULL );
+         vector_remove_cb( cmd->args, callback_v_free_strings, NULL );
          vector_free( &(cmd->args) );
       }
       bdestroy( cmd->line );

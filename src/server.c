@@ -3,7 +3,6 @@
 #include "server.h"
 
 #include "callback.h"
-#include "hashmap.h"
 #include "proto.h"
 #include "channel.h"
 #include "ipc.h"
@@ -234,7 +233,7 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(s->clients), callback_free_clients, nick );
+      hashmap_remove_cb( &(s->clients), callback_h_free_clients, nick );
 #ifdef DEBUG
    scaffold_print_debug(
       &module, "Server: Removed %d clients (%b). %d remaining.\n",
@@ -254,7 +253,8 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(s->self.channels), callback_free_empty_channels, NULL );
+      hashmap_remove_cb(
+         &(s->self.channels), callback_free_empty_channels, NULL );
 #ifdef DEBUG
    scaffold_print_debug(
       &module, "Removed %d channels from server. %d remaining.\n",
@@ -319,9 +319,7 @@ cleanup:
    return new_clients;
 }
 
-static void* server_srv_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
+static void* server_srv_cb( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct SERVER* s = (struct SERVER*)arg;
    BOOL keep_going = TRUE;
@@ -347,7 +345,8 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    /* Check for commands from existing clients. */
    if( 0 < hashmap_count( &(s->clients) ) ) {
-      c_stop = hashmap_iterate_nolock( &(s->clients), server_srv_cb, s );
+      // XXX: NOLOCK
+      c_stop = hashmap_iterate( &(s->clients), server_srv_cb, s );
    }
 
    if( NULL != c_stop ) {

@@ -5,7 +5,6 @@
 #include <math.h>
 #endif /* !DISABLE_MODE_POV */
 
-#include "bstrlib/bstrlib.h"
 #include "scaffold.h"
 #include "ref.h"
 

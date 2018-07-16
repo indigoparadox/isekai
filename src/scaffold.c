@@ -201,8 +201,6 @@ void scaffold_print_debug_color(
    va_start( varg, message );
    scaffold_log( scaffold_log_handle_err, mod_in, color, message, varg );
    va_end( varg );
-
-cleanup:
    return;
 #endif /* DEBUG */
 }

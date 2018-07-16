@@ -2,7 +2,6 @@
 #define DATAFILE_C
 #include "../datafile.h"
 
-#include "../hashmap.h"
 #include "../vm.h"
 #include "../callback.h"
 #include "../channel.h"
@@ -790,7 +789,7 @@ cleanup:
       tilemap_layer_free( layer );
    }
    bdestroy( buffer );
-   vector_remove_cb( tiles_list, callback_free_strings, NULL );
+   vector_remove_cb( tiles_list, callback_v_free_strings, NULL );
    vector_free( &tiles_list );
    return;
 }

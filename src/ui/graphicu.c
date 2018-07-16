@@ -720,7 +720,7 @@ static void ui_window_reset_grid( struct UI_WINDOW* win ) {
 }
 
 static void* ui_control_window_size_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   bstring idx, void* iter, void* arg
 ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)arg;
    const struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
@@ -824,7 +824,7 @@ cleanup:
 }
 
 static void* ui_control_draw_backlog_line(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct UI_CONTROL* control = (struct UI_CONTROL*)arg;
    struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
@@ -891,7 +891,7 @@ static void ui_draw_item_sprite(
 }
 
 static void* ui_control_draw_inventory_item(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct ITEM* e = (struct ITEM*)iter;
    struct UI_CONTROL* inv_pane = (struct UI_CONTROL*)arg;
@@ -1235,7 +1235,7 @@ static void ui_window_draw_furniture( const struct UI_WINDOW* win ) {
    );
 }
 
-static void* ui_window_draw_cb( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
+static void* ui_window_draw_cb( size_t idx, void* iter, void* arg ) {
    GRAPHICS* g = (GRAPHICS*)arg;
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    SCAFFOLD_SIZE_SIGNED
@@ -1421,6 +1421,7 @@ cleanup:
 
 #ifdef DEBUG
 void ui_debug_stack( struct UI* ui ) {
-   vector_iterate_nolock( &(ui->windows), callback_assert_windows, NULL, NULL );
+   // XXX: NOLOCK
+   //vector_iterate( &(ui->windows), callback_assert_windows, NULL );
 }
 #endif /* DEBUG */

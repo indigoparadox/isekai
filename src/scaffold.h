@@ -86,6 +86,7 @@ typedef long SCAFFOLD_SIZE_SIGNED;
 typedef uint8_t BYTE;
 #endif /* BYTE */
 
+#if 0
 #if !defined( BOOL ) && !defined( WIN32 )
 typedef uint8_t BOOL;
 #endif /* BOOL */
@@ -97,6 +98,7 @@ typedef uint8_t BOOL;
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
+#endif
 
 #ifdef USE_SIZET
 typedef size_t SCAFFOLD_SIZE;
@@ -124,7 +126,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #include <stdio.h>
 #include <stddef.h>
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 #include "bstrglue.h"
 #include "colors.h"
 
@@ -466,9 +468,7 @@ struct CONTAINER_IDX {
 struct VECTOR;
 
 /* Vector needs some stuff above but is needed for stuff below. */
-#include "mem.h"
-#include "files.h"
-#include "vector.h"
+#include "libvcol.h"
 
 #define scaffold_byte( number ) (0xff & number)
 
@@ -485,6 +485,9 @@ void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
 BOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
 void scaffold_colorize( bstring str, SCAFFOLD_COLOR color );
 int scaffold_strcmp_caseless( const char* s0, const char* s1 );
+BOOL scaffold_buffer_grow(
+   BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
+);
 
 #ifdef SCAFFOLD_C
 

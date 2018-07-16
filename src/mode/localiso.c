@@ -21,7 +21,7 @@ static void mode_isometric_tilemap_draw_tile(
  *         tile/position (kind of the opposite of tilemap_draw_layer_cb.)
  */
 static void* mode_isometric_tilemap_draw_tile_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
@@ -51,7 +51,7 @@ static void* mode_isometric_tilemap_draw_tile_cb(
 }
 
 static void* mode_isometric_draw_mobile_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
@@ -70,7 +70,7 @@ static void* mode_isometric_draw_mobile_cb(
 }
 
 static void* mode_isometric_tilemap_draw_items_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    GRAPHICS_RECT* rect = (GRAPHICS_RECT*)arg;
    struct ITEM* e = (struct ITEM*)iter;
@@ -84,7 +84,7 @@ static void* mode_isometric_tilemap_draw_items_cb(
 /** \brief Callback: Draw iterated layer.
  */
 static void* mode_isometric_tilemap_draw_layer_cb(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+   size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;

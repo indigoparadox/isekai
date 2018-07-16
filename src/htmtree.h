@@ -2,7 +2,7 @@
 #ifndef HTMLTREE_H
 #define HTMLTREE_H
 
-#include "bstrlib/bstrlib.h"
+#include "libvcol.h"
 
 enum html_tree_state {
    HTML_TREE_IN_DATA,

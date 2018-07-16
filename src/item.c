@@ -139,7 +139,7 @@ SCAFFOLD_SIZE item_random_sprite_id_of_type(
    SCAFFOLD_SIZE selection = 0;
 
    candidates = vector_iterate_v(
-      &(catalog->sprites), callback_search_item_type, NULL, &type
+      &(catalog->sprites), callback_search_item_type, &type
    );
    scaffold_check_null_msg( candidates, "No sprite candidates found." );
 

@@ -1,10 +1,8 @@
 #ifndef UI_H
 #define UI_H
 
+#include "libvcol.h"
 #include "input.h"
-#include "bstrlib/bstrlib.h"
-#include "vector.h"
-#include "hashmap.h"
 #include "graphics.h"
 
 #define UI_TITLEBAR_BG     GRAPHICS_COLOR_BROWN
