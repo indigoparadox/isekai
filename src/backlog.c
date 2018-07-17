@@ -11,6 +11,7 @@ static struct tagbstring str_backlog_id = bsStatic( "backlog" );
 
 void backlog_init() {
    vector_init( &global_backlog );
+   lg_set_info_cb( backlog_system );
 }
 
 void backlog_shutdown() {
