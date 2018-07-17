@@ -799,6 +799,7 @@
 			<Add option="-DEZXML_NOMMAP" />
 			<Add option="-DUSE_ITERATOR_CACHE" />
 			<Add directory="src/libvcol/src/bstrlib" />
+			<Add directory="src/libgoki/src" />
 		</Compiler>
 		<Unit filename="htmlrend.h">
 			<Option virtualFolder="src/" />
@@ -1247,7 +1248,6 @@
 			<Option target="Debug (MingW32-NET)" />
 			<Option target="Debug (MingW32-SB)" />
 		</Unit>
-		<Unit filename="src/hashmap.h" />
 		<Unit filename="src/hs/hs_com.h">
 			<Option target="Debug" />
 			<Option target="Release" />
@@ -1502,7 +1502,6 @@
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
 		</Unit>
-		<Unit filename="src/mem.h" />
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1751,7 +1750,6 @@
 			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/vector.h" />
 		<Unit filename="src/vm.c">
 			<Option compilerVar="CC" />
 		</Unit>
