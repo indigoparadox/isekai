@@ -51,10 +51,8 @@ BOOL server_service_clients( struct SERVER* s );
 void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick );
 bstring server_file_search( bstring search_filename );
 
-#ifdef SERVER_C
-SCAFFOLD_MODULE( "server.c" );
-#else
+#ifndef SERVER_C
 extern struct tagbstring str_server_data_path;
-#endif /* SERVER_C */
+#endif /* !SERVER_C */
 
 #endif /* SERVER_H */

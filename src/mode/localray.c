@@ -183,7 +183,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
 
    current_frame = (struct MOBILE_SPRITE_DEF*)
       vector_get( &(o->current_animation->frames), o->current_frame );
-   scaffold_check_null( current_frame );
+   lgc_null( current_frame );
    current_sprite.w = spritesheet.w = o->sprite_width;
    current_sprite.h = spritesheet.h = o->sprite_height;
    graphics_get_spritesheet_pos_ortho(
@@ -276,7 +276,7 @@ static void* mode_pov_mob_calc_dist_cb( size_t idx, void* iter, void* arg ) {
    c = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = c->active_tilemap;
 
-   scaffold_check_null( t );
+   lgc_null( t );
    if( NULL == m ) {
       goto cleanup; /* Silently. */
    }
@@ -301,7 +301,7 @@ static void* mode_pov_mob_sort_dist_cb(
    c = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = c->active_tilemap;
 
-   scaffold_check_null( t );
+   lgc_null( t );
 
    /* TODO: Sort by distance. */
 
@@ -448,7 +448,7 @@ static BOOL mode_pov_draw_floor(
       g_tileset = (GRAPHICS*)hashmap_iterate(
          &(set->images),
          callback_search_tileset_img_gid,
-         c
+         (void*)c
       );
       if( NULL == g_tileset ) {
          /* Tileset not yet loaded, so fail gracefully. */
@@ -504,7 +504,7 @@ static BOOL mode_pov_update_view(
       pov_incr = 0;
    BOOL recurse = TRUE;
 
-   scaffold_check_null( t );
+   lgc_null( t );
 
    /* Do the actual casting. */
    wall_hit = FALSE;
@@ -563,7 +563,7 @@ static BOOL mode_pov_update_view(
    if( recurse ) {
       ret_tmp = mode_pov_update_view(
          i_x, layer_max, layer_pov + pov_incr, ray, wall_draw_top, cell_height, c, g );
-      if( TRUE == ret_tmp ) {
+      if( FALSE != ret_tmp ) {
          ret_error = TRUE;
          goto cleanup;
       }
@@ -571,7 +571,7 @@ static BOOL mode_pov_update_view(
 
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < cell_height ) {
-      if( TRUE == wall_hit ) {
+      if( FALSE != wall_hit ) {
          /* Choose wall color. */
          color = get_wall_color( &wall_map_pos );
 #ifdef RAYCAST_FOG
@@ -591,7 +591,7 @@ static BOOL mode_pov_update_view(
       ret_tmp = mode_pov_draw_floor(
          &floor_pos, i_x, wall_draw_bottom, prev_wall_top, prev_wall_height,
          &wall_map_pos, layer, ray, c, g );
-      if( TRUE == ret_tmp ) {
+      if( FALSE != ret_tmp ) {
          ret_error = TRUE;
       }
    }
@@ -619,10 +619,10 @@ void mode_pov_draw(
 
    g = twindow->g;
    t = c->active_tilemap;
-   scaffold_check_null( t );
+   lgc_null( t );
 
    player = c->puppet;
-   scaffold_check_null( player );
+   lgc_null( player );
 
    mode_pov_set_facing( c, player->facing );
 
@@ -637,7 +637,7 @@ void mode_pov_draw(
    }
 
    if(
-      TRUE == draw_failed ||
+      FALSE != draw_failed ||
       player->x != last.x ||
       player->y != last.y ||
       player->facing != last.facing
@@ -736,11 +736,11 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui = c->ui;
       update.o = puppet;
       update.l = puppet->channel;
-      scaffold_check_null( update.l );
+      lgc_null( update.l );
       l = puppet->channel;
-      scaffold_check_null_msg( l, "No channel loaded." );
+      lgc_null_msg( l, "No channel loaded." );
       t = &(l->tilemap);
-      scaffold_check_null_msg( t, "No tilemap loaded." );
+      lgc_null_msg( t, "No tilemap loaded." );
    }
 
    /* If no windows need input, then move on to game input. */
@@ -783,7 +783,7 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_inv,
@@ -809,7 +809,7 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case '\\':
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_chat,
@@ -863,7 +863,7 @@ void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p )
 
 void mode_pov_free( struct CLIENT* c ) {
    if(
-      TRUE == client_is_local( c ) &&
+      FALSE != client_is_local( c ) &&
       hashmap_is_valid( &(c->sprites) )
    ) {
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );

@@ -33,8 +33,8 @@ void backlog_ensure_window( struct UI* ui, GFX_COORD_PIXEL height ) {
 
    win = ui_window_by_id( ui, &str_backlog_id );
    if( NULL == win ) {
-      scaffold_print_debug(
-         &module, "Creating backlog window, height: %d\n", height
+      lg_debug(
+         __FILE__, "Creating backlog window, height: %d\n", height
       );
       ui_window_new(
          ui, win, &str_backlog_id,
@@ -56,7 +56,7 @@ void backlog_close_window( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
    win = ui_window_by_id( ui, &str_backlog_id );
    if( NULL != win ) {
-      scaffold_print_debug( &module, "Closing backlog window.\n" );
+      lg_debug( __FILE__, "Closing backlog window.\n" );
       ui_window_destroy( ui, &str_backlog_id );
    }
    return;
@@ -95,7 +95,7 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    SCAFFOLD_SIZE_SIGNED verr;
 
    line = mem_alloc( 1, struct BACKLOG_LINE );
-   scaffold_check_null( line );
+   lgc_null( line );
 
    line->nick = bstrcpy( nick );
    line->line = bstrcpy( msg );
@@ -117,7 +117,7 @@ void backlog_system( const bstring msg ) {
    SCAFFOLD_SIZE_SIGNED verr;
 
    line = mem_alloc( 1, struct BACKLOG_LINE );
-   scaffold_check_null( line );
+   lgc_null( line );
 
    line->nick = NULL;
    line->line = bstrcpy( msg );

@@ -16,7 +16,7 @@ static BOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
       }
       remove = TRUE;
    }
-cleanup:
+/* cleanup: */
    return remove;
 }
 
@@ -237,7 +237,7 @@ cleanup:
 short animate_add_animation( struct ANIMATION* a, bstring key ) {
    /* TODO: What if key exists? */
    if( hashmap_put( &animations, key, a, FALSE ) ) {
-      scaffold_print_error( &module, "Attempted to double-add animation...\n" );
+      lg_error( __FILE__, "Attempted to double-add animation...\n" );
       return 1;
    }
    return 0;
@@ -254,8 +254,9 @@ void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
    a = hashmap_get( &animations, key );
 
    if( NULL != a ) {
+      lg_debug( __FILE__, "Removing \"%b\" animation...\n", key );
       removed = hashmap_remove( &animations, key );
-      scaffold_assert( TRUE == removed );
+      scaffold_assert( 1 == removed );
       if( NULL != a_out ) {
          *a_out = a;
       } else {
@@ -305,7 +306,7 @@ static BOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
    BOOL remove = FALSE;
    struct ANIMATION_FRAME* current_frame = NULL;
 
-   if( TRUE == a->global ) {
+   if( FALSE != a->global ) {
       /* Leave this for the global cycler. */
       goto cleanup;
    }
@@ -322,8 +323,8 @@ static BOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
 
    if( NULL == a->current_frame && FALSE == a->indefinite ) {
       /* The animation has expired. */
-      scaffold_print_debug(
-         &module, "Animation finished: %b", idx
+      lg_debug(
+         __FILE__, "Animation finished: %b", idx
       );
       animate_free_animation( &a );
       remove = TRUE;

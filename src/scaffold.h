@@ -127,6 +127,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #include <stddef.h>
 
 #include "libvcol.h"
+#include "libgoki.h"
 #include "bstrglue.h"
 #include "colors.h"
 
@@ -170,14 +171,6 @@ typedef enum {
    SCAFFOLD_ERROR_UNEQUAL
 } SCAFFOLD_ERROR;
 
-#ifdef DEBUG
-typedef enum {
-   SCAFFOLD_TRACE_NONE,
-   SCAFFOLD_TRACE_CLIENT,
-   SCAFFOLD_TRACE_SERVER
-} SCAFFOLD_TRACE;
-#endif /* DEBUG */
-
 #ifdef USE_INLINE
 #define SCAFFOLD_INLINE inline
 #else
@@ -217,14 +210,14 @@ void scaffold_print_debug_color(
 #if defined( DEBUG ) && !defined( DEBUG_NO_CLIENT_SERVER_MODEL )
 
 #define scaffold_assert_client() \
-   scaffold_assert( SCAFFOLD_TRACE_CLIENT == scaffold_trace_path )
+   assert( 0 == strncmp( "CLIENT", lg_get_trace_cat_name(), 6 ) );
 #define scaffold_assert_server() \
-   scaffold_assert( SCAFFOLD_TRACE_SERVER == scaffold_trace_path )
+   assert( 0 == strncmp( "SERVER", lg_get_trace_cat_name(), 6 ) );
 
 #define scaffold_set_client() \
-   scaffold_trace_path = SCAFFOLD_TRACE_CLIENT;
+   lg_set_trace_cat( "CLIENT" )
 #define scaffold_set_server() \
-   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
+   lg_set_trace_cat( "SERVER" )
 
 #else
 
@@ -245,20 +238,6 @@ void scaffold_print_debug_color(
 #error Colored console is not compatible with log files!
 #endif /* SCAFFOLD_LOG_FILE */
 
-#ifdef SCAFFOLD_C
-
-static
-struct tagbstring ansi_color_strs[7] = {
-   /* GRAPHICS_COLOR_BLUE        =  9, */ bsStatic( "\x1b[34m" ),
-   /* GRAPHICS_COLOR_GREEN       = 10, */ bsStatic( "\x1b[32m" ),
-   /* GRAPHICS_COLOR_CYAN        = 11, */ bsStatic( "\x1b[36m" ),
-   /* GRAPHICS_COLOR_RED         = 12, */ bsStatic( "\x1b[31m" ),
-   /* GRAPHICS_COLOR_MAGENTA     = 13, */ bsStatic( "\x1b[35m" ),
-   /* GRAPHICS_COLOR_YELLOW      = 14, */ bsStatic( "\x1b[33m" ),
-   /* GRAPHICS_COLOR_WHITE       = 15  */ bsStatic( "\x1b[0m" )
-};
-#endif /* SCAFFOLD_C */
-
 #endif /* USE_COLORED_CONSOLE */
 
 typedef union CONTAINER_IDX_VALUE {
@@ -278,9 +257,6 @@ struct CONTAINER_IDX {
 
 /* = Utility Macros = */
 
-#define SCAFFOLD_MODULE( mod_name ) \
-   static struct tagbstring module = bsStatic( mod_name )
-
 #define scaffold_static_string( cstr ) \
     blk2bstr( bsStaticBlkParms( cstr ) )
 
@@ -289,7 +265,7 @@ struct CONTAINER_IDX {
       target = bfromcstr( source ); \
    } else { \
       retval = bassigncstr( target, source ); \
-      scaffold_check_nonzero( retval ); \
+      lgc_nonzero( retval ); \
    }
 
 #define scaffold_check_silence() scaffold_error_silent = TRUE;
@@ -300,7 +276,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, \
+               __FILE__, \
                "Scaffold: Null pointer on line: %d: %s\n", \
                __LINE__, message ); \
         } \
@@ -314,7 +290,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_warning_silent ) { \
             scaffold_print_warning( \
-               &module, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+               __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -326,7 +302,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+               __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -338,8 +314,8 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
-            scaffold_print_debug( &module, "Continuing loop..." ); \
+               __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
+            scaffold_print_debug( __FILE__, "Continuing loop..." ); \
         } \
         continue; \
     } else { \
@@ -351,7 +327,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, \
+               __FILE__, \
                "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
@@ -364,7 +340,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
+               __FILE__, "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -376,7 +352,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
+               __FILE__, "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -388,7 +364,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_NONZERO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
+               __FILE__, "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
         } \
         goto cleanup; \
     } else { \
@@ -400,7 +376,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, \
+               __FILE__, \
                "Scaffold: Zero error on line: %d: %s\n", __LINE__, message ); \
         } \
         goto cleanup; \
@@ -414,7 +390,7 @@ struct CONTAINER_IDX {
         last = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_warning_silent ) { \
             scaffold_print_warning( \
-               &module, \
+               __FILE__, \
                "Scaffold: Zero warning on line: %d: %s\n", __LINE__, msg ); \
         } \
         goto cleanup; \
@@ -427,7 +403,7 @@ struct CONTAINER_IDX {
         last = SCAFFOLD_ERROR_ZERO; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module, \
+               __FILE__, \
                "Scaffold: Zero error on line: %d: %s\n", __LINE__, msg ); \
         } \
         goto cleanup; \
@@ -440,7 +416,7 @@ struct CONTAINER_IDX {
         scaffold_error = SCAFFOLD_ERROR_UNEQUAL; \
         if( TRUE != scaffold_error_silent ) { \
             scaffold_print_error( \
-               &module,\
+               __FILE__,\
                "Values not equal: %d and %d: error on line: %d\n", \
                value1, value2, __LINE__ ); \
         } \
@@ -492,8 +468,6 @@ BOOL scaffold_buffer_grow(
 #ifdef SCAFFOLD_C
 
 /* SCAFFOLD_MODULE( "scaffold.c" ); */
-static struct tagbstring module = bsStatic( "scaffold.c" );
-
 struct tagbstring scaffold_empty_string = bsStatic( "" );
 struct tagbstring scaffold_space_string = bsStatic( " " );
 struct tagbstring scaffold_colon_string = bsStatic( ":" );
@@ -503,7 +477,7 @@ struct tagbstring scaffold_null = bsStatic( "(null)" );
 #else
 
 #ifdef DEBUG
-extern SCAFFOLD_TRACE scaffold_trace_path;
+//extern SCAFFOLD_TRACE scaffold_trace_path;
 #endif /* DEBUG */
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;

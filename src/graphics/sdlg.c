@@ -156,7 +156,7 @@ void graphics_screen_new(
 #endif /* USE_SDL_IMAGE */
       | SDL_DOUBLEBUF
    );
-   scaffold_check_null( (*g)->surface );
+   lgc_null( (*g)->surface );
    graphics_surface_set_h( *g, h );
    graphics_surface_set_w( *g, w );
    (*g)->virtual_x = vw;
@@ -191,7 +191,7 @@ void graphics_surface_init( GRAPHICS* g, GFX_COORD_PIXEL w, GFX_COORD_PIXEL h ) 
          screen->format->Bmask,
          screen->format->Amask
       );
-      scaffold_check_null( g->surface );
+      lgc_null( g->surface );
    }
    g->virtual_x = 0;
    g->virtual_y = 0;
@@ -239,7 +239,7 @@ void graphics_set_image_data(
    BYTE* holder = NULL;
 
    screen = SDL_GetVideoSurface();
-   scaffold_check_null( screen );
+   lgc_null( screen );
 
    if( NULL != g->surface ) {
       SDL_FreeSurface( g->surface );
@@ -251,7 +251,7 @@ void graphics_set_image_data(
    rwop = SDL_RWFromConstMem( data, length );
 
    temp_surface = IMG_LoadBMP_RW( rwop );
-   scaffold_check_null( temp_surface );
+   lgc_null( temp_surface );
 
    /* Setup transparency. */
    color_key = SDL_MapRGB( temp_surface->format, 0, 0, 0 );
@@ -265,7 +265,7 @@ void graphics_set_image_data(
    //g->fp_w = graphics_precise( g->w );
    //g->fp_h = graphics_precise( g->h );
 
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
 
 cleanup:
    if( NULL != temp_surface ) {
@@ -274,8 +274,8 @@ cleanup:
    SDL_FreeRW( rwop );
 #else
    graphics_bitmap_load( data, length, &bitmap );
-   scaffold_check_null( bitmap );
-   scaffold_check_null( bitmap->pixels );
+   lgc_null( bitmap );
+   lgc_null( bitmap->pixels );
    g->surface = SDL_CreateRGBSurface(
       SDL_SWSURFACE,
       bitmap->w,
@@ -286,15 +286,15 @@ cleanup:
       screen->format->Bmask,
       screen->format->Amask
    );
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
    graphics_surface_set_h( g, bitmap->h );
    graphics_surface_set_w( g, bitmap->w );
    sdl_ret = SDL_LockSurface( g->surface );
-   scaffold_check_nonzero( sdl_ret );
+   lgc_nonzero( sdl_ret );
    surface = (SDL_Surface*)g->surface;
-   scaffold_check_null( surface );
+   lgc_null( surface );
    format = surface->format;
-   scaffold_check_null( format );
+   lgc_null( format );
    scaffold_assert( 16 == format->BitsPerPixel );
    //holder = mem_alloc( bytes_per_pixel, BYTE );
    for( y = 0 ; surface->h > y ; y++ ) {
@@ -338,7 +338,7 @@ void graphics_draw_rect(
    SDL_Color* color = &(graphics_stock_colors[color_i]);
    SDL_Surface* surface = g->surface;
 
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
 
    rect.x = x;
    rect.y = y;
@@ -387,7 +387,7 @@ void graphics_draw_char(
 
    divisor = size / 8.0f;
 
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
 
    color = &(graphics_get_color( color_i ));
 

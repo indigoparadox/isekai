@@ -12,6 +12,7 @@
 #include "rng.h"
 #include "channel.h"
 #include "proto.h"
+#include "files.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -22,8 +23,6 @@
 #endif /* __GNUC__ */
 
 #define SERVER_LOOPS_PER_CYCLE 5
-
-SCAFFOLD_MODULE( "main.c" );
 
 static struct tagbstring str_readme_id = bsStatic( "readme" );
 static struct tagbstring str_readme_title = bsStatic( "Readme" );
@@ -154,17 +153,17 @@ static BOOL loop_game() {
 
    /* Do drawing. */
    l = hashmap_get_first( &(main_client->channels) );
-   if( TRUE == channel_has_error( l ) ) {
+   if( FALSE != channel_has_error( l ) ) {
       /* Abort and go back to connect dialog. */
       /* We need to stop both client AND server, 'cause the data is bad! */
       // TODO
-      //scaffold_print_debug( &module, "Stopping server...\n" );
+      //lg_debug( __FILE__, "Stopping server...\n" );
       //scaffold_set_server();
       //server_stop_clients( main_server );
       //server_stop( main_server );
       ui_message_box( ui, l->error );
       client_stop( main_client );
-      scaffold_print_debug( &module, "Unloading loading animation...\n" );
+      lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
       goto cleanup;
 
@@ -172,7 +171,7 @@ static BOOL loop_game() {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
          load_complete = FALSE;
-         scaffold_print_debug( &module, "Creating loading animation...\n" );
+         lg_debug( __FILE__, "Creating loading animation...\n" );
          graphics_surface_new( throbber, 0, 0, 32, 32 );
          graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_WHITE, TRUE );
 
@@ -207,7 +206,7 @@ static BOOL loop_game() {
 
    } else if( TRUE != main_client->running ) {
       /* We're stopping, not starting. */
-      scaffold_print_debug( &module, "Stopping server...\n" );
+      lg_debug( __FILE__, "Stopping server...\n" );
       server_stop( main_server );
 #ifndef USE_NETWORK
       keep_going = FALSE;
@@ -215,7 +214,7 @@ static BOOL loop_game() {
       goto cleanup;
 
    } else if( NULL == main_client->active_tilemap ) {
-      scaffold_print_debug( &module, "Unsetting main client...\n" );
+      lg_debug( __FILE__, "Unsetting main client...\n" );
       client_set_active_t( main_client, l->tilemap );
    }
 
@@ -224,7 +223,7 @@ static BOOL loop_game() {
 
    if( !load_complete ) {
       /* If we're this far, we must be done loading! */
-      scaffold_print_debug( &module, "Unloading loading animation...\n" );
+      lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
       load_complete = TRUE;
 
@@ -364,15 +363,15 @@ static BOOL loop_connect() {
 
       /* TODO: Add fields for these to connect dialog. */
       bstr_result = bassigncstr( main_client->nick, "TestNick" );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
       bstr_result = bassigncstr( main_client->realname, "Tester Tester" );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
       bstr_result = bassigncstr( main_client->username, "TestUser" );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
 
 #ifdef USE_CONNECT_DIALOG
 
-      scaffold_print_debug( &module, "Creating connect dialog...\n" );
+      lg_debug( __FILE__, "Creating connect dialog...\n" );
 
       /* Prompt for an address and port. */
       ui_window_new(
@@ -413,7 +412,7 @@ static BOOL loop_connect() {
       bstr_result =
          bassignformat( buffer_host, "%s:%d", bdata( &str_localhost ), server_port );
       bstr_result = bassign( buffer_channel, &str_default_channel );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
    }
 
    ui_draw( ui, g_screen );
@@ -447,8 +446,8 @@ static BOOL loop_connect() {
       UI_INPUT_RETURN_KEY_ENTER == input_res ||
       0 < input_res
    ) {
-      scaffold_print_info(
-         &module, "Connecting to: %b\n",
+      lg_info(
+         __FILE__, "Connecting to: %b\n",
          buffer_host
       );
       /* Dismiss the connect dialog. */
@@ -457,13 +456,13 @@ static BOOL loop_connect() {
       /* Split up the address and port. */
       server_tuple = bgsplit( buffer_host, ':' );
       if( 2 < vector_count( server_tuple ) ) {
-         scaffold_print_error( &module, "Invalid host string.\n" );
+         lg_error( __FILE__, "Invalid host string.\n" );
          goto cleanup;
       }
       server_address = vector_get( server_tuple, 0 );
       server_port = bgtoi( vector_get( server_tuple, 1 ) );
       if( 0 >= server_port ) {
-         scaffold_print_error( &module, "Invalid port string.\n" );
+         lg_error( __FILE__, "Invalid port string.\n" );
          goto cleanup;
       }
 #else
@@ -477,12 +476,12 @@ static BOOL loop_connect() {
             goto cleanup;
          }
       }
-      scaffold_print_debug( &module, "Listening on port: %d\n", server_port );
+      lg_debug( __FILE__, "Listening on port: %d\n", server_port );
 
 #ifdef USE_RANDOM_PORT
       if( NULL == str_service ) {
          str_service = bformat( "Port: %d", server_port );
-         scaffold_check_null( str_service );
+         lgc_null( str_service );
       }
       ui_debug_window( ui, &str_wid_debug_ip, str_service );
 #endif /* USE_RANDOM_PORT */
@@ -531,8 +530,8 @@ static BOOL loop_master() {
       retval = FALSE;
 #endif /* !USE_CONNECT_DIALOG */
    } else if( connected && (!main_client_joined) ) {
-      scaffold_print_debug(
-         &module, "Server connected; joining client to channel...\n"
+      lg_debug(
+         __FILE__, "Server connected; joining client to channel...\n"
       );
       main_client->ui = ui;
       main_client->local_window.g = g_screen;
@@ -560,7 +559,7 @@ static BOOL loop_master() {
    bstr_ret = bassignformat(
       graphics_fps, "FPS: %f\n", calc_fps( graphics_sample_fps_timer() )
    );
-   scaffold_check_nonzero( bstr_ret );
+   lgc_nonzero( bstr_ret );
 #endif /* DEBUG_FPS */
 
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -584,9 +583,12 @@ int main( int argc, char** argv ) {
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
 
+   lg_add_trace_cat( "CLIENT", LG_COLOR_CYAN );
+   lg_add_trace_cat( "SERVER", LG_COLOR_GREEN );
+
 #ifdef ENABLE_LOCAL_CLIENT
    g_screen = mem_alloc( 1, GRAPHICS );
-   scaffold_check_null( g_screen );
+   lgc_null( g_screen );
 
 #ifdef _WIN32
    graphics_screen_new(
@@ -601,12 +603,12 @@ int main( int argc, char** argv ) {
    );
 #endif /* _WIN32 */
 
-   scaffold_check_nonzero( scaffold_error );
+   lgc_nonzero( scaffold_error );
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
    input = mem_alloc( 1, struct INPUT );
-   scaffold_check_null( input );
+   lgc_null( input );
    input_init( input );
    ui_init( g_screen );
    ui = ui_get_local();
@@ -615,10 +617,10 @@ int main( int argc, char** argv ) {
    rng_init();
 
    ipc_setup();
-   scaffold_check_nonzero( scaffold_error );
+   lgc_nonzero( scaffold_error );
 
    proto_setup();
-   scaffold_check_nonzero( scaffold_error );
+   lgc_nonzero( scaffold_error );
 
 #endif /* ENABLE_LOCAL_CLIENT */
 

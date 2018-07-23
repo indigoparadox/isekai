@@ -23,8 +23,8 @@
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
 
-   scaffold_print_debug(
-      &module,
+   lg_debug(
+      __FILE__,
       "Destroying channel: %b\n",
       l->name
    );
@@ -82,8 +82,8 @@ void channel_init(
    l->sentinal = CHANNEL_SENTINAL;
    l->client_or_server = server;
    l->error = NULL;
-   scaffold_check_null( l->name );
-   scaffold_check_null( l->topic );
+   lgc_null( l->name );
+   lgc_null( l->topic );
    tilemap_new( l->tilemap, local_images, server, l );
 #ifdef USE_VM
    vm_caddy_new( l->vm_caddy );
@@ -98,13 +98,13 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    struct TILEMAP_SPAWNER* spawner = NULL;
    struct VECTOR* player_spawns = NULL;
 
-   scaffold_check_null( c );
+   lgc_null( c );
 
    if( NULL != channel_get_client_by_name( l, c->nick ) ) {
       goto cleanup;
    }
 
-   if( TRUE == spawn ) {
+   if( FALSE != spawn ) {
       scaffold_assert_server();
       t = l->tilemap;
 
@@ -112,14 +112,14 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       player_spawns = vector_iterate_v(
          &(t->spawners), callback_search_spawners, &str_player
       );
-      scaffold_check_null_msg( player_spawns, "No player spawns available." );
+      lgc_null_msg( player_spawns, "No player spawns available." );
       spawner =
          vector_get( player_spawns, rand() % vector_count( player_spawns ) );
    }
 
    if( NULL != spawner ) {
-      scaffold_print_debug(
-         &module, "Creating player mobile for client: %p\n", c
+      lg_debug(
+         __FILE__, "Creating player mobile for client: %p\n", c
       );
 
       /* Create a basic mobile for the new client. */
@@ -136,14 +136,14 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       mobile_set_channel( o, l );
       channel_add_mobile( l, o );
 
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Spawning %s (%d) at: %d, %d\n",
          bdata( c->nick ), o->serial, o->x, o->y
       );
-   } else if( TRUE == spawn ) {
-      scaffold_print_error(
-         &module,
+   } else if( FALSE != spawn ) {
+      lg_error(
+         __FILE__,
          "Unable to find mobile spawner for this map.\n"
       );
    }
@@ -151,9 +151,11 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
    client_add_channel( c, l  );
 
    if( hashmap_put( l->clients, c->nick, c, FALSE ) ) {
-      scaffold_print_error( &module, "Attempted to double-add client.\n" );
-      client_free( c );
+      lg_error( __FILE__, "Attempted to double-add client.\n" );
+      //client_free( c );
    }
+
+   refcount_inc( c, "client" );
 
 cleanup:
    if( NULL != player_spawns) {
@@ -166,13 +168,13 @@ cleanup:
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    struct CLIENT* c_test = NULL;
    c_test = hashmap_get( l->clients, c->nick );
-   if( NULL != c_test && TRUE == hashmap_remove( l->clients, c->nick ) ) {
+   if( NULL != c_test && FALSE != hashmap_remove( l->clients, c->nick ) ) {
       if( NULL != c->puppet ) {
          channel_remove_mobile( l, c->puppet->serial );
       }
 
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Removed 1 clients from channel %s. %d clients, %d refs remaining.\n",
          bdata( l->name ), hashmap_count( l->clients ), l->refcount.count
       );
@@ -207,8 +209,8 @@ void channel_set_mobile(
    scaffold_assert( NULL != nick_c );
    scaffold_assert( NULL != lname_c );
 
-   scaffold_print_debug(
-      &module, "Adding player mobile to channel: %b (%d)\n", mob_nick, serial
+   lg_debug(
+      __FILE__, "Adding player mobile to channel: %b (%d)\n", mob_nick, serial
    );
 
    scaffold_assert( 0 != serial );
@@ -217,8 +219,8 @@ void channel_set_mobile(
    if( NULL == o ) {
       mobile_new( o, mob_id, x, y );
       o->serial = serial;
-      scaffold_print_debug(
-         &module, "Player mobile does not exist. Creating with serial: %d\n",
+      lg_debug(
+         __FILE__, "Player mobile does not exist. Creating with serial: %d\n",
          o->serial
       );
       scaffold_assert( NULL != o->def_filename );
@@ -232,8 +234,8 @@ void channel_set_mobile(
       }
 #endif /* ENABLE_LOCAL_CLIENT */
    } else {
-      scaffold_print_debug(
-         &module, "Resetting position for existing player mobile: %d, %d\n",
+      lg_debug(
+         __FILE__, "Resetting position for existing player mobile: %d, %d\n",
          x, y
       );
       o->x = x;
@@ -250,7 +252,7 @@ void channel_set_mobile(
 
    bstr_res = bassign( o->display_name, mob_nick );
    scaffold_assert( NULL != o->display_name );
-   scaffold_check_nonzero( bstr_res );
+   lgc_nonzero( bstr_res );
 
    tilemap_set_redraw_state( l->tilemap, TILEMAP_REDRAW_ALL );
 
@@ -270,11 +272,11 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    SCAFFOLD_SIZE bytes_read = 0,
       mapdata_size = 0;
 
-   scaffold_print_debug(
-      &module, "Loading tilemap for channel: %s\n", bdata( l->name )
+   lg_debug(
+      __FILE__, "Loading tilemap for channel: %s\n", bdata( l->name )
    );
    mapdata_filename = bstrcpy( l->name );
-   scaffold_check_null( mapdata_filename );
+   lgc_null( mapdata_filename );
    bdelete( mapdata_filename, 0, 1 ); /* Get rid of the # */
 
    mapdata_path = files_root( mapdata_filename );
@@ -284,15 +286,15 @@ void channel_load_tilemap( struct CHANNEL* l ) {
 #ifdef USE_EZXML
 
    bstr_retval = bcatcstr( mapdata_path, ".tmx" );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
 
-   scaffold_print_debug(
-      &module, "Loading tilemap XML data from: %s\n", bdata( mapdata_path ) );
+   lg_debug(
+      __FILE__, "Loading tilemap XML data from: %s\n", bdata( mapdata_path ) );
    bytes_read = files_read_contents(
       mapdata_path, &mapdata_buffer, &mapdata_size );
-   scaffold_check_null_msg(
+   lgc_null_msg(
       mapdata_buffer, "Unable to load tilemap data." );
-   scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
+   lgc_zero_msg( bytes_read, "Unable to load tilemap data." );
 
    datafile_parse_ezxml_string(
       l->tilemap, mapdata_buffer, mapdata_size, FALSE,
@@ -328,6 +330,7 @@ void channel_set_error( struct CHANNEL* l, const char* error ) {
 BOOL channel_is_loaded( struct CHANNEL* l ) {
    BOOL retval = FALSE;
    SCAFFOLD_SIZE tilesets_count;
+   int i_test = 0; /* For debugging convenience. */
 #ifdef DEBUG
    static SCAFFOLD_SIZE tilesets_loaded_last_pass = -1;
 #endif /* DEBUG */
@@ -362,7 +365,8 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
    }
 
 #ifdef USE_CHUNKS
-   if( 0 < hashmap_count( &(l->client_or_server->chunkers) ) ) {
+   i_test = hashmap_count( &(l->client_or_server->chunkers) );
+   if( 0 < i_test ) {
       goto cleanup;
    }
 #endif /* USE_CHUNKS */
@@ -375,8 +379,8 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
 #ifdef DEBUG
       if( tilesets_loaded_last_pass != l->client_or_server->tilesets_loaded ) {
          tilesets_loaded_last_pass = l->client_or_server->tilesets_loaded;
-         scaffold_print_debug(
-            &module, "Tilesets loaded for %b: %d out of %d...\n",
+         lg_debug(
+            __FILE__, "Tilesets loaded for %b: %d out of %d...\n",
             l->name, l->client_or_server->tilesets_loaded, tilesets_count
          );
       }

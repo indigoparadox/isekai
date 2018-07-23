@@ -18,8 +18,8 @@
 static void chunker_destroy( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
-   scaffold_print_debug(
-      &module, "Destroying chunker for: %s\n", bdata( h->filename )
+   lg_debug(
+      __FILE__, "Destroying chunker for: %s\n", bdata( h->filename )
    );
 
    if( NULL != h->tracks ) {
@@ -115,7 +115,7 @@ void chunker_chunk_start(
    struct CHUNKER* h, DATAFILE_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 ) {
-   scaffold_check_null( src_buffer );
+   lgc_null( src_buffer );
 
    chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
@@ -138,19 +138,19 @@ BOOL chunker_chunk_start_file(
    chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
    h->filename = bstrcpy( filepath );
-   scaffold_check_null( h->filename );
+   lgc_null( h->filename );
 
    h->serverpath = bstrcpy( serverpath );
-   scaffold_check_null( h->serverpath );
+   lgc_null( h->serverpath );
 
    full_file_path = bstrcpy( h->serverpath );
 
    files_join_path( full_file_path, h->filename );
-   scaffold_check_null( full_file_path );
+   lgc_null( full_file_path );
 
    bytes_read =
       files_read_contents( full_file_path, &h->raw_ptr, &h->raw_length );
-   scaffold_check_zero( bytes_read, "Zero bytes read from input file." );
+   lgc_zero( bytes_read, "Zero bytes read from input file." );
 
    read_ok = TRUE;
 
@@ -174,7 +174,7 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
    uint8_t* hs_buffer = NULL;
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
-   scaffold_check_null( hs_buffer );
+   lgc_null( hs_buffer );
 
    heatshrink_encoder_reset( chunker_get_encoder( h ) );
 
@@ -241,6 +241,7 @@ void chunker_unchunk_start(
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
+   BOOL filecache_status = TRUE;
 
    scaffold_assert( NULL != h );
    scaffold_assert( NULL != filename );
@@ -275,12 +276,13 @@ void chunker_unchunk_start(
    h->filename = bstrcpy( filename );
 
    filename_c = bdata( filename );
-   scaffold_check_null( filename_c );
+   lgc_null( filename_c );
 
 #ifdef USE_FILE_CACHE
-   if( NULL != filecache_path && TRUE == files_check_directory( filecache_path ) ) {
-      scaffold_print_debug(
-         &module,
+   filecache_status = files_check_directory( filecache_path );
+   if( NULL != filecache_path && FALSE != filecache_status ) {
+      lg_debug(
+         __FILE__,
          "Chunker: Activating cache: %s\n",
          bdata( filecache_path )
       );
@@ -326,7 +328,7 @@ void chunker_unchunk_pass(
    }
 
 #ifdef USE_FILE_CACHE
-   if( TRUE == h->force_finish ) {
+   if( FALSE != h->force_finish ) {
       goto cleanup;
    } else
 #endif
@@ -351,7 +353,7 @@ void chunker_unchunk_pass(
    }
 
    mid_buffer = (uint8_t*)mem_alloc( mid_buffer_length, uint8_t );
-   scaffold_check_null( mid_buffer );
+   lgc_null( mid_buffer );
 
    h->raw_position = src_chunk_start;
 
@@ -456,21 +458,21 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
    SCAFFOLD_SIZE written;
 
    cache_filename = bstrcpy( h->filecache_path );
-   scaffold_check_silence(); /* Caching disabled is a non-event. */
-   scaffold_check_null( cache_filename );
+   lgc_silence(); /* Caching disabled is a non-event. */
+   lgc_null( cache_filename );
 
    files_join_path( cache_filename, h->filename );
 
    written =
       files_write( cache_filename, h->raw_ptr, h->raw_length, TRUE );
    if( 0 >= written ) {
-      scaffold_print_error(
-         &module, "Error writing cache file: %s\n", bdata( cache_filename )
+      lg_error(
+         __FILE__, "Error writing cache file: %s\n", bdata( cache_filename )
       );
    }
 
 cleanup:
-   scaffold_check_unsilence();
+   lgc_unsilence();
    return;
 }
 
@@ -479,10 +481,10 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    SCAFFOLD_SIZE_SIGNED sz_read = -1;
 
    cache_filename = bstrcpy( h->filecache_path );
-   scaffold_check_null( cache_filename );
+   lgc_null( cache_filename );
 
    files_join_path( cache_filename, h->filename );
-   scaffold_check_nonzero( scaffold_error );
+   lgc_nonzero( scaffold_error );
 
    /* TODO: Compare file hashes. */
    scaffold_error_silent = TRUE;
@@ -492,15 +494,15 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    scaffold_error_silent = FALSE;
    if( 0 != scaffold_error ) {
       scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
-      scaffold_print_error(
-         &module, "Unable to open: %s\n", bdata(cache_filename )
+      lg_error(
+         __FILE__, "Unable to open: %s\n", bdata(cache_filename )
       );
       goto cleanup;
    }
-   scaffold_check_negative( sz_read );
+   lgc_negative( sz_read );
 
-   scaffold_print_debug(
-      &module, "Chunker: Cached copy read: %s\n",
+   lg_debug(
+      __FILE__, "Chunker: Cached copy read: %s\n",
       bdata( cache_filename )
    );
 
@@ -511,8 +513,8 @@ cleanup:
    switch( scaffold_error ) {
    case SCAFFOLD_ERROR_NEGATIVE:
    case SCAFFOLD_ERROR_OUTOFBOUNDS:
-      scaffold_print_error(
-         &module, "Chunker: Cache file could not be opened: %s\n",
+      lg_error(
+         __FILE__, "Chunker: Cache file could not be opened: %s\n",
          bdata( cache_filename )
       );
       break;
@@ -534,10 +536,10 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    BOOL chunks_locked = FALSE;
 
 #ifdef USE_FILE_CACHE
-   if( TRUE == h->force_finish ) {
+   if( FALSE != h->force_finish ) {
       /* Force finish, probably due to cache. */
-      scaffold_print_debug(
-         &module, "Chunker: Assuming cached file finished: %s\n",
+      lg_debug(
+         __FILE__, "Chunker: Assuming cached file finished: %s\n",
          bdata( h->filename )
       );
       finished = TRUE;
@@ -547,7 +549,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 
    /* Ensure chunks are contiguous and complete. */
    vector_sort_cb( h->tracks, callback_sort_chunker_tracks );
-   vector_lock( h->tracks, TRUE );
+   //vector_lock( h->tracks, TRUE );
    tracks_count = vector_count( h->tracks );
    chunks_locked = TRUE;
    if( 0  == tracks_count ) {
@@ -569,9 +571,9 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 
 #ifdef USE_FILE_CACHE
    /* If the file is complete and the cache is enabled, then do that. */
-   if( TRUE == finished ) {
-      scaffold_print_debug(
-         &module,
+   if( FALSE != finished ) {
+      lg_debug(
+         __FILE__,
          "Chunker: Saving cached copy of finished file: %s\n",
          bdata( h->filename )
       );
@@ -580,7 +582,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
 #endif /* USE_FILE_CACHE */
 cleanup:
    if( FALSE != chunks_locked ){
-      vector_lock( h->tracks, FALSE );
+      //vector_lock( h->tracks, FALSE );
    }
 
    return finished;

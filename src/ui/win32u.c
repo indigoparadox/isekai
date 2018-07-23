@@ -77,7 +77,7 @@ void ui_window_pop( struct UI* ui ) {
    struct UI_WINDOW* win = NULL;
 
    win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
-   scaffold_check_null( win );
+   lgc_null( win );
 
    ui_window_free( win );
    vector_remove( &(ui->windows), 0);

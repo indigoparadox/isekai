@@ -46,8 +46,6 @@ struct tagbstring files_dirsep_string = bsStatic( "/" );
 #endif /* _WIN32 || WIN16 */
 #define SCAFFOLD_DIRSEP_CHAR files_dirsep_string.data[0]
 
-SCAFFOLD_MODULE( "files.c" );
-
 #else
 
 extern struct tagbstring files_dirsep_string;

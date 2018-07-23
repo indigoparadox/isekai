@@ -10,16 +10,16 @@
 
 #define ezxml_node( target, parent, id ) \
    target = ezxml_child( parent, id ); \
-   scaffold_check_null( target );
+   lgc_null( target );
 
 #define ezxml_int( target, string, parent, attr ) \
    string = ezxml_attr( parent, attr ); \
-   scaffold_check_null( string ); \
+   lgc_null( string ); \
    target = atoi( string );
 
 #define ezxml_string( target, parent, attr ) \
    target = ezxml_attr( parent, attr ); \
-   scaffold_check_null( target );
+   lgc_null( target );
 
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
@@ -30,11 +30,11 @@ void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITE* sprite = NULL;
    SCAFFOLD_SIZE sprite_id = 0;
 
-   scaffold_check_null( xml_sprites );
+   lgc_null( xml_sprites );
 
    assert( NULL == spritesheet->sprites_filename );
    xml_attr = ezxml_attr( xml_sprites, "image" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    spritesheet->sprites_filename = bfromcstr( xml_attr );
 
    ezxml_int( spritesheet->spritewidth, xml_attr, xml_sprites, "spritewidth" );
@@ -50,15 +50,15 @@ void datafile_parse_item_sprites_ezxml_t(
 
       ezxml_string( xml_attr, xml_sprite, "display" );
       sprite->display_name = bfromcstr( xml_attr );
-      scaffold_check_null( sprite->display_name );
+      lgc_null( sprite->display_name );
 
       /* TODO: Parse item type. */
       xml_attr = ezxml_attr( xml_sprite, "type" );
-      scaffold_check_null_continue( xml_attr );
+      lgc_null_continue( xml_attr );
       sprite->type = item_type_from_c( xml_attr );
 
-      scaffold_print_debug(
-         &module, "Loading proto-item: %b\n", sprite->display_name
+      lg_debug(
+         __FILE__, "Loading proto-item: %b\n", sprite->display_name
       );
 
       scaffold_assert( NULL == vector_get( &(spritesheet->sprites), sprite_id ) );
@@ -87,16 +87,16 @@ ezxml_t datafile_mobile_ezxml_peek_mob_id(
    int bstr_retval;
 
    scaffold_assert( NULL != mob_id_buffer );
-   scaffold_check_null( tmdata );
+   lgc_null( tmdata );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
+   lgc_null( xml_data );
 
    mob_id_c = ezxml_attr( xml_data, "id" );
-   scaffold_check_null( mob_id_c );
+   lgc_null( mob_id_c );
 
    bstr_retval = bassigncstr( mob_id_buffer, mob_id_c );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
 
 cleanup:
    return xml_data;
@@ -109,13 +109,13 @@ static void datafile_mobile_parse_sprite_ezxml(
    const char* xml_attr = NULL;
    struct MOBILE_SPRITE_DEF* sprite = NULL;
 
-   scaffold_check_null( xml_sprite );
+   lgc_null( xml_sprite );
 
    sprite = mem_alloc( 1, struct MOBILE_SPRITE_DEF );
 
    /* TODO: Case insensitivity. */
    xml_attr = ezxml_attr( xml_sprite, "id" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    sprite->id = atoi( xml_attr );
 
    vector_set( &(o->sprite_defs), sprite->id, sprite, TRUE );
@@ -140,10 +140,10 @@ static void datafile_mobile_parse_animation_ezxml(
    struct MOBILE_SPRITE_DEF* sprite = NULL;
    SCAFFOLD_SIZE_SIGNED verr;
 
-   scaffold_check_null( xml_animation );
+   lgc_null( xml_animation );
 
    name_dir = bfromcstralloc( 10, "" );
-   scaffold_check_null( name_dir );
+   lgc_null( name_dir );
 
    animation = mem_alloc( 1, struct MOBILE_ANI_DEF );
 
@@ -158,15 +158,15 @@ static void datafile_mobile_parse_animation_ezxml(
 
       sprite = vector_get( &(o->sprite_defs), frame_id );
       if( NULL == sprite ) {
-         scaffold_print_error(
-            &module, "Bad frame in parsed mobile animation: %d\n", frame_id
+         lg_error(
+            __FILE__, "Bad frame in parsed mobile animation: %d\n", frame_id
          );
       }
 
       verr = vector_add( &(animation->frames), sprite );
       if( 0 > verr ) {
-         scaffold_print_error(
-            &module, "Unable to add frame to mobile animation: %d\n", frame_id
+         lg_error(
+            __FILE__, "Unable to add frame to mobile animation: %d\n", frame_id
          );
       }
 
@@ -175,7 +175,7 @@ static void datafile_mobile_parse_animation_ezxml(
 
    /* TODO: Case insensitivity. */
    xml_attr = ezxml_attr( xml_animation, "facing" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    if( 0 == scaffold_strcmp_caseless( "down", xml_attr ) ) {
       animation->facing = MOBILE_FACING_DOWN;
    } else if( 0 == scaffold_strcmp_caseless( "up", xml_attr ) ) {
@@ -189,14 +189,14 @@ static void datafile_mobile_parse_animation_ezxml(
    }
    bstr_retval =
       bassignformat( name_dir, "%s-%s", bdata( animation->name ), xml_attr );
-   scaffold_check_nonzero( bstr_retval );
-   scaffold_print_debug(
-      &module, "Loaded mobile animation: %b\n", name_dir
+   lgc_nonzero( bstr_retval );
+   lg_debug(
+      __FILE__, "Loaded mobile animation: %b\n", name_dir
    );
 
    if( hashmap_put( &(o->ani_defs), name_dir, animation, FALSE ) ) {
-      scaffold_print_error(
-         &module, "Attempted to double-add mobile animation def.\n" );
+      lg_error(
+         __FILE__, "Attempted to double-add mobile animation def.\n" );
       mobile_animation_free( animation );
    }
    animation = NULL;
@@ -225,7 +225,7 @@ void datafile_parse_mobile_ezxml_t(
       vm_val_buffer = NULL,
       vm_key_buffer = NULL;
 
-   scaffold_check_null( xml_data );
+   lgc_null( xml_data );
 
    vm_val_buffer = bfromcstr( "" );
    vm_key_buffer = bfromcstr( "" );
@@ -246,7 +246,7 @@ void datafile_parse_mobile_ezxml_t(
    }
 
    xml_animations = ezxml_child( xml_data, "animations" );
-   scaffold_check_null( xml_animations );
+   lgc_null( xml_animations );
 
    xml_animation_iter = ezxml_child( xml_animations, "animation" );
    while( NULL != xml_animation_iter ) {
@@ -267,8 +267,8 @@ void datafile_parse_mobile_ezxml_t(
          vm_val_buffer, ezxml_attr( xml_script_iter, "value" )
       );
       if( BSTR_ERR == bstr_retval ) {
-         scaffold_print_error(
-            &module, "Error parsing script component value attribute."
+         lg_error(
+            __FILE__, "Error parsing script component value attribute."
          );
          goto next_global;
       }
@@ -277,8 +277,8 @@ void datafile_parse_mobile_ezxml_t(
          vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
       );
       if( BSTR_ERR == bstr_retval ) {
-         scaffold_print_error(
-            &module, "Error parsing script component with value: %b",
+         lg_error(
+            __FILE__, "Error parsing script component with value: %b",
             vm_val_buffer
          );
          goto next_global;
@@ -303,8 +303,8 @@ next_global:
       xml_attr = ezxml_txt( xml_script_iter );
       bstr_retval = bassigncstr( vm_val_buffer, xml_attr );
       if( BSTR_ERR == bstr_retval ) {
-         scaffold_print_error(
-            &module, "Error parsing script component value text."
+         lg_error(
+            __FILE__, "Error parsing script component value text."
          );
          goto next_script;
       }
@@ -313,8 +313,8 @@ next_global:
          vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
       );
       if( BSTR_ERR == bstr_retval ) {
-         scaffold_print_error(
-            &module, "Error parsing script component with value: %b",
+         lg_error(
+            __FILE__, "Error parsing script component with value: %b",
             vm_val_buffer
          );
          goto next_script;
@@ -360,8 +360,8 @@ next_script:
    o->initialized = TRUE;
    o->sprite_display_height = o->sprite_height;
    o->facing = MOBILE_FACING_DOWN;
-   scaffold_print_debug(
-      &module, "Mobile animation defaulting to: %b\n", walk_ani_key
+   lg_debug(
+      __FILE__, "Mobile animation defaulting to: %b\n", walk_ani_key
    );
    o->current_animation = (struct MOBILE_ANI_DEF*)hashmap_get(
       &(o->ani_defs), walk_ani_key
@@ -388,13 +388,13 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
    int bstr_retval;
 
    scaffold_assert( NULL != lname_buffer );
-   scaffold_check_null( tmdata );
+   lgc_null( tmdata );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
+   lgc_null( xml_data );
 
    xml_props = ezxml_child( xml_data, "properties" );
-   scaffold_check_null( xml_props );
+   lgc_null( xml_props );
 
    xml_prop_iter = ezxml_child( xml_props, "property" );
 
@@ -404,9 +404,9 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
          ezxml_attr( xml_prop_iter, "name" ), "channel"
       ) ) {
          channel_c = ezxml_attr( xml_prop_iter, "value" );
-         scaffold_check_null( channel_c );
+         lgc_null( channel_c );
          bstr_retval = bassigncstr( lname_buffer, channel_c );
-         scaffold_check_nonzero( bstr_retval );
+         lgc_nonzero( bstr_retval );
          break;
       }
       xml_prop_iter = ezxml_next( xml_prop_iter );
@@ -421,16 +421,16 @@ static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t 
    const char* channel_c = NULL;
    int bstr_retval;
 
-   scaffold_check_null( xml_props );
+   lgc_null( xml_props );
 
    xml_prop_iter = ezxml_child( xml_props, "property" );
 
    while( NULL != xml_prop_iter ) {
       if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "channel" ) ) {
          channel_c = ezxml_attr( xml_prop_iter, "value" );
-         scaffold_check_null( channel_c );
+         lgc_null( channel_c );
          bstr_retval = bassigncstr( t->lname, channel_c );
-         scaffold_check_nonzero( bstr_retval );
+         lgc_nonzero( bstr_retval );
       }
 
 #if 0
@@ -470,37 +470,37 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
 
    scaffold_error = 0;
 
-   scaffold_check_null( set );
+   lgc_null( set );
 
    if( !hashmap_is_valid( &(set->images) ) ) {
       hashmap_init( &(set->images) );
    }
 
    buffer = bfromcstralloc( 1024, "" );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
 
    xml_attr = ezxml_attr( xml_image, "source" );
    bstr_res = bassigncstr( buffer, xml_attr );
-   scaffold_check_nonzero( bstr_res );
+   lgc_nonzero( bstr_res );
 
 #ifndef USE_REQUESTED_GRAPHICS_EXT
    dot_pos = bstrrchr( buffer, '.' );
    bstr_res = btrunc( buffer, dot_pos );
-   scaffold_check_nonzero( bstr_res );
+   lgc_nonzero( bstr_res );
    bstr_res = bcatcstr( buffer, GRAPHICS_RASTER_EXTENSION );
-   scaffold_check_nonzero( bstr_res );
-   scaffold_print_debug(
-      &module, "Tilemap: Tileset filename adjusted to: %s\n", bdata( buffer )
+   lgc_nonzero( bstr_res );
+   lg_debug(
+      __FILE__, "Tilemap: Tileset filename adjusted to: %s\n", bdata( buffer )
    );
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
    /* The key with NULL means we need to load this image. */
-   scaffold_print_debug(
-      &module, "Adding tile image name %b to set %b...\n",
+   lg_debug(
+      __FILE__, "Adding tile image name %b to set %b...\n",
       buffer, set->def_path
    );
    if( hashmap_put( &(set->images), buffer, NULL, FALSE ) ) {
-      scaffold_print_error( &module, "Attempted to add existing image: %b\n",
+      lg_error( __FILE__, "Attempted to add existing image: %b\n",
          buffer );
    }
 
@@ -524,14 +524,14 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
    SCAFFOLD_SIZE_SIGNED verr;
 
    terrain_info = mem_alloc( 1, struct TILEMAP_TERRAIN_DATA );
-   scaffold_check_null( terrain_info );
+   lgc_null( terrain_info );
 
    xml_attr = ezxml_attr( xml_terrain, "name" );
    terrain_info->name = bfromcstr( xml_attr );
-   scaffold_check_null( terrain_info->name );
+   lgc_null( terrain_info->name );
 
    xml_props = ezxml_child( xml_terrain, "properties" );
-   scaffold_check_null( xml_props );
+   lgc_null( xml_props );
 
    xml_prop_iter = ezxml_child( xml_props, "property" );
    while( NULL != xml_prop_iter ) {
@@ -552,13 +552,13 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
       xml_prop_iter = ezxml_next( xml_prop_iter );
    }
 
-   scaffold_print_debug(
-      &module, "Loaded terrain %d: %s: %d\n",
+   lg_debug(
+      __FILE__, "Loaded terrain %d: %s: %d\n",
       id, bdata( terrain_info->name ), terrain_info->movement
    );
 
    xml_attr = ezxml_attr( xml_terrain, "tile" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    terrain_info->tile = atoi( xml_attr );
 
    terrain_info->id = id;
@@ -604,19 +604,19 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    scaffold_error = 0;
 
-   scaffold_check_null( xml_tileset );
+   lgc_null( xml_tileset );
 
    xml_attr = ezxml_attr( xml_tileset, "source" );
    if( NULL != xml_attr && NULL == def_path ) {
       def_path = bfromcstr( xml_attr );
-      scaffold_print_debug(
-         &module, "Loading external tileset: %s\n", xml_attr );
-      scaffold_check_null( def_path );
+      lg_debug(
+         __FILE__, "Loading external tileset: %s\n", xml_attr );
+      lgc_null( def_path );
    }
 
    /* Try to grab the image list early. If it's missing, just get out. */
    xml_image = ezxml_child( xml_tileset, "image" );
-   scaffold_check_null( xml_image );
+   lgc_null( xml_image );
 
    ezxml_int( set->tilewidth, xml_attr, xml_tileset, "tilewidth" );
    ezxml_int( set->tileheight, xml_attr, xml_tileset, "tileheight" );
@@ -625,7 +625,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    while( NULL != xml_image ) {
       datafile_tilemap_parse_tileset_ezxml_image( set, xml_image, local_images );
-      scaffold_check_nonzero( scaffold_error ); /* Need an image! */
+      lgc_nonzero( scaffold_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
 
@@ -636,7 +636,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    /* Parse the terrain information. */
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
-   scaffold_check_null_msg(
+   lgc_null_msg(
       xml_terraintypes, "No terraintypes found for this tileset.\n" );
    xml_terrain = ezxml_child( xml_terraintypes, "terrain" );
    while( NULL != xml_terrain ) {
@@ -656,20 +656,20 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    }
 
    xml_tile = ezxml_child( xml_tileset, "tile" );
-   scaffold_check_null( xml_tile );
+   lgc_null( xml_tile );
    while( NULL != xml_tile ) {
       tile_info = mem_alloc( 1, struct TILEMAP_TILE_DATA );
-      scaffold_check_null( tile_info );
+      lgc_null( tile_info );
 
       xml_attr = ezxml_attr( xml_tile, "id" );
-      scaffold_check_null( xml_attr );
+      lgc_null( xml_attr );
       tile_info->id = atoi( xml_attr );
 
       xml_attr = ezxml_attr( xml_tile, "terrain" );
-      scaffold_check_null( xml_attr );
+      lgc_null( xml_attr );
 
       /* Parse the terrain attribute. */
-      scaffold_check_null( xml_attr );
+      lgc_null( xml_attr );
       terrain_c = xml_attr; i = 0; terrain_id_c_i = 0; terrain_id_c[0] = '\0';
       while( 4 > i ) {
          if( ',' == *terrain_c || '\0' == *terrain_c) {
@@ -705,8 +705,8 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
          }
       }
 
-      scaffold_print_debug(
-         &module, "Loaded tile %d: %d (%s), %d (%s), %d (%s), %d (%s)\n",
+      lg_debug(
+         __FILE__, "Loaded tile %d: %d (%s), %d (%s), %d (%s), %d (%s)\n",
          tile_info->id,
          dbg_terrain_id[0],
          dbg_terrain_name[0],
@@ -743,7 +743,7 @@ static void datafile_tilemap_parse_layer_ezxml(
    SCAFFOLD_SIZE i;
    const char* xml_attr = NULL;
 
-   scaffold_check_null( xml_layer );
+   lgc_null( xml_layer );
 
    tilemap_layer_new( layer );
 
@@ -751,20 +751,20 @@ static void datafile_tilemap_parse_layer_ezxml(
    layer->height = atoi( ezxml_attr( xml_layer, "height" ) );
 
    xml_layer_data = ezxml_child( xml_layer, "data" );
-   scaffold_check_null( xml_layer_data );
+   lgc_null( xml_layer_data );
 
    /* Split the tiles list CSV into an array of uint16. */
    buffer = bfromcstr( ezxml_txt( xml_layer_data ) );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
    tiles_list = bgsplit( buffer, ',' );
-   scaffold_check_null( tiles_list );
+   lgc_null( tiles_list );
 
    /* Convert each tile terrain ID string into an int16 and stow in array. */
 
    /* TODO: Lock the list while adding, somehow. */
    for( i = 0 ; vector_count( tiles_list ) > i ; i++ ) {
       xml_attr = bdata( (bstring)vector_get( tiles_list, i ) );
-      scaffold_check_null( xml_attr );
+      lgc_null( xml_attr );
       vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
 
@@ -773,7 +773,7 @@ static void datafile_tilemap_parse_layer_ezxml(
 
    if( NULL != ezxml_attr( xml_layer, "name" ) ) {
       layer->name = bfromcstr( ezxml_attr( xml_layer, "name" ) );
-      scaffold_check_null( layer->name );
+      lgc_null( layer->name );
    } else {
       layer->name = bfromcstr( "" );
    }
@@ -804,11 +804,11 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
 
    xml_attr = ezxml_attr( xml_object, "x" );
    /* TODO: _continue versions of the abort macros.*/
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    obj_out->pos.x = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
 
    xml_attr = ezxml_attr( xml_object, "y" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    obj_out->pos.y = atoi( xml_attr ) / TILEMAP_OBJECT_SPAWN_DIVISOR;
 
    /* Parse spawner properties. */
@@ -819,16 +819,16 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    while( NULL != xml_prop_iter ) {
 
       xml_attr = ezxml_attr( xml_prop_iter, "name" );
-      scaffold_check_null_continue( xml_attr );
+      lgc_null_continue( xml_attr );
 
       if( 0 == strcmp( xml_attr, "countdown" ) ) {
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
-         scaffold_check_null_continue( xml_attr );
+         lgc_null_continue( xml_attr );
          obj_out->respawn_countdown = atol( xml_attr );
 
       } else if( 0 == scaffold_strcmp_caseless( xml_attr, "active" ) ) {
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
-         scaffold_check_null_continue( xml_attr );
+         lgc_null_continue( xml_attr );
          if( 0 == scaffold_strcmp_caseless( xml_attr, "false" ) ) {
             obj_out->active = FALSE;
          }
@@ -839,41 +839,41 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
    }
 
    xml_attr = ezxml_attr( xml_object, "name" );
-   scaffold_check_null( xml_attr );
+   lgc_null( xml_attr );
    obj_out->id = bfromcstr( xml_attr );
-   scaffold_check_null( obj_out->id );
+   lgc_null( obj_out->id );
 
    xml_attr = ezxml_attr( xml_object, "spritesheet" );
    if( NULL != xml_attr ) {
       obj_out->catalog = bfromcstr( xml_attr );
-      scaffold_check_null( obj_out->id );
+      lgc_null( obj_out->id );
    } else {
       obj_out->catalog = NULL;
    }
 
    /* Figure out the spawner type. */
    xml_attr = ezxml_attr( xml_object, "type" );
-   scaffold_check_null_msg( xml_attr, "Invalid or no type specified." );
+   lgc_null_msg( xml_attr, "Invalid or no type specified." );
    if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_player" ) ) {
       obj_out->type = TILEMAP_SPAWNER_TYPE_PLAYER;
    } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_mobile" ) ) {
       obj_out->type = TILEMAP_SPAWNER_TYPE_MOBILE;
    } else if( 0 == scaffold_strcmp_caseless( xml_attr, "spawn_item_random" ) ) {
-      scaffold_check_null_msg(
+      lgc_null_msg(
          obj_out->catalog, "Invalid or no catalog specified."
       );
       obj_out->type = TILEMAP_SPAWNER_TYPE_ITEM;
    } else {
       /* We don't know how to handle this yet. */
-      scaffold_print_error(
-         &module, "Unknown object at: %d, %d\n",
+      lg_error(
+         __FILE__, "Unknown object at: %d, %d\n",
          obj_out->pos.x, obj_out->pos.y
       );
       goto cleanup;
    }
 
-   scaffold_print_debug(
-      &module, "Spawner for \"%b\" at: %d, %d\n",
+   lg_debug(
+      __FILE__, "Spawner for \"%b\" at: %d, %d\n",
       obj_out->id, obj_out->pos.x, obj_out->pos.y
    );
 
@@ -895,13 +895,13 @@ static void datafile_tilemap_parse_objectgroup_ezxml( struct TILEMAP* t, ezxml_t
    ezxml_t xml_object = NULL;
    bstring buffer = NULL;
 
-   scaffold_check_null( xml_layer );
+   lgc_null( xml_layer );
 
    buffer = bfromcstralloc( TILEMAP_NAME_ALLOC, "" );
 
    xml_object = ezxml_child( xml_layer, "object" );
-   scaffold_check_null( xml_object );
-   scaffold_print_debug( &module, "Loading object spawns...\n" );
+   lgc_null( xml_object );
+   lg_debug( __FILE__, "Loading object spawns...\n" );
    while( NULL != xml_object ) {
       datafile_tilemap_parse_object_ezxml( t, xml_object );
       xml_object = ezxml_next( xml_object );
@@ -934,7 +934,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    tileset_id = bfromcstr( "" );
 
    l = tilemap_get_channel( t );
-   scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
+   lgc_equal( l->sentinal, CHANNEL_SENTINAL );
 
    xml_attr = ezxml_attr( xml_data, "orientation" );
    if( 0 == strncmp( "orthogonal", xml_attr, 10 ) ) {
@@ -943,26 +943,26 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
       t->orientation = TILEMAP_ORIENTATION_ISO;
    } else {
       l->error = bfromcstr( "Unrecognized map orientation." );
-      scaffold_print_error(
-         &module, "Unrecognized map orientation: %s\n", xml_attr
+      lg_error(
+         __FILE__, "Unrecognized map orientation: %s\n", xml_attr
       );
       goto cleanup;
    }
 
    xml_tileset = ezxml_child( xml_data, "tileset" );
-   scaffold_check_null( xml_tileset );
+   lgc_null( xml_tileset );
    while( NULL != xml_tileset ) {
       bstr_retval = btrunc( tileset_id, 0 );
-      scaffold_check_nonzero( bstr_retval );
+      lgc_nonzero( bstr_retval );
 
       /* Try to grab the string that uniquely identifies this tileset. */
       xml_attr = ezxml_attr( xml_tileset, "source" );
       if( NULL == xml_attr ) {
          /* This must be an internal tileset. */
          xml_attr = ezxml_attr( xml_tileset, "name" );
-         scaffold_check_null_continue( xml_attr ); /* Unusable? */
-         scaffold_print_debug(
-            &module, "Found internal tileset definition: %s\n", xml_attr
+         lgc_null_continue( xml_attr ); /* Unusable? */
+         lg_debug(
+            __FILE__, "Found internal tileset definition: %s\n", xml_attr
          );
 
          /* Prevent collisions in the server-wide tileset list by creating a
@@ -972,18 +972,18 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
           */
          bstr_retval = bassign( tileset_id, t->lname );
          scaffold_assert( 0 == bstr_retval );
-         scaffold_check_nonzero( bstr_retval );
+         lgc_nonzero( bstr_retval );
          bstr_retval = bconchar( tileset_id, ':' );
-         scaffold_check_nonzero( bstr_retval );
+         lgc_nonzero( bstr_retval );
       }
       bstr_retval = bcatcstr( tileset_id, xml_attr );
-      scaffold_check_nonzero( bstr_retval );
+      lgc_nonzero( bstr_retval );
 
       set = hashmap_get( &(l->client_or_server->tilesets), tileset_id );
       if( NULL == set ) {
          /* This layer uses a tileset not seen yet. */
-         scaffold_print_debug(
-            &module, "New tileset found server-wide: %b\n", tileset_id
+         lg_debug(
+            __FILE__, "New tileset found server-wide: %b\n", tileset_id
          );
          tilemap_tileset_new( set, tileset_id );
          /* Don't have to check since the hashmap_get above is a check. */
@@ -999,8 +999,8 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
 
       ezxml_int( firstgid, xml_attr, xml_tileset, "firstgid" );
       vector_set( &(t->tilesets), firstgid, set, TRUE );
-      scaffold_print_debug(
-         &module, "Tileset %b assigned to tilemap %b with first GID: %d\n",
+      lg_debug(
+         __FILE__, "Tileset %b assigned to tilemap %b with first GID: %d\n",
          tileset_id, t->lname, firstgid
       );
 
@@ -1011,7 +1011,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    datafile_tilemap_parse_properties_ezxml( t, xml_props );
 
    xml_layer = ezxml_child( xml_data, "layer" );
-   scaffold_check_null( xml_layer );
+   lgc_null( xml_layer );
    while( NULL != xml_layer ) {
       datafile_tilemap_parse_layer_ezxml( t, xml_layer, z );
       xml_layer = ezxml_next( xml_layer );
@@ -1019,7 +1019,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
    }
 
    xml_layer = ezxml_child( xml_data, "objectgroup" );
-   scaffold_check_null( xml_layer );
+   lgc_null( xml_layer );
    while( NULL != xml_layer ) {
       datafile_tilemap_parse_objectgroup_ezxml( t, xml_layer );
       xml_layer = ezxml_next( xml_layer );
@@ -1043,7 +1043,7 @@ void datafile_parse_ezxml_string(
    SCAFFOLD_SIZE datasize_check = 0;
 #endif /* EZXML_STRICT */
 
-   scaffold_check_null( tmdata );
+   lgc_null( tmdata );
 
 #ifdef EZXML_STRICT
    datasize_check = strlen( (const char*)o );
@@ -1051,7 +1051,7 @@ void datafile_parse_ezxml_string(
 #endif /* EZXML_STRICT */
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
-   scaffold_check_null( xml_data );
+   lgc_null( xml_data );
 
    switch( type ) {
    case DATAFILE_TYPE_TILESET:
@@ -1072,7 +1072,7 @@ void datafile_parse_ezxml_string(
       break;
       */
    default:
-      scaffold_print_error( &module, "Invalid data type specified.\n" );
+      lg_error( __FILE__, "Invalid data type specified.\n" );
       break;
    }
 

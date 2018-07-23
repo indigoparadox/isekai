@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "../src/hashmap.h"
+#include "../src/libvcol.h"
 #include "check_data.h"
 
 extern struct tagbstring str_key_hit;

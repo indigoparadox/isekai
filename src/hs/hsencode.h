@@ -107,8 +107,4 @@ HSE_poll_res heatshrink_encoder_poll(heatshrink_encoder *hse,
  * call heatshrink_encoder_poll and repeat. */
 HSE_finish_res heatshrink_encoder_finish(heatshrink_encoder *hse);
 
-#ifdef HEATSHRINK_ENCODER_C
-SCAFFOLD_MODULE( "hsencode.c" );
-#endif /* HEATSHRINK_ENCODER_C */
-
 #endif /* HEATSHRINK_ENCODER_H */

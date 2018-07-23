@@ -174,7 +174,7 @@ bstring fmt = NULL,
 
    fmt = bfromcstralloc( EZXML_ERRL, "" );
    err = bfromcstralloc( EZXML_ERRL, "" );
-   scaffold_check_null( fmt );
+   lgc_null( fmt );
 
    for (t = root->s; t < s; t++) if (*t == '\n') line++;
    /* snprintf(fmt, EZXML_ERRL, "[error near line %d]: %s", line, err); */
@@ -295,11 +295,11 @@ static void ezxml_char_content(ezxml_root_t root, char *s, SCAFFOLD_SIZE len, ch
          /* allocate some space */
          l = strlen( xml->txt );
          tmp = mem_realloc( xml->txt, (l + len), char );
-         scaffold_check_null( tmp );
+         lgc_null( tmp );
       } else {
          l = strlen( xml->txt );
          tmp = mem_alloc( (l + len), char );
-         scaffold_check_null( tmp );
+         lgc_null( tmp );
          strcpy( tmp, xml->txt );
       }
       xml->txt = tmp;
@@ -526,7 +526,7 @@ static char *ezxml_str2utf8( char **s, SCAFFOLD_SIZE *len ) {
    }
 
    u = mem_alloc( max, char );
-   scaffold_check_null( u );
+   lgc_null( u );
 
    for( sl = 2 ; sl < *len - 1 ; sl += 2 ) {
       if( 0 != be ) {
@@ -549,7 +549,7 @@ static char *ezxml_str2utf8( char **s, SCAFFOLD_SIZE *len ) {
 
       while( l + 6 > max ) {
          u_tmp = mem_realloc( u, (max += EZXML_BUFSIZE), char );
-         scaffold_check_null( u_tmp );
+         lgc_null( u_tmp );
          u = u_tmp;
       }
 
@@ -577,7 +577,7 @@ static char *ezxml_str2utf8( char **s, SCAFFOLD_SIZE *len ) {
    }
 
    u_tmp = mem_realloc( u, l, char );
-   scaffold_check_null( u_tmp );
+   lgc_null( u_tmp );
    *len = l;
    *s = u_tmp;
    retval = u_tmp;
@@ -812,33 +812,33 @@ static void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
          goto cleanup;
       case '&':
          bstr_ret = bcatcstr( txt_out, "&amp;" );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
          break;
       case '<':
          bstr_ret = bcatcstr( txt_out, "&lt;" );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
          break;
       case '>':
          bstr_ret = bcatcstr( txt_out, "&gt;" );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
          break;
       case '"':
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&quot;" );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          } else {
             bstr_ret = bconchar( txt_out, '"' );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          }
          break;
       case '\n':
 #ifdef EZXML_NEWLINES
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&#xA;" );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          } else {
             bstr_ret = bconchar( txt_out, '\n' );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          }
 #endif /* EZXML_NEWLINES */
          break;
@@ -846,22 +846,22 @@ static void ezxml_ampencode_b(bstring txt_in, bstring txt_out, short a) {
 #ifdef EZXML_NEWLINES
          if( a ) {
             bstr_ret = bcatcstr( txt_out, "&#x9;" );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          } else {
             bstr_ret = bconchar( txt_out, '\t' );
-            scaffold_check_nonzero( bstr_ret );
+            lgc_nonzero( bstr_ret );
          }
 #endif /* EZXML_NEWLINES */
          break;
       case '\r':
 #ifdef EZXML_NEWLINES
          bstr_ret = bcatcstr( txt_out, "&#xD;" );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
 #endif /* EZXML_NEWLINES */
          break;
       default:
          bstr_ret = bconchar( txt_out, bchar( txt_in, i ) );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
    }
 cleanup:
@@ -887,16 +887,16 @@ static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, SCAFFOLD_SIZE start, cha
    ezxml_ampencode_b( txt_b, xml_out, 0 );
 
    bstr_ret = bformata( xml_out, "<%s", xml->name );
-   scaffold_check_nonzero( bstr_ret );
+   lgc_nonzero( bstr_ret );
    for (i = 0; xml->attr[i]; i += 2) { /* tag attributes */
       if (ezxml_attr(xml, xml->attr[i]) != xml->attr[i + 1]) continue;
       bstr_ret = bformata( xml_out, " %s=\"", xml->attr[i] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       bstr_ret = bassigncstr( txt_b, xml->attr[i + 1] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 1);
       bstr_ret = bconchar( xml_out, '"' );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
    }
 
    for (i = 0; attr[i] && strcmp(attr[i][0], xml->name); i++);
@@ -904,26 +904,26 @@ static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, SCAFFOLD_SIZE start, cha
       if (! attr[i][j + 1] || ezxml_attr(xml, attr[i][j]) != attr[i][j + 1])
          continue; /* skip duplicates and non-values */
       bstr_ret = bformata( xml_out, " %s=\"", attr[i][j] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       bstr_ret = bassigncstr( txt_b, attr[i][j + 1] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 1 );
       bstr_ret = bconchar( xml_out, '"' );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
    }
    bstr_ret = bconchar( xml_out, '>' );
-   scaffold_check_nonzero( bstr_ret );
+   lgc_nonzero( bstr_ret );
 
    if( NULL != xml->child ) {
       ezxml_toxml_r( xml->child, xml_out, 0, attr );
    } else {
       bstr_ret = bassigncstr( txt_b, xml->txt );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 0 );  /*data */
    }
 
    bstr_ret = bformata( xml_out, "</%s>", xml->name );
-   scaffold_check_nonzero( bstr_ret );
+   lgc_nonzero( bstr_ret );
 
    while( NULL != xml->parent && xml->parent->txt[off] && off < xml->off ) {
       off++; /* make sure off is within bounds */
@@ -933,7 +933,7 @@ static void ezxml_toxml_r(ezxml_t xml, bstring xml_out, SCAFFOLD_SIZE start, cha
       ezxml_toxml_r( xml->ordered, xml_out, off, attr );
    } else if( NULL != xml->parent ) {
       bstr_ret = bassigncstr( txt_b, xml->parent->txt + off );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       ezxml_ampencode_b( txt_b, xml_out, 0);
    }
 
@@ -962,7 +962,7 @@ bstring ezxml_toxml(ezxml_t xml) {
    int i, j, k;
 
    xml_out = bfromcstralloc( EZXML_BUFSIZE, "" );
-   scaffold_check_null( xml_out );
+   lgc_null( xml_out );
 
    /*if (! xml || ! xml->name) return realloc(s, len + 1); */
    if (! xml || ! xml->name) goto cleanup;
@@ -990,7 +990,7 @@ bstring ezxml_toxml(ezxml_t xml) {
 #endif /* EZXML_NEWLINES */
             tag, *tag_attribs ? " " : "", tag_attribs
          );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
    }
 
@@ -1019,7 +1019,7 @@ bstring ezxml_toxml(ezxml_t xml) {
 #endif /* EZXML_NEWLINES */
             tag, *tag_attribs ? " " : "", tag_attribs
          );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
    }
    /*return realloc(s, len + 1); */

@@ -226,7 +226,7 @@ void ui_control_add(
    scaffold_assert( &global_ui == win->ui );
 
    if( hashmap_put( &(win->controls), id, control, FALSE ) ) {
-      scaffold_print_error( &module,
+      lg_error( __FILE__,
          "Attempted to double-add control: %b\n", id );
    }
 
@@ -240,7 +240,7 @@ void ui_control_add(
       control_last->next_control = control;
    }
 
-   if( TRUE == control->can_focus ) {
+   if( FALSE != control->can_focus ) {
       verr = vector_add( &(win->controls_active), control );
       if( 0 <= verr && NULL == win->active_control ) {
          win->active_control = control;
@@ -313,7 +313,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
       0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
    ) {
       /* Message boxes always stay on top of normals like these. */
-      scaffold_print_debug( &module, "Pushing new dialog: %b\n", win->id );
+      lg_debug( __FILE__, "Pushing new dialog: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 1, win );
    } else if(
       NULL != top_window &&
@@ -321,14 +321,14 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
       0 == bstrncmp( top_window->id, &str_wid_mbox, blength( &str_wid_mbox ) )
    ) {
       /* Must be /another/ new messagebox. */
-      scaffold_print_debug( &module, "Pushing new mbox: %b\n", win->id );
+      lg_debug( __FILE__, "Pushing new mbox: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 1, win );
    } else {
       /* Must be a new dialog. */
-      scaffold_print_debug( &module, "Pushing dialog or mbox: %b\n", win->id );
+      lg_debug( __FILE__, "Pushing dialog or mbox: %b\n", win->id );
       verr = vector_insert( &(ui->windows), 0, win );
    }
-   scaffold_check_negative( verr );
+   lgc_negative( verr );
 
 cleanup:
    #ifdef DEBUG
@@ -348,7 +348,7 @@ void ui_window_pop( struct UI* ui ) {
    #endif /* DEBUG */
 
    win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
-   scaffold_check_null( win );
+   lgc_null( win );
 
    scaffold_assert( &global_ui == win->ui );
 
@@ -506,7 +506,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       case INPUT_SCANCODE_BACKSPACE:
          bstr_result = btrunc( control->text, blength( control->text ) - 1 );
          win->dirty = TRUE; /* Check can shunt to cleanup, so dirty first. */
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          break;
 
       case INPUT_SCANCODE_ENTER:
@@ -528,22 +528,20 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
          /* Append printable characters to text buffer. */
          if( !p->character ) {
 #ifdef DEBUG_KEYS
-            scaffold_print_debug( &module, "Field input char unprintable.\n" );
+            lg_debug( __FILE__, "Field input char unprintable.\n" );
 #endif /* DEBUG_KEYS */
          } else {
 #ifdef DEBUG_KEYS
-            scaffold_print_debug( &module, "Input field: %s\n", bdata( buffer ) );
+            lg_debug( __FILE__, "Input field: %s\n", bdata( buffer ) );
 #endif /* DEBUG_KEYS */
             bstr_result = bconchar( control->text, p->character );
             win->dirty = TRUE; /* Check can shunt to cleanup, so dirty first. */
-            scaffold_check_nonzero( bstr_result );
+            lgc_nonzero( bstr_result );
          }
          break;
       }
       break;
    }
-
-control_scancodes_common:
 
    /* Handle common actions for special keys that apply to ALL controls. */
 
@@ -624,8 +622,8 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
    if( INPUT_TYPE_KEY == input->type ) {
       input_length = ui_poll_keys( win, input );
 
-      scaffold_print_debug(
-         &module, "Input length returned: %d\n", input_length
+      lg_debug(
+         __FILE__, "Input length returned: %d\n", input_length
       );
    }
 
@@ -701,7 +699,7 @@ static void ui_window_advance_grid(
       win->grid_pos.h = text.h;
    }
 
-   if( NULL == control || TRUE == control->new_row ) {
+   if( NULL == control || FALSE != control->new_row ) {
       win->grid_pos.x = UI_WINDOW_MARGIN;
       win->grid_pos.y += win->grid_pos.h + UI_WINDOW_MARGIN;
    } else {
@@ -960,7 +958,7 @@ static void ui_control_draw_inventory(
 
    inv_pane->self.grid_iter = 0;
    items = inv_pane->self.attachment;
-   scaffold_check_null_msg( items, "Item list invalid." );
+   lgc_null_msg( items, "Item list invalid." );
    vector_iterate( items, ui_control_draw_inventory_item, inv_pane );
 
 cleanup:
@@ -1123,7 +1121,7 @@ static void ui_control_draw_html(
    GRAPHICS_RECT bg_rect;
 
    if( NULL == html->self.attachment ) {
-      scaffold_print_debug( &module, "Parsing HTML: %b\n", html->text );
+      lg_debug( __FILE__, "Parsing HTML: %b\n", html->text );
       html_tree_parse_string(
          html->text, (struct html_tree*)&(html->self.attachment) );
    }
@@ -1170,7 +1168,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
 
    /* Make sure the window can contain its largest control. */
    largest_control = mem_alloc( 1, GRAPHICS_RECT );
-   scaffold_check_null( largest_control );
+   lgc_null( largest_control );
    memcpy( largest_control, &(win->area), sizeof( GRAPHICS_RECT ) );
 
    #if 0
@@ -1241,7 +1239,6 @@ static void* ui_window_draw_cb( size_t idx, void* iter, void* arg ) {
    SCAFFOLD_SIZE_SIGNED
       win_x = win->area.x,
       win_y = win->area.y;
-   BOOL previous_button = FALSE;
    struct UI_CONTROL* control = NULL;
 
    if( FALSE != win->dirty ) {

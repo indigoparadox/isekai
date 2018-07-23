@@ -35,8 +35,8 @@ extern IRC_COMMAND_TABLE_START( client );
 #ifdef DEBUG
 #define irc_print_args() \
    for( i = 0 ; args->qty > i ; i++ ) { \
-      scaffold_print_debug( \
-         &module, "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
+      lg_debug( \
+         __FILE__, "GDB %d: %s\n", i, bdata( args->entry[i] ) ); \
    }
 #endif
 
@@ -100,8 +100,8 @@ const struct tagbstring irc_reply_error_text[35] = {
 
 #define irc_detect_malformed( args_qty, expression, line_var ) \
    if( args_qty != vector_count( args ) ) { \
-      scaffold_print_error( \
-         &module, \
+      lg_error( \
+         __FILE__, \
          "IRC: Malformed " expression " expression received: %b\n", \
          line_var \
       ); \
@@ -116,25 +116,25 @@ static void proto_send( struct CLIENT* c, const bstring buffer ) {
    /* TODO: Make sure we're still connected. */
 
    buffer_copy = bstrcpy( buffer );
-   scaffold_check_null( buffer_copy );
+   lgc_null( buffer_copy );
    bstr_retval = bconchar( buffer_copy, '\r' );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
    bstr_retval = bconchar( buffer_copy, '\n' );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
    ipc_write( c->link, buffer_copy );
 
 #ifdef DEBUG_NETWORK
-   if( TRUE == client_is_local( c ) ) {
-      scaffold_print_debug( &module, "Client sent to server: %b\n", buffer );
+   if( FALSE != client_is_local( c ) ) {
+      lg_debug( __FILE__, "Client sent to server: %b\n", buffer );
    } else {
-      scaffold_print_debug( &module, "Server sent to client: %b\n", buffer );
+      lg_debug( __FILE__, "Server sent to client: %b\n", buffer );
    }
 #endif /* DEBUG_NETWORK */
 
 cleanup:
    bdestroy( buffer_copy );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( client_is_local( c ) ) {
+   if( FALSE != client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -156,10 +156,10 @@ static void proto_printf( struct CLIENT* c, const char* message, ... ) {
 #endif /* ENABLE_LOCAL_CLIENT */
 
    buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
 
    va_start( varg, message );
-   scaffold_vsnprintf( buffer, message, varg );
+   lg_vsnprintf( buffer, message, varg );
    va_end( varg );
 
    if( 0 == scaffold_error ) {
@@ -192,7 +192,7 @@ static void proto_channel_send(
 
    l_clients =
       hashmap_iterate_v( l->clients, callback_search_clients_r, skip_nick );
-   scaffold_check_null( l_clients );
+   lgc_null( l_clients );
 
    vector_iterate( l_clients, proto_send_cb, buffer );
 
@@ -210,10 +210,10 @@ static void proto_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CL
    va_list varg;
 
    buffer = bfromcstralloc( strlen( message ), "" );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
 
    va_start( varg, message );
-   scaffold_vsnprintf( buffer, message, varg );
+   lg_vsnprintf( buffer, message, varg );
    va_end( varg );
 
    if( 0 == scaffold_error ) {
@@ -242,9 +242,9 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
    scaffold_set_client();
 
    buffer = bfromcstr( "JOIN " );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
    bstr_retval = bconcat( buffer, name );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
 
    proto_send( c, buffer );
 
@@ -263,9 +263,9 @@ void proto_client_leave( struct CLIENT* c, const bstring lname ) {
    scaffold_assert_client();
 
    buffer = bfromcstr( "PART " );
-   scaffold_check_null( buffer );
+   lgc_null( buffer );
    bstr_retval = bconcat( buffer, lname );
-   scaffold_check_nonzero( bstr_retval );
+   lgc_nonzero( bstr_retval );
    proto_send( c, buffer );
 
    /* TODO: Add callback from parser and only delete channel on confirm. */
@@ -314,8 +314,8 @@ void proto_send_chunk(
 
 void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    scaffold_assert_client();
-   scaffold_print_debug(
-      &module,
+   lg_debug(
+      __FILE__,
       "Client: Aborting transfer of %s from server due to cached copy.\n",
       bdata( h->filename )
    );
@@ -332,8 +332,8 @@ void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
    /*
-   scaffold_print_debug(
-      &module, "Client: Requesting %b file: %s\n",
+   lg_debug(
+      __FILE__, "Client: Requesting %b file: %s\n",
       chunker_type_names[type].data, bdata( filename )
    );
    */
@@ -411,7 +411,7 @@ void proto_send_tile_cache(
    scaffold_assert_server();
 
    l = scaffold_container_of( cache->tilemap, struct CHANNEL, tilemap );
-   scaffold_check_equal( l->sentinal, CHANNEL_SENTINAL );
+   lgc_equal( l->sentinal, CHANNEL_SENTINAL );
 
    proto_printf(
       c, "IC_S %b %d %d",
@@ -488,7 +488,7 @@ void proto_server_send_msg_channel(
    struct SERVER* s, struct CHANNEL* l, const bstring nick, const bstring msg
 ) {
    scaffold_assert_server();
-   scaffold_check_null_msg( l, "Invalid channel to send message." );
+   lgc_null_msg( l, "Invalid channel to send message." );
    proto_channel_printf(
       s, l, NULL, ":%b!%b@%b PRIVMSG %b :%b", nick, nick, s->self.remote, l->name, msg
    );
@@ -583,7 +583,7 @@ static void irc_server_user(
       if( 0 == consumed ) {
          /* First arg: User */
          bstr_result = bassign( c->username, (bstring)vector_get( args, i ) );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
       } else if( 1 == consumed && scaffold_is_numeric( (bstring)vector_get( args, i ) ) ) {
          /* Second arg: Mode */
          c->irc_mode = bgtoi( (bstring)vector_get( args, i ) );
@@ -595,20 +595,20 @@ static void irc_server_user(
       } else if( 3 == consumed && ':' != ((bstring)vector_get( args, i ))->data[0] ) {
          /* Third or Fourth arg: Remote Host */
          bstr_result = bassign( c->remote, (bstring)vector_get( args, i ) );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
       } else if( 3 == consumed || 4 == consumed ) {
          /* Fourth or Fifth arg: Real Name */
          bstr_result = bassign( c->realname, (bstring)vector_get( args, i ) );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          if( 3 == consumed ) {
             consumed++; /* Extra bump for missing host. */
          }
       } else if( 4 < consumed ) {
          /* More real name. */
          bstr_result = bconchar( c->realname, ' ' );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          bstr_result = bconcat( c->realname, (bstring)vector_get( args, i ) );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
       }
       consumed++;
    }
@@ -662,21 +662,21 @@ static void irc_server_nick(
 
    if( 0 < blength( c->nick ) ) {
       oldnick = bstrcpy( c->nick );
-      scaffold_check_null( oldnick );
+      lgc_null( oldnick );
    } else {
       oldnick = bstrcpy( c->username );
-      scaffold_check_null( oldnick );
+      lgc_null( oldnick );
    }
 
    bstr_result = bassign( c->nick, newnick );
-   scaffold_check_nonzero( bstr_result );
+   lgc_nonzero( bstr_result );
 
    c->flags |= CLIENT_FLAGS_HAVE_NICK;
 
    /* Don't reply yet if there's been no USER statement yet. */
    if( !(c->flags & CLIENT_FLAGS_HAVE_USER) ) {
-      scaffold_print_debug(
-         &module, "Client %p quietly changed nick from: %s To: %s\n",
+      lg_debug(
+         __FILE__, "Client %p quietly changed nick from: %s To: %s\n",
          c, bdata( oldnick ), bdata( c->nick )
       );
       goto cleanup;
@@ -691,8 +691,8 @@ static void irc_server_nick(
       s->self.remote, c->nick, oldnick, c->username, c->remote, c->nick
    );
 
-   scaffold_print_debug(
-      &module, "Client %p changed nick from: %s To: %s\n",
+   lg_debug(
+      __FILE__, "Client %p changed nick from: %s To: %s\n",
       c, bdata( oldnick ), bdata( c->nick )
    );
 
@@ -732,23 +732,23 @@ static void irc_server_ison(
    int bstr_result;
 
    response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
-   scaffold_check_null( response );
+   lgc_null( response );
 
    /* TODO: Root the command stuff out of args. */
    ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, (void*)args );
-   scaffold_check_null( ison );
+   lgc_null( ison );
    vector_lock( ison, TRUE );
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
       assert( 2 <= c_iter->refcount.count );
       bstr_result = bconcat( response, c_iter->nick );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
       bstr_result = bconchar( response, ' ' );
-      scaffold_check_nonzero( bstr_result );
+      lgc_nonzero( bstr_result );
    }
    vector_lock( ison, FALSE );
-   scaffold_check_null( response );
+   lgc_null( response );
 
    proto_printf( c, ":%b 303 %b :%b", s->self.remote, c->nick, response );
 
@@ -782,7 +782,7 @@ static void irc_server_join(
    /* Add the channel to the server if it does not exist. */
    namehunt = bstrcpy( (bstring)vector_get( args, 1 ) );
    bstr_result = btrimws( namehunt );
-   scaffold_check_nonzero( bstr_result );
+   lgc_nonzero( bstr_result );
 
    if( TRUE != scaffold_string_is_printable( namehunt ) ) {
       proto_printf(
@@ -793,7 +793,7 @@ static void irc_server_join(
    }
 
    l = server_add_channel( s, namehunt, c );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    assert( NULL != c );
    assert( NULL != s );
@@ -816,7 +816,7 @@ static void irc_server_join(
    vector_new( cat_names );
    hashmap_iterate( l->clients, callback_concat_clients, cat_names );
    names = bfromcstr( "" );
-   scaffold_check_null( names );
+   lgc_null( names );
    vector_iterate( cat_names, callback_concat_strings, names );
 
    proto_printf(
@@ -866,10 +866,10 @@ static void irc_server_privmsg(
       vector_add( msg_list, bstrcpy( (bstring)vector_get( args, i ) ) );
    }
 
-   scaffold_print_debug( &module, "%s\n", ((bstring)vector_get( msg_list, 0 ))->data );
+   lg_debug( __FILE__, "%s\n", ((bstring)vector_get( msg_list, 0 ))->data );
 
    msg = bfromcstr( "" );
-   scaffold_check_null( msg );
+   lgc_null( msg );
    vector_iterate( msg_list, callback_concat_strings, msg );
 
    c_dest = server_get_client( s, (bstring)vector_get( args, 1 ) );
@@ -907,12 +907,12 @@ static void irc_server_who(
 
    /* TODO: Handle non-channels. */
    if( '#' != ((bstring)vector_get( args, 1 ))->data[0] ) {
-      scaffold_print_error( &module, "Non-channel WHO not yet implemented.\n" );
+      lg_error( __FILE__, "Non-channel WHO not yet implemented.\n" );
       goto cleanup;
    }
 
    l = client_get_channel_by_name( &(s->self), (bstring)vector_get( args, 1 ) );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    who.c = c;
    who.l = l;
@@ -962,7 +962,7 @@ static void irc_server_gamerequestfile(
 
    file_path_found = files_search( filename );
    if( NULL == file_path_found ) {
-      scaffold_print_debug( &module, "Sending cancel for: %b\n", filename );
+      lg_debug( __FILE__, "Sending cancel for: %b\n", filename );
       proto_send_chunk( c, NULL, 0, filename, NULL );
       goto cleanup;
    }
@@ -986,7 +986,7 @@ static void irc_server_gameupdate(
    irc_detect_malformed( 7, "GU", line )
 
    update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   scaffold_check_null( update.l );
+   lgc_null( update.l );
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
    update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
@@ -995,7 +995,7 @@ static void irc_server_gameupdate(
    target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
    update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
-   scaffold_check_null( update.o );
+   lgc_null( update.o );
 
    update.target =
       (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
@@ -1004,8 +1004,8 @@ static void irc_server_gameupdate(
    if( c == update.o->owner ) {
       update.update = mobile_apply_update( &update, TRUE );
    } else {
-      scaffold_print_error(
-         &module,
+      lg_error(
+         __FILE__,
          "Client %s attempted to modify mobile %d to %d without permission.\n",
          bdata( c->nick ), update.o->serial, update.update
       );
@@ -1031,13 +1031,13 @@ static void irc_server_debugvm(
 
    for( i = 2 /* Skip command and channel. */ ; vector_count( args ) > i ; i++ ) {
       bstr_ret = bconchar( code, ' ' );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       bstr_ret = bconcat( code, (bstring)vector_get( args, i ) );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
    }
 
    l = server_get_channel_by_name( s, lname );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    /* FIXME: channel_vm_start( l, code ); */
 
@@ -1058,12 +1058,12 @@ static void irc_client_gu(
    struct MOBILE_UPDATE_PACKET update;
 
    update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   scaffold_check_null( update.l );
+   lgc_null( update.l );
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
 
    update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
-   scaffold_check_null( update.o );
+   lgc_null( update.o );
 
    update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
    update.x = bgtoi( (bstring)vector_get( args, 4 ) );
@@ -1091,7 +1091,7 @@ static void irc_client_join(
 
    scaffold_assert_client();
 
-   scaffold_check_bounds( 3, vector_count( args ) );
+   lgc_bounds( 3, vector_count( args ) );
    l_name = (bstring)vector_get( args, 3 );
 
    /* Get the channel, or create it if it does not exist. */
@@ -1102,21 +1102,21 @@ static void irc_client_join(
       channel_new( l, l_name, FALSE, c );
       client_add_channel( c, l );
       channel_add_client( l, c, FALSE );
-      scaffold_print_debug(
-         &module, "Client created local channel mirror: %s\n", bdata( l_name )
+      lg_debug(
+         __FILE__, "Client created local channel mirror: %s\n", bdata( l_name )
       );
 
       /* Strip off the #. */
       l_filename = bmidstr( l->name, 1, blength( l->name ) - 1 );
       bstr_res = bcatcstr( l_filename, ".tmx" );
-      scaffold_check_nonzero( bstr_res );
-      scaffold_check_null( l_filename );
+      lgc_nonzero( bstr_res );
+      lgc_null( l_filename );
 
-      client_request_file( c, DATAFILE_TYPE_TILEMAP, l_filename );
+      client_request_file_later( c, DATAFILE_TYPE_TILEMAP, l_filename );
    }
 
-   scaffold_print_info(
-      &module, "Client joined channel: %s\n", bdata( l_name )
+   lg_info(
+      __FILE__, "Client joined channel: %s\n", bdata( l_name )
    );
 
    scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
@@ -1135,7 +1135,7 @@ static void irc_client_error(
       2 <= vector_count( args ) &&
       0 == bstrcmp( &str_closing, (bstring)vector_get( args, 1 ) )
    ) {
-      scaffold_print_debug( &module, "IRC Error received from server.\n" );
+      lg_debug( __FILE__, "IRC Error received from server.\n" );
       client_stop( c );
    }
 }
@@ -1185,8 +1185,8 @@ static void irc_server_gamedataabort(
 ) {
    irc_detect_malformed( 2, "GDA", line );
 
-   scaffold_print_debug(
-      &module,
+   lg_debug(
+      __FILE__,
       "Server: Terminating transfer of %s at request of client: %p\n",
       bdata( (bstring)vector_get( args, 1 ) ), c
    );
@@ -1210,14 +1210,14 @@ static void irc_client_item_cache_start(
    irc_detect_malformed( 4, "IC_S", line );
 
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   scaffold_check_null_msg( l, "Channel not found." );
+   lgc_null_msg( l, "Channel not found." );
 
    x = bgtoi( (bstring)vector_get( args, 2 ) );
    y = bgtoi( (bstring)vector_get( args, 3 ) );
 
    if( NULL != cache ) {
-      scaffold_print_error(
-         &module, "New item cache opened without closing previous: %b (%d, %d)",
+      lg_error(
+         __FILE__, "New item cache opened without closing previous: %b (%d, %d)",
          l->name, x, y
       );
    }
@@ -1254,8 +1254,8 @@ static void irc_client_item(
    catalog_name = (bstring)vector_get( args, 4 );
    catalog = client_get_catalog( c, catalog_name );
    if( NULL == catalog ) {
-      scaffold_print_debug(
-         &module, "Client: Catalog not present in cache: %b\n", catalog_name
+      lg_debug(
+         __FILE__, "Client: Catalog not present in cache: %b\n", catalog_name
       );
       client_request_file( c, DATAFILE_TYPE_ITEM_CATALOG, catalog_name );
    }
@@ -1266,8 +1266,8 @@ static void irc_client_item(
 
    tilemap_drop_item_in_cache( last_item_cache, e );
 
-   scaffold_print_debug(
-      &module, "Client: Local instance of item updated: %b (%d, %b, %d)\n",
+   lg_debug(
+      __FILE__, "Client: Local instance of item updated: %b (%d, %b, %d)\n",
       e->display_name, e->serial, e->catalog_name, e->sprite_id
    );
 
@@ -1313,7 +1313,7 @@ static void irc_client_mob(
    irc_detect_malformed( 8, "MOB", line );
 
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
 
@@ -1325,10 +1325,11 @@ static void irc_client_mob(
    y = bgtoi( (bstring)vector_get( args, 7 ) );
 
    channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y );
-   scaffold_assert( 0 == scaffold_error );
+   lg_debug( __FILE__, "scaffold_error: %d\n", scaffold_error );
+   lgc_nonzero( scaffold_error );
 
-   scaffold_print_debug(
-      &module, "Client: Local instance of mobile updated: %s (%d)\n",
+   lg_debug(
+      __FILE__, "Client: Local instance of mobile updated: %s (%d)\n",
       bdata( nick ), serial
    );
 
@@ -1348,17 +1349,17 @@ static void irc_client_privmsg(
    }
 
    msg = bmidstr( line, binchr( line, 2, &scaffold_colon_string ) + 1, blength( line ) );
-   scaffold_check_null( msg );
+   lgc_null( msg );
 
 #ifdef DEBUG_VERBOSE
-   scaffold_print_debug(
-      &module, "Message Incoming (%b): %b\n",
+   lg_debug(
+      __FILE__, "Message Incoming (%b): %b\n",
       (bstring)vector_get( args, 2 ), msg
    );
 #endif /* DEBUG_VERBOSE */
 
    l = client_get_channel_by_name( c, (bstring)vector_get( args, 2 ) );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    /* TODO: Authentication. */
    nick = /* Start at 1 to filter the : */
@@ -1439,15 +1440,75 @@ static void irc_command_cleanup( const struct REF* ref ) {
 static IRC_COMMAND* irc_dispatch(
    const IRC_COMMAND* table, struct SERVER* s, struct CLIENT* c, const_bstring line
 ) {
-   struct VECTOR* args = NULL;
    const IRC_COMMAND* command = NULL;
-   SCAFFOLD_SIZE i;
-   bstring cmd_test = NULL; /* Don't free this. */
    IRC_COMMAND* out = NULL;
-   SCAFFOLD_SIZE args_count;
 
-   args = bgsplit( line, ' ' );
-   scaffold_check_null( args );
+
+
+
+cleanup:
+   return out;
+}
+
+BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
+   BOOL keep_going = TRUE;
+   SCAFFOLD_SIZE last_read_count = 0;
+   //IRC_COMMAND* cmd = NULL;
+   const IRC_COMMAND* table = proto_table_server;
+   int bstr_result;
+   struct VECTOR* args = NULL;
+   SCAFFOLD_SIZE args_count = 0;
+   bstring cmd_test = NULL; /* Don't free this. */
+   SCAFFOLD_SIZE i = 0, j = 0;
+
+#ifdef ENABLE_LOCAL_CLIENT
+   /* Figure out if we're being called from a client or server. */
+   if( FALSE != client_is_local( c ) ) {
+      table = proto_table_client;
+   } else {
+#endif /* ENABLE_LOCAL_CLIENT */
+      scaffold_assert( NULL != s );
+#ifdef ENABLE_LOCAL_CLIENT
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+
+   /* Make sure a buffer is present. */
+   bwriteallow( (*irc_line_buffer) ); /* Unprotect the buffer. */
+   bstr_result = btrunc( irc_line_buffer, 0 );
+   lgc_nonzero( bstr_result );
+
+   /* Get the next line and clean it up. */
+   last_read_count = ipc_read( c->link, irc_line_buffer );
+
+   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+      /* Return an empty command to force abortion of the iteration. */
+      keep_going = FALSE;
+      goto cleanup;
+   }
+
+   /* Everything is fine, so tidy up the buffer. */
+   btrimws( irc_line_buffer );
+   bwriteprotect( (*irc_line_buffer) ); /* Protect the buffer until next read. */
+
+   /* The -1 is not bubbled up; the scaffold_error should suffice. */
+   if( 0 >= last_read_count ) {
+      goto cleanup;
+   }
+
+#ifdef DEBUG_NETWORK
+   lg_debug(
+      __FILE__, "Server: Line received: %b\n", irc_line_buffer
+   );
+#endif /* DEBUG_NETWORK */
+
+#if 0
+   cmd = irc_dispatch( table, s, c, irc_line_buffer );
+   if( NULL != cmd ) {
+      cmd->callback( c, s, cmd->args, irc_line_buffer );
+   }
+#endif // 0
+   args = bgsplit( irc_line_buffer, ' ' );
+   lgc_null( args );
 
    if( table == proto_table_server ) {
       scaffold_assert_server();
@@ -1465,33 +1526,15 @@ static IRC_COMMAND* irc_dispatch(
    for( i = 0 ; i < args_count && IRC_LINE_CMD_SEARCH_RANGE > i ; i++ ) {
       cmd_test = (bstring)vector_get( args, i );
       for(
-         command = &(table[0]);
+         /*command = &(table[0]);
          NULL != command->callback;
-         command++
+         command++*/
+         j = 0 ; NULL != table[j].callback ; j++
       ) {
-#ifdef DEBUG_VERBOSE
-         if( NULL != command ) {
-            scaffold_print_debug_color( &module, SCAFFOLD_COLOR_MAGENTA, "%b vs %b\n", cmd_test, &(command->command) );
-         }
-#endif /* DEBUG_VERBOSE */
-         if( 0 == bstricmp( cmd_test, &(command->command) ) ) {
-#ifdef DEBUG_VERBOSE
-            if(
-               0 != bstrncmp( cmd_test, &str_gdb, 3 ) &&
-               0 != bstrncmp( cmd_test, &str_gu, 2 )
-            ) {
-               if( table == proto_table_server ) {
-                  scaffold_print_debug(
-                     &module, "Server Parse: %s\n", bdata( line ) );
-               } else {
-                  scaffold_print_debug(
-                     &module, "Client Parse: %s\n", bdata( line ) );
-               }
-            }
-#endif /* DEBUG_VERBOSE */
-
+         if( 0 == bstricmp( cmd_test, &(table[j].command) ) ) {
+            #if 0
             out = mem_alloc( 1, IRC_COMMAND );
-            scaffold_check_null( out );
+            lgc_null( out );
             memcpy( out, command, sizeof( IRC_COMMAND ) );
             if( NULL != s ) {
                out->server = s;
@@ -1504,6 +1547,9 @@ static IRC_COMMAND* irc_dispatch(
             ref_init( &(out->refcount), irc_command_cleanup );
 
             scaffold_assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
+            #endif // 0
+
+            table[j].callback( c, s, args, irc_line_buffer );
 
             /* Found a command, so short-circuit. */
             goto cleanup;
@@ -1513,18 +1559,20 @@ static IRC_COMMAND* irc_dispatch(
 
    if( table == proto_table_server ) {
       scaffold_assert_server();
-      scaffold_print_error(
-         &module, "Server: Parser unable to interpret: %b\n", line );
+      lg_error(
+         __FILE__,
+         "Server: Parser unable to interpret: %b\n", irc_line_buffer );
 #ifdef ENABLE_LOCAL_CLIENT
    } else if( table == proto_table_client ) {
       scaffold_assert_client();
-      scaffold_print_error(
-         &module, "Client: Parser unable to interpret: %b\n", line );
+      lg_error(
+         __FILE__,
+         "Client: Parser unable to interpret: %b\n", irc_line_buffer );
 #endif /* ENABLE_LOCAL_CLIENT */
    }
 
-
 cleanup:
+   /*
    if( NULL == out ) {
       for( i = 0 ; args_count > i ; i++ ) {
          bwriteallow( *((bstring)vector_get( args, i )) );
@@ -1532,73 +1580,13 @@ cleanup:
       vector_remove_cb( args, callback_v_free_strings, NULL );
       vector_free( &args );
    }
-   return out;
-}
+   mem_free( cmd ); */
 
-BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
-   BOOL keep_going = TRUE;
-   SCAFFOLD_SIZE last_read_count = 0;
-   IRC_COMMAND* cmd = NULL;
-   const IRC_COMMAND* table = proto_table_server;
-   int bstr_result;
-
-#ifdef ENABLE_LOCAL_CLIENT
-   /* Figure out if we're being called from a client or server. */
-   if( FALSE != client_is_local( c ) ) {
-      table = proto_table_client;
-   } else {
-#endif /* ENABLE_LOCAL_CLIENT */
-      scaffold_assert( NULL != s );
-#ifdef ENABLE_LOCAL_CLIENT
+   for( i = 0 ; args_count > i ; i++ ) {
+      bwriteallow( *((bstring)vector_get( args, i )) );
    }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-   /* Make sure a buffer is present. */
-   bwriteallow( (*irc_line_buffer) ); /* Unprotect the buffer. */
-   bstr_result = btrunc( irc_line_buffer, 0 );
-   scaffold_check_nonzero( bstr_result );
-
-   /* Get the next line and clean it up. */
-   last_read_count = ipc_read( c->link, irc_line_buffer );
-
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      /* Return an empty command to force abortion of the iteration. */
-      /* cmd = mem_alloc( 1, IRC_COMMAND );
-      cmd->callback = NULL;
-      cmd->line = bstrcpy( c->nick ); */
-      keep_going = FALSE;
-      goto cleanup;
-   }
-
-   /* Everything is fine, so tidy up the buffer. */
-   btrimws( irc_line_buffer );
-   bwriteprotect( (*irc_line_buffer) ); /* Protect the buffer until next read. */
-
-   /* The -1 is not bubbled up; the scaffold_error should suffice. */
-   if( 0 >= last_read_count ) {
-      goto cleanup;
-   }
-
-#ifdef DEBUG_NETWORK
-   scaffold_print_debug(
-      &module, "Server: Line received: %b\n", irc_line_buffer
-   );
-#endif /* DEBUG_NETWORK */
-
-   cmd = irc_dispatch( table, s, c, irc_line_buffer );
-   if( NULL != cmd ) {
-      cmd->callback( c, s, cmd->args, irc_line_buffer );
-   }
-
-cleanup:
-   if( NULL != cmd ) {
-      if( NULL != cmd->args ) {
-         vector_remove_cb( cmd->args, callback_v_free_strings, NULL );
-         vector_free( &(cmd->args) );
-      }
-      bdestroy( cmd->line );
-   }
-   mem_free( cmd );
+   vector_remove_cb( args, callback_v_free_strings, NULL );
+   vector_free( &args );
    return keep_going;
 }
 

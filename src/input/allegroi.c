@@ -34,7 +34,7 @@ void input_get_event( struct INPUT* input ) {
 
    poll_keyboard();
 
-   if( TRUE == window_closed ) {
+   if( FALSE != window_closed ) {
       input->type = INPUT_TYPE_CLOSE;
    } else if( keypressed() ) {
       key_pressed = readkey();
@@ -42,7 +42,7 @@ void input_get_event( struct INPUT* input ) {
       input->character = key_pressed & 0xff;
       input->scancode = (key_pressed & 0xff00) >> 8;
 #ifdef DEBUG_KEYS
-      scaffold_print_debug( &module, "Scancode: %d\n", input->scancode );
+      lg_debug( __FILE__, "Scancode: %d\n", input->scancode );
 #endif /* DEBUG_KEYS */
    } else {
       input->type = INPUT_TYPE_NONE;

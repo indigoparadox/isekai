@@ -70,8 +70,10 @@ heatshrink_decoder* heatshrink_decoder_alloc(
    hsd->window_sz2 = window_sz2;
    hsd->lookahead_sz2 = lookahead_sz2;
    heatshrink_decoder_reset(hsd);
-   scaffold_print_debug( &module, "-- allocated decoder with buffer size of %zu (%zu + %u + %u)\n",
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- allocated decoder with buffer size of %zu (%zu + %u + %u)\n",
        sz, sizeof(heatshrink_decoder), (1 << window_sz2), input_buffer_size);
+#endif /* DEBUG_HEATSHRINK */
    return hsd;
 }
 
@@ -114,7 +116,9 @@ HSD_sink_res heatshrink_decoder_sink(
    }
 
    size = rem < size ? rem : size;
-   scaffold_print_debug( &module, "-- sinking %zd bytes\n", size);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- sinking %zd bytes\n", size);
+#endif /* DEBUG_HEATSHRINK */
    /* copy into input buffer (at head of buffers) */
    memcpy(&hsd->buffers[hsd->input_size], in_buf, size);
    hsd->input_size += size;
@@ -158,10 +162,10 @@ HSD_poll_res heatshrink_decoder_poll(
    oi.output_size = output_size;
 
    while (1) {
-#ifdef DEBUG
-      scaffold_print_debug( &module, "-- poll, state is %d (%s), input_size %d\n",
+#ifdef DEBUG_HEATSHRINK
+      lg_debug( __FILE__, "-- poll, state is %d (%s), input_size %d\n",
           hsd->state, state_names[hsd->state], hsd->input_size);
-#endif /* DEBUG */
+#endif /* DEBUG_HEATSHRINK */
       in_state = hsd->state;
       switch (in_state) {
       case HSDS_TAG_BIT:
@@ -231,7 +235,9 @@ static HSD_state st_yield_literal( heatshrink_decoder* hsd, output_info* oi ) {
       buf = &hsd->buffers[HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd)];
       mask = (1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd))  - 1;
       c = byte & 0xFF;
-      scaffold_print_debug( &module, "-- emitting literal byte 0x%02x ('%c')\n", c, isprint(c) ? c : '.');
+#ifdef DEBUG_HEATSHRINK
+      lg_debug( __FILE__, "-- emitting literal byte 0x%02x ('%c')\n", c, isprint(c) ? c : '.');
+#endif /* DEBUG_HEATSHRINK */
       buf[hsd->head_index++ & mask] = c;
       push_byte(hsd, oi, c);
       return HSDS_TAG_BIT;
@@ -246,7 +252,9 @@ static HSD_state st_backref_index_msb(heatshrink_decoder* hsd) {
 
    scaffold_assert(bit_ct > 8);
    bits = get_bits(hsd, bit_ct - 8);
-   scaffold_print_debug( &module, "-- backref index (msb), got 0x%04x (+1)\n", bits);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- backref index (msb), got 0x%04x (+1)\n", bits);
+#endif /* DEBUG_HEATSHRINK */
    if (bits == NO_BITS) {
       return HSDS_BACKREF_INDEX_MSB;
    }
@@ -259,7 +267,9 @@ static HSD_state st_backref_index_lsb(heatshrink_decoder* hsd) {
    uint16_t bits = get_bits(hsd, bit_ct < 8 ? bit_ct : 8);
    uint8_t br_bit_ct;
 
-   scaffold_print_debug( &module, "-- backref index (lsb), got 0x%04x (+1)\n", bits);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- backref index (lsb), got 0x%04x (+1)\n", bits);
+#endif /* DEBUG_HEATSHRINK */
    if (bits == NO_BITS) {
       return HSDS_BACKREF_INDEX_LSB;
    }
@@ -276,7 +286,9 @@ static HSD_state st_backref_count_msb(heatshrink_decoder* hsd) {
 
    scaffold_assert(br_bit_ct > 8);
    bits = get_bits(hsd, br_bit_ct - 8);
-   scaffold_print_debug( &module, "-- backref count (msb), got 0x%04x (+1)\n", bits);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- backref count (msb), got 0x%04x (+1)\n", bits);
+#endif /* DEBUG_HEATSHRINK */
    if (bits == NO_BITS) {
       return HSDS_BACKREF_COUNT_MSB;
    }
@@ -287,7 +299,9 @@ static HSD_state st_backref_count_msb(heatshrink_decoder* hsd) {
 static HSD_state st_backref_count_lsb(heatshrink_decoder* hsd) {
    uint8_t br_bit_ct = BACKREF_COUNT_BITS(hsd);
    uint16_t bits = get_bits(hsd, br_bit_ct < 8 ? br_bit_ct : 8);
-   scaffold_print_debug( &module, "-- backref count (lsb), got 0x%04x (+1)\n", bits);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- backref count (lsb), got 0x%04x (+1)\n", bits);
+#endif /* DEBUG_HEATSHRINK */
    if (bits == NO_BITS) {
       return HSDS_BACKREF_COUNT_LSB;
    }
@@ -309,7 +323,9 @@ static HSD_state st_yield_backref( heatshrink_decoder* hsd, output_info* oi) {
       buf = &hsd->buffers[HEATSHRINK_DECODER_INPUT_BUFFER_SIZE(hsd)];
       mask = (1 << HEATSHRINK_DECODER_WINDOW_BITS(hsd)) - 1;
       neg_offset = hsd->output_index;
-      scaffold_print_debug( &module, "-- emitting %zu bytes from -%u bytes back\n", count, neg_offset);
+#ifdef DEBUG_HEATSHRINK
+      lg_debug( __FILE__, "-- emitting %zu bytes from -%u bytes back\n", count, neg_offset);
+#endif /* DEBUG_HEATSHRINK */
       scaffold_assert(neg_offset <= mask + 1);
       scaffold_assert(count <= (SCAFFOLD_SIZE)(1 << BACKREF_COUNT_BITS(hsd)));
 
@@ -318,7 +334,9 @@ static HSD_state st_yield_backref( heatshrink_decoder* hsd, output_info* oi) {
          push_byte(hsd, oi, c);
          buf[hsd->head_index & mask] = c;
          hsd->head_index++;
-         scaffold_print_debug( &module, "  -- ++ 0x%02x\n", c);
+#ifdef DEBUG_HEATSHRINK
+         lg_debug( __FILE__, "  -- ++ 0x%02x\n", c);
+#endif /* DEBUG_HEATSHRINK */
       }
       hsd->output_count -= count;
       if (hsd->output_count == 0) {
@@ -336,7 +354,9 @@ static uint16_t get_bits(heatshrink_decoder* hsd, uint8_t count) {
    if (count > 15) {
       return NO_BITS;
    }
-   scaffold_print_debug( &module, "-- popping %u bit(s)\n", count);
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, "-- popping %u bit(s)\n", count);
+#endif /* DEBUG_HEATSHRINK */
 
    /* If we aren't able to get COUNT bits, suspend immediately, because we
     * don't track how many bits of COUNT we've accumulated before suspend. */
@@ -349,12 +369,16 @@ static uint16_t get_bits(heatshrink_decoder* hsd, uint8_t count) {
    for (i = 0; i < count; i++) {
       if (hsd->bit_index == 0x00) {
          if (hsd->input_size == 0) {
-            scaffold_print_debug( &module, "  -- out of bits, suspending w/ accumulator of %u (0x%02x)\n",
+#ifdef DEBUG_HEATSHRINK
+            lg_debug( __FILE__, "  -- out of bits, suspending w/ accumulator of %u (0x%02x)\n",
                 accumulator, accumulator);
+#endif /* DEBUG_HEATSHRINK */
             return NO_BITS;
          }
          hsd->current_byte = hsd->buffers[hsd->input_index++];
-         scaffold_print_debug( &module, "  -- pulled byte 0x%02x\n", hsd->current_byte);
+#ifdef DEBUG_HEATSHRINK
+         lg_debug( __FILE__, "  -- pulled byte 0x%02x\n", hsd->current_byte);
+#endif /* DEBUG_HEATSHRINK */
          if (hsd->input_index == hsd->input_size) {
             hsd->input_index = 0; /* input is exhausted */
             hsd->input_size = 0;
@@ -365,20 +389,26 @@ static uint16_t get_bits(heatshrink_decoder* hsd, uint8_t count) {
       if (hsd->current_byte & hsd->bit_index) {
          accumulator |= 0x01;
          if (0) {
-            scaffold_print_debug( &module, "  -- got 1, accumulator 0x%04x, bit_index 0x%02x\n",
+#ifdef DEBUG_HEATSHRINK
+            lg_debug( __FILE__, "  -- got 1, accumulator 0x%04x, bit_index 0x%02x\n",
                 accumulator, hsd->bit_index);
+#endif /* DEBUG_HEATSHRINK */
          }
       } else {
          if (0) {
-            scaffold_print_debug( &module, "  -- got 0, accumulator 0x%04x, bit_index 0x%02x\n",
+#ifdef DEBUG_HEATSHRINK
+            lg_debug( __FILE__, "  -- got 0, accumulator 0x%04x, bit_index 0x%02x\n",
                 accumulator, hsd->bit_index);
+#endif /* DEBUG_HEATSHRINK */
          }
       }
       hsd->bit_index >>= 1;
    }
 
    if (count > 1) {
-      scaffold_print_debug( &module, "  -- accumulated %08x\n", accumulator);
+#ifdef DEBUG_HEATSHRINK
+      lg_debug( __FILE__, "  -- accumulated %08x\n", accumulator);
+#endif /* DEBUG_HEATSHRINK */
    }
    return accumulator;
 }
@@ -412,7 +442,9 @@ HSD_finish_res heatshrink_decoder_finish(heatshrink_decoder* hsd) {
 }
 
 static void push_byte(heatshrink_decoder* hsd, output_info* oi, uint8_t byte) {
-   scaffold_print_debug( &module, " -- pushing byte: 0x%02x ('%c')\n", byte, isprint(byte) ? byte : '.');
+#ifdef DEBUG_HEATSHRINK
+   lg_debug( __FILE__, " -- pushing byte: 0x%02x ('%c')\n", byte, isprint(byte) ? byte : '.');
+#endif /* DEBUG_HEATSHRINK */
    oi->buf[(*oi->output_size)++] = byte;
    (void)hsd;
 }

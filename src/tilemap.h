@@ -160,32 +160,32 @@ struct TILEMAP {
 
 #define tilemap_tileset_new( set, def_path ) \
     set = mem_alloc( 1, struct TILEMAP_TILESET ); \
-    scaffold_check_null( set ); \
+    lgc_null( set ); \
     tilemap_tileset_init( set, def_path );
 
 #define tilemap_spawner_new( ts, t, type ) \
     ts = mem_alloc( 1, struct TILEMAP_SPAWNER ); \
-    scaffold_check_null( ts ); \
+    lgc_null( ts ); \
     tilemap_spawner_init( ts, t, type );
 
 #define tilemap_new( t, local_images, server, channel ) \
     t = mem_alloc( 1, struct TILEMAP ); \
-    scaffold_check_null( t ); \
+    lgc_null( t ); \
     tilemap_init( t, local_images, server, channel );
 
 #define tilemap_layer_new( t ) \
     t = mem_alloc( 1, struct TILEMAP_LAYER ); \
-    scaffold_check_null( t ); \
+    lgc_null( t ); \
     tilemap_layer_init( t );
 
 #define tilemap_item_cache_new( cache, t, x, y ) \
     cache = mem_alloc( 1, struct TILEMAP_ITEM_CACHE ); \
-    scaffold_check_null( cache ); \
+    lgc_null( cache ); \
     tilemap_item_cache_init( cache, t, x, y );
 
 #define tilemap_position_new( t ) \
     t = mem_alloc( 1, struct TILEMAP_POSITION ); \
-    scaffold_check_null( t ); \
+    lgc_null( t ); \
     tilemap_position_init( t );
 
 #define tilemap_layer_free( layer ) \
@@ -267,8 +267,6 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );
 
 #ifdef TILEMAP_C
-
-SCAFFOLD_MODULE( "tilemap.c" );
 
 #ifdef DEBUG_TILES
 volatile TILEMAP_DEBUG_TERRAIN_STATE tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;

@@ -56,7 +56,6 @@ void animate_draw_animations( GRAPHICS* g );
 BOOL animate_is_blocking();
 
 #ifdef ANIMATE_C
-SCAFFOLD_MODULE( "animate.c" );
 static struct HASHMAP animations;
 #else
 

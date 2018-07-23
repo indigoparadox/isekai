@@ -47,12 +47,12 @@ void item_random_init(
    struct ITEM_SPRITE* sprite = NULL;
 
    catalog = client_get_catalog( c, catalog_name );
-   scaffold_check_null_msg( catalog, "Unable to find catalog." );
+   lgc_null_msg( catalog, "Unable to find catalog." );
 
    sprite_id = item_random_sprite_id_of_type( type, catalog );
    /* TODO: Sprite 0 should be reserved. */
    sprite = item_spritesheet_get_sprite( catalog, sprite_id );
-   scaffold_check_null_msg( sprite, "Unable to find item sprite." );
+   lgc_null_msg( sprite, "Unable to find item sprite." );
 
    item_init( e, sprite->display_name, 1, catalog_name, sprite_id, c );
    rng_gen_serial(
@@ -141,7 +141,7 @@ SCAFFOLD_SIZE item_random_sprite_id_of_type(
    candidates = vector_iterate_v(
       &(catalog->sprites), callback_search_item_type, &type
    );
-   scaffold_check_null_msg( candidates, "No sprite candidates found." );
+   lgc_null_msg( candidates, "No sprite candidates found." );
 
    selection = rng_max( vector_count( candidates ) );
    /* sprite_out = vector_get( candidates, selection ); */

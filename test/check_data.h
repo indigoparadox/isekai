@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "../src/scaffold.h"
-#include "../src/bstrlib/bstrlib.h"
+#include "../src/libvcol.h"
 #include "../src/ref.h"
 
 #define CHECK_BEGIN_END_COLOR SCAFFOLD_COLOR_MAGENTA

@@ -33,7 +33,8 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    c = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = c->active_tilemap;
 
-   vector_lock( &(t->layers), TRUE );
+   // XXX
+   //vector_lock( &(t->layers), TRUE );
    layer_max = vector_count( &(t->layers) );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( &(t->layers), layer_idx );
@@ -45,7 +46,7 @@ static void* mode_topdown_tilemap_draw_tile_cb(
             layer, twindow, pos->x, pos->y, tile );
       }
    }
-   vector_lock( &(t->layers), FALSE );
+   //vector_lock( &(t->layers), FALSE );
 }
 
 static void* mode_topdown_draw_mobile_cb(
@@ -133,14 +134,14 @@ static void mode_topdown_tilemap_draw_tile_debug(
    SCAFFOLD_SIZE layers_count;
 
    bnum = bfromcstralloc( 10, "" );
-   scaffold_check_null( bnum );
+   lgc_null( bnum );
 
    /* FIXME: How does gid resolve in a tileset that can have a variable firstgid? */
    set = tilemap_get_tileset( t, gid, &set_firstgid );
-   scaffold_check_null( set );
-   scaffold_check_zero_against(
+   lgc_null( set );
+   lgc_zero_against(
       t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero_against(
+   lgc_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
 
    layers_count = vector_count( &(t->layers) );
@@ -158,13 +159,13 @@ static void mode_topdown_tilemap_draw_tile_debug(
    case TILEMAP_DEBUG_TERRAIN_COORDS:
       if( layers_count - 1 == layer->z ) {
          bstr_result = bassignformat( bnum, "%d,", tile_x );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
             GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
          );
          bstr_result = bassignformat( bnum, "%d", tile_y );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
             GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
@@ -180,7 +181,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
             bdata( tile_info->terrain[0]->name )[1],
             tile_info->terrain[0]->movement
          );
-         scaffold_check_nonzero( bstr_result );
+         lgc_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + (10 * layer->z),
             GRAPHICS_TEXT_ALIGN_CENTER,
@@ -192,13 +193,13 @@ static void mode_topdown_tilemap_draw_tile_debug(
       for( td_i = 0 ; 4 > td_i ; td_i++ ) {
          if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
             bstr_result = bassignformat( bnum, "x" );
-            scaffold_check_nonzero( bstr_result );
+            lgc_nonzero( bstr_result );
          } else {
             bstr_result = bassignformat(
                bnum, "%d",
                tile_info->terrain[td_i]->id
             );
-            scaffold_check_nonzero( bstr_result );
+            lgc_nonzero( bstr_result );
          }
          graphics_draw_text(
             g,
@@ -264,9 +265,9 @@ static void mode_topdown_tilemap_draw_tile(
       goto cleanup; /* Silently. */
    }
 
-   scaffold_check_zero_against(
+   lgc_zero_against(
       t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero_against(
+   lgc_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
       goto cleanup;
@@ -382,15 +383,15 @@ static void mode_topdown_tilemap_update_window(
    exclusion = tilemap_inside_window_deadzone_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point right of window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point right of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point left of window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point left of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -399,15 +400,15 @@ static void mode_topdown_tilemap_update_window(
    exclusion = tilemap_inside_window_deadzone_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point below window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point below window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point above window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point above window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -417,14 +418,14 @@ static void mode_topdown_tilemap_update_window(
    exclusion = tilemap_inside_inner_map_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map left edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map left edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = t->width - twindow->width;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map right edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map right edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = 0;
    }
@@ -432,14 +433,14 @@ static void mode_topdown_tilemap_update_window(
    exclusion = tilemap_inside_inner_map_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map bottom edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map bottom edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = t->height - twindow->height;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map top edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map top edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = 0;
    }
@@ -552,11 +553,11 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui = c->ui;
       update.o = puppet;
       update.l = puppet->channel;
-      scaffold_check_null( update.l );
+      lgc_null( update.l );
       l = puppet->channel;
-      scaffold_check_null_msg( l, "No channel loaded." );
+      lgc_null_msg( l, "No channel loaded." );
       t = l->tilemap;
-      scaffold_check_null_msg( t, "No tilemap loaded." );
+      lgc_null_msg( t, "No tilemap loaded." );
    }
 
    /* If no windows need input, then move on to game input. */
@@ -599,7 +600,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_inv,
@@ -625,7 +626,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case '\\':
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_chat,

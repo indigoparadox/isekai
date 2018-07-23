@@ -107,7 +107,7 @@ struct MOBILE_UPDATE_PACKET {
 
 #define mobile_new( o, mob_id, x, y ) \
     o = mem_alloc( 1, struct MOBILE ); \
-    scaffold_check_null( o ); \
+    lgc_null( o ); \
     mobile_init( o, mob_id, x, y );
 
 void mobile_free( struct MOBILE* o );
@@ -147,7 +147,6 @@ void mobile_vm_start( struct MOBILE* o );
 #endif /* USE_VM */
 
 #ifdef MOBILE_C
-SCAFFOLD_MODULE( "mobile.c" );
 const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );
 const struct tagbstring str_mobile_facing[4] = {
    bsStatic( "down" ),

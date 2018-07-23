@@ -51,8 +51,4 @@ IRC_COMMAND* irc_dispatch(
 );
 */
 
-#ifdef PROTO_C
-SCAFFOLD_MODULE( "proto.c" );
-#endif /* PROTO_C */
-
 #endif /* PARSER_H */

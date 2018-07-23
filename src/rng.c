@@ -28,15 +28,15 @@ BOOL rng_bytes( BYTE* ptr, SCAFFOLD_SIZE length ) {
 
    if( 0 == prov ) {
       if( !CryptAcquireContext( &prov, NULL, NULL, PROV_RSA_FULL, 0 ) ) {
-         scaffold_print_error( &module, "Unable to open crypto context.\n" );
-         scaffold_error = SCAFFOLD_ERROR_RANDOM;
+         lg_error( __FILE__, "Unable to open crypto context.\n" );
+         //scaffold_error = SCAFFOLD_ERROR_RANDOM;
          ok = FALSE;
          goto cleanup;
       }
    }
    if( !CryptGenRandom( prov, length, ptr ) ) {
-      scaffold_print_error( &module, "Unable to generate random bytes.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
+      lg_error( __FILE__, "Unable to generate random bytes.\n" );
+      //scaffold_error = SCAFFOLD_ERROR_RANDOM;
       ok = FALSE;
       goto cleanup;
    }
@@ -46,15 +46,15 @@ cleanup:
    FILE* randhand = fopen( "/dev/urandom", "rb" );
 
    if( randhand == NULL ) {
-      scaffold_print_error( &module, "Unable to open entropy source.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
+      lg_error( __FILE__, "Unable to open entropy source.\n" );
+      //scaffold_error = SCAFFOLD_ERROR_RANDOM;
       ok = FALSE;
       goto cleanup;
    }
 
    if( 0 == fread( ptr, length, 1, randhand ) ) {
-      scaffold_print_error( &module, "Unable to read random bytes.\n" );
-      scaffold_error = SCAFFOLD_ERROR_RANDOM;
+      lg_error( __FILE__, "Unable to read random bytes.\n" );
+      //scaffold_error = SCAFFOLD_ERROR_RANDOM;
       ok = FALSE;
       goto cleanup;
    }
