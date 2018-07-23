@@ -47,7 +47,7 @@ static void syncbuff_alloc( IPC_END dest ) {
 static void syncbuff_realloc( IPC_END dest, SCAFFOLD_SIZE new_alloc ) {
    SCAFFOLD_SIZE i;
 
-   scaffold_print_debug( &module,
+   lg_debug( __FILE__,
       "Realloc: %d: %d to %d\n", dest, syncbuff_size[dest], new_alloc
    );
 
@@ -114,8 +114,9 @@ BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
 
 BOOL ipc_connected( struct CONNECTION* n ) {
    if(
-      SYNCBUFF_STATE_CONNECTED == n->state ||
-      SYNCBUFF_STATE_LISTENING == n->state
+      NULL != n &&
+      (SYNCBUFF_STATE_CONNECTED == n->state ||
+      SYNCBUFF_STATE_LISTENING == n->state)
    ) {
       return TRUE;
    }
@@ -155,16 +156,16 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
       dest = IPC_END_CLIENT;
    }
 
-   scaffold_print_debug( &module,  "Write: %s\n", bdata( buffer ) );
+   lg_debug( __FILE__,  "Write: %s\n", bdata( buffer ) );
 
    if( syncbuff_count[dest] + 2 >= syncbuff_size[dest] ) {
       syncbuff_realloc( dest, syncbuff_size[dest] * 2 );
    }
 
-   scaffold_print_debug( &module,  "Count is %d\n", syncbuff_count[dest] );
+   lg_debug( __FILE__,  "Count is %d\n", syncbuff_count[dest] );
 
    for( i = syncbuff_count[dest] ; 0 <= i ; i-- ) {
-      scaffold_print_debug( &module,
+      lg_debug( __FILE__,
          "Move: %d: %d was: %s\n", dest, (i + 1), bdata( syncbuff_lines[dest][i + 1] )
       );
       bstr_result =
@@ -173,12 +174,12 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
       if( 0 != bstr_result ) {
          goto cleanup;
       }
-      scaffold_print_debug( &module,
+      lg_debug( __FILE__,
          "Move: %d: %d now: %s\n", dest, (i + 1), bdata( syncbuff_lines[dest][i + 1] )
       );
    }
 
-   scaffold_print_debug( &module,
+   lg_debug( __FILE__,
       "Write: %d: %d was: %s\n", dest, 0, bdata( syncbuff_lines[dest][0] )
    );
    bstr_result =
@@ -188,7 +189,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
    if( 0 != bstr_result ) {
       goto cleanup;
    }
-   scaffold_print_debug( &module,
+   lg_debug( __FILE__,
       "Write: %d: %d now: %s\n", dest, 0, bdata( syncbuff_lines[dest][0] )
    );
 
@@ -209,6 +210,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    IPC_END dest = IPC_END_SERVER;
 
    scaffold_assert( NULL != buffer );
+   scaffold_assert( NULL != n );
 
    if( FALSE != n->local ) {
       dest = IPC_END_CLIENT;
@@ -217,7 +219,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    bstr_result = btrunc( buffer, 0 );
    scaffold_assert( 0 == blength( buffer ) );
    if( 0 != bstr_result ) {
-      scaffold_print_debug( &module,  "btrunc error on line: %d\n", __LINE__ );
+      lg_debug( __FILE__,  "btrunc error on line: %d\n", __LINE__ );
       goto cleanup;
    }
 

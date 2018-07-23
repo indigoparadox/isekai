@@ -81,8 +81,8 @@ void ipc_setup() {
 
    result = WSAStartup( MAKEWORD(2,2), &wsa_data );
    if( 0 != result ) {
-      scaffold_print_error(
-         &module,
+      lg_error(
+         __FILE__,
          "WSAStartup failed with error: %d\n", result
       );
       scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
@@ -101,7 +101,7 @@ struct CONNECTION* ipc_alloc() {
    struct CONNECTION* n_out = NULL;
 
    n_out =  mem_alloc( 1, struct CONNECTION );
-   scaffold_check_null_msg( n_out, "Unable to alloc connection." );
+   lgc_null_msg( n_out, "Unable to alloc connection." );
    n_out->local_client = FALSE;
    n_out->listening = FALSE;
 
@@ -118,8 +118,8 @@ struct CONNECTION* ipc_alloc() {
       &ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char*)pers,
       strlen( pers ) ) ) != 0
    ) {
-      scaffold_print_error(
-         &module, "mbedtls_ctr_drbg_seed returned: %d\n", mbed_tls_ret
+      lg_error(
+         __FILE__, "mbedtls_ctr_drbg_seed returned: %d\n", mbed_tls_ret
       );
       goto cleanup;
    }
@@ -174,7 +174,7 @@ BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
    if( (mbed_tls_ret = mbedtls_net_connect(
       &(n->ssl_net), bdata( server ), bdata( b_port ), MBEDTLS_NET_PROTO_TCP
    )) != 0 ) {
-      scaffold_print_error( &module, "mbedtls_net_connect returned: %d", mbed_tls_ret );
+      lg_error( __FILE__, "mbedtls_net_connect returned: %d", mbed_tls_ret );
       goto cleanup;
    }
 
@@ -226,7 +226,7 @@ cleanup:
    connect_result = getaddrinfo(
       bdata( server ), bdata( service ), &hints, &result
    );
-   scaffold_check_nonzero( connect_result );
+   lgc_nonzero( connect_result );
 
    n->socket = socket(
       result->ai_family,
@@ -241,7 +241,7 @@ cleanup:
    );
 
    if( 0 > connect_result ) {
-      scaffold_print_error( &module, "Connect error: %s\n", strerror( errno ) );
+      lg_error( __FILE__, "Connect error: %s\n", strerror( errno ) );
       net_ipc_cleanup_socket( n );
       goto cleanup;
    }
@@ -277,7 +277,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
 
    dest_socket = n->socket;
    buffer_len = blength( buffer );
-   scaffold_check_zero( dest_socket, "Invalid destination socket." );
+   lgc_zero( dest_socket, "Invalid destination socket." );
 
    do {
       sent = send(
@@ -305,6 +305,8 @@ BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
    u_long mode = 1;
    #endif /* _WIN32 */
 
+   assert( ipc_is_listening( n_server ) );
+
    /* Accept and verify the client. */
    address_length = sizeof( address );
    n->socket = accept(
@@ -325,8 +327,8 @@ BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
 #endif /* _WIN32 */
 
    if( 0 > n->socket ) {
-      scaffold_print_error(
-         &module, "Error while connecting on %d: %d\n", n->socket, errno );
+      lg_error(
+         __FILE__, "Error while connecting on %d: %d\n", n->socket, errno );
       ipc_stop( n );
       n->socket = 0;
       goto cleanup;
@@ -346,8 +348,8 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    struct sockaddr_in address;
 #endif /* !USE_MBED_TLS */
 
-   if( TRUE == n->listening ) {
-      scaffold_print_error( &module, "Server already listening!\n" );
+   if( FALSE != n->listening ) {
+      lg_error( __FILE__, "Server already listening!\n" );
       goto cleanup;
    }
 
@@ -359,12 +361,12 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    bstring b_port = NULL;
 
    b_port = bformat( "%d", port );
-   scaffold_check_null( b_port );
+   lgc_null( b_port );
 
    mbedtls_net_bind( &(n->ssl_net), "0.0.0.0", bdata( b_port ), MBEDTLS_NET_PROTO_TCP )
 #else
    n->socket = socket( AF_INET, SOCK_STREAM, 0 );
-   scaffold_check_negative( n->socket );
+   lgc_negative( n->socket );
 
    /* TODO: Check for error. */
 #ifdef _WIN32
@@ -383,7 +385,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    );
 #endif /* USE_MBED_TLS */
    if( 0 > connect_result ) {
-      scaffold_print_error( &module, "Unable to open listening socket.\n" );
+      lg_error( __FILE__, "Unable to open listening socket.\n" );
       net_ipc_cleanup_socket( n );
       goto cleanup;
    }
@@ -391,7 +393,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    /* If we could bind the port, then launch the serving connection. */
    connect_result = listen( n->socket, 5 );
    if( 0 > connect_result ) {
-      scaffold_print_error( &module, "Unable to listen on socket.\n" );
+      lg_error( __FILE__, "Unable to listen on socket.\n" );
       net_ipc_cleanup_socket( n );
       goto cleanup;
    }
@@ -399,7 +401,7 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    n->listening = TRUE;
    n->local_client = FALSE;
    n->type = IPC_END_SERVER;
-   scaffold_print_debug( &module, "Now listening for connection on port %d...\n", port );
+   lg_debug( __FILE__, "Now listening for connection on port %d...\n", port );
 
 cleanup:
    return n->listening;
@@ -419,8 +421,8 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
 
       if( 0 == last_read_count ) {
          scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
-         scaffold_print_info(
-            &module, "Remote connection (%d) has been closed.\n", n->socket
+         lg_info(
+            __FILE__, "Remote connection (%d) has been closed.\n", n->socket
          );
          close( n->socket );
          n->socket = 0;
@@ -434,7 +436,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
       /* No error and something was read, so add it to the string. */
       total_read_count++;
       bstr_res = bconchar( buffer, read_char );
-      scaffold_check_nonzero( bstr_res );
+      lgc_nonzero( bstr_res );
    }
 
 cleanup:

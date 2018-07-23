@@ -29,7 +29,7 @@ START_TEST( test_b64_decode ) {
    SCAFFOLD_SIZE_SIGNED outlen = 20;
 
    b64_decode( &b64t_result, outbuffer, &outlen );
-   /* scaffold_print_debug(
+   /* lg_debug(
       "Base64 Decoding Got: %s, Length: %d\n", b64_test_decode, b64_test_len
    ); */
    ck_assert_str_eq( (const char*)b64t_testdata.data, (char*)outbuffer );

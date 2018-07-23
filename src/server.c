@@ -26,8 +26,8 @@ void server_free_clients( struct SERVER* s ) {
       hashmap_remove_all( &(s->clients) );
       //hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
 #ifdef DEBUG
-   scaffold_print_debug(
-      &module, "Removed %d clients from server. %d remaining.\n",
+   lg_debug(
+      __FILE__, "Removed %d clients from server. %d remaining.\n",
       deleted, hashmap_count( &(s->clients) )
    );
 #endif /* DEBUG */
@@ -58,7 +58,7 @@ void server_init( struct SERVER* s, const bstring myhost ) {
    hashmap_init( &(s->clients) );
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
-   scaffold_check_nonzero( bstr_result );
+   lgc_nonzero( bstr_result );
 cleanup:
    return;
 }
@@ -70,7 +70,7 @@ void server_stop_clients( struct SERVER* s ) {
 
 void server_stop( struct SERVER* s ) {
    if( ipc_is_listening( s->self.link ) ) {
-      scaffold_print_info( &module, "Server shutting down...\n" );
+      lg_info( __FILE__, "Server shutting down...\n" );
       ipc_stop( s->self.link );
    }
    while(
@@ -98,13 +98,13 @@ short server_add_client( struct SERVER* s, struct CLIENT* c ) {
    }
    scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
    if( hashmap_put( &(s->clients), c->nick, c, FALSE ) ) {
-      scaffold_print_error( &module, "Attempted to double-add client: %b\n",
+      lg_error( __FILE__, "Attempted to double-add client: %b\n",
          c->nick );
       client_free( c );
       return 1;
    } else {
-      scaffold_print_debug(
-         &module, "Client %p added to server with nick: %s\n",
+      lg_debug(
+         __FILE__, "Client %p added to server with nick: %s\n",
          c, bdata( c->nick )
       );
       return 0;
@@ -124,8 +124,8 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       /* Create a new channel on the server. */
       channel_new( l, l_name, FALSE, &(s->self) );
       client_add_channel( &(s->self), l );
-      scaffold_print_debug(
-         &module, "Server: Channel created: %s\n", bdata( l->name ) );
+      lg_debug(
+         __FILE__, "Server: Channel created: %s\n", bdata( l->name ) );
 
       channel_load_tilemap( l );
       hashmap_iterate(
@@ -133,18 +133,18 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          callback_load_local_tilesets,
          &(s->self)
       );
-      scaffold_check_nonzero( scaffold_error );
+      lgc_nonzero( scaffold_error );
    } else {
       /* Use the channel we just found. */
-      scaffold_print_debug(
-         &module, "Server: Channel found on server: %s\n", bdata( l->name ) );
+      lg_debug(
+         __FILE__, "Server: Channel found on server: %s\n", bdata( l->name ) );
    }
 
    /* Make sure the user is not already in the channel. If they are, then  *
     * just shut up and explode.                                            */
    if( NULL != channel_get_client_by_name( l, c_first->nick ) ) {
-      scaffold_print_debug(
-         &module, "Server: %s already in channel %s; ignoring.\n",
+      lg_debug(
+         __FILE__, "Server: %s already in channel %s; ignoring.\n",
          bdata( c_first->nick ), bdata( l->name )
       );
       l = NULL;
@@ -163,8 +163,8 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
       0 < c_first->refcount.count &&
       0 < l->refcount.count
    ) {
-      scaffold_print_debug(
-         &module, "Adding %b to channel %b on server...\n",
+      lg_debug(
+         __FILE__, "Adding %b to channel %b on server...\n",
          c_first->nick, l->name
       );
       server_channel_add_client( l, c_first );
@@ -174,8 +174,8 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          "Unable to add %s to channel %s on server.",
          bdata( c_first->nick ), bdata( l->name )
       );
-      scaffold_print_error(
-         &module, "Unable to add %b to channel %b on server.\n",
+      lg_error(
+         __FILE__, "Unable to add %b to channel %b on server.\n",
          c_first->nick, l->name
       );
       scaffold_assert( NULL != l->error );
@@ -193,7 +193,7 @@ cleanup:
 
 void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
 
-   scaffold_check_null( c );
+   lgc_null( c );
 
    if( NULL != channel_get_client_by_name( l, c->nick ) ) {
       goto cleanup;
@@ -235,8 +235,8 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_h_free_clients, nick );
 #ifdef DEBUG
-   scaffold_print_debug(
-      &module, "Server: Removed %d clients (%b). %d remaining.\n",
+   lg_debug(
+      __FILE__, "Server: Removed %d clients (%b). %d remaining.\n",
       deleted, nick, hashmap_count( &(s->clients) )
    );
 #endif /* DEBUG */
@@ -256,8 +256,8 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
       hashmap_remove_cb(
          &(s->self.channels), callback_free_empty_channels, NULL );
 #ifdef DEBUG
-   scaffold_print_debug(
-      &module, "Removed %d channels from server. %d remaining.\n",
+   lg_debug(
+      __FILE__, "Removed %d channels from server. %d remaining.\n",
       deleted, hashmap_count( &(s->self.channels) )
    );
 #endif /* DEBUG */
@@ -271,8 +271,8 @@ BOOL server_listen( struct SERVER* s, int port ) {
 
    connected = ipc_listen( s->self.link, port );
    if( FALSE == connected ) {
-      scaffold_print_error(
-         &module, "Server: Unable to bind to specified port. Exiting.\n" );
+      lg_error(
+         __FILE__, "Server: Unable to bind to specified port. Exiting.\n" );
    } else {
       s->self.running = TRUE;
    }
@@ -286,8 +286,10 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE_SIGNED old_client_count = 0;
 
+   assert( ipc_is_listening( s->self.link ) );
+
    old_client_count = hashmap_count( &(s->clients) );
-   scaffold_trace_path = SCAFFOLD_TRACE_SERVER;
+   scaffold_set_server();
 #endif /* DEBUG */
 
    /* Get a new standby client ready. */
@@ -309,7 +311,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
       /* The only association this client should start with is the server's   *
        * client hashmap, so get rid of its initial ref.                       */
-      refcount_dec( c, "client" );
+      //refcount_dec( c, "client" ); Hashmap is no longer a ref!
       c = NULL;
 
       new_clients = TRUE;
@@ -341,7 +343,7 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    scaffold_set_server();
 
-   scaffold_check_null( s );
+   lgc_null( s );
 
    /* Check for commands from existing clients. */
    if( 0 < hashmap_count( &(s->clients) ) ) {
@@ -351,8 +353,8 @@ BOOL server_service_clients( struct SERVER* s ) {
 
    if( NULL != c_stop ) {
       /* A dummy was returned, so the connection closed. */
-      scaffold_print_info(
-         &module, "Remote client disconnected: %b\n", c_stop->nick
+      lg_info(
+         __FILE__, "Remote client disconnected: %b\n", c_stop->nick
       );
       server_drop_client( s, c_stop->nick );
    }
@@ -379,15 +381,16 @@ cleanup:
  */
 void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick ) {
    int bstr_result = 0;
-   struct CLIENT* c_test = NULL;
+   //struct CLIENT* c_test = NULL;
 
-   scaffold_check_null( nick );
+   lgc_null( nick );
 
-   c_test = server_get_client( s, nick );
-   scaffold_check_not_null( c_test );
+   /* TODO: Make sure the requested nick does not already exist! */
+   //c_test = server_get_client( s, nick );
+   //lgc_not_null( c_test );
 
    bstr_result = bassign( c->nick, nick );
-   scaffold_check_nonzero( bstr_result );
+   lgc_nonzero( bstr_result );
 
 cleanup:
    return;

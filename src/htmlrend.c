@@ -1,8 +1,6 @@
 
 #include "htmlrend.h"
 
-SCAFFOLD_MODULE( "htmlrend.c" );
-
 char html_tag_next_char( struct html_tree_tag* tag, int idx, int flags ) {
    bchar( tag->data, idx );
 }
@@ -13,7 +11,7 @@ char html_tree_next_char( struct html_tree* tree, int idx, int flags ) {
 void htmlrend_draw( GRAPHICS* g, struct html_tree* tree ) {
    struct html_tree_tag* tag = NULL;
 
-   scaffold_check_null( tree );
+   lgc_null( tree );
    tag = tree->root;
 
    //for( i = 0 ; blength( tag->data ) > i ; i++ ) {

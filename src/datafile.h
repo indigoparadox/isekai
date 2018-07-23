@@ -63,8 +63,4 @@ void datafile_handle_stream(
 
 void datafile_reserialize_tilemap( struct TILEMAP* t );
 
-#ifdef DATAFILE_C
-SCAFFOLD_MODULE( "datafile.c" );
-#endif /* DATAFILE_C */
-
 #endif /* DATAFILE_H */

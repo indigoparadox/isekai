@@ -45,7 +45,7 @@ void datafile_handle_stream(
 
       l = client_get_channel_by_name( c, lname );
       /* TODO: Make this dump us back at the menu. */
-      scaffold_check_null_msg(
+      lgc_null_msg(
          l, "Unable to find channel to attach loaded tileset."
       );
       if( NULL == l ) {
@@ -67,8 +67,8 @@ void datafile_handle_stream(
       /* Go through the parsed tilemap and load graphics. */
       proto_client_request_mobs( c, l );
 
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Client: Tilemap for %s successfully attached to channel.\n",
          bdata( l->name )
       );
@@ -84,22 +84,22 @@ void datafile_handle_stream(
       scaffold_assert( NULL != l );
 
       graphics_surface_new( g, 0, 0, 0, 0 );
-      scaffold_check_null( g );
+      lgc_null( g );
       graphics_set_image_data( g, data, length );
-      scaffold_check_null_msg( g->surface, "Unable to load tileset image." );
+      lgc_null_msg( g->surface, "Unable to load tileset image." );
 
       set = vector_iterate(
          &(l->tilemap->tilesets), callback_search_tilesets_img_name, filename
       );
-      scaffold_check_null( set );
+      lgc_null( set );
 
       if( hashmap_put( &(set->images), filename, g, FALSE ) ) {
-         scaffold_print_error(
-            &module, "Attempted to double-add file: %b\n", filename );
+         lg_error(
+            __FILE__, "Attempted to double-add file: %b\n", filename );
          graphics_surface_free( g );
       } else {
-         scaffold_print_debug(
-            &module,
+         lg_debug(
+            __FILE__,
             "Client: Tilemap image %s successfully loaded into tileset cache.\n",
             bdata( filename )
          );
@@ -116,7 +116,7 @@ void datafile_handle_stream(
 
 #ifdef USE_EZXML
       xml_data = datafile_mobile_ezxml_peek_mob_id( data, length, mob_id );
-      scaffold_check_null( xml_data );
+      lgc_null( xml_data );
 
       o = hashmap_iterate(
          &(c->channels), callback_parse_mob_channels, xml_data
@@ -133,8 +133,8 @@ void datafile_handle_stream(
             o->sprites = g;
          }
 
-         scaffold_print_debug(
-            &module,
+         lg_debug(
+            __FILE__,
             "Client: Mobile def for %s successfully attached to channel.\n",
             bdata( mob_id )
          );
@@ -146,17 +146,17 @@ void datafile_handle_stream(
    case DATAFILE_TYPE_ITEM_CATALOG_SPRITES: /* Fall through. */
    case DATAFILE_TYPE_MOBILE_SPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
-      scaffold_check_null_msg( g, "Unable to interpret spritesheet image." );
+      lgc_null_msg( g, "Unable to interpret spritesheet image." );
       graphics_set_image_data( g, data, length );
-      scaffold_check_null( g->surface );
+      lgc_null( g->surface );
       if( hashmap_put( &(c->sprites), filename, g, FALSE ) ) {
-         scaffold_print_error(
-            &module, "Attempted to double-add spritesheet: %b\n", filename );
+         lg_error(
+            __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
          graphics_surface_free( g );
       } else {
          hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
-         scaffold_print_debug(
-            &module,
+         lg_debug(
+            __FILE__,
             "Client: Spritesheet %b successfully loaded into cache.\n",
             filename
          );
@@ -173,7 +173,7 @@ void datafile_handle_stream(
          filename
       );
       if( hashmap_put( &(c->item_catalogs), filename, catalog, FALSE ) ) {
-         scaffold_print_error( &module, "Attempted to double-add catalog: %b\n",
+         lg_error( __FILE__, "Attempted to double-add catalog: %b\n",
             filename );
          item_spritesheet_free( catalog );
       } else {
@@ -186,7 +186,7 @@ void datafile_handle_stream(
       break;
 
    case DATAFILE_TYPE_MISC:
-      scaffold_print_error( &module, "Invalid data type specified.\n" );
+      lg_error( __FILE__, "Invalid data type specified.\n" );
       break;
 
    case DATAFILE_TYPE_INVALID:

@@ -143,9 +143,9 @@ static void mode_isometric_tilemap_draw_tile(
       goto cleanup; /* Silently. */
    }
 
-   scaffold_check_zero_against(
+   lgc_zero_against(
       t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   scaffold_check_zero_against(
+   lgc_zero_against(
       t->scaffold_error, set->tileheight, "Tile height is zero." );
    if( 0 == set->tilewidth || 0 == set->tileheight ) {
       goto cleanup;
@@ -261,15 +261,15 @@ static void mode_isometric_tilemap_update_window(
    exclusion = tilemap_inside_window_deadzone_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point right of window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point right of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point left of window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point left of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -278,15 +278,15 @@ static void mode_isometric_tilemap_update_window(
    exclusion = tilemap_inside_window_deadzone_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point below window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point below window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y++;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point above window dead zone.\n" );
+      lg_debug(
+         __FILE__, "Focal point above window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y--;
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
@@ -296,14 +296,14 @@ static void mode_isometric_tilemap_update_window(
    exclusion = tilemap_inside_inner_map_x( focal_x, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map left edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map left edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = t->width - twindow->width;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map right edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map right edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->x = 0;
    }
@@ -311,14 +311,14 @@ static void mode_isometric_tilemap_update_window(
    exclusion = tilemap_inside_inner_map_y( focal_y, twindow );
    if( TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map bottom edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map bottom edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = t->height - twindow->height;
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug(
-         &module, "Focal point too close to map top edge.\n" );
+      lg_debug(
+         __FILE__, "Focal point too close to map top edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
       twindow->y = 0;
    }
@@ -432,11 +432,11 @@ static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui = c->ui;
       update.o = puppet;
       update.l = puppet->channel;
-      scaffold_check_null( update.l );
+      lgc_null( update.l );
       l = puppet->channel;
-      scaffold_check_null_msg( l, "No channel loaded." );
+      lgc_null_msg( l, "No channel loaded." );
       t = &(l->tilemap);
-      scaffold_check_null_msg( t, "No tilemap loaded." );
+      lgc_null_msg( t, "No tilemap loaded." );
    }
 
    /* If no windows need input, then move on to game input. */
@@ -479,7 +479,7 @@ static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_inv,
@@ -505,7 +505,7 @@ static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case '\\':
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
-         scaffold_check_null( client_input_from_ui );
+         lgc_null( client_input_from_ui );
       }
       ui_window_new(
          ui, win, &str_client_window_id_chat,

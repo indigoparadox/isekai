@@ -5,8 +5,6 @@
 
 #ifdef USE_DUKTAPE
 
-SCAFFOLD_MODULE( "duktapev.c" );
-
 #include "../graphics.h"
 #include "../mobile.h"
 #include "../proto.h"
@@ -23,8 +21,8 @@ extern struct SERVER* main_server;
 void duktape_helper_channel_crash( void* udata, const char* msg ) {
    struct CHANNEL* l = (struct CHANNEL*)udata;
 
-   scaffold_print_error(
-      &module, "Script (%b): %s",
+   lg_error(
+      __FILE__, "Script (%b): %s",
       channel_get_name( l ), (msg ? msg : "No message.")
    );
 }
@@ -32,8 +30,8 @@ void duktape_helper_channel_crash( void* udata, const char* msg ) {
 void duktape_helper_mobile_crash( void* udata, const char* msg ) {
    struct MOBILE* o = (struct MOBILE*)udata;
 
-   scaffold_print_error(
-      &module, "Script (%d): %s", o->serial, (msg ? msg : "No message.")
+   lg_error(
+      __FILE__, "Script (%d): %s", o->serial, (msg ? msg : "No message.")
    );
 }
 
@@ -41,11 +39,9 @@ void* duktape_set_globals_cb( bstring idx, void* iter, void* arg ) {
    struct VM_CADDY* vmc = (struct VM_CADDY*)arg;
    bstring value = (bstring)iter;
 
-   /*
-   scaffold_assert( NULL != value );
-   scaffold_assert( NULL != arg );
-   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
-   */
+   assert( NULL != value );
+   assert( NULL != arg );
+   assert( NULL != idx );
 
    /* Push each global onto the stack with its identifier. */
    duk_push_global_object( (duk_context*)vmc->vm );
@@ -92,7 +88,7 @@ static duk_ret_t duk_cb_vm_debug( duk_context* vm ) {
 
    text = duk_to_string( vm, -1 );
 
-   scaffold_print_debug( &module, "%s\n", text  );
+   lg_debug( __FILE__, "%s\n", text  );
 
    return 0;
 }
@@ -113,7 +109,7 @@ static duk_ret_t duk_cb_vm_speak( duk_context* vm ) {
 
       /* This assumes all scripts are server-side, which they are. */
       b_text = bfromcstr( text );
-      scaffold_check_null_msg( b_text, "Mobile tried to speak invalid text." );
+      lgc_null_msg( b_text, "Mobile tried to speak invalid text." );
       proto_server_send_msg_channel( main_server, o->channel, o->display_name, b_text );
       break;
    }
@@ -220,6 +216,7 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    duk_put_prop_string( (duk_context*)vmc->vm, -2, "speak" );
    duk_pop( (duk_context*)vmc->vm );
 
+   assert( FALSE != vm_caddy_started( vmc ) );
    duk_result = duk_safe_call( (duk_context*)vmc->vm, vm_unsafe, code_c, 0, 1 );
 
    if( 0 == duk_result ) {
@@ -233,16 +230,16 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    duk_get_prop_string( (duk_context*)vmc->vm, 0, "lineNumber" );
    duk_get_prop_string( (duk_context*)vmc->vm, 0, "stack" );
 
-   scaffold_print_error(
-      &module, "Script error: %s: %d, %s (%s:%s)\n",
+   lg_error(
+      __FILE__, "Script error: %s: %d, %s (%s:%s)\n",
       duk_safe_to_string( (duk_context*)vmc->vm, 1 ),
       o->mob_id,
       duk_safe_to_string( (duk_context*)vmc->vm, 2 ),
       duk_safe_to_string( (duk_context*)vmc->vm, 3 ),
       duk_safe_to_string( (duk_context*)vmc->vm, 4 )
    );
-   scaffold_print_error(
-      &module, "Script stack: %s\n",
+   lg_error(
+      __FILE__, "Script stack: %s\n",
       duk_safe_to_string( (duk_context*)vmc->vm, 5 )
    );
 

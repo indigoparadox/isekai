@@ -79,7 +79,6 @@ extern struct tagbstring str_client_window_id_inv;
 extern struct tagbstring str_client_window_title_inv;
 extern struct tagbstring str_client_control_id_inv_self;
 extern struct tagbstring str_client_control_id_inv_ground;
-SCAFFOLD_MODULE( "mode.c" );
 #endif /* MODE_C */
 
 #endif /* MODE_H */

@@ -33,8 +33,8 @@ static void mobile_cleanup( const struct REF* ref ) {
    }
    if( NULL != o->channel ) {
       channel_free( o->channel );
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Mobile %d decreased refcount of channel %b to: %d\n",
          o->serial, o->channel->name, o->channel->refcount.count
       );
@@ -50,8 +50,8 @@ static void mobile_cleanup( const struct REF* ref ) {
    hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
    hashmap_cleanup( &(o->ani_defs) );
 
-   scaffold_print_debug(
-      &module,
+   lg_debug(
+      __FILE__,
       "Mobile %b (%d) destroyed.\n",
       o->display_name, o->serial
    );
@@ -107,13 +107,15 @@ void mobile_init(
 
    /* We always need the filename to fetch the file with a chunker. */
    o->def_filename = bfromcstr( "mobs" );
-   scaffold_check_null( o->def_filename );
+   lgc_null( o->def_filename );
    files_join_path( o->def_filename, o->mob_id );
-   scaffold_check_nonzero( scaffold_error );
+
+   lg_debug( __FILE__, "scaffold_error: %d\n", scaffold_error );
+   lgc_nonzero( scaffold_error );
 
 #ifdef USE_EZXML
    bstr_ret = bcatcstr( o->def_filename, ".xml" );
-   scaffold_check_nonzero( bstr_ret );
+   lgc_nonzero( bstr_ret );
 #endif /* USE_EZXML */
 
 cleanup:
@@ -140,14 +142,14 @@ void mobile_load_local( struct MOBILE* o ) {
 #ifdef USE_EZXML
 
    /* TODO: Support other mobile formats. */
-   scaffold_print_debug(
-      &module, "Looking for XML data in: %s\n", bdata( mobdata_path )
+   lg_debug(
+      __FILE__, "Looking for XML data in: %s\n", bdata( mobdata_path )
    );
    bytes_read = files_read_contents(
       mobdata_path, &mobdata_buffer, &mobdata_size
    );
-   scaffold_check_null_msg( mobdata_buffer, "Unable to load mobile data." );
-   scaffold_check_zero_msg( bytes_read, "Unable to load mobile data." );
+   lgc_null_msg( mobdata_buffer, "Unable to load mobile data." );
+   lgc_zero_msg( bytes_read, "Unable to load mobile data." );
 
    datafile_parse_ezxml_string(
       o, mobdata_buffer, mobdata_size, FALSE, DATAFILE_TYPE_MOBILE, mobdata_path
@@ -189,7 +191,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
-      scaffold_check_null( tile_iter );
+      lgc_null( tile_iter );
 
       for( j = 0 ; 4 > j ; j++ ) {
          /* TODO: Implement terrain slow-down. */
@@ -373,7 +375,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    /* TODO: Support varied spritesheets. */
    current_frame = (struct MOBILE_SPRITE_DEF*)
       vector_get( &(o->current_animation->frames), o->current_frame );
-   scaffold_check_null( current_frame );
+   lgc_null( current_frame );
 
    sprite_rect.w = o->sprite_width;
    sprite_rect.h = o->sprite_height;
@@ -402,8 +404,8 @@ cleanup:
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    if( NULL != o->channel ) {
       channel_free( o->channel );
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Mobile %d decreased refcount of channel %b to: %d\n",
          o->serial, l->name, l->refcount.count
       );
@@ -411,8 +413,8 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    o->channel = l;
    if( NULL != o->channel ) {
       refcount_inc( l, "channel" );
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Mobile %d increased refcount of channel %b to: %d\n",
          o->serial, l->name, l->refcount.count
       );
@@ -456,8 +458,8 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
       vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
    if( NULL == tiles_end ) {
 #ifdef DEBUG_VERBOSE
-      scaffold_print_error(
-         &module, "No tileset loaded; unable to process move.\n" );
+      lg_error(
+         __FILE__, "No tileset loaded; unable to process move.\n" );
 #endif /* DEBUG_VERBOSE */
       update_out = MOBILE_UPDATE_NONE;
       goto cleanup;
@@ -465,7 +467,7 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
-      scaffold_check_null( tile_iter );
+      lgc_null( tile_iter );
 
       for( j = 0 ; 4 > j ; j++ ) {
          /* TODO: Implement terrain slow-down. */
@@ -544,7 +546,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
-      scaffold_check_null( tile_iter );
+      lgc_null( tile_iter );
 
       for( j = 0 ; 4 > j ; j++ ) {
          /* TODO: Implement terrain slow-down. */
@@ -605,7 +607,7 @@ MOBILE_UPDATE mobile_apply_update(
          mobile_calculate_terrain_steps_inc(
             l->tilemap, o->steps_inc_default,
             o->x, o->y ) * -1;
-      if( TRUE == instant ) {
+      if( FALSE != instant ) {
          o->prev_y = o->y;
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX;
@@ -635,7 +637,7 @@ MOBILE_UPDATE mobile_apply_update(
          mobile_calculate_terrain_steps_inc(
             l->tilemap, o->steps_inc_default,
             o->x, o->y );
-      if( TRUE == instant ) {
+      if( FALSE != instant ) {
          o->prev_y = o->y;
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX * -1;
@@ -666,7 +668,7 @@ MOBILE_UPDATE mobile_apply_update(
          mobile_calculate_terrain_steps_inc(
             l->tilemap, o->steps_inc_default,
             o->x, o->y ) * -1;
-      if( TRUE == instant ) {
+      if( FALSE != instant ) {
          o->prev_x = o->x;
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX;
@@ -697,7 +699,7 @@ MOBILE_UPDATE mobile_apply_update(
          mobile_calculate_terrain_steps_inc(
             l->tilemap, o->steps_inc_default,
             o->x, o->y );
-      if( TRUE == instant ) {
+      if( FALSE != instant ) {
          o->prev_x = o->x;
       } else {
          o->steps_remaining = MOBILE_STEPS_MAX * -1;
@@ -754,7 +756,7 @@ cleanup:
 void mobile_speak( struct MOBILE* o, bstring speech ) {
    bstring line_nick = NULL;
 
-   scaffold_check_null_msg(
+   lgc_null_msg(
       o->channel, "Mobile without channel cannot speak.\n"
    );
 
@@ -844,10 +846,10 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
 
 void mobile_vm_start( struct MOBILE* o ) {
 
-   scaffold_check_null( o->vm_caddy );
+   lgc_null( o->vm_caddy );
 
-   scaffold_print_debug(
-      &module, "Starting script VM for mobile: %d (%b)\n",
+   lg_debug(
+      __FILE__, "Starting script VM for mobile: %d (%b)\n",
       o->serial, o->mob_id
    );
 

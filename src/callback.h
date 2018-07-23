@@ -48,9 +48,9 @@ BOOL callback_h_free_clients( bstring idx, void* iter, void* arg );
 void* callback_search_tilesets_name( bstring idx, void* iter, void* arg );
 
 /* Vector Callbacks */
-#ifdef USE_CHUNKS
+//#ifdef USE_CHUNKS
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b );
-#endif /* USE_CHUNKS */
+//#endif /* USE_CHUNKS */
 #ifdef USE_VM
 void* callback_proc_mobile_vms( size_t idx, void* iter, void* arg );
 #endif /* USE_VM */
@@ -97,9 +97,5 @@ BOOL callback_free_backlog( size_t idx, void* iter, void* arg );
 BOOL callback_free_windows( size_t idx, void* iter, void* arg );
 BOOL callback_free_spawners( size_t idx, void* iter, void* arg );
 BOOL callback_v_free_clients( size_t idx, void* iter, void* arg );
-
-#ifdef CALLBACKS_C
-SCAFFOLD_MODULE( "callback.c" );
-#endif /* CALLBACKS_C */
 
 #endif /* CALLBACKS_H */

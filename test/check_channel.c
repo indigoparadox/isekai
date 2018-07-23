@@ -52,8 +52,8 @@ void check_channel_setup_checked() {
 
    for( i = 0 ; CHECK_CHANNEL_CLIENT_COUNT > i ; i++ ) {
 
-      scaffold_print_debug_color(
-         &module, CHECK_BEGIN_END_COLOR,
+      lg_color(
+         __FILE__, CHECK_BEGIN_END_COLOR,
          "===== BEGIN CLIENT CONNECT: %d =====\n", i
       );
 
@@ -61,13 +61,14 @@ void check_channel_setup_checked() {
       memset( &clients[i], '\0', sizeof( struct CLIENT ) );
       scaffold_set_client();
       client_init( &clients[i] );
+      client_set_local( &clients[i], TRUE );
       bassignformat( nick, "TestNick%d", i );
       bassignformat( uname, "Test Username %d", i );
       bassignformat( rname, "Test Real Name %d", i );
       client_set_names( &clients[i], nick, uname, rname );
       attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
-      scaffold_print_debug(
-         &module,
+      lg_debug(
+         __FILE__,
          "Client %d attempting to connect to: %b:%d\n",
          i,
          &localhost,
@@ -98,8 +99,8 @@ void check_channel_setup_checked() {
       } while( !server_ret && !client_ret );
       ck_assert( i + 1 == hashmap_count( &(server.clients) ) );
 
-      scaffold_print_debug_color(
-         &module, CHECK_BEGIN_END_COLOR,
+      lg_color(
+         __FILE__, CHECK_BEGIN_END_COLOR,
          "===== END CLIENT CONNECT: %d =====\n", i
       );
    }
@@ -117,11 +118,11 @@ void check_channel_teardown_checked() {
       client_ret = FALSE;
 
    for( i = CHECK_CHANNEL_CLIENT_COUNT - 1 ; 0 <= i ; i-- ) {
-      scaffold_print_debug_color(
-         &module, CHECK_BEGIN_END_COLOR,
+      lg_color(
+         __FILE__, CHECK_BEGIN_END_COLOR,
          "===== BEGIN CLIENT DISCONNECT: %d =====\n", i
       );
-      scaffold_print_debug( &module, "Client %d stopping...\n", i );
+      lg_debug( __FILE__, "Client %d stopping...\n", i );
       scaffold_set_client();
       proto_client_stop( &clients[i] );
       do {
@@ -131,15 +132,15 @@ void check_channel_teardown_checked() {
          client_ret = client_update( &clients[i], NULL ) ? TRUE : client_ret;
       } while( !server_ret && !client_ret );
       //ck_assert( client_connected( &(clients[i]) ) );
-      scaffold_print_debug_color(
-         &module, CHECK_BEGIN_END_COLOR,
+      lg_color(
+         __FILE__, CHECK_BEGIN_END_COLOR,
          "===== END CLIENT DISCONNECT: %d =====\n", i
       );
    }
 
-   scaffold_print_debug( &module, "Server stopping...\n" );
+   lg_debug( __FILE__, "Server stopping...\n" );
    scaffold_set_server();
-   while( TRUE == server_service_clients( &server ) );
+   while( FALSE != server_service_clients( &server ) );
 
    ck_assert_int_eq( 0, hashmap_count( &(server.self.channels) ) );
 
@@ -148,15 +149,15 @@ void check_channel_teardown_checked() {
 }
 
 void check_channel_setup_unchecked() {
-   scaffold_print_debug_color(
-      &module, CHECK_BEGIN_END_COLOR,
+   lg_color(
+      __FILE__, CHECK_BEGIN_END_COLOR,
       "====== BEGIN CHANNEL TRACE ======\n"
    );
 }
 
 void check_channel_teardown_unchecked() {
-   scaffold_print_debug_color(
-      &module, CHECK_BEGIN_END_COLOR,
+   lg_color(
+      __FILE__, CHECK_BEGIN_END_COLOR,
       "====== END CHANNEL TRACE ======\n"
    );
 }
@@ -175,7 +176,7 @@ START_TEST( test_channel_server_channel ) {
 
       /* Finish server processing. */
       scaffold_set_server();
-      while( TRUE == server_service_clients( &server ) );
+      while( FALSE != server_service_clients( &server ) );
 
       l = server_get_channel_by_name( &server, &testchannel );
       ck_assert_ptr_ne( NULL, l );

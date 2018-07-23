@@ -6,14 +6,8 @@
 #include "backlog.h"
 #endif /* !DISABLE_BACKLOG */
 
-static struct tagbstring str_scaffold_trace[3] = {
-   bsStatic( "T_NONE" ),
-   bsStatic( "T_CLIENT" ),
-   bsStatic( "T_SERVER" )
-};
-
 #ifdef DEBUG
-SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
+//SCAFFOLD_TRACE scaffold_trace_path = SCAFFOLD_TRACE_NONE;
 #endif /* DEBUG */
 
 #ifdef SCAFFOLD_LOG_FILE
@@ -125,6 +119,8 @@ BOOL scaffold_string_is_printable( bstring str ) {
 }
 
 #include "graphics.h"
+
+#if 0
 
 static void scaffold_log(
    void* log, const bstring mod_in, enum GRAPHICS_COLOR color,
@@ -334,23 +330,6 @@ cleanup:
    return;
 }
 
-void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len ) {
-   SCAFFOLD_SIZE i;
-   int bstr_result;
-   bstr_result = btrunc( rand_str, 0 );
-   scaffold_check_nonzero( bstr_result );
-   for( i = 0; len > i ; i++ ) {
-      bstr_result = bconchar(
-         rand_str,
-         scaffold_random_chars
-            [rand() % (int)(sizeof( scaffold_random_chars )-1)]
-      );
-      scaffold_check_nonzero( bstr_result );
-   }
-cleanup:
-   return;
-}
-
 BOOL scaffold_buffer_grow(
    BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
 ) {
@@ -405,6 +384,25 @@ void scaffold_colorize( bstring str, SCAFFOLD_COLOR color ) {
 }
 
 #endif /* USE_COLORED_CONSOLE */
+
+#endif // 0
+
+void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len ) {
+   SCAFFOLD_SIZE i;
+   int bstr_result;
+   bstr_result = btrunc( rand_str, 0 );
+   lgc_nonzero( bstr_result );
+   for( i = 0; len > i ; i++ ) {
+      bstr_result = bconchar(
+         rand_str,
+         scaffold_random_chars
+            [rand() % (int)(sizeof( scaffold_random_chars )-1)]
+      );
+      lgc_nonzero( bstr_result );
+   }
+cleanup:
+   return;
+}
 
 int scaffold_strcmp_caseless( const char* s0, const char* s1 ) {
    int difference;

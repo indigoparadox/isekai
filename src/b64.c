@@ -288,20 +288,20 @@ void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, SCAF
 
       /* Spread one byte over two characters. */
       bstr_ret = bconchar( outstring, cb64[split6bits[0]] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
       bstr_ret = bconchar( outstring, cb64[split6bits[1]] );
-      scaffold_check_nonzero( bstr_ret );
+      lgc_nonzero( bstr_ret );
 
       /* Add additional byte to third character. */
       if( (i + 1) < indata_len ) {
          bstr_ret = bconchar( outstring, cb64[split6bits[2]] );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
 
       /* Add third byte to fourth character. */
       if( (i + 2) < indata_len ) {
          bstr_ret = bconchar( outstring, cb64[split6bits[3]] );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
    }
 
@@ -309,7 +309,7 @@ void b64_encode( void* indata, SCAFFOLD_SIZE indata_len, bstring outstring, SCAF
    if( 0 < padding ) {
       for( ; 3 > padding ; padding++ ) {
          bstr_ret = bconchar( outstring, '=' );
-         scaffold_check_nonzero( bstr_ret );
+         lgc_nonzero( bstr_ret );
       }
    }
 cleanup:
@@ -339,7 +339,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
    *outdata_len = blength( instring );
 
    outdata = calloc( *outdata_len, sizeof( uint8_t ) );
-   scaffold_check_null( outdata );
+   lgc_null( outdata );
 
    while( blength( instring ) > indata_index ) {
       unsigned char c = d[bdata( instring )[indata_index++]];
@@ -348,7 +348,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
          case WHITESPACE: continue;   /* skip whitespace */
 
          case INVALID:
-            scaffold_print_error( "Invalid input at position %d. Aborting.\n", indata_index );
+            lg_error( "Invalid input at position %d. Aborting.\n", indata_index );
             scaffold_error = SCAFFOLD_ERROR_MISC;
             goto cleanup;   /* invalid input, return error */
 
@@ -365,7 +365,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
                   /* return 1; / buffer overflow */
                   *outdata_len *= 2;
                   outdata = mem_realloc( outdata, *outdata_len, BYTE );
-                  scaffold_check_null( outdata );
+                  lgc_null( outdata );
                }
                outdata[outdata_index++] = (buf >> 16) & 255;
                outdata[outdata_index++] = (buf >> 8) & 255;
@@ -381,7 +381,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
          /* return 1; / buffer overflow */
          *outdata_len *= 2;
          outdata = mem_realloc( outdata, *outdata_len, BYTE );
-         scaffold_check_null( outdata );
+         lgc_null( outdata );
       }
       outdata[outdata_index++] = (buf >> 10) & 255;
       outdata[outdata_index++] = (buf >> 2) & 255;
@@ -390,7 +390,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
          /* return 1; / buffer overflow */
          *outdata_len *= 2;
          outdata = mem_realloc( outdata, *outdata_len, BYTE );
-         scaffold_check_null( outdata );
+         lgc_null( outdata );
 
       }
       outdata[outdata_index++] = (buf >> 4) & 255;
@@ -399,7 +399,7 @@ void* b64_decode( SCAFFOLD_SIZE* outdata_len, bstring instring ) {
    /* Reality check for size. */
    *outdata_len = outdata_index + 1;
    outdata = mem_realloc( outdata, *outdata_len, BYTE );
-   scaffold_check_null( outdata );
+   lgc_null( outdata );
 cleanup:
    return outdata;
 }

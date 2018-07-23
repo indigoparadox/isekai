@@ -23,9 +23,9 @@ struct CHANNEL {
 };
 
 #define channel_new( l, name, local_graphics, server ) \
-    scaffold_check_null( name ); \
+    lgc_null( name ); \
     l = mem_alloc( 1, struct CHANNEL ); \
-    scaffold_check_null( l ); \
+    lgc_null( l ); \
     channel_init( l, name, local_graphics, server );
 
 struct MOBILE;
@@ -58,7 +58,6 @@ bstring channel_get_name( const struct CHANNEL* l );
 struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l );
 
 #ifdef CHANNEL_C
-SCAFFOLD_MODULE( "channel.c" );
 static struct tagbstring str_player = bsStatic( "player" );
 #endif /* CHANNEL_C */
 

@@ -17,7 +17,7 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
    struct CHANNEL* l = NULL;
 
    l = server_add_channel( main_server, name, c );
-   scaffold_check_null( l );
+   lgc_null( l );
 
    assert( NULL != c );
    assert( NULL != main_server );

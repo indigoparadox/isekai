@@ -28,7 +28,7 @@ static REF_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF
    ref->sentinal = REF_SENTINAL;
 }
 
-static struct tagbstring ref_module = bsStatic( "ref.h" );
+//static struct tagbstring ref_module = bsStatic( "ref.h" );
 
 #define refcount_inc( obj, type ) \
    ref_inc( &((obj)->refcount), type, __FUNCTION__ )
@@ -42,8 +42,8 @@ static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const c
    ((struct REF*)ref)->count++;
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
-      scaffold_print_debug(
-         &ref_module,
+      lg_debug(
+         __FILE__,
          "%s: Reference count for %s increased: %d\n", func, type, ref->count
       );
    }
@@ -56,14 +56,14 @@ static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const c
    if( 1 == ((struct REF*)ref)->count ) {
 #ifdef DEBUG_REF
       if( NULL != type && NULL != func ) {
-         scaffold_print_debug( &ref_module, "%s: %s freed.\n", func, type );
+         lg_debug( __FILE__, "%s: %s freed.\n", func, type );
       }
 #endif /* DEBUG_REF */
       ((struct REF*)ref)->count = 0;
       ref->gc_free( ref );
       return TRUE;
    } else if( 0 == ((struct REF*)ref)->count ) {
-      scaffold_print_error( &ref_module, "Reference count negative!\n" );
+      lg_error( __FILE__, "Reference count negative!\n" );
       goto cleanup;
    }
 
@@ -71,7 +71,7 @@ static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const c
 
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
-      scaffold_print_debug(
+      lg_debug(
          &ref_module,
          "%s: Reference count for %s decreased: %d\n", func, type, ref->count
       );

@@ -184,7 +184,7 @@ typedef struct {
 
 #define graphics_surface_new( g, x, y, w, h ) \
     g = mem_alloc( 1, GRAPHICS ); \
-    scaffold_check_null( g ); \
+    lgc_null( g ); \
     graphics_surface_init( g, w, h );
 
 #define graphics_precise( num ) \
@@ -343,7 +343,6 @@ void graphics_transform_isometric(
 #endif /* DISABLE_ISOMETRIC */
 
 #ifdef GRAPHICS_C
-SCAFFOLD_MODULE( "graphics.c" );
 void graphics_setup();
 #ifdef GRAPHICS_SLOW_LINE
 

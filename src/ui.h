@@ -181,7 +181,6 @@ void ui_debug_stack( struct UI* ui );
 #endif /* DEBUG */
 
 #ifdef UI_C
-SCAFFOLD_MODULE( "ui.c" );
 static struct tagbstring str_wid_debug = bsStatic( "_debug" );
 static struct tagbstring str_wid_mbox = bsStatic( "_messagebox" );
 static struct tagbstring str_cid_mbox_l = bsStatic( "_message_lbl" );

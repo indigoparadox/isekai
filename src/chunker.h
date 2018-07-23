@@ -131,8 +131,6 @@ struct tagbstring chunker_type_names[] = {
    bsStatic( "item catalog" ),
    bsStatic( "item catalog sprites" )
 };
-
-SCAFFOLD_MODULE( "chunker.c" );
 #else
 extern struct tagbstring chunker_type_names[];
 #endif /* CHUNKER_C */

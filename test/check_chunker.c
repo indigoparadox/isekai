@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "../src/chunker.h"
-#include "../src/vector.h"
+#include "../src/libvcol.h"
 #include "check_data.h"
 
 #include <unistd.h>
@@ -29,26 +29,26 @@ void check_chunker_setup_unchecked() {
    FILE* cache_file;
    int bstr_res;
 
-   scaffold_print_info( &module, "====== BEGIN CHUNKER TRACE ======\n" );
+   lg_info( __FILE__, "====== BEGIN CHUNKER TRACE ======\n" );
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    files_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
-      scaffold_print_info( &module, "Deleting cached test tilemap...\n" );
+      lg_info( __FILE__, "Deleting cached test tilemap...\n" );
       fclose( cache_file );
       cache_file = NULL;
       unlink( (char*)(cache_file_path->data) );
    }
 
    bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
-   scaffold_check_nonzero( bstr_res );
+   lgc_nonzero( bstr_res );
    files_join_path( cache_file_path, &chunker_test_img_filename );
    cache_file = fopen( cache_file_path->data, "r" );
    if( NULL != cache_file ) {
       /* Delete it! */
-      scaffold_print_info( &module, "Deleting cached test image...\n" );
+      lg_info( __FILE__, "Deleting cached test image...\n" );
       fclose( cache_file );
       cache_file = NULL;
       unlink( (char*)(cache_file_path->data) );
@@ -133,7 +133,7 @@ void check_chunker_chunk_checked(
       // XXX
       //scaffold_list_append_string_cpy( chunks, chunk_buffer );
       bstr_res = btrunc( chunk_buffer, 0 );
-      scaffold_check_nonzero( bstr_res );
+      lgc_nonzero( bstr_res );
    }
 
    /* Verify sanity. */
@@ -229,7 +229,7 @@ void check_chunker_teardown_unchecked() {
       mem_free( chunker_imgdata );
    }
 
-   scaffold_print_info( &module, "====== END CHUNKER TRACE ======\n" );
+   lg_info( __FILE__, "====== END CHUNKER TRACE ======\n" );
 }
 
 START_TEST( test_chunker_chunk_unchunk_tilemap ) {
@@ -306,7 +306,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    cache_file_size = 0;
 
    bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
-   scaffold_check_nonzero( bstr_res );
+   lgc_nonzero( bstr_res );
    files_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
    scaffold_error_silent = TRUE;
    files_read_contents(

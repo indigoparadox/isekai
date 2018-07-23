@@ -27,74 +27,6 @@ extern struct UI* last_ui;
 
 extern struct CLIENT* main_client;
 
-#if 0
-void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
-   size_t last_read_count = 0;
-   struct SERVER* s = (struct SERVER*)arg;
-   static bstring buffer = NULL;
-   struct CLIENT* c = (struct CLIENT*)iter;
-   IRC_COMMAND* cmd = NULL;
-   const IRC_COMMAND* table = proto_table_server;
-   int bstr_result;
-
-#ifdef ENABLE_LOCAL_CLIENT
-   /* Figure out if we're being called from a client or server. */
-   if( FALSE != ipc_is_local_client( c->link ) ) {
-      table = proto_table_client;
-   } else {
-#endif /* ENABLE_LOCAL_CLIENT */
-   scaffold_assert( NULL != s );
-#ifdef ENABLE_LOCAL_CLIENT
-   }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-   /* Make sure a buffer is present. */
-   if( NULL == buffer ) {
-      buffer = bfromcstralloc( IPC_BUFFER_LEN, "" );
-   } else {
-      bwriteallow( (*buffer) ); /* Unprotect the buffer. */
-      bstr_result = btrunc( buffer, 0 );
-      scaffold_check_nonzero( bstr_result );
-   }
-
-   /* Get the next line and clean it up. */
-   last_read_count = ipc_read(
-      c->link,
-      buffer
-   );
-
-   /* Everything is fine, so tidy up the buffer. */
-   btrimws( buffer );
-   bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
-
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      /* Return an empty command to force abortion of the iteration. */
-      cmd = mem_alloc( 1, IRC_COMMAND );
-      cmd->callback = NULL;
-      cmd->line = bstrcpy( c->nick );
-      goto cleanup;
-   }
-
-   /* The -1 is not bubbled up; the scaffold_error should suffice. */
-   if( 0 >= last_read_count ) {
-      goto cleanup;
-   }
-
-#ifdef DEBUG_NETWORK
-   scaffold_print_debug(
-      &module,
-      "Server: Line received from %d: %s\n",
-      c->link.socket, bdata( buffer )
-   );
-#endif /* DEBUG_NETWORK */
-
-   cmd = irc_dispatch( table, s, c, buffer );
-
-cleanup:
-   return cmd;
-}
-#endif
-
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
@@ -211,7 +143,7 @@ void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg ) {
 /* cleanup: */
    if( NULL == tdata ) {
 #ifdef DEBUG_TILES
-      /* scaffold_print_debug(
+      /* lg_debug(
          "Unable to get tileset for: %d, %d\n", pos->x, pos->y
       ); */
 #endif /* DEBUG_TILES */
@@ -243,20 +175,20 @@ void* callback_load_local_tilesets( bstring idx, void* iter, void* arg ) {
    BYTE* setdata_buffer = NULL;
    bstring setdata_path = NULL;
 
-   scaffold_check_null_msg( idx, "Invalid tileset key provided." );
+   lgc_null_msg( idx, "Invalid tileset key provided." );
    if( 0 == set->tileheight && 0 == set->tilewidth ) {
 
       setdata_path = files_root( idx );
 
-      scaffold_print_debug(
-         &module, "Loading tileset XML data from: %s\n",
+      lg_debug(
+         __FILE__, "Loading tileset XML data from: %s\n",
          bdata( setdata_path )
       );
       bytes_read = files_read_contents(
          setdata_path, &setdata_buffer, &setdata_size );
-      scaffold_check_null_msg(
+      lgc_null_msg(
          setdata_buffer, "Unable to load tileset data." );
-      scaffold_check_zero_msg( bytes_read, "Unable to load tilemap data." );
+      lgc_zero_msg( bytes_read, "Unable to load tilemap data." );
 
       datafile_parse_ezxml_string(
          set, setdata_buffer, setdata_size, FALSE,
@@ -286,17 +218,17 @@ void* callback_load_spawner_catalogs(
       TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&
       NULL == hashmap_get( &(client_or_server->item_catalogs), spawner->catalog )
    ) {
-      scaffold_print_debug(
-         &module, "Loading item catalog: %b\n", spawner->catalog
+      lg_debug(
+         __FILE__, "Loading item catalog: %b\n", spawner->catalog
       );
 
-      scaffold_check_null_msg( spawner->catalog, "Invalid catalog provided." );
+      lgc_null_msg( spawner->catalog, "Invalid catalog provided." );
       catdata_path = files_root( spawner->catalog );
       bytes_read = files_read_contents(
          catdata_path, &catdata, &catdata_length );
-      scaffold_check_null_msg(
+      lgc_null_msg(
          catdata, "Unable to load catalog data." );
-      scaffold_check_zero_msg( bytes_read, "Unable to load catalog data." );
+      lgc_zero_msg( bytes_read, "Unable to load catalog data." );
 
       item_spritesheet_new( catalog, spawner->catalog, client_or_server );
 
@@ -310,7 +242,7 @@ void* callback_load_spawner_catalogs(
       if( hashmap_put(
          &(client_or_server->item_catalogs), spawner->catalog, catalog, FALSE
       ) ) {
-         scaffold_print_error( &module, "Attempted to double-add catalog: %b\n",
+         lg_error( __FILE__, "Attempted to double-add catalog: %b\n",
             spawner->catalog );
          item_spritesheet_free( catalog );
       }
@@ -440,8 +372,8 @@ BOOL callback_proc_client_delayed_files(
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   scaffold_print_debug(
-      &module, "Processing delayed request: %b\n", req->filename
+   lg_debug(
+      __FILE__, "Processing delayed request: %b\n", req->filename
    );
    client_request_file( c, req->type, req->filename );
 
@@ -563,7 +495,7 @@ void* callback_proc_channel_spawners(
    switch( ts->type ) {
    case TILEMAP_SPAWNER_TYPE_PLAYER:
    case TILEMAP_SPAWNER_TYPE_MOBILE:
-      scaffold_print_debug( &module, "Spawning mobile: %b\n", ts->id );
+      lg_debug( __FILE__, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
       rng_gen_serial( o, l->mobiles, SERIAL_MIN, SERIAL_MAX );
@@ -579,12 +511,12 @@ void* callback_proc_channel_spawners(
       break;
 
    case TILEMAP_SPAWNER_TYPE_ITEM:
-      scaffold_print_debug(
-         &module, "Spawning item: %b, Catalog: %b\n", ts->id, ts->catalog
+      lg_debug(
+         __FILE__, "Spawning item: %b, Catalog: %b\n", ts->id, ts->catalog
       );
       catalog = hashmap_get( &(s->self.item_catalogs), ts->catalog );
       /* Catalog should be loaded by tilemap datafile loader. */
-      scaffold_check_null( catalog );
+      lgc_null( catalog );
       while( NULL == e || 0 == e->sprite_id ) {
          item_random_new(
             e, item_type_from_c( bdata( ts->id ) ), ts->catalog, &(s->self)
@@ -698,7 +630,7 @@ void* callback_search_tileset_img_gid( bstring idx, void* iter, void* arg ) {
 void* callback_proc_tileset_img_gs( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   scaffold_check_not_null( iter );
+   lgc_not_null( iter );
 
    client_request_file( c, DATAFILE_TYPE_TILESET_TILES, idx );
 
@@ -756,11 +688,11 @@ void* callback_parse_mobs( size_t idx, void* iter, void* arg ) {
    }
 
    mob_id_test = ezxml_attr( xml_data, "id" );
-   scaffold_check_null( mob_id_test );
+   lgc_null( mob_id_test );
 
    if( 1 == biseqcstrcaseless( o->mob_id, mob_id_test ) ) {
-      scaffold_print_debug(
-         &module, "Client: Found mobile with ID: %b\n", o->mob_id
+      lg_debug(
+         __FILE__, "Client: Found mobile with ID: %b\n", o->mob_id
       );
       datafile_parse_mobile_ezxml_t( o, xml_data, NULL, TRUE );
 
@@ -817,7 +749,7 @@ void* callback_stop_clients( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
-      scaffold_print_debug( &module, "Stopping client: %p\n", c );
+      lg_debug( __FILE__, "Stopping client: %p\n", c );
       client_stop( c );
       return NULL;
    }
@@ -834,7 +766,7 @@ BOOL callback_v_free_clients( size_t idx, void* iter, void* arg ) {
 
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
 #ifdef DEBUG_VERBOSE
-      scaffold_print_debug( &module, "Freeing client: %p\n", c );
+      lg_debug( __FILE__, "Freeing client: %p\n", c );
 #endif /* DEBUG_VERBOSE */
       /* This is just a refdec. */
       client_free( c );
@@ -853,7 +785,7 @@ BOOL callback_h_free_clients( bstring idx, void* iter, void* arg ) {
 
    if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
 #ifdef DEBUG_VERBOSE
-      scaffold_print_debug( &module, "Freeing client: %p\n", c );
+      lg_debug( __FILE__, "Freeing client: %p\n", c );
 #endif /* DEBUG_VERBOSE */
       /* This is just a refdec. */
       client_free( c );
@@ -985,8 +917,8 @@ BOOL callback_free_finished_chunkers(
    struct CHUNKER* h = (struct CHUNKER*)iter;
 
    if( chunker_chunk_finished( h ) ) {
-      scaffold_print_debug(
-         &module, "(Un)chunker for %b has finished. Removing...\n", idx );
+      lg_debug(
+         __FILE__, "(Un)chunker for %b has finished. Removing...\n", idx );
       chunker_free( h );
       return TRUE;
    }

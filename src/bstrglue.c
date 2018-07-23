@@ -4,8 +4,6 @@
 
 #include "scaffold.h"
 
-SCAFFOLD_MODULE( "bstrglue.c" );
-
 #include <stdlib.h>
 
 struct VECTOR* bgsplit( const_bstring str, char split ) {
@@ -17,7 +15,7 @@ struct VECTOR* bgsplit( const_bstring str, char split ) {
    vector_new( v );
 
    current_str = bfromcstr( "" );
-   scaffold_check_null( current_str );
+   lgc_null( current_str );
 
    while( str->slen > i ) {
       chr = &(str->data[i]);
@@ -30,7 +28,7 @@ struct VECTOR* bgsplit( const_bstring str, char split ) {
          }
          vector_add( v, current_str );
          current_str = bfromcstr( "" );
-         scaffold_check_null( current_str );
+         lgc_null( current_str );
       } else {
          bconchar( current_str, *chr );
       }
@@ -49,7 +47,7 @@ int bgtoi( bstring i_b ) {
    int i_out = 0;
 
    i_c = bdata( i_b );
-   scaffold_check_null( i_c );
+   lgc_null( i_c );
 
    i_out = atoi( i_c );
 

@@ -61,8 +61,8 @@ void graphics_bitmap_load(
    file_header = (struct GRAPHICS_BITMAP_FILE_HEADER*)&(data[0]);
    header = (struct GRAPHICS_BITMAP_HEADER*)&(data[14]);
 
-   scaffold_print_debug(
-      &module, "Bitmap: %d x %d\n", header->width, header->height
+   lg_debug(
+      __FILE__, "Bitmap: %d x %d\n", header->width, header->height
    );
 
    pixels_sz = ((header->width * header->height) / 2);
@@ -74,13 +74,13 @@ void graphics_bitmap_load(
    scaffold_assert( (file_header->offset + pixels_sz) <= data_sz );
 
    *bitmap_out = mem_alloc( 1, struct GRAPHICS_BITMAP );
-   scaffold_check_null( *bitmap_out );
+   lgc_null( *bitmap_out );
    (*bitmap_out)->w = header->width;
    (*bitmap_out)->h = header->height;
    (*bitmap_out)->pixels_sz = (header->width * header->height);
    (*bitmap_out)->pixels =
       mem_alloc( (*bitmap_out)->pixels_sz, GRAPHICS_COLOR );
-   scaffold_check_null( (*bitmap_out)->pixels );
+   lgc_null( (*bitmap_out)->pixels );
 
    for( i = file_header->offset ; (file_header->offset + pixels_sz) > i ; i++ ) {
       (*bitmap_out)->pixels[output_i++] = (data[i] | 0x00) >> 4;
@@ -162,7 +162,7 @@ void graphics_draw_text(
       graphics_draw_char( g, x + (size * i), y, color, size, c );
    }
 
-   if( TRUE == cursor ) {
+   if( FALSE != cursor ) {
       graphics_draw_char( g, x + (size * i), y, color, size, '_' );
    }
 }
@@ -170,7 +170,7 @@ void graphics_draw_text(
 void graphics_measure_text(
    GRAPHICS* g, GRAPHICS_RECT* r, GRAPHICS_FONT_SIZE size, const bstring text
 ) {
-   scaffold_check_null( r );
+   lgc_null( r );
    r->w = size;
    r->h = size;
    if( NULL != text ) {
@@ -277,7 +277,7 @@ void graphics_draw_line(
 }
 
 void graphics_surface_free( GRAPHICS* g ) {
-   scaffold_check_null( g );
+   lgc_null( g );
    graphics_surface_cleanup( g );
    scaffold_assert( NULL == g->palette );
    scaffold_assert( NULL == g->surface );
@@ -326,7 +326,7 @@ SCAFFOLD_INLINE void graphics_get_spritesheet_pos_ortho(
 ) {
    int tiles_wide = 0;
 
-   scaffold_check_null( g_sprites );
+   lgc_null( g_sprites );
 
    tiles_wide = g_sprites->w / sprite_frame->w;
 

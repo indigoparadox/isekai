@@ -244,15 +244,15 @@ void graphics_screen_new(
 
    set_color_depth( GRAPHICS_COLOR_DEPTH );
    screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0 );
-   scaffold_check_nonzero( screen_return );
+   lgc_nonzero( screen_return );
 
    /* TODO: Free double buffer. */
    *g = mem_alloc( 1, GRAPHICS );
-   scaffold_check_null( *g );
+   lgc_null( *g );
    (*g)->surface = create_bitmap( w, h );
    graphics_surface_set_w( *g, w );
    graphics_surface_set_h( *g, h );
-   scaffold_check_null( (*g)->surface );
+   lgc_null( (*g)->surface );
 
    clear_bitmap( (*g)->surface );
 
@@ -261,7 +261,7 @@ cleanup:
 }
 
 void graphics_surface_cleanup( GRAPHICS* g ) {
-   scaffold_check_null( g );
+   lgc_null( g );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
       g->surface = NULL;
@@ -309,7 +309,7 @@ void graphics_screen_scroll(
 }
 
 void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
-   scaffold_check_null( path );
+   lgc_null( path );
    if( NULL != g->surface ) {
       destroy_bitmap( g->surface );
    }
@@ -327,8 +327,8 @@ void graphics_set_image_path( GRAPHICS* g, const bstring path ) {
 #endif /* USE_ALLEGRO_PALETTE */
    );
    if( NULL == g->surface ) {
-      scaffold_print_error(
-         &module, "Image load error: %s: %s\n", bdata( path ), allegro_error );
+      lg_error(
+         __FILE__, "Image load error: %s: %s\n", bdata( path ), allegro_error );
       goto cleanup;
    }
    graphics_surface_set_w( g, ((BITMAP*)g->surface)->w );
@@ -372,7 +372,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    BOOL close_packfile = TRUE;
 
    fmem_info = (GRAPHICS_FMEM_INFO*)calloc( 1, sizeof( GRAPHICS_FMEM_INFO ) );
-   scaffold_check_null( fmem_info );
+   lgc_null( fmem_info );
 #else
    struct GRAPHICS_BITMAP* bitmap = NULL;
    SCAFFOLD_SIZE_SIGNED x, y, i = 0;
@@ -398,7 +398,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
    fmem_info->alloc = length;
 
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, fmem_info );
-   scaffold_check_null( fmem );
+   lgc_null( fmem );
 
    /* Autodetect image type. */
    g->surface = load_bmp_pf( fmem, (RGB*)g->palette );
@@ -431,7 +431,7 @@ void graphics_set_image_data( GRAPHICS* g, const BYTE* data,
       }
 #endif /* USE_ALLEGRO_PNG */
    }
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
    g->w = ((BITMAP*)g->surface)->w;
    g->h = ((BITMAP*)g->surface)->h;
    g->fp_w = graphics_precise( g->w );
@@ -450,8 +450,8 @@ cleanup:
    }
 #else
    graphics_bitmap_load( data, length, &bitmap );
-   scaffold_check_null( bitmap );
-   scaffold_check_null( bitmap->pixels );
+   lgc_null( bitmap );
+   lgc_null( bitmap->pixels );
    g->surface = create_bitmap( bitmap->w, bitmap->h );
    graphics_surface_set_w( g, bitmap->w );
    graphics_surface_set_h( g, bitmap->h );
@@ -460,7 +460,7 @@ cleanup:
          putpixel( g->surface, x, y, (int)(bitmap->pixels[i++]) );
       }
    }
-   scaffold_check_null( g->surface );
+   lgc_null( g->surface );
 
 cleanup:
    graphics_free_bitmap( bitmap );
@@ -474,16 +474,16 @@ BYTE* graphics_export_image_data( GRAPHICS* g, SCAFFOLD_SIZE* out_len ) {
 
    fmem_info = (GRAPHICS_FMEM_INFO*)calloc( 1, sizeof( GRAPHICS_FMEM_INFO ) );
 
-   scaffold_check_null( g );
-   scaffold_check_null( g->surface );
-   scaffold_check_null( out_len );
+   lgc_null( g );
+   lgc_null( g->surface );
+   lgc_null( out_len );
 
    fmem_info->length = *out_len;
    fmem_info->offset = 0;
    fmem_info->alloc = *out_len;
 
    fmem = pack_fopen_vtable( &graphics_fmem_vtable, fmem_info );
-   scaffold_check_null( fmem );
+   lgc_null( fmem );
 
 /*#ifdef USE_ALLEGRO_PNG
    save_tga_pf( fmem, g->surface, NULL );

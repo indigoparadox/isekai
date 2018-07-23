@@ -93,7 +93,7 @@ struct CLIENT {
 
 #define client_new( c ) \
     c = mem_alloc( 1, struct CLIENT ); \
-    scaffold_check_null( c ); \
+    lgc_null( c ); \
     client_init( c );
 
 struct GAMEDATA;
@@ -172,7 +172,6 @@ struct tagbstring str_client_window_id_inv = bsStatic( "inventory" );
 struct tagbstring str_client_window_title_inv = bsStatic( "Inventory" );
 struct tagbstring str_client_control_id_inv_self = bsStatic( "inv_pane_self" );
 struct tagbstring str_client_control_id_inv_ground = bsStatic( "inv_pane_ground" );
-SCAFFOLD_MODULE( "client.c" );
 #endif /* CLIENT_C */
 
 #endif /* CLIENT_H */

@@ -19,6 +19,10 @@
 
 static SCAFFOLD_SIZE vm_tick_count = 0;
 
+BOOL vm_caddy_started( struct VM_CADDY* vmc ) {
+   return vmc->vm_started;
+}
+
 /** \brief Create a VM caddy, but don't start it.
  */
 void vm_caddy_init( struct VM_CADDY* vmc ) {
@@ -53,13 +57,15 @@ void vm_caddy_start( struct VM_CADDY* vmc ) {
             NULL, NULL, NULL, vmc, duktape_helper_channel_crash );
          break;
       }
-      scaffold_check_null_msg( vmc->vm, "Unable to initialize VM." );
+      lgc_null_msg( vmc->vm, "Unable to initialize VM." );
 
       /* Push all the globals into every new VM. */
       hashmap_iterate( &(vmc->vm_globals), duktape_set_globals_cb, vmc );
       break;
 #endif /* USE_DUKTAPE */
    }
+
+   vmc->vm_started = TRUE;
 
 cleanup:
    return;
@@ -81,6 +87,8 @@ void vm_caddy_end( struct VM_CADDY* vmc ) {
 #endif /* USE_DUKTAPE */
    }
 
+   vmc->vm_started = FALSE;
+
 cleanup:
    return;
 }
@@ -96,7 +104,7 @@ BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
    return vm_tick_count != vm_tick_prev;
 #else
    if( 0 == vm_tick_count % VM_TICK_FREQUENCY ) {
-      /* scaffold_print_debug( &module, "%d\n", vm_tick_count % VM_TICK_FREQUENCY ); */
+      /* lg_debug( __FILE__, "%d\n", vm_tick_count % VM_TICK_FREQUENCY ); */
       return TRUE;
    }
    return FALSE;
@@ -105,7 +113,7 @@ BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
 
 void vm_caddy_free( struct VM_CADDY* vmc ) {
 
-   scaffold_check_null( vmc );
+   lgc_null( vmc );
 
    hashmap_remove_cb( &(vmc->vm_scripts), callback_h_free_strings, NULL );
    hashmap_cleanup( &(vmc->vm_scripts) );
@@ -188,13 +196,13 @@ BOOL vm_caddy_put(
    if( hashmap_put(
       dest, key, bstrcpy( val ), FALSE
    ) ) {
-      scaffold_print_error( &module,
+      lg_error( __FILE__,
          "Attempted to double-put script element \"%b\"\n", key );
       retval = FALSE;
    }
 
-   scaffold_print_debug(
-      &module, "Stored script element \"%b\"\n", key );
+   lg_debug(
+      __FILE__, "Stored script element \"%b\"\n", key );
 
 cleanup:
    return retval;
@@ -202,7 +210,7 @@ cleanup:
 
 SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc ) {
    SCAFFOLD_SIZE count = 0;
-   scaffold_check_null( vmc );
+   lgc_null( vmc );
    count = hashmap_count( &(vmc->vm_scripts) );
 cleanup:
    return count;

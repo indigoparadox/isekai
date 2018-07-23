@@ -28,8 +28,8 @@ static void tilemap_cleanup( const struct REF* ref ) {
    t = scaffold_container_of( ref, struct TILEMAP, refcount );
    l = tilemap_get_channel( t );
 
-   scaffold_print_debug(
-      &module, "Destroying tilemap for channel: %b\n", l->name
+   lg_debug(
+      __FILE__, "Destroying tilemap for channel: %b\n", l->name
    );
 
    vector_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
@@ -189,7 +189,7 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 ) {
    TILEMAP_COORD_TILE tiles_wide = 0;
 
-   scaffold_check_null( g_set );
+   lgc_null( g_set );
 
    tiles_wide = g_set->w / set->tilewidth;
 
@@ -261,7 +261,7 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
 #ifdef ENABLE_LOCAL_CLIENT
    if( TILEMAP_REDRAW_ALL == st ) {
 #ifdef DEBUG_TILES_VERBOSE
-      scaffold_print_debug( &module, "Initiating full tilemap redraw...\n" );
+      lg_debug( __FILE__, "Initiating full tilemap redraw...\n" );
 #endif /* DEBUG_TILES_VERBOSE */
    }
 
@@ -360,7 +360,7 @@ void tilemap_add_dirty_tile(
    SCAFFOLD_SIZE_SIGNED verr;
 
    pos = mem_alloc( 1, struct TILEMAP_POSITION );
-   scaffold_check_null( pos );
+   lgc_null( pos );
 
    pos->x = x;
    pos->y = y;
@@ -381,23 +381,23 @@ void tilemap_toggle_debug_state() {
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_OFF:
       tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_COORDS;
-      scaffold_print_debug( &module, "Terrain Debug: Coords\n" );
+      lg_debug( __FILE__, "Terrain Debug: Coords\n" );
       break;
    case TILEMAP_DEBUG_TERRAIN_COORDS:
       tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_NAMES;
-      scaffold_print_debug( &module, "Terrain Debug: Terrain Names\n" );
+      lg_debug( __FILE__, "Terrain Debug: Terrain Names\n" );
       break;
    case TILEMAP_DEBUG_TERRAIN_NAMES:
       tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_QUARTERS;
-      scaffold_print_debug( &module, "Terrain Debug: Terrain Quarters\n" );
+      lg_debug( __FILE__, "Terrain Debug: Terrain Quarters\n" );
       break;
    case TILEMAP_DEBUG_TERRAIN_QUARTERS:
       tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_DEADZONE;
-      scaffold_print_debug( &module, "Terrain Debug: Window Deadzone\n" );
+      lg_debug( __FILE__, "Terrain Debug: Window Deadzone\n" );
       break;
    case TILEMAP_DEBUG_TERRAIN_DEADZONE:
       tilemap_dt_state = TILEMAP_DEBUG_TERRAIN_OFF;
-      scaffold_print_debug( &module, "Terrain Debug: Off\n" );
+      lg_debug( __FILE__, "Terrain Debug: Off\n" );
       break;
    }
 }
@@ -418,7 +418,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
       vector_iterate( &(t->item_caches), callback_search_item_caches, &pos );
    if( NULL == cache ) {
       tilemap_item_cache_new( cache, t, x, y );
-      scaffold_check_null( cache );
+      lgc_null( cache );
       verr = vector_add( &(t->item_caches), cache );
       if( 0 > verr ) {
          tilemap_item_cache_free( cache );
@@ -471,7 +471,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 
    if( NULL == cache_out && FALSE != force ) {
       tilemap_item_cache_new( cache_out, t, x, y );
-      scaffold_check_null( cache_out );
+      lgc_null( cache_out );
       verr = vector_add( &(t->item_caches), cache_out );
       if( 0 > verr ) {
          tilemap_item_cache_free( cache_out );

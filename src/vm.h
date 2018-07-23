@@ -55,7 +55,7 @@ struct CHANNEL;
 
 #define vm_caddy_new( vmc ) \
     vmc = mem_alloc( 1, struct VM_CADDY ); \
-    scaffold_check_null( vmc ); \
+    lgc_null( vmc ); \
     vm_caddy_init( vmc );
 
 #ifdef USE_VM
@@ -81,7 +81,6 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code );
 #endif /* USE_DUKTAPE */
 
 #ifdef VM_C
-SCAFFOLD_MODULE( "vm.c" );
 const struct tagbstring str_vm_global = bsStatic( "global" );
 const struct tagbstring str_vm_script = bsStatic( "script" );
 const struct tagbstring str_vm_tick = bsStatic( "tick" );

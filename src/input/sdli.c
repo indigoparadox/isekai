@@ -33,8 +33,8 @@ void input_get_event( struct INPUT* input ) {
       input->character = event->key.keysym.unicode & 0x00ff;
       input->scancode = event->key.keysym.scancode;
 #ifdef DEBUG_KEYS
-      scaffold_print_debug( &module, "Scancode: %d\n", input->scancode );
-      scaffold_print_debug( &module, "Char: %d\n", input->character );
+      lg_debug( __FILE__, "Scancode: %d\n", input->scancode );
+      lg_debug( __FILE__, "Char: %d\n", input->character );
 #endif /* DEBUG_KEYS */
    } else if( SDL_QUIT == event->type ) {
       input->type = INPUT_TYPE_CLOSE;

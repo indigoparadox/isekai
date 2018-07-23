@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "../src/vector.h"
 #include "check_data.h"
 
 static struct tagbstring module = bsStatic( "check_vector.c" );

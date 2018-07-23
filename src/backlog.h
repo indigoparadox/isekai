@@ -26,8 +26,4 @@ void* backlog_iter( vector_iter_cb cb, void* arg );
 void backlog_speak( const bstring nick, const bstring msg );
 void backlog_system( const bstring msg );
 
-#ifdef BACKLOG_C
-SCAFFOLD_MODULE( "backlog.c" );
-#endif /* BACKLOG_C */
-
 #endif /* BACKLOG_H */
