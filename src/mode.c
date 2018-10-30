@@ -4,6 +4,7 @@
 
 #include "channel.h"
 #include "tilemap.h"
+#include "plugin.h"
 
 void client_local_update(
    struct CLIENT* c,
@@ -19,6 +20,7 @@ void client_local_update(
    }
 #endif /* !DISABLE_MODE_POV */
 
+#if 0
    switch( c->gfx_mode ) {
    case MODE_TOPDOWN:
       mode_topdown_update( c, l );
@@ -29,6 +31,9 @@ void client_local_update(
       break;
 #endif /* !DISABLE_MODE_POV */
    }
+#endif // 0
+
+   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_UPDATE, c, l );
 }
 
 void client_local_draw(
@@ -40,6 +45,8 @@ void client_local_draw(
       goto cleanup; /* Quietly. */
    }
    t = channel_get_tilemap( l );
+
+#if 0
    switch( c->gfx_mode ) {
    case MODE_TOPDOWN:
       switch( tilemap_get_orientation( t ) ) {
@@ -57,6 +64,10 @@ void client_local_draw(
       break;
 #endif /* !DISABLE_MODE_POV */
    }
+#endif
+
+   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_DRAW, c, l );
+
 cleanup:
    return;
 }
@@ -64,6 +75,7 @@ cleanup:
 void client_local_poll_input(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
 ) {
+#if 0
    switch( c->gfx_mode ) {
    case MODE_TOPDOWN:
       mode_topdown_poll_input( c, l, p );
@@ -75,17 +87,24 @@ void client_local_poll_input(
       break;
 #endif /* !DISABLE_MODE_POV */
    }
+#endif
+
+   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_POLL_INPUT, c, l, p );
 }
 
 void client_local_free( struct CLIENT* c ) {
+#if 0
    switch( c->gfx_mode ) {
    case MODE_TOPDOWN:
       mode_topdown_free( c );
       break;
 #ifndef DISABLE_MODE_POV
-   case MODE_POV:
+   case MODEdraw_POV:
       mode_pov_free( c );
       break;
 #endif /* !DISABLE_MODE_POV */
    }
+#endif
+
+   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_FREE, c );
 }

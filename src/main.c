@@ -13,6 +13,7 @@
 #include "channel.h"
 #include "proto.h"
 #include "files.h"
+#include "plugin.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -621,6 +622,9 @@ int main( int argc, char** argv ) {
 
    proto_setup();
    lgc_nonzero( scaffold_error );
+
+   /* Setup a list of available modes. */
+   plugin_load_all( PLUGIN_MODE );
 
 #endif /* ENABLE_LOCAL_CLIENT */
 

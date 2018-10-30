@@ -7,24 +7,25 @@ typedef enum {
    MODE_POV
 }MODE;
 
-#include "libvcol.h"
+#include <libvcol.h>
 #include "input.h"
 #include "graphics.h"
 #include "client.h"
 
 struct CHANNEL;
 
-void mode_topdown_update(
+#if 0
+PLUGIN_RESULT mode_topdown_update(
    struct CLIENT* c,
    struct CHANNEL* l
 );
-void mode_topdown_draw(
+PLUGIN_RESULT mode_topdown_draw(
    struct CLIENT* c,
    struct CHANNEL* l
 );
-void mode_topdown_poll_input(
+PLUGIN_RESULT mode_topdown_poll_input(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
-void mode_topdown_free( struct CLIENT* c );
+PLUGIN_RESULT mode_topdown_free( struct CLIENT* c );
 
 #ifndef DISABLE_MODE_ISO
 
@@ -57,6 +58,8 @@ void mode_pov_free( struct CLIENT* c );
 
 #endif /* !DISABLE_MODE_POV */
 
+#endif // 0
+
 void client_local_update(
    struct CLIENT* c,
    struct CHANNEL* l
@@ -78,7 +81,6 @@ extern struct tagbstring str_client_control_id_chat;
 extern struct tagbstring str_client_window_id_inv;
 extern struct tagbstring str_client_window_title_inv;
 extern struct tagbstring str_client_control_id_inv_self;
-extern struct tagbstring str_client_control_id_inv_ground;
 #endif /* MODE_C */
 
 #endif /* MODE_H */
