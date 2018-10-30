@@ -126,6 +126,7 @@
 					<Add option="-pg" />
 					<Add library="alleg" />
 					<Add library="ubsan" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Strict (Linux-NET-Allegro4)">
@@ -172,6 +173,7 @@
 					<Add option="-pg" />
 					<Add library="alleg" />
 					<Add library="ubsan" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (MingW32-NET)">
@@ -334,6 +336,7 @@
 				<Linker>
 					<Add option="-pg" />
 					<Add library="ncurses" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Curses)">
@@ -353,10 +356,12 @@
 					<Add option="-DSCAFFOLD_LOG_FILE" />
 					<Add option="-DUSE_CHUNKS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
 					<Add library="ncurses" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SB-Allegro4)">
@@ -401,6 +406,7 @@
 					<Add option="-pg" />
 					<Add library="alleg" />
 					<Add library="ubsan" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4)">
@@ -457,6 +463,7 @@
 					<Add option="-pg" />
 					<Add library="alleg" />
 					<Add library="ubsan" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-TLS)">
@@ -505,6 +512,7 @@
 					<Add library="alleg" />
 					<Add library="ubsan" />
 					<Add library="mbedtls" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-SDL)">
@@ -552,6 +560,7 @@
 					<Add library="ubsan" />
 					<Add library="SDL" />
 					<Add library="SDL_image" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -579,6 +588,7 @@
 				<Linker>
 					<Add option="-pg" />
 					<Add library="alleg" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
@@ -609,6 +619,7 @@
 				<Linker>
 					<Add library="alleg" />
 					<Add library="loadpng" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-TCC)">
@@ -629,6 +640,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="alleg" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Curses-Threaded)">
@@ -646,6 +658,7 @@
 				<Linker>
 					<Add library="curses" />
 					<Add library="pthread" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Release (Linux-Allegro4)">
@@ -717,6 +730,7 @@
 				<Linker>
 					<Add option="-pg" />
 					<Add library="ubsan" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Emscripten-NET-SDL)">
@@ -782,6 +796,9 @@
 					<Add option="-DxUSE_INLINE" />
 					<Add option="-DDISABLE_MODE_RAYCAST" />
 				</Compiler>
+				<Linker>
+					<Add directory="../libvcol/bin/Debug-Linux" />
+				</Linker>
 				<MakeCommands>
 					<Build command="" />
 					<CompileFile command="" />
@@ -798,9 +815,11 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 			<Add option="-DUSE_ITERATOR_CACHE" />
-			<Add directory="src/libvcol/src/bstrlib" />
-			<Add directory="src/libgoki/src" />
+			<Add directory="../libvcol/src" />
 		</Compiler>
+		<Linker>
+			<Add library="vcol" />
+		</Linker>
 		<Unit filename="htmlrend.h">
 			<Option virtualFolder="src/" />
 		</Unit>
@@ -1457,26 +1476,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/item.h" />
-		<Unit filename="src/libgoki/src/libgoki.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/libgoki/src/libgoki.h" />
-		<Unit filename="src/libvcol/src/bstrlib/bstrlib.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/libvcol/src/bstrlib/bstrlib.h" />
-		<Unit filename="src/libvcol/src/hashmap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/libvcol/src/hashmap.h" />
-		<Unit filename="src/libvcol/src/mem.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/libvcol/src/mem.h" />
-		<Unit filename="src/libvcol/src/vector.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/libvcol/src/vector.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
