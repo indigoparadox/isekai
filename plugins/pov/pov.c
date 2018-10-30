@@ -1,18 +1,17 @@
 
 #define MODE_C
-#include "../mode.h"
+#include <mode.h>
 
 #ifndef DISABLE_MODE_POV
 
 #include <stdlib.h>
 
-#include "../callback.h"
-#include "../ui.h"
-#include "../ipc.h"
-#include "../channel.h"
-#include "../tilemap.h"
-#include "../proto.h"
-#include "../mobile.h"
+#include <callback.h>
+#include <ui.h>
+#include <ipc.h>
+#include <channel.h>
+#include <proto.h>
+#include <mobile.h>
 
 typedef enum {
    POV_LAYER_LEVEL_MAX = 4,

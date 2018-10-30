@@ -65,7 +65,7 @@ struct CLIENT {
    SCAFFOLD_SIZE tilesets_loaded;
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
-   MODE gfx_mode;
+   bstring gfx_mode;
    struct TILEMAP* active_tilemap;
    struct TWINDOW local_window;
 

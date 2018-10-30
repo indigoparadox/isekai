@@ -1120,7 +1120,7 @@ static void ui_control_draw_html(
    GRAPHICS* g = win->element;
    GRAPHICS_RECT bg_rect;
 
-   if( NULL == html->self.attachment ) {
+   if( NULL == html->self.attachment && NULL != html->text ) {
       lg_debug( __FILE__, "Parsing HTML: %b\n", html->text );
       html_tree_parse_string(
          html->text, (struct html_tree*)&(html->self.attachment) );

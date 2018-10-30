@@ -1,16 +1,18 @@
 
 #define MODE_C
-#include "../mode.h"
+#include <mode.h>
 
-#include "../callback.h"
-#include "../ui.h"
-#include "../ipc.h"
-#include "../channel.h"
-#include "../proto.h"
+#ifndef DISABLE_MODE_ISO
+
+#include <callback.h>
+#include <ui.h>
+#include <ipc.h>
+#include <channel.h>
+#include <proto.h>
 
 extern bstring client_input_from_ui;
 
-static void mode_topdown_tilemap_draw_tile(
+static void mode_isometric_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
    TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
 );
@@ -18,7 +20,7 @@ static void mode_topdown_tilemap_draw_tile(
 /** \brief Callback: Draw all of the layers for the iterated individual
  *         tile/position (kind of the opposite of tilemap_draw_layer_cb.)
  */
-static void* mode_topdown_tilemap_draw_tile_cb(
+static void* mode_isometric_tilemap_draw_tile_cb(
    size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
@@ -33,23 +35,22 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    c = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = c->active_tilemap;
 
-   // XXX
-   //vector_lock( &(t->layers), TRUE );
+   vector_lock( &(t->layers), TRUE );
    layer_max = vector_count( &(t->layers) );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( &(t->layers), layer_idx );
       scaffold_assert(
-         TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
+         TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
       tile = tilemap_get_tile( layer, pos->x, pos->y );
       if( 0 < tile ) {
-         mode_topdown_tilemap_draw_tile(
+         mode_isometric_tilemap_draw_tile(
             layer, twindow, pos->x, pos->y, tile );
       }
    }
-   //vector_lock( &(t->layers), FALSE );
+   vector_lock( &(t->layers), FALSE );
 }
 
-static void* mode_topdown_draw_mobile_cb(
+static void* mode_isometric_draw_mobile_cb(
    size_t idx, void* iter, void* arg
 ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -68,7 +69,7 @@ static void* mode_topdown_draw_mobile_cb(
    return NULL;
 }
 
-static void* mode_topdown_tilemap_draw_items_cb(
+static void* mode_isometric_tilemap_draw_items_cb(
    size_t idx, void* iter, void* arg
 ) {
    GRAPHICS_RECT* rect = (GRAPHICS_RECT*)arg;
@@ -82,7 +83,7 @@ static void* mode_topdown_tilemap_draw_items_cb(
 
 /** \brief Callback: Draw iterated layer.
  */
-static void* mode_topdown_tilemap_draw_layer_cb(
+static void* mode_isometric_tilemap_draw_layer_cb(
    size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
@@ -99,7 +100,7 @@ static void* mode_topdown_tilemap_draw_layer_cb(
       goto cleanup;
    }
 
-   scaffold_assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
+   scaffold_assert( TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
 
    /* TODO: Do culling in iso-friendly way. */
    for( x = twindow->min_x ; twindow->max_x > x ; x++ ) {
@@ -108,7 +109,7 @@ static void* mode_topdown_tilemap_draw_layer_cb(
          if( 0 == tile ) {
             continue;
          }
-         mode_topdown_tilemap_draw_tile(
+         mode_isometric_tilemap_draw_tile(
             layer, twindow, x, y, tile );
       }
    }
@@ -117,149 +118,26 @@ cleanup:
    return NULL;
 }
 
-#ifdef DEBUG_TILES
-
-static void mode_topdown_tilemap_draw_tile_debug(
-   struct TILEMAP_LAYER* layer, GRAPHICS* g, struct TWINDOW* twin,
-   SCAFFOLD_SIZE_SIGNED tile_x, SCAFFOLD_SIZE_SIGNED tile_y,
-   SCAFFOLD_SIZE_SIGNED pix_x, SCAFFOLD_SIZE_SIGNED pix_y, uint32_t gid
-) {
-   struct TILEMAP_TILESET* set = NULL;
-   bstring bnum = NULL;
-   struct TILEMAP_TILE_DATA* tile_info = NULL;
-   SCAFFOLD_SIZE td_i;
-   int bstr_result;
-   struct TILEMAP* t = layer->tilemap;
-   SCAFFOLD_SIZE set_firstgid = 0;
-   SCAFFOLD_SIZE layers_count;
-
-   bnum = bfromcstralloc( 10, "" );
-   lgc_null( bnum );
-
-   /* FIXME: How does gid resolve in a tileset that can have a variable firstgid? */
-   set = tilemap_get_tileset( t, gid, &set_firstgid );
-   lgc_null( set );
-   lgc_zero_against(
-      t->scaffold_error, set->tilewidth, "Tile width is zero." );
-   lgc_zero_against(
-      t->scaffold_error, set->tileheight, "Tile height is zero." );
-
-   layers_count = vector_count( &(t->layers) );
-   if( layers_count <= tilemap_dt_layer ) {
-      tilemap_dt_layer = 0;
-   }
-
-   if( layer->z != tilemap_dt_layer ) {
-      /* Don't bother with the debug stuff for another layer. */
-      goto cleanup;
-   }
-
-   tile_info = vector_get( &(set->tiles), gid - 1 );
-   switch( tilemap_dt_state ) {
-   case TILEMAP_DEBUG_TERRAIN_COORDS:
-      if( layers_count - 1 == layer->z ) {
-         bstr_result = bassignformat( bnum, "%d,", tile_x );
-         lgc_nonzero( bstr_result );
-         graphics_draw_text(
-            g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
-         );
-         bstr_result = bassignformat( bnum, "%d", tile_y );
-         lgc_nonzero( bstr_result );
-         graphics_draw_text(
-            g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
-         );
-         bdestroy( bnum );
-      }
-      break;
-   case TILEMAP_DEBUG_TERRAIN_NAMES:
-      if( NULL != tile_info && NULL != tile_info->terrain[0] ) {
-         bstr_result = bassignformat(
-            bnum, "%c%c:%d",
-            bdata( tile_info->terrain[0]->name )[0],
-            bdata( tile_info->terrain[0]->name )[1],
-            tile_info->terrain[0]->movement
-         );
-         lgc_nonzero( bstr_result );
-         graphics_draw_text(
-            g, pix_x + 16, pix_y + (10 * layer->z),
-            GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
-         );
-      }
-      break;
-   case TILEMAP_DEBUG_TERRAIN_QUARTERS:
-      for( td_i = 0 ; 4 > td_i ; td_i++ ) {
-         if( NULL == tile_info || NULL == tile_info->terrain[td_i] ) {
-            bstr_result = bassignformat( bnum, "x" );
-            lgc_nonzero( bstr_result );
-         } else {
-            bstr_result = bassignformat(
-               bnum, "%d",
-               tile_info->terrain[td_i]->id
-            );
-            lgc_nonzero( bstr_result );
-         }
-         graphics_draw_text(
-            g,
-            pix_x + ((td_i % 2) * 12),
-            pix_y + ((td_i / 2) * 16),
-            GRAPHICS_TEXT_ALIGN_CENTER,
-            td_i + 4, GRAPHICS_FONT_SIZE_8,
-            bnum,
-            FALSE
-         );
-      }
-      break;
-   case TILEMAP_DEBUG_TERRAIN_DEADZONE:
-      if(
-         !tilemap_inside_inner_map_x( tile_x, twin ) &&
-         !tilemap_inside_inner_map_y( tile_y, twin )
-      ) {
-         graphics_draw_rect(
-            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED, TRUE
-         );
-      }
-      if(
-         !tilemap_inside_window_deadzone_x( tile_x, twin ) &&
-         !tilemap_inside_window_deadzone_y( tile_y, twin )
-      ) {
-         graphics_draw_rect(
-            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN, TRUE
-         );
-      }
-      break;
-   }
-
-cleanup:
-   bdestroy( bnum );
-   return;
-}
-
-#endif /* DEBUG_TILES */
-
-static void* callback_get_tileimg( bstring idx, void* iter, void* arg ) {
-   return iter;
-}
-
-static void mode_topdown_tilemap_draw_tile(
+static void mode_isometric_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
-   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
+   TILEMAP_COORD_TILE tile_x, TILEMAP_COORD_TILE tile_y, SCAFFOLD_SIZE gid
 ) {
    struct TILEMAP_TILESET* set = NULL;
    GRAPHICS_RECT tile_tilesheet_pos;
    GRAPHICS_RECT tile_screen_rect;
    struct CLIENT* local_client = NULL;
    struct TILEMAP* t = NULL;
-   const struct MOBILE* o = NULL;
+   //const struct MOBILE* o = NULL;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+   GFX_COORD_PIXEL
+      iso_dest_offset_x,
+      iso_dest_offset_y;
 
    local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = local_client->active_tilemap;
-   o = local_client->puppet;
+   //o = local_client->puppet;
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
@@ -274,8 +152,13 @@ static void mode_topdown_tilemap_draw_tile(
    }
 
    /* Figure out the window position to draw to. */
-   tile_screen_rect.x = set->tilewidth * (x - twindow->x);
-   tile_screen_rect.y = set->tileheight * (y - twindow->y);
+   //tile_screen_rect.x = set->tilewidth * (x - twindow->x);
+   //tile_screen_rect.y = set->tileheight * (y - twindow->y);
+
+   iso_dest_offset_x = set->tilewidth / 2;
+   iso_dest_offset_y = set->tileheight / 2;
+   tile_screen_rect.x = ((tile_x - tile_y) * iso_dest_offset_x) - twindow->x;
+   tile_screen_rect.y = ((tile_x + tile_y) * iso_dest_offset_y) - twindow->y;
 
    if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
       goto cleanup; /* Silently. */
@@ -295,6 +178,7 @@ static void mode_topdown_tilemap_draw_tile(
    tilemap_get_tile_tileset_pos(
       set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
 
+      /*
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
          tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
@@ -324,6 +208,7 @@ static void mode_topdown_tilemap_draw_tile(
    ) {
       tile_screen_rect.y += mobile_get_steps_remaining_y( o, TRUE );
    }
+   */
 
    graphics_blit_partial(
       twindow->g,
@@ -333,25 +218,18 @@ static void mode_topdown_tilemap_draw_tile(
       g_tileset
    );
 
-   cache = tilemap_get_item_cache( t, x, y, FALSE );
+   cache = tilemap_get_item_cache( t, tile_x, tile_y, FALSE );
    if( NULL != cache ) {
       vector_iterate(
-         &(cache->items), mode_topdown_tilemap_draw_items_cb, &tile_screen_rect
+         &(cache->items), mode_isometric_tilemap_draw_items_cb, &tile_screen_rect
       );
    }
-
-#ifdef DEBUG_TILES
-   mode_topdown_tilemap_draw_tile_debug(
-      layer, twindow->g, twindow, x, y,
-      tile_screen_rect.x, tile_screen_rect.y, gid
-   );
-#endif /* DEBUG_TILES */
 
 cleanup:
    return;
 }
 
-static void mode_topdown_tilemap_update_window(
+static void mode_isometric_tilemap_update_window(
    struct TWINDOW* twindow,
    TILEMAP_COORD_TILE focal_x, TILEMAP_COORD_TILE focal_y
 ) {
@@ -461,7 +339,8 @@ static void mode_topdown_tilemap_update_window(
       ? twindow->y - border_y : 0;
 }
 
-static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
+
+static void mode_isometric_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    struct CLIENT* local_client = NULL;
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
@@ -481,14 +360,14 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
       || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
 #endif /* DEBUG_TILES */
    ) {
-      vector_iterate( &(t->layers), mode_topdown_tilemap_draw_layer_cb, twindow );
+      vector_iterate( &(t->layers), mode_isometric_tilemap_draw_layer_cb, twindow );
    } else if(
       TILEMAP_REDRAW_DIRTY == t->redraw_state &&
       0 < vector_count( &(t->dirty_tiles ) )
    ) {
       /* Just redraw dirty tiles. */
       vector_iterate(
-         &(t->dirty_tiles), mode_topdown_tilemap_draw_tile_cb, twindow
+         &(t->dirty_tiles), mode_isometric_tilemap_draw_tile_cb, twindow
       );
    }
 
@@ -507,15 +386,15 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    }
 }
 
-void mode_topdown_draw(
+void mode_isometric_draw(
    struct CLIENT* c,
    struct CHANNEL* l
 ) {
-   mode_topdown_tilemap_draw_tilemap( &(c->local_window) );
-   vector_iterate( l->mobiles, mode_topdown_draw_mobile_cb, &(c->local_window) );
+   mode_isometric_tilemap_draw_tilemap( &(c->local_window) );
+   vector_iterate( l->mobiles, mode_isometric_draw_mobile_cb, &(c->local_window) );
 }
 
-void mode_topdown_update(
+void mode_isometric_update(
    struct CLIENT* c,
    struct CHANNEL* l
 ) {
@@ -524,12 +403,13 @@ void mode_topdown_update(
    if( NULL == o ) {
       return;
    }
-   mode_topdown_tilemap_update_window(
+   mode_isometric_tilemap_update_window(
       &(c->local_window), o->x, o->y
    );
 }
 
-static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+#if 0
+static BOOL mode_isometric_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update;
    struct UI* ui = NULL;
@@ -539,24 +419,23 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct TILEMAP* t = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 
-   puppet = client_get_puppet( c );
-
    /* Make sure the buffer that all windows share is available. */
    if(
-      NULL == puppet ||
-      (puppet->steps_remaining < -8 || puppet->steps_remaining > 8)
+      NULL == c->puppet ||
+      (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
+      puppet = c->puppet;
       ui = c->ui;
       update.o = puppet;
       update.l = puppet->channel;
       lgc_null( update.l );
       l = puppet->channel;
       lgc_null_msg( l, "No channel loaded." );
-      t = l->tilemap;
+      t = &(l->tilemap);
       lgc_null_msg( t, "No tilemap loaded." );
    }
 
@@ -565,29 +444,29 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
    case INPUT_ASSIGNMENT_UP:
       update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = puppet->x;
-      update.y = puppet->y - 1;
+      update.x = c->puppet->x;
+      update.y = c->puppet->y - 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
       update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = puppet->x - 1;
-      update.y = puppet->y;
+      update.x = c->puppet->x - 1;
+      update.y = c->puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
       update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = puppet->x;
-      update.y = puppet->y + 1;
+      update.x = c->puppet->x;
+      update.y = c->puppet->y + 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
       update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = puppet->x + 1;
-      update.y = puppet->y;
+      update.x = c->puppet->x + 1;
+      update.y = c->puppet->y;
       proto_client_send_update( c, &update );
       return TRUE;
 
@@ -640,7 +519,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_window_push( ui, win );
       return TRUE;
 #ifdef DEBUG_VM
-   //case 'p': windef_show_repl( ui ); return TRUE;
+   case 'p': windef_show_repl( ui ); return TRUE;
 #endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
    case 't':
@@ -662,25 +541,28 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    return FALSE;
 }
 
-void mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+void mode_isometric_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
       proto_client_stop( c );
    } else if( INPUT_TYPE_KEY == p->type ) {
       if( !client_poll_ui( c, l, p ) ) {
-         mode_topdown_poll_keyboard( c, p );
+         mode_isometric_poll_keyboard( c, p );
       }
    }
    return;
 }
+#endif // 0
 
-void mode_topdown_free( struct CLIENT* c ) {
+void mode_isometric_free( struct CLIENT* c ) {
    if(
       TRUE == client_is_local( c ) &&
-      hashmap_is_valid( &(c->sprites ) )
+      hashmap_is_valid( &(c->sprites) )
    ) {
       /* FIXME: This causes crash on re-login. */
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
 }
+
+#endif /* DISABLE_MODE_ISO */

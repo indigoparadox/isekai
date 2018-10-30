@@ -3,7 +3,9 @@
 
 typedef int TILEMAP_COORD_TILE;
 
-#include "libvcol.h"
+#include <libvcol.h>
+#include <goki.h>
+
 #include "ezxml.h"
 #include "graphics.h"
 #include "twindow.h"
@@ -134,7 +136,7 @@ struct TILEMAP {
    bstring lname;
    struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
-   SCAFFOLD_ERROR scaffold_error;
+   enum LGC_ERROR scaffold_error;
    struct CHANNEL* channel;
 #ifdef DEBUG
    uint16_t sentinal;
