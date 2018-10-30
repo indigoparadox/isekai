@@ -126,8 +126,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #include <stdio.h>
 #include <stddef.h>
 
-#include "libvcol.h"
-#include "libgoki.h"
+#include <libvcol.h>
 #include "bstrglue.h"
 #include "colors.h"
 
