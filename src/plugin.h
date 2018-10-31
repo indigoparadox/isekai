@@ -23,6 +23,8 @@ typedef enum {
 PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype );
 PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name );
 PLUGIN_RESULT plugin_call_all( PLUGIN_TYPE ptype, PLUGIN_CALL hook, ... );
+PLUGIN_RESULT plugin_unload_all( PLUGIN_TYPE ptype );
+PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name );
 PLUGIN_RESULT plugin_call(
    PLUGIN_TYPE ptype, const_bstring plug, PLUGIN_CALL hook, ... );
 

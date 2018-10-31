@@ -23,6 +23,8 @@ typedef enum {
 
 extern bstring client_input_from_ui;
 
+struct tagbstring mode_name = bsStatic( "POV" );
+
 static GRAPHICS* ray_view = NULL;
 struct HASHMAP tileset_status;
 
@@ -777,7 +779,7 @@ static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       update.update = MOBILE_UPDATE_ATTACK;
       /* TODO: Get attack target. */
       proto_client_send_update( c, &update );
-      return TRUE;
+      return TRUE;bstring
 
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {

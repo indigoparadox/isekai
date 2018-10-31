@@ -106,7 +106,7 @@ struct UI_CONTROL {
    SCAFFOLD_SIZE_SIGNED min;
    SCAFFOLD_SIZE_SIGNED max;
    UI_OPT_STATE new_row;
-   bstring* list;
+   struct VECTOR list;
    struct UI_CONTROL* next_control;
 };
 

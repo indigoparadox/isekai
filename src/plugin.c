@@ -9,12 +9,14 @@
 
 #include <dlfcn.h>
 
+extern struct VECTOR mode_list_pretty;
+extern struct VECTOR mode_list_short;
+
 static struct tagbstring str_mode = bsStatic( "mode" );
 
 #define plugin_setup( format, hook ) \
    hook_name = bformat( format, bdata( plug ) ); \
    lgc_null( hook_name ); \
-   lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name ); \
    f.hook = dlsym( handle, bdata( hook_name ) ); \
    lgc_null( f.hook );
 
@@ -109,6 +111,7 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    bstring plugin_path = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
    bstring plugin_filename = NULL;
+   bstring mode_name = NULL;
 
    plugin_filename = bformat( "lib%s.so", bdata( plugin_name ) );
    plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
@@ -128,10 +131,41 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
    /* TODO: Error check. */
-   hashmap_put( &plugin_list_mode, bstrcpy( plugin_name ), handle, FALSE );
+   hashmap_put( &plugin_list_mode, plugin_name, handle, FALSE );
+
+   if( PLUGIN_MODE == ptype ) {
+      mode_name = dlsym( handle, "mode_name" );
+      lg_debug( __FILE__, "Adding %b to mode name list...\n", mode_name );
+      vector_add( &mode_list_pretty, mode_name );
+      vector_add( &mode_list_short, bstrcpy( plugin_name ) );
+   }
 
    ret = plugin_call( ptype, plugin_name, PLUGIN_INIT );
-   lg_info( "Plugin %b init returned: %d\n", plugin_name, ret );
+   lg_info( __FILE__,  "Plugin %b init returned: %d\n", plugin_name, ret );
+   if( PLUGIN_SUCCESS != ret ) {
+      goto cleanup;
+   }
+
+cleanup:
+   return ret;
+}
+
+PLUGIN_RESULT plugin_unload_all( PLUGIN_TYPE ptype ) {
+}
+
+PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
+   void* handle = NULL;
+   PLUGIN_RESULT ret = PLUGIN_FAILURE;
+
+   switch( ptype ) {
+      case PLUGIN_MODE:
+         handle = hashmap_get( &plugin_list_mode, plugin_name );
+         break;
+   }
+   lgc_null( handle );
+
+   ret = plugin_call( ptype, plugin_name, PLUGIN_FREE );
+   lg_info( __FILE__,  "Plugin %b free returned: %d\n", plugin_name, ret );
    if( PLUGIN_SUCCESS != ret ) {
       goto cleanup;
    }
@@ -165,17 +199,26 @@ PLUGIN_RESULT plugin_call(
          handle = hashmap_get( &plugin_list_mode, plug );
          break;
    }
+   if( NULL == handle ) {
+      lg_error( __FILE__, "Could not call plugin: %b\n", plug );
+   }
    lgc_null( handle );
 
    va_start( varg, hook );
    switch( hook ) {
       case PLUGIN_INIT:
          plugin_setup( "mode_%s_init", init );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
          ret = f.init();
          break;
 
       case PLUGIN_UPDATE:
          plugin_setup( "mode_%s_update", update );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
          ret = f.update( c, l );
@@ -183,6 +226,9 @@ PLUGIN_RESULT plugin_call(
 
       case PLUGIN_DRAW:
          plugin_setup( "mode_%s_draw", draw );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
          ret = f.draw( c, l );
@@ -190,6 +236,9 @@ PLUGIN_RESULT plugin_call(
 
       case PLUGIN_POLL_INPUT:
          plugin_setup( "mode_%s_poll_input", poll_input );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
          p = va_arg( varg, struct INPUT* );
@@ -199,6 +248,9 @@ PLUGIN_RESULT plugin_call(
 
       case PLUGIN_FREE:
          plugin_setup( "mode_%s_free", free );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          ret = f.free( c );
          break;

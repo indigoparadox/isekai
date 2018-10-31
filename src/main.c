@@ -54,17 +54,8 @@ bstring buffer_channel = NULL;
 BOOL showed_readme = FALSE;
 #endif /* ENABLE_LOCAL_CLIENT */
 
-static struct tagbstring str_top_down = bsStatic( "Top Down" );
-#ifndef DISABLE_MODE_POV
-static struct tagbstring str_pov = bsStatic( "POV" );
-#endif /* !DISABLE_MODE_POV */
-static bstring mode_list[] = {
-   &str_top_down,
-#ifndef DISABLE_MODE_POV
-   &str_pov,
-#endif /* !DISABLE_MODE_POV */
-   NULL
-};
+struct VECTOR mode_list_pretty;
+struct VECTOR mode_list_short;
 
 #ifdef USE_RANDOM_PORT
 bstring str_service = NULL;
@@ -403,10 +394,11 @@ static BOOL loop_connect() {
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
          -1, -1, -1, -1
       );
-      main_client->gfx_mode = MODE_TOPDOWN;
-      control->list = mode_list;
+      //main_client->gfx_mode = MODE_TOPDOWN;
+      /* TODO: Encapsulate list structure. */
+      control->list = mode_list_pretty;
       control->self.attachment = &(main_client->gfx_mode);
-      main_client->gfx_mode = MODE_TOPDOWN;
+      main_client->gfx_mode = 0;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
 
       ui_window_push( ui, win );
@@ -591,6 +583,9 @@ int main( int argc, char** argv ) {
    g_screen = mem_alloc( 1, GRAPHICS );
    lgc_null( g_screen );
 
+   vector_init( &mode_list_pretty );
+   vector_init( &mode_list_short );
+
 #ifdef _WIN32
    graphics_screen_new(
       &g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
@@ -656,6 +651,8 @@ cleanup:
    mem_free( input );
    backlog_shutdown();
    ui_cleanup( ui );
+   vector_cleanup_force( &mode_list_pretty ); /* These are static strings. */
+   vector_cleanup( &mode_list_short );
    scaffold_set_client();
    client_free( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */

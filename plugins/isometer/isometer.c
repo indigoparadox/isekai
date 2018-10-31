@@ -12,6 +12,8 @@
 
 extern bstring client_input_from_ui;
 
+struct tagbstring mode_name = bsStatic( "Isometric" );
+
 static void mode_isometric_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
    TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid

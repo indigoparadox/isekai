@@ -10,6 +10,9 @@
 #include <plugin.h>
 
 extern bstring client_input_from_ui;
+extern struct tagbstring str_client_control_id_inv_ground;
+
+struct tagbstring mode_name = bsStatic( "Top Down" );
 
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
@@ -530,14 +533,28 @@ PLUGIN_RESULT mode_topdown_update(
    struct CHANNEL* l
 ) {
    struct MOBILE* o = NULL;
+   PLUGIN_RESULT ret = PLUGIN_SUCCESS;
+   struct TILEMAP* t = NULL;
+
    o = client_get_puppet( c );
    if( NULL == o ) {
-      return;
+      ret = PLUGIN_FAILURE;
+      goto cleanup;
    }
+
+   t = client_get_tilemap( c );
+   if( NULL == t ) {
+      ret = PLUGIN_FAILURE;
+      lg_error( __FILE__, "No active tilemap set.\n" );
+      goto cleanup;
+   }
+
    mode_topdown_tilemap_update_window(
       &(c->local_window), o->x, o->y
    );
-   return PLUGIN_SUCCESS;
+
+cleanup:
+   return ret;
 }
 
 static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {

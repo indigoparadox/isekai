@@ -65,7 +65,7 @@ struct CLIENT {
    SCAFFOLD_SIZE tilesets_loaded;
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
-   bstring gfx_mode;
+   int gfx_mode;
    struct TILEMAP* active_tilemap;
    struct TWINDOW local_window;
 
@@ -159,6 +159,7 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 GRAPHICS* client_get_screen( struct CLIENT* c );
+struct TILEMAP* client_geT_tilemap( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

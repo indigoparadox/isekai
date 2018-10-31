@@ -453,9 +453,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       case INPUT_SCANCODE_LEFT:
          (*numbuff)--;
          if( 0 > *numbuff ) {
-            while( NULL != control->list[*numbuff + 1] ) {
-               (*numbuff)++;
-            }
+            *numbuff = vector_count( &(control->list) ) - 1;
          }
          win->dirty = TRUE;
          goto cleanup;
@@ -463,7 +461,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       case INPUT_SCANCODE_DOWN:
       case INPUT_SCANCODE_RIGHT:
          (*numbuff)++;
-         if( NULL == control->list[*numbuff] ) {
+         if( vector_count( &(control->list) ) <= *numbuff ) {
             *numbuff = 0;
          }
          win->dirty = TRUE;
@@ -647,8 +645,8 @@ static SCAFFOLD_SIZE ui_control_get_draw_width(
       break;
 
    case UI_CONTROL_TYPE_DROPDOWN:
-      while( NULL != control->list[i] ) {
-         list_item = control->list[i];
+      while( vector_count( &(control->list) ) > i ) {
+         list_item = vector_get( &(control->list), i );
          graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
          num = control_size.w + (2 * UI_TEXT_MARGIN);
          if( num > control_w ) {
@@ -1081,7 +1079,7 @@ static void ui_control_draw_dropdown(
    }
 
 #ifdef DEBUG
-   list_item = listbox->list[*num];
+   list_item = vector_get( &(listbox->list), *num );
    list_item = bformat( "%s (%d)", bdata( list_item ), *num );
 #else
    list_item = listbox->list[*num];
