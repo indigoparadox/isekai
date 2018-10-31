@@ -110,8 +110,8 @@ void mobile_init(
    lgc_null( o->def_filename );
    files_join_path( o->def_filename, o->mob_id );
 
-   lg_debug( __FILE__, "scaffold_error: %d\n", scaffold_error );
-   lgc_nonzero( scaffold_error );
+   lg_debug( __FILE__, "scaffold_error: %d\n", lgc_error );
+   lgc_nonzero( lgc_error );
 
 #ifdef USE_EZXML
    bstr_ret = bcatcstr( o->def_filename, ".xml" );
@@ -128,7 +128,7 @@ void mobile_load_local( struct MOBILE* o ) {
     * client-side mobiles don't need to load from the file system.
     */
 
-   SCAFFOLD_SIZE bytes_read = 0,
+   size_t bytes_read = 0,
       mobdata_size = 0;
    BYTE* mobdata_buffer = NULL;
    bstring mobdata_path = NULL;

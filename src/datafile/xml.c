@@ -468,7 +468,7 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
    SCAFFOLD_SIZE dot_pos = 0;
 #endif /* USE_REQUESTED_GRAPHICS_EXT */
 
-   scaffold_error = 0;
+   lgc_error = 0;
 
    lgc_null( set );
 
@@ -602,7 +602,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 #endif /* DEBUG_TILES_VERBOSE */
    BOOL loaded_fully = FALSE;
 
-   scaffold_error = 0;
+   lgc_error = 0;
 
    lgc_null( xml_tileset );
 
@@ -625,7 +625,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    while( NULL != xml_image ) {
       datafile_tilemap_parse_tileset_ezxml_image( set, xml_image, local_images );
-      lgc_nonzero( scaffold_error ); /* Need an image! */
+      lgc_nonzero( lgc_error ); /* Need an image! */
       xml_image = ezxml_next( xml_image );
    }
 
@@ -785,7 +785,7 @@ static void datafile_tilemap_parse_layer_ezxml(
    if( layer->height > t->height ) { t->height = layer->height; }
 
 cleanup:
-   if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
+   if( LGC_ERROR_NONE != lgc_error ) {
       tilemap_layer_free( layer );
    }
    bdestroy( buffer );

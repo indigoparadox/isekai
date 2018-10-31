@@ -360,7 +360,6 @@ static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
 
    /* TODO: Blit fill color masked with shape. */
 
-//#ifdef GRAPHICS_C
    graphics_blit_stretch(
       g,
       centered_x,
@@ -369,7 +368,6 @@ static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
       a->current_frame->height,
       a->target
    );
-//#endif /* GRAPHICS_C */
 }
 
 void animate_draw_animations( GRAPHICS* g ) {

@@ -17,9 +17,6 @@ struct TWINDOW {
    TILEMAP_COORD_TILE min_y;    /*!< Top-most window tile. */
    GFX_COORD_PIXEL grid_w;
    GFX_COORD_PIXEL grid_h;
-#ifdef DISABLE_MODE_POV
-   BOOL dirty;
-#endif /* !DISABLE_MODE_POV */
 };
 
 void twindow_update_details( struct TWINDOW* twindow );

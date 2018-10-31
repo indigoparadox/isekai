@@ -105,7 +105,6 @@ const struct tagbstring irc_reply_error_text[35] = {
          "IRC: Malformed " expression " expression received: %b\n", \
          line_var \
       ); \
-      scaffold_error = SCAFFOLD_ERROR_MISC; \
       goto cleanup; \
    }
 
@@ -162,7 +161,7 @@ static void proto_printf( struct CLIENT* c, const char* message, ... ) {
    lg_vsnprintf( buffer, message, varg );
    va_end( varg );
 
-   if( 0 == scaffold_error ) {
+   if( 0 == lgc_error ) {
       proto_send( c, buffer );
    }
 
@@ -216,7 +215,7 @@ static void proto_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CL
    lg_vsnprintf( buffer, message, varg );
    va_end( varg );
 
-   if( 0 == scaffold_error ) {
+   if( 0 == lgc_error ) {
       proto_channel_send( s, l, c_skip, buffer );
    }
 
@@ -644,7 +643,7 @@ static void irc_server_nick(
    }
 
    server_set_client_nick( s, c, newnick );
-   if( SCAFFOLD_ERROR_NULLPO == scaffold_error ) {
+   if( LGC_ERROR_NULLPO == lgc_error ) {
       proto_printf(
          c, ":%b 431 %b :No nickname given",
          s->self.remote, c->nick
@@ -652,7 +651,7 @@ static void irc_server_nick(
       goto cleanup;
    }
 
-   if( SCAFFOLD_ERROR_NOT_NULLPO == scaffold_error ) {
+   if( LGC_ERROR_NOT_NULLPO == lgc_error ) {
       proto_printf(
          c, ":%b 433 %b :Nickname is already in use",
          s->self.remote, c->nick
@@ -1325,8 +1324,8 @@ static void irc_client_mob(
    y = bgtoi( (bstring)vector_get( args, 7 ) );
 
    channel_set_mobile( l, serial, mob_id, def_filename, nick, x, y );
-   lg_debug( __FILE__, "scaffold_error: %d\n", scaffold_error );
-   lgc_nonzero( scaffold_error );
+   lg_debug( __FILE__, "scaffold_error: %d\n", lgc_error );
+   lgc_nonzero( lgc_error );
 
    lg_debug(
       __FILE__, "Client: Local instance of mobile updated: %s (%d)\n",
@@ -1416,44 +1415,9 @@ IRC_COMMAND_TABLE_END() };
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-static void irc_command_cleanup( const struct REF* ref ) {
-   IRC_COMMAND* cmd = scaffold_container_of( ref, IRC_COMMAND, refcount );
-   SCAFFOLD_SIZE i;
-
-   /* Don't try to free the string or callback. */
-   /* client_free( cmd->client ); */
-   cmd->client = NULL;
-   /* server_free( cmd->server ); */
-   cmd->server = NULL;
-
-   bdestroy( cmd->line );
-
-   for( i = 0 ; vector_count( cmd->args ) > i ; i++ ) {
-      bwriteallow( *((bstring)vector_get( cmd->args, i )) );
-   }
-   vector_remove_cb( cmd->args, callback_v_free_strings, NULL );
-   vector_free( &(cmd->args) );
-
-   mem_free( cmd );
-}
-
-static IRC_COMMAND* irc_dispatch(
-   const IRC_COMMAND* table, struct SERVER* s, struct CLIENT* c, const_bstring line
-) {
-   const IRC_COMMAND* command = NULL;
-   IRC_COMMAND* out = NULL;
-
-
-
-
-cleanup:
-   return out;
-}
-
 BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    BOOL keep_going = TRUE;
    SCAFFOLD_SIZE last_read_count = 0;
-   //IRC_COMMAND* cmd = NULL;
    const IRC_COMMAND* table = proto_table_server;
    int bstr_result;
    struct VECTOR* args = NULL;
@@ -1480,7 +1444,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    /* Get the next line and clean it up. */
    last_read_count = ipc_read( c->link, irc_line_buffer );
 
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
+   if( !ipc_connected( c->link ) ) {
       /* Return an empty command to force abortion of the iteration. */
       keep_going = FALSE;
       goto cleanup;
@@ -1501,12 +1465,6 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    );
 #endif /* DEBUG_NETWORK */
 
-#if 0
-   cmd = irc_dispatch( table, s, c, irc_line_buffer );
-   if( NULL != cmd ) {
-      cmd->callback( c, s, cmd->args, irc_line_buffer );
-   }
-#endif // 0
    args = bgsplit( irc_line_buffer, ' ' );
    lgc_null( args );
 
@@ -1532,23 +1490,6 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
          j = 0 ; NULL != table[j].callback ; j++
       ) {
          if( 0 == bstricmp( cmd_test, &(table[j].command) ) ) {
-            #if 0
-            out = mem_alloc( 1, IRC_COMMAND );
-            lgc_null( out );
-            memcpy( out, command, sizeof( IRC_COMMAND ) );
-            if( NULL != s ) {
-               out->server = s;
-               /* refcount_inc( &(s->self.link), "server" ); */
-            }
-            out->client = c;
-            /* refcount_inc( &(c->link), "client" ); */
-            out->args = args;
-            out->line = bstrcpy( line );
-            ref_init( &(out->refcount), irc_command_cleanup );
-
-            scaffold_assert( 0 == bstrcmp( &(out->command), &(command->command) ) );
-            #endif // 0
-
             table[j].callback( c, s, args, irc_line_buffer );
 
             /* Found a command, so short-circuit. */

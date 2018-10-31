@@ -20,7 +20,7 @@ static struct tagbstring str_server_data_path =
 
 bstring files_read_contents_b( const bstring path ) {
    BYTE* buffer = NULL;
-   SCAFFOLD_SIZE len = 0;
+   size_t len = 0;
    bstring out = NULL;
 
    files_read_contents( path, &buffer, &len );
@@ -39,8 +39,8 @@ bstring files_read_contents_b( const bstring path ) {
  * \param[in] len    A pointer to the size indicator for the buffer.
  * \return The number of bytes read, or -1 on failure.
  */
-SCAFFOLD_SIZE files_read_contents(
-   const bstring path, BYTE** buffer, SCAFFOLD_SIZE* len
+size_t files_read_contents(
+   const bstring path, BYTE** buffer, size_t* len
 ) {
    struct stat inputstat;
    char* path_c = NULL;
@@ -53,7 +53,7 @@ SCAFFOLD_SIZE files_read_contents(
    int sz_win;
    HFILE inputfd = NULL;
 #else
-   SCAFFOLD_SIZE sz_out = -1;
+   size_t sz_out = -1;
    int inputfd = -1;
 #endif /* _WIN32 */
    bstring zero_error = NULL;
@@ -85,7 +85,6 @@ SCAFFOLD_SIZE files_read_contents(
    inputfd = open( path_c, O_RDONLY );
    if( 0 > inputfd ) {
 #endif /* _WIN32 || _WIN16 */
-      //scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
 
@@ -97,7 +96,6 @@ SCAFFOLD_SIZE files_read_contents(
    sz_win = GetFileSize( inputfd, NULL );
 #else
    if( 0 != fstat( inputfd, &inputstat ) || !S_ISREG( inputstat.st_mode ) ) {
-      //scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
       goto cleanup;
    }
    *len = inputstat.st_size;
@@ -164,7 +162,7 @@ SCAFFOLD_SIZE_SIGNED files_write(
 
       stat_res = stat( path_c, &test_path_stat );
       if( 0 == (test_path_stat.st_mode & S_IFDIR) ) {
-         scaffold_error = SCAFFOLD_ERROR_ZERO;
+         lgc_error = LGC_ERROR_ZERO;
          lg_error(
             __FILE__, "Path %s is not a directory. Aborting.\n", path_c
          );
@@ -329,7 +327,7 @@ BOOL files_check_directory( const bstring path ) {
 
    zero_error = bformat( "Not a directory: %s", bdata( path ) );
 
-   scaffold_error = 0;
+   lgc_error = 0;
    lgc_silence();
 
    path_c = bdata( path );
@@ -340,13 +338,13 @@ BOOL files_check_directory( const bstring path ) {
 cleanup:
    bdestroy( zero_error );
    lgc_unsilence();
-   switch( scaffold_error ) {
-   case SCAFFOLD_ERROR_NONZERO:
+   switch( lgc_error ) {
+   case LGC_ERROR_NONZERO:
       lg_error(
          __FILE__, "Unable to open directory: %s\n", bdata( path ) );
       return FALSE;
 
-   case SCAFFOLD_ERROR_ZERO:
+   case LGC_ERROR_ZERO:
       lg_error( __FILE__, "Not a directory: %s\n", bdata( path ) );
       return FALSE;
 
@@ -401,7 +399,7 @@ bstring files_root( const bstring append ) {
    path_out = bstrcpy( &str_server_data_path );
    lgc_null_msg( path_out, "Could not allocate path buffer." );
    files_join_path( path_out, append );
-   lgc_nonzero( scaffold_error );
+   lgc_nonzero( lgc_error );
 
 cleanup:
    return path_out;

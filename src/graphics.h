@@ -13,10 +13,6 @@
 #define GRAPHICS_RASTER_EXTENSION ".bmp"
 #define GRAPHICS_SCREEN_WIDTH 640
 #define GRAPHICS_SCREEN_HEIGHT 480
-//#define GRAPHICS_SPRITE_WIDTH 32
-//#define GRAPHICS_SPRITE_HEIGHT 32
-//#define GRAPHICS_VIRTUAL_SCREEN_WIDTH 768
-//#define GRAPHICS_VIRTUAL_SCREEN_HEIGHT 608
 #define GRAPHICS_RAY_FOV 0.66
 #define GRAPHICS_RAY_FOV_FP 6600
 #define GRAPHICS_RAY_ROTATE_INC (3 * GRAPHICS_90DEG_RADS)
@@ -127,8 +123,6 @@ typedef struct {
    GFX_COORD_PIXEL h;
 } GRAPHICS_RECT;
 
-#ifndef DISABLE_MODE_POV
-
 typedef struct {
    int map_x;
    int map_y;
@@ -164,11 +158,6 @@ typedef struct {
    double y;
    int tex_x;
    int tex_y;
-   //int tex_w;
-   //int tex_h;
-   /* x, y position of the floor texel at the bottom of the wall. */
-   //double wall_x;
-   //double wall_y;
    int floor_height;
    int map_w;
    int map_h;
@@ -176,8 +165,6 @@ typedef struct {
    double weight;
    int line_height;
 } GFX_RAY_FLOOR;
-
-#endif /* !DISABLE_MODE_POV */
 
 #define graphics_clear_screen( g, color ) \
    graphics_draw_rect( g, 0, 0, g->w, g->h, color, TRUE )

@@ -69,17 +69,17 @@ struct CHUNKER {
    struct heatshrink_encoder encoder;
    struct heatshrink_decoder decoder;
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
-   SCAFFOLD_SIZE raw_position;
-   SCAFFOLD_SIZE raw_length;
+   size_t raw_position;
+   size_t raw_length;
    BYTE* raw_ptr;
-   SCAFFOLD_SIZE tx_chunk_length;
+   size_t tx_chunk_length;
    BOOL force_finish;
    DATAFILE_TYPE type;
    struct VECTOR* tracks;
    bstring filecache_path;
    bstring filename;
    bstring serverpath;
-   SCAFFOLD_SIZE last_percent;
+   size_t last_percent;
    void* placeholder; /*!< For use by a parser function. */
 };
 

@@ -78,11 +78,7 @@ static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" )
 static struct tagbstring str_title = bsStatic( "ProCIRCd" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
-//#ifndef DISABLE_MODE_ISO
-//static struct tagbstring str_default_channel = bsStatic( "#isotest" );
-//#else
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
-//#endif /* !DISABLE_MODE_ISO */
 static uint32_t server_port = 33080;
 
 #ifdef USE_ALLEGRO
@@ -138,9 +134,13 @@ static BOOL loop_game() {
 
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == animate_is_blocking() ) {
-      client_local_poll_input( main_client, l, input );
+      plugin_call(
+         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_POLL_INPUT, main_client, l, input );
       client_update( main_client, g_screen );
-      client_local_update( main_client, l );
+      plugin_call(
+         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_UPDATE, main_client, l );
    }
 
    /* Do drawing. */
@@ -148,11 +148,11 @@ static BOOL loop_game() {
    if( FALSE != channel_has_error( l ) ) {
       /* Abort and go back to connect dialog. */
       /* We need to stop both client AND server, 'cause the data is bad! */
-      // TODO
-      //lg_debug( __FILE__, "Stopping server...\n" );
-      //scaffold_set_server();
-      //server_stop_clients( main_server );
-      //server_stop( main_server );
+      /* TODO
+      lg_debug( __FILE__, "Stopping server...\n" );
+      scaffold_set_server();
+      server_stop_clients( main_server );
+      server_stop( main_server ); */
       ui_message_box( ui, l->error );
       client_stop( main_client );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
@@ -244,7 +244,9 @@ static BOOL loop_game() {
       main_client->local_window.max_x == main_client->local_window.min_x ||
       TILEMAP_REDRAW_ALL == main_client->active_tilemap->redraw_state
    ) {
-      client_local_update( main_client, l );
+      plugin_call(
+         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_UPDATE, main_client, l );
    }
 
    animate_cycle_animations( g_screen );
@@ -252,23 +254,12 @@ static BOOL loop_game() {
    /* If there's no puppet then there should be a load screen. */
    scaffold_assert( NULL != main_client->puppet );
 
-   client_local_draw( main_client, l );
+   plugin_call(
+      PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+      PLUGIN_DRAW, main_client, l );
 
    /* Draw masks to cover up garbage from mismatch between viewport and window.
     */
-   //if( main_client->local_window.width < (GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) ) {
-   /* graphics_draw_rect(
-      g_screen,
-      twindow->width * GRAPHICS_SPRITE_WIDTH,
-      0,
-      ((GRAPHICS_SCREEN_WIDTH / GRAPHICS_SPRITE_WIDTH) - twindow->width)
-         * GRAPHICS_SPRITE_WIDTH,
-      GRAPHICS_SCREEN_HEIGHT,
-      GRAPHICS_COLOR_CHARCOAL,
-      TRUE
-   ); */
-   //}
-   //if( twindow->height < (GRAPHICS_SCREEN_HEIGHT / GRAPHICS_SPRITE_HEIGHT) ) {
    graphics_draw_rect(
       g_screen,
       0,
@@ -278,7 +269,6 @@ static BOOL loop_game() {
       GRAPHICS_COLOR_CHARCOAL,
       TRUE
    );
-   //}
 
    /* XXX Tilegrid support.
    if( NULL != twindow ) {
@@ -300,15 +290,16 @@ static BOOL loop_connect() {
       input_res = 0;
    struct VECTOR* server_tuple = NULL;
    bstring html_buffer = NULL;
+#ifdef USE_CONNECT_DIALOG
+   struct UI_WINDOW* win = NULL;
+   struct UI_CONTROL* control = NULL;
+#endif /* USE_CONNECT_DIALOG */
 
 #ifdef ENABLE_LOCAL_CLIENT
 
    backlog_close_window( ui );
 
 #ifdef USE_CONNECT_DIALOG
-   struct UI_WINDOW* win = NULL;
-   struct UI_CONTROL* control = NULL;
-
    graphics_clear_screen( g_screen, GRAPHICS_COLOR_CHARCOAL );
 
    if( NULL == buffer_host ) {
@@ -394,7 +385,6 @@ static BOOL loop_connect() {
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
          -1, -1, -1, -1
       );
-      //main_client->gfx_mode = MODE_TOPDOWN;
       /* TODO: Encapsulate list structure. */
       control->list = mode_list_pretty;
       control->self.attachment = &(main_client->gfx_mode);
@@ -409,7 +399,6 @@ static BOOL loop_connect() {
    }
 
    ui_draw( ui, g_screen );
-   //graphics_draw_line( g_screen, 200, 0, 200, 200, GRAPHICS_COLOR_RED );
    input_get_event( input );
 
    if(
@@ -599,7 +588,7 @@ int main( int argc, char** argv ) {
    );
 #endif /* _WIN32 */
 
-   lgc_nonzero( scaffold_error );
+   lgc_nonzero( lgc_error );
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
@@ -613,10 +602,10 @@ int main( int argc, char** argv ) {
    rng_init();
 
    ipc_setup();
-   lgc_nonzero( scaffold_error );
+   lgc_nonzero( lgc_error );
 
    proto_setup();
-   lgc_nonzero( scaffold_error );
+   lgc_nonzero( lgc_error );
 
    /* Setup a list of available modes. */
    plugin_load_all( PLUGIN_MODE );

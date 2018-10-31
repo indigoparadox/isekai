@@ -24,11 +24,11 @@ static SCAFFOLD_SIZE syncbuff_size[2];
 static bstring* syncbuff_lines[2];
 static SCAFFOLD_SIZE syncbuff_count[2];
 
-SCAFFOLD_SIZE syncbuff_get_count( struct CONNECTION* n ) {
+static SCAFFOLD_SIZE syncbuff_get_count( struct CONNECTION* n ) {
    return syncbuff_count[n->type];
 }
 
-SCAFFOLD_SIZE syncbuff_get_allocated( struct CONNECTION* n ) {
+static SCAFFOLD_SIZE syncbuff_get_allocated( struct CONNECTION* n ) {
    return syncbuff_size[n->type];
 }
 

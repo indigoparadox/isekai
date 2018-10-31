@@ -183,7 +183,7 @@ PLUGIN_RESULT plugin_call_all( PLUGIN_TYPE ptype, PLUGIN_CALL hook, ... ) {
 }
 
 PLUGIN_RESULT plugin_call(
-   PLUGIN_TYPE ptype, const_bstring plug, PLUGIN_CALL hook, ...
+   PLUGIN_TYPE ptype, const bstring plug, PLUGIN_CALL hook, ...
 ) {
    union PLUGIN_CALL_FUNC f = { 0 };
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
@@ -199,7 +199,7 @@ PLUGIN_RESULT plugin_call(
          handle = hashmap_get( &plugin_list_mode, plug );
          break;
    }
-   if( NULL == handle ) {
+   if( NULL == handle && NULL != plug ) {
       lg_error( __FILE__, "Could not call plugin: %b\n", plug );
    }
    lgc_null( handle );
