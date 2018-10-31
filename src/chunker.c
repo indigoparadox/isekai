@@ -484,16 +484,16 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
    lgc_null( cache_filename );
 
    files_join_path( cache_filename, h->filename );
-   lgc_nonzero( scaffold_error );
+   lgc_nonzero( lgc_error );
 
    /* TODO: Compare file hashes. */
-   scaffold_error_silent = TRUE;
+   lgc_silence();
    sz_read = files_read_contents(
       cache_filename, &(h->raw_ptr), &(h->raw_length)
    );
-   scaffold_error_silent = FALSE;
-   if( 0 != scaffold_error ) {
-      scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS;
+   lgc_unsilence();
+   if( 0 != lgc_error ) {
+      lgc_error = LGC_ERROR_OUTOFBOUNDS;
       lg_error(
          __FILE__, "Unable to open: %s\n", bdata(cache_filename )
       );
@@ -510,9 +510,9 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
 
 cleanup:
 
-   switch( scaffold_error ) {
-   case SCAFFOLD_ERROR_NEGATIVE:
-   case SCAFFOLD_ERROR_OUTOFBOUNDS:
+   switch( lgc_error ) {
+   case LGC_ERROR_NEGATIVE:
+   case LGC_ERROR_OUTOFBOUNDS:
       lg_error(
          __FILE__, "Chunker: Cache file could not be opened: %s\n",
          bdata( cache_filename )

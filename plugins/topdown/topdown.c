@@ -1,6 +1,5 @@
 
 #define MODE_C
-#include <mode.h>
 
 #include <callback.h>
 #include <ui.h>
@@ -8,6 +7,15 @@
 #include <channel.h>
 #include <proto.h>
 #include <plugin.h>
+
+extern struct tagbstring str_client_cache_path;
+extern struct tagbstring str_wid_debug_tiles_pos;
+extern struct tagbstring str_client_window_id_chat;
+extern struct tagbstring str_client_window_title_chat;
+extern struct tagbstring str_client_control_id_chat;
+extern struct tagbstring str_client_window_id_inv;
+extern struct tagbstring str_client_window_title_inv;
+extern struct tagbstring str_client_control_id_inv_self;
 
 extern bstring client_input_from_ui;
 extern struct tagbstring str_client_control_id_inv_ground;

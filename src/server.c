@@ -133,7 +133,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          callback_load_local_tilesets,
          &(s->self)
       );
-      lgc_nonzero( scaffold_error );
+      lgc_nonzero( lgc_error );
    } else {
       /* Use the channel we just found. */
       lg_debug(

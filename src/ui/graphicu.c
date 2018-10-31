@@ -5,6 +5,8 @@
 #include "../graphics.h"
 #include "../callback.h"
 #include "../backlog.h"
+#include "../htmtree.h"
+#include "../htmlrend.h"
 
 #include "../windefs.h"
 
@@ -1126,7 +1128,7 @@ static void ui_control_draw_html(
 
    htmlrend_draw( g, (struct html_tree*)(html->self.attachment) );
 
-#if 0
+#if 0 /* TODO ? */
    if( textfield == win->active_control ) {
       fg = UI_SELECTED_FG;
    }
@@ -1147,7 +1149,7 @@ static void ui_control_draw_html(
          textfield == win->active_control ? TRUE : FALSE, TRUE
       );
    }
-#endif // 0
+#endif
 }
 
 static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {

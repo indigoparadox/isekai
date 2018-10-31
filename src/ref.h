@@ -28,8 +28,6 @@ static REF_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF
    ref->sentinal = REF_SENTINAL;
 }
 
-//static struct tagbstring ref_module = bsStatic( "ref.h" );
-
 #define refcount_inc( obj, type ) \
    ref_inc( &((obj)->refcount), type, __FUNCTION__ )
 #define refcount_dec( obj, type ) \

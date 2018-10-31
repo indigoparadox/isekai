@@ -65,7 +65,8 @@ cleanup:
    }
    #endif
    if( FALSE != ok ) {
-      scaffold_error = SCAFFOLD_ERROR_NONE;
+      //scaffold_error = SCAFFOLD_ERROR_NONE;
+      lgc_error = LGC_ERROR_NONE;
    }
    return ok;
 }

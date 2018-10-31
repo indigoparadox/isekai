@@ -240,7 +240,7 @@ void graphics_screen_new(
 
    set_color_conversion( COLORCONV_NONE );
 
-   scaffold_error = 0;
+   lgc_error = 0;
 
    set_color_depth( GRAPHICS_COLOR_DEPTH );
    screen_return = set_gfx_mode( GFX_AUTODETECT_WINDOWED, w, h, 0, 0 );

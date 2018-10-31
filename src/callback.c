@@ -294,7 +294,6 @@ void* callback_search_tilesets_img_name( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if(
       NULL != set &&
-      // XXX: NOLOCK
       NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg )
    ) {
       /* This is the tileset that contains this image. */

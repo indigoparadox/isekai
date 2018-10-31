@@ -42,7 +42,6 @@ static void channel_free_final( const struct REF *ref ) {
    if( vector_is_valid( l->mobiles ) ) {
       vector_remove_cb( l->mobiles, callback_free_mobiles, NULL );
       scaffold_assert( 0 == vector_count( l->mobiles ) );
-      //vector_cleanup( l->mobiles );
       vector_free( &(l->mobiles) );
    }
 
@@ -269,7 +268,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
       mapdata_path = NULL;
    BYTE* mapdata_buffer = NULL;
    int bstr_retval;
-   SCAFFOLD_SIZE bytes_read = 0,
+   size_t bytes_read = 0,
       mapdata_size = 0;
 
    lg_debug(

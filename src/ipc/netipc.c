@@ -420,7 +420,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
       last_read_count = recv( n->socket, &read_char, 1, 0 );
 
       if( 0 == last_read_count ) {
-         scaffold_error = SCAFFOLD_ERROR_CONNECTION_CLOSED;
+         //scaffold_error = LGC_ERROR_CONNECTION_CLOSED;
          lg_info(
             __FILE__, "Remote connection (%d) has been closed.\n", n->socket
          );

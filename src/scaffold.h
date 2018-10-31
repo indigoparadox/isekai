@@ -155,6 +155,7 @@ typedef uint16_t BIG_SERIAL;
 #endif /* !USE_VM */
 #endif /* USE_DUKTAPE || USE_TINYPY */
 
+/*
 typedef enum {
    SCAFFOLD_ERROR_NONE,
    SCAFFOLD_ERROR_MISC,
@@ -169,6 +170,7 @@ typedef enum {
    SCAFFOLD_ERROR_CONNECTION_CLOSED,
    SCAFFOLD_ERROR_UNEQUAL
 } SCAFFOLD_ERROR;
+*/
 
 #ifdef USE_INLINE
 #define SCAFFOLD_INLINE inline
@@ -475,9 +477,6 @@ struct tagbstring scaffold_null = bsStatic( "(null)" );
 
 #else
 
-#ifdef DEBUG
-//extern SCAFFOLD_TRACE scaffold_trace_path;
-#endif /* DEBUG */
 extern struct tagbstring scaffold_empty_string;
 extern struct tagbstring scaffold_space_string;
 extern struct tagbstring scaffold_colon_string;

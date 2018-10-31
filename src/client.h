@@ -5,7 +5,6 @@
 #include "graphics.h"
 #include "input.h"
 #include "datafile.h"
-#include "mode.h"
 #include "twindow.h"
 
 struct CHANNEL;
@@ -159,7 +158,7 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 GRAPHICS* client_get_screen( struct CLIENT* c );
-struct TILEMAP* client_geT_tilemap( struct CLIENT* c );
+struct TILEMAP* client_get_tilemap( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

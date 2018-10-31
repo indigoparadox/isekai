@@ -36,6 +36,10 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fPIC" />
+			<Add option="-DxRAY_WIREFRAME" />
+			<Add option="-DRAYCAST_OLD_DOUBLE" />
+			<Add option="-DxRAYCAST_FOG" />
+			<Add option="-DRAYCAST_CACHE" />
 			<Add directory="../../src" />
 			<Add directory="../../../libvcol/src" />
 		</Compiler>

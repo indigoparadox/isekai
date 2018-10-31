@@ -17,7 +17,7 @@ FILE* scaffold_log_handle_err = NULL;
 
 #include <stdlib.h>
 
-int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
+//int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
 BOOL scaffold_error_silent = FALSE;
 BOOL scaffold_warning_silent = FALSE;
 bstring scaffold_print_buffer = NULL;

@@ -267,6 +267,14 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
    struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
 );
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );
+SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow );
+SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow );
+SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
+   TILEMAP_COORD_TILE x, struct TWINDOW* twindow );
+SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
+   TILEMAP_COORD_TILE y, struct TWINDOW* twindow );
 
 #ifdef TILEMAP_C
 

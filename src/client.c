@@ -14,6 +14,10 @@
 #include "windefs.h"
 #include "channel.h"
 #include "ipc.h"
+#include "plugin.h"
+#include "files.h"
+
+extern struct VECTOR mode_list_short;
 
 bstring client_input_from_ui = NULL;
 
@@ -57,11 +61,9 @@ static void client_cleanup( const struct REF *ref ) {
    vector_cleanup( &(c->delayed_files) );
    hashmap_cleanup( &(c->channels) );
 
-   //hashmap_remove_cb( &(c->tilesets), callback_free_tilesets, NULL );
    hashmap_remove_all( &(c->tilesets) );
    hashmap_cleanup( &(c->tilesets) );
 
-   //hashmap_remove_cb( &(c->item_catalogs), callback_free_catalogs, NULL );
    hashmap_remove_all( &(c->item_catalogs) );
    hashmap_cleanup( &(c->item_catalogs) );
 
@@ -316,7 +318,7 @@ void client_stop( struct CLIENT* c ) {
    client_set_active_t( c, NULL );
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE != client_is_local( c ) ) {
-      client_local_free( c );
+      plugin_call( PLUGIN_MODE, vector_get( &mode_list_short, c->gfx_mode ), PLUGIN_FREE, c );
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
       hashmap_remove_all( &(c->tilesets) );
       hashmap_remove_all( &(c->item_catalogs) );
@@ -453,9 +455,9 @@ static void client_request_file_local(
 ) {
    /* FIXME: No file receiving method implemented! */
    BYTE* data = NULL;
-   SCAFFOLD_SIZE length;
+   size_t length;
    bstring filepath = NULL;
-   SCAFFOLD_SIZE bytes_read;
+   size_t bytes_read;
 
    filepath = files_root( filename );
 
@@ -505,9 +507,6 @@ void client_request_file(
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
 
-   //hashmap_lock( &(c->chunkers), TRUE );
-
-   // XXX: NOLOCK
    if( FALSE != hashmap_contains_key( &(c->chunkers), filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
@@ -523,10 +522,9 @@ void client_request_file(
       chunker_unchunk_start(
          h, type, filename, &str_client_cache_path
       );
-      // XXX: NOLOCK
       hashmap_put( &(c->chunkers), filename, h, TRUE );
-      lg_debug( __FILE__, "scaffold_error: %d\n", scaffold_error );
-      lgc_nonzero( scaffold_error );
+      lg_debug( __FILE__, "scaffold_error: %d\n", lgc_error );
+      lgc_nonzero( lgc_error );
 
       if( !chunker_unchunk_finished( h ) ) {
          /* File not in cache. */
@@ -535,7 +533,6 @@ void client_request_file(
    }
 
 cleanup:
-   //hashmap_lock( &(c->chunkers), FALSE );
 #else
    /* FIXME: No file receiving method implemented! */
    client_request_file_local( c, type, filename );
@@ -560,7 +557,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       lg_error(
          __FILE__, "Invalid progress for %s.\n", bdata( cp->filename )
       );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
+      //lgc_error = LGC_ERROR_MISC;
       goto cleanup;
    }
 
@@ -571,7 +568,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
          "Client: Invalid data block received (I didn't ask for this?): %s\n",
          bdata( cp->filename )
       );
-      scaffold_error = SCAFFOLD_ERROR_MISC;
+      //scaffold_error = SCAFFOLD_ERROR_MISC;
       goto cleanup;
    }
 
