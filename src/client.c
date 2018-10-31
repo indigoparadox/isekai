@@ -776,3 +776,7 @@ GRAPHICS* client_get_screen( struct CLIENT* c ) {
 
    return c->ui->screen_g;
 }
+
+struct TILEMAP* client_get_tilemap( struct CLIENT* c ) {
+   return c->active_tilemap;
+}

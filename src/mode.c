@@ -6,6 +6,8 @@
 #include "tilemap.h"
 #include "plugin.h"
 
+extern struct VECTOR mode_list_short;
+
 void client_local_update(
    struct CLIENT* c,
    struct CHANNEL* l
@@ -33,7 +35,7 @@ void client_local_update(
    }
 #endif // 0
 
-   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_UPDATE, c, l );
+   plugin_call( PLUGIN_MODE, vector_get( &mode_list_short, c->gfx_mode ), PLUGIN_UPDATE, c, l );
 }
 
 void client_local_draw(
@@ -66,7 +68,7 @@ void client_local_draw(
    }
 #endif
 
-   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_DRAW, c, l );
+   plugin_call( PLUGIN_MODE, vector_get( &mode_list_short, c->gfx_mode ), PLUGIN_DRAW, c, l );
 
 cleanup:
    return;
@@ -89,7 +91,7 @@ void client_local_poll_input(
    }
 #endif
 
-   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_POLL_INPUT, c, l, p );
+   plugin_call( PLUGIN_MODE, vector_get( &mode_list_short, c->gfx_mode ), PLUGIN_POLL_INPUT, c, l, p );
 }
 
 void client_local_free( struct CLIENT* c ) {
@@ -106,5 +108,5 @@ void client_local_free( struct CLIENT* c ) {
    }
 #endif
 
-   plugin_call( PLUGIN_MODE, c->gfx_mode, PLUGIN_FREE, c );
+   plugin_call( PLUGIN_MODE, vector_get( &mode_list_short, c->gfx_mode ), PLUGIN_FREE, c );
 }

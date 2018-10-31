@@ -2,10 +2,12 @@
 #ifndef MODE_H
 #define MODE_H
 
+/*
 typedef enum {
    MODE_TOPDOWN,
    MODE_POV
 }MODE;
+*/
 
 #include <libvcol.h>
 #include "input.h"
