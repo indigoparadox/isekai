@@ -13,8 +13,8 @@ void twindow_update_details( struct TWINDOW* twindow ) {
 
    lg_debug( __FILE__, "Setting up tilemap screen window...\n" );
 
-   c = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = c->active_tilemap;
+   c = client_from_local_window( twindow );
+   t = channel_get_tilemap( client_get_channel_active( c ) );
 
    /* smallest_tile will have the dimensions of the smallest tileset's tiles. */
    vector_iterate(

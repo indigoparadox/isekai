@@ -17,7 +17,7 @@ typedef enum DATAFILE_TYPE {
 #include "tilemap.h"
 #include "scaffold.h"
 #include "mobile.h"
-#include "item.h"
+//#include "item.h"
 
 typedef void (*datafile_cb)(
    void* targ, bstring filename, const BYTE* tmdata, SCAFFOLD_SIZE datasize
@@ -26,6 +26,7 @@ typedef void (*datafile_cb)(
 struct MOBILE;
 
 #ifdef USE_EZXML
+#ifdef USE_ITEMS
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
    bstring def_path, BOOL local_images
@@ -33,6 +34,7 @@ void datafile_parse_item_sprites_ezxml_t(
 void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
 );
+#endif // USE_ITEMS
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
 );
@@ -57,7 +59,7 @@ void datafile_parse_ezxml_string(
 
 
 void datafile_handle_stream(
-   DATAFILE_TYPE type, bstring filename, BYTE* data, SCAFFOLD_SIZE length,
+   DATAFILE_TYPE type, bstring filename, BYTE* data, size_t length,
    struct CLIENT* c
 );
 

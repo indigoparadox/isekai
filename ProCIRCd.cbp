@@ -990,6 +990,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/client.h" />
+		<Unit filename="src/clistruct.h" />
 		<Unit filename="src/colors.h" />
 		<Unit filename="src/config.h" />
 		<Unit filename="src/datafile.c">
@@ -1027,7 +1028,6 @@
 			<Option target="Debug (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-Allegro4-CLANG)" />
 			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Debug (Linux-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
@@ -1379,10 +1379,6 @@
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (MingW32-SB)" />
 		</Unit>
-		<Unit filename="src/item.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/item.h" />
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />

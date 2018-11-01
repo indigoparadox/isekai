@@ -880,6 +880,8 @@ static void ui_control_draw_backlog(
 
 #endif /* !DISABLE_BACKLOG */
 
+#ifdef USE_ITEMS
+
 static void ui_draw_item_sprite(
    struct UI_CONTROL* inv_pane, GRAPHICS_RECT* rect, struct ITEM* e
 ) {
@@ -970,6 +972,8 @@ void ui_set_inventory_pane_list(
 ) {
    inv_pane->self.attachment = list;
 }
+
+#endif // USE_ITEMS
 
 static void ui_control_draw_textfield(
    struct UI_WINDOW* win, struct UI_CONTROL* textfield
@@ -1269,7 +1273,9 @@ static void* ui_window_draw_cb( size_t idx, void* iter, void* arg ) {
 #endif /* DISABLE_BACKLOG */
             case UI_CONTROL_TYPE_SPINNER: ui_control_draw_spinner( win, control ); break;
             case UI_CONTROL_TYPE_DROPDOWN: ui_control_draw_dropdown( win, control ); break;
+#ifdef USE_ITEMS
             case UI_CONTROL_TYPE_INVENTORY: ui_control_draw_inventory( win, control ); break;
+#endif // USE_ITEMS
             case UI_CONTROL_TYPE_HTML: ui_control_draw_html( win, control ); break;
          }
 

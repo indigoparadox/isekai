@@ -295,6 +295,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
    struct MOBILE* o_player = NULL;
    GRAPHICS_RECT sprite_rect;
+   struct TILEMAP* active_tilemap = NULL;
 
    scaffold_assert_client();
 
@@ -318,7 +319,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
    pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
 
-   o_player = local_client->puppet;
+   o_player = client_get_puppet( local_client );
 
    if(
       mobile_is_local_player( o, local_client ) &&
@@ -384,8 +385,9 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    );
 
    /* Add dirty tiles to list before drawing. */
-   tilemap_add_dirty_tile( local_client->active_tilemap, o->x, o->y );
-   tilemap_add_dirty_tile( local_client->active_tilemap, o->prev_x, o->prev_y );
+   active_tilemap = client_get_channel_active( local_client )->tilemap;
+   tilemap_add_dirty_tile( active_tilemap, o->x, o->y );
+   tilemap_add_dirty_tile( active_tilemap, o->prev_x, o->prev_y );
 
    graphics_blit_partial(
       twindow->g,
@@ -761,7 +763,7 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
    );
 
    if( NULL != o->owner ) {
-      line_nick = o->owner->nick;
+      line_nick = client_get_nick( o->owner );
    } else {
       line_nick = o->display_name;
    }
@@ -782,7 +784,7 @@ cleanup:
  */
 SCAFFOLD_INLINE
 BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c ) {
-   if( NULL != o->owner && 0 == bstrcmp( o->owner->nick, c->nick ) ) {
+   if( NULL != o->owner && 0 == bstrcmp( client_get_nick( o->owner ), client_get_nick( c ) ) ) {
       return TRUE;
    }
    return FALSE;
@@ -796,9 +798,13 @@ BOOL mobile_is_occupied( struct MOBILE* o ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+#ifdef USE_ITEMS
+
 void mobile_add_item( struct MOBILE* o, struct ITEM* e ) {
    vector_add( &(o->items), e );
 }
+
+#endif // USE_ITEMS
 
 struct CHANNEL* mobile_get_channel( struct MOBILE* o ) {
    if( NULL == o ) {

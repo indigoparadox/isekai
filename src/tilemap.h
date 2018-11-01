@@ -9,7 +9,7 @@ typedef int TILEMAP_COORD_TILE;
 #include "ezxml.h"
 #include "graphics.h"
 #include "twindow.h"
-#include "item.h"
+//#include "item.h"
 
 /* All x/y/height/width dimensions for these structs are in terms of tiles. */
 
@@ -259,13 +259,13 @@ void tilemap_toggle_debug_state();
 void tilemap_add_tileset(
    struct TILEMAP* t, const bstring key, struct TILEMAP_TILESET* set
 );
-struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
-   struct TILEMAP* t, struct ITEM* e, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
-);
-void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e );
-struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
-   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
-);
+//struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
+//   struct TILEMAP* t, struct ITEM* e, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+//);
+//void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e );
+//struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
+//   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, BOOL force
+//);
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    TILEMAP_COORD_TILE x, struct TWINDOW* twindow );

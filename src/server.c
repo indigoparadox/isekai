@@ -7,6 +7,30 @@
 #include "channel.h"
 #include "ipc.h"
 
+#include "clistruct.h"
+
+struct SERVER {
+   /* "Root" class is REF*/
+
+   /* "Parent class" */
+   struct CLIENT self;
+
+   /* Items after this line are server-specific. */
+   struct HASHMAP clients;
+};
+
+/** \brief Kick and free clients on all channels in the given list.
+ **/
+static void* callback_remove_clients( bstring idx, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+   bstring nick = (bstring)arg;
+
+   hashmap_iterate( l->clients, callback_stop_clients, nick );
+   hashmap_remove_cb( l->clients, callback_h_free_clients, nick );
+
+   return NULL;
+}
+
 static void server_cleanup( struct SERVER* s ) {
    /* Infinite circle. server_free > client_free > ref_dec > server_free */
    client_free_from_server( &(s->self) );
@@ -50,6 +74,15 @@ BOOL server_free( struct SERVER* s ) {
    return refcount_dec( &(s->self), "server" );
 }
 
+struct SERVER* server_new( const bstring myhost ) {
+   struct SERVER* s = NULL;
+   s = mem_alloc( 1, struct SERVER );
+   lgc_null( s );
+   server_init( s, myhost );
+cleanup:
+   return s;
+}
+
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
    s->self.local_client = FALSE;
@@ -90,22 +123,22 @@ void server_stop( struct SERVER* s ) {
 }
 
 short server_add_client( struct SERVER* s, struct CLIENT* c ) {
-   if( 0 >= blength( c->nick ) ) {
+   if( 0 >= blength( client_get_nick( c ) ) ) {
       /* Generate a temporary random nick not already existing. */
       do {
-         scaffold_random_string( c->nick, SERVER_RANDOM_NICK_LEN );
-      } while( NULL != hashmap_get( &(s->clients), c->nick ) );
+         scaffold_random_string( client_get_nick( c ), SERVER_RANDOM_NICK_LEN );
+      } while( NULL != hashmap_get( &(s->clients), client_get_nick( c ) ) );
    }
-   scaffold_assert( NULL == hashmap_get( &(s->clients), c->nick ) );
-   if( hashmap_put( &(s->clients), c->nick, c, FALSE ) ) {
+   scaffold_assert( NULL == hashmap_get( &(s->clients), client_get_nick( c ) ) );
+   if( hashmap_put( &(s->clients), client_get_nick( c ), c, FALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client: %b\n",
-         c->nick );
+         client_get_nick( c ) );
       client_free( c );
       return 1;
    } else {
       lg_debug(
          __FILE__, "Client %p added to server with nick: %s\n",
-         c, bdata( c->nick )
+         c, bdata( client_get_nick( c ) )
       );
       return 0;
    }
@@ -114,7 +147,7 @@ short server_add_client( struct SERVER* s, struct CLIENT* c ) {
 struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLIENT* c_first ) {
    struct CHANNEL* l = NULL;
 #ifdef DEBUG
-   SCAFFOLD_SIZE old_count;
+   //SCAFFOLD_SIZE old_count;
 #endif /* DEBUG */
 
    /* Get the channel, or create it if it does not exist. */
@@ -155,38 +188,38 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 //#ifdef DEBUG
    /* TODO: Make this dump us back at the menu. */
    /* Problem is: couldn't find map file! */
-   old_count = c_first->refcount.count;
+   //old_count = c_first->refcount.count;
    /* scaffold_assert( 0 < c_first->refcount.count );
    scaffold_assert( 0 < l->refcount.count );
    scaffold_assert( c_first->refcount.count > old_count ); */
-   if(
+   /*if(
       0 < c_first->refcount.count &&
       0 < l->refcount.count
-   ) {
+   ) {*/
       lg_debug(
          __FILE__, "Adding %b to channel %b on server...\n",
-         c_first->nick, l->name
+         client_get_nick( c_first ), l->name
       );
       server_channel_add_client( l, c_first );
       //client_add_channel( c_first, l );
-   } else {
+   /*} else {
       l->error = bformat(
          "Unable to add %s to channel %s on server.",
-         bdata( c_first->nick ), bdata( l->name )
+         client_get_nick( c_first ), bdata( l->name )
       );
       lg_error(
          __FILE__, "Unable to add %b to channel %b on server.\n",
-         c_first->nick, l->name
+         client_get_nick( c_first ), l->name
       );
       scaffold_assert( NULL != l->error );
-   }
-   scaffold_assert( c_first->refcount.count > old_count );
+   }*/
+   //scaffold_assert( c_first->refcount.count > old_count );
 //#endif /* DEBUG */
 
 cleanup:
    if( NULL != l ) {
       scaffold_assert( 0 < hashmap_count( l->clients ) );
-      scaffold_assert( 0 < hashmap_count( &(c_first->channels) ) );
+      scaffold_assert( 0 < client_get_channels_count( c_first ) );
    }
    return l;
 }
@@ -195,7 +228,7 @@ void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
 
    lgc_null( c );
 
-   if( NULL != channel_get_client_by_name( l, c->nick ) ) {
+   if( NULL != channel_get_client_by_name( l, client_get_nick( c ) ) ) {
       goto cleanup;
    }
 
@@ -294,12 +327,12 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
    /* Get a new standby client ready. */
    if( NULL == c ) {
-      client_new( c );
+      c = client_new();
    }
 
    /* Check for new clients. */
    ipc_accept( s->self.link, c->link );
-   if( !client_connected( c ) ) {
+   if( !client_is_connected( c ) ) {
       goto cleanup;
    } else {
 
@@ -354,9 +387,9 @@ BOOL server_service_clients( struct SERVER* s ) {
    if( NULL != c_stop ) {
       /* A dummy was returned, so the connection closed. */
       lg_info(
-         __FILE__, "Remote client disconnected: %b\n", c_stop->nick
+         __FILE__, "Remote client disconnected: %b\n", client_get_nick( c_stop )
       );
-      server_drop_client( s, c_stop->nick );
+      server_drop_client( s, client_get_nick( c_stop ) );
    }
 
 #ifdef USE_CHUNKS
@@ -389,9 +422,42 @@ void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring n
    //c_test = server_get_client( s, nick );
    //lgc_not_null( c_test );
 
-   bstr_result = bassign( c->nick, nick );
+   bstr_result = bassign( client_get_nick( c ), nick );
    lgc_nonzero( bstr_result );
 
 cleanup:
    return;
+}
+
+BOOL server_is_running( struct SERVER* s ) {
+   return client_is_running( &(s->self) );
+}
+
+BOOL server_is_listening( struct SERVER* s ) {
+   return client_is_listening( &(s->self) );
+}
+
+bstring server_get_remote( struct SERVER* s ) {
+   return client_get_remote( &(s->self) );
+}
+
+size_t server_get_client_count( struct SERVER* s ) {
+   return hashmap_count( &(s->clients) );
+}
+
+/* Return any client that is in the bstrlist arg. */
+static void* callback_search_clients_l( bstring idx, void* iter, void* arg ) {
+   struct VECTOR* list = (struct VECTOR*)arg;
+   struct CLIENT* c = (struct CLIENT*)iter;
+   return vector_iterate( list, callback_search_bstring_i, client_get_nick( c ) );
+}
+
+struct VECTOR* server_get_clients_online( struct SERVER* s, struct VECTOR* filter ) {
+   struct VECTOR* ison = NULL;
+   ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, filter );
+   return ison;
+}
+
+size_t server_get_channels_count( struct SERVER* s ) {
+   return client_get_channels_count( &(s->self) );
 }

@@ -21,6 +21,8 @@
    target = ezxml_attr( parent, attr ); \
    lgc_null( target );
 
+#ifdef USE_ITEMS
+
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
    bstring def_path, BOOL local_images
@@ -76,6 +78,8 @@ void datafile_parse_item_ezxml_t(
    struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
 }
+
+#endif // USE_ITEMS
 
 /* = Mobiles = */
 
@@ -979,7 +983,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
       bstr_retval = bcatcstr( tileset_id, xml_attr );
       lgc_nonzero( bstr_retval );
 
-      set = hashmap_get( &(l->client_or_server->tilesets), tileset_id );
+      set = client_get_tileset( l->client_or_server, tileset_id );
       if( NULL == set ) {
          /* This layer uses a tileset not seen yet. */
          lg_debug(
@@ -987,9 +991,9 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
          );
          tilemap_tileset_new( set, tileset_id );
          /* Don't have to check since the hashmap_get above is a check. */
-         hashmap_put( &(l->client_or_server->tilesets), tileset_id, set, TRUE );
+         client_set_tileset( l->client_or_server, tileset_id, set );
 
-        if( datafile_tilemap_parse_tileset_ezxml(
+         if( datafile_tilemap_parse_tileset_ezxml(
             set, xml_tileset, tileset_id, local_images )
          ) {
             /* This tileset was loaded enough to be considered done. */
@@ -1063,6 +1067,7 @@ void datafile_parse_ezxml_string(
    case DATAFILE_TYPE_MOBILE:
       datafile_parse_mobile_ezxml_t( object, xml_data, def_path, local_images );
       break;
+#ifdef USE_ITEMS
    case DATAFILE_TYPE_ITEM_CATALOG:
       datafile_parse_item_sprites_ezxml_t( object, xml_data, def_path, local_images );
       break;
@@ -1071,6 +1076,7 @@ void datafile_parse_ezxml_string(
       datafile_parse_item_ezxml_t( object, xml_data, def_path, local_images );
       break;
       */
+#endif // USE_ITEMS
    default:
       lg_error( __FILE__, "Invalid data type specified.\n" );
       break;

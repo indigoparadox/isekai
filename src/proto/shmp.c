@@ -21,7 +21,7 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
 
    assert( NULL != c );
    assert( NULL != main_server );
-   assert( NULL != c->nick );
+   assert( NULL != client_get_nick( c ) );
    assert( NULL != c->username );
    assert( NULL != c->remote );
 

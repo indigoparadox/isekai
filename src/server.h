@@ -6,7 +6,9 @@
 
 struct CLIENT;
 struct CHANNEL;
+struct SERVER;
 
+#if 0
 struct SERVER {
    /* "Root" class is REF*/
 
@@ -16,16 +18,14 @@ struct SERVER {
    /* Items after this line are server-specific. */
    struct HASHMAP clients;
 };
+#endif // 0
 
 #define SERVER_SENTINAL 164641
 
 #define SERVER_RANDOM_NICK_LEN 10
 
-#define server_new( s, myhost ) \
-    s = mem_alloc( 1, struct SERVER ); \
-    server_init( s, myhost );
-
 void server_free_clients( struct SERVER* s );
+struct SERVER* server_new();
 void server_init( struct SERVER* s, const bstring myhost );
 void server_stop_clients( struct SERVER* s );
 #ifdef USE_INLINES
@@ -50,6 +50,12 @@ BOOL server_poll_new_clients( struct SERVER* s );
 BOOL server_service_clients( struct SERVER* s );
 void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick );
 bstring server_file_search( bstring search_filename );
+BOOL server_is_running( struct SERVER* s );
+BOOL server_is_listening( struct SERVER* s );
+bstring server_get_remote( struct SERVER* s );
+size_t server_get_client_count( struct SERVER* s );
+struct VECTOR* server_get_clients_online( struct SERVER* s, struct VECTOR* filter );
+size_t server_get_channels_count( struct SERVER* s );
 
 #ifndef SERVER_C
 extern struct tagbstring str_server_data_path;
