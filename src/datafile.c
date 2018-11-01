@@ -7,15 +7,14 @@
 #include "channel.h"
 
 void datafile_handle_stream(
-   DATAFILE_TYPE type, const bstring filename, BYTE* data, SCAFFOLD_SIZE length,
+   DATAFILE_TYPE type, const bstring filename, BYTE* data, size_t length,
    struct CLIENT* c
 ) {
    struct CHANNEL* l = NULL;
    struct MOBILE* o = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct TILEMAP_TILESET* set = NULL;
-   bstring lname = NULL,
-      mob_id = NULL;
+   bstring mob_id = NULL;
    GRAPHICS* g = NULL;
 #ifdef USE_EZXML
    ezxml_t xml_data = NULL;
@@ -23,64 +22,16 @@ void datafile_handle_stream(
 
    switch( type ) {
    case DATAFILE_TYPE_TILESET:
-
-      /* TODO: Fetch this tileset from other tilemaps, too. */
-      set = hashmap_get( &(c->tilesets), filename );
-      scaffold_assert( NULL != set );
-      datafile_parse_ezxml_string(
-         set, data, length, TRUE, DATAFILE_TYPE_TILESET, filename
-      );
-
-      /* External tileset loaded. */
-      c->tilesets_loaded++;
+      client_load_tileset_data( c, filename, data, length );
       break;
 
    case DATAFILE_TYPE_TILEMAP:
-      lname = bfromcstr( "" );
-#ifdef USE_EZXML
-      xml_data = datafile_tilemap_ezxml_peek_lname(
-         data, length, lname
-      );
-#endif /* USE_EZXML */
-
-      l = client_get_channel_by_name( c, lname );
-      /* TODO: Make this dump us back at the menu. */
-      lgc_null_msg(
-         l, "Unable to find channel to attach loaded tileset."
-      );
-      if( NULL == l ) {
-         channel_set_error( l, "Unable to load channel; missing data." );
-      }
-
-#ifdef USE_EZXML
-      scaffold_assert( TILEMAP_SENTINAL != l->tilemap->sentinal );
-      c->tilesets_loaded += datafile_parse_tilemap_ezxml_t(
-         l->tilemap, xml_data, filename, TRUE
-      );
-      scaffold_assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
-
-      /* Download missing tilesets. */
-      hashmap_iterate( &(c->tilesets), callback_download_tileset, c );
-
-#endif /* USE_EZXML */
-
-      /* Go through the parsed tilemap and load graphics. */
-      proto_client_request_mobs( c, l );
-
-      lg_debug(
-         __FILE__,
-         "Client: Tilemap for %s successfully attached to channel.\n",
-         bdata( l->name )
-      );
+      client_load_tilemap_data( c, filename, data, length );
       break;
 
    case DATAFILE_TYPE_TILESET_TILES:
 
-      l = hashmap_iterate(
-         &(c->channels),
-         callback_search_channels_tilemap_img_name,
-         filename
-      );
+      l = client_iterate_channels( c, callback_search_channels_tilemap_img_name, filename );
       scaffold_assert( NULL != l );
 
       graphics_surface_new( g, 0, 0, 0, 0 );
@@ -118,14 +69,12 @@ void datafile_handle_stream(
       xml_data = datafile_mobile_ezxml_peek_mob_id( data, length, mob_id );
       lgc_null( xml_data );
 
-      o = hashmap_iterate(
-         &(c->channels), callback_parse_mob_channels, xml_data
-      );
+      client_iterate_channels( c, callback_parse_mob_channels, xml_data );
       if( NULL != o ) {
          /* TODO: Make sure we never create receiving chunkers server-side
           *       (not strictly relevant here, but still).
           */
-         g = hashmap_get( &(c->sprites), o->sprites_filename );
+         g = client_get_sprite( c, o->sprites_filename );
          if( NULL == g ) {
             client_request_file_later(
                c, DATAFILE_TYPE_MOBILE_SPRITES, o->sprites_filename );
@@ -143,26 +92,20 @@ void datafile_handle_stream(
 #endif /* USE_EZXML */
       break;
 
+#ifdef USE_ITEMS
    case DATAFILE_TYPE_ITEM_CATALOG_SPRITES: /* Fall through. */
+#endif // USE_ITEMS
    case DATAFILE_TYPE_MOBILE_SPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
       lgc_null_msg( g, "Unable to interpret spritesheet image." );
       graphics_set_image_data( g, data, length );
       lgc_null( g->surface );
-      if( hashmap_put( &(c->sprites), filename, g, FALSE ) ) {
-         lg_error(
-            __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
+      if( !client_set_sprite( c, filename, g ) ) {
          graphics_surface_free( g );
-      } else {
-         hashmap_iterate( &(c->channels), callback_attach_channel_mob_sprites, c );
-         lg_debug(
-            __FILE__,
-            "Client: Spritesheet %b successfully loaded into cache.\n",
-            filename
-         );
       }
       break;
 
+#ifdef USE_ITEMS
    case DATAFILE_TYPE_ITEM_CATALOG:
 
       item_spritesheet_new( catalog, filename, c );
@@ -184,6 +127,7 @@ void datafile_handle_stream(
       }
 #endif /* USE_EZXML */
       break;
+#endif // USE_ITEMS
 
    case DATAFILE_TYPE_MISC:
       lg_error( __FILE__, "Invalid data type specified.\n" );
@@ -194,7 +138,6 @@ void datafile_handle_stream(
    }
 
 cleanup:
-   bdestroy( lname );
    bdestroy( mob_id );
 #ifdef USE_EZXML
    if( NULL != xml_data ) {

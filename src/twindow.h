@@ -5,6 +5,8 @@
 #include "graphics.h"
 #include "tilemap.h"
 
+struct UI;
+
 struct TWINDOW {
    GRAPHICS* g;            /*!< Graphics element to draw on. */
    TILEMAP_COORD_TILE x;        /*!< Window left in tiles. */
@@ -17,6 +19,7 @@ struct TWINDOW {
    TILEMAP_COORD_TILE min_y;    /*!< Top-most window tile. */
    GFX_COORD_PIXEL grid_w;
    GFX_COORD_PIXEL grid_h;
+   struct UI* ui;
 };
 
 void twindow_update_details( struct TWINDOW* twindow );

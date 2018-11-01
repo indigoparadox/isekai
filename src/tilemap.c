@@ -34,8 +34,10 @@ static void tilemap_cleanup( const struct REF* ref ) {
 
    vector_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
    vector_cleanup( &(t->layers) );
+#ifdef USE_ITEMS
    vector_remove_cb( &(t->item_caches), callback_free_item_caches, NULL );
    vector_cleanup( &(t->item_caches) );
+#endif // USE_ITEMS
    vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
    vector_cleanup( &(t->spawners) );
    vector_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
@@ -89,6 +91,8 @@ void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
    mem_free( ts );
 }
 
+#ifdef USE_ITEMS
+
 void tilemap_item_cache_init(
    struct TILEMAP_ITEM_CACHE* cache,
    struct TILEMAP* t,
@@ -106,6 +110,8 @@ void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
    vector_cleanup( &(cache->items) );
    mem_free( cache );
 }
+
+#endif // USE_ITEMS
 
 void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
    vector_init( &(layer->tiles) );
@@ -284,8 +290,8 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    struct CLIENT* c;
    struct TILEMAP* t = NULL;
 
-   c = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = c->active_tilemap;
+   c = client_from_local_window( twindow );
+   t = client_get_channel_active( c )->tilemap;
 
    if( x < ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
@@ -307,8 +313,8 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
    struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
 
-   c = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = c->active_tilemap;
+   c = client_from_local_window( twindow );
+   t = client_get_channel_active( c )->tilemap;
 
    if(
       y < ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y)
@@ -404,6 +410,8 @@ void tilemap_toggle_debug_state() {
 
 #endif /* DEBUG_TILES */
 
+#ifdef USE_ITEMS
+
 struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
    struct TILEMAP* t, struct ITEM* e, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
@@ -483,6 +491,8 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 cleanup:
    return cache_out;
 }
+
+#endif // USE_ITEMS
 
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t ) {
    return t->channel;

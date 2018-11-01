@@ -99,7 +99,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    lgc_null( c );
 
-   if( NULL != channel_get_client_by_name( l, c->nick ) ) {
+   if( NULL != channel_get_client_by_name( l, client_get_nick( c ) ) ) {
       goto cleanup;
    }
 
@@ -138,7 +138,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       lg_debug(
          __FILE__,
          "Spawning %s (%d) at: %d, %d\n",
-         bdata( c->nick ), o->serial, o->x, o->y
+         bdata( client_get_nick( c ) ), o->serial, o->x, o->y
       );
    } else if( FALSE != spawn ) {
       lg_error(
@@ -149,12 +149,12 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    client_add_channel( c, l  );
 
-   if( hashmap_put( l->clients, c->nick, c, FALSE ) ) {
+   if( hashmap_put( l->clients, client_get_nick( c ), c, FALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client.\n" );
       //client_free( c );
    }
 
-   refcount_inc( c, "client" );
+   client_add_ref( c );
 
 cleanup:
    if( NULL != player_spawns) {
@@ -166,10 +166,13 @@ cleanup:
 
 void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    struct CLIENT* c_test = NULL;
-   c_test = hashmap_get( l->clients, c->nick );
-   if( NULL != c_test && FALSE != hashmap_remove( l->clients, c->nick ) ) {
-      if( NULL != c->puppet ) {
-         channel_remove_mobile( l, c->puppet->serial );
+   struct MOBILE* o = NULL;
+
+   c_test = hashmap_get( l->clients, client_get_nick( c ) );
+   if( NULL != c_test && FALSE != hashmap_remove( l->clients, client_get_nick( c ) ) ) {
+      o = client_get_puppet( c );
+      if( NULL != o ) {
+         channel_remove_mobile( l, o->serial );
       }
 
       lg_debug(
@@ -245,7 +248,7 @@ void channel_set_mobile(
 
    scaffold_assert( 0 < hashmap_count( l->clients ) );
    mobile_c = channel_get_client_by_name( l, mob_nick );
-   if( NULL != mobile_c && 0 == bstrcmp( mobile_c->nick, mob_nick ) ) {
+   if( NULL != mobile_c && 0 == bstrcmp( client_get_nick( mobile_c ), mob_nick ) ) {
       client_set_puppet( mobile_c, o );
    }
 
@@ -300,10 +303,13 @@ void channel_load_tilemap( struct CHANNEL* l ) {
       DATAFILE_TYPE_TILEMAP, mapdata_path
    );
 
+#ifdef USE_ITEMS
    vector_iterate(
       &(l->tilemap->spawners), callback_load_spawner_catalogs,
       l->client_or_server
    );
+#endif // USE_ITEMS
+
 #endif /* USE_EZXML */
 
 cleanup:
@@ -342,7 +348,7 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if( NULL == l->client_or_server->puppet ) {
+   if( NULL == client_get_puppet( l->client_or_server ) ) {
       goto cleanup;
    }
 
@@ -354,36 +360,7 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
       goto cleanup;
    }
 
-   if( 0 >= hashmap_count( &(l->client_or_server->sprites) ) ) {
-      goto cleanup;
-   }
-
-   tilesets_count = hashmap_count( &(l->client_or_server->tilesets) );
-   if( 0 >= tilesets_count ) {
-      goto cleanup;
-   }
-
-#ifdef USE_CHUNKS
-   i_test = hashmap_count( &(l->client_or_server->chunkers) );
-   if( 0 < i_test ) {
-      goto cleanup;
-   }
-#endif /* USE_CHUNKS */
-
-   if( 0 < vector_count( &(l->client_or_server->delayed_files) ) ) {
-      goto cleanup;
-   }
-
-   if( l->client_or_server->tilesets_loaded < tilesets_count ) {
-#ifdef DEBUG
-      if( tilesets_loaded_last_pass != l->client_or_server->tilesets_loaded ) {
-         tilesets_loaded_last_pass = l->client_or_server->tilesets_loaded;
-         lg_debug(
-            __FILE__, "Tilesets loaded for %b: %d out of %d...\n",
-            l->name, l->client_or_server->tilesets_loaded, tilesets_count
-         );
-      }
-#endif /* DEBUG */
+   if( !client_is_loaded( l->client_or_server ) ) {
       goto cleanup;
    }
 

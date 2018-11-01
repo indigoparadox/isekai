@@ -33,6 +33,10 @@ static struct tagbstring str_cdialog_title = bsStatic( "Connect to Server" );
 static struct tagbstring str_cdialog_prompt =
    bsStatic( "Connect to [address:port]:" );
 
+static struct tagbstring str_test_nick = bsStatic( "TestNick" );
+static struct tagbstring str_test_username = bsStatic( "TestUser" );
+static struct tagbstring str_test_realname = bsStatic( "Tester Test" );
+
 #if defined( USE_CONNECT_DIALOG ) && !defined( USE_NETWORK )
 #error Connect dialog requires network to be enabled!
 #endif /* USE_CONNECT_DIALOG && !USE_NETWORK */
@@ -100,7 +104,7 @@ static double calc_fps( int newtick ) {
 }
 #endif /* DEBUG_FPS */
 
-static BOOL loop_game() {
+static BOOL loop_game( int gfx_mode ) {
    BOOL keep_going = TRUE;
    int i;
    struct ANIMATION* a = NULL;
@@ -109,12 +113,15 @@ static BOOL loop_game() {
    static BOOL load_complete = FALSE;
    GFX_COORD_PIXEL backlog_height_tiles = CONFIG_BACKLOG_TILES_HEIGHT;
    GFX_COORD_PIXEL backlog_height_px = 0;
+   struct TWINDOW* local_window = NULL;
+   struct MOBILE* o = NULL;
+   //struct CHANNEL* l = NULL;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
    }
 
-   if( !main_server->self.running ) {
+   if( !server_is_running( main_server ) ) {
       keep_going = FALSE;
       goto cleanup;
    }
@@ -135,16 +142,16 @@ static BOOL loop_game() {
 #ifdef ENABLE_LOCAL_CLIENT
    if( FALSE == animate_is_blocking() ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
          PLUGIN_POLL_INPUT, main_client, l, input );
       client_update( main_client, g_screen );
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
          PLUGIN_UPDATE, main_client, l );
    }
 
    /* Do drawing. */
-   l = hashmap_get_first( &(main_client->channels) );
+   l = client_get_channel_active( main_client );
    if( FALSE != channel_has_error( l ) ) {
       /* Abort and go back to connect dialog. */
       /* We need to stop both client AND server, 'cause the data is bad! */
@@ -154,6 +161,8 @@ static BOOL loop_game() {
       server_stop_clients( main_server );
       server_stop( main_server ); */
       ui_message_box( ui, l->error );
+      plugin_call(
+         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ), PLUGIN_FREE, main_client );
       client_stop( main_client );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
@@ -196,7 +205,7 @@ static BOOL loop_game() {
 
       goto cleanup;
 
-   } else if( TRUE != main_client->running ) {
+   } else if( !client_is_running( main_client ) ) {
       /* We're stopping, not starting. */
       lg_debug( __FILE__, "Stopping server...\n" );
       server_stop( main_server );
@@ -205,10 +214,10 @@ static BOOL loop_game() {
 #endif /* USE_NETWORK */
       goto cleanup;
 
-   } else if( NULL == main_client->active_tilemap ) {
-      lg_debug( __FILE__, "Unsetting main client...\n" );
-      client_set_active_t( main_client, l->tilemap );
-   }
+   } // else if( NULL == client_get_channel_active( main_client )->tilemap ) {
+   //   lg_debug( __FILE__, "Unsetting main client...\n" );
+   //   client_set_active_t( main_client, l->tilemap );
+   //}
 
    /* Client drawing stuff after this. */
    scaffold_set_client();
@@ -220,42 +229,45 @@ static BOOL loop_game() {
       load_complete = TRUE;
 
       /* Setup the window for drawing tiles, etc. */
-      twindow_update_details( &(main_client->local_window) );
+      local_window = client_get_local_window( main_client );
+      twindow_update_details( local_window );
 
       backlog_height_px =
-         backlog_height_tiles * main_client->local_window.grid_h;
+         backlog_height_tiles * local_window->grid_h;
 
       /* Show the backlog at the bottom, shrinking the map to fit. */
-      main_client->local_window.height -= backlog_height_tiles;
+      local_window->height -= backlog_height_tiles;
       backlog_ensure_window( ui, backlog_height_px );
    } else {
       /* We need this for the one-time stuff under !load_complete AND for        *
        * drawing the mask below.
        */
       backlog_height_px =
-         backlog_height_tiles * main_client->local_window.grid_h;
+         backlog_height_tiles * local_window->grid_h;
    }
 
    /* If we're on the move then update the window frame. */
    /* Allows for smooth-scrolling view window with bonus that action is    *
     * technically paused while doing so.                                   */
+   o = client_get_puppet( main_client );
+   l = client_get_channel_active( main_client );
    if(
-      0 != main_client->puppet->steps_remaining ||
-      main_client->local_window.max_x == main_client->local_window.min_x ||
-      TILEMAP_REDRAW_ALL == main_client->active_tilemap->redraw_state
+      0 != o->steps_remaining ||
+      local_window->max_x == local_window->min_x ||
+      (NULL != l && TILEMAP_REDRAW_ALL == l->tilemap->redraw_state)
    ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
          PLUGIN_UPDATE, main_client, l );
    }
 
    animate_cycle_animations( g_screen );
 
    /* If there's no puppet then there should be a load screen. */
-   scaffold_assert( NULL != main_client->puppet );
+   scaffold_assert( NULL != o );
 
    plugin_call(
-      PLUGIN_MODE, vector_get( &mode_list_short, main_client->gfx_mode ),
+      PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
       PLUGIN_DRAW, main_client, l );
 
    /* Draw masks to cover up garbage from mismatch between viewport and window.
@@ -283,7 +295,7 @@ cleanup:
    return keep_going;
 }
 
-static BOOL loop_connect() {
+static BOOL loop_connect( int* gfx_mode ) {
    BOOL keep_going = TRUE;
    bstring server_address = NULL;
    int bstr_result = 0,
@@ -294,6 +306,7 @@ static BOOL loop_connect() {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
 #endif /* USE_CONNECT_DIALOG */
+   static bstring buffer_nick = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -336,7 +349,7 @@ static BOOL loop_connect() {
 #endif /* USE_CONNECT_DIALOG */
 
 #ifdef USE_RANDOM_PORT
-      if( FALSE == ipc_is_listening( main_server->self.link ) ) {
+      if( !server_is_listening( main_server ) ) {
          server_port = 30000 + rng_max( 30000 );
       } else {
          /* Join the running server in progress by default. */
@@ -345,12 +358,8 @@ static BOOL loop_connect() {
 #endif /* USE_RANDOM_PORT */
 
       /* TODO: Add fields for these to connect dialog. */
-      bstr_result = bassigncstr( main_client->nick, "TestNick" );
-      lgc_nonzero( bstr_result );
-      bstr_result = bassigncstr( main_client->realname, "Tester Tester" );
-      lgc_nonzero( bstr_result );
-      bstr_result = bassigncstr( main_client->username, "TestUser" );
-      lgc_nonzero( bstr_result );
+      client_set_names(
+         main_client, &str_test_nick, &str_test_realname, &str_test_username );
 
 #ifdef USE_CONNECT_DIALOG
 
@@ -375,8 +384,10 @@ static BOOL loop_connect() {
       );
       ui_control_add( win, &str_cid_connect_channel, control );
 
+      scaffold_assert( NULL == buffer_nick );
+      buffer_nick = bstrcpy( client_get_nick( main_client ) );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, main_client->nick,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_nick,
          -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_nick, control );
@@ -387,8 +398,7 @@ static BOOL loop_connect() {
       );
       /* TODO: Encapsulate list structure. */
       control->list = mode_list_pretty;
-      control->self.attachment = &(main_client->gfx_mode);
-      main_client->gfx_mode = 0;
+      control->self.attachment = gfx_mode;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
 
       ui_window_push( ui, win );
@@ -408,6 +418,8 @@ static BOOL loop_connect() {
       )
    ) {
       /* FIXME */
+      bdestroy( buffer_nick );
+      buffer_nick = NULL;
       return FALSE;
    }
 
@@ -435,6 +447,10 @@ static BOOL loop_connect() {
       /* Dismiss the connect dialog. */
       ui_window_destroy( ui, &str_cdialog_id );
 
+      /* TODO: Assign the client nick. */
+      bdestroy( buffer_nick );
+      buffer_nick = NULL;
+
       /* Split up the address and port. */
       server_tuple = bgsplit( buffer_host, ':' );
       if( 2 < vector_count( server_tuple ) ) {
@@ -453,7 +469,7 @@ static BOOL loop_connect() {
       buffer_channel = &str_default_channel;
 #endif /* USE_CONNECT_DIALOG */
 
-      if( FALSE == ipc_is_listening( main_server->self.link ) ) {
+      if( FALSE == server_is_listening( main_server ) ) {
          if( FALSE == server_listen( main_server, server_port ) ) {
             goto cleanup;
          }
@@ -493,12 +509,13 @@ static BOOL loop_master() {
    BOOL connected = FALSE;
    uint16_t main_client_joined = 0;
    int bstr_ret;
+   static int gfx_mode = 0;
 
 #ifdef ENABLE_LOCAL_CLIENT
    graphics_start_fps_timer();
 
-   connected = client_connected( main_client );
-   main_client_joined = main_client->flags & CLIENT_FLAGS_SENT_CHANNEL_JOIN;
+   connected = client_is_connected( main_client );
+   main_client_joined = client_test_flags( main_client, CLIENT_FLAGS_SENT_CHANNEL_JOIN );
 
    if(
       FALSE == connected
@@ -506,7 +523,7 @@ static BOOL loop_master() {
       && 0 >= loop_count
 #endif /* !USE_CONNECT_DIALOG */
    ) {
-      retval = loop_connect();
+      retval = loop_connect( &gfx_mode );
 #ifndef USE_CONNECT_DIALOG
    } else if( FALSE == connected && 0 < loop_count ) {
       retval = FALSE;
@@ -515,9 +532,9 @@ static BOOL loop_master() {
       lg_debug(
          __FILE__, "Server connected; joining client to channel...\n"
       );
-      main_client->ui = ui;
-      main_client->local_window.g = g_screen;
-      client_set_active_t( main_client, NULL );
+      client_get_local_window( main_client )->ui = ui;
+      client_get_local_window( main_client )->g = g_screen;
+      //client_set_active_t( main_client, NULL );
       proto_client_join( main_client, buffer_channel );
       retval = TRUE;
 
@@ -526,7 +543,7 @@ static BOOL loop_master() {
 #endif /* DEBUG_FPS */
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
-      retval = loop_game();
+      retval = loop_game( gfx_mode );
 #ifdef ENABLE_LOCAL_CLIENT
    }
 
@@ -612,11 +629,11 @@ int main( int argc, char** argv ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   server_new( main_server, &str_localhost );
+   main_server = server_new( &str_localhost );
 
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_set_client();
-   client_new( main_client );
+   main_client = client_new();
    client_set_local( main_client, TRUE );
 #endif /* ENABLE_LOCAL_CLIENT */
 
@@ -631,11 +648,6 @@ cleanup:
    bdestroy( buffer_channel );
 #endif /* USE_CONNECT_DIALOG */
 #ifdef ENABLE_LOCAL_CLIENT
-#ifndef DISABLE_MODE_POV
-   if( NULL != main_client && NULL != main_client->z_buffer ) {
-      mem_free( main_client->z_buffer );
-   }
-#endif /* !DISABLE_MODE_POV */
    input_shutdown( input );
    mem_free( input );
    backlog_shutdown();

@@ -18,7 +18,6 @@ void* callback_proc_channel_vms( bstring idx, void* iter, void* arg );
 #endif /* USE_VM */
 void* callback_concat_clients( bstring idx, void* iter, void* arg );
 void* callback_search_clients_r( bstring idx, void* iter, void* arg );
-void* callback_search_clients_l( bstring idx, void* iter, void* arg );
 void* callback_download_tileset( bstring idx, void* iter, void* arg );
 void* callback_load_local_tilesets(
    bstring idx, void* iter, void* arg );
@@ -35,7 +34,6 @@ void* callback_attach_channel_mob_sprites(
 void* callback_proc_tileset_img_gs( bstring idx, void* iter, void* arg );
 void* callback_proc_server_spawners( bstring idx, void* iter, void* arg );
 void* callback_stop_clients( bstring idx, void* iter, void* arg );
-void* callback_remove_clients( bstring idx, void* iter, void* arg );
 BOOL callback_free_channels( bstring idx, void* iter, void* arg );
 BOOL callback_free_empty_channels( bstring idx, void* iter, void* arg );
 BOOL callback_free_tilesets( bstring idx, void* iter, void* arg );

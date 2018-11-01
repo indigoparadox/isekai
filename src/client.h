@@ -24,76 +24,10 @@ typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_SENT_CHANNEL_JOIN = 0x16
 } CLIENT_FLAGS;
 
-struct CLIENT_DELAYED_REQUEST {
-   bstring filename;
-   DATAFILE_TYPE type;
-};
-
-struct CLIENT {
-   struct REF refcount; /*!< Parent "class". The "root" class is REF. */
-
-   struct CONNECTION* link;
-
-   /* Items shared between server and client. */
-   BOOL running;
-   bstring nick;
-   bstring username;
-   bstring realname;
-   bstring remote;
-   bstring away;
-   bstring mobile_sprite;
-   uint8_t irc_mode;
-   uint16_t flags;
-   struct UI* ui;
-   struct HASHMAP channels; /*!< All channels the client is in now, or all
-                             *   channels available if this is a server.
-                             */
-
-   struct VECTOR delayed_files; /*!< Requests for files to be executed "later"
-                                 *   as a way of getting around locks on
-                                 *   resource holders due to dependencies
-                                 *   (e.g. tileset needed by tilemap).
-                                 *   NOT to be confused with chunkers!
-                                 */
-   struct MOBILE* puppet;
-   struct HASHMAP sprites; /*!< Contains sprites for all mobiles/items this
-                            *   client encounters on client-side. Not used
-                            *   server-side.
-                            */
-   struct HASHMAP tilesets;
-   SCAFFOLD_SIZE tilesets_loaded;
-   struct HASHMAP item_catalogs;
-   struct VECTOR unique_items;
-   int gfx_mode;
-   struct TILEMAP* active_tilemap;
-   struct TWINDOW local_window;
-
-#ifdef USE_CHUNKS
-   struct HASHMAP chunkers;
-#endif /* USE_CHUNKS */
-
-#ifndef DISABLE_MODE_POV
-   GRAPHICS_PLANE cam_pos;
-   GRAPHICS_PLANE plane_pos;
-   GFX_COORD_FPP* z_buffer;
-#endif /* !DISABLE_MODE_POV */
-
-   BOOL local_client;
-
-   int sentinal;     /*!< Used in release version to distinguish from server. */
-};
 #define CLIENT_SENTINAL 254542
 
 #define CLIENT_NAME_ALLOC 32
 #define CLIENT_BUFFER_ALLOC 256
-
-#define client_connected( c ) \
-   (FALSE != ipc_connected( c->link ) && TRUE == (c)->running)
-
-#define client_new( c ) \
-    c = mem_alloc( 1, struct CLIENT ); \
-    lgc_null( c ); \
-    client_init( c );
 
 struct GAMEDATA;
 struct INPUT;
@@ -101,10 +35,11 @@ struct INPUT;
 BOOL cb_client_del_channels( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 void* cb_client_get_nick( struct VECTOR* v, SCAFFOLD_SIZE idx, void* iter, void* arg );
 
+struct CLIENT* client_new();
 void client_init( struct CLIENT* c );
 BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
-void client_set_active_t( struct CLIENT* c, struct TILEMAP* t );
+//void client_set_active_t( struct CLIENT* c, struct TILEMAP* t );
 short client_add_channel( struct CLIENT* c, struct CHANNEL* l )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
@@ -159,6 +94,35 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 GRAPHICS* client_get_screen( struct CLIENT* c );
 struct TILEMAP* client_get_tilemap( struct CLIENT* c );
+const bstring client_get_nick( struct CLIENT* c );
+struct CHUNKER* client_get_chunker( struct CLIENT* c, bstring key );
+GRAPHICS* client_get_sprite( struct CLIENT* c, bstring filename );
+struct TILEMAP_TILESET* client_get_tileset( struct CLIENT* c, bstring filename );
+void client_add_ref( struct CLIENT* c );
+void client_load_tileset_data( struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
+void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
+BOOL client_is_loaded( struct CLIENT* c );
+struct CHANNEL* client_iterate_channels(
+   struct CLIENT* c, hashmap_iter_cb cb, void* data
+);
+BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g );
+BOOL client_set_tileset( struct CLIENT* c, bstring filename, struct TILEMAP_TILESET* set );
+BOOL client_is_running( struct CLIENT* c );
+struct CHANNEL* client_get_channel_active( struct CLIENT* c );
+struct TWINDOW* client_get_local_window( struct CLIENT* c );
+BOOL client_is_listening( struct CLIENT* c );
+BOOL client_is_connected( struct CLIENT* c );
+CLIENT_FLAGS client_test_flags( struct CLIENT* c, CLIENT_FLAGS flags );
+void client_set_flag( struct CLIENT* c, CLIENT_FLAGS flags );
+SCAFFOLD_SIZE_SIGNED client_write( struct CLIENT* c, const bstring buffer );
+SCAFFOLD_SIZE_SIGNED client_read( struct CLIENT* c, const bstring buffer );
+const bstring client_get_realname( struct CLIENT* c );
+const bstring client_get_username( struct CLIENT* c );
+int client_remove_channel( struct CLIENT* c, const bstring lname );
+const bstring client_get_remote( struct CLIENT* c );
+size_t client_get_channels_count( struct CLIENT* c );
+size_t client_remove_chunkers( struct CLIENT* c, bstring filter );
+struct CLIENT* client_from_local_window( struct TWINDOW* twindow );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

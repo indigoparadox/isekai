@@ -31,7 +31,7 @@ extern struct CLIENT* main_client;
 void* callback_concat_clients( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct VECTOR* list = (struct VECTOR*)arg;
-   vector_add( list, bstrcpy( c->nick ) );
+   vector_add( list, bstrcpy( client_get_nick( c ) ) );
    return NULL;
 }
 
@@ -48,7 +48,7 @@ void* callback_concat_strings( size_t idx, void* iter, void* arg ) {
 void* callback_search_clients_r( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
-   if( NULL == nick || 0 != bstrcmp( nick, c->nick ) ) {
+   if( NULL == nick || 0 != bstrcmp( nick, client_get_nick( c ) ) ) {
       return c;
    }
    return NULL;
@@ -63,13 +63,6 @@ void* callback_search_bstring_i( size_t idx, void* iter, void* arg ) {
    }
 
    return NULL;
-}
-
-/* Return any client that is in the bstrlist arg. */
-void* callback_search_clients_l( bstring idx, void* iter, void* arg ) {
-   struct VECTOR* list = (struct VECTOR*)arg;
-   struct CLIENT* c = (struct CLIENT*)iter;
-   return vector_iterate( list, callback_search_bstring_i, c->nick );
 }
 
 /** \brief If the iterated spawner is of the ID specified in arg, then return
@@ -203,6 +196,8 @@ cleanup:
    return NULL;
 }
 
+#ifdef USE_ITEMS
+
 void* callback_load_spawner_catalogs(
    size_t idx, void* iter, void* arg
 ) {
@@ -216,7 +211,7 @@ void* callback_load_spawner_catalogs(
 
    if(
       TILEMAP_SPAWNER_TYPE_ITEM == spawner->type &&
-      NULL == hashmap_get( &(client_or_server->item_catalogs), spawner->catalog )
+      NULL == client_get_catalog( client_or_server, spawner->catalog )
    ) {
       lg_debug(
          __FILE__, "Loading item catalog: %b\n", spawner->catalog
@@ -239,13 +234,13 @@ void* callback_load_spawner_catalogs(
          catdata_path
       );
 
-      if( hashmap_put(
-         &(client_or_server->item_catalogs), spawner->catalog, catalog, FALSE
-      ) ) {
+#ifdef USE_ITEMS
+      if( client_set_catalog( client_or_server, spawner->catalog, catalog ) ) {
          lg_error( __FILE__, "Attempted to double-add catalog: %b\n",
             spawner->catalog );
          item_spritesheet_free( catalog );
       }
+#endif /* USE_ITEMS */
 
 #endif /* USE_EZXML */
 
@@ -257,6 +252,8 @@ cleanup:
    mem_free( catdata );
    return NULL;
 }
+
+#endif // USE_ITEMS
 
 void* callback_search_mobs_by_pos( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -365,59 +362,7 @@ void* callback_proc_client_chunkers( bstring idx, void* iter, void* arg ) {
 
 #endif /* USE_CHUNKS */
 
-BOOL callback_proc_client_delayed_files(
-   size_t idx, void* iter, void* arg
-) {
-   struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   lg_debug(
-      __FILE__, "Processing delayed request: %b\n", req->filename
-   );
-   client_request_file( c, req->type, req->filename );
-
-   bdestroy( req->filename );
-   mem_free( req );
-   return TRUE;
-}
-
 #endif /* ENABLE_LOCAL_CLIENT */
-
-#ifdef USE_CHUNKS
-
-void* callback_send_chunkers_l( bstring idx, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-   bstring chunk_out = NULL;
-   size_t start_pos = 0;
-
-   if( chunker_chunk_finished( h ) ) {
-      goto cleanup;
-   }
-
-   chunk_out = bfromcstralloc( CHUNKER_DEFAULT_CHUNK_SIZE, "" );
-   start_pos = chunker_chunk_pass( h, chunk_out );
-   proto_send_chunk( c, h, start_pos, idx, chunk_out );
-
-cleanup:
-   bdestroy( chunk_out );
-   return NULL;
-}
-
-void* callback_proc_chunkers( bstring idx, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)iter;
-
-   /* Process some compression chunks. */
-   hashmap_iterate_v( &(c->chunkers), callback_send_chunkers_l, c );
-
-   /* Removed any finished chunkers. */
-   hashmap_remove_cb(
-      &(c->chunkers), callback_free_finished_chunkers, NULL );
-
-   return NULL;
-}
-
-#endif /* USE_CHUNKS */
 
 #ifdef USE_VM
 
@@ -471,9 +416,11 @@ void* callback_proc_channel_spawners(
    struct TILEMAP* t = ts->tilemap;
    struct CHANNEL* l = NULL;
    struct MOBILE* o = NULL;
+#ifdef USE_ITEMS
    struct ITEM* e = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+#endif // USE_ITEMS
 
    l = tilemap_get_channel( t );
    scaffold_assert( CHANNEL_SENTINAL == l->sentinal );
@@ -509,16 +456,18 @@ void* callback_proc_channel_spawners(
       }
       break;
 
+#if 0
    case TILEMAP_SPAWNER_TYPE_ITEM:
       lg_debug(
          __FILE__, "Spawning item: %b, Catalog: %b\n", ts->id, ts->catalog
       );
-      catalog = hashmap_get( &(s->self.item_catalogs), ts->catalog );
+      catalog = server_get_catalog( s, ts->catalog );
       /* Catalog should be loaded by tilemap datafile loader. */
       lgc_null( catalog );
       while( NULL == e || 0 == e->sprite_id ) {
          item_random_new(
-            e, item_type_from_c( bdata( ts->id ) ), ts->catalog, &(s->self)
+            e, item_type_from_c( bdata( ts->id ) ), ts->catalog,
+            client_get_spritesheet( s ), server_get_unique_items( s )
          );
       }
       scaffold_assert( 0 != e->sprite_id );
@@ -531,6 +480,7 @@ void* callback_proc_channel_spawners(
       }
       e = NULL;
       break;
+#endif // 0
    }
 
    /* TODO: We didn't get shunted to cleanup, so reset the timer if needed. */
@@ -550,6 +500,7 @@ void* callback_proc_server_spawners( bstring idx, void* iter, void* arg ) {
    return NULL;
 }
 
+#if 0
 void* callback_search_item_type(
    size_t idx, void* iter, void* arg
 ) {
@@ -562,6 +513,7 @@ void* callback_search_item_type(
 
    return NULL;
 }
+#endif // 0
 
 void* callback_search_tilesets_gid( size_t idx, void* iter, void* arg ) {
    size_t* gid = (size_t*)arg;
@@ -600,7 +552,7 @@ void* callback_search_tileset_img_gid( bstring idx, void* iter, void* arg ) {
    if(
       NULL == iter
 #ifdef USE_CHUNKS
-      && NULL == hashmap_get( &(c->chunkers), idx )
+      && NULL == client_get_chunker( c, idx )
 #endif /* USE_CHUNKS */
    ) {
       client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx );
@@ -727,7 +679,7 @@ void* callback_attach_mob_sprites( size_t idx, void* iter, void* arg ) {
       goto cleanup;
    }
 
-   g = hashmap_get( &(c->sprites), o->sprites_filename );
+   g = client_get_sprite( c, o->sprites_filename );
    o->sprites = g;
 
 cleanup:
@@ -747,7 +699,7 @@ void* callback_attach_channel_mob_sprites(
 void* callback_stop_clients( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
-   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, client_get_nick( c ) ) ) {
       lg_debug( __FILE__, "Stopping client: %p\n", c );
       client_stop( c );
       return NULL;
@@ -763,7 +715,7 @@ BOOL callback_v_free_clients( size_t idx, void* iter, void* arg ) {
     * to a list and then the list is disposed of.
     */
 
-   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, client_get_nick( c ) ) ) {
 #ifdef DEBUG_VERBOSE
       lg_debug( __FILE__, "Freeing client: %p\n", c );
 #endif /* DEBUG_VERBOSE */
@@ -782,7 +734,7 @@ BOOL callback_h_free_clients( bstring idx, void* iter, void* arg ) {
     * to a list and then the list is disposed of.
     */
 
-   if( NULL == arg || 0 == bstrcmp( nick, c->nick ) ) {
+   if( NULL == arg || 0 == bstrcmp( nick, client_get_nick( c ) ) ) {
 #ifdef DEBUG_VERBOSE
       lg_debug( __FILE__, "Freeing client: %p\n", c );
 #endif /* DEBUG_VERBOSE */
@@ -791,18 +743,6 @@ BOOL callback_h_free_clients( bstring idx, void* iter, void* arg ) {
       return TRUE;
    }
    return FALSE;
-}
-
-/** \brief Kick and free clients on all channels in the given list.
- **/
-void* callback_remove_clients( bstring idx, void* iter, void* arg ) {
-   struct CHANNEL* l = (struct CHANNEL*)iter;
-   bstring nick = (bstring)arg;
-
-   hashmap_iterate( l->clients, callback_stop_clients, nick );
-   hashmap_remove_cb( l->clients, callback_h_free_clients, nick );
-
-   return NULL;
 }
 
 BOOL callback_free_channels( bstring idx, void* iter, void* arg ) {
@@ -861,6 +801,8 @@ BOOL callback_free_tilesets( bstring idx, void* iter, void* arg ) {
    return FALSE;
 }
 
+#ifdef USE_ITEMS
+
 BOOL callback_free_sprites( size_t idx, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
@@ -897,6 +839,7 @@ BOOL callback_free_item_caches( size_t idx, void* iter, void* arg ) {
    }
    return FALSE;
 }
+#endif // USE_ITEMS
 
 #ifdef USE_CHUNKS
 
