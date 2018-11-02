@@ -94,7 +94,7 @@ void datafile_handle_stream(
 
 #ifdef USE_ITEMS
    case DATAFILE_TYPE_ITEM_CATALOG_SPRITES: /* Fall through. */
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
    case DATAFILE_TYPE_MOBILE_SPRITES:
       graphics_surface_new( g, 0, 0, 0, 0 );
       lgc_null_msg( g, "Unable to interpret spritesheet image." );
@@ -127,7 +127,7 @@ void datafile_handle_stream(
       }
 #endif /* USE_EZXML */
       break;
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
    case DATAFILE_TYPE_MISC:
       lg_error( __FILE__, "Invalid data type specified.\n" );

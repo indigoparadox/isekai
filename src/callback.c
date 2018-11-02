@@ -253,7 +253,7 @@ cleanup:
    return NULL;
 }
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 void* callback_search_mobs_by_pos( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
@@ -420,7 +420,7 @@ void* callback_proc_channel_spawners(
    struct ITEM* e = NULL;
    struct ITEM_SPRITESHEET* catalog = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
    l = tilemap_get_channel( t );
    scaffold_assert( CHANNEL_SENTINAL == l->sentinal );
@@ -456,7 +456,7 @@ void* callback_proc_channel_spawners(
       }
       break;
 
-#if 0
+#ifdef USE_ITEMS
    case TILEMAP_SPAWNER_TYPE_ITEM:
       lg_debug(
          __FILE__, "Spawning item: %b, Catalog: %b\n", ts->id, ts->catalog
@@ -480,7 +480,7 @@ void* callback_proc_channel_spawners(
       }
       e = NULL;
       break;
-#endif // 0
+#endif /* USE_ITEMS */
    }
 
    /* TODO: We didn't get shunted to cleanup, so reset the timer if needed. */
@@ -500,7 +500,8 @@ void* callback_proc_server_spawners( bstring idx, void* iter, void* arg ) {
    return NULL;
 }
 
-#if 0
+#ifdef USE_ITEMS
+
 void* callback_search_item_type(
    size_t idx, void* iter, void* arg
 ) {
@@ -513,7 +514,8 @@ void* callback_search_item_type(
 
    return NULL;
 }
-#endif // 0
+
+#endif /* USE_ITEMS */
 
 void* callback_search_tilesets_gid( size_t idx, void* iter, void* arg ) {
    size_t* gid = (size_t*)arg;
@@ -839,7 +841,7 @@ BOOL callback_free_item_caches( size_t idx, void* iter, void* arg ) {
    }
    return FALSE;
 }
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 #ifdef USE_CHUNKS
 

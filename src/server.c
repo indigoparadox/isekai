@@ -47,8 +47,8 @@ void server_free_clients( struct SERVER* s ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_all( &(s->clients) );
-      //hashmap_remove_cb( &(s->clients), callback_free_clients, NULL );
+      //hashmap_remove_all( &(s->clients) );
+      hashmap_remove_cb( &(s->clients), callback_h_free_clients, NULL );
 #ifdef DEBUG
    lg_debug(
       __FILE__, "Removed %d clients from server. %d remaining.\n",
@@ -295,7 +295,7 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    );
 #endif /* DEBUG */
 
-/* cleanup: */
+cleanup:
    return;
 }
 

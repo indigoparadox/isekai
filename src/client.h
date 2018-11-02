@@ -39,7 +39,6 @@ struct CLIENT* client_new();
 void client_init( struct CLIENT* c );
 BOOL client_free_from_server( struct CLIENT* c );
 BOOL client_free( struct CLIENT* c );
-//void client_set_active_t( struct CLIENT* c, struct TILEMAP* t );
 short client_add_channel( struct CLIENT* c, struct CHANNEL* l )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
@@ -83,7 +82,7 @@ BOOL client_poll_ui(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
 );
 void client_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
-void client_set_names(
+int client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 );
 struct MOBILE* client_get_puppet( struct CLIENT* c );
@@ -94,13 +93,17 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 GRAPHICS* client_get_screen( struct CLIENT* c );
 struct TILEMAP* client_get_tilemap( struct CLIENT* c );
-const bstring client_get_nick( struct CLIENT* c );
-struct CHUNKER* client_get_chunker( struct CLIENT* c, bstring key );
+int client_set_remote( struct CLIENT* c, const bstring remote );
+bstring client_get_nick( struct CLIENT* c );
+struct CHUNKER* client_get_chunker( struct CLIENT* c, const bstring key );
 GRAPHICS* client_get_sprite( struct CLIENT* c, bstring filename );
-struct TILEMAP_TILESET* client_get_tileset( struct CLIENT* c, bstring filename );
+struct TILEMAP_TILESET* client_get_tileset(
+   struct CLIENT* c, const bstring filename );
 void client_add_ref( struct CLIENT* c );
-void client_load_tileset_data( struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
-void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
+void client_load_tileset_data(
+   struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
+void client_load_tilemap_data(
+   struct CLIENT* c, const bstring filename, BYTE* data, size_t length );
 BOOL client_is_loaded( struct CLIENT* c );
 struct CHANNEL* client_iterate_channels(
    struct CLIENT* c, hashmap_iter_cb cb, void* data
@@ -116,10 +119,10 @@ CLIENT_FLAGS client_test_flags( struct CLIENT* c, CLIENT_FLAGS flags );
 void client_set_flag( struct CLIENT* c, CLIENT_FLAGS flags );
 SCAFFOLD_SIZE_SIGNED client_write( struct CLIENT* c, const bstring buffer );
 SCAFFOLD_SIZE_SIGNED client_read( struct CLIENT* c, const bstring buffer );
-const bstring client_get_realname( struct CLIENT* c );
-const bstring client_get_username( struct CLIENT* c );
+bstring client_get_realname( struct CLIENT* c );
+bstring client_get_username( struct CLIENT* c );
 int client_remove_channel( struct CLIENT* c, const bstring lname );
-const bstring client_get_remote( struct CLIENT* c );
+bstring client_get_remote( struct CLIENT* c );
 size_t client_get_channels_count( struct CLIENT* c );
 size_t client_remove_chunkers( struct CLIENT* c, bstring filter );
 struct CLIENT* client_from_local_window( struct TWINDOW* twindow );

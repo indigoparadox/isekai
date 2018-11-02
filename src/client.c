@@ -100,7 +100,7 @@ static BOOL callback_remove_items( size_t idx, void* iter, void* arg ) {
    return TRUE;
 }
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 static void client_cleanup( const struct REF *ref ) {
    struct CLIENT* c =
@@ -132,7 +132,7 @@ static void client_cleanup( const struct REF *ref ) {
    vector_remove_cb( &(c->unique_items), callback_remove_items, NULL );
    vector_cleanup( &(c->unique_items ) );
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
    ipc_free( &(c->link) );
 
@@ -174,6 +174,7 @@ void client_init( struct CLIENT* c ) {
    c->remote = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->link = ipc_alloc();
+   c->protocol_data = NULL;
 
    c->sentinal = CLIENT_SENTINAL;
    c->running = TRUE;
@@ -790,29 +791,45 @@ reset_buffer:
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-void client_set_names(
+int client_set_names(
    struct CLIENT* c, bstring nick, bstring uname, bstring rname
 ) {
-   int bstr_result;
+   int bstr_result = 0;
 
    /* TODO: Handle this if we're connected. */
    scaffold_assert( !client_is_connected( c ) );
 
-   bwriteallow( *(c->nick) );
-   bstr_result = bassign( c->nick, nick );
-   scaffold_assert( BSTR_ERR != bstr_result );
-   bwriteprotect( *(c->nick) );
+   if( NULL != nick ) {
+      bwriteallow( *(c->nick) );
+      bstr_result = bassign( c->nick, nick );
+      lgc_nonzero( bstr_result );
+      bwriteprotect( *(c->nick) );
+   }
 
-   bwriteallow( *(c->realname) );
-   bstr_result = bassign( c->realname, uname );
-   scaffold_assert( BSTR_ERR != bstr_result );
-   bwriteprotect( *(c->realname) );
+   if( NULL != rname ) {
+      bwriteallow( *(c->realname) );
+      bstr_result = bassign( c->realname, rname );
+      lgc_nonzero( bstr_result );
+      bwriteprotect( *(c->realname) );
+   }
 
-   bwriteallow( *(c->username) );
-   bstr_result = bassign( c->username, rname );
-   scaffold_assert( BSTR_ERR != bstr_result );
-   bwriteprotect( *(c->username) );
-   return;
+   if( NULL != uname ) {
+      bwriteallow( *(c->username) );
+      bstr_result = bassign( c->username, uname );
+      lgc_nonzero( bstr_result );
+      bwriteprotect( *(c->username) );
+   }
+
+cleanup:
+   return bstr_result;
+}
+
+int client_set_remote( struct CLIENT* c, const bstring remote ) {
+   int res = 0;
+   bwriteallow( *(c->remote) );
+   res = bassign( c->remote, remote );
+   bwriteprotect( *(c->remote) );
+   return res;
 }
 
 struct MOBILE* client_get_puppet( struct CLIENT* c ) {
@@ -876,13 +893,15 @@ struct TILEMAP* client_get_tilemap( struct CLIENT* c ) {
  * \return
  *
  */
-const bstring client_get_nick( struct CLIENT* c ) {
+bstring client_get_nick( struct CLIENT* c ) {
    return c->nick;
 }
 
+#ifdef USE_CHUNKS
 struct CHUNKER* client_get_chunker( struct CLIENT* c, bstring key ) {
    return hashmap_get( &(c->chunkers), key );
 }
+#endif /* USE_CHUNKS */
 
 GRAPHICS* client_get_sprite( struct CLIENT* c, bstring filename ) {
    return hashmap_get( &(c->sprites), filename );
@@ -1102,11 +1121,11 @@ SCAFFOLD_SIZE_SIGNED client_read( struct CLIENT* c, const bstring buffer ) {
    return NULL != c && ipc_read( c->link, buffer );
 }
 
-const bstring client_get_realname( struct CLIENT* c ) {
+bstring client_get_realname( struct CLIENT* c ) {
    return c->realname;
 }
 
-const bstring client_get_username( struct CLIENT* c ) {
+bstring client_get_username( struct CLIENT* c ) {
    return c->username;
 }
 
@@ -1122,7 +1141,7 @@ int client_remove_channel( struct CLIENT* c, const bstring lname ) {
    return hashmap_remove( &(c->channels), lname );
 }
 
-const bstring client_get_remote( struct CLIENT* c ) {
+bstring client_get_remote( struct CLIENT* c ) {
    return c->remote;
 }
 
@@ -1130,9 +1149,11 @@ size_t client_get_channels_count( struct CLIENT* c ) {
    return hashmap_count( &(c->channels) );
 }
 
+#ifdef USE_CHUNKS
 size_t client_remove_chunkers( struct CLIENT* c, bstring filter ) {
    return hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, filter );
 }
+#endif /* USE_CHUNKS */
 
 struct CLIENT* client_from_local_window( struct TWINDOW* twindow ) {
    return scaffold_container_of( twindow, struct CLIENT, local_window );

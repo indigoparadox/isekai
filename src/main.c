@@ -52,7 +52,7 @@ struct CLIENT* main_client = NULL;
 GRAPHICS* g_screen = NULL;
 struct INPUT* input = NULL;
 struct UI* ui = NULL;
-struct CHANNEL* l = NULL;
+//struct CHANNEL* l = NULL;
 bstring buffer_host = NULL;
 bstring buffer_channel = NULL;
 BOOL showed_readme = FALSE;
@@ -115,7 +115,7 @@ static BOOL loop_game( int gfx_mode ) {
    GFX_COORD_PIXEL backlog_height_px = 0;
    struct TWINDOW* local_window = NULL;
    struct MOBILE* o = NULL;
-   //struct CHANNEL* l = NULL;
+   struct CHANNEL* l = NULL;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );

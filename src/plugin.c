@@ -6,6 +6,7 @@
 #include "channel.h"
 #include "input.h"
 #include "files.h"
+#include "callback.h"
 
 #include <dlfcn.h>
 
@@ -103,6 +104,10 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
 
    vector_iterate( &plugin_dir, cb_plugin_load, &ptype );
 
+cleanup:
+   bdestroy( plugin_path );
+   vector_remove_cb( &plugin_dir, callback_v_free_strings, NULL );
+   vector_cleanup( &plugin_dir );
    return ret;
 }
 
@@ -147,6 +152,8 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
 cleanup:
+   bdestroy( plugin_path );
+   bdestroy( plugin_filename );
    return ret;
 }
 
@@ -199,7 +206,7 @@ PLUGIN_RESULT plugin_call(
          handle = hashmap_get( &plugin_list_mode, plug );
          break;
    }
-   if( NULL == handle && NULL != plug ) {
+   if( NULL == handle ) {
       lg_error( __FILE__, "Could not call plugin: %b\n", plug );
    }
    lgc_null( handle );

@@ -8,18 +8,6 @@ struct CLIENT;
 struct CHANNEL;
 struct SERVER;
 
-#if 0
-struct SERVER {
-   /* "Root" class is REF*/
-
-   /* "Parent class" */
-   struct CLIENT self;
-
-   /* Items after this line are server-specific. */
-   struct HASHMAP clients;
-};
-#endif // 0
-
 #define SERVER_SENTINAL 164641
 
 #define SERVER_RANDOM_NICK_LEN 10
