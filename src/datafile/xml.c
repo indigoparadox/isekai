@@ -79,7 +79,7 @@ void datafile_parse_item_ezxml_t(
 ) {
 }
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 /* = Mobiles = */
 

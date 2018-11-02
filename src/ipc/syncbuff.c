@@ -97,9 +97,9 @@ BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
    retval = TRUE;
 
 cleanup:
-   if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
-      n->state = SYNCBUFF_STATE_DISCONNECTED;
-   }
+   //if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
+   //   n->state = SYNCBUFF_STATE_DISCONNECTED;
+   //}
 
    return retval;
 }

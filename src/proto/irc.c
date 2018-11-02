@@ -10,6 +10,10 @@
 #include "../ipc.h"
 #include "../files.h"
 
+struct IRC_CLIENT_DATA {
+   int irc_mode;
+};
+
 typedef struct _IRC_COMMAND {
    struct REF refcount;
    const struct tagbstring command;
@@ -44,7 +48,7 @@ extern IRC_COMMAND_TABLE_START( client );
 
 #ifdef USE_ITEMS
 static struct TILEMAP_ITEM_CACHE* last_item_cache = NULL;
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 static bstring irc_line_buffer = NULL;
 
@@ -447,7 +451,7 @@ void proto_send_tile_cache_channel(
    );
 }
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
    SCAFFOLD_SIZE serial = 0;
@@ -581,18 +585,18 @@ static void irc_server_user(
    SCAFFOLD_SIZE i,
        consumed = 0;
    int bstr_result = 0;
+   bstring realnamebuffer = NULL;
 
    /* Start at 1, skipping the command, itself. */
    for( i = 1 ; vector_count( args ) > i ; i++ ) {
       if( 0 == consumed ) {
          /* First arg: User */
-         // TODO: Set username.
          //bstr_result = bassign( c->username, (bstring)vector_get( args, i ) );
+         bstr_result =
+            client_set_names( c, NULL, (bstring)vector_get( args, i ), NULL );
          lgc_nonzero( bstr_result );
       } else if( 1 == consumed && scaffold_is_numeric( (bstring)vector_get( args, i ) ) ) {
          /* Second arg: Mode */
-         // TODO: Handle IRC mode in IRC module.
-         //c->irc_mode = bgtoi( (bstring)vector_get( args, i ) );
       } else if( 1 == consumed || 2 == consumed ) {
          /* Second or Third arg: * */
          if( 1 == consumed ) {
@@ -600,24 +604,27 @@ static void irc_server_user(
          }
       } else if( 3 == consumed && ':' != ((bstring)vector_get( args, i ))->data[0] ) {
          /* Third or Fourth arg: Remote Host */
-         // TODO: Set remote.
          //bstr_result = bassign( c->remote, (bstring)vector_get( args, i ) );
-         //lgc_nonzero( bstr_result );
+         bstr_result = client_set_remote( c, (bstring)vector_get( args, i ) );
+         lgc_nonzero( bstr_result );
       } else if( 3 == consumed || 4 == consumed ) {
          /* Fourth or Fifth arg: Real Name */
-         // TODO: Set realname.
          //bstr_result = bassign( c->realname, (bstring)vector_get( args, i ) );
-         //lgc_nonzero( bstr_result );
+         bstr_result =
+            client_set_names( c, NULL, NULL, (bstring)vector_get( args, i ) );
+         lgc_nonzero( bstr_result );
          if( 3 == consumed ) {
             consumed++; /* Extra bump for missing host. */
          }
       } else if( 4 < consumed ) {
          /* More real name. */
-         // TODO: Set realname.
-         //bstr_result = bconchar( c->realname, ' ' );
-         //lgc_nonzero( bstr_result );
-         //bstr_result = bconcat( c->realname, (bstring)vector_get( args, i ) );
-         //lgc_nonzero( bstr_result );
+         realnamebuffer = bstrcpy( client_get_realname( c ) );
+         bstr_result = bconchar( realnamebuffer, ' ' );
+         lgc_nonzero( bstr_result );
+         bstr_result =
+            bconcat( realnamebuffer, (bstring)vector_get( args, i ) );
+         lgc_nonzero( bstr_result );
+         client_set_names( c, NULL, NULL, realnamebuffer );
       }
       consumed++;
    }
@@ -629,6 +636,7 @@ static void irc_server_user(
    }
 
 cleanup:
+   bdestroy( realnamebuffer );
    return;
 }
 
@@ -677,7 +685,7 @@ static void irc_server_nick(
       lgc_null( oldnick );
    }
 
-   bstr_result = bassign( client_get_nick( c ), newnick );
+   bstr_result = client_set_names( c, newnick, NULL, NULL );
    lgc_nonzero( bstr_result );
 
    client_set_flag( c, CLIENT_FLAGS_HAVE_NICK );
