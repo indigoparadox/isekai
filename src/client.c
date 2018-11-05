@@ -166,8 +166,10 @@ void client_init( struct CLIENT* c ) {
 #endif /* USE_CHUNKS */
    vector_init( &(c->delayed_files) );
    hashmap_init( &(c->tilesets) );
+#ifdef USE_ITEMS
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
+#endif // USE_ITEMS
 
    c->nick = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->realname = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
@@ -402,8 +404,10 @@ void client_stop( struct CLIENT* c ) {
    if( FALSE != client_is_local( c ) ) {
       hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
       hashmap_remove_all( &(c->tilesets) );
+#ifdef USE_ITEMS
       hashmap_remove_all( &(c->item_catalogs) );
       vector_remove_all( &(c->unique_items) );
+#endif // USE_ITEMS
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
@@ -432,11 +436,13 @@ void client_stop( struct CLIENT* c ) {
       test_count = hashmap_count( &(c->tilesets) );
       scaffold_assert( 0 == test_count );
 
+#ifdef USE_ITEMS
       test_count = hashmap_count( &(c->item_catalogs) );
       scaffold_assert( 0 == test_count );
 
       test_count = vector_count( &(c->unique_items) );
       scaffold_assert( 0 == test_count );
+#endif // USE_ITEMS
    }
 #endif // DEBUG
 
@@ -839,6 +845,8 @@ struct MOBILE* client_get_puppet( struct CLIENT* c ) {
    return c->puppet;
 }
 
+#ifdef USE_ITEMS
+
 struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial ) {
    return vector_get( &(c->unique_items), serial );
 }
@@ -849,7 +857,6 @@ struct ITEM_SPRITESHEET* client_get_catalog(
    return hashmap_get( &(c->item_catalogs), name );
 }
 
-#if 0
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
    struct ITEM* c_e = NULL;
    int retval = 0;
@@ -875,7 +882,8 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
 cleanup:
    return;
 }
-#endif // 0
+
+#endif // USE_ITEMS
 
 GRAPHICS* client_get_screen( struct CLIENT* c ) {
    scaffold_assert_client();
