@@ -38,12 +38,17 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    struct TILEMAP_LAYER* layer = NULL;
    struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
+   struct CHANNEL* l = NULL;
    int layer_idx = 0;
    int layer_max;
    uint32_t tile;
 
-   c = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = c->active_tilemap;
+   c = client_from_local_window( twindow );
+   lgc_null( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   t = channel_get_tilemap( l );
+   lgc_null( c );
 
    // XXX
    //vector_lock( &(t->layers), TRUE );
@@ -60,6 +65,7 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    }
    //vector_lock( &(t->layers), FALSE );
 
+cleanup:
    return NULL;
 }
 
@@ -69,6 +75,7 @@ static void* mode_topdown_draw_mobile_cb(
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct CLIENT* local_client = NULL;
+   struct CHANNEL* l = NULL;
 
    if( NULL == o ) { return NULL; }
 
@@ -76,11 +83,16 @@ static void* mode_topdown_draw_mobile_cb(
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
-   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
+   local_client = client_from_local_window( twindow );
+   lgc_null( local_client );
+
    mobile_draw_ortho( o, local_client, twindow );
 
+cleanup:
    return NULL;
 }
+
+#ifdef USE_ITEMS
 
 static void* mode_topdown_tilemap_draw_items_cb(
    size_t idx, void* iter, void* arg
@@ -95,6 +107,8 @@ static void* mode_topdown_tilemap_draw_items_cb(
 
    return NULL;
 }
+
+#endif // USE_ITEMS
 
 /** \brief Callback: Draw iterated layer.
  */
@@ -272,10 +286,15 @@ static void mode_topdown_tilemap_draw_tile(
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+   struct CHANNEL* l = NULL;
 
-   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = local_client->active_tilemap;
-   o = local_client->puppet;
+   local_client = client_from_local_window( twindow );
+   lgc_null( local_client );
+   l = client_get_channel_active( local_client );
+   lgc_null( l );
+   t = channel_get_tilemap( l );
+   lgc_null( t );
+   o = client_get_puppet( local_client );
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
@@ -349,12 +368,16 @@ static void mode_topdown_tilemap_draw_tile(
       g_tileset
    );
 
+#ifdef USE_ITEMS
+
    cache = tilemap_get_item_cache( t, x, y, FALSE );
    if( NULL != cache ) {
       vector_iterate(
          &(cache->items), mode_topdown_tilemap_draw_items_cb, &tile_screen_rect
       );
    }
+
+#endif // USE_ITEMS
 
 #ifdef DEBUG_TILES
    mode_topdown_tilemap_draw_tile_debug(
@@ -377,9 +400,13 @@ static void mode_topdown_tilemap_update_window(
    struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
    TILEMAP_EXCLUSION exclusion;
+   struct CHANNEL* l = NULL;
 
-   c = scaffold_container_of( twindow, struct CLIENT, local_window );
-   t = c->active_tilemap;
+   c = client_from_local_window( twindow );
+   lgc_null( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   t = channel_get_tilemap( l );
 
    if( NULL == t ) {
       return;
@@ -475,16 +502,23 @@ static void mode_topdown_tilemap_update_window(
       twindow->y - border_y >= 0 &&
       twindow->y + twindow->height <= t->height
       ? twindow->y - border_y : 0;
+
+cleanup:
+   return;
 }
 
 static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    struct CLIENT* local_client = NULL;
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
+   struct CHANNEL* l = NULL;
 
-   local_client = scaffold_container_of( twindow, struct CLIENT, local_window );
-   o = local_client->puppet;
-   t = local_client->active_tilemap;
+   local_client = client_from_local_window( twindow );
+   lgc_null( local_client );
+   o = client_get_puppet( local_client );
+   l = client_get_channel_active( local_client );
+   lgc_null( l );
+   t = channel_get_tilemap( l );
 
    if( NULL == t ) {
       return;
@@ -521,6 +555,9 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    ) {
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
    }
+
+cleanup:
+   return;
 }
 
 PLUGIN_RESULT mode_topdown_init() {
@@ -531,8 +568,8 @@ PLUGIN_RESULT mode_topdown_draw(
    struct CLIENT* c,
    struct CHANNEL* l
 ) {
-   mode_topdown_tilemap_draw_tilemap( &(c->local_window) );
-   vector_iterate( l->mobiles, mode_topdown_draw_mobile_cb, &(c->local_window) );
+   mode_topdown_tilemap_draw_tilemap( client_get_local_window( c ) );
+   vector_iterate( l->mobiles, mode_topdown_draw_mobile_cb, client_get_local_window( c ) );
    return PLUGIN_SUCCESS;
 }
 
@@ -558,7 +595,7 @@ PLUGIN_RESULT mode_topdown_update(
    }
 
    mode_topdown_tilemap_update_window(
-      &(c->local_window), o->x, o->y
+      client_get_local_window( c ), o->x, o->y
    );
 
 cleanup:
@@ -586,14 +623,16 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       input_clear_buffer( p );
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
-      ui = c->ui;
+
+      /* XXX
+      ui = client_get_ui;
       update.o = puppet;
       update.l = puppet->channel;
       lgc_null( update.l );
       l = puppet->channel;
       lgc_null_msg( l, "No channel loaded." );
       t = l->tilemap;
-      lgc_null_msg( t, "No tilemap loaded." );
+      lgc_null_msg( t, "No tilemap loaded." ); */
    }
 
    /* If no windows need input, then move on to game input. */
@@ -712,6 +751,8 @@ PLUGIN_RESULT mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, stru
 }
 
 PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
+   #if 0
+
    if(
       TRUE == client_is_local( c ) &&
       hashmap_is_valid( &(c->sprites ) )
@@ -719,5 +760,6 @@ PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
       /* FIXME: This causes crash on re-login. */
       //hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
    }
+   #endif
    return PLUGIN_SUCCESS;
 }
