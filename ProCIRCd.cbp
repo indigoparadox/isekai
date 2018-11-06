@@ -401,11 +401,11 @@
 					<Add option="-DDEBUG_TILES" />
 					<Add option="-DxUSE_INLINE" />
 					<Add option="-DxUSE_CHUNKS" />
-					<Add option="-DDEBUG_VM" />
-					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DxDEBUG_VM" />
+					<Add option="-DxUSE_DUKTAPE" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
-					<Add option="-DDISABLE_MODE_ISO" />
+					<Add option="-DxDISABLE_MODE_ISO" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -836,6 +836,7 @@
 			<Add option="-DUSE_EZXML" />
 			<Add option="-DEZXML_NOMMAP" />
 			<Add option="-DUSE_ITERATOR_CACHE" />
+			<Add option="-DUSE_VECTOR_SCALAR" />
 			<Add directory="../libvcol/src" />
 		</Compiler>
 		<Linker>
