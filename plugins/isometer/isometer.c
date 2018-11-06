@@ -1,6 +1,6 @@
 
 #define MODE_C
-#include <mode.h>
+//#include <mode.h>
 
 #ifndef DISABLE_MODE_ISO
 
