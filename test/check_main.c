@@ -1,6 +1,6 @@
 #include <check.h>
 
-#include "../src/libgoki.h"
+#include <libvcol.h>
 
 #define main_add_test_proto( suite_name ) \
    Suite* suite_name ## _suite();

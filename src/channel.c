@@ -384,3 +384,10 @@ struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l ) {
    }
    return l->tilemap;
 }
+
+size_t channel_get_clients_count( const struct CHANNEL* l ) {
+   if( NULL == l ) {
+      return 0;
+   }
+   return hashmap_count( l->clients );
+}

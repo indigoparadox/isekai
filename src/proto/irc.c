@@ -1451,7 +1451,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
    /* Figure out if we're being called from a client or server. */
-   if( FALSE != client_is_local( c ) ) {
+   if( client_is_local( c ) ) {
       table = proto_table_client;
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -1469,7 +1469,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    last_read_count = client_read( c, irc_line_buffer );
 
    //if( !ipc_connected( c->link ) ) {
-   if( client_is_connected( c ) ) {
+   if( !client_is_connected( c ) ) {
       /* Return an empty command to force abortion of the iteration. */
       keep_going = FALSE;
       goto cleanup;
