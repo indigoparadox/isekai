@@ -292,7 +292,7 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    );
    scaffold_error_silent = FALSE;
 
-   if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
+   if( LGC_ERROR_NONE != lgc_error ) {
       ck_abort_msg( "Unable to open cached tilemap file." );
    }
    ck_assert_int_eq( cache_file_size, chunker_mapsize );
@@ -308,15 +308,15 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
    bstr_res = bassign( cache_file_path, &chunker_test_cachepath );
    lgc_nonzero( bstr_res );
    files_join_path( cache_file_path, (const bstring)&chunker_test_img_filename );
-   scaffold_error_silent = TRUE;
+   lgc_silence();
    files_read_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
    );
-   scaffold_error_silent = FALSE;
+   lgc_unsilence();
 
-   if( SCAFFOLD_ERROR_NONE != scaffold_error ) {
+   if( LGC_ERROR_NONE != lgc_error ) {
       ck_abort_msg( "Unable to open cached image file." );
    }
    ck_assert_int_eq( cache_file_size, chunker_imgsize );

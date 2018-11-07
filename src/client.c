@@ -567,9 +567,17 @@ void client_request_file_later(
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
    SCAFFOLD_SIZE_SIGNED verr;
+   BOOL deffered_lock = FALSE;
 
    /* Make sure request wasn't made already. */
+   if( vector_is_locked( &(c->delayed_files) ) ) {
+      deffered_lock = TRUE;
+      vector_lock( &(c->delayed_files), FALSE ); /* Hack, recursive locking. */
+   }
    request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
+   if( deffered_lock ) {
+      vector_lock( &(c->delayed_files), TRUE ); /* Hack, recursive locking. */
+   }
    if( NULL != request ) {
       goto cleanup; /* Silently. */
    }
@@ -581,7 +589,14 @@ void client_request_file_later(
    request->filename = bstrcpy( filename );
    request->type = type;
 
+   if( vector_is_locked( &(c->delayed_files) ) ) {
+      deffered_lock = TRUE;
+      vector_lock( &(c->delayed_files), FALSE ); /* Hack, recursive locking. */
+   }
    verr = vector_add( &(c->delayed_files), request );
+   if( deffered_lock ) {
+      vector_lock( &(c->delayed_files), TRUE ); /* Hack, recursive locking. */
+   }
    lgc_negative( verr );
 
 cleanup:
@@ -803,7 +818,9 @@ int client_set_names(
    int bstr_result = 0;
 
    /* TODO: Handle this if we're connected. */
-   scaffold_assert( !client_is_connected( c ) );
+   if( client_is_local( c ) ) {
+      scaffold_assert( !client_is_connected( c ) );
+   }
 
    if( NULL != nick ) {
       bwriteallow( *(c->nick) );

@@ -368,6 +368,8 @@ static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
       a->current_frame->height,
       a->target
    );
+
+   return NULL;
 }
 
 void animate_draw_animations( GRAPHICS* g ) {
