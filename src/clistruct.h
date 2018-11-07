@@ -36,7 +36,6 @@ struct CLIENT {
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
 #endif /* USE_ITEMS */
-   struct TILEMAP* active_tilemap;
    struct TWINDOW local_window;
 
 #ifdef USE_CHUNKS

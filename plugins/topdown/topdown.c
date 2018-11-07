@@ -121,13 +121,13 @@ static void* mode_topdown_tilemap_draw_layer_cb(
       x = 0,
       y = 0;
    uint32_t tile;
-   struct VECTOR* tiles = NULL;
+   /*struct VECTOR* tiles = NULL;
 
    tiles = &(layer->tiles);
 
    if( NULL == tiles || 0 == vector_count( tiles ) ) {
       goto cleanup;
-   }
+   }*/
 
    scaffold_assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
 
@@ -273,6 +273,38 @@ static void* callback_get_tileimg( bstring idx, void* iter, void* arg ) {
    return iter;
 }
 
+void* callback_search_tileset_img_gid( bstring idx, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   if(
+      NULL == iter
+#ifdef USE_CHUNKS
+      && NULL == client_get_chunker( c, idx )
+#endif /* USE_CHUNKS */
+   ) {
+      client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx );
+   }
+   if( NULL != iter ) {
+      return iter;
+   }
+
+   return NULL;
+
+#if 0
+   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
+      /* No sprites and no request yet, so make one! */
+      client_request_file( twindow->c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
+      goto cleanup;
+   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
+      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
+      refcount_inc( o->sprites, "spritesheet" );
+   } else if( NULL == o->sprites ) {
+      /* Sprites must not be ready yet. */
+      goto cleanup;
+   }
+#endif
+}
+
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
    TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
@@ -285,7 +317,9 @@ static void mode_topdown_tilemap_draw_tile(
    const struct MOBILE* o = NULL;
    GRAPHICS* g_tileset = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
+#ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+#endif // USE_ITEMS
    struct CHANNEL* l = NULL;
 
    local_client = client_from_local_window( twindow );
@@ -400,14 +434,15 @@ static void mode_topdown_tilemap_update_window(
    struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
    TILEMAP_EXCLUSION exclusion;
-   struct CHANNEL* l = NULL;
+   //struct CHANNEL* l = NULL;
 
    c = client_from_local_window( twindow );
    lgc_null( c );
-   l = client_get_channel_active( c );
+   /*l = client_get_channel_active( c );
    lgc_null( l );
-   t = channel_get_tilemap( l );
+   t = channel_get_tilemap( l );*/
 
+   t = client_get_tilemap_active( c );
    if( NULL == t ) {
       return;
    }
@@ -587,7 +622,7 @@ PLUGIN_RESULT mode_topdown_update(
       goto cleanup;
    }
 
-   t = client_get_tilemap( c );
+   t = client_get_tilemap_active( c );
    if( NULL == t ) {
       ret = PLUGIN_FAILURE;
       lg_error( __FILE__, "No active tilemap set.\n" );
@@ -608,9 +643,11 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
-   struct CHANNEL* l = NULL;
-   struct TILEMAP* t = NULL;
+   //struct CHANNEL* l = NULL;
+   //struct TILEMAP* t = NULL;
+#ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+#endif // USE_ITEMS
 
    puppet = client_get_puppet( c );
 
@@ -624,15 +661,14 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
 
-      /* XXX
-      ui = client_get_ui;
+      //ui = client_get_ui;
       update.o = puppet;
       update.l = puppet->channel;
       lgc_null( update.l );
-      l = puppet->channel;
-      lgc_null_msg( l, "No channel loaded." );
-      t = l->tilemap;
-      lgc_null_msg( t, "No tilemap loaded." ); */
+      //l = puppet->channel;
+      //lgc_null_msg( l, "No channel loaded." );
+      //t = client_get_tilemap( c );
+      //lgc_null_msg( t, "No tilemap loaded." );
    }
 
    /* If no windows need input, then move on to game input. */
@@ -672,6 +708,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       proto_client_send_update( c, &update );
       return TRUE;
 
+#ifdef USE_ITEMS
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
@@ -697,6 +734,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
       return TRUE;
+#endif // USE_ITEMS
 
    case '\\':
       if( NULL == client_input_from_ui ) {

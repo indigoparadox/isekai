@@ -548,38 +548,6 @@ void* callback_search_tilesets_small(
    return NULL;
 }
 
-void* callback_search_tileset_img_gid( bstring idx, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   if(
-      NULL == iter
-#ifdef USE_CHUNKS
-      && NULL == client_get_chunker( c, idx )
-#endif /* USE_CHUNKS */
-   ) {
-      client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx );
-   }
-   if( NULL != iter ) {
-      return iter;
-   }
-
-   return NULL;
-
-#if 0
-   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      /* No sprites and no request yet, so make one! */
-      client_request_file( twindow->c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
-      goto cleanup;
-   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
-      refcount_inc( o->sprites, "spritesheet" );
-   } else if( NULL == o->sprites ) {
-      /* Sprites must not be ready yet. */
-      goto cleanup;
-   }
-#endif
-}
-
 void* callback_proc_tileset_img_gs( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
 

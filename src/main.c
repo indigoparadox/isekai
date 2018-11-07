@@ -140,6 +140,9 @@ static BOOL loop_game( int gfx_mode ) {
    server_poll_new_clients( main_server );
 
 #ifdef ENABLE_LOCAL_CLIENT
+   /* Client drawing stuff after this. */
+   scaffold_set_client();
+
    if( FALSE == animate_is_blocking() ) {
       plugin_call(
          PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
@@ -168,7 +171,7 @@ static BOOL loop_game( int gfx_mode ) {
       animate_cancel_animation( NULL, &str_loading );
       goto cleanup;
 
-   } else if( FALSE == channel_is_loaded( l ) ) {
+   } else if( !channel_is_loaded( l ) ) {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
          load_complete = FALSE;
@@ -222,6 +225,7 @@ static BOOL loop_game( int gfx_mode ) {
    /* Client drawing stuff after this. */
    scaffold_set_client();
 
+   local_window = client_get_local_window( main_client );
    if( !load_complete ) {
       /* If we're this far, we must be done loading! */
       lg_debug( __FILE__, "Unloading loading animation...\n" );
@@ -229,7 +233,7 @@ static BOOL loop_game( int gfx_mode ) {
       load_complete = TRUE;
 
       /* Setup the window for drawing tiles, etc. */
-      local_window = client_get_local_window( main_client );
+      //local_window = client_get_local_window( main_client );
       twindow_update_details( local_window );
 
       backlog_height_px =

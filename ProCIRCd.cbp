@@ -89,6 +89,7 @@
 					<Add library="pthread" />
 					<Add library="rt" />
 					<Add library="m" />
+					<Add directory="../libvcol/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Strict (Linux-SB-Allegro4)">
@@ -406,6 +407,7 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DxDISABLE_MODE_ISO" />
+					<Add option="-DDEBUG_TILES_VERBOSE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -1407,6 +1409,28 @@
 		<Unit filename="src/mode/topdown.h" />
 		<Unit filename="src/plugin.c">
 			<Option compilerVar="CC" />
+			<Option target="Debug" />
+			<Option target="Release" />
+			<Option target="Strict (Linux-SB-Allegro4)" />
+			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-SB-Curses)" />
+			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+			<Option target="Debug (Linux-NET-Server)" />
+			<Option target="Debug (Emscripten-NET-SDL)" />
+			<Option target="Debug (Palm-SB)" />
 		</Unit>
 		<Unit filename="src/plugin.h" />
 		<Unit filename="src/proto.h" />
@@ -1697,7 +1721,6 @@
 		<Unit filename="test/check_syncbuff.c">
 			<Option compilerVar="CC" />
 			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
 		</Unit>
 		<Unit filename="test/check_vector.c">
 			<Option compilerVar="CC" />
