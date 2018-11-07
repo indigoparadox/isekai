@@ -528,7 +528,11 @@ static void* client_dr_cb( size_t idx, void* iter, void* arg ) {
    bstring filename = (bstring)arg;
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
 
-   if( NULL == req || 0 == bstrcmp( filename, req->filename ) ) {
+   if( NULL == req ) {
+      lg_error( __FILE__, "NULL file request found. This shouldn't happen.\n" );
+      return req;
+   }
+   if( 0 == bstrcmp( filename, req->filename ) ) {
       return req;
    }
 
@@ -583,6 +587,7 @@ void client_request_file_later(
    }
 
    /* Create a new delayed request. */
+   lg_info( __FILE__, "Creating delayed request for file: %b\n", filename );
    request = mem_alloc( 1, struct CLIENT_DELAYED_REQUEST );
    lgc_null( request );
 
@@ -908,8 +913,23 @@ GRAPHICS* client_get_screen( struct CLIENT* c ) {
    return c->local_window.ui->screen_g;
 }
 
-struct TILEMAP* client_get_tilemap( struct CLIENT* c ) {
-   return c->active_tilemap;
+struct TILEMAP* client_get_tilemap_active( struct CLIENT* c ) {
+   struct CHANNEL* l = NULL;
+   struct TILEMAP* t = NULL;
+   BOOL previously_silent = lgc_error_silent;
+
+   lgc_silence();
+   lgc_null( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   t = channel_get_tilemap( l );
+
+cleanup:
+   if( !previously_silent ) {
+      lgc_unsilence();
+   }
+
+   return t;
 }
 
 /** \brief Returns a reference to the client's current nick. This reference
@@ -1029,27 +1049,58 @@ size_t client_get_chunker_count(  )
 
 BOOL client_is_loaded( struct CLIENT* c ) {
    BOOL loaded = FALSE;
-   static size_t count = 0,
+   static size_t
       last_sprites = 0,
-      last_tilesets = 0,
       last_tilesets_loaded = 0,
-      last_chunkers = 0;
+      last_delayed = 0,
+#ifdef USE_CHUNKS
+      last_chunkers = 0,
+#endif /* USE_CHUNKS */
+      last_tilesets = 0;
 
-   client_is_loaded_compare(
-      count, hashmap_count( &(c->tilesets) ), last_tilesets, "Tileset" );
-   client_is_loaded_compare(
-      count, hashmap_count( &(c->sprites) ), last_sprites, "Sprite" );
+   if( last_tilesets != hashmap_count( &(c->tilesets) ) ) {
+      lg_debug( __FILE__,
+         "Tileset count changed: %d to %d\n", last_tilesets,
+         hashmap_count( &(c->tilesets) ) );
+      last_tilesets = hashmap_count( &(c->tilesets) );
+   }
+   if( 0 >= hashmap_count( &(c->tilesets) ) ) {
+      goto cleanup;
+   }
+   /* Sprites are loaded as we draw? */
+   /*client_is_loaded_compare(
+      count, hashmap_count( &(c->sprites) ), last_sprites, "Sprite" );*/
 
 #ifdef USE_CHUNKS
-   client_is_loaded_compare(
-      count, hashmap_count( &(c->chunkers) ), last_chunkers, "Chunker" );
+   if( last_chunkers != hashmap_count( &(c->chunkers) ) ) {
+      lg_debug( __FILE__,
+         "Chunker count changed: %d to %d\n", last_chunkers,
+         hashmap_count( &(c->chunkers) ) );
+      last_chunkers = hashmap_count( &(c->chunkers) );
+   }
+   if( 0 < hashmap_count( &(c->chunkers) ) ) {
+      goto cleanup;
+   }
 #endif /* USE_CHUNKS */
 
-   client_is_loaded_compare(
-      count, vector_count( &(c->delayed_files) ), last_chunkers, "Delayed file" );
+   if( last_delayed != vector_count( &(c->delayed_files) ) ) {
+      lg_debug( __FILE__,
+         "Delayed file count changed: %d to %d\n", last_delayed,
+         vector_count( &(c->delayed_files) ) );
+      last_delayed = vector_count( &(c->delayed_files) );
+   }
+   if( 0 < vector_count( &(c->delayed_files) ) ) {
+      goto cleanup;
+   }
 
-   client_is_loaded_compare(
-      count, c->tilesets_loaded, last_tilesets_loaded, "Loaded tileset" );
+   /* Loaded Tilesets */
+   if( last_tilesets_loaded != c->tilesets_loaded ) {
+      lg_debug( __FILE__, "Loaded tileset count changed: %d to %d\n", last_tilesets_loaded, c->tilesets_loaded );
+      last_tilesets_loaded = c->tilesets_loaded;
+   }
+   if( 0 >= c->tilesets_loaded  ) {
+      goto cleanup;
+   }
 
    /* We made it this far... */
    loaded = TRUE;

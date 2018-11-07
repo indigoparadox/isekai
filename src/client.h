@@ -92,7 +92,7 @@ struct ITEM_SPRITESHEET* client_get_catalog(
 );
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e );
 GRAPHICS* client_get_screen( struct CLIENT* c );
-struct TILEMAP* client_get_tilemap( struct CLIENT* c );
+struct TILEMAP* client_get_tilemap_active( struct CLIENT* c );
 int client_set_remote( struct CLIENT* c, const bstring remote );
 bstring client_get_nick( struct CLIENT* c );
 struct CHUNKER* client_get_chunker( struct CLIENT* c, const bstring key );
