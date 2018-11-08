@@ -253,6 +253,7 @@ struct CHANNEL* server_get_channel_by_name( struct SERVER* s, const bstring nick
 }
 
 void server_drop_client( struct SERVER* s, const bstring nick ) {
+   BOOL deffered_lock = FALSE;
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -263,10 +264,17 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    /* Perform the deletion. */
    /* TODO: Remove the client from all of the other lists that have upped its *
     *       ref count.                                                        */
+   if( hashmap_is_locked( &(s->clients) ) ) {
+      deffered_lock = TRUE;
+      hashmap_lock( &(s->clients), FALSE );
+   }
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( &(s->clients), callback_h_free_clients, nick );
+   if( deffered_lock ) {
+      hashmap_lock( &(s->clients), TRUE );
+   }
 #ifdef DEBUG
    lg_debug(
       __FILE__, "Server: Removed %d clients (%b). %d remaining.\n",

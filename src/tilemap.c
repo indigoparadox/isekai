@@ -7,6 +7,16 @@
 #include "channel.h"
 #include "twindow.h"
 
+struct TILEMAP_TILESET {
+   struct REF refcount;
+   GFX_COORD_PIXEL tileheight;  /*!< Height of tiles in pixels. */
+   GFX_COORD_PIXEL tilewidth;   /*!< Width of tiles in pixels. */
+   struct HASHMAP images;     /*!< Graphics indexed by filename. */
+   struct VECTOR terrain;     /*!< Terrains in file order. */
+   struct VECTOR tiles;       /*!< Tile data in file order. */
+   bstring def_path;
+};
+
 static BOOL tilemap_layer_free_cb(
    size_t idx, void* iter, void* arg
 ) {
@@ -114,13 +124,137 @@ void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
 
 #endif // USE_ITEMS
 
-void tilemap_layer_init( struct TILEMAP_LAYER* layer ) {
-   vector_init( &(layer->tiles) );
+void tilemap_layer_init( struct TILEMAP_LAYER* layer, size_t tiles_length ) {
+   //vector_init( &(layer->tiles) );
+   layer->tile_gids = mem_alloc( tiles_length, TILEMAP_TILE );
+   layer->tile_gids_len = tiles_length;
 }
 
 void tilemap_layer_cleanup( struct TILEMAP_LAYER* layer ) {
-   vector_cleanup( &(layer->tiles ) );
+   //vector_cleanup( &(layer->tiles) );
+   if( NULL != layer->tile_gids ) {
+      mem_free( layer->tile_gids );
+   }
    bdestroy( layer->name );
+}
+
+struct TILEMAP_TILESET* tilemap_tileset_new( bstring def_path ) {
+   struct TILEMAP_TILESET* set = NULL;
+   set = mem_alloc( 1, struct TILEMAP_TILESET );
+   lgc_null( set );
+   tilemap_tileset_init( set, def_path );
+cleanup:
+   return set;
+}
+
+struct TILEMAP_TILE_DATA* tilemap_tileset_get_tile(
+   struct TILEMAP_TILESET* set, int gid
+) {
+   scaffold_assert( NULL != set );
+   scaffold_assert( vector_is_valid( &(set->tiles) ) );
+   return vector_get( &(set->tiles), gid );
+}
+
+size_t tilemap_tileset_set_tile(
+   struct TILEMAP_TILESET* set, int gid, struct TILEMAP_TILE_DATA* tile_info
+) {
+   scaffold_assert( NULL != set );
+   scaffold_assert( vector_is_valid( &(set->tiles) ) );
+   return vector_set( &(set->tiles), gid, tile_info, TRUE );
+}
+
+GFX_COORD_PIXEL tilemap_tileset_get_tile_width( struct TILEMAP_TILESET* set ) {
+   scaffold_assert( NULL != set );
+   return set->tilewidth;
+}
+
+GFX_COORD_PIXEL tilemap_tileset_get_tile_height( struct TILEMAP_TILESET* set ) {
+   scaffold_assert( NULL != set );
+   return set->tileheight;
+}
+
+void tilemap_tileset_set_tile_width(
+   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL width
+) {
+   scaffold_assert( NULL != set );
+   set->tilewidth = width;
+}
+
+void tilemap_tileset_set_tile_height(
+   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL height
+) {
+   scaffold_assert( NULL != set );
+   set->tileheight = height;
+}
+
+BOOL tilemap_tileset_has_image( struct TILEMAP_TILESET* set, bstring filename ) {
+   if( NULL == set ) {
+      return FALSE;
+   }
+   if( hashmap_iterate( &(set->images), callback_search_graphics, filename ) ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+BOOL tilemap_tileset_set_image(
+   struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g
+) {
+   scaffold_assert( NULL != set );
+   scaffold_assert( hashmap_is_valid( &(set->images) ) );
+   if( hashmap_put( &(set->images), filename, g, FALSE ) ) {
+      return TRUE;
+   }
+   return FALSE;
+}
+
+static void* cb_tilemap_tileset_img_get_or_dl( bstring idx, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+
+   if(
+      NULL == iter
+#ifdef USE_CHUNKS
+      && NULL == client_get_chunker( c, idx )
+#endif /* USE_CHUNKS */
+   ) {
+      client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx );
+   } else if( NULL != iter ) {
+      return iter;
+   }
+   return NULL;
+}
+
+struct GRAPHICS* tilemap_tileset_get_image_default(
+   struct TILEMAP_TILESET* set, struct CLIENT* c
+) {
+   scaffold_assert( NULL != set );
+   //return (GRAPHICS*)hashmap_get_first( &(set->images) );
+   return hashmap_iterate(
+      &(set->images), cb_tilemap_tileset_img_get_or_dl, c );
+}
+
+BOOL tilemap_tileset_add_terrain(
+   struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info
+) {
+   scaffold_assert( NULL != set );
+   scaffold_assert( vector_is_valid( &(set->terrain) ) );
+   if( 0 > vector_add( &(set->terrain), terrain_info ) ) {
+      return FALSE;
+   }
+   return TRUE;
+}
+
+struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
+   struct TILEMAP_TILESET* set, size_t gid
+) {
+   scaffold_assert( NULL != set );
+   scaffold_assert( vector_is_valid( &(set->terrain) ) );
+   return vector_get( &(set->terrain), gid );
+}
+
+bstring tilemap_tileset_get_definition_path( struct TILEMAP_TILESET* set ) {
+   scaffold_assert( NULL != set );
+   return set->def_path;
 }
 
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* set ) {
@@ -213,20 +347,38 @@ cleanup:
 
 #endif /* USE_CURSES */
 
+#if 0
 /** \brief Get the GID of the tile at the given position on the given layer.
  * \param[in] layer  Layer from which to fetch the tile.
  * \param[in] x      X coordinate of the tile to fetch.
  * \param[in] y      Y coordinate of the tile to fetch.
  * \return A GID that can be used to find the tile's image or terrain info.
  */
-SCAFFOLD_INLINE uint32_t tilemap_get_tile(
+SCAFFOLD_INLINE TILEMAP_TILE tilemap_get_tile(
    const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
    if( vector_count( &(layer->tiles) ) <= index ) {
       return -1;
    }
+   // XXX: Invalid tiles showing up later.
    return vector_get_scalar( &(layer->tiles), index );
+}
+#endif // 0
+
+TILEMAP_TILE tilemap_layer_get_tile_gid(
+   const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+) {
+   SCAFFOLD_SIZE index = (y * layer->width) + x;
+   scaffold_assert( layer->tile_gids_len > index );
+   return layer->tile_gids[index];
+}
+
+void tilemap_layer_set_tile_gid(
+   const struct TILEMAP_LAYER* layer, size_t index, TILEMAP_TILE gid
+) {
+   scaffold_assert( layer->tile_gids_len > index );
+   layer->tile_gids[index] = gid;
 }
 
 TILEMAP_ORIENTATION tilemap_get_orientation( struct TILEMAP* t ) {

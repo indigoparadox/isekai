@@ -44,7 +44,7 @@ void datafile_handle_stream(
       );
       lgc_null( set );
 
-      if( hashmap_put( &(set->images), filename, g, FALSE ) ) {
+      if( tilemap_tileset_set_image( set, filename, g ) ) {
          lg_error(
             __FILE__, "Attempted to double-add file: %b\n", filename );
          graphics_surface_free( g );
@@ -139,6 +139,7 @@ void datafile_handle_stream(
 
 cleanup:
    bdestroy( mob_id );
+   //bdestroy( filename );
 #ifdef USE_EZXML
    if( NULL != xml_data ) {
       ezxml_free( xml_data );

@@ -478,9 +478,11 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
 
    lgc_null( set );
 
+   /*
    if( !hashmap_is_valid( &(set->images) ) ) {
       hashmap_init( &(set->images) );
    }
+   */
 
    buffer = bfromcstralloc( 1024, "" );
    lgc_null( buffer );
@@ -503,9 +505,9 @@ static void datafile_tilemap_parse_tileset_ezxml_image(
    /* The key with NULL means we need to load this image. */
    lg_debug(
       __FILE__, "Adding tile image name %b to set %b...\n",
-      buffer, set->def_path
+      buffer, tilemap_tileset_get_definition_path( set )
    );
-   if( hashmap_put( &(set->images), buffer, NULL, FALSE ) ) {
+   if( tilemap_tileset_set_image( set, buffer, NULL ) ) {
       lg_error( __FILE__, "Attempted to add existing image: %b\n",
          buffer );
    }
@@ -569,8 +571,8 @@ static void datafile_tilemap_parse_tileset_ezxml_terrain(
 
    terrain_info->id = id;
 
-   verr = vector_add( &(set->terrain), terrain_info );
-   if( 0 > verr ) {
+   verr = tilemap_tileset_add_terrain( set, terrain_info );
+   if( !verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;
    }
@@ -607,6 +609,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    const char* dbg_terrain_name[4];
 #endif /* DEBUG_TILES_VERBOSE */
    BOOL loaded_fully = FALSE;
+   GFX_COORD_PIXEL val_tmp = 0;
 
    lgc_error = 0;
 
@@ -624,8 +627,10 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    xml_image = ezxml_child( xml_tileset, "image" );
    lgc_null( xml_image );
 
-   ezxml_int( set->tilewidth, xml_attr, xml_tileset, "tilewidth" );
-   ezxml_int( set->tileheight, xml_attr, xml_tileset, "tileheight" );
+   ezxml_int( val_tmp, xml_attr, xml_tileset, "tilewidth" );
+   tilemap_tileset_set_tile_width( set, val_tmp );
+   ezxml_int( val_tmp, xml_attr, xml_tileset, "tileheight" );
+   tilemap_tileset_set_tile_height( set, val_tmp );
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -657,9 +662,9 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 
    /* Parse the tile information. */
 
-   if( !vector_is_valid( &(set->tiles) ) ) {
+   /* if( !vector_is_valid( &(set->tiles) ) ) {
       vector_init( &(set->tiles) );
-   }
+   } */
 
    xml_tile = ezxml_child( xml_tileset, "tile" );
    lgc_null( xml_tile );
@@ -680,7 +685,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
       while( 4 > i ) {
          if( ',' == *terrain_c || '\0' == *terrain_c) {
             if( '\0' != terrain_id_c[0] ) {
-               terrain_info = vector_get( &(set->terrain), atoi( terrain_id_c ) );
+               terrain_info = tilemap_tileset_get_terrain( set, atoi( terrain_id_c ) );
                tile_info->terrain[i] = terrain_info;
             } else {
                tile_info->terrain[i] = NULL;
@@ -725,7 +730,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
       );
 #endif /* DEBUG_TILES_VERBOSE */
 
-      vector_set( &(set->tiles), tile_info->id, tile_info, TRUE );
+      tilemap_tileset_set_tile( set, tile_info->id, tile_info );
       tile_info = NULL;
 
       xml_tile = ezxml_next( xml_tile );
@@ -751,7 +756,9 @@ static void datafile_tilemap_parse_layer_ezxml(
 
    lgc_null( xml_layer );
 
-   tilemap_layer_new( layer );
+   //tilemap_layer_new( layer );
+
+   layer = mem_alloc( 1, struct TILEMAP_LAYER );
 
    layer->width = atoi( ezxml_attr( xml_layer, "width" ) );
    layer->height = atoi( ezxml_attr( xml_layer, "height" ) );
@@ -768,10 +775,12 @@ static void datafile_tilemap_parse_layer_ezxml(
    /* Convert each tile terrain ID string into an int16 and stow in array. */
 
    /* TODO: Lock the list while adding, somehow. */
+   tilemap_layer_init( layer, vector_count( tiles_list ) );
    for( i = 0 ; vector_count( tiles_list ) > i ; i++ ) {
       xml_attr = bdata( (bstring)vector_get( tiles_list, i ) );
       lgc_null( xml_attr );
-      vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
+      tilemap_layer_set_tile_gid( layer, i, atoi( xml_attr ) );
+      //vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
 
    layer->tilemap = t;
@@ -991,7 +1000,8 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
          lg_debug(
             __FILE__, "New tileset found server-wide: %b\n", tileset_id
          );
-         tilemap_tileset_new( set, tileset_id );
+         set = tilemap_tileset_new( tileset_id );
+         lgc_null( set );
          /* Don't have to check since the hashmap_get above is a check. */
          client_set_tileset( l->client_or_server, tileset_id, set );
 
