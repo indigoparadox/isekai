@@ -287,15 +287,13 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    TILEMAP_COORD_TILE x, struct TWINDOW* twindow
 ) {
-   struct CLIENT* c;
    struct TILEMAP* t = NULL;
 
-   c = client_from_local_window( twindow );
-   t = client_get_channel_active( c )->tilemap;
+   t = twindow_get_tilemap_active( twindow );
 
-   if( x < ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
+   if( x < ((twindow_get_width( twindow ) / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
-   } else if( x >= t->width - ((twindow->width / 2) - TILEMAP_DEAD_ZONE_X) ) {
+   } else if( x >= t->width - ((twindow_get_width( twindow ) / 2) - TILEMAP_DEAD_ZONE_X) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN;
    } else {
       return TILEMAP_EXCLUSION_INSIDE;
@@ -310,17 +308,15 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
 SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
    TILEMAP_COORD_TILE y, struct TWINDOW* twindow
 ) {
-   struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
 
-   c = client_from_local_window( twindow );
-   t = client_get_channel_active( c )->tilemap;
+   t = twindow_get_tilemap_active( twindow );
 
    if(
-      y < ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y)
+      y < (twindow_get_height( twindow ) / 2) - TILEMAP_DEAD_ZONE_Y
    ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
-   } else if( y >= t->height - ((twindow->height / 2) - TILEMAP_DEAD_ZONE_Y) ) {
+   } else if( y >= t->height - ((twindow_get_height( twindow ) / 2) - TILEMAP_DEAD_ZONE_Y) ) {
       return TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN;
    } else {
       return TILEMAP_EXCLUSION_INSIDE;
@@ -332,7 +328,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
 ) {
    TILEMAP_COORD_TILE twindow_middle_x = 0;
 
-   twindow_middle_x = (twindow->x + (twindow->width / 2));
+   twindow_middle_x = (twindow_get_x( twindow ) + (twindow_get_width( twindow ) / 2));
 
    if( x < twindow_middle_x - TILEMAP_DEAD_ZONE_X ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;
@@ -348,7 +344,7 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
 ) {
    TILEMAP_COORD_TILE twindow_middle_y = 0;
 
-   twindow_middle_y = (twindow->y + (twindow->height / 2));
+   twindow_middle_y = (twindow_get_y( twindow ) + (twindow_get_height( twindow ) / 2));
 
    if( y < twindow_middle_y - TILEMAP_DEAD_ZONE_Y ) {
       return TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP;

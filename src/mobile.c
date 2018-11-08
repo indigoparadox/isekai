@@ -304,10 +304,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    }
 
    if(
-      o->x > twindow->max_x ||
-      o->y > twindow->max_y ||
-      o->x < twindow->min_x ||
-      o->y < twindow->min_y ||
+      o->x > twindow_get_max_x( twindow ) ||
+      o->y > twindow_get_max_y( twindow ) ||
+      o->x < twindow_get_min_x( twindow ) ||
+      o->y < twindow_get_min_y( twindow ) ||
       NULL == o->current_animation
    ) {
       goto cleanup;
@@ -316,8 +316,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    /* Figure out the window position to draw to. */
    /* TODO: Support variable sprite size. */
    /* TODO: This should use tilemap tile size. */
-   pix_x = (MOBILE_SPRITE_SIZE * (o->x - (twindow->x)));
-   pix_y = (MOBILE_SPRITE_SIZE * (o->y - (twindow->y)));
+   pix_x = (MOBILE_SPRITE_SIZE * (o->x - twindow_get_x( twindow )));
+   pix_y = (MOBILE_SPRITE_SIZE * (o->y - twindow_get_y( twindow )));
 
    o_player = client_get_puppet( local_client );
 
@@ -390,7 +390,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    tilemap_add_dirty_tile( active_tilemap, o->prev_x, o->prev_y );
 
    graphics_blit_partial(
-      twindow->g,
+      twindow_get_screen( twindow ),
       pix_x, pix_y,
       sprite_rect.x, sprite_rect.y,
       o->sprite_width, o->sprite_display_height,

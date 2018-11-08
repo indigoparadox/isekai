@@ -237,17 +237,17 @@ static BOOL loop_game( int gfx_mode ) {
       twindow_update_details( local_window );
 
       backlog_height_px =
-         backlog_height_tiles * local_window->grid_h;
+         backlog_height_tiles * twindow_get_grid_h( local_window );
 
       /* Show the backlog at the bottom, shrinking the map to fit. */
-      local_window->height -= backlog_height_tiles;
+      twindow_shrink_height( local_window, backlog_height_tiles );
       backlog_ensure_window( ui, backlog_height_px );
    } else {
       /* We need this for the one-time stuff under !load_complete AND for        *
        * drawing the mask below.
        */
       backlog_height_px =
-         backlog_height_tiles * local_window->grid_h;
+         backlog_height_tiles * twindow_get_grid_h( local_window );
    }
 
    /* If we're on the move then update the window frame. */
@@ -257,7 +257,7 @@ static BOOL loop_game( int gfx_mode ) {
    l = client_get_channel_active( main_client );
    if(
       0 != o->steps_remaining ||
-      local_window->max_x == local_window->min_x ||
+      twindow_get_max_x( local_window ) == twindow_get_min_x( local_window ) ||
       (NULL != l && TILEMAP_REDRAW_ALL == l->tilemap->redraw_state)
    ) {
       plugin_call(
@@ -508,7 +508,7 @@ cleanup:
    return keep_going; /* TODO: ESC to quit. */
 }
 
-static BOOL loop_master() {
+static BOOL loop_master( struct TWINDOW* local_screen ) {
    BOOL retval = FALSE;
    BOOL connected = FALSE;
    uint16_t main_client_joined = 0;
@@ -536,9 +536,9 @@ static BOOL loop_master() {
       lg_debug(
          __FILE__, "Server connected; joining client to channel...\n"
       );
-      client_get_local_window( main_client )->ui = ui;
-      client_get_local_window( main_client )->g = g_screen;
-      //client_set_active_t( main_client, NULL );
+      twindow_set_ui( local_screen, ui );
+      twindow_set_screen( local_screen, g_screen );
+      twindow_set_local_client( local_screen, main_client );
       proto_client_join( main_client, buffer_channel );
       retval = TRUE;
 
@@ -585,6 +585,7 @@ int main( int argc, char** argv ) {
    scaffold_log_handle = fopen( "stdout.log", "w" );
    scaffold_log_handle_err = fopen( "stderr.log", "w" );
 #endif /* SCAFFOLD_LOG_FILE */
+   struct TWINDOW* local_window = NULL;
 
    lg_add_trace_cat( "CLIENT", LG_COLOR_CYAN );
    lg_add_trace_cat( "SERVER", LG_COLOR_GREEN );
@@ -613,6 +614,7 @@ int main( int argc, char** argv ) {
 
    graphics_set_window_title( g_screen, &str_title, NULL );
 
+   local_window = twindow_new();
    input = mem_alloc( 1, struct INPUT );
    lgc_null( input );
    input_init( input );
@@ -639,9 +641,11 @@ int main( int argc, char** argv ) {
    scaffold_set_client();
    main_client = client_new();
    client_set_local( main_client, TRUE );
+   twindow_set_local_client( local_window, main_client );
+   client_set_local_window( main_client, local_window );
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   while( loop_master() );
+   while( loop_master( local_window ) );
 
 cleanup:
    proto_shutdown();

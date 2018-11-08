@@ -1326,7 +1326,7 @@ void ui_window_draw_tilegrid( struct UI* ui, struct TWINDOW* twindow ) {
 
    scaffold_assert( &global_ui == ui );
 
-   for( grid_x = 0 ; twindow->max_x > grid_x ; grid_x++ ) {
+   for( grid_x = 0 ; twindow_get_max_x( twindow ) > grid_x ; grid_x++ ) {
 
    }
 }

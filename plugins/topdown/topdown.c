@@ -7,6 +7,7 @@
 #include <channel.h>
 #include <proto.h>
 #include <plugin.h>
+#include <twindow.h>
 
 extern struct tagbstring str_client_cache_path;
 extern struct tagbstring str_wid_debug_tiles_pos;
@@ -36,19 +37,13 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct TILEMAP_LAYER* layer = NULL;
-   struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
-   struct CHANNEL* l = NULL;
    int layer_idx = 0;
    int layer_max;
    uint32_t tile;
 
-   c = client_from_local_window( twindow );
-   lgc_null( c );
-   l = client_get_channel_active( c );
-   lgc_null( l );
-   t = channel_get_tilemap( l );
-   lgc_null( c );
+   t = twindow_get_tilemap_active( twindow );
+   lgc_null( t );
 
    // XXX
    //vector_lock( &(t->layers), TRUE );
@@ -75,7 +70,6 @@ static void* mode_topdown_draw_mobile_cb(
    struct MOBILE* o = (struct MOBILE*)iter;
    struct TWINDOW* twindow = (struct TWINDOW*)arg;
    struct CLIENT* local_client = NULL;
-   struct CHANNEL* l = NULL;
 
    if( NULL == o ) { return NULL; }
 
@@ -83,7 +77,7 @@ static void* mode_topdown_draw_mobile_cb(
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
-   local_client = client_from_local_window( twindow );
+   local_client = twindow_get_local_client( twindow );
    lgc_null( local_client );
 
    mobile_draw_ortho( o, local_client, twindow );
@@ -132,8 +126,8 @@ static void* mode_topdown_tilemap_draw_layer_cb(
    scaffold_assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
 
    /* TODO: Do culling in iso-friendly way. */
-   for( x = twindow->min_x ; twindow->max_x > x ; x++ ) {
-      for( y = twindow->min_y ; twindow->max_y > y ; y++ ) {
+   for( x = twindow_get_min_x( twindow ) ; twindow_get_max_x( twindow ) > x ; x++ ) {
+      for( y = twindow_get_min_y( twindow ) ; twindow_get_max_y( twindow ) > y ; y++ ) {
          tile = tilemap_get_tile( layer, x, y );
          if( 0 == tile ) {
             continue;
@@ -143,7 +137,6 @@ static void* mode_topdown_tilemap_draw_layer_cb(
       }
    }
 
-cleanup:
    return NULL;
 }
 
@@ -320,14 +313,13 @@ static void mode_topdown_tilemap_draw_tile(
 #ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 #endif // USE_ITEMS
-   struct CHANNEL* l = NULL;
+   //struct CHANNEL* l = NULL;
 
-   local_client = client_from_local_window( twindow );
+   local_client = twindow_get_local_client( twindow );
    lgc_null( local_client );
-   l = client_get_channel_active( local_client );
-   lgc_null( l );
-   t = channel_get_tilemap( l );
+   t = twindow_get_tilemap_active( twindow );
    lgc_null( t );
+
    o = client_get_puppet( local_client );
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
@@ -343,8 +335,8 @@ static void mode_topdown_tilemap_draw_tile(
    }
 
    /* Figure out the window position to draw to. */
-   tile_screen_rect.x = set->tilewidth * (x - twindow->x);
-   tile_screen_rect.y = set->tileheight * (y - twindow->y);
+   tile_screen_rect.x = set->tilewidth * (x - twindow_get_x( twindow ));
+   tile_screen_rect.y = set->tileheight * (y - twindow_get_y( twindow ));
 
    if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
       goto cleanup; /* Silently. */
@@ -395,7 +387,7 @@ static void mode_topdown_tilemap_draw_tile(
    }
 
    graphics_blit_partial(
-      twindow->g,
+      twindow_get_screen( twindow ),
       tile_screen_rect.x, tile_screen_rect.y,
       tile_tilesheet_pos.x, tile_tilesheet_pos.y,
       set->tilewidth, set->tileheight,
@@ -429,20 +421,28 @@ static void mode_topdown_tilemap_update_window(
    TILEMAP_COORD_TILE focal_x, TILEMAP_COORD_TILE focal_y
 ) {
    TILEMAP_COORD_TILE
-      border_x = twindow->x == 0 ? 0 : TILEMAP_BORDER,
-      border_y = twindow->y == 0 ? 0 : TILEMAP_BORDER;
-   struct CLIENT* c = NULL;
+      border_x = TILEMAP_BORDER,
+      border_y = TILEMAP_BORDER;
+   //struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
    TILEMAP_EXCLUSION exclusion;
    //struct CHANNEL* l = NULL;
 
-   c = client_from_local_window( twindow );
-   lgc_null( c );
+   /* Clamp border to the edge of the map. */
+   if( 0 == twindow_get_x( twindow ) ) {
+      border_x = 0;
+   }
+   if( 0 == twindow_get_y( twindow ) ) {
+      border_y = 0;
+   }
+
+   //c = twindow_get_local_client( twindow );
+   //lgc_null( c );
    /*l = client_get_channel_active( c );
    lgc_null( l );
    t = channel_get_tilemap( l );*/
 
-   t = client_get_tilemap_active( c );
+   t = twindow_get_tilemap_active( twindow );
    if( NULL == t ) {
       return;
    }
@@ -450,11 +450,17 @@ static void mode_topdown_tilemap_update_window(
    /* TODO: Request item caches for tiles scrolling into view. */
 
    /* Find the focal point if we're not centered on it. */
-   if( focal_x < twindow->x || focal_x > twindow->x + twindow->width ) {
-      twindow->x = focal_x - (twindow->width / 2);
+   if(
+      focal_x < twindow_get_x( twindow ) ||
+      focal_x > twindow_get_x( twindow ) + twindow_get_width( twindow )
+   ) {
+      twindow_set_x( twindow, focal_x - (twindow_get_width( twindow ) / 2) );
    }
-   if( focal_y < twindow->y || focal_y > twindow->y + twindow->height ) {
-      twindow->y = focal_y - (twindow->height / 2);
+   if(
+      focal_y < twindow_get_y( twindow ) ||
+      focal_y > twindow_get_y( twindow ) + twindow_get_height( twindow )
+   ) {
+      twindow_set_y( twindow, focal_y - (twindow_get_height( twindow ) / 2) );
    }
 
    /* Scroll the window to follow the focal point. */
@@ -464,14 +470,14 @@ static void mode_topdown_tilemap_update_window(
       lg_debug(
          __FILE__, "Focal point right of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->x++;
+      twindow_shift_right_x( twindow, 1 );
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
       lg_debug(
          __FILE__, "Focal point left of window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->x--;
+      twindow_shift_left_x( twindow, 1 );
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    }
 
@@ -481,14 +487,14 @@ static void mode_topdown_tilemap_update_window(
       lg_debug(
          __FILE__, "Focal point below window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->y++;
+      twindow_shift_down_y( twindow, 1 );
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
       lg_debug(
          __FILE__, "Focal point above window dead zone.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->y--;
+      twindow_shift_up_y( twindow, 1 );
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    }
 
@@ -499,13 +505,13 @@ static void mode_topdown_tilemap_update_window(
       lg_debug(
          __FILE__, "Focal point too close to map left edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->x = t->width - twindow->width;
+      twindow_set_x( twindow, t->width - twindow_get_width( twindow ) );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
       lg_debug(
          __FILE__, "Focal point too close to map right edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->x = 0;
+      twindow_set_x( twindow, 0 );
    }
 
    exclusion = tilemap_inside_inner_map_y( focal_y, twindow );
@@ -514,29 +520,41 @@ static void mode_topdown_tilemap_update_window(
       lg_debug(
          __FILE__, "Focal point too close to map bottom edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->y = t->height - twindow->height;
+      twindow_set_y( twindow, t->height - twindow_get_height( twindow ) );
    } else if( TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP == exclusion ) {
 #ifdef DEBUG_TILES_VERBOSE
       lg_debug(
          __FILE__, "Focal point too close to map top edge.\n" );
 #endif /* DEBUG_TILES_VERBOSE */
-      twindow->y = 0;
+      twindow_set_y( twindow, 0 );
    }
 
    /* Only calculate these when window moves and store them. */
-   twindow->max_x = twindow->x + twindow->width + border_x < t->width ?
-      twindow->x + twindow->width + border_x : t->width;
-   twindow->max_y = twindow->y + twindow->height + border_y < t->height ?
-      twindow->y + twindow->height + border_y : t->height;
+   twindow_set_max_x(
+      twindow,
+      twindow_get_x( twindow ) + twindow_get_width( twindow ) +
+      border_x < t->width ?
+         twindow_get_right( twindow ) + border_x :
+         t->width
+   );
+   twindow_set_max_y(
+      twindow,
+      twindow_get_y( twindow ) + twindow_get_height( twindow ) +
+      border_y < t->height ?
+         twindow_get_bottom( twindow ) + border_y :
+         t->height
+   );
 
-   twindow->min_x =
-      twindow->x - border_x >= 0 &&
-      twindow->x + twindow->width <= t->width
-      ? twindow->x - border_x : 0;
-   twindow->min_y =
-      twindow->y - border_y >= 0 &&
-      twindow->y + twindow->height <= t->height
-      ? twindow->y - border_y : 0;
+   twindow_set_min_x(
+      twindow,
+      twindow_get_x( twindow ) - border_x >= 0 &&
+      twindow_get_right( twindow ) <= t->width
+      ? twindow_get_x( twindow ) - border_x : 0 );
+   twindow_set_min_y(
+      twindow,
+      twindow_get_y( twindow ) - border_y >= 0 &&
+      twindow_get_bottom( twindow ) <= t->height
+      ? twindow_get_y( twindow ) - border_y : 0 );
 
 cleanup:
    return;
@@ -546,14 +564,12 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    struct CLIENT* local_client = NULL;
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
-   struct CHANNEL* l = NULL;
+   //struct CHANNEL* l = NULL;
 
-   local_client = client_from_local_window( twindow );
+   local_client = twindow_get_local_client( twindow );
    lgc_null( local_client );
    o = client_get_puppet( local_client );
-   l = client_get_channel_active( local_client );
-   lgc_null( l );
-   t = channel_get_tilemap( l );
+   t = twindow_get_tilemap_active( twindow );
 
    if( NULL == t ) {
       return;

@@ -36,7 +36,7 @@ struct CLIENT {
    struct HASHMAP item_catalogs;
    struct VECTOR unique_items;
 #endif /* USE_ITEMS */
-   struct TWINDOW local_window;
+   struct TWINDOW* local_window;
 
 #ifdef USE_CHUNKS
    struct HASHMAP chunkers;
