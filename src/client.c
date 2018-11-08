@@ -742,6 +742,7 @@ BOOL client_poll_ui(
    struct TILEMAP* t = NULL;
    int bstr_ret;
    BOOL retval = FALSE;
+   struct TWINDOW* w = NULL;
 
    if( NULL != c && NULL != c->puppet && NULL != c->puppet->channel ) {
       t = c->puppet->channel->tilemap;
@@ -768,10 +769,12 @@ BOOL client_poll_ui(
 #endif /* DEBUG_VM */
 
    /* Poll window: Chat */
-   if( NULL != ui_window_by_id( c->local_window.ui, &str_client_window_id_chat ) ) {
+   w = client_get_local_window( c );
+   lgc_null( w );
+   if( NULL != ui_window_by_id( client_get_ui( c ), &str_client_window_id_chat ) ) {
       retval = TRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
-         c->local_window.ui, p, &str_client_window_id_chat
+         client_get_ui( c ), p, &str_client_window_id_chat
       ) ) {
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
@@ -786,10 +789,10 @@ BOOL client_poll_ui(
    }
 
    /* Poll window: Chat */
-   if( NULL != ui_window_by_id( c->local_window.ui, &str_client_window_id_inv ) ) {
+   if( NULL != ui_window_by_id( client_get_ui( c ), &str_client_window_id_inv ) ) {
       retval = TRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
-         c->local_window.ui, p, &str_client_window_id_inv
+         client_get_ui( c ), p, &str_client_window_id_inv
       ) ) {
          tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
@@ -908,9 +911,21 @@ cleanup:
 #endif // USE_ITEMS
 
 GRAPHICS* client_get_screen( struct CLIENT* c ) {
+   struct TWINDOW* w = NULL;
+   struct GRAPHICS* g = NULL;
+
    scaffold_assert_client();
 
-   return c->local_window.ui->screen_g;
+   lgc_null( c );
+
+   w = client_get_local_window( c );
+   lgc_null( w );
+
+   g = twindow_get_screen( w );
+
+cleanup:
+
+   return g;
 }
 
 struct TILEMAP* client_get_tilemap_active( struct CLIENT* c ) {
@@ -1170,7 +1185,7 @@ struct CHANNEL* client_get_channel_active( struct CLIENT* c ) {
 }
 
 struct TWINDOW* client_get_local_window( struct CLIENT* c ) {
-   return &(c->local_window);
+   return c->local_window;
 }
 
 BOOL client_is_listening( struct CLIENT* c ) {
@@ -1205,6 +1220,18 @@ bstring client_get_username( struct CLIENT* c ) {
    return c->username;
 }
 
+struct UI* client_get_ui( struct CLIENT* c ) {
+   struct UI* ui = NULL;
+   struct TWINDOW* w = NULL;
+
+   w = client_get_local_window( c );
+   lgc_null( w );
+
+   ui = twindow_get_ui( w );
+cleanup:
+   return ui;
+}
+
 /** \brief
  *
  * \param
@@ -1231,6 +1258,12 @@ size_t client_remove_chunkers( struct CLIENT* c, bstring filter ) {
 }
 #endif /* USE_CHUNKS */
 
-struct CLIENT* client_from_local_window( struct TWINDOW* twindow ) {
+/* struct CLIENT* client_from_local_window( struct TWINDOW* twindow ) {
    return scaffold_container_of( twindow, struct CLIENT, local_window );
+} */
+
+void client_set_local_window( struct CLIENT* c, struct TWINDOW* w ) {
+   scaffold_assert( NULL != w );
+   scaffold_assert( NULL != c );
+   c->local_window = w;
 }

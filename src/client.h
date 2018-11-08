@@ -125,7 +125,8 @@ int client_remove_channel( struct CLIENT* c, const bstring lname );
 bstring client_get_remote( struct CLIENT* c );
 size_t client_get_channels_count( struct CLIENT* c );
 size_t client_remove_chunkers( struct CLIENT* c, bstring filter );
-struct CLIENT* client_from_local_window( struct TWINDOW* twindow );
+//struct CLIENT* client_from_local_window( struct TWINDOW* twindow );
+struct UI* client_get_ui( struct CLIENT* c );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
