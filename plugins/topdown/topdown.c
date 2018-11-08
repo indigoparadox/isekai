@@ -263,42 +263,6 @@ cleanup:
 
 #endif /* DEBUG_TILES */
 
-static void* callback_get_tileimg( bstring idx, void* iter, void* arg ) {
-   return iter;
-}
-
-void* callback_search_tileset_img_gid( bstring idx, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   if(
-      NULL == iter
-#ifdef USE_CHUNKS
-      && NULL == client_get_chunker( c, idx )
-#endif /* USE_CHUNKS */
-   ) {
-      client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx );
-   }
-   if( NULL != iter ) {
-      return iter;
-   }
-
-   return NULL;
-
-#if 0
-   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      /* No sprites and no request yet, so make one! */
-      client_request_file( twindow->c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
-      goto cleanup;
-   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
-      refcount_inc( o->sprites, "spritesheet" );
-   } else if( NULL == o->sprites ) {
-      /* Sprites must not be ready yet. */
-      goto cleanup;
-   }
-#endif
-}
-
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
    TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
@@ -328,27 +292,30 @@ static void mode_topdown_tilemap_draw_tile(
    }
 
    lgc_zero_against(
-      t->scaffold_error, set->tilewidth, "Tile width is zero." );
+      t->scaffold_error,
+      tilemap_tileset_get_tile_width( set ), "Tile width is zero." );
    lgc_zero_against(
-      t->scaffold_error, set->tileheight, "Tile height is zero." );
-   if( 0 == set->tilewidth || 0 == set->tileheight ) {
+      t->scaffold_error,
+      tilemap_tileset_get_tile_height( set ), "Tile height is zero." );
+   if(
+      0 == tilemap_tileset_get_tile_width( set ) ||
+      0 == tilemap_tileset_get_tile_height( set )
+   ) {
       goto cleanup;
    }
 
    /* Figure out the window position to draw to. */
-   tile_screen_rect.x = set->tilewidth * (x - twindow_get_x( twindow ));
-   tile_screen_rect.y = set->tileheight * (y - twindow_get_y( twindow ));
+   tile_screen_rect.x =
+      tilemap_tileset_get_tile_width( set ) * (x - twindow_get_x( twindow ));
+   tile_screen_rect.y =
+      tilemap_tileset_get_tile_height( set ) * (y - twindow_get_y( twindow ));
 
    if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
       goto cleanup; /* Silently. */
    }
 
    /* Figure out the graphical tile to draw from. */
-   g_tileset = (GRAPHICS*)hashmap_get_first( &(set->images) );
-   /* FIXME */
-   /* If the current tileset doesn't exist, then load it. */
-   g_tileset = hashmap_iterate(
-      &(set->images), callback_search_tileset_img_gid, local_client );
+   g_tileset = tilemap_tileset_get_image_default( set, local_client );
    if( NULL == g_tileset ) {
       /* TODO: Use a built-in placeholder tileset. */
       goto cleanup;
@@ -391,7 +358,8 @@ static void mode_topdown_tilemap_draw_tile(
       twindow_get_screen( twindow ),
       tile_screen_rect.x, tile_screen_rect.y,
       tile_tilesheet_pos.x, tile_tilesheet_pos.y,
-      set->tilewidth, set->tileheight,
+      tilemap_tileset_get_tile_width( set ),
+      tilemap_tileset_get_tile_height( set ),
       g_tileset
    );
 
@@ -575,6 +543,9 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    if( NULL == t ) {
       return;
    }
+
+   // XXX: TEST
+   tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
    /* Redraw all tiles if requested. */
    if(

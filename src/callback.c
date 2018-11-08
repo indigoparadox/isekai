@@ -79,6 +79,8 @@ void* callback_search_spawners( size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+#ifdef USE_ITEMS
+
 void* callback_search_item_caches( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
@@ -106,6 +108,8 @@ void* callback_search_items( size_t idx, void* iter, void* arg ) {
    return NULL;
 }
 
+#endif // USE_ITEMS
+
 /*
 void* callback_search_channels( struct CONTAINER_IDX* idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
@@ -127,10 +131,10 @@ void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg ) {
 
    scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
 
-   gid = tilemap_get_tile( layer, pos->x, pos->y );
+   gid = tilemap_layer_get_tile_gid( layer, pos->x, pos->y );
    set = tilemap_get_tileset( t, gid, NULL );
    if( NULL != set ) {
-      tdata = vector_get( &(set->tiles), gid - 1 );
+      tdata = tilemap_tileset_get_tile( set, gid - 1 );
    }
 
 /* cleanup: */
@@ -152,7 +156,10 @@ void* callback_download_tileset( bstring idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
 
-   if( 0 == set->tileheight && 0 == set->tilewidth ) {
+   if(
+      0 == tilemap_tileset_get_tile_height( set ) &&
+      0 == tilemap_tileset_get_tile_width( set )
+   ) {
       client_request_file_later( c, DATAFILE_TYPE_TILESET, idx );
    }
 
@@ -169,7 +176,10 @@ void* callback_load_local_tilesets( bstring idx, void* iter, void* arg ) {
    bstring setdata_path = NULL;
 
    lgc_null_msg( idx, "Invalid tileset key provided." );
-   if( 0 == set->tileheight && 0 == set->tilewidth ) {
+   if(
+      0 == tilemap_tileset_get_tile_height( set ) &&
+      0 == tilemap_tileset_get_tile_width( set )
+   ) {
 
       setdata_path = files_root( idx );
 
@@ -289,10 +299,7 @@ void* callback_search_windows( size_t idx, void* iter, void* arg ) {
 
 void* callback_search_tilesets_img_name( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-   if(
-      NULL != set &&
-      NULL != hashmap_iterate( &(set->images), callback_search_graphics, arg )
-   ) {
+   if( tilemap_tileset_has_image( set, (bstring)arg ) ) {
       /* This is the tileset that contains this image. */
       return set;
    }
@@ -537,12 +544,12 @@ void* callback_search_tilesets_small(
    struct TILEMAP_POSITION* temp = (struct TILEMAP_POSITION*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
-   if( NULL != iter && temp->x < set->tilewidth ) {
-      temp->x = set->tilewidth;
+   if( NULL != iter && temp->x < tilemap_tileset_get_tile_width( set ) ) {
+      temp->x = tilemap_tileset_get_tile_width( set );
    }
 
-   if( NULL != iter && temp->y < set->tileheight ) {
-      temp->y = set->tileheight;
+   if( NULL != iter && temp->y < tilemap_tileset_get_tile_height( set ) ) {
+      temp->y = tilemap_tileset_get_tile_height( set );
    }
 
    return NULL;
