@@ -299,7 +299,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       );
       lgc_nonzero( bstr_ret );
       twindow = client_get_local_window( c );
-      ui_debug_window( twindow->ui, &str_wid_debug_tiles_pos, pos );
+      ui_debug_window( twindow_get_ui( twindow ), &str_wid_debug_tiles_pos, pos );
    }
 
 #ifdef USE_CHUNKS
@@ -1035,6 +1035,7 @@ void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* d
    );
 
 cleanup:
+   ezxml_free( xml_data );
    bdestroy( lname );
    return;
 }

@@ -220,8 +220,10 @@ void datafile_parse_mobile_ezxml_t(
       xml_sprite_iter = NULL,
       xml_animations = NULL,
       xml_animation_iter = NULL,
+#ifdef USE_VM
       xml_scripts = NULL,
       xml_script_iter = NULL,
+#endif /* USE_VM */
       xml_image = NULL;
    const char* xml_attr = NULL;
    int bstr_retval;

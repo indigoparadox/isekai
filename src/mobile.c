@@ -11,6 +11,7 @@
 #include "channel.h"
 #include "ipc.h"
 #include "files.h"
+#include "twindow.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;

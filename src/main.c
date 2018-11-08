@@ -14,6 +14,7 @@
 #include "proto.h"
 #include "files.h"
 #include "plugin.h"
+#include "twindow.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -51,7 +52,7 @@ struct SERVER* main_server = NULL;
 struct CLIENT* main_client = NULL;
 GRAPHICS* g_screen = NULL;
 struct INPUT* input = NULL;
-struct UI* ui = NULL;
+//struct UI* ui = NULL;
 //struct CHANNEL* l = NULL;
 bstring buffer_host = NULL;
 bstring buffer_channel = NULL;
@@ -104,7 +105,7 @@ static double calc_fps( int newtick ) {
 }
 #endif /* DEBUG_FPS */
 
-static BOOL loop_game( int gfx_mode ) {
+static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    BOOL keep_going = TRUE;
    int i;
    struct ANIMATION* a = NULL;
@@ -113,9 +114,9 @@ static BOOL loop_game( int gfx_mode ) {
    static BOOL load_complete = FALSE;
    GFX_COORD_PIXEL backlog_height_tiles = CONFIG_BACKLOG_TILES_HEIGHT;
    GFX_COORD_PIXEL backlog_height_px = 0;
-   struct TWINDOW* local_window = NULL;
    struct MOBILE* o = NULL;
    struct CHANNEL* l = NULL;
+   struct UI* ui = NULL;
 
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
@@ -142,6 +143,7 @@ static BOOL loop_game( int gfx_mode ) {
 #ifdef ENABLE_LOCAL_CLIENT
    /* Client drawing stuff after this. */
    scaffold_set_client();
+   ui = twindow_get_ui( local_window );
 
    if( FALSE == animate_is_blocking() ) {
       plugin_call(
@@ -225,9 +227,9 @@ static BOOL loop_game( int gfx_mode ) {
    /* Client drawing stuff after this. */
    scaffold_set_client();
 
-   local_window = client_get_local_window( main_client );
    if( !load_complete ) {
       /* If we're this far, we must be done loading! */
+      lg_info( __FILE__, "Channel load complete.\n" );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
       load_complete = TRUE;
@@ -299,7 +301,7 @@ cleanup:
    return keep_going;
 }
 
-static BOOL loop_connect( int* gfx_mode ) {
+static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
    BOOL keep_going = TRUE;
    bstring server_address = NULL;
    int bstr_result = 0,
@@ -311,9 +313,11 @@ static BOOL loop_connect( int* gfx_mode ) {
    struct UI_CONTROL* control = NULL;
 #endif /* USE_CONNECT_DIALOG */
    static bstring buffer_nick = NULL;
+   struct UI* ui = NULL;
 
 #ifdef ENABLE_LOCAL_CLIENT
 
+   ui = twindow_get_ui( local_window );
    backlog_close_window( ui );
 
 #ifdef USE_CONNECT_DIALOG
@@ -527,7 +531,7 @@ static BOOL loop_master( struct TWINDOW* local_screen ) {
       && 0 >= loop_count
 #endif /* !USE_CONNECT_DIALOG */
    ) {
-      retval = loop_connect( &gfx_mode );
+      retval = loop_connect( &gfx_mode, local_screen );
 #ifndef USE_CONNECT_DIALOG
    } else if( FALSE == connected && 0 < loop_count ) {
       retval = FALSE;
@@ -536,18 +540,18 @@ static BOOL loop_master( struct TWINDOW* local_screen ) {
       lg_debug(
          __FILE__, "Server connected; joining client to channel...\n"
       );
-      twindow_set_ui( local_screen, ui );
       twindow_set_screen( local_screen, g_screen );
       twindow_set_local_client( local_screen, main_client );
       proto_client_join( main_client, buffer_channel );
       retval = TRUE;
 
 #ifdef DEBUG_FPS
-      ui_debug_window( ui, &str_wid_debug_fps, graphics_fps );
+      ui_debug_window(
+         twindow_get_ui( local_screen ), &str_wid_debug_fps, graphics_fps );
 #endif /* DEBUG_FPS */
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
-      retval = loop_game( gfx_mode );
+      retval = loop_game( gfx_mode, local_screen );
 #ifdef ENABLE_LOCAL_CLIENT
    }
 
@@ -619,7 +623,7 @@ int main( int argc, char** argv ) {
    lgc_null( input );
    input_init( input );
    ui_init( g_screen );
-   ui = ui_get_local();
+   twindow_set_ui( local_window, ui_get_local() );
    backlog_init();
    animate_init();
    rng_init();
@@ -659,7 +663,7 @@ cleanup:
    input_shutdown( input );
    mem_free( input );
    backlog_shutdown();
-   ui_cleanup( ui );
+   ui_cleanup( twindow_get_ui( local_window ) );
    vector_cleanup_force( &mode_list_pretty ); /* These are static strings. */
    vector_cleanup( &mode_list_short );
    scaffold_set_client();

@@ -132,6 +132,7 @@ static void* mode_topdown_tilemap_draw_layer_cb(
          if( 0 == tile ) {
             continue;
          }
+         scaffold_assert( tile < tilemap_get_tiles_count( layer ) );
          mode_topdown_tilemap_draw_tile(
             layer, twindow, x, y, tile );
       }

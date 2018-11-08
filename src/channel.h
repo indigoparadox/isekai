@@ -56,6 +56,7 @@ void channel_set_error( struct CHANNEL* l, const char* error );
 BOOL channel_is_loaded( struct CHANNEL* l );
 bstring channel_get_name( const struct CHANNEL* l );
 struct TILEMAP* channel_get_tilemap( const struct CHANNEL* l );
+size_t channel_get_clients_count( const struct CHANNEL* l );
 
 #ifdef CHANNEL_C
 static struct tagbstring str_player = bsStatic( "player" );

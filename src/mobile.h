@@ -6,6 +6,7 @@
 #include "client.h"
 
 struct VM_CADDY;
+struct TWINDOW;
 
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,

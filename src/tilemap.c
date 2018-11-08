@@ -5,6 +5,7 @@
 #include "callback.h"
 #include "mobile.h"
 #include "channel.h"
+#include "twindow.h"
 
 static BOOL tilemap_layer_free_cb(
    size_t idx, void* iter, void* arg

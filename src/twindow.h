@@ -7,11 +7,18 @@
 #include "ui.h"
 
 struct TWINDOW;
+struct UI;
 
+struct TWINDOW* twindow_new();
 void twindow_update_details( struct TWINDOW* twindow );
 struct GRAPHICS* twindow_get_screen( struct TWINDOW* w );
+struct UI* twindow_get_ui( struct TWINDOW* w );
 GFX_COORD_PIXEL twindow_get_grid_w( struct TWINDOW* w );
 GFX_COORD_PIXEL twindow_get_grid_h( struct TWINDOW* w );
+TILEMAP_COORD_TILE twindow_get_x( struct TWINDOW* w );
+TILEMAP_COORD_TILE twindow_get_y( struct TWINDOW* w );
+TILEMAP_COORD_TILE twindow_get_width( struct TWINDOW* w );
+TILEMAP_COORD_TILE twindow_get_height( struct TWINDOW* w );
 TILEMAP_COORD_TILE twindow_get_max_x( struct TWINDOW* w );
 TILEMAP_COORD_TILE twindow_get_max_y( struct TWINDOW* w );
 TILEMAP_COORD_TILE twindow_get_min_x( struct TWINDOW* w );
@@ -23,6 +30,12 @@ TILEMAP_COORD_TILE twindow_get_right( struct TWINDOW* w );
 TILEMAP_COORD_TILE twindow_get_bottom( struct TWINDOW* w );
 void twindow_set_x( struct TWINDOW* w, TILEMAP_COORD_TILE x );
 void twindow_set_y( struct TWINDOW* w, TILEMAP_COORD_TILE y );
+void twindow_set_max_x( struct TWINDOW* w, TILEMAP_COORD_TILE x );
+void twindow_set_max_y( struct TWINDOW* w, TILEMAP_COORD_TILE y );
+void twindow_set_min_x( struct TWINDOW* w, TILEMAP_COORD_TILE x );
+void twindow_set_min_y( struct TWINDOW* w, TILEMAP_COORD_TILE y );
+void twindow_shrink_height( struct TWINDOW* w, TILEMAP_COORD_TILE h_shrink );
+void twindow_grow_height( struct TWINDOW* w, TILEMAP_COORD_TILE h_grow );
 void twindow_shift_left_x( struct TWINDOW* w, TILEMAP_COORD_TILE x_left );
 void twindow_shift_right_x( struct TWINDOW* w, TILEMAP_COORD_TILE x_right );
 void twindow_shift_up_y( struct TWINDOW* w, TILEMAP_COORD_TILE y_up );

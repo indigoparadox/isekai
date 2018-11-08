@@ -26,6 +26,8 @@ typedef void (*datafile_cb)(
 );
 
 struct MOBILE;
+struct TILEMAP;
+struct TILEMAP_TILESET;
 
 #ifdef USE_EZXML
 #ifdef USE_ITEMS
