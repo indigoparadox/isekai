@@ -4,6 +4,7 @@
 #include "libvcol.h"
 #include "input.h"
 #include "graphics.h"
+#include "twindow.h"
 
 #define UI_TITLEBAR_BG     GRAPHICS_COLOR_BROWN
 #define UI_TITLEBAR_FG     GRAPHICS_COLOR_WHITE
@@ -51,6 +52,7 @@
 #define UI_INPUT_RETURN_KEY_NEXT -3
 
 struct UI;
+struct TWINDOW;
 
 typedef enum {
    UI_CONTROL_TYPE_NONE,

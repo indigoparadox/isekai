@@ -127,6 +127,7 @@ size_t client_get_channels_count( struct CLIENT* c );
 size_t client_remove_chunkers( struct CLIENT* c, bstring filter );
 //struct CLIENT* client_from_local_window( struct TWINDOW* twindow );
 struct UI* client_get_ui( struct CLIENT* c );
+void client_set_local_window( struct CLIENT* c, struct TWINDOW* w );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =
