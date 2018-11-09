@@ -28,7 +28,6 @@ void* callback_search_channels_tilemap_img_name(
 void* callback_search_graphics( bstring idx, void* iter, void* arg );
 void* callback_send_mobs_to_channel( bstring idx, void* iter, void* arg );
 void* callback_send_updates_to_client( bstring idx, void* iter, void* arg );
-void* callback_parse_mob_channels( bstring idx, void* iter, void* arg );
 void* callback_attach_channel_mob_sprites(
    bstring idx, void* iter, void* arg );
 void* callback_proc_tileset_img_gs( bstring idx, void* iter, void* arg );
@@ -72,7 +71,6 @@ void* callback_search_item_type(
 void* callback_search_tilesets_img_name(
    size_t idx, void* iter, void* arg );
 void* callback_send_mobs_to_client( size_t idx, void* iter, void* arg );
-void* callback_parse_mobs( size_t idx, void* iter, void* arg );
 void* callback_attach_mob_sprites(
    size_t idx, void* iter, void* arg );
 void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg );

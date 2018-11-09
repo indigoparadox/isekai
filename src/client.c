@@ -294,8 +294,8 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 
       bstr_ret = bassignformat( pos,
          "Player: %d (%d)[%d], %d (%d)[%d]",
-         o->x, o->prev_x, steps_remaining_x,
-         o->y, o->prev_y, steps_remaining_y
+         mobile_get_x( o ), mobile_get_prev_x( o ), steps_remaining_x,
+         mobile_get_y( o ), mobile_get_prev_y( o ), steps_remaining_y
       );
       lgc_nonzero( bstr_ret );
       twindow = client_get_local_window( c );
@@ -511,11 +511,7 @@ void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
       c->puppet = NULL;
    }
    if( NULL != o ) {
-      refcount_inc( o, "mobile" ); /* Add first, to avoid deletion. */
-      if( NULL != o->owner ) {
-         client_clear_puppet( o->owner );
-      }
-      o->owner = c;
+      mobile_set_owner( o, c );
    }
    c->puppet = o; /* Assign to client last, to activate. */
 }
@@ -744,8 +740,8 @@ BOOL client_poll_ui(
    BOOL retval = FALSE;
    struct TWINDOW* w = NULL;
 
-   if( NULL != c && NULL != c->puppet && NULL != c->puppet->channel ) {
-      t = c->puppet->channel->tilemap;
+   if( NULL != c && NULL != mobile_get_channel( c->puppet ) ) {
+      t = mobile_get_tilemap( c->puppet );
    }
 
 #ifdef DEBUG_VM
@@ -1137,6 +1133,8 @@ cleanup:
 
 BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
    BOOL already_present = FALSE;
+
+   lg_debug( __FILE__, "Setting sprites for client: %b\n", client_get_nick( c ) );
 
    already_present = hashmap_put( &(c->sprites), filename, g, FALSE );
    if( already_present ) {

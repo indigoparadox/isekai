@@ -20,6 +20,69 @@ static uint8_t mobile_frame_counter = 0;
 static uint8_t mobile_move_counter = 0;
 #endif /* USE_MOBILE_MOVE_COUNTER */
 
+struct MOBILE {
+   struct REF refcount;
+   SERIAL serial;
+   struct CLIENT* owner;
+   TILEMAP_COORD_TILE x;
+   TILEMAP_COORD_TILE y;
+   TILEMAP_COORD_TILE prev_x;
+   TILEMAP_COORD_TILE prev_y;
+   GFX_COORD_PIXEL sprite_width;
+   GFX_COORD_PIXEL sprite_height;
+   GFX_COORD_PIXEL sprite_display_width;
+   GFX_COORD_PIXEL sprite_display_height;
+   GFX_COORD_PIXEL steps_inc;
+   GFX_COORD_PIXEL steps_inc_default;
+   GFX_COORD_PIXEL steps_remaining;
+   bstring sprites_filename;
+   GRAPHICS* sprites;
+   /* MOBILE_FRAME_ALT frame_alt;
+   MOBILE_FRAME frame; */
+   uint8_t current_frame;
+   MOBILE_FACING facing;
+   BOOL animation_reset;
+   bstring display_name;
+   bstring def_filename;
+   bstring mob_id;
+   struct CHANNEL* channel;
+   MOBILE_TYPE type;
+   struct VECTOR sprite_defs;
+   struct HASHMAP ani_defs;
+   struct HASHMAP script_defs;
+   struct MOBILE_ANI_DEF* current_animation;
+   struct VECTOR items;
+   BOOL initialized;
+#ifdef USE_VM
+   struct VM_CADDY* vm_caddy;
+#ifdef USE_TURNS
+   SCAFFOLD_SIZE vm_tick_prev;
+#endif /* USE_TURNS */
+#endif /* USE_VM */
+#ifndef DISABLE_MODE_POV
+   double ray_distance;
+   BOOL animation_flipped; /*!< TRUE if looking in - direction in POV. */
+#endif /* !DISABLE_MODE_POV */
+};
+
+void mobile_gen_serial( struct MOBILE* o, struct VECTOR* mobiles ) {
+   do {
+      o->serial = SERIAL_MIN + rng_max( SERIAL_MAX );
+   } while( 0 == o->serial || NULL != vector_get( mobiles, o->serial ) );
+}
+
+struct MOBILE* mobile_new( bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y ) {
+   struct MOBILE* o = NULL;
+
+   o = mem_alloc( 1, struct MOBILE );
+   lgc_null( o );
+
+   mobile_init( o, mob_id, x, y );
+
+cleanup:
+   return o;
+}
+
 static void mobile_cleanup( const struct REF* ref ) {
    struct MOBILE* o = scaffold_container_of( ref, struct MOBILE, refcount );
 
@@ -77,7 +140,7 @@ void mobile_init(
 
    ref_init( &(o->refcount), mobile_cleanup );
 
-   scaffold_assert( NULL != mob_id );
+   //scaffold_assert( NULL != mob_id );
 
    o->sprites_filename = NULL;
    o->serial = 0;
@@ -104,7 +167,11 @@ void mobile_init(
    o->prev_x = x;
    o->y = y;
    o->prev_y = y;
-   o->mob_id = bstrcpy( mob_id );
+   if( NULL != mob_id ) {
+      o->mob_id = bstrcpy( mob_id );
+   } else {
+      o->mob_id = bfromcstr( "" );
+   }
 
    /* We always need the filename to fetch the file with a chunker. */
    o->def_filename = bfromcstr( "mobs" );
@@ -300,8 +367,15 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
 
    scaffold_assert_client();
 
-   if( NULL == o || NULL == o->sprites_filename || NULL == o->sprites ) {
-      return;
+   scaffold_assert( NULL != o );
+   if( NULL == o->sprites_filename ) {
+      /* Nothing to load, nothing to see here. */
+      goto cleanup;
+   }
+
+   if( NULL == o->sprites ) {
+      client_request_file_later( local_client, DATAFILE_TYPE_MOBILE_SPRITES, o->sprites_filename );
+      goto cleanup;
    }
 
    if(
@@ -394,7 +468,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
       twindow_get_screen( twindow ),
       pix_x, pix_y,
       sprite_rect.x, sprite_rect.y,
-      o->sprite_width, o->sprite_display_height,
+      o->sprite_display_width, o->sprite_display_height,
       o->sprites
    );
 
@@ -807,7 +881,7 @@ void mobile_add_item( struct MOBILE* o, struct ITEM* e ) {
 
 #endif // USE_ITEMS
 
-struct CHANNEL* mobile_get_channel( struct MOBILE* o ) {
+struct CHANNEL* mobile_get_channel( const struct MOBILE* o ) {
    if( NULL == o ) {
       return NULL;
    }
@@ -872,3 +946,220 @@ cleanup:
 }
 
 #endif /* USE_VM */
+
+void mobile_update_coords(
+   struct MOBILE* o, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+) {
+   o->prev_x = o->x;
+   o->prev_y = o->y;
+   o->x = x;
+   o->y = y;
+}
+
+int mobile_set_display_name( struct MOBILE* o, const bstring name ) {
+   int bstr_res = 0;
+   return bassign( o->display_name, name );
+}
+
+
+void mobile_set_owner( struct MOBILE* o, struct CLIENT* c ) {
+   refcount_inc( o, "mobile" ); /* Add first, to avoid deletion. */
+   if( NULL != o->owner ) {
+      client_clear_puppet( o->owner );
+   }
+   o->owner = c;
+}
+
+void mobile_set_serial( struct MOBILE* o, SERIAL serial ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->channel->tilemap;
+}
+
+struct TILEMAP* mobile_get_tilemap( const struct MOBILE* o ) {
+   if( NULL == o || NULL == o->channel ) {
+      return NULL;
+   }
+   return o->channel->tilemap;
+}
+
+size_t mobile_set_sprite(
+   struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
+) {
+   scaffold_assert( NULL != o );
+   return vector_set( &(o->sprite_defs), id, sprite, TRUE );
+}
+
+mobile_add_animation(
+   struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
+) {
+   hashmap_put( &(o->ani_defs), name_dir, animation, FALSE );
+}
+
+int mobile_set_id( struct MOBILE* o, bstring mob_id ) {
+   int bstr_retval = 0;
+   bstr_retval = bassign( o->mob_id, mob_id );
+   return bstr_retval;
+}
+
+void mobile_set_sprite_width( struct MOBILE* o, GFX_COORD_PIXEL w ) {
+   lgc_null( o );
+   o->sprite_width = w;
+   o->sprite_display_width = o->sprite_width;
+cleanup:
+   return;
+}
+
+void mobile_set_sprite_height( struct MOBILE* o, GFX_COORD_PIXEL h ) {
+   lgc_null( o );
+   o->sprite_height = h;
+   o->sprite_display_height = o->sprite_height;
+cleanup:
+   return;
+}
+
+void mobile_set_sprites_filename( struct MOBILE* o, const bstring filename ) {
+   lgc_null( o );
+   lgc_null( filename );
+   if( NULL != o->sprites_filename ) {
+      bassign( o->sprites_filename, filename );
+   } else {
+      o->sprites_filename = bstrcpy( filename );
+   }
+cleanup:
+   return;
+}
+
+void mobile_set_facing( struct MOBILE* o, MOBILE_FACING facing ) {
+   lgc_null( o );
+   lg_debug(
+      __FILE__, "Setting mobile %b (%d) facing direction: %d\n",
+      o->display_name, o->serial, facing
+   );
+   o->facing = facing;
+cleanup:
+   return;
+}
+
+void mobile_set_animation( struct MOBILE* o, bstring ani_key ) {
+   struct MOBILE_ANI_DEF* ani_def = NULL;
+   lgc_null( o );
+   ani_def = (struct MOBILE_ANI_DEF*)hashmap_get(
+      &(o->ani_defs), ani_key
+   );
+   lgc_null( ani_def );
+   o->current_animation = ani_def;
+   /* TODO: Don't die if this fails. */
+   //scaffold_assert( NULL != o->current_animation );
+cleanup:
+   return;
+}
+
+TILEMAP_COORD_TILE mobile_get_x( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return -1;
+   }
+   return o->x;
+}
+
+TILEMAP_COORD_TILE mobile_get_y( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return -1;
+   }
+   return o->y;
+}
+
+TILEMAP_COORD_TILE mobile_get_prev_x( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return -1;
+   }
+   return o->prev_x;
+}
+
+TILEMAP_COORD_TILE mobile_get_prev_y( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return -1;
+   }
+   return o->prev_y;
+}
+
+bstring mobile_get_sprites_filename( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->sprites_filename;
+}
+
+bstring mobile_get_id( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->mob_id;
+}
+
+struct GRAPHICS* mobile_get_sprites( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->sprites;
+}
+
+bstring mobile_get_def_filename( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->def_filename;
+}
+
+SERIAL mobile_get_serial( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->serial;
+}
+
+struct MOBILE_SPRITE_DEF* mobile_get_sprite(
+   const struct MOBILE* o, size_t id
+) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return vector_get( &(o->sprite_defs), id );
+}
+
+GFX_COORD_PIXEL mobile_get_steps_remaining( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->steps_remaining;
+}
+
+struct CLIENT* mobile_get_owner( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->owner;
+}
+
+void mobile_set_initialized( struct MOBILE* o, BOOL init ) {
+   if( NULL == o ) {
+      return;
+   }
+   o->initialized = init;
+}
+
+void mobile_set_type( struct MOBILE* o, MOBILE_TYPE type ) {
+   lgc_null( o );
+   o->type = type;
+cleanup:
+   return;
+}
+
+void mobile_set_sprites( struct MOBILE* o, struct GRAPHICS* sheet ) {
+   lgc_null( o );
+   scaffold_assert( NULL == o->sprites );
+   o->sprites = sheet;
+cleanup:
+   return;
+}

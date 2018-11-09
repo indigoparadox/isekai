@@ -197,7 +197,7 @@ static void proto_channel_send(
 
    l_clients =
       hashmap_iterate_v( l->clients, callback_search_clients_r, skip_nick );
-   lgc_null( l_clients );
+   lgc_null_msg( l_clients, "No clients found in channel." );
 
    vector_iterate( l_clients, proto_send_cb, buffer );
 
@@ -354,25 +354,26 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
 
    scaffold_assert_server();
    scaffold_assert( NULL != o );
-   scaffold_assert( NULL != o->mob_id );
-   scaffold_assert( NULL != o->def_filename );
+   //scaffold_assert( NULL != o->mob_id );
+   //scaffold_assert( NULL != o->def_filename );
 
    l = mobile_get_channel( o );
    scaffold_assert( NULL != l );
    channel_name = channel_get_name( l );
    scaffold_assert( NULL != channel_name );
 
-   if( NULL != o->owner ) {
-      scaffold_assert( NULL != client_get_nick( o->owner ) );
-      owner_nick = client_get_nick( o->owner );
+   if( NULL != mobile_get_owner( o ) ) {
+      scaffold_assert( NULL != client_get_nick( mobile_get_owner( o ) ) );
+      owner_nick = client_get_nick( mobile_get_owner( o ) );
    } else {
       owner_nick = &scaffold_null;
    }
 
    proto_printf(
       c, "MOB %b %d %b %b %b %d %d",
-      channel_name, o->serial, o->mob_id, o->def_filename,
-      owner_nick, o->x, o->y
+      channel_name, mobile_get_serial( o ), mobile_get_id( o ),
+      mobile_get_def_filename( o ),
+      owner_nick, mobile_get_x( o ), mobile_get_y( o )
    );
 }
 
@@ -457,11 +458,11 @@ void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    SCAFFOLD_SIZE serial = 0;
    scaffold_assert_client();
    if( NULL != update->target ) {
-      serial = update->target->serial;
+      serial = mobile_get_serial( update->target );
    }
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, update->o->serial, update->update, update->x, update->y, serial
+      update->l->name, mobile_get_serial( update ), update->update, update->x, update->y, serial
    );
 }
 
@@ -469,11 +470,11 @@ void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    SCAFFOLD_SIZE serial = 0;
    scaffold_assert_server();
    if( NULL != update->target ) {
-      serial = update->target->serial;
+      serial = mobile_get_serial( update->target );
    }
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, update->o->serial, update->update, update->x, update->y, serial
+      update->l->name, mobile_get_serial( update ), update->update, update->x, update->y, serial
    );
 }
 
@@ -1021,13 +1022,13 @@ static void irc_server_gameupdate(
       (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
    /* No NULL check. If it's NULL, it's NULL. */
 
-   if( c == update.o->owner ) {
+   if( c == mobile_get_owner( update.o ) ) {
       update.update = mobile_apply_update( &update, TRUE );
    } else {
       lg_error(
          __FILE__,
          "Client %s attempted to modify mobile %d to %d without permission.\n",
-         bdata( client_get_nick( c ) ), update.o->serial, update.update
+         bdata( client_get_nick( c ) ), mobile_get_serial( update.o ), update.update
       );
    }
 
