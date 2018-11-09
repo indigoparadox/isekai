@@ -61,7 +61,7 @@ cleanup:
    return;
 }
 
-struct UI* twindow_get_ui( struct TWINDOW* w ) {
+struct UI* twindow_get_ui( const struct TWINDOW* w ) {
    struct UI* ui = NULL;
    lgc_null( w );
    ui = w->ui;
@@ -69,7 +69,7 @@ cleanup:
    return ui;
 }
 
-struct GRAPHICS* twindow_get_screen( struct TWINDOW* w ) {
+struct GRAPHICS* twindow_get_screen( const struct TWINDOW* w ) {
    struct GRAPHICS* g = NULL;
    lgc_null( w );
 
@@ -79,56 +79,56 @@ cleanup:
    return g;
 }
 
-GFX_COORD_PIXEL twindow_get_grid_w( struct TWINDOW* w ) {
+GFX_COORD_PIXEL twindow_get_grid_w( const struct TWINDOW* w ) {
    if( NULL != w ) {
       return w->grid_w;
    }
    return 0;
 }
 
-GFX_COORD_PIXEL twindow_get_grid_h( struct TWINDOW* w ) {
+GFX_COORD_PIXEL twindow_get_grid_h( const struct TWINDOW* w ) {
    if( NULL != w ) {
       return w->grid_h;
    }
    return 0;
 }
 
-TILEMAP_COORD_TILE twindow_get_x( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_x( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->x;
 }
 
-TILEMAP_COORD_TILE twindow_get_y( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_y( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->y;
 }
 
-TILEMAP_COORD_TILE twindow_get_width( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_width( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->width;
 }
 
-TILEMAP_COORD_TILE twindow_get_height( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_height( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->height;
 }
 
-TILEMAP_COORD_TILE twindow_get_max_x( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_max_x( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->max_x;
 }
 
-TILEMAP_COORD_TILE twindow_get_max_y( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_max_y( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->max_y;
 }
 
-TILEMAP_COORD_TILE twindow_get_min_x( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_min_x( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->min_x;
 }
 
-TILEMAP_COORD_TILE twindow_get_min_y( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_min_y( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->min_y;
 }
@@ -208,23 +208,23 @@ void twindow_set_local_client( struct TWINDOW* w, struct CLIENT* c ) {
    w->local_client = c;
 }
 
-struct TILEMAP* twindow_get_tilemap_active( struct TWINDOW* w ) {
+struct TILEMAP* twindow_get_tilemap_active( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    scaffold_assert( NULL != w->local_client );
    return client_get_tilemap_active( w->local_client );
 }
 
-struct CLIENT* twindow_get_local_client( struct TWINDOW* w ) {
+struct CLIENT* twindow_get_local_client( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->local_client;
 }
 
-TILEMAP_COORD_TILE twindow_get_right( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_right( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->x + w->width;
 }
 
-TILEMAP_COORD_TILE twindow_get_bottom( struct TWINDOW* w ) {
+TILEMAP_COORD_TILE twindow_get_bottom( const struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    return w->y + w->height;
 }

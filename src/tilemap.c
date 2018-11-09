@@ -148,7 +148,7 @@ cleanup:
 }
 
 struct TILEMAP_TILE_DATA* tilemap_tileset_get_tile(
-   struct TILEMAP_TILESET* set, int gid
+   const struct TILEMAP_TILESET* set, int gid
 ) {
    scaffold_assert( NULL != set );
    scaffold_assert( vector_is_valid( &(set->tiles) ) );
@@ -163,12 +163,16 @@ size_t tilemap_tileset_set_tile(
    return vector_set( &(set->tiles), gid, tile_info, TRUE );
 }
 
-GFX_COORD_PIXEL tilemap_tileset_get_tile_width( struct TILEMAP_TILESET* set ) {
+GFX_COORD_PIXEL tilemap_tileset_get_tile_width(
+   const struct TILEMAP_TILESET* set
+) {
    scaffold_assert( NULL != set );
    return set->tilewidth;
 }
 
-GFX_COORD_PIXEL tilemap_tileset_get_tile_height( struct TILEMAP_TILESET* set ) {
+GFX_COORD_PIXEL tilemap_tileset_get_tile_height(
+   const struct TILEMAP_TILESET* set
+) {
    scaffold_assert( NULL != set );
    return set->tileheight;
 }
@@ -187,7 +191,9 @@ void tilemap_tileset_set_tile_height(
    set->tileheight = height;
 }
 
-BOOL tilemap_tileset_has_image( struct TILEMAP_TILESET* set, bstring filename ) {
+BOOL tilemap_tileset_has_image(
+   const struct TILEMAP_TILESET* set, bstring filename
+) {
    if( NULL == set ) {
       return FALSE;
    }
@@ -225,7 +231,7 @@ static void* cb_tilemap_tileset_img_get_or_dl( bstring idx, void* iter, void* ar
 }
 
 struct GRAPHICS* tilemap_tileset_get_image_default(
-   struct TILEMAP_TILESET* set, struct CLIENT* c
+   const struct TILEMAP_TILESET* set, struct CLIENT* c
 ) {
    scaffold_assert( NULL != set );
    //return (GRAPHICS*)hashmap_get_first( &(set->images) );
@@ -252,7 +258,9 @@ struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
    return vector_get( &(set->terrain), gid );
 }
 
-bstring tilemap_tileset_get_definition_path( struct TILEMAP_TILESET* set ) {
+bstring tilemap_tileset_get_definition_path(
+   const struct TILEMAP_TILESET* set
+) {
    scaffold_assert( NULL != set );
    return set->def_path;
 }
@@ -302,7 +310,7 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
  * \return The tileset containing the tile with the requested GID.
  */
 SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
-   struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
+   const struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
 ) {
    struct TILEMAP_TILESET* set = NULL;
    /* The gid variable does double-duty, here. It provides a GID to search for,
@@ -334,10 +342,10 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
 
    tiles_wide = g_set->w / set->tilewidth;
 
-   gid -= set_firstgid - 1;
+   gid -= set_firstgid;
 
-   tile_screen_rect->y = ((gid - 1) / tiles_wide) * set->tileheight;
-   tile_screen_rect->x = ((gid - 1) % tiles_wide) * set->tilewidth;
+   tile_screen_rect->y = (gid / tiles_wide) * set->tileheight;
+   tile_screen_rect->x = (gid % tiles_wide) * set->tilewidth;
 
    /* scaffold_assert( *y < (set->tileheight * tiles_high) );
    scaffold_assert( *x < (set->tilewidth * tiles_wide) ); */
@@ -370,8 +378,11 @@ TILEMAP_TILE tilemap_layer_get_tile_gid(
    const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
+   TILEMAP_TILE gid_out = 0;
    scaffold_assert( layer->tile_gids_len > index );
-   return layer->tile_gids[index];
+   gid_out = layer->tile_gids[index];
+   scaffold_assert( gid_out >= 0 );
+   return layer->tile_gids[index] - 1;
 }
 
 void tilemap_layer_set_tile_gid(
@@ -555,6 +566,68 @@ void tilemap_toggle_debug_state() {
       lg_debug( __FILE__, "Terrain Debug: Off\n" );
       break;
    }
+}
+
+void tilemap_tile_draw_ortho(
+   const struct TILEMAP_LAYER* layer,
+   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y,
+   GFX_COORD_PIXEL screen_x, GFX_COORD_PIXEL screen_y,
+   struct TILEMAP_TILESET* set,
+   const struct TWINDOW* twindow
+) {
+   GRAPHICS_RECT tile_tilesheet_pos;
+   struct CLIENT* local_client = NULL;
+   struct TILEMAP* t = NULL;
+   GRAPHICS* g_tileset = NULL;
+   SCAFFOLD_SIZE set_firstgid = 0;
+   TILEMAP_TILE gid = 0;
+
+   local_client = twindow_get_local_client( twindow );
+   lgc_null( local_client );
+   lgc_null( layer );
+   t = layer->tilemap;
+   lgc_null( t );
+
+   gid = tilemap_layer_get_tile_gid( layer, x, y );
+
+   lgc_zero_against(
+      t->scaffold_error,
+      tilemap_tileset_get_tile_width( set ), "Tile width is zero." );
+   lgc_zero_against(
+      t->scaffold_error,
+      tilemap_tileset_get_tile_height( set ), "Tile height is zero." );
+   if(
+      0 == tilemap_tileset_get_tile_width( set ) ||
+      0 == tilemap_tileset_get_tile_height( set )
+   ) {
+      goto cleanup;
+   }
+
+   if( 0 > screen_x || 0 > screen_y ) {
+      goto cleanup; /* Silently. */
+   }
+
+   /* Figure out the graphical tile to draw from. */
+   g_tileset = tilemap_tileset_get_image_default( set, local_client );
+   if( NULL == g_tileset ) {
+      /* TODO: Use a built-in placeholder tileset. */
+      goto cleanup;
+   }
+
+   tilemap_get_tile_tileset_pos(
+      set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
+
+   graphics_blit_partial(
+      twindow_get_screen( twindow ),
+      screen_x, screen_y,
+      tile_tilesheet_pos.x, tile_tilesheet_pos.y,
+      tilemap_tileset_get_tile_width( set ),
+      tilemap_tileset_get_tile_height( set ),
+      g_tileset
+   );
+
+cleanup:
+   return;
 }
 
 #endif /* DEBUG_TILES */
