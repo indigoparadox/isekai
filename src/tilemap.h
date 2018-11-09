@@ -248,18 +248,21 @@ bstring tilemap_tileset_get_definition_path( struct TILEMAP_TILESET* set );
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_init( struct TILEMAP_TILESET* tileset, bstring def_path );
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
+struct TILEMAP_TILESET* tilemap_get_tileset(
    struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
 );
-SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
+void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
    SCAFFOLD_SIZE gid, GRAPHICS_RECT* tile_screen_rect
 );
 TILEMAP_ORIENTATION tilemap_get_orientation( struct TILEMAP* t );
-SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t );
-SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t );
-SCAFFOLD_INLINE TILEMAP_TILE tilemap_get_tile(
+GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t );
+GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t );
+TILEMAP_TILE tilemap_layer_get_tile_gid(
    const struct TILEMAP_LAYER* layer, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+);
+void tilemap_layer_set_tile_gid(
+   struct TILEMAP_LAYER* layer, size_t index, TILEMAP_TILE gid
 );
 void tilemap_draw_tilemap( struct TWINDOW* window );
 /* void tilemap_update_window_ortho(
@@ -296,13 +299,13 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
 );
 #endif /* USE_ITEMS */
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );
-SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
+TILEMAP_EXCLUSION tilemap_inside_inner_map_x(
    TILEMAP_COORD_TILE x, struct TWINDOW* twindow );
-SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
+TILEMAP_EXCLUSION tilemap_inside_inner_map_y(
    TILEMAP_COORD_TILE y, struct TWINDOW* twindow );
-SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
+TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
    TILEMAP_COORD_TILE x, struct TWINDOW* twindow );
-SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
+TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
    TILEMAP_COORD_TILE y, struct TWINDOW* twindow );
 
 #ifdef TILEMAP_C
