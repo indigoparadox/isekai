@@ -129,7 +129,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       );
       mobile_load_local( o );
 
-      rng_gen_serial( o, l->mobiles, SERIAL_MIN, SERIAL_MAX );
+      mobile_gen_serial( o, l->mobiles );
 
       client_set_puppet( c, o );
       mobile_set_channel( o, l );
@@ -137,8 +137,9 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
       lg_debug(
          __FILE__,
-         "Spawning %s (%d) at: %d, %d\n",
-         bdata( client_get_nick( c ) ), o->serial, o->x, o->y
+         "Spawning %b (%d) at: %d, %d\n",
+         client_get_nick( c ), mobile_get_serial( o ),
+         mobile_get_x( o ), mobile_get_y( o )
       );
    } else if( FALSE != spawn ) {
       lg_error(
@@ -172,7 +173,7 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    if( NULL != c_test && FALSE != hashmap_remove( l->clients, client_get_nick( c ) ) ) {
       o = client_get_puppet( c );
       if( NULL != o ) {
-         channel_remove_mobile( l, o->serial );
+         channel_remove_mobile( l, mobile_get_serial( o ) );
       }
 
       lg_debug(
@@ -191,8 +192,8 @@ struct CLIENT* channel_get_client_by_name(
 
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
-   assert( 0 != o->serial );
-   vector_set( l->mobiles, o->serial, o, TRUE );
+   assert( 0 != mobile_get_serial( o ) );
+   vector_set( l->mobiles, mobile_get_serial( o ), o, TRUE );
 }
 
 void channel_set_mobile(
@@ -220,18 +221,18 @@ void channel_set_mobile(
    o = vector_get( l->mobiles, serial );
    if( NULL == o ) {
       mobile_new( o, mob_id, x, y );
-      o->serial = serial;
+      mobile_set_serial( serial );
       lg_debug(
          __FILE__, "Player mobile does not exist. Creating with serial: %d\n",
-         o->serial
+         mobile_get_serial( o )
       );
-      scaffold_assert( NULL != o->def_filename );
+      scaffold_assert( NULL != mobile_get_def_filename( o ) );
       mobile_set_channel( o, l );
-      vector_set( l->mobiles, o->serial, o, TRUE );
+      vector_set( l->mobiles, mobile_get_serial( o ), o, TRUE );
 #ifdef ENABLE_LOCAL_CLIENT
       if( client_is_local( l->client_or_server ) ) {
          client_request_file(
-            l->client_or_server, DATAFILE_TYPE_MOBILE, o->def_filename
+            l->client_or_server, DATAFILE_TYPE_MOBILE, mobile_get_def_filename( o )
          );
       }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -240,10 +241,7 @@ void channel_set_mobile(
          __FILE__, "Resetting position for existing player mobile: %d, %d\n",
          x, y
       );
-      o->x = x;
-      o->y = y;
-      o->prev_x = x;
-      o->prev_y = y;
+      mobile_update_coords( o, x, y );
    }
 
    scaffold_assert( 0 < hashmap_count( l->clients ) );
@@ -252,9 +250,7 @@ void channel_set_mobile(
       client_set_puppet( mobile_c, o );
    }
 
-   bstr_res = bassign( o->display_name, mob_nick );
-   scaffold_assert( NULL != o->display_name );
-   lgc_nonzero( bstr_res );
+   mobile_set_display_name( o, mob_nick );
 
    tilemap_set_redraw_state( l->tilemap, TILEMAP_REDRAW_ALL );
 

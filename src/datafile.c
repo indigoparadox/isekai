@@ -6,6 +6,71 @@
 #include "proto.h"
 #include "channel.h"
 
+
+static void* callback_parse_mobs( size_t idx, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+#ifdef USE_EZXML
+   ezxml_t xml_data = (ezxml_t)arg;
+   const char* mob_id_test = NULL;
+
+   /* Since the vector index is set by serial, there will be a number of      *
+    * NULLs before we find one that isn't.                                    */
+   if( NULL == iter ) {
+      goto cleanup;
+   }
+
+   mob_id_test = ezxml_attr( xml_data, "id" );
+   lgc_null( mob_id_test );
+
+   if( 1 == biseqcstrcaseless( mobile_get_id( o ), mob_id_test ) ) {
+      lg_debug(
+         __FILE__, "Client: Found mobile with ID: %b\n", mobile_get_id( o )
+      );
+      datafile_parse_mobile_ezxml_t( o, xml_data, NULL, TRUE );
+
+      return o;
+   }
+
+
+#endif /* USE_EZXML */
+cleanup:
+   return NULL;
+}
+
+/*
+static BOOL cb_datafile_prune_spriteless_mobs( size_t idx, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct MOBILE* o_player = NULL;
+   struct CLIENT* local_client = (struct CLIENT*)arg;
+
+   o_player = client_get_puppet( local_client );
+
+   if(
+      o_player != o &&
+      NULL != o &&
+      NULL == mobile_get_sprites_filename( o )
+   ) {
+      lg_debug( __FILE__, "Removing spriteless mobile: %b (%d)\n", o->display_name, o->serial );
+      return TRUE;
+   }
+   return FALSE;
+}
+*/
+
+static void* callback_parse_mob_channels( bstring idx, void* iter, void* arg ) {
+   struct CHANNEL* l = (struct CHANNEL*)iter;
+#ifdef USE_EZXML
+   ezxml_t xml_data = (ezxml_t)arg;
+
+   /* TODO: Return a condensed vector, somehow? */
+
+   vector_iterate( l->mobiles, callback_parse_mobs, xml_data );
+   //vector_remove_cb( l->mobiles, cb_datafile_prune_spriteless_mobs, l->client_or_server );
+
+#endif /* USE_EZXML */
+   return NULL;
+}
+
 void datafile_handle_stream(
    DATAFILE_TYPE type, const bstring filename, BYTE* data, size_t length,
    struct CLIENT* c
@@ -74,12 +139,13 @@ void datafile_handle_stream(
          /* TODO: Make sure we never create receiving chunkers server-side
           *       (not strictly relevant here, but still).
           */
-         g = client_get_sprite( c, o->sprites_filename );
+         g = client_get_sprite( c, mobile_get_sprites_filename( o ) );
          if( NULL == g ) {
             client_request_file_later(
-               c, DATAFILE_TYPE_MOBILE_SPRITES, o->sprites_filename );
+               c, DATAFILE_TYPE_MOBILE_SPRITES,
+               mobile_get_sprites_filename( o ) );
          } else {
-            o->sprites = g;
+            mobile_set_sprites( o, g );
          }
 
          lg_debug(

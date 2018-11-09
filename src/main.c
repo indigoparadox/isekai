@@ -258,7 +258,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    o = client_get_puppet( main_client );
    l = client_get_channel_active( main_client );
    if(
-      0 != o->steps_remaining ||
+      0 != mobile_get_steps_remaining( o ) ||
       twindow_get_max_x( local_window ) == twindow_get_min_x( local_window ) ||
       (NULL != l && TILEMAP_REDRAW_ALL == l->tilemap->redraw_state)
    ) {

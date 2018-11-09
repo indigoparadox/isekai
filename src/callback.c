@@ -128,7 +128,6 @@ void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = NULL;
    uint32_t gid = 0;
    struct TILEMAP_TILE_DATA* tdata = NULL;
-   TILEMAP_TILE set_firstgid = 0;
 
    scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
 
@@ -271,7 +270,7 @@ void* callback_search_mobs_by_pos( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
    struct MOBILE* o_out = NULL;
 
-   if( NULL != o && o->x == pos->x && o->y == pos->y ) {
+   if( NULL != o && mobile_get_x( o ) == pos->x && mobile_get_y( o ) == pos->y ) {
       o_out = o;
    }
 
@@ -452,15 +451,15 @@ void* callback_proc_channel_spawners(
       lg_debug( __FILE__, "Spawning mobile: %b\n", ts->id );
       mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
-      rng_gen_serial( o, l->mobiles, SERIAL_MIN, SERIAL_MAX );
+      mobile_gen_serial( o, l->mobiles );
       channel_add_mobile( l, o );
       if( TILEMAP_SPAWNER_TYPE_PLAYER == ts->type ) {
-         o->type = MOBILE_TYPE_PLAYER;
+         mobile_set_type( o, MOBILE_TYPE_PLAYER );
 #ifdef DEBUG_NO_CLIENT_SERVER_MODEL
          client_set_puppet( main_client, o );
 #endif /* DEBUG_NO_CLIENT_SERVER_MODEL */
       } else {
-         o->type = MOBILE_TYPE_GENERIC;
+         mobile_set_type( o, MOBILE_TYPE_GENERIC );
       }
       break;
 
@@ -604,48 +603,6 @@ void* callback_send_updates_to_client( bstring idx, void* iter, void* arg ) {
    return NULL;
 }
 
-void* callback_parse_mobs( size_t idx, void* iter, void* arg ) {
-   struct MOBILE* o = (struct MOBILE*)iter;
-#ifdef USE_EZXML
-   ezxml_t xml_data = (ezxml_t)arg;
-   const char* mob_id_test = NULL;
-
-   /* Since the vector index is set by serial, there will be a number of      *
-    * NULLs before we find one that isn't.                                    */
-   if( NULL == iter ) {
-      goto cleanup;
-   }
-
-   mob_id_test = ezxml_attr( xml_data, "id" );
-   lgc_null( mob_id_test );
-
-   if( 1 == biseqcstrcaseless( o->mob_id, mob_id_test ) ) {
-      lg_debug(
-         __FILE__, "Client: Found mobile with ID: %b\n", o->mob_id
-      );
-      datafile_parse_mobile_ezxml_t( o, xml_data, NULL, TRUE );
-
-      return o;
-   }
-
-
-#endif /* USE_EZXML */
-cleanup:
-   return NULL;
-}
-
-void* callback_parse_mob_channels( bstring idx, void* iter, void* arg ) {
-   struct CHANNEL* l = (struct CHANNEL*)iter;
-#ifdef USE_EZXML
-   ezxml_t xml_data = (ezxml_t)arg;
-
-   /* TODO: Return a condensed vector, somehow? */
-
-   return vector_iterate( l->mobiles, callback_parse_mobs, xml_data );
-#endif /* USE_EZXML */
-   return NULL;
-}
-
 void* callback_attach_mob_sprites( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct CLIENT* c = (struct CLIENT*)arg;
@@ -653,12 +610,17 @@ void* callback_attach_mob_sprites( size_t idx, void* iter, void* arg ) {
 
    /* Since the vector index is set by serial, there will be a number of      *
     * NULLs before we find one that isn't.                                    */
-   if( NULL == o || NULL != o->sprites || NULL == o->sprites_filename ) {
+   if(
+      NULL == o ||
+      NULL != mobile_get_sprites( o ) ||
+      NULL == mobile_get_sprites_filename( o )
+   ) {
       goto cleanup;
    }
 
-   g = client_get_sprite( c, o->sprites_filename );
-   o->sprites = g;
+   g = client_get_sprite( c, mobile_get_sprites_filename( o ) );
+   lgc_null( g );
+   mobile_set_sprites( g );
 
 cleanup:
    return NULL;
@@ -763,7 +725,7 @@ BOOL callback_free_mobiles( size_t idx, void* iter, void* arg ) {
    /*if( NULL == 0 ) {
       return TRUE;
    }*/
-   if( NULL == arg || *serial == o->serial ) {
+   if( NULL == arg || *serial == mobile_get_serial( o ) ) {
       mobile_free( o );
       return TRUE;
    }

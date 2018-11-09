@@ -7,6 +7,7 @@
 
 struct VM_CADDY;
 struct TWINDOW;
+struct MOBILE;
 
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,
@@ -47,50 +48,6 @@ struct MOBILE_SPRITE_DEF {
    SCAFFOLD_SIZE id;
 };
 
-struct MOBILE {
-   struct REF refcount;
-   SERIAL serial;
-   struct CLIENT* owner;
-   TILEMAP_COORD_TILE x;
-   TILEMAP_COORD_TILE y;
-   TILEMAP_COORD_TILE prev_x;
-   TILEMAP_COORD_TILE prev_y;
-   GFX_COORD_PIXEL sprite_width;
-   GFX_COORD_PIXEL sprite_height;
-   GFX_COORD_PIXEL sprite_display_height;
-   GFX_COORD_PIXEL steps_inc;
-   GFX_COORD_PIXEL steps_inc_default;
-   GFX_COORD_PIXEL steps_remaining;
-   bstring sprites_filename;
-   GRAPHICS* sprites;
-   /* MOBILE_FRAME_ALT frame_alt;
-   MOBILE_FRAME frame; */
-   uint8_t current_frame;
-   MOBILE_FACING facing;
-   BOOL animation_reset;
-   bstring display_name;
-   bstring def_filename;
-   bstring mob_id;
-   struct CHANNEL* channel;
-   MOBILE_TYPE type;
-   struct VECTOR sprite_defs;
-   struct HASHMAP ani_defs;
-   struct HASHMAP script_defs;
-   struct MOBILE_ANI_DEF* current_animation;
-   struct VECTOR items;
-   BOOL initialized;
-#ifdef USE_VM
-   struct VM_CADDY* vm_caddy;
-#ifdef USE_TURNS
-   SCAFFOLD_SIZE vm_tick_prev;
-#endif /* USE_TURNS */
-#endif /* USE_VM */
-#ifndef DISABLE_MODE_POV
-   double ray_distance;
-   BOOL animation_flipped; /*!< TRUE if looking in - direction in POV. */
-#endif /* !DISABLE_MODE_POV */
-};
-
 struct MOBILE_UPDATE_PACKET {
    struct MOBILE* o;
    struct CHANNEL* l;
@@ -105,11 +62,6 @@ struct MOBILE_UPDATE_PACKET {
 #define MOBILE_STEPS_HALF (MOBILE_STEPS_MAX / 2)
 #define MOBILE_STEPS_INCREMENT 8
 #define MOBILE_SPRITE_SIZE 32
-
-#define mobile_new( o, mob_id, x, y ) \
-    o = mem_alloc( 1, struct MOBILE ); \
-    lgc_null( o ); \
-    mobile_init( o, mob_id, x, y );
 
 void mobile_free( struct MOBILE* o );
 void mobile_init(
@@ -142,7 +94,7 @@ BOOL mobile_is_occupied( struct MOBILE* o );
 #ifdef USE_ITEMS
 void mobile_add_item( struct MOBILE* o, struct ITEM* e );
 #endif /* USE_ITEMS */
-struct CHANNEL* mobile_get_channel( struct MOBILE* o );
+struct CHANNEL* mobile_get_channel( const struct MOBILE* o );
 void mobile_call_reset_animation( struct MOBILE* o );
 void mobile_do_reset_2d_animation( struct MOBILE* o );
 #ifdef USE_VM

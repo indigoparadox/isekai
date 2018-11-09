@@ -122,7 +122,7 @@ static void datafile_mobile_parse_sprite_ezxml(
    lgc_null( xml_attr );
    sprite->id = atoi( xml_attr );
 
-   vector_set( &(o->sprite_defs), sprite->id, sprite, TRUE );
+   mobile_set_sprite( o, sprite->id, sprite );
    sprite = NULL;
 
 cleanup:
@@ -160,7 +160,7 @@ static void datafile_mobile_parse_animation_ezxml(
    while( NULL != xml_frame_iter ) {
       ezxml_int( frame_id, xml_attr, xml_frame_iter, "id" );
 
-      sprite = vector_get( &(o->sprite_defs), frame_id );
+      sprite = mobile_get_sprite( o, frame_id );
       if( NULL == sprite ) {
          lg_error(
             __FILE__, "Bad frame in parsed mobile animation: %d\n", frame_id
@@ -198,7 +198,7 @@ static void datafile_mobile_parse_animation_ezxml(
       __FILE__, "Loaded mobile animation: %b\n", name_dir
    );
 
-   if( hashmap_put( &(o->ani_defs), name_dir, animation, FALSE ) ) {
+   if( mobile_set_animation( o, name_dir, animation ) ) {
       lg_error(
          __FILE__, "Attempted to double-add mobile animation def.\n" );
       mobile_animation_free( animation );
@@ -228,21 +228,34 @@ void datafile_parse_mobile_ezxml_t(
    const char* xml_attr = NULL;
    int bstr_retval;
    bstring walk_ani_key = NULL,
+#ifdef USE_VM
       vm_val_buffer = NULL,
-      vm_key_buffer = NULL;
+      vm_key_buffer = NULL,
+#endif // USE_VM
+      xml_val_buffer = NULL;
+   GFX_COORD_PIXEL temp_pixel = 0;
 
    lgc_null( xml_data );
 
+#ifdef USE_VM
    vm_val_buffer = bfromcstr( "" );
    vm_key_buffer = bfromcstr( "" );
+   xml_val_buffer = bfromcstr( "" );
+#endif // USE_VM
 
    ezxml_string( xml_attr, xml_data, "id" );
-   scaffold_assign_or_cpy_c( o->mob_id, xml_attr, bstr_retval );
-   ezxml_int( o->sprite_width, xml_attr, xml_data, "spritewidth" );
-   ezxml_int( o->sprite_height, xml_attr, xml_data, "spriteheight" );
+   bstr_retval = bassignblk( xml_val_buffer, xml_attr, strlen( xml_attr ) );
+   lgc_nonzero( bstr_retval );
+   mobile_set_id( o, xml_val_buffer );
+   ezxml_int( temp_pixel, xml_attr, xml_data, "spritewidth" );
+   mobile_set_sprite_width( o, temp_pixel );
+   ezxml_int( temp_pixel, xml_attr, xml_data, "spriteheight" );
+   mobile_set_sprite_height( o, temp_pixel );
 
    ezxml_string( xml_attr, xml_data, "display" );
-   scaffold_assign_or_cpy_c( o->display_name, xml_attr, bstr_retval );
+   bstr_retval = bassignblk( xml_val_buffer, xml_attr, strlen( xml_attr ) );
+   lgc_nonzero( bstr_retval );
+   mobile_set_display_name( o, xml_val_buffer );
 
    ezxml_node( xml_sprites, xml_data, "sprites" );
    xml_sprite_iter = ezxml_child( xml_sprites, "sprite" );
@@ -355,7 +368,11 @@ next_script:
 
    ezxml_node( xml_image, xml_data, "image" );
    ezxml_string( xml_attr, xml_image, "src" );
-   scaffold_assign_or_cpy_c( o->sprites_filename, xml_attr, bstr_retval );
+
+   bstr_retval = bassignblk( xml_val_buffer, xml_attr, strlen( xml_attr ) );
+   lgc_nonzero( bstr_retval );
+
+   mobile_set_sprites_filename( o, xml_val_buffer );
 
    walk_ani_key = bformat(
       "%s-%s",
@@ -363,22 +380,19 @@ next_script:
       str_mobile_facing[MOBILE_FACING_DOWN].data
    );
 
-   o->initialized = TRUE;
-   o->sprite_display_height = o->sprite_height;
-   o->facing = MOBILE_FACING_DOWN;
+   mobile_set_initialized( o, TRUE );
+   mobile_set_facing( o, MOBILE_FACING_DOWN );
    lg_debug(
       __FILE__, "Mobile animation defaulting to: %b\n", walk_ani_key
    );
-   o->current_animation = (struct MOBILE_ANI_DEF*)hashmap_get(
-      &(o->ani_defs), walk_ani_key
-   );
-   /* TODO: Don't die if this fails. */
-   scaffold_assert( NULL != o->current_animation );
+   mobile_set_animation( o, walk_ani_key );
 
 cleanup:
    bdestroy( walk_ani_key );
+#ifdef USE_VM
    bdestroy( vm_key_buffer );
    bdestroy( vm_val_buffer );
+#endif // USE_VM
    return;
 }
 
@@ -780,7 +794,6 @@ static void datafile_tilemap_parse_layer_ezxml(
       xml_attr = bdata( (bstring)vector_get( tiles_list, i ) );
       lgc_null( xml_attr );
       tilemap_layer_set_tile_gid( layer, i, atoi( xml_attr ) );
-      //vector_add_scalar( &(layer->tiles), atoi( xml_attr ), TRUE );
    }
 
    layer->tilemap = t;
