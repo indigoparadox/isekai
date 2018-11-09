@@ -375,7 +375,7 @@ TILEMAP_TILE tilemap_layer_get_tile_gid(
 }
 
 void tilemap_layer_set_tile_gid(
-   const struct TILEMAP_LAYER* layer, size_t index, TILEMAP_TILE gid
+   struct TILEMAP_LAYER* layer, size_t index, TILEMAP_TILE gid
 ) {
    scaffold_assert( layer->tile_gids_len > index );
    layer->tile_gids[index] = gid;

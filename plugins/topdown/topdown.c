@@ -128,7 +128,7 @@ static void* mode_topdown_tilemap_draw_layer_cb(
    /* TODO: Do culling in iso-friendly way. */
    for( x = twindow_get_min_x( twindow ) ; twindow_get_max_x( twindow ) > x ; x++ ) {
       for( y = twindow_get_min_y( twindow ) ; twindow_get_max_y( twindow ) > y ; y++ ) {
-         tile = tilemap_get_tile( layer, x, y );
+         tile = tilemap_layer_get_tile_gid( layer, x, y );
          if( 0 == tile ) {
             continue;
          }
