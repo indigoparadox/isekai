@@ -128,6 +128,7 @@ void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = NULL;
    uint32_t gid = 0;
    struct TILEMAP_TILE_DATA* tdata = NULL;
+   TILEMAP_TILE set_firstgid = 0;
 
    scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
 

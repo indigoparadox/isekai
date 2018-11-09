@@ -25,8 +25,7 @@ struct tagbstring mode_name = bsStatic( "Top Down" );
 
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
-   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
-);
+   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y );
 
 /** \brief Callback: Draw all of the layers for the iterated individual
  *         tile/position (kind of the opposite of tilemap_draw_layer_cb.)
@@ -50,13 +49,8 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    layer_max = vector_count( &(t->layers) );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( &(t->layers), layer_idx );
-      scaffold_assert(
-         TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
-      tile = tilemap_get_tile( layer, pos->x, pos->y );
-      if( 0 < tile ) {
-         mode_topdown_tilemap_draw_tile(
-            layer, twindow, pos->x, pos->y, tile );
-      }
+      mode_topdown_tilemap_draw_tile(
+         layer, twindow, pos->x, pos->y );
    }
    //vector_lock( &(t->layers), FALSE );
 
@@ -114,27 +108,12 @@ static void* mode_topdown_tilemap_draw_layer_cb(
    SCAFFOLD_SIZE_SIGNED
       x = 0,
       y = 0;
-   uint32_t tile;
-   /*struct VECTOR* tiles = NULL;
-
-   tiles = &(layer->tiles);
-
-   if( NULL == tiles || 0 == vector_count( tiles ) ) {
-      goto cleanup;
-   }*/
 
    scaffold_assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
 
-   /* TODO: Do culling in iso-friendly way. */
    for( x = twindow_get_min_x( twindow ) ; twindow_get_max_x( twindow ) > x ; x++ ) {
       for( y = twindow_get_min_y( twindow ) ; twindow_get_max_y( twindow ) > y ; y++ ) {
-         tile = tilemap_layer_get_tile_gid( layer, x, y );
-         if( 0 == tile ) {
-            continue;
-         }
-         scaffold_assert( tile < tilemap_get_tiles_count( layer ) );
-         mode_topdown_tilemap_draw_tile(
-            layer, twindow, x, y, tile );
+         mode_topdown_tilemap_draw_tile( layer, twindow, x, y );
       }
    }
 
@@ -265,103 +244,80 @@ cleanup:
 
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
-   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, SCAFFOLD_SIZE gid
+   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 ) {
    struct TILEMAP_TILESET* set = NULL;
-   GRAPHICS_RECT tile_tilesheet_pos;
-   GRAPHICS_RECT tile_screen_rect;
    struct CLIENT* local_client = NULL;
    struct TILEMAP* t = NULL;
-   const struct MOBILE* o = NULL;
-   GRAPHICS* g_tileset = NULL;
+   const struct MOBILE* o_player = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
+   GFX_COORD_PIXEL screen_x = 0,
+      screen_y = 0;
 #ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 #endif // USE_ITEMS
    //struct CHANNEL* l = NULL;
+   TILEMAP_TILE gid = 0;
+
+   gid = tilemap_layer_get_tile_gid( layer, x, y );
+   if( 0 == gid ) {
+      goto cleanup;
+   }
+   scaffold_assert( gid < tilemap_get_tiles_count( layer ) );
 
    local_client = twindow_get_local_client( twindow );
    lgc_null( local_client );
    t = twindow_get_tilemap_active( twindow );
    lgc_null( t );
 
-   o = client_get_puppet( local_client );
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    if( NULL == set ) {
       goto cleanup; /* Silently. */
    }
 
-   lgc_zero_against(
-      t->scaffold_error,
-      tilemap_tileset_get_tile_width( set ), "Tile width is zero." );
-   lgc_zero_against(
-      t->scaffold_error,
-      tilemap_tileset_get_tile_height( set ), "Tile height is zero." );
-   if(
-      0 == tilemap_tileset_get_tile_width( set ) ||
-      0 == tilemap_tileset_get_tile_height( set )
-   ) {
-      goto cleanup;
-   }
+   o_player = client_get_puppet( local_client );
 
    /* Figure out the window position to draw to. */
-   tile_screen_rect.x =
+   screen_x =
       tilemap_tileset_get_tile_width( set ) * (x - twindow_get_x( twindow ));
-   tile_screen_rect.y =
+   screen_y =
       tilemap_tileset_get_tile_height( set ) * (y - twindow_get_y( twindow ));
 
-   if( 0 > tile_screen_rect.x || 0 > tile_screen_rect.y ) {
+   if( 0 > screen_x || 0 > screen_y ) {
       goto cleanup; /* Silently. */
    }
 
-   /* Figure out the graphical tile to draw from. */
-   g_tileset = tilemap_tileset_get_image_default( set, local_client );
-   if( NULL == g_tileset ) {
-      /* TODO: Use a built-in placeholder tileset. */
-      goto cleanup;
-   }
-
-   tilemap_get_tile_tileset_pos(
-      set, set_firstgid, g_tileset, gid, &tile_tilesheet_pos );
-
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_x( o->x + 1, twindow ) &&
+         tilemap_inside_window_deadzone_x( o_player->x + 1, twindow ) &&
        TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
-         tilemap_inside_inner_map_x( o->x, twindow )
+         tilemap_inside_inner_map_x( o_player->x, twindow )
       ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_x( o->x - 1, twindow ) &&
+         tilemap_inside_window_deadzone_x( o_player->x - 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_x( o->x, twindow )
+         tilemap_inside_inner_map_x( o_player->x, twindow )
       )
    ) {
-      tile_screen_rect.x += mobile_get_steps_remaining_x( o, TRUE );
+      screen_x += mobile_get_steps_remaining_x( o_player, TRUE );
    }
 
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_y( o->y + 1, twindow )  &&
+         tilemap_inside_window_deadzone_y( o_player->y + 1, twindow )  &&
        TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
-         tilemap_inside_inner_map_y( o->y, twindow )
+         tilemap_inside_inner_map_y( o_player->y, twindow )
       ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_y( o->y - 1, twindow ) &&
+         tilemap_inside_window_deadzone_y( o_player->y - 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_y( o->y, twindow )
+         tilemap_inside_inner_map_y( o_player->y, twindow )
       )
    ) {
-      tile_screen_rect.y += mobile_get_steps_remaining_y( o, TRUE );
+      screen_y += mobile_get_steps_remaining_y( o_player, TRUE );
    }
 
-   graphics_blit_partial(
-      twindow_get_screen( twindow ),
-      tile_screen_rect.x, tile_screen_rect.y,
-      tile_tilesheet_pos.x, tile_tilesheet_pos.y,
-      tilemap_tileset_get_tile_width( set ),
-      tilemap_tileset_get_tile_height( set ),
-      g_tileset
-   );
+   tilemap_tile_draw_ortho( layer, x, y, screen_x, screen_y, set, twindow );
 
 #ifdef USE_ITEMS
 

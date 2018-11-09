@@ -218,38 +218,35 @@ void tilemap_position_init( struct TILEMAP_POSITION* position );
 void tilemap_position_cleanup( struct TILEMAP_POSITION* position );
 struct TILEMAP_TILESET* tilemap_tileset_new( bstring def_path );
 struct TILEMAP_TILE_DATA* tilemap_tileset_get_tile(
-   struct TILEMAP_TILESET* set, int gid
-);
+   const struct TILEMAP_TILESET* set, int gid );
 size_t tilemap_tileset_set_tile(
-   struct TILEMAP_TILESET* set, int gid, struct TILEMAP_TILE_DATA* tile_info
-);
-GFX_COORD_PIXEL tilemap_tileset_get_tile_width( struct TILEMAP_TILESET* set );
-GFX_COORD_PIXEL tilemap_tileset_get_tile_height( struct TILEMAP_TILESET* set );
+   struct TILEMAP_TILESET* set, int gid, struct TILEMAP_TILE_DATA* tile_info );
+GFX_COORD_PIXEL tilemap_tileset_get_tile_width(
+   const struct TILEMAP_TILESET* set );
+GFX_COORD_PIXEL tilemap_tileset_get_tile_height(
+   const struct TILEMAP_TILESET* set );
 void tilemap_tileset_set_tile_width(
-   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL width
-);
+   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL width );
 void tilemap_tileset_set_tile_height(
-   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL height
-);
-BOOL tilemap_tileset_has_image( struct TILEMAP_TILESET* set, bstring filename );
+   struct TILEMAP_TILESET* set, GFX_COORD_PIXEL height );
+BOOL tilemap_tileset_has_image(
+   const struct TILEMAP_TILESET* set, bstring filename );
 BOOL tilemap_tileset_set_image(
-   struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g
-);
+   struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g );
 BOOL tilemap_tileset_add_terrain(
-   struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info
-);
+   struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info );
 struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
    struct TILEMAP_TILESET* set, size_t gid
 );
 struct GRAPHICS* tilemap_tileset_get_image_default(
-   struct TILEMAP_TILESET* set, struct CLIENT* c
-);
-bstring tilemap_tileset_get_definition_path( struct TILEMAP_TILESET* set );
+   const struct TILEMAP_TILESET* set, struct CLIENT* c );
+bstring tilemap_tileset_get_definition_path(
+   const struct TILEMAP_TILESET* set );
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_init( struct TILEMAP_TILESET* tileset, bstring def_path );
 struct TILEMAP_TILESET* tilemap_get_tileset(
-   struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
+   const struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
 );
 void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,
@@ -283,6 +280,13 @@ SCAFFOLD_INLINE TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
 );*/
 void tilemap_add_dirty_tile(
    struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+);
+void tilemap_tile_draw_ortho(
+   const struct TILEMAP_LAYER* layer,
+   TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y,
+   GFX_COORD_PIXEL screen_x, GFX_COORD_PIXEL screen_y,
+   struct TILEMAP_TILESET* set,
+   const struct TWINDOW* twindow
 );
 void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st );
 void tilemap_toggle_debug_state();
