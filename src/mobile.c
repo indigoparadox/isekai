@@ -1142,6 +1142,13 @@ struct CLIENT* mobile_get_owner( const struct MOBILE* o ) {
    return o->owner;
 }
 
+BOOL mobile_get_animation_reset( const struct MOBILE* o ) {
+    if( NULL == o ) {
+        return FALSE;
+    }
+    return o->animation_reset;
+}
+
 void mobile_set_initialized( struct MOBILE* o, BOOL init ) {
    if( NULL == o ) {
       return;

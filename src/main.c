@@ -85,6 +85,8 @@ static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
 static struct tagbstring str_default_channel = bsStatic( "#testchan" );
 static uint32_t server_port = 33080;
+static struct tagbstring str_error = bsStatic( "Error" );
+static struct tagbstring str_no_modes = bsStatic( "Unable to load any modes." );
 
 #ifdef USE_ALLEGRO
 /* TODO: Is this really defined nowhere? */
@@ -575,6 +577,38 @@ cleanup:
    return retval;
 }
 
+void loop_error() {
+   BOOL cont = TRUE;
+   struct UI_WINDOW* dialog = NULL;
+   int bstr_result = 0,
+      input_res = 0;
+
+   ui_window_new( ui_get_local(), dialog, &str_error, &str_error, &str_no_modes, -1, -1, -1, -1 );
+   ui_window_push( ui_get_local(), dialog );
+
+   while( cont ) {
+      graphics_start_fps_timer();
+
+      input_res = ui_poll_input( ui_get_local(), input, &str_error );
+      if(
+         UI_INPUT_RETURN_KEY_ENTER == input_res ||
+         0 < input_res
+      ) {
+         cont = FALSE;
+      }
+
+      ui_draw( ui_get_local(), g_screen );
+      graphics_flip_screen( g_screen );
+
+      graphics_wait_for_fps_timer();
+   }
+
+cleanup:
+   ui_window_destroy( ui_get_local(), &str_error );
+   ui_window_free( dialog );
+   return;
+}
+
 #ifdef _WIN32
 int CALLBACK WinMain(
    _In_ HINSTANCE hInstance,
@@ -636,6 +670,10 @@ int main( int argc, char** argv ) {
 
    /* Setup a list of available modes. */
    plugin_load_all( PLUGIN_MODE );
+   if( 0 >= vector_count( &mode_list_short ) ) {
+      loop_error();
+      goto cleanup;
+   }
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
