@@ -88,6 +88,19 @@ cleanup:
    return NULL;
 }
 
+bstring plugin_get_path() {
+   bstring plugin_path = NULL;
+   plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
+   /* TODO: Plugins directory fallback. */
+   if( NULL == plugin_path ) {
+      plugin_path = bfromcstr( "" );
+   }
+   if( 0 >= blength( plugin_path ) ) {
+      bassignStatic( plugin_path, "plugins/bin" );
+   }
+   return plugin_path;
+}
+
 PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    bstring plugin_path = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
@@ -96,8 +109,7 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    hashmap_init( &plugin_list_mode );
    vector_init( &plugin_dir );
 
-   plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
-   /* TODO: Plugins directory fallback. */
+   plugin_path = plugin_get_path();
 
    lg_debug( __FILE__, "Loading mode plugins from path: %b\n", plugin_path );
    files_list_dir( plugin_path, &plugin_dir, NULL, FALSE, FALSE );
@@ -119,8 +131,8 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    bstring mode_name = NULL;
 
    plugin_filename = bformat( "lib%s.so", bdata( plugin_name ) );
-   plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
-   /* TODO: Plugins directory fallback. */
+   plugin_path = plugin_get_path();
+
    switch( ptype ) {
    case PLUGIN_MODE:
       files_join_path( plugin_path, &str_mode );

@@ -67,7 +67,7 @@ static void* mode_topdown_draw_mobile_cb(
 
    if( NULL == o ) { return NULL; }
 
-   if( TRUE == o->animation_reset ) {
+   if( TRUE == mobile_get_animation_reset( o ) ) {
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
@@ -289,14 +289,14 @@ static void mode_topdown_tilemap_draw_tile(
 
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_x( o_player->x + 1, twindow ) &&
+         tilemap_inside_window_deadzone_x( mobile_get_x( o_player ) + 1, twindow ) &&
        TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
-         tilemap_inside_inner_map_x( o_player->x, twindow )
+         tilemap_inside_inner_map_x( mobile_get_x( o_player ), twindow )
       ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_x( o_player->x - 1, twindow ) &&
+         tilemap_inside_window_deadzone_x( mobile_get_x( o_player ) - 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_x( o_player->x, twindow )
+         tilemap_inside_inner_map_x( mobile_get_x( o_player ), twindow )
       )
    ) {
       screen_x += mobile_get_steps_remaining_x( o_player, TRUE );
@@ -304,14 +304,14 @@ static void mode_topdown_tilemap_draw_tile(
 
    if(
       (TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN ==
-         tilemap_inside_window_deadzone_y( o_player->y + 1, twindow )  &&
+         tilemap_inside_window_deadzone_y( mobile_get_y( o_player ) + 1, twindow )  &&
        TILEMAP_EXCLUSION_OUTSIDE_RIGHT_DOWN !=
-         tilemap_inside_inner_map_y( o_player->y, twindow )
+         tilemap_inside_inner_map_y( mobile_get_y( o_player ), twindow )
       ) || (
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
-         tilemap_inside_window_deadzone_y( o_player->y - 1, twindow ) &&
+         tilemap_inside_window_deadzone_y( mobile_get_y( o_player ) - 1, twindow ) &&
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
-         tilemap_inside_inner_map_y( o_player->y, twindow )
+         tilemap_inside_inner_map_y( mobile_get_y( o_player ), twindow )
       )
    ) {
       screen_y += mobile_get_steps_remaining_y( o_player, TRUE );
@@ -524,12 +524,12 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    /* If we've done a full redraw as requested then switch back to just dirty *
     * tiles.                                                                  */
    if(
-      0 != o->steps_remaining &&
+      0 != mobile_get_steps_remaining( o ) &&
       TILEMAP_REDRAW_ALL != t->redraw_state
    ) {
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
    } else if(
-      0 == o->steps_remaining &&
+      0 == mobile_get_steps_remaining( o ) &&
       TILEMAP_REDRAW_DIRTY != t->redraw_state
    ) {
       tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
@@ -574,7 +574,7 @@ PLUGIN_RESULT mode_topdown_update(
    }
 
    mode_topdown_tilemap_update_window(
-      client_get_local_window( c ), o->x, o->y
+      client_get_local_window( c ), mobile_get_x( o ), mobile_get_y( o )
    );
 
 cleanup:
@@ -598,7 +598,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    /* Make sure the buffer that all windows share is available. */
    if(
       NULL == puppet ||
-      (puppet->steps_remaining < -8 || puppet->steps_remaining > 8)
+      (mobile_get_steps_remaining( puppet ) < -8 ||
+      mobile_get_steps_remaining( puppet ) > 8)
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
@@ -607,7 +608,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
       //ui = client_get_ui;
       update.o = puppet;
-      update.l = puppet->channel;
+      update.l = mobile_get_channel( puppet );
       lgc_null( update.l );
       //l = puppet->channel;
       //lgc_null_msg( l, "No channel loaded." );
@@ -620,29 +621,29 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
    case INPUT_ASSIGNMENT_UP:
       update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = puppet->x;
-      update.y = puppet->y - 1;
+      update.x = mobile_get_x( puppet );
+      update.y = mobile_get_y( puppet ) - 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
       update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = puppet->x - 1;
-      update.y = puppet->y;
+      update.x = mobile_get_x( puppet ) - 1;
+      update.y = mobile_get_y( puppet );
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
       update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = puppet->x;
-      update.y = puppet->y + 1;
+      update.x = mobile_get_x( puppet );
+      update.y = mobile_get_y( puppet ) + 1;
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
       update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = puppet->x + 1;
-      update.y = puppet->y;
+      update.x = mobile_get_x( puppet ) + 1;
+      update.y = mobile_get_y( puppet );
       proto_client_send_update( c, &update );
       return TRUE;
 
