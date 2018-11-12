@@ -198,7 +198,7 @@ static void datafile_mobile_parse_animation_ezxml(
       __FILE__, "Loaded mobile animation: %b\n", name_dir
    );
 
-   if( mobile_set_animation( o, name_dir, animation ) ) {
+   if( !mobile_add_animation( o, name_dir, animation ) ) {
       lg_error(
          __FILE__, "Attempted to double-add mobile animation def.\n" );
       mobile_animation_free( animation );

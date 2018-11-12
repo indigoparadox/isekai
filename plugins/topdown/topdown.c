@@ -587,7 +587,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
-   //struct CHANNEL* l = NULL;
+   struct CHANNEL* l = NULL;
    //struct TILEMAP* t = NULL;
 #ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
@@ -608,8 +608,9 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
       //ui = client_get_ui;
       update.o = puppet;
-      update.l = mobile_get_channel( puppet );
-      lgc_null( update.l );
+      l = mobile_get_channel( puppet );
+      lgc_null( l );
+      update.l = l;
       //l = puppet->channel;
       //lgc_null_msg( l, "No channel loaded." );
       //t = client_get_tilemap( c );

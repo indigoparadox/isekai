@@ -123,8 +123,8 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
       /* Create a basic mobile for the new client. */
       /* TODO: Get the desired mobile data ID from client. */
-      mobile_new(
-         o, (const bstring)&str_mobile_def_id_default,
+      o = mobile_new(
+         (const bstring)&str_mobile_def_id_default,
          spawner->pos.x, spawner->pos.y
       );
       mobile_load_local( o );
@@ -220,8 +220,8 @@ void channel_set_mobile(
 
    o = vector_get( l->mobiles, serial );
    if( NULL == o ) {
-      mobile_new( o, mob_id, x, y );
-      mobile_set_serial( serial );
+      o = mobile_new( mob_id, x, y );
+      mobile_set_serial( o, serial );
       lg_debug(
          __FILE__, "Player mobile does not exist. Creating with serial: %d\n",
          mobile_get_serial( o )

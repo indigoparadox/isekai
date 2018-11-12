@@ -8,6 +8,7 @@
 struct VM_CADDY;
 struct TWINDOW;
 struct MOBILE;
+struct CLIENT;
 
 typedef enum MOBILE_UPDATE {
    MOBILE_UPDATE_NONE,
@@ -63,6 +64,8 @@ struct MOBILE_UPDATE_PACKET {
 #define MOBILE_STEPS_INCREMENT 8
 #define MOBILE_SPRITE_SIZE 32
 
+void mobile_gen_serial( struct MOBILE* o, struct VECTOR* mobiles );
+struct MOBILE* mobile_new( bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y );
 void mobile_free( struct MOBILE* o );
 void mobile_init(
    struct MOBILE* o, const bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
@@ -100,6 +103,43 @@ void mobile_do_reset_2d_animation( struct MOBILE* o );
 #ifdef USE_VM
 void mobile_vm_start( struct MOBILE* o );
 #endif /* USE_VM */
+void mobile_update_coords(
+   struct MOBILE* o, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+);
+int mobile_set_display_name( struct MOBILE* o, const bstring name );
+void mobile_set_owner( struct MOBILE* o, struct CLIENT* c );
+void mobile_set_serial( struct MOBILE* o, SERIAL serial );
+struct TILEMAP* mobile_get_tilemap( const struct MOBILE* o );
+size_t mobile_set_sprite(
+   struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
+);
+BOOL mobile_add_animation(
+   struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
+);
+int mobile_set_id( struct MOBILE* o, bstring mob_id );
+void mobile_set_sprite_width( struct MOBILE* o, GFX_COORD_PIXEL w );
+void mobile_set_sprite_height( struct MOBILE* o, GFX_COORD_PIXEL h );
+void mobile_set_sprites_filename( struct MOBILE* o, const bstring filename );
+void mobile_set_facing( struct MOBILE* o, MOBILE_FACING facing );
+void mobile_set_animation( struct MOBILE* o, bstring ani_key );
+TILEMAP_COORD_TILE mobile_get_x( const struct MOBILE* o );
+TILEMAP_COORD_TILE mobile_get_y( const struct MOBILE* o );
+TILEMAP_COORD_TILE mobile_get_prev_x( const struct MOBILE* o );
+TILEMAP_COORD_TILE mobile_get_prev_y( const struct MOBILE* o );
+bstring mobile_get_sprites_filename( const struct MOBILE* o );
+bstring mobile_get_id( const struct MOBILE* o );
+struct GRAPHICS* mobile_get_sprites( const struct MOBILE* o );
+bstring mobile_get_def_filename( const struct MOBILE* o );
+SERIAL mobile_get_serial( const struct MOBILE* o );
+struct MOBILE_SPRITE_DEF* mobile_get_sprite(
+   const struct MOBILE* o, size_t id
+);
+GFX_COORD_PIXEL mobile_get_steps_remaining( const struct MOBILE* o );
+struct CLIENT* mobile_get_owner( const struct MOBILE* o );
+BOOL mobile_get_animation_reset( const struct MOBILE* o );
+void mobile_set_initialized( struct MOBILE* o, BOOL init );
+void mobile_set_type( struct MOBILE* o, MOBILE_TYPE type );
+void mobile_set_sprites( struct MOBILE* o, struct GRAPHICS* sheet );
 
 #ifdef MOBILE_C
 const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );
