@@ -462,20 +462,26 @@ void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* up
    }
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, mobile_get_serial( update ), update->update, update->x, update->y, serial
+      update->l->name, mobile_get_serial( update->o ), update->update, update->x, update->y, serial
    );
 }
 
 void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
    SCAFFOLD_SIZE serial = 0;
    scaffold_assert_server();
+   lgc_null( update );
    if( NULL != update->target ) {
       serial = mobile_get_serial( update->target );
    }
+   lgc_null( update->l );
+   lgc_null( update->l->name );
+   lgc_null( update->o );
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, mobile_get_serial( update ), update->update, update->x, update->y, serial
+      update->l->name, mobile_get_serial( update->o ), update->update, update->x, update->y, serial
    );
+cleanup:
+   return;
 }
 
 void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg ) {

@@ -971,10 +971,10 @@ void mobile_set_owner( struct MOBILE* o, struct CLIENT* c ) {
 }
 
 void mobile_set_serial( struct MOBILE* o, SERIAL serial ) {
-   if( NULL == o ) {
-      return NULL;
-   }
-   return o->channel->tilemap;
+   lgc_null( o );
+   o->serial = serial;
+cleanup:
+   return;
 }
 
 struct TILEMAP* mobile_get_tilemap( const struct MOBILE* o ) {
@@ -990,11 +990,16 @@ size_t mobile_set_sprite(
    scaffold_assert( NULL != o );
    return vector_set( &(o->sprite_defs), id, sprite, TRUE );
 }
-
-mobile_add_animation(
+BOOL mobile_add_animation(
    struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
 ) {
-   hashmap_put( &(o->ani_defs), name_dir, animation, FALSE );
+   if(
+      HASHMAP_ERROR_NONE !=
+      hashmap_put( &(o->ani_defs), name_dir, animation, FALSE )
+   ) {
+      return FALSE;
+   }
+   return TRUE;
 }
 
 int mobile_set_id( struct MOBILE* o, bstring mob_id ) {

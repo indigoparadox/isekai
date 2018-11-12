@@ -449,7 +449,7 @@ void* callback_proc_channel_spawners(
    case TILEMAP_SPAWNER_TYPE_PLAYER:
    case TILEMAP_SPAWNER_TYPE_MOBILE:
       lg_debug( __FILE__, "Spawning mobile: %b\n", ts->id );
-      mobile_new( o, ts->id, ts->pos.x, ts->pos.y );
+      o = mobile_new( ts->id, ts->pos.x, ts->pos.y );
       mobile_load_local( o );
       mobile_gen_serial( o, l->mobiles );
       channel_add_mobile( l, o );
@@ -620,7 +620,7 @@ void* callback_attach_mob_sprites( size_t idx, void* iter, void* arg ) {
 
    g = client_get_sprite( c, mobile_get_sprites_filename( o ) );
    lgc_null( g );
-   mobile_set_sprites( g );
+   mobile_set_sprites( o, g );
 
 cleanup:
    return NULL;
