@@ -4,19 +4,19 @@
 
 #include "callback.h"
 
-static struct VECTOR global_backlog;
+static struct VECTOR* global_backlog;
 
 static struct tagbstring str_backlog_title = bsStatic( "Log" );
 static struct tagbstring str_backlog_id = bsStatic( "backlog" );
 
 void backlog_init() {
-   vector_init( &global_backlog );
+   global_backlog = vector_new();
    lg_set_info_cb( backlog_system );
 }
 
 void backlog_shutdown() {
-   vector_remove_cb( &global_backlog, callback_free_backlog, NULL );
-   vector_cleanup( &global_backlog );
+   vector_remove_cb( global_backlog, callback_free_backlog, NULL );
+   vector_free( &global_backlog );
 }
 
 void backlog_line_free( struct BACKLOG_LINE* line ) {
@@ -63,7 +63,7 @@ void backlog_close_window( struct UI* ui ) {
 }
 
 void* backlog_iter( vector_iter_cb cb, void* arg ) {
-   return vector_iterate( &global_backlog, cb, arg );
+   return vector_iterate( global_backlog, cb, arg );
 }
 
 #ifdef USE_CLOCK
@@ -101,7 +101,7 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    line->line = bstrcpy( msg );
 
    backlog_timestamp( line );
-   verr = vector_insert( &global_backlog, 0, line );
+   verr = vector_insert( global_backlog, 0, line );
    if( 0 > verr ) {
       backlog_line_free( line );
       goto cleanup;
@@ -123,7 +123,7 @@ void backlog_system( const bstring msg ) {
    line->line = bstrcpy( msg );
 
    backlog_timestamp( line );
-   verr = vector_insert( &global_backlog, 0, line );
+   verr = vector_insert( global_backlog, 0, line );
    if( 0 > verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;

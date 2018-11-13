@@ -16,7 +16,7 @@ struct SERVER {
    struct CLIENT self;
 
    /* Items after this line are server-specific. */
-   struct HASHMAP clients;
+   struct HASHMAP* clients;
 };
 
 /** \brief Kick and free clients on all channels in the given list.
@@ -48,14 +48,14 @@ void server_free_clients( struct SERVER* s ) {
    deleted =
 #endif /* DEBUG */
       //hashmap_remove_all( &(s->clients) );
-      hashmap_remove_cb( &(s->clients), callback_h_free_clients, NULL );
+      hashmap_remove_cb( s->clients, callback_h_free_clients, NULL );
 #ifdef DEBUG
    lg_debug(
       __FILE__, "Removed %d clients from server. %d remaining.\n",
-      deleted, hashmap_count( &(s->clients) )
+      deleted, hashmap_count( s->clients )
    );
 #endif /* DEBUG */
-   hashmap_cleanup( &(s->clients) );
+   hashmap_free( &(s->clients) );
 }
 
 static void server_free_final( const struct REF* ref ) {
@@ -88,7 +88,7 @@ void server_init( struct SERVER* s, const bstring myhost ) {
    s->self.local_client = FALSE;
    client_init( &(s->self) );
    s->self.refcount.gc_free = server_free_final;
-   hashmap_init( &(s->clients) );
+   s->clients = hashmap_new();
    s->self.sentinal = SERVER_SENTINAL;
    bstr_result = bassign( s->self.remote, myhost );
    lgc_nonzero( bstr_result );
@@ -107,8 +107,8 @@ void server_stop( struct SERVER* s ) {
       ipc_stop( s->self.link );
    }
    while(
-      0 < hashmap_count( &(s->clients) ) &&
-      0 < hashmap_count( &(s->self.channels) )
+      0 < hashmap_count( s->clients ) &&
+      0 < hashmap_count( s->self.channels )
    ) {
       server_service_clients( s );
       graphics_sleep( 1000 );
@@ -117,8 +117,8 @@ void server_stop( struct SERVER* s ) {
    client_free_channels( &(s->self) );
    server_free_clients( s );
    */
-   scaffold_assert( 0 == hashmap_count( &(s->self.channels) ) );
-   scaffold_assert( 0 == hashmap_count( &(s->clients) ) );
+   scaffold_assert( 0 == hashmap_count( s->self.channels ) );
+   scaffold_assert( 0 == hashmap_count( s->clients ) );
    s->self.running = FALSE;
 }
 
@@ -127,10 +127,10 @@ short server_add_client( struct SERVER* s, struct CLIENT* c ) {
       /* Generate a temporary random nick not already existing. */
       do {
          scaffold_random_string( client_get_nick( c ), SERVER_RANDOM_NICK_LEN );
-      } while( NULL != hashmap_get( &(s->clients), client_get_nick( c ) ) );
+      } while( NULL != hashmap_get( s->clients, client_get_nick( c ) ) );
    }
-   scaffold_assert( NULL == hashmap_get( &(s->clients), client_get_nick( c ) ) );
-   if( hashmap_put( &(s->clients), client_get_nick( c ), c, FALSE ) ) {
+   scaffold_assert( NULL == hashmap_get( s->clients, client_get_nick( c ) ) );
+   if( hashmap_put( s->clients, client_get_nick( c ), c, FALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client: %b\n",
          client_get_nick( c ) );
       client_free( c );
@@ -162,7 +162,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 
       channel_load_tilemap( l );
       hashmap_iterate(
-         &(s->self.tilesets),
+         s->self.tilesets,
          callback_load_local_tilesets,
          &(s->self)
       );
@@ -245,7 +245,7 @@ uint16_t server_get_port( struct SERVER* s ) {
 }
 
 struct CLIENT* server_get_client( struct SERVER* s, const bstring nick ) {
-   return hashmap_get( &(s->clients), nick );
+   return hashmap_get( s->clients, nick );
 }
 
 struct CHANNEL* server_get_channel_by_name( struct SERVER* s, const bstring nick ) {
@@ -258,48 +258,48 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
 
-   old_count = hashmap_count( &(s->clients) );
+   old_count = hashmap_count( s->clients );
 #endif /* DEBUG */
 
    /* Perform the deletion. */
    /* TODO: Remove the client from all of the other lists that have upped its *
     *       ref count.                                                        */
-   if( hashmap_is_locked( &(s->clients) ) ) {
+   if( hashmap_is_locked( s->clients ) ) {
       deffered_lock = TRUE;
-      hashmap_lock( &(s->clients), FALSE );
+      hashmap_lock( s->clients, FALSE );
    }
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_cb( &(s->clients), callback_h_free_clients, nick );
+      hashmap_remove_cb( s->clients, callback_h_free_clients, nick );
    if( deffered_lock ) {
-      hashmap_lock( &(s->clients), TRUE );
+      hashmap_lock( s->clients, TRUE );
    }
 #ifdef DEBUG
    lg_debug(
       __FILE__, "Server: Removed %d clients (%b). %d remaining.\n",
-      deleted, nick, hashmap_count( &(s->clients) )
+      deleted, nick, hashmap_count( s->clients )
    );
 #endif /* DEBUG */
 
-   hashmap_iterate( &(s->self.channels), callback_remove_clients, nick );
+   hashmap_iterate( s->self.channels, callback_remove_clients, nick );
 
 #ifdef DEBUG
-   new_count = hashmap_count( &(s->clients) );
+   new_count = hashmap_count( s->clients );
    scaffold_assert( new_count == old_count - deleted );
 
-   old_count = hashmap_count( &(s->self.channels) );
+   old_count = hashmap_count( s->self.channels );
 #endif /* DEBUG */
 
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb(
-         &(s->self.channels), callback_free_empty_channels, NULL );
+         s->self.channels, callback_free_empty_channels, NULL );
 #ifdef DEBUG
    lg_debug(
       __FILE__, "Removed %d channels from server. %d remaining.\n",
-      deleted, hashmap_count( &(s->self.channels) )
+      deleted, hashmap_count( s->self.channels )
    );
 #endif /* DEBUG */
 
@@ -329,7 +329,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
 
    assert( ipc_is_listening( s->self.link ) );
 
-   old_client_count = hashmap_count( &(s->clients) );
+   old_client_count = hashmap_count( s->clients );
    scaffold_set_server();
 #endif /* DEBUG */
 
@@ -347,7 +347,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
       server_add_client( s, c );
 
 #ifdef DEBUG
-      scaffold_assert( old_client_count < hashmap_count( &(s->clients) ) );
+      scaffold_assert( old_client_count < hashmap_count( s->clients ) );
 #endif /* DEBUG */
 
       /* The only association this client should start with is the server's   *
@@ -387,9 +387,9 @@ BOOL server_service_clients( struct SERVER* s ) {
    lgc_null( s );
 
    /* Check for commands from existing clients. */
-   if( 0 < hashmap_count( &(s->clients) ) ) {
+   if( 0 < hashmap_count( s->clients ) ) {
       // XXX: NOLOCK
-      c_stop = hashmap_iterate( &(s->clients), server_srv_cb, s );
+      c_stop = hashmap_iterate( s->clients, server_srv_cb, s );
    }
 
    if( NULL != c_stop ) {
@@ -403,12 +403,12 @@ BOOL server_service_clients( struct SERVER* s ) {
 #ifdef USE_CHUNKS
 
    /* Send files in progress. */
-   hashmap_iterate( &(s->clients), callback_proc_chunkers, s );
+   hashmap_iterate( s->clients, callback_proc_chunkers, s );
 
 #endif /* USE_CHUNKS */
 
    /* Spawn NPC mobiles. */
-   hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, s );
+   hashmap_iterate( s->self.channels, callback_proc_server_spawners, s );
 
 cleanup:
    return retval;
@@ -450,7 +450,7 @@ bstring server_get_remote( struct SERVER* s ) {
 }
 
 size_t server_get_client_count( struct SERVER* s ) {
-   return hashmap_count( &(s->clients) );
+   return hashmap_count( s->clients );
 }
 
 /* Return any client that is in the bstrlist arg. */
@@ -462,7 +462,7 @@ static void* callback_search_clients_l( bstring idx, void* iter, void* arg ) {
 
 struct VECTOR* server_get_clients_online( struct SERVER* s, struct VECTOR* filter ) {
    struct VECTOR* ison = NULL;
-   ison = hashmap_iterate_v( &(s->clients), callback_search_clients_l, filter );
+   ison = hashmap_iterate_v( s->clients, callback_search_clients_l, filter );
    return ison;
 }
 

@@ -46,9 +46,9 @@ static void* mode_topdown_tilemap_draw_tile_cb(
 
    // XXX
    //vector_lock( &(t->layers), TRUE );
-   layer_max = vector_count( &(t->layers) );
+   layer_max = vector_count( t->layers );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
-      layer = vector_get( &(t->layers), layer_idx );
+      layer = vector_get( t->layers, layer_idx );
       mode_topdown_tilemap_draw_tile(
          layer, twindow, pos->x, pos->y );
    }
@@ -510,14 +510,14 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
       || TILEMAP_DEBUG_TERRAIN_OFF != tilemap_dt_state
 #endif /* DEBUG_TILES */
    ) {
-      vector_iterate( &(t->layers), mode_topdown_tilemap_draw_layer_cb, twindow );
+      vector_iterate( t->layers, mode_topdown_tilemap_draw_layer_cb, twindow );
    } else if(
       TILEMAP_REDRAW_DIRTY == t->redraw_state &&
-      0 < vector_count( &(t->dirty_tiles ) )
+      0 < vector_count( t->dirty_tiles )
    ) {
       /* Just redraw dirty tiles. */
       vector_iterate(
-         &(t->dirty_tiles), mode_topdown_tilemap_draw_tile_cb, twindow
+         t->dirty_tiles, mode_topdown_tilemap_draw_tile_cb, twindow
       );
    }
 

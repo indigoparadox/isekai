@@ -151,6 +151,7 @@ SCAFFOLD_SIZE_SIGNED files_write(
    bstring zero_error = NULL;
    size_t dir_count = 0;
    int res = 0;
+   size_t p_count = 0;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
@@ -164,12 +165,15 @@ SCAFFOLD_SIZE_SIGNED files_write(
       goto write_file;
    }
 
-   /* TODO: Why... are we doing this this way? */
+   /* Process every subset of the path (dir1, dir1/dir2, dir1/dir2/file) until
+    * we hit the final path to make sure that each parent directory exists,
+    * creating them if they do not.
+    */
    dir_count = vector_count( path_dirs );
-   for( path_dirs->count = 1 ; path_dirs->count < dir_count ; path_dirs->count++ ) {
+   for( p_count = 1 ; p_count < dir_count ; p_count++ ) {
       test_path = bfromcstr( "" );
       lgc_null( test_path );
-      vector_iterate( path_dirs, cb_files_concat_dirs, test_path );
+      vector_iterate_i( path_dirs, cb_files_concat_dirs, test_path, p_count );
       lgc_null( test_path );
 
       path_c = bdata( test_path );
@@ -453,7 +457,7 @@ bstring files_search( bstring search_filename ) {
    struct VECTOR* files = NULL;
    bstring path_out = NULL;
 
-   vector_new( files );
+   files = vector_new();
    files_list_dir( files_root( NULL ), files, NULL, FALSE, FALSE );
    path_out = vector_iterate( files, files_search_cb, search_filename );
 

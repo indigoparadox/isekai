@@ -10,8 +10,8 @@
 
 #include <dlfcn.h>
 
-extern struct VECTOR mode_list_pretty;
-extern struct VECTOR mode_list_short;
+extern struct VECTOR* mode_list_pretty;
+extern struct VECTOR* mode_list_short;
 
 static struct tagbstring str_mode = bsStatic( "mode" );
 
@@ -35,7 +35,7 @@ union PLUGIN_CALL_FUNC {
    plugin_mode_free* free;
 };
 
-static struct HASHMAP plugin_list_mode;
+static struct HASHMAP* plugin_list_mode;
 
 static void* cb_plugin_load( size_t idx, void* iter, void* arg ) {
    bstring entry = (bstring)iter;
@@ -88,7 +88,7 @@ cleanup:
    return NULL;
 }
 
-bstring plugin_get_path() {
+static bstring plugin_get_path() {
    bstring plugin_path = NULL;
    plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
    /* TODO: Plugins directory fallback. */
@@ -104,22 +104,22 @@ bstring plugin_get_path() {
 PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    bstring plugin_path = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
-   struct VECTOR plugin_dir = { 0 };
+   struct VECTOR* plugin_dir;
 
-   hashmap_init( &plugin_list_mode );
-   vector_init( &plugin_dir );
+   plugin_list_mode = hashmap_new();
+   plugin_dir = vector_new();
 
    plugin_path = plugin_get_path();
 
    lg_debug( __FILE__, "Loading mode plugins from path: %b\n", plugin_path );
-   files_list_dir( plugin_path, &plugin_dir, NULL, FALSE, FALSE );
+   files_list_dir( plugin_path, plugin_dir, NULL, FALSE, FALSE );
 
-   vector_iterate( &plugin_dir, cb_plugin_load, &ptype );
+   vector_iterate( plugin_dir, cb_plugin_load, &ptype );
 
 cleanup:
    bdestroy( plugin_path );
-   vector_remove_cb( &plugin_dir, callback_v_free_strings, NULL );
-   vector_cleanup( &plugin_dir );
+   vector_remove_cb( plugin_dir, callback_v_free_strings, NULL );
+   vector_free( &plugin_dir );
    return ret;
 }
 
@@ -148,13 +148,13 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
    /* TODO: Error check. */
-   hashmap_put( &plugin_list_mode, plugin_name, handle, FALSE );
+   hashmap_put( plugin_list_mode, plugin_name, handle, FALSE );
 
    if( PLUGIN_MODE == ptype ) {
       mode_name = dlsym( handle, "mode_name" );
       lg_debug( __FILE__, "Adding %b to mode name list...\n", mode_name );
-      vector_add( &mode_list_pretty, mode_name );
-      vector_add( &mode_list_short, bstrcpy( plugin_name ) );
+      vector_add( mode_list_pretty, mode_name );
+      vector_add( mode_list_short, bstrcpy( plugin_name ) );
    }
 
    ret = plugin_call( ptype, plugin_name, PLUGIN_INIT );
@@ -178,7 +178,7 @@ PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
 
    switch( ptype ) {
       case PLUGIN_MODE:
-         handle = hashmap_get( &plugin_list_mode, plugin_name );
+         handle = hashmap_get( plugin_list_mode, plugin_name );
          break;
    }
    lgc_null( handle );
@@ -215,7 +215,7 @@ PLUGIN_RESULT plugin_call(
 
    switch( ptype ) {
       case PLUGIN_MODE:
-         handle = hashmap_get( &plugin_list_mode, plug );
+         handle = hashmap_get( plugin_list_mode, plug );
          break;
    }
    if( NULL == handle ) {

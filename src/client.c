@@ -77,11 +77,10 @@ void* callback_proc_chunkers( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
 
    /* Process some compression chunks. */
-   hashmap_iterate_v( &(c->chunkers), callback_send_chunkers_l, c );
+   hashmap_iterate_v( c->chunkers, callback_send_chunkers_l, c );
 
    /* Removed any finished chunkers. */
-   hashmap_remove_cb(
-      &(c->chunkers), callback_free_finished_chunkers, NULL );
+   hashmap_remove_cb( c->chunkers, callback_free_finished_chunkers, NULL );
 
    return NULL;
 }
@@ -113,21 +112,21 @@ static void client_cleanup( const struct REF *ref ) {
 
    client_stop( c );
 
-   hashmap_cleanup( &(c->sprites) );
+   hashmap_free( &(c->sprites) );
 
 #ifdef USE_CHUNKS
-   hashmap_cleanup( &(c->chunkers) );
+   hashmap_free( &(c->chunkers) );
 #endif /* USE_CHUNKS */
-   vector_cleanup( &(c->delayed_files) );
-   hashmap_cleanup( &(c->channels) );
+   vector_free( &(c->delayed_files) );
+   hashmap_free( &(c->channels) );
 
-   hashmap_remove_all( &(c->tilesets) );
-   hashmap_cleanup( &(c->tilesets) );
+   hashmap_remove_all( c->tilesets );
+   hashmap_free( &(c->tilesets) );
 
 #ifdef USE_ITEMS
 
    hashmap_remove_all( &(c->item_catalogs) );
-   hashmap_cleanup( &(c->item_catalogs) );
+   hashmap_free( &(c->item_catalogs) );
 
    vector_remove_cb( &(c->unique_items), callback_remove_items, NULL );
    vector_cleanup( &(c->unique_items ) );
@@ -159,13 +158,13 @@ void client_init( struct CLIENT* c ) {
 
    scaffold_assert( FALSE == c->running );
 
-   hashmap_init( &(c->channels) );
-   hashmap_init( &(c->sprites) );
+   c->channels = hashmap_new();
+   c->sprites = hashmap_new();
 #ifdef USE_CHUNKS
-   hashmap_init( &(c->chunkers) );
+   c->chunkers = hashmap_new();
 #endif /* USE_CHUNKS */
-   vector_init( &(c->delayed_files) );
-   hashmap_init( &(c->tilesets) );
+   c->delayed_files = vector_new();
+   c->tilesets = hashmap_new();
 #ifdef USE_ITEMS
    hashmap_init( &(c->item_catalogs) );
    vector_init( &(c->unique_items) );
@@ -226,7 +225,7 @@ void client_set_active_t( struct CLIENT* c, struct TILEMAP* t ) {
 #endif // 0
 
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name ) {
-   return hashmap_get( &(c->channels), name );
+   return hashmap_get( c->channels, name );
 }
 
 BOOL client_connect( struct CLIENT* c, const bstring server, int port ) {
@@ -306,7 +305,8 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    /* Deal with chunkers that will never receive blocks that are finished via
     * their cache.
     */
-   chunker_removal_queue = hashmap_iterate_v( &(c->chunkers), callback_proc_client_chunkers, c );
+   chunker_removal_queue =
+      hashmap_iterate_v( c->chunkers, callback_proc_client_chunkers, c );
    if( NULL != chunker_removal_queue ) {
       vector_remove_cb( chunker_removal_queue, callback_remove_chunkers, c );
       vector_free( &chunker_removal_queue );
@@ -316,7 +316,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 cleanup:
 #endif /* DEBUG_TILES */
 
-   vector_remove_cb( &(c->delayed_files), callback_proc_client_delayed_files, c );
+   vector_remove_cb( c->delayed_files, callback_proc_client_delayed_files, c );
 
    return retval;
 }
@@ -327,16 +327,16 @@ void client_free_channels( struct CLIENT* c ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_all( &(c->channels) );
+      hashmap_remove_all( c->channels );
       //hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
 #ifdef DEBUG
    lg_debug(
       __FILE__,
       "Removed %d channels. %d remaining.\n",
-      deleted, hashmap_count( &(c->channels) )
+      deleted, hashmap_count( c->channels )
    );
 #endif /* DEBUG */
-   scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
+   scaffold_assert( 0 == hashmap_count( c->channels ) );
 }
 
 #ifdef USE_CHUNKS
@@ -346,15 +346,15 @@ void client_free_chunkers( struct CLIENT* c ) {
 
    deleted =
 #endif /* DEBUG */
-      hashmap_remove_all( &(c->chunkers) );
+      hashmap_remove_all( c->chunkers );
       //hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, NULL );
 #ifdef DEBUG
    lg_debug(
       __FILE__,
       "Removed %d chunkers. %d remaining.\n",
-      deleted, hashmap_count( &(c->chunkers) )
+      deleted, hashmap_count( c->chunkers )
    );
-   scaffold_assert( 0 == hashmap_count( &(c->chunkers) ) );
+   scaffold_assert( 0 == hashmap_count( c->chunkers ) );
 #endif /* DEBUG */
 }
 #endif /* USE_CHUNKS */
@@ -401,12 +401,13 @@ void client_stop( struct CLIENT* c ) {
    client_clear_puppet( c );
    //client_set_active_t( c, NULL );
 #ifdef ENABLE_LOCAL_CLIENT
+   // XXX: Free these after removing all?
    if( FALSE != client_is_local( c ) ) {
-      hashmap_remove_cb( &(c->sprites), callback_free_graphics, NULL );
-      hashmap_remove_all( &(c->tilesets) );
+      hashmap_remove_cb( c->sprites, callback_free_graphics, NULL );
+      hashmap_remove_all( c->tilesets );
 #ifdef USE_ITEMS
-      hashmap_remove_all( &(c->item_catalogs) );
-      vector_remove_all( &(c->unique_items) );
+      hashmap_remove_all( c->item_catalogs );
+      vector_remove_all( c->unique_items );
 #endif // USE_ITEMS
    }
 #endif /* ENABLE_LOCAL_CLIENT */
@@ -419,28 +420,28 @@ void client_stop( struct CLIENT* c ) {
    if( FALSE != client_is_local( c ) ) {
       scaffold_assert( FALSE == c->running );
 
-      test_count = hashmap_count( &(c->channels) );
+      test_count = hashmap_count( c->channels );
       scaffold_assert( 0 == test_count );
 
-      test_count = hashmap_count( &(c->sprites) );
+      test_count = hashmap_count( c->sprites );
       scaffold_assert( 0 == test_count );
 
 #ifdef USE_CHUNKS
-      test_count = hashmap_count( &(c->chunkers) );
+      test_count = hashmap_count( c->chunkers );
       scaffold_assert( 0 == test_count );
 #endif /* USE_CHUNKS */
 
-      test_count = vector_count( &(c->delayed_files) );
+      test_count = vector_count( c->delayed_files );
       scaffold_assert( 0 == test_count );
 
-      test_count = hashmap_count( &(c->tilesets) );
+      test_count = hashmap_count( c->tilesets );
       scaffold_assert( 0 == test_count );
 
 #ifdef USE_ITEMS
-      test_count = hashmap_count( &(c->item_catalogs) );
+      test_count = hashmap_count( c->item_catalogs );
       scaffold_assert( 0 == test_count );
 
-      test_count = vector_count( &(c->unique_items) );
+      test_count = vector_count( c->unique_items );
       scaffold_assert( 0 == test_count );
 #endif // USE_ITEMS
    }
@@ -452,7 +453,7 @@ cleanup:
 }
 
 short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
-   if( hashmap_put( &(c->channels), l->name, l, FALSE ) ) {
+   if( hashmap_put( c->channels, l->name, l, FALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add channel...\n" );
       return 1;
    }
@@ -494,7 +495,7 @@ void client_send_file(
    lg_debug(
       __FILE__, "Server: Adding chunker to send: %b\n", filepath
    );
-   hashmap_put( &(c->chunkers), filepath, h, TRUE );
+   hashmap_put( c->chunkers, filepath, h, TRUE );
 
 cleanup:
    if( NULL != h ) {
@@ -570,13 +571,13 @@ void client_request_file_later(
    BOOL deffered_lock = FALSE;
 
    /* Make sure request wasn't made already. */
-   if( vector_is_locked( &(c->delayed_files) ) ) {
+   if( vector_is_locked( c->delayed_files ) ) {
       deffered_lock = TRUE;
-      vector_lock( &(c->delayed_files), FALSE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, FALSE ); /* Hack, recursive locking. */
    }
-   request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
+   request = vector_iterate( c->delayed_files, client_dr_cb, filename );
    if( deffered_lock ) {
-      vector_lock( &(c->delayed_files), TRUE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, TRUE ); /* Hack, recursive locking. */
    }
    if( NULL != request ) {
       goto cleanup; /* Silently. */
@@ -590,13 +591,13 @@ void client_request_file_later(
    request->filename = bstrcpy( filename );
    request->type = type;
 
-   if( vector_is_locked( &(c->delayed_files) ) ) {
+   if( vector_is_locked( c->delayed_files ) ) {
       deffered_lock = TRUE;
-      vector_lock( &(c->delayed_files), FALSE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, FALSE ); /* Hack, recursive locking. */
    }
-   verr = vector_add( &(c->delayed_files), request );
+   verr = vector_add( c->delayed_files, request );
    if( deffered_lock ) {
-      vector_lock( &(c->delayed_files), TRUE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, TRUE ); /* Hack, recursive locking. */
    }
    lgc_negative( verr );
 
@@ -610,12 +611,12 @@ void client_request_file(
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
 
-   if( FALSE != hashmap_contains_key( &(c->chunkers), filename ) ) {
+   if( FALSE != hashmap_contains_key( c->chunkers, filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
 
-   h = hashmap_get( &(c->chunkers), filename );
+   h = hashmap_get( c->chunkers, filename );
    if( NULL == h ) {
       /* Create a chunker and get it started, since one is not in progress. */
       /* TODO: Verify cached file hash from server. */
@@ -625,7 +626,7 @@ void client_request_file(
       chunker_unchunk_start(
          h, type, filename, &str_client_cache_path
       );
-      hashmap_put( &(c->chunkers), filename, h, TRUE );
+      hashmap_put( c->chunkers, filename, h, TRUE );
       lg_debug( __FILE__, "scaffold_error: %d\n", lgc_error );
       lgc_nonzero( lgc_error );
 
@@ -664,7 +665,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       goto cleanup;
    }
 
-   h = hashmap_get( &(c->chunkers), cp->filename );
+   h = hashmap_get( c->chunkers, cp->filename );
    if( NULL == h ) {
       lg_error(
          __FILE__,
@@ -679,7 +680,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
       scaffold_assert( NULL != h );
       lg_debug(
          __FILE__, "Removing invalid chunker: %b\n", h->filename );
-      remove_ok = hashmap_remove( &(c->chunkers), cp->filename );
+      remove_ok = hashmap_remove( c->chunkers, cp->filename );
       chunker_free( h );
       scaffold_assert( FALSE != remove_ok );
       goto cleanup;
@@ -692,7 +693,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
    if( 0 < chunker_percent ) {
       lg_debug(
-         __FILE__, "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
+         __FILE__, "Chunker: %b: %d%%\n", h->filename, chunker_percent );
    }
 
    if( chunker_unchunk_finished( h ) ) {
@@ -715,12 +716,9 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
    datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
 
 /* cleanup: */
-   lg_debug(
-      __FILE__,
-      "Removing finished chunker for: %s\n", bdata( h->filename )
-   );
+   lg_debug( __FILE__, "Removing finished chunker for: %b\n", h->filename );
    /* Hashmap no longer adds a ref. */
-   hashmap_remove( &(c->chunkers), h->filename );
+   hashmap_remove( c->chunkers, h->filename );
    chunker_free( h );
    return;
 }
@@ -955,16 +953,16 @@ bstring client_get_nick( struct CLIENT* c ) {
 
 #ifdef USE_CHUNKS
 struct CHUNKER* client_get_chunker( struct CLIENT* c, bstring key ) {
-   return hashmap_get( &(c->chunkers), key );
+   return hashmap_get( c->chunkers, key );
 }
 #endif /* USE_CHUNKS */
 
 GRAPHICS* client_get_sprite( struct CLIENT* c, bstring filename ) {
-   return hashmap_get( &(c->sprites), filename );
+   return hashmap_get( c->sprites, filename );
 }
 
 struct TILEMAP_TILESET* client_get_tileset( struct CLIENT* c, bstring filename ) {
-   return hashmap_get( &(c->tilesets), filename );
+   return hashmap_get( c->tilesets, filename );
 }
 
 void client_add_ref( struct CLIENT* c ) {
@@ -1017,7 +1015,7 @@ void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* d
    scaffold_assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
 
    /* Download missing tilesets. */
-   hashmap_iterate( &(c->tilesets), callback_download_tileset, c );
+   hashmap_iterate( c->tilesets, callback_download_tileset, c );
 
 #endif /* USE_EZXML */
 
@@ -1062,7 +1060,6 @@ size_t client_get_chunker_count(  )
 BOOL client_is_loaded( struct CLIENT* c ) {
    BOOL loaded = FALSE;
    static size_t
-      last_sprites = 0,
       last_tilesets_loaded = 0,
       last_delayed = 0,
 #ifdef USE_CHUNKS
@@ -1070,44 +1067,44 @@ BOOL client_is_loaded( struct CLIENT* c ) {
 #endif /* USE_CHUNKS */
       last_tilesets = 0;
 
-   if( last_tilesets != hashmap_count( &(c->tilesets) ) ) {
+   if( last_tilesets != hashmap_count( c->tilesets ) ) {
       lg_debug( __FILE__,
          "Tileset count changed: %d to %d\n", last_tilesets,
-         hashmap_count( &(c->tilesets) ) );
-      last_tilesets = hashmap_count( &(c->tilesets) );
+         hashmap_count( c->tilesets ) );
+      last_tilesets = hashmap_count( c->tilesets );
    }
-   if( 0 >= hashmap_count( &(c->tilesets) ) ) {
+   if( 0 >= hashmap_count( c->tilesets ) ) {
       goto cleanup;
    }
-   /* Sprites are loaded as we draw? */
-   /*client_is_loaded_compare(
-      count, hashmap_count( &(c->sprites) ), last_sprites, "Sprite" );*/
 
 #ifdef USE_CHUNKS
-   if( last_chunkers != hashmap_count( &(c->chunkers) ) ) {
+   if( last_chunkers != hashmap_count( c->chunkers ) ) {
       lg_debug( __FILE__,
          "Chunker count changed: %d to %d\n", last_chunkers,
-         hashmap_count( &(c->chunkers) ) );
-      last_chunkers = hashmap_count( &(c->chunkers) );
+         hashmap_count( c->chunkers ) );
+      last_chunkers = hashmap_count( c->chunkers );
    }
-   if( 0 < hashmap_count( &(c->chunkers) ) ) {
+   if( 0 < hashmap_count( c->chunkers ) ) {
       goto cleanup;
    }
 #endif /* USE_CHUNKS */
 
-   if( last_delayed != vector_count( &(c->delayed_files) ) ) {
+   if( last_delayed != vector_count( c->delayed_files ) ) {
       lg_debug( __FILE__,
          "Delayed file count changed: %d to %d\n", last_delayed,
-         vector_count( &(c->delayed_files) ) );
-      last_delayed = vector_count( &(c->delayed_files) );
+         vector_count( c->delayed_files ) );
+      last_delayed = vector_count( c->delayed_files );
    }
-   if( 0 < vector_count( &(c->delayed_files) ) ) {
+   if( 0 < vector_count( c->delayed_files ) ) {
       goto cleanup;
    }
 
    /* Loaded Tilesets */
    if( last_tilesets_loaded != c->tilesets_loaded ) {
-      lg_debug( __FILE__, "Loaded tileset count changed: %d to %d\n", last_tilesets_loaded, c->tilesets_loaded );
+      lg_debug(
+         __FILE__, "Loaded tileset count changed: %d to %d\n",
+         last_tilesets_loaded, c->tilesets_loaded
+      );
       last_tilesets_loaded = c->tilesets_loaded;
    }
    if( 0 >= c->tilesets_loaded  ) {
@@ -1126,7 +1123,7 @@ struct CHANNEL* client_iterate_channels(
 ) {
    struct CHANNEL* l = NULL;
    lgc_null( c );
-   l = hashmap_iterate( &(c->channels), cb, data );
+   l = hashmap_iterate( c->channels, cb, data );
 cleanup:
    return l;
 }
@@ -1134,9 +1131,10 @@ cleanup:
 BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
    BOOL already_present = FALSE;
 
-   lg_debug( __FILE__, "Setting sprites for client: %b\n", client_get_nick( c ) );
+   lg_debug(
+      __FILE__, "Setting sprites for client: %b\n", client_get_nick( c ) );
 
-   already_present = hashmap_put( &(c->sprites), filename, g, FALSE );
+   already_present = hashmap_put( c->sprites, filename, g, FALSE );
    if( already_present ) {
       lg_error(
          __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
@@ -1155,7 +1153,7 @@ BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
 BOOL client_set_tileset( struct CLIENT* c, bstring filename, struct TILEMAP_TILESET* set ) {
    BOOL already_present = FALSE;
 
-   already_present = hashmap_put( &(c->tilesets), filename, set, TRUE );
+   already_present = hashmap_put( c->tilesets, filename, set, TRUE );
    if( already_present ) {
       lg_error(
          __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
@@ -1180,7 +1178,7 @@ BOOL client_is_running( struct CLIENT* c ) {
 } */
 
 struct CHANNEL* client_get_channel_active( struct CLIENT* c ) {
-   return hashmap_get_first( &(c->channels) );
+   return hashmap_get_first( c->channels );
 }
 
 struct TWINDOW* client_get_local_window( struct CLIENT* c ) {
@@ -1240,7 +1238,7 @@ cleanup:
  */
 int client_remove_channel( struct CLIENT* c, const bstring lname ) {
    // TODO: Remove channel if empty.
-   return hashmap_remove( &(c->channels), lname );
+   return hashmap_remove( c->channels, lname );
 }
 
 bstring client_get_remote( struct CLIENT* c ) {
@@ -1248,12 +1246,12 @@ bstring client_get_remote( struct CLIENT* c ) {
 }
 
 size_t client_get_channels_count( struct CLIENT* c ) {
-   return hashmap_count( &(c->channels) );
+   return hashmap_count( c->channels );
 }
 
 #ifdef USE_CHUNKS
 size_t client_remove_chunkers( struct CLIENT* c, bstring filter ) {
-   return hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, filter );
+   return hashmap_remove_cb( c->chunkers, callback_free_chunkers, filter );
 }
 #endif /* USE_CHUNKS */
 

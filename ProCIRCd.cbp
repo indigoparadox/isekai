@@ -947,10 +947,6 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
 		</Unit>
-		<Unit filename="src/bstrglue.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/bstrglue.h" />
 		<Unit filename="src/callback.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -105,7 +105,7 @@ void datafile_handle_stream(
       lgc_null_msg( g->surface, "Unable to load tileset image." );
 
       set = vector_iterate(
-         &(l->tilemap->tilesets), callback_search_tilesets_img_name, filename
+         l->tilemap->tilesets, callback_search_tilesets_img_name, filename
       );
       lgc_null( set );
 

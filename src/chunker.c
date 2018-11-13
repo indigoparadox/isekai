@@ -83,7 +83,7 @@ static void chunker_chunk_setup_internal(
 #endif /* HEATSHRINK_DYNAMIC_ALLOC  */
 
    if( NULL == h->tracks ) {
-      vector_new( h->tracks );
+      h->tracks = vector_new();
    }
 
    h->force_finish = FALSE;
@@ -261,7 +261,7 @@ void chunker_unchunk_start(
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
    if( NULL == h->tracks ) {
-      vector_new( h->tracks );
+      h->tracks = vector_new();
    }
 
    /* TODO: Shouldn't need to check for NULL here since chunker should be     *
@@ -586,7 +586,7 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
          bdata( h->filename )
       );
       if( !chunker_unchunk_save_cache( h ) ) {
-         1 / 0;
+         /* TODO: Error! */
       }
    }
 #endif /* USE_FILE_CACHE */

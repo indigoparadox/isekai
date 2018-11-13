@@ -49,7 +49,7 @@ void twindow_update_details( struct TWINDOW* twindow ) {
 
    /* smallest_tile will have the dimensions of the smallest tileset's tiles. */
    vector_iterate(
-      &(t->tilesets), callback_search_tilesets_small, &smallest_tile );
+      t->tilesets, callback_search_tilesets_small, &smallest_tile );
    twindow->grid_w = smallest_tile.x;
    twindow->grid_h = smallest_tile.y;
    lg_debug(

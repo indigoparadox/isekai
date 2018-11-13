@@ -197,7 +197,7 @@ struct VECTOR* graphics_get_line(
    GRAPHICS_POINT* point_i = NULL;
    struct VECTOR* points = NULL;
 
-   vector_new( points );
+   points = vector_new();
 
    delta_x = x2 - x1;
    delta_y = y2 - y1;

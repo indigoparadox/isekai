@@ -11,9 +11,9 @@ struct TILEMAP_TILESET {
    struct REF refcount;
    GFX_COORD_PIXEL tileheight;  /*!< Height of tiles in pixels. */
    GFX_COORD_PIXEL tilewidth;   /*!< Width of tiles in pixels. */
-   struct HASHMAP images;     /*!< Graphics indexed by filename. */
-   struct VECTOR terrain;     /*!< Terrains in file order. */
-   struct VECTOR tiles;       /*!< Tile data in file order. */
+   struct HASHMAP* images;     /*!< Graphics indexed by filename. */
+   struct VECTOR* terrain;     /*!< Terrains in file order. */
+   struct VECTOR* tiles;       /*!< Tile data in file order. */
    bstring def_path;
 };
 
@@ -43,16 +43,16 @@ static void tilemap_cleanup( const struct REF* ref ) {
       __FILE__, "Destroying tilemap for channel: %b\n", l->name
    );
 
-   vector_remove_cb( &(t->layers), tilemap_layer_free_cb, NULL );
-   vector_cleanup( &(t->layers) );
+   vector_remove_cb( t->layers, tilemap_layer_free_cb, NULL );
+   vector_free( &(t->layers) );
 #ifdef USE_ITEMS
    vector_remove_cb( &(t->item_caches), callback_free_item_caches, NULL );
    vector_cleanup( &(t->item_caches) );
 #endif // USE_ITEMS
-   vector_remove_cb( &(t->spawners), callback_free_spawners, NULL );
-   vector_cleanup( &(t->spawners) );
-   vector_remove_cb( &(t->tilesets), tilemap_tileset_free_cb, NULL );
-   vector_cleanup( &(t->tilesets) );
+   vector_remove_cb( t->spawners, callback_free_spawners, NULL );
+   vector_free( &(t->spawners) );
+   vector_remove_cb( t->tilesets, tilemap_tileset_free_cb, NULL );
+   vector_free( &(t->tilesets) );
 
    /* TODO: Free tilemap. */
 }
@@ -63,12 +63,12 @@ void tilemap_init(
 ) {
    ref_init( &(t->refcount), tilemap_cleanup );
 
-   vector_init( &(t->layers) );
-   vector_init( &(t->item_caches) );
-   vector_init( &(t->tilesets) );
-   vector_init( &(t->spawners) );
+   t->layers = vector_new();
+   t->item_caches = vector_new();
+   t->tilesets = vector_new();
+   t->spawners = vector_new();
 
-   vector_init( &(t->dirty_tiles) );
+   t->dirty_tiles = vector_new();
 
    tilemap_set_redraw_state( t, TILEMAP_REDRAW_DIRTY );
 
@@ -151,16 +151,16 @@ struct TILEMAP_TILE_DATA* tilemap_tileset_get_tile(
    const struct TILEMAP_TILESET* set, int gid
 ) {
    scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( &(set->tiles) ) );
-   return vector_get( &(set->tiles), gid );
+   scaffold_assert( vector_is_valid( set->tiles ) );
+   return vector_get( set->tiles, gid );
 }
 
 size_t tilemap_tileset_set_tile(
    struct TILEMAP_TILESET* set, int gid, struct TILEMAP_TILE_DATA* tile_info
 ) {
    scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( &(set->tiles) ) );
-   return vector_set( &(set->tiles), gid, tile_info, TRUE );
+   scaffold_assert( vector_is_valid( set->tiles ) );
+   return vector_set( set->tiles, gid, tile_info, TRUE );
 }
 
 GFX_COORD_PIXEL tilemap_tileset_get_tile_width(
@@ -197,7 +197,7 @@ BOOL tilemap_tileset_has_image(
    if( NULL == set ) {
       return FALSE;
    }
-   if( hashmap_iterate( &(set->images), callback_search_graphics, filename ) ) {
+   if( hashmap_iterate( set->images, callback_search_graphics, filename ) ) {
       return TRUE;
    }
    return FALSE;
@@ -207,8 +207,8 @@ BOOL tilemap_tileset_set_image(
    struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g
 ) {
    scaffold_assert( NULL != set );
-   scaffold_assert( hashmap_is_valid( &(set->images) ) );
-   if( hashmap_put( &(set->images), filename, g, FALSE ) ) {
+   scaffold_assert( hashmap_is_valid( set->images ) );
+   if( hashmap_put( set->images, filename, g, FALSE ) ) {
       return TRUE;
    }
    return FALSE;
@@ -236,15 +236,15 @@ struct GRAPHICS* tilemap_tileset_get_image_default(
    scaffold_assert( NULL != set );
    //return (GRAPHICS*)hashmap_get_first( &(set->images) );
    return hashmap_iterate(
-      &(set->images), cb_tilemap_tileset_img_get_or_dl, c );
+      set->images, cb_tilemap_tileset_img_get_or_dl, c );
 }
 
 BOOL tilemap_tileset_add_terrain(
    struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info
 ) {
    scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( &(set->terrain) ) );
-   if( 0 > vector_add( &(set->terrain), terrain_info ) ) {
+   scaffold_assert( vector_is_valid( set->terrain ) );
+   if( 0 > vector_add( set->terrain, terrain_info ) ) {
       return FALSE;
    }
    return TRUE;
@@ -254,8 +254,8 @@ struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
    struct TILEMAP_TILESET* set, size_t gid
 ) {
    scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( &(set->terrain) ) );
-   return vector_get( &(set->terrain), gid );
+   scaffold_assert( vector_is_valid( set->terrain ) );
+   return vector_get( set->terrain, gid );
 }
 
 bstring tilemap_tileset_get_definition_path(
@@ -267,7 +267,7 @@ bstring tilemap_tileset_get_definition_path(
 
 void tilemap_tileset_cleanup( struct TILEMAP_TILESET* set ) {
 #ifdef ENABLE_LOCAL_CLIENT
-   hashmap_remove_cb( &(set->images), callback_free_graphics, NULL );
+   hashmap_remove_cb( set->images, callback_free_graphics, NULL );
    bdestroy( set->def_path );
 #endif /* ENABLE_LOCAL_CLIENT */
 }
@@ -294,10 +294,10 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
    set->refcount.count = 0;
    set->def_path = bstrcpy( def_path );
 
-   hashmap_init( &(set->images) );
+   set->images = hashmap_new();
 
-   vector_init( &(set->terrain) );
-   vector_init( &(set->tiles) );
+   set->terrain = vector_new();
+   set->tiles = vector_new();
 }
 
 #ifndef USE_CURSES
@@ -317,7 +317,7 @@ SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
     * and a place to keep the first GID of the found tileset for this tilemap
     * when the tileset is found.
     */
-   set = vector_iterate( &(t->tilesets), callback_search_tilesets_gid, &gid );
+   set = vector_iterate( t->tilesets, callback_search_tilesets_gid, &gid );
    if( NULL != set && NULL != set_firstgid ) {
       *set_firstgid = gid;
    }
@@ -436,8 +436,8 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
    }
 
    /* Always reset dirty tiles. */
-   vector_remove_cb( &(t->dirty_tiles), callback_free_generic, NULL );
-   scaffold_assert( 0 == vector_count( &(t->dirty_tiles) ) );
+   vector_remove_cb( t->dirty_tiles, callback_free_generic, NULL );
+   scaffold_assert( 0 == vector_count( t->dirty_tiles ) );
 #endif /* ENABLE_LOCAL_CLIENT */
 }
 
@@ -531,7 +531,7 @@ void tilemap_add_dirty_tile(
    pos->x = x;
    pos->y = y;
 
-   verr = vector_add( &(t->dirty_tiles), pos );
+   verr = vector_add( t->dirty_tiles, pos );
    if( 0 > verr ) {
       mem_free( pos );
       goto cleanup;

@@ -838,7 +838,7 @@ static void irc_server_join(
       client_get_nick( c ), client_get_username( c ), client_get_remote( c ), l->name
    );
 
-   vector_new( cat_names );
+   cat_names = vector_new();
    hashmap_iterate( l->clients, callback_concat_clients, cat_names );
    names = bfromcstr( "" );
    lgc_null( names );
@@ -886,7 +886,7 @@ static void irc_server_privmsg(
    struct VECTOR* msg_list = NULL;
    SCAFFOLD_SIZE i;
 
-   vector_new( msg_list );
+   msg_list = vector_new();
    for( i = 1 ; vector_count( args ) > i ; i++ ) {
       vector_add( msg_list, bstrcpy( (bstring)vector_get( args, i ) ) );
    }

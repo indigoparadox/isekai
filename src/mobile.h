@@ -42,7 +42,7 @@ struct MOBILE_ANI_DEF {
    MOBILE_FACING facing;
    bstring name;
    short speed;
-   struct VECTOR frames; /*!< Pointers to the sprite defs in the sprite_defs vector. */
+   struct VECTOR* frames; /*!< Pointers to the sprite defs in the sprite_defs vector. */
 };
 
 struct MOBILE_SPRITE_DEF {
