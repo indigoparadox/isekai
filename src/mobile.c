@@ -47,11 +47,13 @@ struct MOBILE {
    bstring mob_id;
    struct CHANNEL* channel;
    MOBILE_TYPE type;
-   struct VECTOR sprite_defs;
-   struct HASHMAP ani_defs;
-   struct HASHMAP script_defs;
+   struct VECTOR* sprite_defs;
+   struct HASHMAP* ani_defs;
+   struct HASHMAP* script_defs;
    struct MOBILE_ANI_DEF* current_animation;
-   struct VECTOR items;
+#ifdef USE_ITEMS
+   struct VECTOR* items;
+#endif // USE_ITEMS
    BOOL initialized;
 #ifdef USE_VM
    struct VM_CADDY* vm_caddy;
@@ -105,14 +107,14 @@ static void mobile_cleanup( const struct REF* ref ) {
       o->channel = NULL;
    }
 
-   vector_remove_cb( &(o->sprite_defs), callback_free_generic, NULL );
-   vector_cleanup( &(o->sprite_defs) );
+   vector_remove_cb( o->sprite_defs, callback_free_generic, NULL );
+   vector_free( &(o->sprite_defs) );
 
    /* vector_remove_cb( &(o->speech_backlog), callback_free_strings, NULL );
    vector_cleanup( &(o->speech_backlog) ); */
 
-   hashmap_remove_cb( &(o->ani_defs), callback_free_ani_defs, NULL );
-   hashmap_cleanup( &(o->ani_defs) );
+   hashmap_remove_cb( o->ani_defs, callback_free_ani_defs, NULL );
+   hashmap_free( &(o->ani_defs) );
 
    lg_debug(
       __FILE__,
@@ -129,7 +131,7 @@ void mobile_free( struct MOBILE* o ) {
 }
 
 void mobile_animation_free( struct MOBILE_ANI_DEF* animation ) {
-   vector_cleanup_force( &(animation->frames) );
+   vector_free( &(animation->frames) );
    bdestroy( animation->name );
 }
 
@@ -158,10 +160,12 @@ void mobile_init(
    vm_caddy_new( o->vm_caddy );
 #endif /* USE_VM */
 
-   vector_init( &(o->sprite_defs) );
-   hashmap_init( &(o->ani_defs) );
-   hashmap_init( &(o->script_defs) );
+   o->sprite_defs = vector_new();
+   o->ani_defs = hashmap_new();
+   o->script_defs = hashmap_new();
+#ifdef USE_ITEMS
    vector_init( &(o->items) );
+#endif // USE_ITEMS
 
    o->x = x;
    o->prev_x = x;
@@ -255,7 +259,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
 
    /* Fetch the destination tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+      vector_iterate_v( t->layers, callback_get_tile_stack_l, &pos_end );
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
@@ -288,7 +292,7 @@ void mobile_animate( struct MOBILE* o ) {
       goto cleanup;
    }
 
-   if( o->current_frame >= vector_count( &(o->current_animation->frames) ) - 1 ) {
+   if( o->current_frame >= vector_count( o->current_animation->frames ) - 1 ) {
       o->current_frame = 0;
    } else {
       o->current_frame++;
@@ -450,7 +454,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
    /* Figure out the graphical sprite to draw from. */
    /* TODO: Support varied spritesheets. */
    current_frame = (struct MOBILE_SPRITE_DEF*)
-      vector_get( &(o->current_animation->frames), o->current_frame );
+      vector_get( o->current_animation->frames, o->current_frame );
    lgc_null( current_frame );
 
    sprite_rect.w = o->sprite_width;
@@ -532,7 +536,7 @@ static MOBILE_UPDATE mobile_calculate_terrain_result(
 
    /* Fetch the source tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+      vector_iterate_v( t->layers, callback_get_tile_stack_l, &pos_end );
    if( NULL == tiles_end ) {
 #ifdef DEBUG_VERBOSE
       lg_error(
@@ -619,7 +623,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
 
    /* Fetch the destination tile on all layers. */
    tiles_end =
-      vector_iterate_v( &(t->layers), callback_get_tile_stack_l, &pos_end );
+      vector_iterate_v( t->layers, callback_get_tile_stack_l, &pos_end );
 
    for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
       tile_iter = vector_get( tiles_end, i );
@@ -911,8 +915,8 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
       );
       scaffold_assert( NULL != ani_key_buffer );
       /* Grab the animation from the mobiles linked animation list, if any. */
-      if( NULL != hashmap_get( &(o->ani_defs), ani_key_buffer ) ) {
-         o->current_animation = hashmap_get( &(o->ani_defs), ani_key_buffer );
+      if( NULL != hashmap_get( o->ani_defs, ani_key_buffer ) ) {
+         o->current_animation = hashmap_get( o->ani_defs, ani_key_buffer );
       }
    }
 
@@ -957,7 +961,6 @@ void mobile_update_coords(
 }
 
 int mobile_set_display_name( struct MOBILE* o, const bstring name ) {
-   int bstr_res = 0;
    return bassign( o->display_name, name );
 }
 
@@ -988,14 +991,14 @@ size_t mobile_set_sprite(
    struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
 ) {
    scaffold_assert( NULL != o );
-   return vector_set( &(o->sprite_defs), id, sprite, TRUE );
+   return vector_set( o->sprite_defs, id, sprite, TRUE );
 }
 BOOL mobile_add_animation(
    struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
 ) {
    if(
       HASHMAP_ERROR_NONE !=
-      hashmap_put( &(o->ani_defs), name_dir, animation, FALSE )
+      hashmap_put( o->ani_defs, name_dir, animation, FALSE )
    ) {
       return FALSE;
    }
@@ -1050,9 +1053,7 @@ cleanup:
 void mobile_set_animation( struct MOBILE* o, bstring ani_key ) {
    struct MOBILE_ANI_DEF* ani_def = NULL;
    lgc_null( o );
-   ani_def = (struct MOBILE_ANI_DEF*)hashmap_get(
-      &(o->ani_defs), ani_key
-   );
+   ani_def = (struct MOBILE_ANI_DEF*)hashmap_get( o->ani_defs, ani_key );
    lgc_null( ani_def );
    o->current_animation = ani_def;
    /* TODO: Don't die if this fails. */
@@ -1119,7 +1120,7 @@ bstring mobile_get_def_filename( const struct MOBILE* o ) {
 
 SERIAL mobile_get_serial( const struct MOBILE* o ) {
    if( NULL == o ) {
-      return NULL;
+      return 0;
    }
    return o->serial;
 }
@@ -1130,12 +1131,12 @@ struct MOBILE_SPRITE_DEF* mobile_get_sprite(
    if( NULL == o ) {
       return NULL;
    }
-   return vector_get( &(o->sprite_defs), id );
+   return vector_get( o->sprite_defs, id );
 }
 
 GFX_COORD_PIXEL mobile_get_steps_remaining( const struct MOBILE* o ) {
    if( NULL == o ) {
-      return NULL;
+      return 0;
    }
    return o->steps_remaining;
 }

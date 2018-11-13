@@ -155,7 +155,7 @@ static void datafile_mobile_parse_animation_ezxml(
    scaffold_assign_or_cpy_c( animation->name, xml_attr, bstr_retval );
    ezxml_int( animation->speed, xml_attr, xml_animation, "speed" );
 
-   vector_init( &(animation->frames) );
+   animation->frames = vector_new();
    xml_frame_iter = ezxml_child( xml_animation, "frame" );
    while( NULL != xml_frame_iter ) {
       ezxml_int( frame_id, xml_attr, xml_frame_iter, "id" );
@@ -167,7 +167,7 @@ static void datafile_mobile_parse_animation_ezxml(
          );
       }
 
-      verr = vector_add( &(animation->frames), sprite );
+      verr = vector_add( animation->frames, sprite );
       if( 0 > verr ) {
          lg_error(
             __FILE__, "Unable to add frame to mobile animation: %d\n", frame_id
@@ -806,7 +806,7 @@ static void datafile_tilemap_parse_layer_ezxml(
       layer->name = bfromcstr( "" );
    }
 
-   vector_set( &(t->layers), layer_index, layer, TRUE );
+   vector_set( t->layers, layer_index, layer, TRUE );
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
@@ -905,7 +905,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
       obj_out->id, obj_out->pos.x, obj_out->pos.y
    );
 
-   verr = vector_add( &(t->spawners), obj_out );
+   verr = vector_add( t->spawners, obj_out );
    if( 0 > verr ) {
       /* Check below will destroy leftover object. */
       goto cleanup;
@@ -1027,7 +1027,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
       }
 
       ezxml_int( firstgid, xml_attr, xml_tileset, "firstgid" );
-      vector_set( &(t->tilesets), firstgid, set, TRUE );
+      vector_set( t->tilesets, firstgid, set, TRUE );
       lg_debug(
          __FILE__, "Tileset %b assigned to tilemap %b with first GID: %d\n",
          tileset_id, t->lname, firstgid

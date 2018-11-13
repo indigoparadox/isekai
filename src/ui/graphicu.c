@@ -70,13 +70,13 @@ void ui_cleanup( struct UI* ui ) {
    vector_remove_cb( &(ui->windows), callback_free_windows, NULL );
    */
 
-   vector_lock( &(ui->windows), TRUE );
-   while( 0 < vector_count( &(ui->windows) ) ) {
+   vector_lock( ui->windows, TRUE );
+   while( 0 < vector_count( ui->windows ) ) {
       ui_window_pop( ui );
    }
-   vector_lock( &(ui->windows), FALSE );
+   vector_lock( ui->windows, FALSE );
 
-   vector_cleanup( &(ui->windows) );
+   vector_free( &(ui->windows) );
 }
 
 /** \brief
@@ -116,7 +116,7 @@ void ui_window_init(
       win->title = bstrcpy( &str_dialog_default_title );
    }
 
-   hashmap_init( &(win->controls) );
+   win->controls = hashmap_new();
 
    if( NULL != prompt ) {
       ui_control_new(
@@ -130,7 +130,7 @@ void ui_window_init(
       );
    }
 
-   vector_init( &(win->controls_active) );
+   win->controls_active = vector_new();
 
    graphics_surface_init( win->element, width, height );
 
@@ -144,15 +144,15 @@ void ui_window_cleanup( struct UI_WINDOW* win ) {
    win->title = NULL;
    bdestroy( win->id );
    win->id = NULL;
-   if( NULL != win->controls.data ) {
-      hashmap_remove_cb( &(win->controls), callback_free_controls, NULL );
-      hashmap_cleanup( &(win->controls) );
+   if( 0 < hashmap_count( win->controls ) ) {
+      hashmap_remove_cb( win->controls, callback_free_controls, NULL );
+      hashmap_free( &(win->controls) );
    }
    if( NULL != win->element && NULL != win->element->surface ) {
       graphics_surface_free( win->element );
       win->element = NULL;
    }
-   vector_cleanup_force( &(win->controls_active) );
+   vector_free( &(win->controls_active) );
 }
 
 void ui_window_free( struct UI_WINDOW* win ) {
@@ -203,7 +203,7 @@ void ui_control_init(
 #ifdef DEBUG
    control->self.sentinal = UI_SENTINAL_CONTROL;
 #endif /* DEBUG */
-   vector_init( &(control->self.controls_active) );
+   control->self.controls_active = vector_new();
 }
 
 void ui_control_add(
@@ -217,8 +217,8 @@ void ui_control_add(
    control->owner = win;
    control->self.ui = win->ui;
 
-   if( 0 < hashmap_count( &(win->controls) ) ) {
-      control_test = (struct UI_CONTROL*)hashmap_get( &(win->controls), id );
+   if( 0 < hashmap_count( win->controls ) ) {
+      control_test = (struct UI_CONTROL*)hashmap_get( win->controls, id );
       scaffold_assert( NULL == control_test );
    }
 #endif /* DEBUG */
@@ -227,7 +227,7 @@ void ui_control_add(
    scaffold_assert( NULL != control );
    scaffold_assert( &global_ui == win->ui );
 
-   if( hashmap_put( &(win->controls), id, control, FALSE ) ) {
+   if( hashmap_put( win->controls, id, control, FALSE ) ) {
       lg_error( __FILE__,
          "Attempted to double-add control: %b\n", id );
    }
@@ -243,7 +243,7 @@ void ui_control_add(
    }
 
    if( FALSE != control->can_focus ) {
-      verr = vector_add( &(win->controls_active), control );
+      verr = vector_add( win->controls_active, control );
       if( 0 <= verr && NULL == win->active_control ) {
          win->active_control = control;
       }
@@ -264,7 +264,7 @@ void ui_control_free( struct UI_CONTROL* control ) {
 
 void ui_init( GRAPHICS* screen ) {
    global_ui.screen_g = screen;
-   vector_init( &(global_ui.windows) );
+   global_ui.windows = vector_new();
 }
 
 struct UI* ui_get_local() {
@@ -308,7 +308,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    scaffold_assert( NULL != ui );
    scaffold_assert( &global_ui == win->ui );
    scaffold_assert( &global_ui == ui );
-   top_window = vector_get( &(ui->windows), 0 );
+   top_window = vector_get( ui->windows, 0 );
    if(
       NULL != top_window &&
       0 != bstrncmp( win->id, &str_wid_mbox, blength( &str_wid_mbox ) ) &&
@@ -316,7 +316,7 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    ) {
       /* Message boxes always stay on top of normals like these. */
       lg_debug( __FILE__, "Pushing new dialog: %b\n", win->id );
-      verr = vector_insert( &(ui->windows), 1, win );
+      verr = vector_insert( ui->windows, 1, win );
    } else if(
       NULL != top_window &&
       0 == bstrncmp( win->id, &str_wid_mbox, blength( &str_wid_mbox ) ) &&
@@ -324,11 +324,11 @@ void ui_window_push( struct UI* ui, struct UI_WINDOW* win ) {
    ) {
       /* Must be /another/ new messagebox. */
       lg_debug( __FILE__, "Pushing new mbox: %b\n", win->id );
-      verr = vector_insert( &(ui->windows), 1, win );
+      verr = vector_insert( ui->windows, 1, win );
    } else {
       /* Must be a new dialog. */
       lg_debug( __FILE__, "Pushing dialog or mbox: %b\n", win->id );
-      verr = vector_insert( &(ui->windows), 0, win );
+      verr = vector_insert( ui->windows, 0, win );
    }
    lgc_negative( verr );
 
@@ -349,15 +349,15 @@ void ui_window_pop( struct UI* ui ) {
    ui_debug_stack( ui );
    #endif /* DEBUG */
 
-   win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+   win = (struct UI_WINDOW*)vector_get( ui->windows, 0 );
    lgc_null( win );
 
    scaffold_assert( &global_ui == win->ui );
 
    ui_window_free( win );
-   vector_lock( &(ui->windows), FALSE );
-   vector_remove( &(ui->windows), 0);
-   vector_lock( &(ui->windows), TRUE );
+   vector_lock( ui->windows, FALSE );
+   vector_remove( ui->windows, 0);
+   vector_lock( ui->windows, TRUE );
 
 cleanup:
    #ifdef DEBUG
@@ -455,7 +455,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       case INPUT_SCANCODE_LEFT:
          (*numbuff)--;
          if( 0 > *numbuff ) {
-            *numbuff = vector_count( &(control->list) ) - 1;
+            *numbuff = vector_count( control->list ) - 1;
          }
          win->dirty = TRUE;
          goto cleanup;
@@ -463,7 +463,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_keys( struct UI_WINDOW* win, struct INPUT* p ) {
       case INPUT_SCANCODE_DOWN:
       case INPUT_SCANCODE_RIGHT:
          (*numbuff)++;
-         if( vector_count( &(control->list) ) <= *numbuff ) {
+         if( vector_count( control->list ) <= *numbuff ) {
             *numbuff = 0;
          }
          win->dirty = TRUE;
@@ -588,7 +588,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 #endif /* DEBUG */
 
    /* Special case: message boxes. */
-   win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+   win = (struct UI_WINDOW*)vector_get( ui->windows, 0 );
    if(
       INPUT_TYPE_KEY == input->type &&
       NULL != win &&
@@ -607,7 +607,7 @@ SCAFFOLD_SIZE_SIGNED ui_poll_input(
 
    /* No message box, so grab the top or requested dialog. */
    if( NULL == id ) {
-      win = (struct UI_WINDOW*)vector_get( &(ui->windows), 0 );
+      win = (struct UI_WINDOW*)vector_get( ui->windows, 0 );
    } else {
       win = ui_window_by_id( ui, id );
    }
@@ -647,8 +647,8 @@ static SCAFFOLD_SIZE ui_control_get_draw_width(
       break;
 
    case UI_CONTROL_TYPE_DROPDOWN:
-      while( vector_count( &(control->list) ) > i ) {
-         list_item = vector_get( &(control->list), i );
+      while( vector_count( control->list ) > i ) {
+         list_item = vector_get( control->list, i );
          graphics_measure_text( NULL, &control_size, UI_TEXT_SIZE, list_item );
          num = control_size.w + (2 * UI_TEXT_MARGIN);
          if( num > control_w ) {
@@ -1085,7 +1085,7 @@ static void ui_control_draw_dropdown(
    }
 
 #ifdef DEBUG
-   list_item = vector_get( &(listbox->list), *num );
+   list_item = vector_get( listbox->list, *num );
    list_item = bformat( "%s (%d)", bdata( list_item ), *num );
 #else
    list_item = listbox->list[*num];
@@ -1211,7 +1211,7 @@ static void ui_window_enforce_minimum_size( struct UI_WINDOW* win ) {
       ui_window_reset_grid( win );
    } while(
       NULL != (largest_control =
-      hashmap_iterate( &(win->controls), ui_control_window_size_cb, win ))
+      hashmap_iterate( win->controls, ui_control_window_size_cb, win ))
    );
    assert( NULL == largest_control );
 
@@ -1307,7 +1307,7 @@ void ui_draw( struct UI* ui, GRAPHICS* g ) {
    int i;
 #endif /* DEBUG_PALETTE */
 
-   vector_iterate_r( &(ui->windows), ui_window_draw_cb, g );
+   vector_iterate_r( ui->windows, ui_window_draw_cb, g );
 
 #ifdef DEBUG_PALETTE
    if( NULL == color_test ) {
@@ -1334,36 +1334,36 @@ void ui_window_draw_tilegrid( struct UI* ui, struct TWINDOW* twindow ) {
 struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid ) {
    struct UI_WINDOW* found = NULL;
    scaffold_assert( &global_ui == ui );
-   found = vector_iterate( &(ui->windows), callback_search_windows, wid );
+   found = vector_iterate( ui->windows, callback_search_windows, wid );
    return found;
 }
 
 BOOL ui_window_destroy( struct UI* ui, const bstring wid ) {
    scaffold_assert( &global_ui == ui );
-   return vector_remove_cb( &(ui->windows), callback_free_windows, wid );
+   return vector_remove_cb( ui->windows, callback_free_windows, wid );
 }
 
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id ) {
    scaffold_assert( &global_ui == win->ui );
-   return hashmap_get( &(win->controls), id );
+   return hashmap_get( win->controls, id );
 }
 
 void ui_window_next_active_control( struct UI_WINDOW* win ) {
    int i, active_controls_count;
-   active_controls_count = vector_count( &(win->controls_active) );
+   active_controls_count = vector_count( win->controls_active );
    for( i = 0 ; active_controls_count > i ; i++ ) {
       if(
-         vector_get( &(win->controls_active), i ) == win->active_control &&
+         vector_get( win->controls_active, i ) == win->active_control &&
          i + 1 < active_controls_count
       ) {
-         win->active_control = vector_get( &(win->controls_active), i + 1 );
+         win->active_control = vector_get( win->controls_active, i + 1 );
          goto cleanup;
       }
    }
 
    /* Reached the end of the list. */
    if( 0 < active_controls_count ) {
-      win->active_control = vector_get( &(win->controls_active), 0 );
+      win->active_control = vector_get( win->controls_active, 0 );
    }
 
 cleanup:

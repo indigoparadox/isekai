@@ -46,8 +46,8 @@ struct VM_CADDY {
    VM_LANG lang;
    void* vm;
    BOOL vm_started;
-   struct HASHMAP vm_scripts;
-   struct HASHMAP vm_globals;
+   struct HASHMAP* vm_scripts;
+   struct HASHMAP* vm_globals;
 };
 
 struct MOBILE;

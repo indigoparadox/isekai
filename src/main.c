@@ -59,8 +59,8 @@ bstring buffer_channel = NULL;
 BOOL showed_readme = FALSE;
 #endif /* ENABLE_LOCAL_CLIENT */
 
-struct VECTOR mode_list_pretty;
-struct VECTOR mode_list_short;
+struct VECTOR* mode_list_pretty;
+struct VECTOR* mode_list_short;
 
 #ifdef USE_RANDOM_PORT
 bstring str_service = NULL;
@@ -149,11 +149,11 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
 
    if( FALSE == animate_is_blocking() ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
+         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
          PLUGIN_POLL_INPUT, main_client, l, input );
       client_update( main_client, g_screen );
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
+         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
          PLUGIN_UPDATE, main_client, l );
    }
 
@@ -169,7 +169,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       server_stop( main_server ); */
       ui_message_box( ui, l->error );
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ), PLUGIN_FREE, main_client );
+         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ), PLUGIN_FREE, main_client );
       client_stop( main_client );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
@@ -265,7 +265,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       (NULL != l && TILEMAP_REDRAW_ALL == l->tilemap->redraw_state)
    ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
+         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
          PLUGIN_UPDATE, main_client, l );
    }
 
@@ -275,7 +275,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    scaffold_assert( NULL != o );
 
    plugin_call(
-      PLUGIN_MODE, vector_get( &mode_list_short, gfx_mode ),
+      PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
       PLUGIN_DRAW, main_client, l );
 
    /* Draw masks to cover up garbage from mismatch between viewport and window.
@@ -577,11 +577,10 @@ cleanup:
    return retval;
 }
 
-void loop_error() {
+static void loop_error() {
    BOOL cont = TRUE;
    struct UI_WINDOW* dialog = NULL;
-   int bstr_result = 0,
-      input_res = 0;
+   int input_res = 0;
 
    ui_window_new( ui_get_local(), dialog, &str_error, &str_error, &str_no_modes, -1, -1, -1, -1 );
    ui_window_push( ui_get_local(), dialog );
@@ -632,8 +631,8 @@ int main( int argc, char** argv ) {
    g_screen = mem_alloc( 1, GRAPHICS );
    lgc_null( g_screen );
 
-   vector_init( &mode_list_pretty );
-   vector_init( &mode_list_short );
+   mode_list_pretty = vector_new();
+   mode_list_short = vector_new();
 
 #ifdef _WIN32
    graphics_screen_new(
@@ -670,7 +669,7 @@ int main( int argc, char** argv ) {
 
    /* Setup a list of available modes. */
    plugin_load_all( PLUGIN_MODE );
-   if( 0 >= vector_count( &mode_list_short ) ) {
+   if( 0 >= vector_count( mode_list_short ) ) {
       loop_error();
       goto cleanup;
    }
@@ -702,8 +701,8 @@ cleanup:
    mem_free( input );
    backlog_shutdown();
    ui_cleanup( twindow_get_ui( local_window ) );
-   vector_cleanup_force( &mode_list_pretty ); /* These are static strings. */
-   vector_cleanup( &mode_list_short );
+   vector_free( &mode_list_pretty ); /* These are static strings. */
+   vector_free( &mode_list_short );
    scaffold_set_client();
    client_free( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */

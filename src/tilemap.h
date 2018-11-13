@@ -125,15 +125,15 @@ struct TILEMAP {
    struct REF refcount; /*!< Parent "class". */
    TILEMAP_COORD_TILE width;
    TILEMAP_COORD_TILE height;
-   struct VECTOR item_caches;
-   struct VECTOR layers;
-   struct VECTOR tilesets;
-   struct VECTOR spawners;
+   struct VECTOR* item_caches;
+   struct VECTOR* layers;
+   struct VECTOR* tilesets;
+   struct VECTOR* spawners;
    TILEMAP_ORIENTATION orientation;
    GFX_COORD_PIXEL window_step_width;    /*!< For dungeons. */
    GFX_COORD_PIXEL window_step_height;   /*!< For dungeons. */
    bstring lname;
-   struct VECTOR dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
+   struct VECTOR* dirty_tiles; /*!< Stores TILEMAP_POSITIONS. */
    TILEMAP_REDRAW_STATE redraw_state;
    enum LGC_ERROR scaffold_error;
    struct CHANNEL* channel;

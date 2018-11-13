@@ -74,8 +74,8 @@ void channel_init(
    struct CLIENT* server
 ) {
    ref_init( &(l->refcount), channel_free_final );
-   hashmap_new( l->clients );
-   vector_new( l->mobiles );
+   l->clients = hashmap_new();
+   l->mobiles = vector_new();
    l->name = bstrcpy( name );
    l->topic = bfromcstr( "No topic" );
    l->sentinal = CHANNEL_SENTINAL;
@@ -109,7 +109,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
       /* Make a list of player-capable spawns and pick one at pseudo-random. */
       player_spawns = vector_iterate_v(
-         &(t->spawners), callback_search_spawners, &str_player
+         t->spawners, callback_search_spawners, &str_player
       );
       lgc_null_msg( player_spawns, "No player spawns available." );
       spawner =
@@ -202,7 +202,6 @@ void channel_set_mobile(
    SCAFFOLD_SIZE x, SCAFFOLD_SIZE y
 ) {
    struct MOBILE* o = NULL;
-   int bstr_res = 0;
    struct CLIENT* mobile_c = NULL;
    const char* nick_c = NULL,
       * lname_c = NULL;
@@ -330,11 +329,6 @@ void channel_set_error( struct CHANNEL* l, const char* error ) {
 
 BOOL channel_is_loaded( struct CHANNEL* l ) {
    BOOL retval = FALSE;
-   SCAFFOLD_SIZE tilesets_count;
-   int i_test = 0; /* For debugging convenience. */
-#ifdef DEBUG
-   static SCAFFOLD_SIZE tilesets_loaded_last_pass = -1;
-#endif /* DEBUG */
 
    if( NULL == l ) {
       goto cleanup;

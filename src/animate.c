@@ -3,7 +3,7 @@
 #include "animate.h"
 
 void animate_init() {
-   hashmap_init( &animations );
+   animations = hashmap_new();
 }
 
 static BOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
@@ -21,8 +21,8 @@ static BOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
 }
 
 void animate_shutdown() {
-   hashmap_remove_cb( &animations, animate_del_cb, NULL );
-   hashmap_cleanup( &animations );
+   hashmap_remove_cb( animations, animate_del_cb, NULL );
+   hashmap_free( &animations );
 }
 
 /** \brief Get the last existing frame (if any) in an animation.
@@ -236,7 +236,7 @@ cleanup:
 
 short animate_add_animation( struct ANIMATION* a, bstring key ) {
    /* TODO: What if key exists? */
-   if( hashmap_put( &animations, key, a, FALSE ) ) {
+   if( hashmap_put( animations, key, a, FALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add animation...\n" );
       return 1;
    }
@@ -244,18 +244,18 @@ short animate_add_animation( struct ANIMATION* a, bstring key ) {
 }
 
 struct ANIMATION* animate_get_animation( bstring key ) {
-   return hashmap_get( &animations, key );
+   return hashmap_get( animations, key );
 }
 
 void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
    BOOL removed;
    struct ANIMATION* a = NULL;
 
-   a = hashmap_get( &animations, key );
+   a = hashmap_get( animations, key );
 
    if( NULL != a ) {
       lg_debug( __FILE__, "Removing \"%b\" animation...\n", key );
-      removed = hashmap_remove( &animations, key );
+      removed = hashmap_remove( animations, key );
       scaffold_assert( 1 == removed );
       if( NULL != a_out ) {
          *a_out = a;
@@ -338,7 +338,7 @@ cleanup:
 }
 
 void animate_cycle_animations( GRAPHICS* g ) {
-   hashmap_remove_cb( &animations, animate_cyc_ani_cb, g );
+   hashmap_remove_cb( animations, animate_cyc_ani_cb, g );
 }
 
 static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
@@ -373,7 +373,7 @@ static void* animate_draw_ani_cb( bstring idx, void* iter, void* arg ) {
 }
 
 void animate_draw_animations( GRAPHICS* g ) {
-   hashmap_iterate( &animations, animate_draw_ani_cb, g );
+   hashmap_iterate( animations, animate_draw_ani_cb, g );
 }
 
 static void* animate_blocker_cb( bstring idx, void* iter, void* arg ) {
@@ -386,7 +386,7 @@ static void* animate_blocker_cb( bstring idx, void* iter, void* arg ) {
 
 BOOL animate_is_blocking() {
    struct ANIMATION* blocker = NULL;
-   blocker = hashmap_iterate( &animations, animate_blocker_cb, NULL );
+   blocker = hashmap_iterate( animations, animate_blocker_cb, NULL );
    if( NULL != blocker ) {
       return TRUE;
    } else {

@@ -80,14 +80,14 @@ typedef enum {
 struct UI_WINDOW {
    struct UI* ui;
    bstring title;
-   struct HASHMAP controls;
+   struct HASHMAP* controls;
    GRAPHICS* element;
    BOOL modal;
    struct UI_CONTROL* active_control;
    GRAPHICS_RECT area;
    GRAPHICS_RECT grid_pos;
    bstring id;
-   struct VECTOR controls_active;
+   struct VECTOR* controls_active;
    void* attachment; /*!< Struct to draw data from. */
    SCAFFOLD_SIZE selection;
    SCAFFOLD_SIZE grid_iter;
@@ -108,13 +108,13 @@ struct UI_CONTROL {
    SCAFFOLD_SIZE_SIGNED min;
    SCAFFOLD_SIZE_SIGNED max;
    UI_OPT_STATE new_row;
-   struct VECTOR list;
+   struct VECTOR* list;
    struct UI_CONTROL* next_control;
 };
 
 struct UI {
    GRAPHICS* screen_g;
-   struct VECTOR windows;
+   struct VECTOR* windows;
 };
 
 #define ui_window_new( ui, win, id, title, prompt, x, y, w, h ) \

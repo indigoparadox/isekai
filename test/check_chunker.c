@@ -62,16 +62,16 @@ void check_chunker_setup_unchecked() {
 
    /* Prepare the chunk list. */
    //chunker_mapchunks = bstrListCreate();
-   vector_new( chunker_mapchunks );
+   chunker_mapchunks = vector_new();
    chunker_mapchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
-   vector_init( chunker_mapchunk_starts );
+   chunker_mapchunk_starts = vector_init();
    if( NULL == chunker_mapchunks || NULL == chunker_mapchunk_starts ) {
       ck_abort_msg( "Unable to create testing map chunks list." );
    }
 
    /* Prepare the chunk list. */
    //chunker_imgchunks = bstrListCreate();
-   vector_new( chunker_imgchunks );
+   chunker_imgchunks = vector_new();
    chunker_imgchunk_starts = (struct VECTOR*)calloc( 1, sizeof( struct VECTOR ) );
    vector_init( chunker_imgchunk_starts );
    if( NULL == chunker_imgchunks || NULL == chunker_imgchunk_starts ) {

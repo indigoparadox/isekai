@@ -317,7 +317,7 @@ void* callback_search_tilesets_img_name( size_t idx, void* iter, void* arg ) {
 void* callback_search_channels_tilemap_img_name( bstring idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    struct TILEMAP* t = l->tilemap;
-   if( NULL != vector_iterate( &(t->tilesets), callback_search_tilesets_img_name, arg ) ) {
+   if( NULL != vector_iterate( t->tilesets, callback_search_tilesets_img_name, arg ) ) {
       return l;
    }
    return NULL;
@@ -419,7 +419,6 @@ void* callback_proc_channel_spawners(
    size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_SPAWNER* ts = (struct TILEMAP_SPAWNER*)iter;
-   struct SERVER* s = (struct SERVER*)arg;
    struct TILEMAP* t = ts->tilemap;
    struct CHANNEL* l = NULL;
    struct MOBILE* o = NULL;
@@ -502,7 +501,7 @@ void* callback_proc_server_spawners( bstring idx, void* iter, void* arg ) {
 
    scaffold_assert_server();
 
-   vector_iterate( &(l->tilemap->spawners), callback_proc_channel_spawners, s );
+   vector_iterate( l->tilemap->spawners, callback_proc_channel_spawners, s );
 
    return NULL;
 }
