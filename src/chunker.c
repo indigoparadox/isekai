@@ -453,12 +453,16 @@ cleanup:
 
 #ifdef USE_FILE_CACHE
 
-void chunker_unchunk_save_cache( struct CHUNKER* h ) {
+/***
+ * @return TRUE if successful, FALSE otherwise.
+ */
+BOOL chunker_unchunk_save_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
    SCAFFOLD_SIZE written;
+   BOOL retval = FALSE;
 
    cache_filename = bstrcpy( h->filecache_path );
-   lgc_silence(); /* Caching disabled is a non-event. */
+   //lgc_silence(); /* Caching disabled is a non-event. */
    lgc_null( cache_filename );
 
    files_join_path( cache_filename, h->filename );
@@ -467,13 +471,17 @@ void chunker_unchunk_save_cache( struct CHUNKER* h ) {
       files_write( cache_filename, h->raw_ptr, h->raw_length, TRUE );
    if( 0 >= written ) {
       lg_error(
-         __FILE__, "Error writing cache file: %s\n", bdata( cache_filename )
+         __FILE__, "Error writing cache file: %b, Dir: %b\n",
+         cache_filename,
+         h->filecache_path
       );
+   } else {
+      retval = TRUE;
    }
 
 cleanup:
-   lgc_unsilence();
-   return;
+   //lgc_unsilence();
+   return retval;
 }
 
 void chunker_unchunk_check_cache( struct CHUNKER* h ) {
@@ -577,7 +585,9 @@ BOOL chunker_unchunk_finished( struct CHUNKER* h ) {
          "Chunker: Saving cached copy of finished file: %s\n",
          bdata( h->filename )
       );
-      chunker_unchunk_save_cache( h );
+      if( !chunker_unchunk_save_cache( h ) ) {
+         1 / 0;
+      }
    }
 #endif /* USE_FILE_CACHE */
 cleanup:
