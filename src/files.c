@@ -124,6 +124,20 @@ cleanup:
    return sz_out;
 }
 
+static void* cb_files_concat_dirs( size_t idx, void* iter, void* arg ) {
+   bstring str_out = (bstring)arg;
+   bstring str_cat = (bstring)iter;
+   int bstr_res = 0;
+
+   bstr_res = bconcat( str_out, str_cat );
+   lgc_nonzero( bstr_res );
+   bstr_res = bconchar( str_out, '/' );
+   lgc_nonzero( bstr_res );
+
+cleanup:
+   return NULL;
+}
+
 SCAFFOLD_SIZE_SIGNED files_write(
    bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs
 ) {
@@ -131,11 +145,12 @@ SCAFFOLD_SIZE_SIGNED files_write(
    char* path_c = NULL;
    bstring test_path = NULL;
    struct VECTOR* path_dirs = NULL;
-   SCAFFOLD_SIZE true_qty;
    struct stat test_path_stat = { 0 };
    int stat_res;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    bstring zero_error = NULL;
+   size_t dir_count = 0;
+   int res = 0;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
@@ -150,11 +165,11 @@ SCAFFOLD_SIZE_SIGNED files_write(
    }
 
    /* TODO: Why... are we doing this this way? */
-   true_qty = vector_count( path_dirs );
-   for( path_dirs->count = 1 ; path_dirs->count < true_qty ; path_dirs->count++ ) {
+   dir_count = vector_count( path_dirs );
+   for( path_dirs->count = 1 ; path_dirs->count < dir_count ; path_dirs->count++ ) {
       test_path = bfromcstr( "" );
       lgc_null( test_path );
-      vector_iterate( path_dirs, callback_concat_strings, test_path );
+      vector_iterate( path_dirs, cb_files_concat_dirs, test_path );
       lgc_null( test_path );
 
       path_c = bdata( test_path );
@@ -177,7 +192,8 @@ SCAFFOLD_SIZE_SIGNED files_write(
 #ifdef _WIN32
          CreateDirectory( path_c, NULL );
 #else
-         lgc_nonzero( mkdir( path_c, 0 ) );
+         res = mkdir( path_c, 0777 );
+         lgc_nonzero( res );
 #endif /* _WIN32 */
       }
 

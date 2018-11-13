@@ -114,7 +114,7 @@ void chunker_unchunk_pass(
    struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start,
    SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len
 );
-void chunker_unchunk_save_cache( struct CHUNKER* h );
+BOOL chunker_unchunk_save_cache( struct CHUNKER* h );
 void chunker_unchunk_check_cache( struct CHUNKER* h );
 BOOL chunker_unchunk_finished( struct CHUNKER* h );
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, BOOL force );
