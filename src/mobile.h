@@ -83,9 +83,11 @@ void mobile_do_reset_2d_animation( struct MOBILE* o );
 #ifdef USE_VM
 void mobile_vm_start( struct MOBILE* o );
 #endif /* USE_VM */
-void mobile_update_coords(
+/*void mobile_update_coords(
    struct MOBILE* o, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
-);
+);*/
+void mobile_update_x( struct MOBILE* o, TILEMAP_COORD_TILE x );
+void mobile_update_y( struct MOBILE* o, TILEMAP_COORD_TILE y );
 int mobile_set_display_name( struct MOBILE* o, const bstring name );
 void mobile_set_owner( struct MOBILE* o, struct CLIENT* c );
 void mobile_set_serial( struct MOBILE* o, SERIAL serial );
