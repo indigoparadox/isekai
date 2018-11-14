@@ -9,16 +9,7 @@ struct VM_CADDY;
 struct TWINDOW;
 struct MOBILE;
 struct CLIENT;
-
-typedef enum MOBILE_UPDATE {
-   MOBILE_UPDATE_NONE,
-   MOBILE_UPDATE_MOVEUP,
-   MOBILE_UPDATE_MOVEDOWN,
-   MOBILE_UPDATE_MOVELEFT,
-   MOBILE_UPDATE_MOVERIGHT,
-   MOBILE_UPDATE_ATTACK,
-   MOBILE_UPDATE_DIG
-} MOBILE_UPDATE;
+struct CHANNEL;
 
 typedef enum MOBILE_ANI_TYPE {
    MOBILE_ANI_TYPE_WALK,
@@ -49,15 +40,6 @@ struct MOBILE_SPRITE_DEF {
    SCAFFOLD_SIZE id;
 };
 
-struct MOBILE_UPDATE_PACKET {
-   struct MOBILE* o;
-   struct CHANNEL* l;
-   MOBILE_UPDATE update;
-   TILEMAP_COORD_TILE x;
-   TILEMAP_COORD_TILE y;
-   struct MOBILE* target;
-};
-
 #define MOBILE_RANDOM_SERIAL_LEN 64
 #define MOBILE_STEPS_MAX 32
 #define MOBILE_STEPS_HALF (MOBILE_STEPS_MAX / 2)
@@ -82,8 +64,6 @@ void mobile_apply_steps_remaining(
 );
 void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TWINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
-MOBILE_UPDATE
-mobile_apply_update( struct MOBILE_UPDATE_PACKET* update, BOOL instant );
 SCAFFOLD_INLINE
 GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );

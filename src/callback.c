@@ -591,9 +591,9 @@ void* callback_send_mobs_to_channel( bstring idx, void* iter, void* arg ) {
 
 void* callback_send_updates_to_client( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
-   struct MOBILE_UPDATE_PACKET* update = (struct MOBILE_UPDATE_PACKET*)arg;
+   struct ACTION_PACKET* update = (struct ACTION_PACKET*)arg;
 
-   if( NULL == c || NULL == update->o ) {
+   if( NULL == c || NULL == action_packet_get_mobile( update ) ) {
       return NULL;
    }
 

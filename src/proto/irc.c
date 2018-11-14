@@ -454,32 +454,67 @@ void proto_send_tile_cache_channel(
 
 #endif /* USE_ITEMS */
 
-void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+void proto_client_send_update( struct CLIENT* c, struct ACTION_PACKET* update ) {
    SCAFFOLD_SIZE serial = 0;
    scaffold_assert_client();
-   if( NULL != update->target ) {
-      serial = mobile_get_serial( update->target );
+   struct MOBILE* o = NULL;
+   struct MOBILE* target = NULL;
+   enum ACTION_OP op = ACTION_OP_NONE;
+   TILEMAP_COORD_TILE x, y;
+   struct CHANNEL* l = NULL;
+
+   lgc_null( update );
+
+   o = action_packet_get_mobile( update );
+   target = action_packet_get_target( update );
+   op = action_packet_get_op( update );
+   x = action_packet_get_tile_x( update );
+   y = action_packet_get_tile_y( update );
+   l = action_packet_get_channel( update );
+
+   if( NULL != target ) {
+      serial = mobile_get_serial( target );
    }
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, mobile_get_serial( update->o ), update->update, update->x, update->y, serial
+      l->name, mobile_get_serial( o ), op, x, y, serial
    );
+
+cleanup:
+   return;
 }
 
-void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+void proto_server_send_update( struct CLIENT* c, struct ACTION_PACKET* update ) {
    SCAFFOLD_SIZE serial = 0;
-   scaffold_assert_server();
+   struct MOBILE* o = NULL;
+   struct MOBILE* target = NULL;
+   enum ACTION_OP op = ACTION_OP_NONE;
+   TILEMAP_COORD_TILE x, y;
+   struct CHANNEL* l = NULL;
+
    lgc_null( update );
-   if( NULL != update->target ) {
-      serial = mobile_get_serial( update->target );
+
+   o = action_packet_get_mobile( update );
+   target = action_packet_get_target( update );
+   op = action_packet_get_op( update );
+   x = action_packet_get_tile_x( update );
+   y = action_packet_get_tile_y( update );
+   l = action_packet_get_channel( update );
+
+   scaffold_assert_server();
+
+   if( NULL != target ) {
+      serial = mobile_get_serial( target );
    }
-   lgc_null( update->l );
-   lgc_null( update->l->name );
-   lgc_null( update->o );
+   lgc_null( l );
+   lgc_null( l->name );
+   lgc_null( o );
+
    proto_printf(
       c, "GU %b %d %d %d %d %d",
-      update->l->name, mobile_get_serial( update->o ), update->update, update->x, update->y, serial
+      l->name, mobile_get_serial( o ), op, x, y, serial
    );
+
 cleanup:
    return;
 }
@@ -1008,35 +1043,45 @@ static void irc_server_gameupdate(
 ) {
    SCAFFOLD_SIZE serial,
       target_serial;
-   struct MOBILE_UPDATE_PACKET update;
+   struct ACTION_PACKET* update = NULL;
+   struct MOBILE* o = NULL;
+   struct CHANNEL* l = NULL;
+   enum ACTION_OP op = ACTION_OP_NONE;
 
    irc_detect_malformed( 7, "GU", line )
 
-   update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   lgc_null( update.l );
+   l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
+   lgc_null( l );
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
-   update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
-   update.x = bgtoi( (bstring)vector_get( args, 4 ) );
-   update.y = bgtoi( (bstring)vector_get( args, 5 ) );
+   o = (struct MOBILE*)vector_get( l->mobiles, serial );
+   lgc_null( o );
+
+   op = (enum ACTION_OP)bgtoi( (bstring)vector_get( args, 3 ) );
+
    target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
 
-   update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
-   lgc_null( update.o );
-
-   update.target =
-      (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
-   /* No NULL check. If it's NULL, it's NULL. */
-
-   if( c == mobile_get_owner( update.o ) ) {
-      update.update = mobile_apply_update( &update, TRUE );
-   } else {
+   if( c != mobile_get_owner( o ) ) {
       lg_error(
          __FILE__,
          "Client %s attempted to modify mobile %d to %d without permission.\n",
-         bdata( client_get_nick( c ) ), mobile_get_serial( update.o ), update.update
+         bdata( client_get_nick( c ) ), mobile_get_serial( o ), op
       );
+      goto cleanup;
    }
+
+   update = action_packet_new(
+      l,
+      o,
+      op,
+      bgtoi( (bstring)vector_get( args, 4 ) ),
+      bgtoi( (bstring)vector_get( args, 5 ) ),
+      (struct MOBILE*)vector_get( l->mobiles, target_serial )
+   );
+   lgc_null( update );
+
+   /* Everything checks out! */
+   action_queue( update );
 
 cleanup:
    return;
@@ -1082,27 +1127,34 @@ static void irc_client_gu(
 ) {
    SCAFFOLD_SIZE serial,
       target_serial;
-   struct MOBILE_UPDATE_PACKET update;
+   struct ACTION_PACKET* update = NULL;
+   struct CHANNEL* l = NULL;
+   struct MOBILE* o = NULL;
+   struct MOBILE* target = NULL;
 
-   update.l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
-   lgc_null( update.l );
+   l = client_get_channel_by_name( c, (bstring)vector_get( args, 1 ) );
+   lgc_null( l );
 
    serial = bgtoi( (bstring)vector_get( args, 2 ) );
+   o = (struct MOBILE*)vector_get( l->mobiles, serial );
+   lgc_null( o );
 
-   update.o = (struct MOBILE*)vector_get( update.l->mobiles, serial );
-   lgc_null( update.o );
-
-   update.update = (MOBILE_UPDATE)bgtoi( (bstring)vector_get( args, 3 ) );
-   update.x = bgtoi( (bstring)vector_get( args, 4 ) );
-   update.y = bgtoi( (bstring)vector_get( args, 5 ) );
    target_serial = bgtoi( (bstring)vector_get( args, 6 ) );
-
-   update.target =
-      (struct MOBILE*)vector_get( update.l->mobiles, target_serial );
+   target =
+      (struct MOBILE*)vector_get( l->mobiles, target_serial );
    /* No NULL check. If it's NULL, it's NULL. */
 
-   /* The client always trusts the server. */
-   update.update = mobile_apply_update( &update, FALSE );
+   update = action_packet_new(
+      l,
+      o,
+      (enum ACTION_OP)bgtoi( (bstring)vector_get( args, 3 ) ),
+      bgtoi( (bstring)vector_get( args, 4 ) ),
+      bgtoi( (bstring)vector_get( args, 5 ) ),
+      target
+   );
+   lgc_null( update );
+
+   action_queue( update );
 
 cleanup:
    return;
