@@ -240,8 +240,8 @@ void datafile_parse_mobile_ezxml_t(
 #ifdef USE_VM
    vm_val_buffer = bfromcstr( "" );
    vm_key_buffer = bfromcstr( "" );
-   xml_val_buffer = bfromcstr( "" );
 #endif // USE_VM
+   xml_val_buffer = bfromcstr( "" );
 
    ezxml_string( xml_attr, xml_data, "id" );
    bstr_retval = bassignblk( xml_val_buffer, xml_attr, strlen( xml_attr ) );

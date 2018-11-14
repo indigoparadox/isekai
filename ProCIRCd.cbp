@@ -831,6 +831,36 @@
 					<SilentBuild command=" &gt; $(CMD_NULL)" />
 				</MakeCommands>
 			</Target>
+			<Target title="Debug (DOS16-Allegro4)">
+				<Option platforms="Unix;" />
+				<Option output="bin/Debug/ProCIR16" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug-DOS16-SB-Allegro4/" />
+				<Option type="1" />
+				<Option compiler="openwatcom_compiler" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DUSE_ALLEGRO" />
+					<Add option="-DDEBUG" />
+					<Add option="-DxUSE_ALLEGRO_PNG" />
+					<Add option="-DxUSE_NETWORK" />
+					<Add option="-DxDEBUG_NETWORK" />
+					<Add option="-DUSE_SYNCBUFF" />
+					<Add option="-DUSE_FILE_CACHE" />
+					<Add option="-DDEBUG_TILES" />
+					<Add option="-DxUSE_INLINE" />
+					<Add option="-DxUSE_CHUNKS" />
+					<Add option="-DxDEBUG_VM" />
+					<Add option="-DxUSE_DUKTAPE" />
+					<Add option="-DENABLE_LOCAL_CLIENT" />
+					<Add option="-DUSE_COLORED_CONSOLE" />
+					<Add option="-DxDISABLE_MODE_ISO" />
+					<Add option="-DDEBUG_TILES_VERBOSE" />
+				</Compiler>
+				<Linker>
+					<Add library="alleg" />
+					<Add directory="../libvcol/bin/Debug-DOS16" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-DEZXML_CSTR" />
@@ -921,6 +951,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/backlog.h">
 			<Option target="Debug" />
@@ -946,6 +977,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/callback.c">
 			<Option compilerVar="CC" />
@@ -1030,6 +1062,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/duktape/duktape.h">
 			<Option target="Debug" />
@@ -1049,6 +1082,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/duktape/duktype.h">
 			<Option target="Debug" />
@@ -1071,6 +1105,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/ezxml.c">
 			<Option compilerVar="CC" />
@@ -1101,6 +1136,7 @@
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/files.h" />
 		<Unit filename="src/font.h" />
@@ -1129,6 +1165,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics.h" />
 		<Unit filename="src/graphics/allegrog.c">
@@ -1143,6 +1180,7 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/graphics/cursesg.c">
 			<Option compilerVar="CC" />
@@ -1187,6 +1225,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hs_conf.h">
 			<Option target="Debug" />
@@ -1208,6 +1247,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsdecode.c">
 			<Option compilerVar="CC" />
@@ -1230,6 +1270,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsdecode.h">
 			<Option target="Debug" />
@@ -1251,6 +1292,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsencode.c">
 			<Option compilerVar="CC" />
@@ -1273,6 +1315,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/hs/hsencode.h">
 			<Option target="Debug" />
@@ -1294,6 +1337,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/htmlrend.c">
 			<Option compilerVar="CC" />
@@ -1316,6 +1360,7 @@
 			<Option target="Debug (Linux-Allegro4-TCC)" />
 			<Option target="Release (Linux-Allegro4)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/input/cursesi.c">
 			<Option compilerVar="CC" />
@@ -1371,6 +1416,7 @@
 			<Option target="Debug (Linux-Curses-Threaded)" />
 			<Option target="Check (Linux-C89)" />
 			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
@@ -1396,6 +1442,7 @@
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/mobile.c">
 			<Option compilerVar="CC" />
@@ -1427,6 +1474,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/plugin.h" />
 		<Unit filename="src/proto.h" />
@@ -1455,6 +1503,7 @@
 			<Option target="Debug (Linux-NET-Server)" />
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Debug (Palm-SB)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/proto/shmp.c">
 			<Option compilerVar="CC" />
@@ -1510,6 +1559,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
 			<Option target="Debug" />
@@ -1530,6 +1580,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tnacl.c">
 			<Option compilerVar="CC" />
@@ -1552,6 +1603,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/tnacl.h">
 			<Option target="Debug" />
@@ -1573,6 +1625,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/twindow.c">
 			<Option compilerVar="CC" />
@@ -1602,6 +1655,7 @@
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Palm-SB)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/vm.c">
 			<Option compilerVar="CC" />
@@ -1624,6 +1678,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/vm/duktapev.c">
 			<Option compilerVar="CC" />
@@ -1644,6 +1699,7 @@
 			<Option target="Debug (MingW32-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="src/windefs.h">
 			<Option target="Debug" />
@@ -1669,6 +1725,7 @@
 			<Option target="Debug (Emscripten-NET-SDL)" />
 			<Option target="Strict (Linux-NET-Allegro4)" />
 			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (DOS16-Allegro4)" />
 		</Unit>
 		<Unit filename="test/check_b64.c">
 			<Option compilerVar="CC" />
