@@ -62,7 +62,7 @@ void action_enqueue( struct ACTION_PACKET* update ) {
       action_queue_v = vector_new();
    }
 
-   vector_push( action_queue_v, update );
+   vector_enqueue( action_queue_v, update );
 }
 
 size_t action_queue_proc( bstring mode_id ) {
@@ -72,7 +72,7 @@ size_t action_queue_proc( bstring mode_id ) {
    PLUGIN_RESULT res = 0;
 
    while( 0 < vector_count( action_queue_v ) ) {
-      update = vector_pop( action_queue_v );
+      update = vector_dequeue( action_queue_v );
       res = plugin_call( PLUGIN_MODE, mode_id, PLUGIN_MOBILE_ACTION, update );
       action_packet_free( update );
       if( PLUGIN_SUCCESS ) {

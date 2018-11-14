@@ -52,6 +52,7 @@ struct MOBILE {
    struct HASHMAP* ani_defs;
    struct HASHMAP* script_defs;
    struct MOBILE_ANI_DEF* current_animation;
+   struct VECTOR* walking_queue; /* Only used for certain modes. Think RTS. */
 #ifdef USE_ITEMS
    struct VECTOR* items;
 #endif // USE_ITEMS
@@ -1006,7 +1007,6 @@ cleanup:
 
 BOOL mobile_walk(
    struct MOBILE* o,
-   struct TILEMAP* t,
    TILEMAP_COORD_TILE dest_x,
    TILEMAP_COORD_TILE dest_y
 ) {
@@ -1015,9 +1015,15 @@ BOOL mobile_walk(
       start_y = 0;
    int diff_x = 0,
       diff_y = 0;
+   struct TILEMAP* t = NULL;
+
+   lgc_null( o );
 
    start_x = mobile_get_x( o );
    start_y = mobile_get_y( o );
+
+   t = mobile_get_tilemap( o );
+   lgc_null( t );
 
    /* switch( action_packet_get_op( update ) ) {
    case ACTION_OP_MOVEUP: */
@@ -1038,11 +1044,11 @@ BOOL mobile_walk(
 
    /* Check for blockers. */
    if(
-      !mobile_calculate_terrain_result(
+      /*!mobile_calculate_terrain_result(
          o,
          mobile_get_x( o ), mobile_get_y( o ),
          dest_x, dest_y
-      ) ||
+      ) || XXX */
       !mobile_calculate_mobile_result(
          o,
          mobile_get_x( o ), mobile_get_y( o ),
@@ -1071,22 +1077,47 @@ BOOL mobile_walk(
    diff_y = (dest_y - start_y);
 
    /* Setup facing direction and animation.*/
-   if(  )
-   mobile_set_facing( MOBILE_FACING_UP );
+   switch( diff_x ) {
+   case -1:
+      mobile_set_facing( o, MOBILE_FACING_LEFT );
+      break;
+
+   case 0:
+      switch( diff_y ) {
+      case -1:
+         mobile_set_facing( o, MOBILE_FACING_UP );
+         break;
+      case 1:
+         mobile_set_facing( o, MOBILE_FACING_DOWN );
+         break;
+      default:
+         /* ERROR */
+         break;
+      }
+      break;
+
+   case 1:
+      mobile_set_facing( o, MOBILE_FACING_RIGHT );
+      break;
+   default:
+      /* ERROR */
+      break;
+   }
    /* We'll calculate the actual animation frames to use in the per-mode
     * update() function, where we have access to the current camera rotation
     * and stuff like that. */
    mobile_call_reset_animation( o );
    mobile_set_steps_inc( o,
       mobile_calculate_terrain_steps_inc(
-         l->tilemap, mobile_get_steps_inc_default( o ),
-         mobile_get_x( o ), mobile_get_y( o ) * -1 );
-   if( FALSE != instant ) {
+         t, mobile_get_steps_inc_default( o ),
+         mobile_get_x( o ), mobile_get_y( o ) * -1 ) );
+   // This is walk, it's never instant.
+   //if( !instant ) {
       o->prev_y = o->y;
-   } else {
+   /*} else {
       mobile_set_steps_remaining( MOBILE_STEPS_MAX );
       o->steps_remaining = MOBILE_STEPS_MAX;
-   }
+   }*/
 
 #if 0
    case MOBILE_UPDATE_MOVEDOWN:
@@ -1219,4 +1250,6 @@ BOOL mobile_walk(
 cleanup:
    bdestroy( animation_key );
 #endif // 0
+cleanup:
+   return;
 }
