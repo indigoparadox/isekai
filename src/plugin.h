@@ -13,7 +13,8 @@ typedef enum {
    PLUGIN_DRAW,
    PLUGIN_UPDATE,
    PLUGIN_POLL_INPUT,
-   PLUGIN_FREE
+   PLUGIN_FREE,
+   PLUGIN_MOBILE_ACTION
 } PLUGIN_CALL;
 
 typedef enum {

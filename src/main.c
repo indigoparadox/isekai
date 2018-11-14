@@ -123,6 +123,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
    }
+   action_queue_proc( vector_get( mode_list_short, gfx_mode ) );
 
    if( !server_is_running( main_server ) ) {
       keep_going = FALSE;

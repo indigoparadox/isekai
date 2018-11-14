@@ -923,3 +923,300 @@ cleanup:
 void mobile_add_ref( struct MOBILE* o ) {
    refcount_inc( o, "mobile" );
 }
+
+/** \brief Calculate the movement success between two tiles on the given
+ *         mobile's present tilemap based on neighboring mobiles.
+ * \param[in] x_1 Starting X.
+ * \param[in] y_1 Starting Y.
+ * \param[in] x_2 Finishing X.
+ * \param[in] y_2 Finishing Y.
+ * \return TRUE if the mobile can pass and FALSE if not.
+ */
+BOOL mobile_calculate_mobile_result(
+   struct MOBILE* o,
+   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
+) {
+   struct TILEMAP* t = NULL;
+   struct CHANNEL* l = NULL;
+   struct TILEMAP_POSITION pos;
+   struct MOBILE* o_test = NULL;
+   BOOL update_out = TRUE; /* Pass by default. */
+
+   l = mobile_get_channel( o );
+   lgc_null( l );
+
+   t = channel_get_tilemap( l );
+   lgc_null( t );
+
+   pos.x = x_2;
+   pos.y = y_2;
+
+   o_test = channel_search_mobiles( l, &pos );
+
+   if( NULL != o_test ) {
+      update_out = FALSE;
+   }
+
+cleanup:
+   return update_out;
+}
+
+static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
+   struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_in,
+   TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
+) {
+   struct VECTOR* tiles_end = NULL;
+   struct TILEMAP_POSITION pos_end;
+   struct TILEMAP_TILE_DATA* tile_iter = NULL;
+   uint8_t i, j;
+   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
+   GFX_COORD_PIXEL steps_inc_out = steps_inc_in;
+
+   pos_end.x = x_2;
+   pos_end.y = y_2;
+
+   /* Fetch the destination tile on all layers. */
+   tiles_end =
+      vector_iterate_v( t->layers, callback_get_tile_stack_l, &pos_end );
+
+   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
+      tile_iter = vector_get( tiles_end, i );
+      lgc_null( tile_iter );
+
+      for( j = 0 ; 4 > j ; j++ ) {
+         /* TODO: Implement terrain slow-down. */
+         terrain_iter = tile_iter->terrain[j];
+         if( NULL == terrain_iter ) { continue; }
+         if(
+            terrain_iter->movement != 0 &&
+            steps_inc_in / terrain_iter->movement < steps_inc_out
+         ) {
+            steps_inc_out = steps_inc_in / terrain_iter->movement;
+         }
+      }
+   }
+
+cleanup:
+   if( NULL != tiles_end ) {
+      vector_cleanup_force( tiles_end );
+      mem_free( tiles_end );
+   }
+   return steps_inc_out;
+}
+
+BOOL mobile_walk(
+   struct MOBILE* o,
+   struct TILEMAP* t,
+   TILEMAP_COORD_TILE dest_x,
+   TILEMAP_COORD_TILE dest_y
+) {
+   bstring animation_key = NULL;
+   TILEMAP_COORD_TILE start_x = 0,
+      start_y = 0;
+   int diff_x = 0,
+      diff_y = 0;
+
+   start_x = mobile_get_x( o );
+   start_y = mobile_get_y( o );
+
+   /* switch( action_packet_get_op( update ) ) {
+   case ACTION_OP_MOVEUP: */
+
+   /* Check for valid movement range. */
+   if(
+      dest_x != start_x - 1 ||
+      dest_x != start_x + 1 ||
+      dest_y != start_y - 1 ||
+      dest_y != start_y + 1
+   ) {
+      lg_error( __FILE__,
+         "Attempted to walk invalid distance: %d, %d to %d, %d\n",
+         start_x, start_y, dest_x, dest_y
+      );
+      goto cleanup;
+   }
+
+   /* Check for blockers. */
+   if(
+      !mobile_calculate_terrain_result(
+         o,
+         mobile_get_x( o ), mobile_get_y( o ),
+         dest_x, dest_y
+      ) ||
+      !mobile_calculate_mobile_result(
+         o,
+         mobile_get_x( o ), mobile_get_y( o ),
+         dest_x, dest_y
+      )
+   ) {
+      lg_error( __FILE__,
+         "Mobile walking blocked: %d, %d to %d, %d",
+         start_x, start_y, dest_x, dest_y
+      );
+      goto cleanup;
+   }
+
+   /* Setup walking starting conditions. Update callbacks will handle these
+    * later. */
+   if( dest_x != start_x ) {
+      mobile_update_x( o, mobile_get_x( o ) ); /* Forceful reset. */
+   }
+   if( dest_y != start_y ) {
+      mobile_update_y( o, mobile_get_y( o ) ); /* Forceful reset. */
+   }
+   mobile_set_x( o, dest_x );
+   mobile_set_y( o, dest_y );
+
+   diff_x = (dest_x - start_x);
+   diff_y = (dest_y - start_y);
+
+   /* Setup facing direction and animation.*/
+   if(  )
+   mobile_set_facing( MOBILE_FACING_UP );
+   /* We'll calculate the actual animation frames to use in the per-mode
+    * update() function, where we have access to the current camera rotation
+    * and stuff like that. */
+   mobile_call_reset_animation( o );
+   mobile_set_steps_inc( o,
+      mobile_calculate_terrain_steps_inc(
+         l->tilemap, mobile_get_steps_inc_default( o ),
+         mobile_get_x( o ), mobile_get_y( o ) * -1 );
+   if( FALSE != instant ) {
+      o->prev_y = o->y;
+   } else {
+      mobile_set_steps_remaining( MOBILE_STEPS_MAX );
+      o->steps_remaining = MOBILE_STEPS_MAX;
+   }
+
+#if 0
+   case MOBILE_UPDATE_MOVEDOWN:
+      if( (update->x != o->x || update->y != o->y + 1) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( l->tilemap, update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
+      o->prev_x = o->x; /* Forceful reset. */
+      o->y = update->y;
+      o->x = update->x;
+      o->facing = MOBILE_FACING_DOWN;
+      /* We'll calculate the actual animation frames to use in the per-mode
+       * update() function, where we have access to the current camera rotation
+       * and stuff like that. */
+      o->animation_reset = TRUE;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            l->tilemap, o->steps_inc_default,
+            o->x, o->y );
+      if( FALSE != instant ) {
+         o->prev_y = o->y;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX * -1;
+      }
+      break;
+
+   case MOBILE_UPDATE_MOVELEFT:
+      if(
+         (update->x != o->x - 1 || update->y != o->y) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( l->tilemap, update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
+      o->prev_y = o->y; /* Forceful reset. */
+      o->y = update->y;
+      o->x = update->x;
+      o->facing = MOBILE_FACING_LEFT;
+      /* We'll calculate the actual animation frames to use in the per-mode
+       * update() function, where we have access to the current camera rotation
+       * and stuff like that. */
+      o->animation_reset = TRUE;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            l->tilemap, o->steps_inc_default,
+            o->x, o->y ) * -1;
+      if( FALSE != instant ) {
+         o->prev_x = o->x;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX;
+      }
+      break;
+
+   case MOBILE_UPDATE_MOVERIGHT:
+      if(
+         (update->x != o->x + 1 || update->y != o->y) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_terrain_result( l->tilemap, update->update,
+            o->x, o->y, update->x, update->y )) ||
+         (MOBILE_UPDATE_NONE ==
+         mobile_calculate_mobile_result( l, update->update,
+            o->x, o->y, update->x, update->y ))
+      ) {
+         goto cleanup;
+      }
+      o->prev_y = o->y; /* Forceful reset. */
+      o->y = update->y;
+      o->x = update->x;
+      o->facing = MOBILE_FACING_RIGHT;
+      /* We'll calculate the actual animation frames to use in the per-mode
+       * update() function, where we have access to the current camera rotation
+       * and stuff like that. */
+      o->animation_reset = TRUE;
+      o->steps_inc =
+         mobile_calculate_terrain_steps_inc(
+            l->tilemap, o->steps_inc_default,
+            o->x, o->y );
+      if( FALSE != instant ) {
+         o->prev_x = o->x;
+      } else {
+         o->steps_remaining = MOBILE_STEPS_MAX * -1;
+      }
+      break;
+
+   case MOBILE_UPDATE_ATTACK:
+      break;
+
+   case MOBILE_UPDATE_NONE:
+      goto cleanup;
+   }
+
+#ifdef USE_VM
+#ifdef USE_TURNS
+   if(
+      NULL != o->owner
+#ifdef ENABLE_LOCAL_CLIENT
+      && TRUE != ipc_is_local_client( o->owner->link )
+#endif /* ENABLE_LOCAL_CLIENT */
+   ) {
+      vm_tick();
+   }
+#endif /* USE_TURNS */
+#endif /* USE_VM */
+
+#ifdef ENABLE_LOCAL_CLIENT
+   if( FALSE == instant ) {
+      /* Local Client */
+      /* o->sprite_display_height =
+         mobile_calculate_terrain_sprite_height(
+            l->tilemap, o->sprite_height,
+            o->x, o->y ); */
+   } else {
+#endif /* ENABLE_LOCAL_CLIENT */
+      /* Server */
+      hashmap_iterate( l->clients, callback_send_updates_to_client, update );
+#ifdef ENABLE_LOCAL_CLIENT
+   }
+#endif /* ENABLE_LOCAL_CLIENT */
+
+cleanup:
+   bdestroy( animation_key );
+#endif // 0
+}

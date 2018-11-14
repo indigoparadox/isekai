@@ -586,7 +586,7 @@ cleanup:
 
 static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
-   struct MOBILE_UPDATE_PACKET update;
+   struct MOBILE_UPDATE_PACKET* update = NULL;
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
@@ -608,51 +608,44 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       input_clear_buffer( p );
       return FALSE; /* Silently ignore input until animations are done. */
    } else {
-
-      //ui = client_get_ui;
-      update.o = puppet;
       l = mobile_get_channel( puppet );
       lgc_null( l );
-      update.l = l;
-      //l = puppet->channel;
-      //lgc_null_msg( l, "No channel loaded." );
-      //t = client_get_tilemap( c );
-      //lgc_null_msg( t, "No tilemap loaded." );
+      update = action_packet_new( l, puppet, ACTION_OP_NONE, 0, 0, NULL );
    }
 
    /* If no windows need input, then move on to game input. */
    switch( p->character ) {
    case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
    case INPUT_ASSIGNMENT_UP:
-      update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = mobile_get_x( puppet );
-      update.y = mobile_get_y( puppet ) - 1;
+      action_packet_set_op( update, ACTION_OP_MOVEUP );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
-      update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = mobile_get_x( puppet ) - 1;
-      update.y = mobile_get_y( puppet );
+      action_packet_set_op( update, ACTION_OP_MOVELEFT );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
-      update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = mobile_get_x( puppet );
-      update.y = mobile_get_y( puppet ) + 1;
+      action_packet_set_op( update, ACTION_OP_MOVEDOWN );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
-      update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = mobile_get_x( puppet ) + 1;
-      update.y = mobile_get_y( puppet );
+      action_packet_set_op( update, ACTION_OP_MOVERIGHT );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, &update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_ATTACK:
-      update.update = MOBILE_UPDATE_ATTACK;
+      action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
       proto_client_send_update( c, &update );
       return TRUE;
@@ -687,6 +680,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
    case '\\':
       if( NULL == client_input_from_ui ) {
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) ) - 1;
          client_input_from_ui = bfromcstralloc( 80, "" );
          lgc_null( client_input_from_ui );
       }
@@ -720,7 +715,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 #endif /* DEBUG_TILES */
    }
 
-   cleanup:
+cleanup:
+   action_packet_free( &update );
    return FALSE;
 }
 
@@ -751,250 +747,6 @@ PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
    return PLUGIN_SUCCESS;
 }
 
-/** \brief Calculate the movement success between two tiles on the given
- *         mobile's present tilemap based on neighboring mobiles.
- * \param[in] x_1 Starting X.
- * \param[in] y_1 Starting Y.
- * \param[in] x_2 Finishing X.
- * \param[in] y_2 Finishing Y.
- * \return A MOBILE_UPDATE indicating action resulting.
- */
-static ACTION_OP mobile_calculate_mobile_result(
-   const struct CHANNEL* l, MOBILE_UPDATE update_in,
-   SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
-) {
-   struct TILEMAP_POSITION pos;
-   struct MOBILE* o_test = NULL;
-   MOBILE_UPDATE update_out = update_in;
-
-   if( ACTION_OP_NONE == update_in ) {
-      update_out = ACTION_OP_NONE;
-      goto cleanup;
-   }
-
-   pos.x = x_2;
-   pos.y = y_2;
-
-   o_test =
-      // XXX: NOLOCK
-      vector_iterate( l->mobiles, callback_search_mobs_by_pos, &pos );
-
-   if( NULL != o_test ) {
-      /* TODO: Default to something else for friendlies? */
-      /* update_out = ACTION_OP_ATTACK; */
-      update_out = ACTION_OP_NONE;
-   }
-
-cleanup:
-   return update_out;
-}
-
-static GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
-   struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_in,
-   TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
-) {
-   struct VECTOR* tiles_end = NULL;
-   struct TILEMAP_POSITION pos_end;
-   struct TILEMAP_TILE_DATA* tile_iter = NULL;
-   uint8_t i, j;
-   struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
-   GFX_COORD_PIXEL steps_inc_out = steps_inc_in;
-
-   pos_end.x = x_2;
-   pos_end.y = y_2;
-
-   /* Fetch the destination tile on all layers. */
-   tiles_end =
-      vector_iterate_v( t->layers, callback_get_tile_stack_l, &pos_end );
-
-   for( i = 0 ; vector_count( tiles_end ) > i ; i++ ) {
-      tile_iter = vector_get( tiles_end, i );
-      lgc_null( tile_iter );
-
-      for( j = 0 ; 4 > j ; j++ ) {
-         /* TODO: Implement terrain slow-down. */
-         terrain_iter = tile_iter->terrain[j];
-         if( NULL == terrain_iter ) { continue; }
-         if(
-            terrain_iter->movement != 0 &&
-            steps_inc_in / terrain_iter->movement < steps_inc_out
-         ) {
-            steps_inc_out = steps_inc_in / terrain_iter->movement;
-         }
-      }
-   }
-
-cleanup:
-   if( NULL != tiles_end ) {
-      vector_cleanup_force( tiles_end );
-      mem_free( tiles_end );
-   }
-   return steps_inc_out;
-}
-
-PLUGIN_RESULT mode_topdown_mobile_update( struct MOBILE_UPDATE_PACKET* update ) {
-   struct MOBILE* o = update->o;
-   struct CHANNEL* l = update->l;
-   bstring animation_key = NULL;
-
-   switch( update->update ) {
-   case MOBILE_UPDATE_MOVEUP:
-      if( (update->x != o->x || update->y != o->y - 1) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( l->tilemap, update->update,
-            o->x, o->y, update->x, update->y )) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_mobile_result( l, update->update,
-            o->x, o->y, update->x, update->y ))
-      ) {
-         goto cleanup;
-      }
-      o->prev_x = o->x; /* Forceful reset. */
-      o->y = update->y;
-      o->x = update->x;
-      o->facing = MOBILE_FACING_UP;
-      /* We'll calculate the actual animation frames to use in the per-mode
-       * update() function, where we have access to the current camera rotation
-       * and stuff like that. */
-      mobile_call_reset_animation( o );
-      o->steps_inc =
-         mobile_calculate_terrain_steps_inc(
-            l->tilemap, o->steps_inc_default,
-            o->x, o->y ) * -1;
-      if( FALSE != instant ) {
-         o->prev_y = o->y;
-      } else {
-         o->steps_remaining = MOBILE_STEPS_MAX;
-      }
-      break;
-
-   case MOBILE_UPDATE_MOVEDOWN:
-      if( (update->x != o->x || update->y != o->y + 1) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( l->tilemap, update->update,
-            o->x, o->y, update->x, update->y )) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_mobile_result( l, update->update,
-            o->x, o->y, update->x, update->y ))
-      ) {
-         goto cleanup;
-      }
-      o->prev_x = o->x; /* Forceful reset. */
-      o->y = update->y;
-      o->x = update->x;
-      o->facing = MOBILE_FACING_DOWN;
-      /* We'll calculate the actual animation frames to use in the per-mode
-       * update() function, where we have access to the current camera rotation
-       * and stuff like that. */
-      o->animation_reset = TRUE;
-      o->steps_inc =
-         mobile_calculate_terrain_steps_inc(
-            l->tilemap, o->steps_inc_default,
-            o->x, o->y );
-      if( FALSE != instant ) {
-         o->prev_y = o->y;
-      } else {
-         o->steps_remaining = MOBILE_STEPS_MAX * -1;
-      }
-      break;
-
-   case MOBILE_UPDATE_MOVELEFT:
-      if(
-         (update->x != o->x - 1 || update->y != o->y) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( l->tilemap, update->update,
-            o->x, o->y, update->x, update->y )) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_mobile_result( l, update->update,
-            o->x, o->y, update->x, update->y ))
-      ) {
-         goto cleanup;
-      }
-      o->prev_y = o->y; /* Forceful reset. */
-      o->y = update->y;
-      o->x = update->x;
-      o->facing = MOBILE_FACING_LEFT;
-      /* We'll calculate the actual animation frames to use in the per-mode
-       * update() function, where we have access to the current camera rotation
-       * and stuff like that. */
-      o->animation_reset = TRUE;
-      o->steps_inc =
-         mobile_calculate_terrain_steps_inc(
-            l->tilemap, o->steps_inc_default,
-            o->x, o->y ) * -1;
-      if( FALSE != instant ) {
-         o->prev_x = o->x;
-      } else {
-         o->steps_remaining = MOBILE_STEPS_MAX;
-      }
-      break;
-
-   case MOBILE_UPDATE_MOVERIGHT:
-      if(
-         (update->x != o->x + 1 || update->y != o->y) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_terrain_result( l->tilemap, update->update,
-            o->x, o->y, update->x, update->y )) ||
-         (MOBILE_UPDATE_NONE ==
-         mobile_calculate_mobile_result( l, update->update,
-            o->x, o->y, update->x, update->y ))
-      ) {
-         goto cleanup;
-      }
-      o->prev_y = o->y; /* Forceful reset. */
-      o->y = update->y;
-      o->x = update->x;
-      o->facing = MOBILE_FACING_RIGHT;
-      /* We'll calculate the actual animation frames to use in the per-mode
-       * update() function, where we have access to the current camera rotation
-       * and stuff like that. */
-      o->animation_reset = TRUE;
-      o->steps_inc =
-         mobile_calculate_terrain_steps_inc(
-            l->tilemap, o->steps_inc_default,
-            o->x, o->y );
-      if( FALSE != instant ) {
-         o->prev_x = o->x;
-      } else {
-         o->steps_remaining = MOBILE_STEPS_MAX * -1;
-      }
-      break;
-
-   case MOBILE_UPDATE_ATTACK:
-      break;
-
-   case MOBILE_UPDATE_NONE:
-      goto cleanup;
-   }
-
-#ifdef USE_VM
-#ifdef USE_TURNS
-   if(
-      NULL != o->owner
-#ifdef ENABLE_LOCAL_CLIENT
-      && TRUE != ipc_is_local_client( o->owner->link )
-#endif /* ENABLE_LOCAL_CLIENT */
-   ) {
-      vm_tick();
-   }
-#endif /* USE_TURNS */
-#endif /* USE_VM */
-
-#ifdef ENABLE_LOCAL_CLIENT
-   if( FALSE == instant ) {
-      /* Local Client */
-      /* o->sprite_display_height =
-         mobile_calculate_terrain_sprite_height(
-            l->tilemap, o->sprite_height,
-            o->x, o->y ); */
-   } else {
-#endif /* ENABLE_LOCAL_CLIENT */
-      /* Server */
-      hashmap_iterate( l->clients, callback_send_updates_to_client, update );
-#ifdef ENABLE_LOCAL_CLIENT
-   }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-cleanup:
-   bdestroy( animation_key );
+PLUGIN_RESULT mode_topdown_mobile_action( struct MOBILE_UPDATE_PACKET* update ) {
+// XXX: Call movement stuff.
 }

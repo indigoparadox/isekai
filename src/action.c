@@ -2,8 +2,9 @@
 #include "action.h"
 #include "tilemap.h"
 #include "channel.h"
+#include "plugin.h"
 
-struct VECTOR* action_queue_v = NULL;
+static struct VECTOR* action_queue_v = NULL;
 
 struct ACTION_PACKET {
    struct MOBILE* o;
@@ -55,8 +56,35 @@ cleanup:
  * \return What the update becomes to send to the clients. MOBILE_UPDATE_NONE
  *         if the update failed to occur.
  */
-void action_queue( struct ACTION_PACKET* update ) {
+void action_enqueue( struct ACTION_PACKET* update ) {
 
+   if( NULL == action_queue_v ) {
+      action_queue_v = vector_new();
+   }
+
+   vector_push( action_queue_v, update );
+}
+
+size_t action_queue_proc( bstring mode_id ) {
+   size_t handled = 0;
+   size_t failed = 0;
+   struct ACTION_PACKET* update = NULL;
+   PLUGIN_RESULT res = 0;
+
+   while( 0 < vector_count( action_queue_v ) ) {
+      update = vector_pop( action_queue_v );
+      res = plugin_call( PLUGIN_MODE, mode_id, PLUGIN_MOBILE_ACTION, update );
+      action_packet_free( update );
+      if( PLUGIN_SUCCESS ) {
+         handled++;
+      } else {
+         failed++;
+      }
+   }
+
+   lg_debug( "Actions processed: %d successful, %d failed.\n", handled, failed );
+
+   return handled;
 }
 
 struct CHANNEL* action_packet_get_channel( struct ACTION_PACKET* update ) {
