@@ -877,6 +877,10 @@
 		<Unit filename="procircd.def">
 			<Option target="Debug (Palm-SB)" />
 		</Unit>
+		<Unit filename="src/action.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/action.h" />
 		<Unit filename="src/animate.c">
 			<Option compilerVar="CC" />
 		</Unit>

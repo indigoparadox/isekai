@@ -6,6 +6,7 @@
 #include "server.h"
 #include "ref.h"
 #include "chunker.h"
+#include "action.h"
 
 void proto_register( struct CLIENT* c );
 void proto_client_join( struct CLIENT* c, const bstring name );
@@ -26,8 +27,8 @@ void proto_send_tile_cache_channel(
    struct CHANNEL* l, struct TILEMAP_ITEM_CACHE* cache
 );
 #endif // USE_ITEMS
-void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
-void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update );
+void proto_server_send_update( struct CLIENT* c, struct ACTION_PACKET* update );
+void proto_client_send_update( struct CLIENT* c, struct ACTION_PACKET* update );
 void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg );
 void proto_send_msg_client( struct CLIENT* c, struct CLIENT* cd, bstring msg );
 void proto_send_msg( struct CLIENT* c, bstring dest, bstring msg );

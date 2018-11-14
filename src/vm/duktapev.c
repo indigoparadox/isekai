@@ -75,11 +75,11 @@ duk_bool_t duktape_use_exec_timeout_check( void* udata ) {
 }
 
 static duk_number_list_entry mobile_update_enum[] = {
-   { "moveUp", MOBILE_UPDATE_MOVEUP },
-   { "moveDown", MOBILE_UPDATE_MOVEDOWN },
-   { "moveLeft", MOBILE_UPDATE_MOVELEFT },
-   { "moveRight", MOBILE_UPDATE_MOVERIGHT },
-   { "attack", MOBILE_UPDATE_ATTACK },
+   { "moveUp", ACTION_OP_MOVEUP },
+   { "moveDown", ACTION_OP_MOVEDOWN },
+   { "moveLeft", ACTION_OP_MOVELEFT },
+   { "moveRight", ACTION_OP_MOVERIGHT },
+   { "attack", ACTION_OP_ATTACK },
    { NULL, 0.0 }
 };
 
@@ -126,7 +126,7 @@ static duk_ret_t duk_cb_vm_random( duk_context* vm ) {
 
 static duk_ret_t duk_cb_vm_update( duk_context* vm ) {
    MOBILE_UPDATE action = (MOBILE_UPDATE)duk_to_int( vm, -1 );
-   struct MOBILE_UPDATE_PACKET update = { 0 };
+   struct ACTION_PACKET update = { 0 };
    struct VM_CADDY* caddy = NULL;
    struct MOBILE* o = NULL;
 
@@ -141,22 +141,22 @@ static duk_ret_t duk_cb_vm_update( duk_context* vm ) {
       update.update = action;
 
       switch( action ) {
-      case MOBILE_UPDATE_MOVEUP:
+      case ACTION_OP_MOVEUP:
          update.x = o->x;
          update.y = o->y - 1;
          break;
 
-      case MOBILE_UPDATE_MOVEDOWN:
+      case ACTION_OP_MOVEDOWN:
          update.x = o->x;
          update.y = o->y + 1;
          break;
 
-      case MOBILE_UPDATE_MOVELEFT:
+      case ACTION_OP_MOVELEFT:
          update.x = o->x - 1;
          update.y = o->y;
          break;
 
-      case MOBILE_UPDATE_MOVERIGHT:
+      case ACTION_OP_MOVERIGHT:
          update.x = o->x + 1;
          update.y = o->y;
          break;

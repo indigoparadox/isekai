@@ -76,10 +76,10 @@ void proto_send_tile_cache_channel(
 ) {
 }
 
-void proto_server_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+void proto_server_send_update( struct CLIENT* c, struct ACTION_PACKET* update ) {
 }
 
-void proto_client_send_update( struct CLIENT* c, struct MOBILE_UPDATE_PACKET* update ) {
+void proto_client_send_update( struct CLIENT* c, struct ACTION_PACKET* update ) {
 }
 
 void proto_send_msg_channel( struct CLIENT* c, struct CHANNEL* ld, bstring msg ) {
