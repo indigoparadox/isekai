@@ -335,7 +335,7 @@ GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_x != o->x ) {
-      if( TRUE != reverse ) {
+      if( !reverse ) {
          steps_out = o->steps_remaining;
       } else {
          steps_out = -1 * o->steps_remaining;
@@ -349,7 +349,7 @@ GFX_COORD_PIXEL
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_y != o->y ) {
-      if( TRUE != reverse ) {
+      if( !reverse ) {
          steps_out = o->steps_remaining;
       } else {
          steps_out = -1 * o->steps_remaining;

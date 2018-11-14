@@ -299,7 +299,7 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_x( mobile_get_x( o_player ), twindow )
       )
    ) {
-      screen_x += mobile_get_steps_remaining_x( o_player, TRUE );
+      screen_x -= mobile_get_steps_remaining_x( o_player, TRUE );
    }
 
    if(
@@ -314,7 +314,7 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_y( mobile_get_y( o_player ), twindow )
       )
    ) {
-      screen_y += mobile_get_steps_remaining_y( o_player, TRUE );
+      screen_y -= mobile_get_steps_remaining_y( o_player, TRUE );
    }
 
    tilemap_tile_draw_ortho( layer, x, y, screen_x, screen_y, set, twindow );
@@ -374,19 +374,25 @@ static void mode_topdown_tilemap_update_window(
 
    /* TODO: Request item caches for tiles scrolling into view. */
 
+#if 0
    /* Find the focal point if we're not centered on it. */
    if(
       focal_x < twindow_get_x( twindow ) ||
       focal_x > twindow_get_x( twindow ) + twindow_get_width( twindow )
    ) {
-      twindow_set_x( twindow, focal_x - (twindow_get_width( twindow ) / 2) );
+      border_x = focal_x - (twindow_get_width( twindow ) / 2);
+      lg_debug( __FILE__, "Setting focal X: %d\n", border_x );
+      twindow_set_x( twindow, border_x );
    }
    if(
       focal_y < twindow_get_y( twindow ) ||
       focal_y > twindow_get_y( twindow ) + twindow_get_height( twindow )
    ) {
-      twindow_set_y( twindow, focal_y - (twindow_get_height( twindow ) / 2) );
+      border_y = focal_y - (twindow_get_height( twindow ) / 2);
+      lg_debug( __FILE__, "Setting focal Y: %d\n", border_y );
+      twindow_set_y( twindow, border_y );
    }
+#endif // 0
 
    /* Scroll the window to follow the focal point. */
    exclusion = tilemap_inside_window_deadzone_x( focal_x, twindow );
@@ -499,9 +505,6 @@ static void mode_topdown_tilemap_draw_tilemap( struct TWINDOW* twindow ) {
    if( NULL == t ) {
       return;
    }
-
-   // XXX: TEST
-   tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
 
    /* Redraw all tiles if requested. */
    if(
