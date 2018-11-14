@@ -77,7 +77,9 @@ void datafile_handle_stream(
 ) {
    struct CHANNEL* l = NULL;
    struct MOBILE* o = NULL;
+#ifdef USE_ITEMS
    struct ITEM_SPRITESHEET* catalog = NULL;
+#endif // USE_ITEMS
    struct TILEMAP_TILESET* set = NULL;
    bstring mob_id = NULL;
    GRAPHICS* g = NULL;

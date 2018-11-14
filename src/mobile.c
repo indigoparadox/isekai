@@ -332,7 +332,6 @@ cleanup:
    return;
 }
 
-SCAFFOLD_INLINE
 GFX_COORD_PIXEL
 mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
@@ -346,7 +345,6 @@ mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
    return steps_out;
 }
 
-SCAFFOLD_INLINE
 GFX_COORD_PIXEL
 mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
@@ -504,6 +502,7 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
    }
 }
 
+#if 0 // XXX
 /** \brief Calculate the movement success between two tiles on the given
  *         mobile's present tilemap based on all available layers.
  * \param[in] x_1 Starting X.
@@ -513,12 +512,11 @@ void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l ) {
  * \return A MOBILE_UPDATE indicating action resulting.
  */
 void mobile_calculate_terrain_result(
-   struct TILEMAP* t, struct ACTION_PACKET* update_in,
+   struct TILEMAP* t, struct ACTION_PACKET* update,
    TILEMAP_COORD_TILE x_1, TILEMAP_COORD_TILE y_1, TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 ) {
    struct VECTOR* tiles_end = NULL;
    struct TILEMAP_POSITION pos_end;
-   struct ACTION_PACKET* update_out = update_in;
    struct TILEMAP_TILE_DATA* tile_iter = NULL;
    uint8_t i, j;
    struct TILEMAP_TERRAIN_DATA* terrain_iter = NULL;
@@ -570,6 +568,7 @@ cleanup:
    }
    return;
 }
+#endif // 0
 
 /** \brief This inserts a line of speech into the local speech buffer.
  *         It should be called by AI speech routines or the receiver for
@@ -1005,6 +1004,54 @@ cleanup:
    return steps_inc_out;
 }
 
+void mobile_set_steps_inc( struct MOBILE* o, GFX_COORD_PIXEL inc ) {
+   o->steps_inc = inc;
+}
+
+GFX_COORD_PIXEL mobile_get_steps_inc_default( struct MOBILE* o ) {
+   if( NULL == o ) {
+      return 0;
+   }
+   return o->steps_inc_default;
+}
+
+void mobile_update_x( struct MOBILE* o, TILEMAP_COORD_TILE x ) {
+   lgc_null( o );
+   o->prev_x = o->x;
+   o->x = x;
+cleanup:
+   return;
+}
+
+void mobile_update_y( struct MOBILE* o, TILEMAP_COORD_TILE y ) {
+   lgc_null( o );
+   o->prev_y = o->y;
+   o->y = y;
+cleanup:
+   return;
+}
+
+void mobile_set_x( struct MOBILE* o, TILEMAP_COORD_TILE x ) {
+   lgc_null( o );
+   o->x = x;
+cleanup:
+   return;
+}
+
+void mobile_set_y( struct MOBILE* o, TILEMAP_COORD_TILE y ) {
+   lgc_null( o );
+   o->y = y;
+cleanup:
+   return;
+}
+
+void mobile_set_steps_remaining( struct MOBILE* o, GFX_COORD_PIXEL sr ) {
+   lgc_null( o );
+   o->steps_remaining = sr;
+cleanup:
+   return;
+}
+
 BOOL mobile_walk(
    struct MOBILE* o,
    TILEMAP_COORD_TILE dest_x,
@@ -1016,6 +1063,8 @@ BOOL mobile_walk(
    int diff_x = 0,
       diff_y = 0;
    struct TILEMAP* t = NULL;
+   BOOL success = FALSE;
+   GFX_COORD_PIXEL steps = 0, inc = 0;
 
    lgc_null( o );
 
@@ -1027,17 +1076,29 @@ BOOL mobile_walk(
 
    /* switch( action_packet_get_op( update ) ) {
    case ACTION_OP_MOVEUP: */
+   if(
+      mobile_get_x( o ) != mobile_get_prev_x( o ) ||
+      mobile_get_y( o ) != mobile_get_prev_y( o )
+   ) {
+      lg_error(
+         __FILE__,
+         "Mobile (%d) already walking.\n", mobile_get_serial( o )
+      );
+      goto cleanup;
+   }
 
    /* Check for valid movement range. */
    if(
-      dest_x != start_x - 1 ||
-      dest_x != start_x + 1 ||
-      dest_y != start_y - 1 ||
+      dest_x != start_x &&
+      dest_x != start_x - 1 &&
+      dest_x != start_x + 1 &&
+      dest_y != start_y &&
+      dest_y != start_y - 1 &&
       dest_y != start_y + 1
    ) {
       lg_error( __FILE__,
-         "Attempted to walk invalid distance: %d, %d to %d, %d\n",
-         start_x, start_y, dest_x, dest_y
+         "Mobile (%d) attempted to walk invalid distance: %d, %d to %d, %d\n",
+         mobile_get_serial( o ), start_x, start_y, dest_x, dest_y
       );
       goto cleanup;
    }
@@ -1056,7 +1117,7 @@ BOOL mobile_walk(
       )
    ) {
       lg_error( __FILE__,
-         "Mobile walking blocked: %d, %d to %d, %d",
+         "Mobile walking blocked: %d, %d to %d, %d\n",
          start_x, start_y, dest_x, dest_y
       );
       goto cleanup;
@@ -1107,17 +1168,23 @@ BOOL mobile_walk(
     * update() function, where we have access to the current camera rotation
     * and stuff like that. */
    mobile_call_reset_animation( o );
-   mobile_set_steps_inc( o,
-      mobile_calculate_terrain_steps_inc(
-         t, mobile_get_steps_inc_default( o ),
-         mobile_get_x( o ), mobile_get_y( o ) * -1 ) );
-   // This is walk, it's never instant.
-   //if( !instant ) {
-      o->prev_y = o->y;
-   /*} else {
-      mobile_set_steps_remaining( MOBILE_STEPS_MAX );
-      o->steps_remaining = MOBILE_STEPS_MAX;
-   }*/
+
+   lg_debug( __FILE__, "Movement diff: (X) %d, (Y) %d\n", diff_x, diff_y );
+   if( 0 != diff_x ) {
+      steps = MOBILE_STEPS_MAX * diff_x;
+   }
+   if( 0 != diff_y ) {
+      steps = MOBILE_STEPS_MAX * diff_y;
+   }
+   inc = mobile_calculate_terrain_steps_inc(
+      t, mobile_get_steps_inc_default( o ), dest_x, dest_y );
+   mobile_set_steps_remaining( o, steps );
+   mobile_set_steps_inc( o, inc );
+
+   lg_debug( __FILE__, "Setting steps: %d (+%d)\n", steps, inc );
+
+   /* Everything seemed to work out. */
+   success = TRUE;
 
 #if 0
    case MOBILE_UPDATE_MOVEDOWN:
@@ -1251,5 +1318,5 @@ cleanup:
    bdestroy( animation_key );
 #endif // 0
 cleanup:
-   return;
+   return success;
 }

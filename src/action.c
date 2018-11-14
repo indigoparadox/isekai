@@ -74,15 +74,17 @@ size_t action_queue_proc( bstring mode_id ) {
    while( 0 < vector_count( action_queue_v ) ) {
       update = vector_dequeue( action_queue_v );
       res = plugin_call( PLUGIN_MODE, mode_id, PLUGIN_MOBILE_ACTION, update );
-      action_packet_free( update );
-      if( PLUGIN_SUCCESS ) {
+      action_packet_free( &update );
+      if( PLUGIN_SUCCESS == res ) {
          handled++;
       } else {
          failed++;
       }
    }
 
-   lg_debug( "Actions processed: %d successful, %d failed.\n", handled, failed );
+   if( 0 < handled || 0 < failed ) {
+      lg_debug( __FILE__, "Actions processed: %d successful, %d failed.\n", handled, failed );
+   }
 
    return handled;
 }
@@ -141,6 +143,33 @@ void action_packet_free( struct ACTION_PACKET** update ) {
    mem_free( *update );
    *update = NULL;
 
+cleanup:
+   return;
+}
+
+void action_packet_set_op(
+   struct ACTION_PACKET* update, enum ACTION_OP op
+) {
+   lgc_null( update );
+   update->update = op;
+cleanup:
+   return;
+}
+
+void action_packet_set_tile_x(
+   struct ACTION_PACKET* update, TILEMAP_COORD_TILE x
+) {
+   lgc_null( update );
+   update->x = x;
+cleanup:
+   return;
+}
+
+void action_packet_set_tile_y(
+   struct ACTION_PACKET* update, TILEMAP_COORD_TILE y
+) {
+   lgc_null( update );
+   update->y = y;
 cleanup:
    return;
 }
