@@ -24,12 +24,20 @@ struct ACTION_PACKET* action_packet_new(
    TILEMAP_COORD_TILE tile_y,
    struct MOBILE* target
 );
-void action_queue( struct ACTION_PACKET* update );
+void action_enqueue( struct ACTION_PACKET* update );
+size_t action_queue_proc( bstring mode_id );
 struct CHANNEL* action_packet_get_channel( struct ACTION_PACKET* update );
 struct MOBILE* action_packet_get_mobile( struct ACTION_PACKET* update );
 struct MOBILE* action_packet_get_target( struct ACTION_PACKET* update );
 TILEMAP_COORD_TILE action_packet_get_tile_x( struct ACTION_PACKET* update );
 TILEMAP_COORD_TILE action_packet_get_tile_y( struct ACTION_PACKET* update );
 enum ACTION_OP action_packet_get_op( struct ACTION_PACKET* update );
+void action_packet_free( struct ACTION_PACKET** update );
+void action_packet_set_op(
+   struct ACTION_PACKET* update, enum ACTION_OP op );
+void action_packet_set_tile_x(
+   struct ACTION_PACKET* update, TILEMAP_COORD_TILE x );
+void action_packet_set_tile_y(
+   struct ACTION_PACKET* update, TILEMAP_COORD_TILE y );
 
 #endif /* ACTION_H */

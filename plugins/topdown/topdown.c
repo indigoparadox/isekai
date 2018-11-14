@@ -586,7 +586,7 @@ cleanup:
 
 static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
-   struct MOBILE_UPDATE_PACKET* update = NULL;
+   struct ACTION_PACKET* update = NULL;
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
@@ -595,6 +595,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 #ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
 #endif // USE_ITEMS
+
+   scaffold_assert_client();
 
    puppet = client_get_puppet( c );
 
@@ -620,34 +622,34 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       action_packet_set_op( update, ACTION_OP_MOVEUP );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
-      proto_client_send_update( c, &update );
+      proto_client_send_update( c, update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
       action_packet_set_op( update, ACTION_OP_MOVELEFT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
-      proto_client_send_update( c, &update );
+      proto_client_send_update( c, update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
       action_packet_set_op( update, ACTION_OP_MOVEDOWN );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
-      proto_client_send_update( c, &update );
+      proto_client_send_update( c, update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
       action_packet_set_op( update, ACTION_OP_MOVERIGHT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
-      proto_client_send_update( c, &update );
+      proto_client_send_update( c, update );
       return TRUE;
 
    case INPUT_ASSIGNMENT_ATTACK:
       action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
-      proto_client_send_update( c, &update );
+      proto_client_send_update( c, update );
       return TRUE;
 
 #ifdef USE_ITEMS
@@ -680,8 +682,8 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
    case '\\':
       if( NULL == client_input_from_ui ) {
-      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
-      action_packet_set_tile_y( update, mobile_get_y( puppet ) ) - 1;
+         action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+         action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
          client_input_from_ui = bfromcstralloc( 80, "" );
          lgc_null( client_input_from_ui );
       }
@@ -720,7 +722,9 @@ cleanup:
    return FALSE;
 }
 
-PLUGIN_RESULT mode_topdown_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+PLUGIN_RESULT mode_topdown_poll_input(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
+) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
@@ -747,6 +751,14 @@ PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
    return PLUGIN_SUCCESS;
 }
 
-PLUGIN_RESULT mode_topdown_mobile_action( struct MOBILE_UPDATE_PACKET* update ) {
+PLUGIN_RESULT mode_topdown_mobile_action( struct ACTION_PACKET* update ) {
 // XXX: Call movement stuff.
+
+   scaffold_assert_client();
+   mobile_walk(
+      action_packet_get_mobile( update ),
+      action_packet_get_tile_x( update ),
+      action_packet_get_tile_y( update ) );
+
+   return PLUGIN_SUCCESS;
 }

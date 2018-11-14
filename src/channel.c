@@ -382,12 +382,24 @@ size_t channel_get_clients_count( const struct CHANNEL* l ) {
    return hashmap_count( l->clients );
 }
 
+static void* cb_channel_mobs_by_pos( size_t idx, const void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct TILEMAP_POSITION* pos = (struct TILEMAP_POSITION*)arg;
+   struct MOBILE* o_out = NULL;
+
+   if( NULL != o && mobile_get_x( o ) == pos->x && mobile_get_y( o ) == pos->y ) {
+      o_out = o;
+   }
+
+   return o_out;
+}
+
 struct MOBILE* channel_search_mobiles(
    const struct CHANNEL* l, struct TILEMAP_POSITION* pos
 ) {
    struct MOBILE* out = NULL;
    lgc_null( l );
-   out = vector_iterate_x( l->mobiles, callback_search_mobs_by_pos, pos );
+   out = vector_iterate_x( l->mobiles, cb_channel_mobs_by_pos, pos );
 cleanup:
    return out;
 }

@@ -7,6 +7,7 @@
 #include "input.h"
 #include "files.h"
 #include "callback.h"
+#include "action.h"
 
 #include <dlfcn.h>
 
@@ -26,6 +27,7 @@ typedef PLUGIN_RESULT plugin_mode_update( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_draw( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 typedef PLUGIN_RESULT plugin_mode_free( struct CLIENT* c );
+typedef PLUGIN_RESULT plugin_mode_mobile_action( struct ACTION_PACKET* update );
 
 union PLUGIN_CALL_FUNC {
    plugin_mode_init* init;
@@ -33,6 +35,7 @@ union PLUGIN_CALL_FUNC {
    plugin_mode_draw* draw;
    plugin_mode_poll_input* poll_input;
    plugin_mode_free* free;
+   plugin_mode_mobile_action* mobile_action;
 };
 
 static struct HASHMAP* plugin_list_mode;
@@ -212,6 +215,7 @@ PLUGIN_RESULT plugin_call(
    struct CLIENT* c = NULL;
    struct CHANNEL* l = NULL;
    struct INPUT* p = NULL;
+   struct ACTION_PACKET* update = NULL;
 
    switch( ptype ) {
       case PLUGIN_MODE:
@@ -264,6 +268,14 @@ PLUGIN_RESULT plugin_call(
          ret = f.poll_input( c, l, p );
          break;
 
+      case PLUGIN_MOBILE_ACTION:
+         plugin_setup( "mode_%s_mobile_action", mobile_action );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
+         update = va_arg( varg, struct ACTION_PACKET* );
+         ret = f.mobile_action( update );
+         break;
 
       case PLUGIN_FREE:
          plugin_setup( "mode_%s_free", free );
