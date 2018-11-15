@@ -931,6 +931,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/animate.h" />
+		<Unit filename="src/audition.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/audition.h" />
 		<Unit filename="src/b64.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
