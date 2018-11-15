@@ -72,7 +72,7 @@ typedef long SCAFFOLD_SIZE_SIGNED;
 #define USE_CLOCK 1
 #define USE_FILE 1
 
-#elif defined( __linux )
+#elif defined( __linux ) || defined( DJGPP )
 
 #define _GNU_SOURCE
 #undef _POSIX_SOURCE

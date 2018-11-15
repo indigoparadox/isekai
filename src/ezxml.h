@@ -44,7 +44,7 @@ struct ezxml {
     char *name;      /* tag name */
     char **attr;     /* tag attributes { name, value, name, value, ... NULL } */
     char *txt;       /* tag character content, empty string if none */
-    SCAFFOLD_SIZE off;      /* tag offset from start of parent tag character content */
+    size_t off;      /* tag offset from start of parent tag character content */
     ezxml_t next;    /* next tag with same name in this section at this depth */
     ezxml_t sibling; /* next tag with different name in same section and depth */
     ezxml_t ordered; /* next tag, same section and depth, in original order */
