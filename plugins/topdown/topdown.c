@@ -67,7 +67,7 @@ static void* mode_topdown_draw_mobile_cb(
 
    if( NULL == o ) { return NULL; }
 
-   if( TRUE == mobile_get_animation_reset( o ) ) {
+   if( mobile_get_animation_reset( o ) ) {
       mobile_do_reset_2d_animation( o );
    }
    mobile_animate( o );
