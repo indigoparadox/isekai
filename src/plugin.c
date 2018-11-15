@@ -45,7 +45,7 @@ static void* cb_plugin_load( size_t idx, void* iter, void* arg ) {
    bstring entry_base = NULL;
    int found = 0;
    int entry_pos = 0;
-   char i = NULL;
+   char i = '\0';
    PLUGIN_TYPE ptype = *(PLUGIN_TYPE*)arg;
 
    entry_base = bfromcstr( "" );
@@ -268,8 +268,17 @@ PLUGIN_RESULT plugin_call(
          ret = f.poll_input( c, l, p );
          break;
 
-      case PLUGIN_MOBILE_ACTION:
-         plugin_setup( "mode_%s_mobile_action", mobile_action );
+      case PLUGIN_MOBILE_ACTION_SERVER:
+         plugin_setup( "mode_%s_mobile_action_server", mobile_action );
+         #ifdef DEBUG_PLUGIN_CALL
+         lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
+         #endif /* DEBUG_PLUGIN_CALL */
+         update = va_arg( varg, struct ACTION_PACKET* );
+         ret = f.mobile_action( update );
+         break;
+
+      case PLUGIN_MOBILE_ACTION_CLIENT:
+         plugin_setup( "mode_%s_mobile_action_client", mobile_action );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */

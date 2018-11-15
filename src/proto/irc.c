@@ -1081,7 +1081,7 @@ static void irc_server_gameupdate(
    lgc_null( update );
 
    /* Everything checks out! */
-   action_enqueue( update );
+   action_enqueue( update, ACTION_QUEUE_SERVER );
 
 cleanup:
    return;
@@ -1154,7 +1154,7 @@ static void irc_client_gu(
    );
    lgc_null( update );
 
-   action_enqueue( update );
+   action_enqueue( update, ACTION_QUEUE_CLIENT );
 
 cleanup:
    return;

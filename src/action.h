@@ -4,6 +4,12 @@
 
 #include "tilemap.h"
 
+enum ACTION_QUEUE {
+   ACTION_QUEUE_CLIENT = 0,
+   ACTION_QUEUE_SERVER = 1,
+   ACTION_QUEUE_COUNT = 2
+};
+
 enum ACTION_OP {
    ACTION_OP_NONE,
    ACTION_OP_MOVEUP,
@@ -24,8 +30,8 @@ struct ACTION_PACKET* action_packet_new(
    TILEMAP_COORD_TILE tile_y,
    struct MOBILE* target
 );
-void action_enqueue( struct ACTION_PACKET* update );
-size_t action_queue_proc( bstring mode_id );
+void action_enqueue( struct ACTION_PACKET* update, enum ACTION_QUEUE q );
+size_t action_queue_proc( bstring mode_id, enum ACTION_QUEUE q );
 struct CHANNEL* action_packet_get_channel( struct ACTION_PACKET* update );
 struct MOBILE* action_packet_get_mobile( struct ACTION_PACKET* update );
 struct MOBILE* action_packet_get_target( struct ACTION_PACKET* update );

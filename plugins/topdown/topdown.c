@@ -299,7 +299,7 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_x( mobile_get_x( o_player ), twindow )
       )
    ) {
-      screen_x -= mobile_get_steps_remaining_x( o_player, TRUE );
+      screen_x += mobile_get_steps_remaining_x( o_player, TRUE );
    }
 
    if(
@@ -314,7 +314,7 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_y( mobile_get_y( o_player ), twindow )
       )
    ) {
-      screen_y -= mobile_get_steps_remaining_y( o_player, TRUE );
+      screen_y += mobile_get_steps_remaining_y( o_player, TRUE );
    }
 
    tilemap_tile_draw_ortho( layer, x, y, screen_x, screen_y, set, twindow );
@@ -751,14 +751,116 @@ PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
    return PLUGIN_SUCCESS;
 }
 
-PLUGIN_RESULT mode_topdown_mobile_action( struct ACTION_PACKET* update ) {
-// XXX: Call movement stuff.
+/* Mobile action chain of events is roughly:
+ *
+ * (Client-Side) Keyboard > Protocol Message > Server Action
+ *
+ * During the server action, the movement is either determined to be blocked
+ * (and subsequently ignored) or allowed and propogated to all clients
+ * (including the one that initiated the action).
+ *
+ * Having the plugin decide how the chain of actions happens theoretically
+ * leaves the door open for plugins that are "smarter" at handling bad network
+ * conditions later on (e.g. by predicting movements client-side).
+ */
+
+PLUGIN_RESULT mode_topdown_mobile_action_client( struct ACTION_PACKET* update ) {
+   struct MOBILE* o = NULL;
+   GFX_COORD_PIXEL steps_increment = 0;
+   struct TILEMAP* t = NULL;
 
    scaffold_assert_client();
-   mobile_walk(
-      action_packet_get_mobile( update ),
-      action_packet_get_tile_x( update ),
-      action_packet_get_tile_y( update ) );
 
+   o = action_packet_get_mobile( update );
+   lgc_null( o );
+   t = mobile_get_tilemap( o );
+   lgc_null( t );
+
+   steps_increment = mobile_calculate_terrain_steps_inc(
+      t,
+      mobile_get_steps_inc_default( o ),
+      action_packet_get_tile_x( update ),
+      action_packet_get_tile_y( update )
+   );
+
+   lg_debug(
+      __FILE__, "Mobile %d walking with speed: %d\n",
+      mobile_get_serial( o ), steps_increment
+   );
+
+   mobile_walk(
+      o,
+      action_packet_get_tile_x( update ),
+      action_packet_get_tile_y( update ),
+      steps_increment
+   );
+
+cleanup:
+   return PLUGIN_SUCCESS;
+}
+
+PLUGIN_RESULT mode_topdown_mobile_action_server( struct ACTION_PACKET* update ) {
+   struct MOBILE* o = NULL;
+   struct CHANNEL* l = NULL;
+   GFX_COORD_PIXEL steps_increment = 0;
+   struct TILEMAP* t = NULL;
+   TILEMAP_COORD_TILE dest_x = 0,
+      dest_y = 0;
+
+// XXX: Call movement stuff.
+
+   /* Check for valid movement range. */
+   /* if(
+      dest_x != start_x - 1 &&
+      dest_x != start_x + 1 &&
+      dest_y != start_y - 1 &&
+      dest_y != start_y + 1
+   ) {
+      lg_error( __FILE__,
+         "Mobile (%d) attempted to walk invalid distance: %d, %d to %d, %d\n",
+         mobile_get_serial( o ), start_x, start_y, dest_x, dest_y
+      );
+      goto cleanup;
+   } */
+
+   o = action_packet_get_mobile( update );
+   lgc_null( o );
+   t = mobile_get_tilemap( o );
+   lgc_null( t );
+
+   dest_x = action_packet_get_tile_x( update );
+   dest_y = action_packet_get_tile_y( update );
+
+   steps_increment = mobile_calculate_terrain_steps_inc(
+      t, mobile_get_steps_inc_default( o ), dest_x, dest_y );
+
+   /* Check for blockers. */
+   if(
+      0 >= steps_increment ||
+      !mobile_calculate_mobile_collision(
+         o,
+         mobile_get_x( o ), mobile_get_y( o ),
+         dest_x, dest_y
+      )
+   ) {
+      lg_error( __FILE__,
+         "Mobile walking blocked: %d, %d to %d, %d\n",
+         mobile_get_x( o ),  mobile_get_y( o ), dest_x, dest_y
+      );
+      goto cleanup;
+   }
+
+   scaffold_assert_server();
+   o = action_packet_get_mobile( update );
+   /* TODO: Check obstacles. */
+   mobile_set_x( o, action_packet_get_tile_x( update ) );
+   mobile_set_y( o, action_packet_get_tile_y( update ) );
+   mobile_set_prev_x( o, action_packet_get_tile_x( update ) );
+   mobile_set_prev_y( o, action_packet_get_tile_y( update ) );
+
+   l = action_packet_get_channel( update );
+   hashmap_iterate( l->clients, callback_send_updates_to_client, update );
+
+cleanup:
    return PLUGIN_SUCCESS;
 }
