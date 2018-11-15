@@ -4,7 +4,7 @@
 #include "channel.h"
 #include "plugin.h"
 
-static struct VECTOR* action_queue_v = NULL;
+static struct VECTOR* action_queue[ACTION_QUEUE_COUNT] = { 0 };
 
 struct ACTION_PACKET {
    struct MOBILE* o;
@@ -49,31 +49,33 @@ cleanup:
    return update;
 }
 
-/** \brief Apply an update received from a remote client to a local mobile.
- * \param[in] update    Packet containing update information.
- * \param[in] instant   A BOOL indicating whether to force the update instantly
- *                      or allow any relevant animations to take place.
- * \return What the update becomes to send to the clients. MOBILE_UPDATE_NONE
- *         if the update failed to occur.
- */
-void action_enqueue( struct ACTION_PACKET* update ) {
+void action_enqueue( struct ACTION_PACKET* update, enum ACTION_QUEUE q ) {
 
-   if( NULL == action_queue_v ) {
-      action_queue_v = vector_new();
+   if( NULL == action_queue[q] ) {
+      action_queue[q] = vector_new();
    }
 
-   vector_enqueue( action_queue_v, update );
+   lg_debug( __FILE__, "Enqueing update in queue %d.\n", q );
+
+   vector_enqueue( action_queue[q], update );
 }
 
-size_t action_queue_proc( bstring mode_id ) {
+size_t action_queue_proc( bstring mode_id, enum ACTION_QUEUE q ) {
    size_t handled = 0;
    size_t failed = 0;
    struct ACTION_PACKET* update = NULL;
    PLUGIN_RESULT res = 0;
+   enum PLUGIN_CALL act_side;
 
-   while( 0 < vector_count( action_queue_v ) ) {
-      update = vector_dequeue( action_queue_v );
-      res = plugin_call( PLUGIN_MODE, mode_id, PLUGIN_MOBILE_ACTION, update );
+   if( ACTION_QUEUE_CLIENT == q ) {
+      act_side = PLUGIN_MOBILE_ACTION_CLIENT;
+   } else {
+      act_side = PLUGIN_MOBILE_ACTION_SERVER;
+   }
+
+   while( 0 < vector_count( action_queue[q] ) ) {
+      update = vector_dequeue( action_queue[q] );
+      res = plugin_call( PLUGIN_MODE, mode_id, act_side, update );
       action_packet_free( &update );
       if( PLUGIN_SUCCESS == res ) {
          handled++;
@@ -83,7 +85,11 @@ size_t action_queue_proc( bstring mode_id ) {
    }
 
    if( 0 < handled || 0 < failed ) {
-      lg_debug( __FILE__, "Actions processed: %d successful, %d failed.\n", handled, failed );
+      lg_debug(
+         __FILE__,
+         "Actions processed (Q%d): %d successful, %d failed.\n",
+         q, handled, failed
+      );
    }
 
    return handled;

@@ -124,7 +124,7 @@ void mobile_update_coords(
    struct MOBILE* o, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void mobile_add_ref( struct MOBILE* o );
-BOOL mobile_calculate_mobile_result(
+BOOL mobile_calculate_mobile_collision(
    struct MOBILE* o,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 );
@@ -135,8 +135,16 @@ void mobile_set_y( struct MOBILE* o, TILEMAP_COORD_TILE y );
 BOOL mobile_walk(
    struct MOBILE* o,
    TILEMAP_COORD_TILE dest_x,
-   TILEMAP_COORD_TILE dest_y
+   TILEMAP_COORD_TILE dest_y,
+   GFX_COORD_PIXEL steps_increment
 );
+void mobile_set_prev_x( struct MOBILE* o, TILEMAP_COORD_TILE x );
+void mobile_set_prev_y( struct MOBILE* o, TILEMAP_COORD_TILE y );
+GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
+   struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_default,
+   TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
+);
+BOOL mobile_is_walking( const struct MOBILE* o );
 
 #ifdef MOBILE_C
 const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );
