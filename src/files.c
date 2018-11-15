@@ -179,6 +179,7 @@ SCAFFOLD_SIZE_SIGNED files_write(
       path_c = bdata( test_path );
       lgc_null( test_path );
 
+#ifndef DJGPP
       stat_res = stat( path_c, &test_path_stat );
       if( 0 == (test_path_stat.st_mode & S_IFDIR) ) {
          lgc_error = LGC_ERROR_ZERO;
@@ -187,6 +188,7 @@ SCAFFOLD_SIZE_SIGNED files_write(
          );
          goto cleanup;
       }
+#endif // _DJGPP
 
       if( 0 != stat_res  ) {
          /* Directory does not exist, so create it. */
@@ -234,6 +236,8 @@ void files_list_dir(
 ) {
 
    /* FIXME: Detect directories under WIN16 or DOS. */
+
+#ifndef DJGPP
 
 #ifndef WIN16
 
@@ -336,6 +340,7 @@ cleanup:
    }
    return;
 #endif /* WIN16 */
+#endif // DJGPP
 }
 
 BOOL files_check_directory( const bstring path ) {
@@ -352,8 +357,10 @@ BOOL files_check_directory( const bstring path ) {
 
    path_c = bdata( path );
    scaffold_assert( NULL != path_c );
+#ifndef DJGPP
    lgc_nonzero( stat( path_c, &dir_info ) );
    lgc_zero( (dir_info.st_mode & S_IFDIR), bdata( zero_error ) );
+#endif // DJGPP
 
 cleanup:
    bdestroy( zero_error );

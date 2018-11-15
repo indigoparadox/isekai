@@ -568,6 +568,8 @@ void tilemap_toggle_debug_state() {
    }
 }
 
+#endif /* DEBUG_TILES */
+
 void tilemap_tile_draw_ortho(
    const struct TILEMAP_LAYER* layer,
    TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y,
@@ -629,8 +631,6 @@ void tilemap_tile_draw_ortho(
 cleanup:
    return;
 }
-
-#endif /* DEBUG_TILES */
 
 #ifdef USE_ITEMS
 
