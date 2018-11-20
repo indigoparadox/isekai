@@ -1,12 +1,12 @@
 
 #define MODE_C
-#include <mode.h>
-
-#ifndef DISABLE_MODE_POV
+//#include <mode.h>
 
 #include <stdlib.h>
 
-#include <callback.h>
+#include <graphics.h>
+#include <vbool.h>
+//#include <callback.h>
 #include <ui.h>
 #include <ipc.h>
 #include <channel.h>
@@ -21,86 +21,104 @@ typedef enum {
    POV_LAYER_LEVEL_INSET = 0
 } POV_LAYER;
 
+struct POV_CLIENT_DATA {
+   GRAPHICS_PLANE cam_pos;
+   GRAPHICS_PLANE plane_pos;
+   GFX_COORD_FPP* z_buffer;
+};
+
+struct POV_MOBILE_DATA {
+   double ray_distance;
+   VBOOL animation_flipped; /*!< VTRUE if looking in - direction in POV. */
+};
+
 extern bstring client_input_from_ui;
 
 struct tagbstring mode_name = bsStatic( "POV" );
 
 static GRAPHICS* ray_view = NULL;
-struct HASHMAP tileset_status;
+struct HASHMAP* tileset_status;
 
 static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) {
    bstring buffer = NULL;
-   int facing = o->facing;
+   enum MOBILE_FACING o_facing = MOBILE_FACING_DOWN,
+      puppet_facing = MOBILE_FACING_DOWN;
    struct MOBILE* puppet = NULL;
+   struct MOBILE_ANI_DEF* o_animation = NULL;
+   struct POV_MOBILE_DATA* o_data = NULL;
+
+   o_facing = mobile_get_facing( o );
+   o_data = mobile_get_mode_data( o );
 
    puppet = client_get_puppet( c );
    if( NULL == puppet ) {
       goto cleanup;
    }
 
-   if( o->animation_reset || puppet->animation_reset ) {
-      if( MOBILE_FACING_DOWN == puppet->facing ) {
-         o->animation_flipped = TRUE;
-         switch( o->facing ) {
+   puppet_facing = mobile_get_facing( puppet );
+
+   if( mobile_get_animation_reset( o ) || mobile_get_animation_reset( puppet ) ) {
+      if( MOBILE_FACING_DOWN == puppet_facing ) {
+         o_data->animation_flipped = VTRUE;
+         switch( o_facing ) {
          case MOBILE_FACING_DOWN:
-            facing =  MOBILE_FACING_UP;
+            o_facing =  MOBILE_FACING_UP;
             break;
          case MOBILE_FACING_UP:
-            facing = MOBILE_FACING_DOWN;
+            o_facing = MOBILE_FACING_DOWN;
             break;
          case MOBILE_FACING_LEFT:
-            facing = MOBILE_FACING_RIGHT;
+            o_facing = MOBILE_FACING_RIGHT;
             break;
          case MOBILE_FACING_RIGHT:
-            facing = MOBILE_FACING_LEFT;
+            o_facing = MOBILE_FACING_LEFT;
             break;
          }
-      } else if( MOBILE_FACING_LEFT == puppet->facing ) {
-         switch( o->facing ) {
+      } else if( MOBILE_FACING_LEFT == puppet_facing ) {
+         switch( o_facing ) {
          case MOBILE_FACING_DOWN:
-            facing =  MOBILE_FACING_LEFT;
+            o_facing =  MOBILE_FACING_LEFT;
             break;
          case MOBILE_FACING_UP:
-            facing = MOBILE_FACING_RIGHT;
+            o_facing = MOBILE_FACING_RIGHT;
             break;
          case MOBILE_FACING_LEFT:
-            facing = MOBILE_FACING_UP;
+            o_facing = MOBILE_FACING_UP;
             break;
          case MOBILE_FACING_RIGHT:
-            facing = MOBILE_FACING_DOWN;
+            o_facing = MOBILE_FACING_DOWN;
             break;
          }
-      } else if( MOBILE_FACING_RIGHT == puppet->facing ) {
-         o->animation_flipped = TRUE;
-         switch( o->facing ) {
+      } else if( MOBILE_FACING_RIGHT == puppet_facing ) {
+         o_data->animation_flipped = VTRUE;
+         switch( o_facing ) {
          case MOBILE_FACING_DOWN:
-            facing =  MOBILE_FACING_RIGHT;
+            o_facing =  MOBILE_FACING_RIGHT;
             break;
          case MOBILE_FACING_UP:
-            facing = MOBILE_FACING_LEFT;
+            o_facing = MOBILE_FACING_LEFT;
             break;
          case MOBILE_FACING_LEFT:
-            facing = MOBILE_FACING_DOWN;
+            o_facing = MOBILE_FACING_DOWN;
             break;
          case MOBILE_FACING_RIGHT:
-            facing = MOBILE_FACING_UP;
+            o_facing = MOBILE_FACING_UP;
             break;
          }
       }
    }
 
-   if( NULL != o->current_animation ) {
+   o_animation = mobile_get_animation_current( o );
+   if( NULL != o_animation ) {
       buffer = bformat(
          "%s-%s",
-         bdata( o->current_animation->name ),
-         str_mobile_facing[facing].data
+         bdata( o_animation->name ),
+         str_mobile_facing[o_facing].data
       );
-      if( NULL != hashmap_get( &(o->ani_defs), buffer ) ) {
-         o->current_animation = hashmap_get( &(o->ani_defs), buffer );
-      }
+      mobile_set_animation( o, buffer );
    }
 
-   o->animation_reset = FALSE;
+   mobile_set_animation_reset( o, VFALSE );
 
 cleanup:
    bdestroy( buffer );
@@ -127,14 +145,27 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    GRAPHICS_RECT spritesheet = { 0 };
    GRAPHICS_RECT current_sprite = { 0 };
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
+   struct POV_CLIENT_DATA* c_data = NULL;
+   struct GRAPHICS_PLANE* cam_pos = NULL;
+   struct GRAPHICS_PLANE* plane_pos = NULL;
+   struct POV_MOBILE_DATA* o_data = NULL;
 
-   if( NULL == o || NULL == o->sprites ) {
+   if( NULL == mobile_get_sprites( o ) ) {
       goto cleanup;
    }
 
+   c_data = client_get_mode_data( c );
+   lgc_null( c_data );
+   cam_pos = &(c_data->cam_pos);
+   lgc_null( cam_pos );
+   plane_pos = &(c_data->plane_pos);
+   lgc_null( plane_pos );
+   o_data = mobile_get_mode_data( o );
+   lgc_null( o_data );
+
    /* Translate sprite position to relative to camera. */
-   sprite_x = o->x - c->cam_pos.precise_x;
-   sprite_y = o->y - c->cam_pos.precise_y;
+   sprite_x = mobile_get_x( o ) - cam_pos->precise_x;
+   sprite_y = mobile_get_y( o ) - cam_pos->precise_y;
 
    /* Transform sprite with the inverse camera matrix:
     *
@@ -144,11 +175,14 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
     */
 
    /* Required for correct matrix multiplication. */
-   inv_det = 1.0 / (c->plane_pos.precise_x * c->cam_pos.facing_y - c->cam_pos.facing_x * c->plane_pos.precise_y);
+   inv_det = 1.0 / (plane_pos->precise_x * cam_pos->facing_y -
+      cam_pos->facing_x * plane_pos->precise_y);
 
-   transform_x = inv_det * (c->cam_pos.facing_y * sprite_x - c->cam_pos.facing_x * sprite_y);
+   transform_x = inv_det * (cam_pos->facing_y * sprite_x -
+      cam_pos->facing_x * sprite_y);
    /* This is actually the depth inside the screen, what Z is in 3D. */
-   transform_y = inv_det * (-c->plane_pos.precise_y * sprite_x + c->plane_pos.precise_x * sprite_y);
+   transform_y = inv_det * (-(plane_pos->precise_y) * sprite_x +
+      plane_pos->precise_x * sprite_y);
 
    sprite_screen_x = ((int)(g->w / 2) * (1 + transform_x / transform_y));
 
@@ -182,8 +216,7 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
       draw_rect.w = g->w - 1;
    }
 
-   current_frame = (struct MOBILE_SPRITE_DEF*)
-      vector_get( &(o->current_animation->frames), o->current_frame );
+   current_frame = mobile_get_animation_frame_current( o );
    lgc_null( current_frame );
    current_sprite.w = spritesheet.w = o->sprite_width;
    current_sprite.h = spritesheet.h = o->sprite_height;
@@ -196,8 +229,8 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
 
       stepped_x = stripe;
       if(
-         MOBILE_FACING_LEFT == o->facing && FALSE == o->animation_flipped ||
-         MOBILE_FACING_RIGHT == o->facing && FALSE == o->animation_flipped
+         MOBILE_FACING_LEFT == o->facing && FALSE == o_data->animation_flipped ||
+         MOBILE_FACING_RIGHT == o->facing && FALSE == o_data->animation_flipped
       ) {
          stepped_x = (stripe - sprite_screen_w) + o->steps_remaining;
       } else {
@@ -258,7 +291,7 @@ void* mode_pov_draw_mobile_cb( size_t idx, void* iter, void* arg ) {
       goto cleanup; /* Silently. */
    }
 
-   if( TRUE == o->animation_reset ) {
+   if( mobile_get_animation_reset( o ) ) {
       mode_pov_mobile_set_animation( o, c );
    }
    mobile_animate( o );
@@ -371,22 +404,22 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
          break;
 
       case MOBILE_FACING_UP:
-         c->cam_pos.facing_x = 0; /* TODO */
-         c->cam_pos.facing_y = -1;
-         c->plane_pos.precise_x = GRAPHICS_RAY_FOV;
-         c->plane_pos.precise_y = 0;
+         cam_pos->facing_x = 0; /* TODO */
+         cam_pos->facing_y = -1;
+         plane_pos->precise_x = GRAPHICS_RAY_FOV;
+         plane_pos->precise_y = 0;
          break;
 
       case MOBILE_FACING_DOWN:
-         c->cam_pos.facing_x = 0; /* TODO */
-         c->cam_pos.facing_y = 1;
-         c->plane_pos.precise_x = -GRAPHICS_RAY_FOV;
-         c->plane_pos.precise_y = 0;
+         cam_pos->facing_x = 0; /* TODO */
+         cam_pos->facing_y = 1;
+         plane_pos->precise_x = -GRAPHICS_RAY_FOV;
+         plane_pos->precise_y = 0;
          break;
    }
 }
 
-static BOOL mode_pov_draw_floor(
+static VBOOL mode_pov_draw_floor(
    GFX_RAY_FLOOR* floor_pos,
    GFX_COORD_PIXEL i_x,
    GFX_COORD_PIXEL above_wall_draw_end,
@@ -401,7 +434,7 @@ static BOOL mode_pov_draw_floor(
    struct TILEMAP* t = NULL;
    SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS* g_tileset = NULL;
-   BOOL ret_error = FALSE;
+   VBOOL ret_error = FALSE;
    GRAPHICS_RECT tile_tilesheet_pos = { 0 };
    int tex_x = 0,
       tex_y = 0;
@@ -480,7 +513,7 @@ cleanup:
  * \return TRUE on error, FALSE otherwise.
  *
  */
-static BOOL mode_pov_update_view(
+static VBOOL mode_pov_update_view(
    GFX_COORD_PIXEL i_x, int layer_max, int layer_pov, GRAPHICS_RAY* ray,
    GFX_COORD_PIXEL prev_wall_top, GFX_COORD_PIXEL prev_wall_height,
    struct CLIENT* c, GRAPHICS* g
@@ -489,8 +522,8 @@ static BOOL mode_pov_update_view(
    GFX_RAY_FLOOR floor_pos = { 0 };
    uint32_t tile = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
-   BOOL wall_hit = FALSE;
-   BOOL ret_error = FALSE,
+   VBOOL wall_hit = FALSE;
+   VBOOL ret_error = FALSE,
       ret_tmp = FALSE;
    GRAPHICS_DELTA wall_map_pos = { 0 };
    struct TILEMAP* t = c->active_tilemap;
@@ -503,7 +536,7 @@ static BOOL mode_pov_update_view(
    int layer_index = 0,
       opaque_index = 0,
       pov_incr = 0;
-   BOOL recurse = TRUE;
+   VBOOL recurse = TRUE;
 
    lgc_null( t );
 
@@ -522,11 +555,11 @@ static BOOL mode_pov_update_view(
       for( layer_index = layer_pov ; layer_max > layer_index ; layer_index++ ) {
          /* Detect if the opaque layer exists. */
          opaque_index = layer_index + 1;
-         layer = vector_get( &(t->layers), layer_index );
+         layer = vector_get( t->layers, layer_index );
          if( opaque_index >= layer_max || POV_LAYER_LEVEL_INSET == layer_index ) {
             opaque_layer = NULL;
          } else {
-            opaque_layer = vector_get( &(t->layers), opaque_index );
+            opaque_layer = vector_get( t->layers, opaque_index );
          }
 
          /* Detect raised terrain as a wall hit. */
@@ -608,7 +641,7 @@ void mode_pov_draw(
    GRAPHICS* g = NULL;
    struct MOBILE* player = NULL;
    static struct TILEMAP_POSITION last;
-   static BOOL draw_failed = FALSE;
+   static VBOOL draw_failed = VFALSE;
    struct TILEMAP* t = NULL;
    int i_x = 0,
       layer_max = 0,
@@ -714,7 +747,7 @@ void mode_pov_update(
 }
 
 #if 0
-static BOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct MOBILE_UPDATE_PACKET update = { 0 };
    struct UI* ui = NULL;
@@ -875,5 +908,3 @@ void mode_pov_free( struct CLIENT* c ) {
       ray_view = NULL;
    } */
 }
-
-#endif /* !DISABLE_MODE_POV */

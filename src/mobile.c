@@ -43,7 +43,7 @@ struct MOBILE {
    MOBILE_FRAME frame; */
    uint8_t current_frame;
    MOBILE_FACING facing;
-   BOOL animation_reset;
+   VBOOL animation_reset;
    bstring display_name;
    bstring def_filename;
    bstring mob_id;
@@ -55,20 +55,17 @@ struct MOBILE {
    struct MOBILE_ANI_DEF* current_animation;
    struct VECTOR* walking_queue; /* Only used for certain modes. Think RTS. */
    struct AUDI_CONTEXT* ai;
+   void* mode_data;
 #ifdef USE_ITEMS
    struct VECTOR* items;
 #endif // USE_ITEMS
-   BOOL initialized;
+   VBOOL initialized;
 #ifdef USE_VM
    struct VM_CADDY* vm_caddy;
 #ifdef USE_TURNS
    SCAFFOLD_SIZE vm_tick_prev;
 #endif /* USE_TURNS */
 #endif /* USE_VM */
-#ifndef DISABLE_MODE_POV
-   double ray_distance;
-   BOOL animation_flipped; /*!< TRUE if looking in - direction in POV. */
-#endif /* !DISABLE_MODE_POV */
 };
 
 void mobile_gen_serial( struct MOBILE* o, struct VECTOR* mobiles ) {
@@ -158,7 +155,7 @@ void mobile_init(
    o->current_frame = 0;
    o->steps_inc_default = MOBILE_STEPS_INCREMENT;
    o->owner = NULL;
-   o->animation_reset = FALSE;
+   o->animation_reset = VFALSE;
 #ifdef USE_TURNS
    o->vm_tick_prev = 0;
 #endif /* USE_TURNS */
@@ -231,12 +228,12 @@ void mobile_load_local( struct MOBILE* o ) {
    lgc_zero_msg( bytes_read, "Unable to load mobile data." );
 
    datafile_parse_ezxml_string(
-      o, mobdata_buffer, mobdata_size, FALSE, DATAFILE_TYPE_MOBILE, mobdata_path
+      o, mobdata_buffer, mobdata_size, VFALSE, DATAFILE_TYPE_MOBILE, mobdata_path
    );
 
 #endif /* USE_EZXML */
 
-   o->initialized = TRUE;
+   o->initialized = VTRUE;
 
 cleanup:
    bdestroy( mobdata_path );
@@ -339,7 +336,7 @@ cleanup:
 }
 
 GFX_COORD_PIXEL
-mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
+mobile_get_steps_remaining_x( const struct MOBILE* o, VBOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_x != o->x ) {
       if( !reverse ) {
@@ -352,7 +349,7 @@ mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse ) {
 }
 
 GFX_COORD_PIXEL
-mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse ) {
+mobile_get_steps_remaining_y( const struct MOBILE* o, VBOOL reverse ) {
    GFX_COORD_PIXEL steps_out = 0;
    if( o->prev_y != o->y ) {
       if( !reverse ) {
@@ -413,10 +410,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
          tilemap_inside_inner_map_x( o->x - 1, twindow ))
    ) {
-      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      steps_remaining_x = mobile_get_steps_remaining_x( o, VFALSE );
       pix_x += steps_remaining_x;
    } else if( !mobile_is_local_player( o, local_client ) ) {
-      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      steps_remaining_x = mobile_get_steps_remaining_x( o, VFALSE );
       pix_x += steps_remaining_x;
    }
 
@@ -427,10 +424,10 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP !=
          tilemap_inside_window_deadzone_y( o->y - 1, twindow ))
    ) {
-      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, VFALSE );
       pix_y += steps_remaining_y;
    } else if( !mobile_is_local_player( o, local_client ) ) {
-      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, VFALSE );
       pix_y += steps_remaining_y;
    }
 
@@ -442,7 +439,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
          tilemap_inside_inner_map_x( o_player->x - 1, twindow ))
    ) {
-      steps_remaining_x = mobile_get_steps_remaining_x( o_player, TRUE );
+      steps_remaining_x = mobile_get_steps_remaining_x( o_player, VTRUE );
       pix_x += steps_remaining_x;
    }
 
@@ -453,7 +450,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
       TILEMAP_EXCLUSION_OUTSIDE_LEFT_UP ==
          tilemap_inside_window_deadzone_y( o_player->y - 1, twindow ))
    ) {
-      steps_remaining_y = mobile_get_steps_remaining_y( o_player, TRUE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o_player, VTRUE );
       pix_y += steps_remaining_y;
    }
 
@@ -607,20 +604,20 @@ cleanup:
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-/** \return TRUE if the mobile is owned by the client that is currently
+/** \return VTRUE if the mobile is owned by the client that is currently
  *          locally connected in a hosted coop or single-player instance.
  */
 SCAFFOLD_INLINE
-BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c ) {
+VBOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c ) {
    if( NULL != o->owner && 0 == bstrcmp( client_get_nick( o->owner ), client_get_nick( c ) ) ) {
-      return TRUE;
+      return VTRUE;
    }
-   return FALSE;
+   return VFALSE;
 }
 
-/** \return TRUE if the mobile is currently doing something (moving, etc).
+/** \return VTRUE if the mobile is currently doing something (moving, etc).
  */
-BOOL mobile_is_occupied( struct MOBILE* o ) {
+VBOOL mobile_is_occupied( struct MOBILE* o ) {
    return NULL != o && o->steps_remaining > 0;
 }
 
@@ -646,7 +643,7 @@ struct CHANNEL* mobile_get_channel( const struct MOBILE* o ) {
  *         directions or attacking.
  */
 void mobile_call_reset_animation( struct MOBILE* o ) {
-   o->animation_reset = TRUE;
+   o->animation_reset = VTRUE;
 }
 
 /** \brief Perform a requested reset in a 2D (topdown/iso) mode. */
@@ -670,7 +667,7 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
    }
 
    /* No more need to reset. It's done. */
-   o->animation_reset = FALSE;
+   o->animation_reset = VFALSE;
 
 /* cleanup: */
    bdestroy( ani_key_buffer );
@@ -740,18 +737,18 @@ size_t mobile_set_sprite(
    struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
 ) {
    scaffold_assert( NULL != o );
-   return vector_set( o->sprite_defs, id, sprite, TRUE );
+   return vector_set( o->sprite_defs, id, sprite, VTRUE );
 }
-BOOL mobile_add_animation(
+VBOOL mobile_add_animation(
    struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
 ) {
    if(
       HASHMAP_ERROR_NONE !=
-      hashmap_put( o->ani_defs, name_dir, animation, FALSE )
+      hashmap_put( o->ani_defs, name_dir, animation, VFALSE )
    ) {
-      return FALSE;
+      return VFALSE;
    }
-   return TRUE;
+   return VTRUE;
 }
 
 int mobile_set_id( struct MOBILE* o, bstring mob_id ) {
@@ -897,14 +894,7 @@ struct CLIENT* mobile_get_owner( const struct MOBILE* o ) {
    return o->owner;
 }
 
-BOOL mobile_get_animation_reset( const struct MOBILE* o ) {
-    if( NULL == o ) {
-        return FALSE;
-    }
-    return o->animation_reset;
-}
-
-void mobile_set_initialized( struct MOBILE* o, BOOL init ) {
+void mobile_set_initialized( struct MOBILE* o, VBOOL init ) {
    if( NULL == o ) {
       return;
    }
@@ -936,9 +926,9 @@ void mobile_add_ref( struct MOBILE* o ) {
  * \param[in] y_1 Starting Y.
  * \param[in] x_2 Finishing X.
  * \param[in] y_2 Finishing Y.
- * \return TRUE if the mobile can pass and FALSE if not.
+ * \return VTRUE if the mobile can pass and VFALSE if not.
  */
-BOOL mobile_calculate_mobile_collision(
+VBOOL mobile_calculate_mobile_collision(
    struct MOBILE* o,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 ) {
@@ -946,7 +936,7 @@ BOOL mobile_calculate_mobile_collision(
    struct CHANNEL* l = NULL;
    struct TILEMAP_POSITION pos;
    struct MOBILE* o_test = NULL;
-   BOOL update_out = TRUE; /* Pass by default. */
+   VBOOL update_out = VTRUE; /* Pass by default. */
 
    l = mobile_get_channel( o );
    lgc_null( l );
@@ -960,21 +950,21 @@ BOOL mobile_calculate_mobile_collision(
    o_test = channel_search_mobiles( l, &pos );
 
    if( NULL != o_test ) {
-      update_out = FALSE;
+      update_out = VFALSE;
    }
 
 cleanup:
    return update_out;
 }
 
-BOOL mobile_is_walking( const struct MOBILE* o ) {
-   BOOL res = FALSE;
+VBOOL mobile_is_walking( const struct MOBILE* o ) {
+   VBOOL res = VFALSE;
 
    if(
       mobile_get_x( o ) != mobile_get_prev_x( o ) ||
       mobile_get_y( o ) != mobile_get_prev_y( o )
    ) {
-      res = TRUE;
+      res = VTRUE;
       lg_error(
          __FILE__,
          "Mobile (%d) already walking.\n", mobile_get_serial( o )
@@ -1096,7 +1086,7 @@ cleanup:
  *         function should only ever be called client-side, as it relies on
  *         client-side animation routines.
  */
-BOOL mobile_walk(
+VBOOL mobile_walk(
    struct MOBILE* o,
    TILEMAP_COORD_TILE dest_x,
    TILEMAP_COORD_TILE dest_y,
@@ -1106,7 +1096,7 @@ BOOL mobile_walk(
       start_y = 0;
    int diff_x = 0,
       diff_y = 0;
-   BOOL success = FALSE;
+   VBOOL success = VFALSE;
    GFX_COORD_PIXEL steps = 0;
 
    scaffold_assert_client();
@@ -1178,7 +1168,7 @@ BOOL mobile_walk(
       __FILE__, "Setting steps: %d (+%d)\n", steps, mobile_steps_increment );
 
    /* Everything seemed to work out. */
-   success = TRUE;
+   success = VTRUE;
 
 cleanup:
    return success;
@@ -1188,4 +1178,50 @@ void mobile_ai_add_global( struct MOBILE* o, const bstring key, const bstring va
    lg_debug( __FILE__, "Added global to %d: %b: %b\n",
       mobile_get_serial( o ), key, val );
    audition_context_add_var( o->ai, key, val );
+}
+
+enum MOBILE_FACING mobile_get_facing( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return MOBILE_FACING_DOWN;
+   }
+   return o->facing;
+}
+
+VBOOL mobile_get_animation_reset( const struct MOBILE* o ) {
+   if( NULL == o ) {
+      return FALSE;
+   }
+   return o->animation_reset;
+}
+
+struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
+   const struct MOBILE* o, size_t index
+) {
+   if( NULL == o || NULL == o->sprite_defs ) {
+      return NULL;
+   }
+   return vector_get( o->sprite_defs, index );
+}
+
+struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
+   const struct MOBILE* o
+) {
+   if( NULL == o || NULL == o->sprite_defs ) {
+      return NULL;
+   }
+   return vector_get( o->sprite_defs, o->current_frame );
+}
+
+void* mobile_get_mode_data( struct MOBILE* o ) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->mode_data;
+}
+
+void mobile_set_mode_data( struct MOBILE* o, void* mode_data ) {
+   lgc_null( o );
+   o->mode_data = mode_data;
+cleanup:
+   return;
 }

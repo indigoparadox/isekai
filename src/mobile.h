@@ -60,17 +60,17 @@ void mobile_get_spritesheet_pos_ortho(
    GFX_COORD_PIXEL* x, GFX_COORD_PIXEL* y
 );
 void mobile_apply_steps_remaining(
-   struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, BOOL reverse
+   struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, VBOOL reverse
 );
 void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TWINDOW* twindow );
 void mobile_set_channel( struct MOBILE* o, struct CHANNEL* l );
 GFX_COORD_PIXEL
-mobile_get_steps_remaining_x( const struct MOBILE* o, BOOL reverse );
+mobile_get_steps_remaining_x( const struct MOBILE* o, VBOOL reverse );
 GFX_COORD_PIXEL
-mobile_get_steps_remaining_y( const struct MOBILE* o, BOOL reverse );
+mobile_get_steps_remaining_y( const struct MOBILE* o, VBOOL reverse );
 void mobile_speak( struct MOBILE* o, bstring speech );
-BOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c );
-BOOL mobile_is_occupied( struct MOBILE* o );
+VBOOL mobile_is_local_player( struct MOBILE* o, struct CLIENT* c );
+VBOOL mobile_is_occupied( struct MOBILE* o );
 #ifdef USE_ITEMS
 void mobile_add_item( struct MOBILE* o, struct ITEM* e );
 #endif /* USE_ITEMS */
@@ -92,7 +92,7 @@ struct TILEMAP* mobile_get_tilemap( const struct MOBILE* o );
 size_t mobile_set_sprite(
    struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
 );
-BOOL mobile_add_animation(
+VBOOL mobile_add_animation(
    struct MOBILE* o, bstring name_dir, struct MOBILE_ANI_DEF* animation
 );
 int mobile_set_id( struct MOBILE* o, bstring mob_id );
@@ -116,15 +116,15 @@ struct MOBILE_SPRITE_DEF* mobile_get_sprite(
 GFX_COORD_PIXEL mobile_get_steps_remaining( const struct MOBILE* o );
 struct CLIENT* mobile_get_owner( const struct MOBILE* o );
 void mobile_set_steps_remaining( struct MOBILE* o, GFX_COORD_PIXEL sr );
-BOOL mobile_get_animation_reset( const struct MOBILE* o );
-void mobile_set_initialized( struct MOBILE* o, BOOL init );
+VBOOL mobile_get_animation_reset( const struct MOBILE* o );
+void mobile_set_initialized( struct MOBILE* o, VBOOL init );
 void mobile_set_type( struct MOBILE* o, MOBILE_TYPE type );
 void mobile_set_sprites( struct MOBILE* o, struct GRAPHICS* sheet );
 void mobile_update_coords(
    struct MOBILE* o, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
 );
 void mobile_add_ref( struct MOBILE* o );
-BOOL mobile_calculate_mobile_collision(
+VBOOL mobile_calculate_mobile_collision(
    struct MOBILE* o,
    SCAFFOLD_SIZE x_1, SCAFFOLD_SIZE y_1, SCAFFOLD_SIZE x_2, SCAFFOLD_SIZE y_2
 );
@@ -132,7 +132,7 @@ void mobile_set_steps_inc( struct MOBILE* o, GFX_COORD_PIXEL inc );
 GFX_COORD_PIXEL mobile_get_steps_inc_default( struct MOBILE* o );
 void mobile_set_x( struct MOBILE* o, TILEMAP_COORD_TILE x );
 void mobile_set_y( struct MOBILE* o, TILEMAP_COORD_TILE y );
-BOOL mobile_walk(
+VBOOL mobile_walk(
    struct MOBILE* o,
    TILEMAP_COORD_TILE dest_x,
    TILEMAP_COORD_TILE dest_y,
@@ -144,8 +144,14 @@ GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
    struct TILEMAP* t, GFX_COORD_PIXEL steps_inc_default,
    TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 );
-BOOL mobile_is_walking( const struct MOBILE* o );
+VBOOL mobile_is_walking( const struct MOBILE* o );
 void mobile_ai_add_global( struct MOBILE* o, const bstring key, const bstring val );
+enum MOBILE_FACING mobile_get_facing( const struct MOBILE* o );
+void* mobile_get_mode_data( struct MOBILE* o );
+void mobile_set_mode_data( struct MOBILE* o, void* mode_data );
+struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
+   const struct MOBILE* o, size_t index
+);
 
 #ifdef MOBILE_C
 const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );
