@@ -213,6 +213,114 @@ cleanup:
    return;
 }
 
+void datafile_mobile_parse_script(
+   struct MOBILE* o, ezxml_t xml_data
+) {
+   ezxml_t xml_scripts = NULL,
+      xml_script_iter = NULL,
+      xml_attr = NULL;
+   int bstr_retval = 0;
+   bstring vm_val_buffer = NULL,
+      vm_key_buffer = NULL;
+
+   vm_val_buffer = bfromcstr( "" );
+   vm_key_buffer = bfromcstr( "" );
+
+   xml_scripts = ezxml_child( xml_data, "scripts" );
+
+   /* Store script globals. */
+   xml_script_iter = ezxml_child( xml_scripts, "global" );
+   while( NULL != xml_script_iter ) {
+
+      /* Prepare by grabbing the key/val to be stored. */
+      bstr_retval = bassigncstr(
+         vm_val_buffer, ezxml_attr( xml_script_iter, "value" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         lg_error(
+            __FILE__, "Error parsing script component value attribute."
+         );
+         goto next_global;
+      }
+
+      bstr_retval = bassigncstr(
+         vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         lg_error(
+            __FILE__, "Error parsing script component with value: %b",
+            vm_val_buffer
+         );
+         goto next_global;
+      }
+
+      /* Load the global into the hashmap. */
+      if(
+         0 == scaffold_strcmp_caseless( "global", xml_script_iter->name )
+      ) {
+         mobile_ai_add_global( o, vm_key_buffer, vm_val_buffer );
+      }
+
+next_global:
+      xml_script_iter = ezxml_next( xml_script_iter );
+   }
+
+   xml_script_iter = ezxml_child( xml_scripts, "script" );
+   while( NULL != xml_script_iter ) {
+
+      /* Prepare by grabbing the key/val to be stored. */
+      xml_attr = ezxml_txt( xml_script_iter );
+      bstr_retval = bassigncstr( vm_val_buffer, xml_attr );
+      if( BSTR_ERR == bstr_retval ) {
+         lg_error(
+            __FILE__, "Error parsing script component value text."
+         );
+         goto next_script;
+      }
+
+      bstr_retval = bassigncstr(
+         vm_key_buffer, ezxml_attr( xml_script_iter, "name" )
+      );
+      if( BSTR_ERR == bstr_retval ) {
+         lg_error(
+            __FILE__, "Error parsing script component with value: %b",
+            vm_val_buffer
+         );
+         goto next_script;
+      }
+
+#ifdef USE_DUKTAPE
+      /* Load the script into the hashmap. */
+      if(
+         0 == scaffold_strcmp_caseless(
+            "text/javascript", ezxml_attr( xml_script_iter, "type" )
+         )
+      ) {
+         /* TODO: Make lang per-script, not per-object/mobile/caddy. */
+         if( VM_LANG_NONE != o->vm_caddy->lang ) {
+            /* For now, crash if we try to mix languages in a mobile. */
+            scaffold_assert( VM_LANG_JS == o->vm_caddy->lang );
+         }
+         o->vm_caddy->lang = VM_LANG_JS;
+         vm_caddy_put(
+            o->vm_caddy, VM_MEMBER_SCRIPT, vm_key_buffer, vm_val_buffer );
+      }
+#endif /* USE_DUKTAPE */
+
+next_script:
+      xml_script_iter = ezxml_next( xml_script_iter );
+   }
+
+   //if( 0 != vm_caddy_scripts_count( o->vm_caddy ) ) {
+   //   mobile_vm_start( o );
+   //}
+
+cleanup:
+   bdestroy( vm_val_buffer );
+   bdestroy( vm_key_buffer );
+   return;
+}
+
 void datafile_parse_mobile_ezxml_t(
    struct MOBILE* o, ezxml_t xml_data, bstring def_path, BOOL local_images
 ) {
@@ -272,6 +380,8 @@ void datafile_parse_mobile_ezxml_t(
       datafile_mobile_parse_animation_ezxml( o, xml_animation_iter );
       xml_animation_iter = ezxml_next( xml_animation_iter );
    }
+
+   datafile_mobile_parse_script( o, xml_data );
 
 #ifdef USE_VM
 

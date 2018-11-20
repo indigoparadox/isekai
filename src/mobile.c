@@ -13,6 +13,7 @@
 #include "files.h"
 #include "twindow.h"
 #include "action.h"
+#include "audition.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -53,6 +54,7 @@ struct MOBILE {
    struct HASHMAP* script_defs;
    struct MOBILE_ANI_DEF* current_animation;
    struct VECTOR* walking_queue; /* Only used for certain modes. Think RTS. */
+   struct AUDI_CONTEXT* ai;
 #ifdef USE_ITEMS
    struct VECTOR* items;
 #endif // USE_ITEMS
@@ -118,6 +120,8 @@ static void mobile_cleanup( const struct REF* ref ) {
    hashmap_remove_cb( o->ani_defs, callback_free_ani_defs, NULL );
    hashmap_free( &(o->ani_defs) );
 
+   audition_node_free( &(o->ai) );
+
    lg_debug(
       __FILE__,
       "Mobile %b (%d) destroyed.\n",
@@ -146,6 +150,7 @@ void mobile_init(
 
    //scaffold_assert( NULL != mob_id );
 
+   o->ai = audition_context_new();
    o->sprites_filename = NULL;
    o->serial = 0;
    o->channel = NULL;
@@ -1177,4 +1182,10 @@ BOOL mobile_walk(
 
 cleanup:
    return success;
+}
+
+void mobile_ai_add_global( struct MOBILE* o, const bstring key, const bstring val ) {
+   lg_debug( __FILE__, "Added global to %d: %b: %b\n",
+      mobile_get_serial( o ), key, val );
+   audition_context_add_var( o->ai, key, val );
 }
