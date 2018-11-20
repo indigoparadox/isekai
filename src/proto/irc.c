@@ -576,7 +576,7 @@ static void irc_server_reply_welcome( struct CLIENT* c, struct SERVER* s ) {
    );
 
    proto_printf(
-      c, ":%b 002 %b :Your host is ProCIRCd, running version 0.1",
+      c, ":%b 002 %b :Your host is isekai, running version 0.1",
       server_get_remote( s ), client_get_nick( c )
    );
 
@@ -586,7 +586,7 @@ static void irc_server_reply_welcome( struct CLIENT* c, struct SERVER* s ) {
    );
 
    proto_printf(
-      c, ":%b 004 %b :%b ProCIRCd-0.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
+      c, ":%b 004 %b :%b isekai-0.1 abBcCFiIoqrRswx abehiIklmMnoOPqQrRstvVz",
       server_get_remote( s ), client_get_nick( c ), server_get_remote( s )
    );
 
