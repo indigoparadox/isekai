@@ -145,6 +145,7 @@ GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
    TILEMAP_COORD_TILE x_2, TILEMAP_COORD_TILE y_2
 );
 BOOL mobile_is_walking( const struct MOBILE* o );
+void mobile_ai_add_global( struct MOBILE* o, const bstring key, const bstring val );
 
 #ifdef MOBILE_C
 const struct tagbstring str_mobile_default_ani = bsStatic( "normal" );

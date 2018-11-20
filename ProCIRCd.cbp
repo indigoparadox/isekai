@@ -565,7 +565,7 @@
 					<Add option="-DxDEBUG_PALETTE" />
 					<Add option="-DDEBUG_FPS" />
 					<Add option="-DENABLE_LOCAL_CLIENT" />
-					<Add option="-DUSE_DUKTAPE" />
+					<Add option="-DxUSE_DUKTAPE" />
 					<Add option="-DxDEBUG_VERBOSEGRAPHICS_COLOR" />
 				</Compiler>
 				<Linker>
