@@ -14,6 +14,7 @@
 #include "twindow.h"
 #include "action.h"
 #include "audition.h"
+#include "plugin.h"
 
 #ifdef USE_MOBILE_FRAME_COUNTER
 static uint8_t mobile_frame_counter = 0;
@@ -74,7 +75,9 @@ void mobile_gen_serial( struct MOBILE* o, struct VECTOR* mobiles ) {
    } while( 0 == o->serial || NULL != vector_get( mobiles, o->serial ) );
 }
 
-struct MOBILE* mobile_new( bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y ) {
+struct MOBILE* mobile_new(
+   bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+) {
    struct MOBILE* o = NULL;
 
    o = mem_alloc( 1, struct MOBILE );
@@ -361,6 +364,31 @@ mobile_get_steps_remaining_y( const struct MOBILE* o, VBOOL reverse ) {
    return steps_out;
 }
 
+/** \brief Put the spritesheet position for gid on the spritesheet g_sprites in
+ *         the rectangle sprite_frame. The rectangle must already have the
+ *         correct sprite width and height set when passed.
+ * \param
+ * \param
+ */
+void mobile_get_spritesheet_pos_ortho(
+   struct MOBILE* o, GRAPHICS_RECT* sprite_frame, size_t gid
+) {
+   int tiles_wide = 0;
+   GRAPHICS* g_sprites = NULL;
+
+   lgc_null( o );
+   g_sprites = o->sprites;
+   lgc_null( g_sprites );
+
+   tiles_wide = g_sprites->w / sprite_frame->w;
+
+   sprite_frame->y = ((gid) / tiles_wide) * sprite_frame->h;
+   sprite_frame->x = ((gid) % tiles_wide) * sprite_frame->w;
+
+cleanup:
+   return;
+}
+
 void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TWINDOW* twindow ) {
    GFX_COORD_PIXEL
       pix_x,
@@ -462,8 +490,8 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
 
    sprite_rect.w = o->sprite_width;
    sprite_rect.h = o->sprite_height;
-   graphics_get_spritesheet_pos_ortho(
-      o->sprites, &sprite_rect, current_frame->id
+   mobile_get_spritesheet_pos_ortho(
+      o, &sprite_rect, current_frame->id
    );
 
    /* Add dirty tiles to list before drawing. */
@@ -1194,6 +1222,15 @@ VBOOL mobile_get_animation_reset( const struct MOBILE* o ) {
    return o->animation_reset;
 }
 
+struct MOBILE_ANI_DEF* mobile_get_animation_current(
+   const struct MOBILE* o
+) {
+   if( NULL == o ) {
+      return NULL;
+   }
+   return o->current_animation;
+}
+
 struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
    const struct MOBILE* o, size_t index
 ) {
@@ -1201,6 +1238,17 @@ struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
       return NULL;
    }
    return vector_get( o->sprite_defs, index );
+}
+
+struct MOBILE_SPRITE_DEF* mobile_get_animation_frame_current(
+   const struct MOBILE* o
+) {
+   struct MOBILE_ANI_DEF* ani = NULL;
+   if( NULL == o || NULL == o->sprite_defs ) {
+      return NULL;
+   }
+   ani = o->current_animation;
+   return vector_get( ani->frames, o->current_frame );
 }
 
 void* mobile_get_mode_data( struct MOBILE* o ) {
@@ -1216,3 +1264,43 @@ void mobile_set_mode_data( struct MOBILE* o, void* mode_data ) {
 cleanup:
    return;
 }
+
+GRAPHICS_COLOR mobile_spritesheet_get_pixel(
+   struct MOBILE* o, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+) {
+   GRAPHICS_COLOR pixel = GRAPHICS_COLOR_CHARCOAL;
+   if( NULL != o && NULL != o->sprites ) {
+      pixel = graphics_get_pixel( o->sprites, x, y );
+   }
+   return pixel;
+}
+
+void mobile_spritesheet_set_pixel(
+   struct MOBILE* o, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
+) {
+   if( NULL != o && NULL != o->sprites ) {
+      graphics_set_pixel( o->sprites, x, y, pixel );
+   }
+}
+
+void mobile_set_animation_reset( struct MOBILE* o, VBOOL reset ) {
+   lgc_null( o );
+   o->animation_reset = reset;
+cleanup:
+   return;
+}
+
+GFX_COORD_PIXEL mobile_get_sprite_width( struct MOBILE* o ) {
+   if( NULL == o ) {
+      return 0;
+   }
+   return o->sprite_width;
+}
+
+GFX_COORD_PIXEL mobile_get_sprite_height( struct MOBILE* o ) {
+   if( NULL == o ) {
+      return 0;
+   }
+   return o->sprite_height;
+}
+

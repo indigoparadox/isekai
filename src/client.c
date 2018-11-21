@@ -135,10 +135,6 @@ static void client_cleanup( const struct REF *ref ) {
 
    ipc_free( &(c->link) );
 
-   if( NULL != c->z_buffer ) {
-      mem_free( c->z_buffer );
-   }
-
    c->sentinal = 0;
    /* TODO: Ensure entire struct is freed. */
    /* mem_free( c ); */
@@ -1263,4 +1259,18 @@ void client_set_local_window( struct CLIENT* c, struct TWINDOW* w ) {
    scaffold_assert( NULL != w );
    scaffold_assert( NULL != c );
    c->local_window = w;
+}
+
+void* client_get_mode_data( struct CLIENT* c ) {
+   if( NULL == c ) {
+      return NULL;
+   }
+   return c->mode_data;
+}
+
+void client_set_mode_data( struct CLIENT* c, void* mode_data ) {
+   lgc_null( c );
+   c->mode_data = mode_data;
+cleanup:
+   return;
 }

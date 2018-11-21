@@ -721,3 +721,18 @@ struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t ) {
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */
+
+struct TWINDOW* tilemap_get_local_window( struct TILEMAP* t ) {
+   struct CHANNEL* l = NULL;
+   struct CLIENT* c = NULL;
+   struct TWINDOW* w = NULL;
+
+   lgc_null( t );
+   l = t->channel;
+   lgc_null( l );
+   c = l->client_or_server;
+   w = client_get_local_window( c );
+
+cleanup:
+   return w;
+}

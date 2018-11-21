@@ -1,6 +1,4 @@
 
-#include <graphics.h>
-
 struct CLIENT {
    struct REF refcount; /*!< Parent "class". The "root" class is REF. */
 
@@ -15,6 +13,7 @@ struct CLIENT {
    bstring away;
    bstring mobile_sprite;
    void* protocol_data;
+   void* mode_data;
    uint16_t flags;
    struct UI* ui;
    struct HASHMAP* channels; /*!< All channels the client is in now, or all
@@ -43,12 +42,6 @@ struct CLIENT {
 #ifdef USE_CHUNKS
    struct HASHMAP* chunkers;
 #endif /* USE_CHUNKS */
-
-#ifndef DISABLE_MODE_POV
-   GRAPHICS_PLANE cam_pos;
-   GRAPHICS_PLANE plane_pos;
-   GFX_COORD_FPP* z_buffer;
-#endif /* !DISABLE_MODE_POV */
 
    VBOOL local_client;
 
