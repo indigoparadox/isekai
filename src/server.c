@@ -155,7 +155,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 
    if( NULL == l ) {
       /* Create a new channel on the server. */
-      channel_new( l, l_name, VFALSE, &(s->self) );
+      channel_new( l, l_name, VFALSE, &(s->self), NULL );
       client_add_channel( &(s->self), l );
       lg_debug(
          __FILE__, "Server: Channel created: %s\n", bdata( l->name ) );

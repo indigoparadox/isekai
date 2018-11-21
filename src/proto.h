@@ -9,7 +9,7 @@
 #include "action.h"
 
 void proto_register( struct CLIENT* c );
-void proto_client_join( struct CLIENT* c, const bstring name );
+void proto_client_join( struct CLIENT* c, const bstring name, const bstring mode );
 void proto_client_leave( struct CLIENT* c, const bstring lname );
 void proto_send_chunk(
    struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,

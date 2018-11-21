@@ -12,6 +12,7 @@ struct CHANNEL {
    uint16_t sentinal;
    bstring name;
    bstring topic;
+   bstring mode;
    struct HASHMAP* clients;
    struct CLIENT* client_or_server;
    struct VECTOR* mobiles;
@@ -22,17 +23,17 @@ struct CHANNEL {
    bstring error;
 };
 
-#define channel_new( l, name, local_graphics, server ) \
+#define channel_new( l, name, local_graphics, server, mode ) \
     lgc_null( name ); \
     l = mem_alloc( 1, struct CHANNEL ); \
     lgc_null( l ); \
-    channel_init( l, name, local_graphics, server );
+    channel_init( l, name, local_graphics, server, mode );
 
 struct MOBILE;
 
 void channel_init(
    struct CHANNEL* l, const bstring name, VBOOL local_graphics,
-   struct CLIENT* server
+   struct CLIENT* server, bstring mode
 );
 void channel_free( struct CHANNEL* l );
 struct CLIENT* channel_client_present( struct CHANNEL* l, struct CLIENT* c );
@@ -60,6 +61,7 @@ size_t channel_get_clients_count( const struct CHANNEL* l );
 struct MOBILE* channel_search_mobiles(
    const struct CHANNEL* l, struct TILEMAP_POSITION* pos
 );
+void channel_set_mode( struct CHANNEL* l, const bstring mode );
 
 #ifdef CHANNEL_C
 static struct tagbstring str_player = bsStatic( "player" );

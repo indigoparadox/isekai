@@ -123,7 +123,15 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    for( i = 0 ; SERVER_LOOPS_PER_CYCLE > i ; i++ ) {
       server_service_clients( main_server );
    }
-   action_queue_proc( vector_get( mode_list_short, gfx_mode ), ACTION_QUEUE_SERVER );
+
+   l = client_get_channel_active( main_client );
+   if( NULL != l ) {
+      l->mode = vector_get( mode_list_short, gfx_mode );
+   }
+
+   if( NULL != l && NULL != l->mode ) {
+      action_queue_proc( l->mode, ACTION_QUEUE_SERVER );
+   }
 
    if( !server_is_running( main_server ) ) {
       keep_going = VFALSE;
@@ -148,19 +156,18 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    scaffold_set_client();
    ui = twindow_get_ui( local_window );
 
-   if( VFALSE == animate_is_blocking() ) {
+   client_update( main_client, g_screen );
+   if( NULL != l && NULL != l->mode && VFALSE == animate_is_blocking() ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
+         PLUGIN_MODE, l->mode,
          PLUGIN_POLL_INPUT, main_client, l, input );
-      client_update( main_client, g_screen );
       plugin_call(
-         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
+         PLUGIN_MODE, l->mode,
          PLUGIN_UPDATE, main_client, l );
    }
 
    /* Do drawing. */
-   l = client_get_channel_active( main_client );
-   if( VFALSE != channel_has_error( l ) ) {
+   if( channel_has_error( l ) ) {
       /* Abort and go back to connect dialog. */
       /* We need to stop both client AND server, 'cause the data is bad! */
       /* TODO
@@ -170,7 +177,7 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       server_stop( main_server ); */
       ui_message_box( ui, l->error );
       plugin_call(
-         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ), PLUGIN_FREE, main_client );
+         PLUGIN_MODE, l->mode, PLUGIN_FREE, main_client );
       client_stop( main_client );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
@@ -241,17 +248,6 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       //local_window = client_get_local_window( main_client );
       twindow_update_details( local_window );
 
-      /* Make sure we have the correct mode data. */
-
-      if( NULL != client_get_mode_data( main_client ) ) {
-         plugin_call(
-            PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
-            PLUGIN_CLIENT_FREE, main_client );
-      }
-      plugin_call(
-         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
-         PLUGIN_CLIENT_INIT, main_client );
-
       backlog_height_px =
          backlog_height_tiles * twindow_get_grid_h( local_window );
 
@@ -267,7 +263,7 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    }
 
    action_queue_proc(
-      vector_get( mode_list_short, gfx_mode ), ACTION_QUEUE_CLIENT );
+      l->mode, ACTION_QUEUE_CLIENT );
 
    /* If we're on the move then update the window frame. */
    /* Allows for smooth-scrolling view window with bonus that action is    *
@@ -280,7 +276,7 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       (NULL != l && TILEMAP_REDRAW_ALL == l->tilemap->redraw_state)
    ) {
       plugin_call(
-         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
+         PLUGIN_MODE, l->mode,
          PLUGIN_UPDATE, main_client, l );
    }
 
@@ -290,8 +286,8 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    scaffold_assert( NULL != o );
 
    plugin_call(
-      PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
-      PLUGIN_DRAW, main_client, l );
+      PLUGIN_MODE, l->mode,
+      PLUGIN_DRAW, main_client, o, l );
 
    /* Draw masks to cover up garbage from mismatch between viewport and window.
     */
@@ -559,7 +555,8 @@ static VBOOL loop_master( struct TWINDOW* local_screen ) {
       );
       twindow_set_screen( local_screen, g_screen );
       twindow_set_local_client( local_screen, main_client );
-      proto_client_join( main_client, buffer_channel );
+      proto_client_join( main_client, buffer_channel,
+         vector_get( mode_list_short, gfx_mode ) );
       retval = VTRUE;
 
 #ifdef DEBUG_FPS

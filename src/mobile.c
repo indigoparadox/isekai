@@ -56,6 +56,7 @@ struct MOBILE {
    struct MOBILE_ANI_DEF* current_animation;
    struct VECTOR* walking_queue; /* Only used for certain modes. Think RTS. */
    struct AUDI_CONTEXT* ai;
+   bstring mode;
    void* mode_data;
 #ifdef USE_ITEMS
    struct VECTOR* items;
@@ -1258,9 +1259,10 @@ void* mobile_get_mode_data( struct MOBILE* o ) {
    return o->mode_data;
 }
 
-void mobile_set_mode_data( struct MOBILE* o, void* mode_data ) {
+void mobile_set_mode( struct MOBILE* o, const bstring mode, void* mode_data ) {
    lgc_null( o );
    o->mode_data = mode_data;
+   o->mode = bstrcpy( mode );
 cleanup:
    return;
 }

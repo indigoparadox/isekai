@@ -28,8 +28,8 @@ typedef PLUGIN_RESULT plugin_mode_draw( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 typedef PLUGIN_RESULT plugin_mode_free( struct CLIENT* c );
 typedef PLUGIN_RESULT plugin_mode_mobile_action( struct ACTION_PACKET* update );
-typedef PLUGIN_RESULT plugin_mode_mobile_init( struct MOBILE* o );
-typedef PLUGIN_RESULT plugin_mode_client_init( struct CLIENT* c );
+typedef PLUGIN_RESULT plugin_mode_mobile_init( struct MOBILE* o, struct CHANNEL* l );
+typedef PLUGIN_RESULT plugin_mode_client_init( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_mobile_free( struct MOBILE* o );
 typedef PLUGIN_RESULT plugin_mode_client_free( struct CLIENT* c );
 
@@ -301,7 +301,8 @@ PLUGIN_RESULT plugin_call(
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
-         ret = f.client_init( c );
+         l = va_arg( varg, struct CHANNEL* );
+         ret = f.client_init( c, l );
          break;
 
       case PLUGIN_MOBILE_INIT:
@@ -310,7 +311,8 @@ PLUGIN_RESULT plugin_call(
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          o = va_arg( varg, struct MOBILE* );
-         ret = f.mobile_init( o );
+         l = va_arg( varg, struct CHANNEL* );
+         ret = f.mobile_init( o, l );
          break;
 
       case PLUGIN_CLIENT_FREE:
