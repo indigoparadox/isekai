@@ -1252,19 +1252,52 @@ struct MOBILE_SPRITE_DEF* mobile_get_animation_frame_current(
    return vector_get( ani->frames, o->current_frame );
 }
 
-void* mobile_get_mode_data( struct MOBILE* o ) {
-   if( NULL == o ) {
-      return NULL;
+void* mobile_get_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l ) {
+   struct HASHMAP* channels = NULL;
+   void* mode_data = NULL;
+
+   assert( NULL != l && NULL != l->name );
+   assert( NULL != mode );
+
+   lgc_null( o );
+
+   channels = hashmap_get( o->mode_data, mode );
+   if( NULL == channels ) {
+      lg_debug( __FILE__, "Creating channel list for %b for mobile %d...\n", mode, o->serial );
+      channels = hashmap_new();
+      hashmap_put( o->mode_data, mode, channels, VFALSE );
    }
-   return o->mode_data;
+
+   mode_data = hashmap_get( channels, l->name );
+   if( NULL == mode_data ) {
+      plugin_call( PLUGIN_MODE, mode, PLUGIN_MOBILE_INIT, o, l );
+   }
+   mode_data = hashmap_get( channels, l->name );
+
+cleanup:
+   return mode_data;
 }
 
-void mobile_set_mode( struct MOBILE* o, const bstring mode, void* mode_data ) {
+void* mobile_set_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l, void* mode_data ) {
+   struct HASHMAP* channels = NULL;
+
+   assert( NULL != l && NULL != l->name );
+   assert( NULL != mode );
+
    lgc_null( o );
-   o->mode_data = mode_data;
-   o->mode = bstrcpy( mode );
+
+   channels = hashmap_get( o->mode_data, mode );
+   if( NULL == channels ) {
+      lg_debug( __FILE__, "Creating channel list for %b for mobile %d...\n", mode, o->serial );
+      channels = hashmap_new();
+      hashmap_put( o->mode_data, mode, channels, VFALSE );
+   }
+
+   assert( NULL == hashmap_get( channels, l->name ) );
+   hashmap_put( channels, l->name, mode_data, FALSE );
+
 cleanup:
-   return;
+   return mode_data;
 }
 
 GRAPHICS_COLOR mobile_spritesheet_get_pixel(

@@ -13,8 +13,7 @@ struct CLIENT {
    bstring away;
    bstring mobile_sprite;
    void* protocol_data;
-   struct HASHMAP* mode;
-   struct HASHMAP* mode_data;
+   struct HASHMAP* mode_data; /* Mode > Channel */
    uint16_t flags;
    struct UI* ui;
    struct HASHMAP* channels; /*!< All channels the client is in now, or all

@@ -148,8 +148,8 @@ GFX_COORD_PIXEL mobile_calculate_terrain_steps_inc(
 VBOOL mobile_is_walking( const struct MOBILE* o );
 void mobile_ai_add_global( struct MOBILE* o, const bstring key, const bstring val );
 enum MOBILE_FACING mobile_get_facing( const struct MOBILE* o );
-void* mobile_get_mode_data( struct MOBILE* o );
-void mobile_set_mode_data( struct MOBILE* o, void* mode_data );
+void* mobile_get_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l_name );
+void* mobile_set_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l, void* mode_data );
 struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
    const struct MOBILE* o, size_t index
 );

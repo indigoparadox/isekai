@@ -161,11 +161,6 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, VBOOL spawn ) {
 
    client_add_channel( c, l );
    // TODO: Handle existing mode data.
-   assert( NULL == client_get_mode_data( c, l->name ) );
-   if( NULL != l->mode ) {
-      lg_debug( __FILE__, "Calling %b_init for client...\n", l->mode );
-      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_CLIENT_INIT, c, l );
-   }
 
    client_add_ref( c );
 
@@ -417,6 +412,7 @@ cleanup:
    return out;
 }
 
+#if 0
 static void* cb_channel_client_pinit( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct CHANNEL* l = (struct CHANNEL*)arg;
@@ -425,7 +421,7 @@ static void* cb_channel_client_pinit( bstring idx, void* iter, void* arg ) {
       goto cleanup;
    }
 
-   assert( NULL == client_get_mode_data( c, l->name ) );
+   assert( NULL == client_get_mode_data( c, l->mode, l->name ) );
 
    if( NULL != l->mode ) {
       lg_debug( __FILE__, "Calling %b_init for client...\n", l->mode );
@@ -448,12 +444,13 @@ static void* cb_channel_mobile_pinit( size_t idx, void* iter, void* arg ) {
 
    if( NULL != l->mode ) {
       lg_debug( __FILE__, "Calling %b_init for mobile...\n", l->mode );
-      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_CLIENT_INIT, o, l );
+      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_MOBILE_INIT, o, l );
    }
 
 cleanup:
    return NULL;
 }
+#endif // 0
 
 void channel_set_mode( struct CHANNEL* l, const bstring mode ) {
    assert( NULL != l );
@@ -465,8 +462,8 @@ void channel_set_mode( struct CHANNEL* l, const bstring mode ) {
       //assert( NULL == l->mode );
       l->mode = bstrcpy( mode );
       lg_debug( __FILE__, "Isekai mode for %b set to: %b\n", l->name, l->mode );
-      hashmap_iterate( l->clients, cb_channel_client_pinit, l );
-      vector_iterate( l->mobiles, cb_channel_mobile_pinit, l );
+      //hashmap_iterate( l->clients, cb_channel_client_pinit, l );
+      //vector_iterate( l->mobiles, cb_channel_mobile_pinit, l );
    }
 cleanup:
    return;

@@ -128,9 +128,11 @@ size_t client_remove_chunkers( struct CLIENT* c, bstring filter );
 //struct CLIENT* client_from_local_window( struct TWINDOW* twindow );
 struct UI* client_get_ui( struct CLIENT* c );
 void client_set_local_window( struct CLIENT* c, struct TWINDOW* w );
-void* client_get_mode_data( struct CLIENT* c, bstring l_name );
+void* client_get_mode_data( struct CLIENT* c, bstring mode, struct CHANNEL* l );
+void client_set_mode_data(
+   struct CLIENT* c, const bstring mode, struct CHANNEL* l, void* mode_data
+);
 //void client_set_mode( struct CLIENT* c, bstring l_name, const bstring mode, void* mode_data );
-void client_set_mode_data( struct CLIENT* c, bstring l_name, void* mode_data );
 
 #ifdef CLIENT_C
 struct tagbstring str_client_cache_path =

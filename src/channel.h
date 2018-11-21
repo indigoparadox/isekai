@@ -14,8 +14,10 @@ struct CHANNEL {
    bstring topic;
    bstring mode;
    struct HASHMAP* clients;
+   struct HASHMAP* client_mode_data;
    struct CLIENT* client_or_server;
    struct VECTOR* mobiles;
+   struct VECTOR* mobile_mode_data;
    struct TILEMAP* tilemap;
 #ifdef USE_VM
    struct VM_CADDY* vm_caddy;
