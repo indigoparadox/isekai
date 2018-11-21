@@ -123,6 +123,8 @@ static void client_cleanup( const struct REF *ref ) {
    hashmap_remove_all( c->tilesets );
    hashmap_free( &(c->tilesets) );
 
+   hashmap_free( &(c->mode_data) );
+
 #ifdef USE_ITEMS
 
    hashmap_remove_all( &(c->item_catalogs) );
@@ -172,6 +174,7 @@ void client_init( struct CLIENT* c ) {
    c->username = bfromcstralloc( CLIENT_NAME_ALLOC, "" );
    c->link = ipc_alloc();
    c->protocol_data = NULL;
+   c->mode_data = hashmap_new();
 
    c->sentinal = CLIENT_SENTINAL;
    c->running = VTRUE;
@@ -1261,16 +1264,36 @@ void client_set_local_window( struct CLIENT* c, struct TWINDOW* w ) {
    c->local_window = w;
 }
 
-void* client_get_mode_data( struct CLIENT* c ) {
+void* client_get_mode_data( struct CLIENT* c, bstring l_name ) {
    if( NULL == c ) {
       return NULL;
    }
-   return c->mode_data;
+   return hashmap_get( c->mode_data, l_name );
 }
 
-void client_set_mode_data( struct CLIENT* c, void* mode_data ) {
+/*
+void client_set_mode(
+   struct CLIENT* c, bstring l_name, const bstring mode, void* mode_data
+) {
    lgc_null( c );
-   c->mode_data = mode_data;
+   assert( NULL != l_name );
+   hashmap_put( c->mode_data, l_name, mode_data, VFALSE );
+   if( NULL == hashmap_get( c->mode, l_name ) ) {
+      hashmap_put( c->mode, l_name, bstrcpy( mode ), VFALSE );
+   } else {
+      bassign( hashmap_get( c->mode, l_name ), mode );
+   }
+cleanup:
+   return;
+}
+*/
+
+void client_set_mode_data(
+   struct CLIENT* c, bstring l_name, void* mode_data
+) {
+   lgc_null( c );
+   assert( NULL != l_name );
+   hashmap_put( c->mode_data, l_name, mode_data, VFALSE );
 cleanup:
    return;
 }

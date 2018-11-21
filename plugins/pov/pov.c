@@ -43,13 +43,13 @@ struct tagbstring mode_name = bsStatic( "POV" );
 static GRAPHICS* ray_view = NULL;
 struct HASHMAP* tileset_status;
 
-PLUGIN_RESULT mode_pov_mobile_init( struct MOBILE* o ) {
+PLUGIN_RESULT mode_pov_mobile_init( struct MOBILE* o, struct CHANNEL* l ) {
    mobile_set_mode_data( o, mem_alloc( 1, struct POV_MOBILE_DATA ) );
    return PLUGIN_SUCCESS;
 }
 
-PLUGIN_RESULT mode_pov_client_init( struct CLIENT* c ) {
-   client_set_mode_data( c, mem_alloc( 1, struct POV_CLIENT_DATA ) );
+PLUGIN_RESULT mode_pov_client_init( struct CLIENT* c, struct CHANNEL* l ) {
+   client_set_mode_data( c, l->name, mem_alloc( 1, struct POV_CLIENT_DATA ) );
    return PLUGIN_SUCCESS;
 }
 
@@ -164,12 +164,15 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
    GRAPHICS_PLANE* plane_pos = NULL;
    struct POV_MOBILE_DATA* o_data = NULL;
    GFX_COORD_FPP* z_buffer = NULL;
+   struct CHANNEL* l = NULL;
 
    if( NULL == mobile_get_sprites( o ) ) {
       goto cleanup;
    }
 
-   c_data = client_get_mode_data( c );
+   l = mobile_get_channel( o );
+   lgc_null( l );
+   c_data = client_get_mode_data( c, l->name );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -332,12 +335,15 @@ static void* mode_pov_mob_calc_dist_cb( size_t idx, void* iter, void* arg ) {
    GRAPHICS_PLANE* cam_pos = NULL;
    struct POV_CLIENT_DATA* c_data = NULL;
    struct POV_MOBILE_DATA* o_data = NULL;
+   struct CHANNEL* l = NULL;
 
    c = twindow_get_local_client( twindow );
    lgc_null( c );
    t = client_get_tilemap_active( c );
    lgc_null( t );
-   c_data = client_get_mode_data( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   c_data = client_get_mode_data( c, l->name );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -411,8 +417,11 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
    GRAPHICS_PLANE* cam_pos = NULL;
    GRAPHICS_PLANE* plane_pos = NULL;
    struct POV_CLIENT_DATA* c_data = NULL;
+   struct CHANNEL* l = NULL;
 
-   c_data = client_get_mode_data( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   c_data = client_get_mode_data( c, l->name );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -492,8 +501,11 @@ static VBOOL mode_pov_draw_floor(
    GRAPHICS_PLANE* plane_pos = NULL;
    struct POV_CLIENT_DATA* c_data = NULL;
    struct TWINDOW* w = NULL;
+   struct CHANNEL* l = NULL;
 
-   c_data = client_get_mode_data( c );
+   l = client_get_channel_active( c );
+   lgc_null( l );
+   c_data = client_get_mode_data( c, l->name );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -594,10 +606,13 @@ static VBOOL mode_pov_update_view(
    VBOOL recurse = VTRUE;
    struct POV_CLIENT_DATA* c_data = NULL;
    GFX_COORD_FPP* z_buffer = NULL;
+   struct CHANNEL* l = NULL;
 
    t = client_get_tilemap_active( c );
    lgc_null( t );
-   c_data = client_get_mode_data( c );
+   l = tilemap_get_channel( t );
+   lgc_null( l );
+   c_data = client_get_mode_data( c, l->name );
    lgc_null( c_data );
    z_buffer = c_data->z_buffer;
    lgc_null( z_buffer );
@@ -725,12 +740,13 @@ PLUGIN_RESULT mode_pov_draw(
    lgc_null( t );
    player = client_get_puppet( c );
    lgc_null( player );
-   assert( NULL != o_data );
-   o_data = mobile_get_mode_data( player );
-   lgc_null( o_data );
-   c_data = client_get_mode_data( c );
-   assert( NULL != c_data );
+   c_data = client_get_mode_data( c, l->name );
+   //assert( NULL != c_data );
+   if( NULL == c_data ) { goto cleanup; }
    lgc_null( c_data );
+   o_data = mobile_get_mode_data( player );
+   if( NULL == o_data ) { goto cleanup; }
+   lgc_null( o_data );
    cam_pos = &(c_data->cam_pos);
    plane_pos = &(c_data->plane_pos);
 
@@ -952,6 +968,11 @@ cleanup:
    return VFALSE;
 }
 #endif
+
+PLUGIN_RESULT mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
+   // XXX
+   return PLUGIN_SUCCESS;
+}
 
 #if 0
 void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {

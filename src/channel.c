@@ -19,6 +19,7 @@
 #include "vm.h"
 #include "ipc.h"
 #include "files.h"
+#include "plugin.h"
 
 static void channel_free_final( const struct REF *ref ) {
    struct CHANNEL* l = scaffold_container_of( ref, struct CHANNEL, refcount );
@@ -56,6 +57,8 @@ static void channel_free_final( const struct REF *ref ) {
    tilemap_free( l->tilemap );
    l->tilemap = NULL;
 
+   bdestroy( l->mode );
+
    /* Free channel. */
    mem_free( l );
 }
@@ -71,7 +74,7 @@ void channel_free( struct CHANNEL* l ) {
  */
 void channel_init(
    struct CHANNEL* l, const bstring name, VBOOL local_images,
-   struct CLIENT* server
+   struct CLIENT* server, const bstring mode
 ) {
    ref_init( &(l->refcount), channel_free_final );
    l->clients = hashmap_new();
@@ -81,6 +84,7 @@ void channel_init(
    l->sentinal = CHANNEL_SENTINAL;
    l->client_or_server = server;
    l->error = NULL;
+   l->mode = mode;
    lgc_null( l->name );
    lgc_null( l->topic );
    tilemap_new( l->tilemap, local_images, server, l );
@@ -148,11 +152,19 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, VBOOL spawn ) {
       );
    }
 
-   client_add_channel( c, l  );
-
    if( hashmap_put( l->clients, client_get_nick( c ), c, VFALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client.\n" );
+      // XXX
       //client_free( c );
+      goto cleanup;
+   }
+
+   client_add_channel( c, l );
+   // TODO: Handle existing mode data.
+   assert( NULL == client_get_mode_data( c, l->name ) );
+   if( NULL != l->mode ) {
+      lg_debug( __FILE__, "Calling %b_init for client...\n", l->mode );
+      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_CLIENT_INIT, c, l );
    }
 
    client_add_ref( c );
@@ -194,6 +206,7 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
    assert( 0 != mobile_get_serial( o ) );
    vector_set( l->mobiles, mobile_get_serial( o ), o, VTRUE );
+   plugin_call( PLUGIN_MODE, l->mode, PLUGIN_MOBILE_INIT, o );
 }
 
 void channel_set_mobile(
@@ -402,4 +415,59 @@ struct MOBILE* channel_search_mobiles(
    out = vector_iterate_x( l->mobiles, cb_channel_mobs_by_pos, pos );
 cleanup:
    return out;
+}
+
+static void* cb_channel_client_pinit( bstring idx, void* iter, void* arg ) {
+   struct CLIENT* c = (struct CLIENT*)iter;
+   struct CHANNEL* l = (struct CHANNEL*)arg;
+
+   if( NULL == c ) {
+      goto cleanup;
+   }
+
+   assert( NULL == client_get_mode_data( c, l->name ) );
+
+   if( NULL != l->mode ) {
+      lg_debug( __FILE__, "Calling %b_init for client...\n", l->mode );
+      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_CLIENT_INIT, c, l );
+   }
+
+cleanup:
+   return NULL;
+}
+
+static void* cb_channel_mobile_pinit( size_t idx, void* iter, void* arg ) {
+   struct MOBILE* o = (struct MOBILE*)iter;
+   struct CHANNEL* l = (struct CHANNEL*)arg;
+
+   if( NULL == o ) {
+      goto cleanup;
+   }
+
+   assert( NULL == mobile_get_mode_data( o ) );
+
+   if( NULL != l->mode ) {
+      lg_debug( __FILE__, "Calling %b_init for mobile...\n", l->mode );
+      plugin_call( PLUGIN_MODE, l->mode, PLUGIN_CLIENT_INIT, o, l );
+   }
+
+cleanup:
+   return NULL;
+}
+
+void channel_set_mode( struct CHANNEL* l, const bstring mode ) {
+   assert( NULL != l );
+   assert( NULL != mode );
+   if(
+      NULL == l->mode ||
+      0 != bstrcmp( l->mode, mode )
+   ) {
+      //assert( NULL == l->mode );
+      l->mode = bstrcpy( mode );
+      lg_debug( __FILE__, "Isekai mode for %b set to: %b\n", l->name, l->mode );
+      hashmap_iterate( l->clients, cb_channel_client_pinit, l );
+      vector_iterate( l->mobiles, cb_channel_mobile_pinit, l );
+   }
+cleanup:
+   return;
 }

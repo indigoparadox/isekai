@@ -237,7 +237,7 @@ void proto_register( struct CLIENT* c ) {
    proto_printf( c, "USER %b", client_get_realname( c ) );
 }
 
-void proto_client_join( struct CLIENT* c, const bstring name ) {
+void proto_client_join( struct CLIENT* c, const bstring name, const bstring mode ) {
    bstring buffer = NULL;
    int bstr_retval;
    /* We won't record the channel in our list until the server confirms it. */
@@ -254,6 +254,17 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
    proto_send( c, buffer );
 
    client_set_flag( c, CLIENT_FLAGS_SENT_CHANNEL_JOIN );
+
+   bstr_retval = bassigncstr( buffer, "GMODE " );
+   lgc_nonzero( bstr_retval );
+   bstr_retval = bconcat( buffer, name );
+   lgc_nonzero( bstr_retval );
+   bstr_retval = bconchar( buffer, ' ' );
+   lgc_nonzero( bstr_retval );
+   bstr_retval = bconcat( buffer, mode );
+   lgc_nonzero( bstr_retval );
+
+   proto_send( c, buffer );
 
 cleanup:
    bdestroy( buffer );
@@ -907,6 +918,30 @@ cleanup:
    return;
 }
 
+static void irc_server_gmode(
+   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
+) {
+   struct CHANNEL* l = NULL;
+   bstring mode = NULL;
+   bstring name = NULL;
+
+   irc_detect_malformed( 3, "GMODE", line )
+
+   name = (bstring)vector_get( args, 1 );
+   lgc_null( name );
+   l = client_get_channel_by_name( c, name );
+   lgc_null( l );
+
+   mode = (bstring)vector_get( args, 2 );
+
+   //channel_set_mode( l, mode );
+   proto_channel_printf( s, l, NULL, "GMODE %b %b", l->name, mode );
+   lg_info( __FILE__, "Isekai mode for %b set to %b.", name, mode );
+
+cleanup:
+   return;
+}
+
 static void irc_server_part(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
@@ -1160,6 +1195,29 @@ cleanup:
    return;
 }
 
+static void irc_client_gmode(
+   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
+) {
+   struct CHANNEL* l = NULL;
+   bstring mode = NULL;
+   bstring name = NULL;
+
+   irc_detect_malformed( 3, "GMODE", line )
+
+   name = (bstring)vector_get( args, 1 );
+   lgc_null( name );
+   l = client_get_channel_by_name( c, name );
+   lgc_null( l );
+
+   mode = (bstring)vector_get( args, 2 );
+
+   channel_set_mode( l, mode );
+   lg_info( __FILE__, "Isekai mode for %b set to %b.", name, mode );
+
+cleanup:
+   return;
+}
+
 static void irc_client_join(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
 ) {
@@ -1178,7 +1236,7 @@ static void irc_client_join(
    l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
       /* Create a new client-side channel mirror. */
-      channel_new( l, l_name, VFALSE, c );
+      channel_new( l, l_name, VFALSE, c, NULL );
       client_add_channel( c, l );
       channel_add_client( l, c, VFALSE );
       lg_debug(
@@ -1461,6 +1519,7 @@ IRC_COMMAND_ROW( "NICK", irc_server_nick ),
 IRC_COMMAND_ROW( "QUIT", irc_server_quit ),
 IRC_COMMAND_ROW( "ISON", irc_server_ison ),
 IRC_COMMAND_ROW( "JOIN", irc_server_join ),
+IRC_COMMAND_ROW( "GMODE", irc_server_gmode ),
 IRC_COMMAND_ROW( "PART", irc_server_part ),
 IRC_COMMAND_ROW( "PRIVMSG", irc_server_privmsg ),
 IRC_COMMAND_ROW( "WHO", irc_server_who ),
@@ -1482,6 +1541,7 @@ IRC_COMMAND_TABLE_END() };
 IRC_COMMAND_TABLE_START( client ) = {
 IRC_COMMAND_ROW( "GU", irc_client_gu  ),
 IRC_COMMAND_ROW( "366", irc_client_join ),
+IRC_COMMAND_ROW( "GMODE", irc_client_gmode ),
 IRC_COMMAND_ROW( "ERROR", irc_client_error  ),
 #ifdef USE_CHUNKS
 IRC_COMMAND_ROW( "GDB", irc_client_gamedatablock ),
