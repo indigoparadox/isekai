@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="ProCIRCd" />
+		<Option title="isekai" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -16,7 +16,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/ProCIRCd" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/isekai" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -29,7 +29,7 @@
 			</Target>
 			<Target title="Check (Linux-C99)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Test/ProCIRCdCheck-C99" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Test/isekaiCheck-C99" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Test-Linux-C99" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -63,7 +63,7 @@
 			</Target>
 			<Target title="Check (Linux-C89)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Test/ProCIRCdCheck-C89" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Test/isekaiCheck-C89" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Test-Linux-C89" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -94,7 +94,7 @@
 			</Target>
 			<Target title="Strict (Linux-SB-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/sProCIRCd-SB-Allegro4" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/sisekai-SB-Allegro4" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-Allegro4-Strict/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -133,7 +133,7 @@
 			</Target>
 			<Target title="Strict (Linux-NET-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/sProCIRCd-NET-Allegro4" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/sisekai-NET-Allegro4" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-Allegro4-Strict/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -181,7 +181,7 @@
 			</Target>
 			<Target title="Debug (MingW32-NET)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd-NET.exe" prefix_auto="1" extension_auto="0" />
+				<Option output="bin/Debug-MingW32/isekai-NET.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-MingW32-NET/" />
 				<Option type="0" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
@@ -199,7 +199,7 @@
 			</Target>
 			<Target title="Debug (MingW32-NET-Allegro4)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd-NET-Allegro4.exe" prefix_auto="1" extension_auto="0" />
+				<Option output="bin/Debug-MingW32/isekai-NET-Allegro4.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-MingW32-NET-Allegro4/" />
 				<Option type="1" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
@@ -242,7 +242,7 @@
 			</Target>
 			<Target title="Debug (MingW32-NET-SDL)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd-NET-SDL.exe" prefix_auto="1" extension_auto="0" />
+				<Option output="bin/Debug-MingW32/isekai-NET-SDL.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-MingW32-NET-SDL/" />
 				<Option type="1" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
@@ -286,7 +286,7 @@
 			</Target>
 			<Target title="Debug (MingW32-SB)">
 				<Option platforms="Windows;Unix;" />
-				<Option output="bin/Debug-MingW32/ProCIRCd-SB.exe" prefix_auto="1" extension_auto="0" />
+				<Option output="bin/Debug-MingW32/isekai-SB.exe" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-MingW32-SB/" />
 				<Option type="0" />
 				<Option compiler="mingw32_gnu_gcc_compiler" />
@@ -320,7 +320,7 @@
 			</Target>
 			<Target title="Debug (Linux-SB-Curses)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-SB-Curses" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-SB-Curses" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-SB-Curses/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -345,7 +345,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-Curses)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-NET-Curses" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-NET-Curses" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-NET-Curses/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -371,7 +371,7 @@
 			</Target>
 			<Target title="Debug (Linux-SB-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-SB-Allegro4/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -420,7 +420,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Allegro-NET" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Allegro-NET" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-NET-Allegro4/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -474,7 +474,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-TLS)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Allegro-NET-TLS" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Allegro-NET-TLS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-NET-Allegro4-TLS/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -528,7 +528,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-SDL)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-SDL-NET" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-SDL-NET" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-NET-SDL/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -580,7 +580,7 @@
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Allegro-SHM" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Allegro-SHM" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -610,7 +610,7 @@
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug-CLANG/ProCIRCd-Allegro" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug-CLANG/isekai-Allegro" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-CLANG/" />
 				<Option type="1" />
 				<Option compiler="clang" />
@@ -642,7 +642,7 @@
 			</Target>
 			<Target title="Debug (Linux-Allegro4-TCC)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug-TCC/ProCIRCd-Allegro" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug-TCC/isekai-Allegro" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-TCC/" />
 				<Option type="1" />
 				<Option compiler="tcc" />
@@ -664,7 +664,7 @@
 			</Target>
 			<Target title="Debug (Linux-Curses-Threaded)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Curses" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Curses" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-Curses-threaded/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -683,7 +683,7 @@
 			</Target>
 			<Target title="Release (Linux-Allegro4)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Release/ProCIRCd-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/isekai-Allegro-SyncBuffer" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -720,7 +720,7 @@
 			</Target>
 			<Target title="Debug (Linux-NET-Server)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-Server-NET" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-Server-NET" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Linux-NET-Server/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -758,7 +758,7 @@
 			</Target>
 			<Target title="Debug (Emscripten-NET-SDL)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug/ProCIRCd-SDL-NET" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/isekai-SDL-NET" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug-Emscripten-NET-SDL/" />
 				<Option type="1" />
 				<Option compiler="emscripten_gcc_compiler" />
@@ -801,7 +801,7 @@
 			</Target>
 			<Target title="Debug (Palm-SB)">
 				<Option platforms="Unix;" />
-				<Option output="bin/Debug-Palm/ProCIRCd-SB.prc" prefix_auto="1" extension_auto="0" />
+				<Option output="bin/Debug-Palm/isekai-SB.prc" prefix_auto="1" extension_auto="0" />
 				<Option object_output="obj/Debug-Palm-SB/" />
 				<Option type="0" />
 				<Option compiler="prc_tools" />
@@ -920,7 +920,7 @@
 		<Linker>
 			<Add library="vcol" />
 		</Linker>
-		<Unit filename="procircd.def">
+		<Unit filename="isekai.def">
 			<Option target="Debug (Palm-SB)" />
 		</Unit>
 		<Unit filename="src/action.c">

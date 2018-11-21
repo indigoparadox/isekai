@@ -93,7 +93,7 @@ cleanup:
 
 static bstring plugin_get_path() {
    bstring plugin_path = NULL;
-   plugin_path = bfromcstr( getenv( "PROCIRCD_PLUGINS" ) );
+   plugin_path = bfromcstr( getenv( "ISEKAI_PLUGINS" ) );
    /* TODO: Plugins directory fallback. */
    if( NULL == plugin_path ) {
       plugin_path = bfromcstr( "" );
