@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProCIRCd", "ProCIRCd.vcxproj", "{193B24FD-B51B-4D0D-9B4A-6B8F5DC23403}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "isekai", "isekai.vcxproj", "{193B24FD-B51B-4D0D-9B4A-6B8F5DC23403}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{66F4C2AB-7C23-4E72-BD2E-2D699DBC03FB}"
 	ProjectSection(SolutionItems) = preProject
