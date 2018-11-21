@@ -42,7 +42,7 @@ void backlog_ensure_window( struct UI* ui, GFX_COORD_PIXEL height ) {
          0, GRAPHICS_SCREEN_HEIGHT - height, 460, height
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, FALSE, FALSE, NULL,
+         ui, control, NULL, UI_CONTROL_TYPE_BACKLOG, VFALSE, VFALSE, NULL,
          0, 0, 260, 70 - UI_TITLEBAR_SIZE - UI_WINDOW_MARGIN
       );
       ui_control_add( win, &str_backlog_id, control );
@@ -86,7 +86,7 @@ static void backlog_refresh_window() {
    /* TODO: A more elegant method of marking the backlog window dirty. */
    bl = ui_window_by_id( ui_get_local(), &str_backlog_id );
    if( NULL != bl ) {
-      bl->dirty = TRUE;
+      bl->dirty = VTRUE;
    }
 }
 

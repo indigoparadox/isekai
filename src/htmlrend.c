@@ -17,7 +17,7 @@ void htmlrend_draw( GRAPHICS* g, struct html_tree* tree ) {
    //for( i = 0 ; blength( tag->data ) > i ; i++ ) {
       graphics_draw_text(
          g, 0, 0, GRAPHICS_TEXT_ALIGN_LEFT, GRAPHICS_COLOR_WHITE,
-         GRAPHICS_FONT_SIZE_12, tag->data, FALSE
+         GRAPHICS_FONT_SIZE_12, tag->data, VFALSE
       );
    //}
 

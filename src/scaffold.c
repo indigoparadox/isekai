@@ -18,24 +18,24 @@ FILE* scaffold_log_handle_err = NULL;
 #include <stdlib.h>
 
 //int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
-BOOL scaffold_error_silent = FALSE;
-BOOL scaffold_warning_silent = FALSE;
+VBOOL scaffold_error_silent = VFALSE;
+VBOOL scaffold_warning_silent = VFALSE;
 bstring scaffold_print_buffer = NULL;
 
 static char scaffold_random_chars[] =
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-BOOL scaffold_is_numeric( bstring line ) {
+VBOOL scaffold_is_numeric( bstring line ) {
    int i;
-   BOOL is_numeric = TRUE;
+   VBOOL is_numeric = VTRUE;
 
    if( NULL == line ) {
-      return FALSE;
+      return VFALSE;
    }
 
    for( i = 0 ; blength( line ) > i ; i++ ) {
       if( !isdigit( bdata( line )[i] ) ) {
-         is_numeric = FALSE;
+         is_numeric = VFALSE;
          break;
       }
    }
@@ -99,18 +99,18 @@ cleanup:
 }
 #endif
 
-BOOL scaffold_string_is_printable( bstring str ) {
-   BOOL is_printable = TRUE;
+VBOOL scaffold_string_is_printable( bstring str ) {
+   VBOOL is_printable = VTRUE;
    int i;
    const char* strdata = bdata( str );
 
    if( NULL == strdata ) {
-      return FALSE;
+      return VFALSE;
    }
 
    for( i = 0 ; blength( str ) > i ; i++ ) {
       if( !scaffold_char_is_printable( strdata[i] ) ) {
-         is_printable = FALSE;
+         is_printable = VFALSE;
          break;
       }
    }
@@ -330,11 +330,11 @@ cleanup:
    return;
 }
 
-BOOL scaffold_buffer_grow(
+VBOOL scaffold_buffer_grow(
    BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
 ) {
    BYTE* realloc_tmp = NULL;
-   BOOL ok = FALSE;
+   VBOOL ok = VFALSE;
 
    if( new_len > *len ) {
       realloc_tmp = mem_realloc( *buffer, new_len, BYTE );
@@ -344,7 +344,7 @@ BOOL scaffold_buffer_grow(
       realloc_tmp = NULL;
    }
 
-   ok = TRUE;
+   ok = VTRUE;
 
 cleanup:
    return ok;

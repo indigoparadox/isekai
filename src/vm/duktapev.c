@@ -56,7 +56,7 @@ void* duktape_set_globals_cb( bstring idx, void* iter, void* arg ) {
  *         by Duktape, itself.
  *
  * \param
- * \return TRUE if timeout, FALSE otherwise.
+ * \return VTRUE if timeout, VFALSE otherwise.
  */
 duk_bool_t duktape_use_exec_timeout_check( void* udata ) {
    struct VM_CADDY* caddy = (struct VM_CADDY*)udata;
@@ -68,9 +68,9 @@ duk_bool_t duktape_use_exec_timeout_check( void* udata ) {
       0 != caddy->exec_start &&
       now > (caddy->exec_start + VM_EXEC_TIMEOUT_MS)
    ) {
-      return TRUE;
+      return VTRUE;
    } else {
-      return FALSE;
+      return VFALSE;
    }
 }
 
@@ -165,7 +165,7 @@ static duk_ret_t duk_cb_vm_update( duk_context* vm ) {
       update.l = o->channel;
       update.o = o;
 
-      mobile_apply_update( &update, TRUE );
+      mobile_apply_update( &update, VTRUE );
       break;
 
    }
@@ -216,7 +216,7 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    duk_put_prop_string( (duk_context*)vmc->vm, -2, "speak" );
    duk_pop( (duk_context*)vmc->vm );
 
-   assert( FALSE != vm_caddy_started( vmc ) );
+   assert( VFALSE != vm_caddy_started( vmc ) );
    duk_result = duk_safe_call( (duk_context*)vmc->vm, vm_unsafe, code_c, 0, 1 );
 
    if( 0 == duk_result ) {

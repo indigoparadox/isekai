@@ -9,8 +9,8 @@
 void* callback_send_chunkers_l( bstring idx, void* iter, void* arg );
 void* callback_proc_client_chunkers( bstring idx, void* iter, void* arg );
 void* callback_proc_chunkers( bstring idx, void* iter, void* arg );
-BOOL callback_free_chunkers( bstring idx, void* iter, void* arg );
-BOOL callback_free_finished_chunkers(
+VBOOL callback_free_chunkers( bstring idx, void* iter, void* arg );
+VBOOL callback_free_finished_chunkers(
    bstring idx, void* iter, void* arg );
 #endif /* USE_CHUNKS */
 #ifdef USE_VM
@@ -33,15 +33,15 @@ void* callback_attach_channel_mob_sprites(
 void* callback_proc_tileset_img_gs( bstring idx, void* iter, void* arg );
 void* callback_proc_server_spawners( bstring idx, void* iter, void* arg );
 void* callback_stop_clients( bstring idx, void* iter, void* arg );
-BOOL callback_free_channels( bstring idx, void* iter, void* arg );
-BOOL callback_free_empty_channels( bstring idx, void* iter, void* arg );
-BOOL callback_free_tilesets( bstring idx, void* iter, void* arg );
-BOOL callback_free_catalogs( bstring idx, void* iter, void* arg );
-BOOL callback_free_controls( bstring idx, void* iter, void* arg );
-BOOL callback_free_graphics( bstring idx, void* iter, void* arg );
-BOOL callback_free_ani_defs( bstring idx, void* iter, void* arg );
-BOOL callback_h_free_strings( bstring idx, void* iter, void* arg );
-BOOL callback_h_free_clients( bstring idx, void* iter, void* arg );
+VBOOL callback_free_channels( bstring idx, void* iter, void* arg );
+VBOOL callback_free_empty_channels( bstring idx, void* iter, void* arg );
+VBOOL callback_free_tilesets( bstring idx, void* iter, void* arg );
+VBOOL callback_free_catalogs( bstring idx, void* iter, void* arg );
+VBOOL callback_free_controls( bstring idx, void* iter, void* arg );
+VBOOL callback_free_graphics( bstring idx, void* iter, void* arg );
+VBOOL callback_free_ani_defs( bstring idx, void* iter, void* arg );
+VBOOL callback_h_free_strings( bstring idx, void* iter, void* arg );
+VBOOL callback_h_free_clients( bstring idx, void* iter, void* arg );
 void* callback_search_tilesets_name( bstring idx, void* iter, void* arg );
 
 /* Vector Callbacks */
@@ -74,22 +74,22 @@ void* callback_send_mobs_to_client( size_t idx, void* iter, void* arg );
 void* callback_attach_mob_sprites(
    size_t idx, void* iter, void* arg );
 void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg );
-BOOL callback_proc_client_delayed_files(
+VBOOL callback_proc_client_delayed_files(
    size_t idx, void* iter, void* arg );
 void* callback_proc_channel_spawners(
    size_t idx, void* iter, void* arg );
 void* callback_search_tilesets_gid( size_t idx, void* iter, void* arg );
-BOOL callback_free_mobiles( size_t idx, void* iter, void* arg );
-BOOL callback_free_sprites( size_t idx, void* iter, void* arg );
-BOOL callback_free_item_cache_items(
+VBOOL callback_free_mobiles( size_t idx, void* iter, void* arg );
+VBOOL callback_free_sprites( size_t idx, void* iter, void* arg );
+VBOOL callback_free_item_cache_items(
    size_t idx, void* iter, void* arg );
-BOOL callback_free_item_caches(
+VBOOL callback_free_item_caches(
    size_t idx, void* iter, void* arg );
-BOOL callback_free_generic( size_t idx, void* iter, void* arg );
-BOOL callback_v_free_strings( size_t idx, void* iter, void* arg );
-BOOL callback_free_backlog( size_t idx, void* iter, void* arg );
-BOOL callback_free_windows( size_t idx, void* iter, void* arg );
-BOOL callback_free_spawners( size_t idx, void* iter, void* arg );
-BOOL callback_v_free_clients( size_t idx, void* iter, void* arg );
+VBOOL callback_free_generic( size_t idx, void* iter, void* arg );
+VBOOL callback_v_free_strings( size_t idx, void* iter, void* arg );
+VBOOL callback_free_backlog( size_t idx, void* iter, void* arg );
+VBOOL callback_free_windows( size_t idx, void* iter, void* arg );
+VBOOL callback_free_spawners( size_t idx, void* iter, void* arg );
+VBOOL callback_v_free_clients( size_t idx, void* iter, void* arg );
 
 #endif /* CALLBACKS_H */

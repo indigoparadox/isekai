@@ -3,6 +3,7 @@
 #define ACTION_H
 
 #include "tilemap.h"
+#include "mobile.h"
 
 enum ACTION_QUEUE {
    ACTION_QUEUE_CLIENT = 0,

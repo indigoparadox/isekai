@@ -20,7 +20,7 @@ void server_stop_clients( struct SERVER* s );
 inline
 #endif /* USE_INLINES */
 void server_stop( struct SERVER* s );
-BOOL server_free( struct SERVER* s );
+VBOOL server_free( struct SERVER* s );
 void server_channel_printf( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, const char* message, ... );
 void server_channel_send( struct SERVER* s, struct CHANNEL* l, struct CLIENT* c_skip, bstring buffer );
 short server_add_client( struct SERVER* s, struct CLIENT* n );
@@ -33,13 +33,13 @@ struct CLIENT* server_get_client( struct SERVER* s, const bstring nick );
 struct CLIENT* server_get_client_by_ptr( struct SERVER* s, struct CLIENT* c );
 void server_cleanup_client_channels( struct SERVER* s, struct CLIENT* c );
 void server_drop_client( struct SERVER* s, bstring nick );
-BOOL server_listen( struct SERVER* s, int port );
-BOOL server_poll_new_clients( struct SERVER* s );
-BOOL server_service_clients( struct SERVER* s );
+VBOOL server_listen( struct SERVER* s, int port );
+VBOOL server_poll_new_clients( struct SERVER* s );
+VBOOL server_service_clients( struct SERVER* s );
 void server_set_client_nick( struct SERVER* s, struct CLIENT* c, const bstring nick );
 bstring server_file_search( bstring search_filename );
-BOOL server_is_running( struct SERVER* s );
-BOOL server_is_listening( struct SERVER* s );
+VBOOL server_is_running( struct SERVER* s );
+VBOOL server_is_listening( struct SERVER* s );
 bstring server_get_remote( struct SERVER* s );
 size_t server_get_client_count( struct SERVER* s );
 struct VECTOR* server_get_clients_online( struct SERVER* s, struct VECTOR* filter );

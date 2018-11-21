@@ -33,30 +33,30 @@ struct TILEMAP_TILESET;
 #ifdef USE_ITEMS
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
-   bstring def_path, BOOL local_images
+   bstring def_path, VBOOL local_images
 );
 void datafile_parse_item_ezxml_t(
-   struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct ITEM* e, ezxml_t xml_data, bstring def_path, VBOOL local_images
 );
 #endif /* USE_ITEMS */
 ezxml_t datafile_mobile_ezxml_peek_mob_id(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring mob_id_buffer
 );
 void datafile_parse_mobile_ezxml_t(
-   struct MOBILE* o, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct MOBILE* o, ezxml_t xml_data, bstring def_path, VBOOL local_images
 );
-BOOL datafile_tilemap_parse_tileset_ezxml(
+VBOOL datafile_tilemap_parse_tileset_ezxml(
    struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path,
-   BOOL local_images
+   VBOOL local_images
 );
 ezxml_t datafile_tilemap_ezxml_peek_lname(
    BYTE* tmdata, SCAFFOLD_SIZE datasize, bstring lname_buffer
 );
 SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
-   struct TILEMAP* t, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct TILEMAP* t, ezxml_t xml_data, bstring def_path, VBOOL local_images
 );
 void datafile_parse_ezxml_string(
-   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images,
+   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, VBOOL local_images,
    DATAFILE_TYPE type, bstring def_path
 );
 #endif /* USE_EZXML */

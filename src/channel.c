@@ -70,7 +70,7 @@ void channel_free( struct CHANNEL* l ) {
  *                   mirror of a server-side channel.)
  */
 void channel_init(
-   struct CHANNEL* l, const bstring name, BOOL local_images,
+   struct CHANNEL* l, const bstring name, VBOOL local_images,
    struct CLIENT* server
 ) {
    ref_init( &(l->refcount), channel_free_final );
@@ -91,7 +91,7 @@ cleanup:
    return;
 }
 
-void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
+void channel_add_client( struct CHANNEL* l, struct CLIENT* c, VBOOL spawn ) {
    struct MOBILE* o = NULL;
    struct TILEMAP* t = NULL;
    struct TILEMAP_SPAWNER* spawner = NULL;
@@ -103,7 +103,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
       goto cleanup;
    }
 
-   if( FALSE != spawn ) {
+   if( VFALSE != spawn ) {
       scaffold_assert_server();
       t = l->tilemap;
 
@@ -141,7 +141,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
          client_get_nick( c ), mobile_get_serial( o ),
          mobile_get_x( o ), mobile_get_y( o )
       );
-   } else if( FALSE != spawn ) {
+   } else if( VFALSE != spawn ) {
       lg_error(
          __FILE__,
          "Unable to find mobile spawner for this map.\n"
@@ -150,7 +150,7 @@ void channel_add_client( struct CHANNEL* l, struct CLIENT* c, BOOL spawn ) {
 
    client_add_channel( c, l  );
 
-   if( hashmap_put( l->clients, client_get_nick( c ), c, FALSE ) ) {
+   if( hashmap_put( l->clients, client_get_nick( c ), c, VFALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client.\n" );
       //client_free( c );
    }
@@ -170,7 +170,7 @@ void channel_remove_client( struct CHANNEL* l, struct CLIENT* c ) {
    struct MOBILE* o = NULL;
 
    c_test = hashmap_get( l->clients, client_get_nick( c ) );
-   if( NULL != c_test && FALSE != hashmap_remove( l->clients, client_get_nick( c ) ) ) {
+   if( NULL != c_test && VFALSE != hashmap_remove( l->clients, client_get_nick( c ) ) ) {
       o = client_get_puppet( c );
       if( NULL != o ) {
          channel_remove_mobile( l, mobile_get_serial( o ) );
@@ -193,7 +193,7 @@ struct CLIENT* channel_get_client_by_name(
 void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
    assert( 0 != mobile_get_serial( o ) );
-   vector_set( l->mobiles, mobile_get_serial( o ), o, TRUE );
+   vector_set( l->mobiles, mobile_get_serial( o ), o, VTRUE );
 }
 
 void channel_set_mobile(
@@ -227,7 +227,7 @@ void channel_set_mobile(
       );
       scaffold_assert( NULL != mobile_get_def_filename( o ) );
       mobile_set_channel( o, l );
-      vector_set( l->mobiles, mobile_get_serial( o ), o, TRUE );
+      vector_set( l->mobiles, mobile_get_serial( o ), o, VTRUE );
 #ifdef ENABLE_LOCAL_CLIENT
       if( client_is_local( l->client_or_server ) ) {
          client_request_file(
@@ -294,7 +294,7 @@ void channel_load_tilemap( struct CHANNEL* l ) {
    lgc_zero_msg( bytes_read, "Unable to load tilemap data." );
 
    datafile_parse_ezxml_string(
-      l->tilemap, mapdata_buffer, mapdata_size, FALSE,
+      l->tilemap, mapdata_buffer, mapdata_size, VFALSE,
       DATAFILE_TYPE_TILEMAP, mapdata_path
    );
 
@@ -316,19 +316,19 @@ cleanup:
    return;
 }
 
-BOOL channel_has_error( const struct CHANNEL* l ) {
+VBOOL channel_has_error( const struct CHANNEL* l ) {
    if( NULL != l && NULL != l->error ) {
-      return TRUE;
+      return VTRUE;
    }
-   return FALSE;
+   return VFALSE;
 }
 
 void channel_set_error( struct CHANNEL* l, const char* error ) {
    l->error = bfromcstr( error );
 }
 
-BOOL channel_is_loaded( struct CHANNEL* l ) {
-   BOOL retval = FALSE;
+VBOOL channel_is_loaded( struct CHANNEL* l ) {
+   VBOOL retval = VFALSE;
 
    if( NULL == l ) {
       goto cleanup;
@@ -355,7 +355,7 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
    }
 
    /* We made it this far... */
-   retval = TRUE;
+   retval = VTRUE;
 
 cleanup:
    return retval;

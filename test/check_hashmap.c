@@ -15,7 +15,7 @@ START_TEST( test_hashmap_add_get ) {
    blob = create_blob( 12121, 65000, 32, 4545 );
    hashmap_init( &h );
 
-   hashmap_put( &h, &str_key_hit, blob, FALSE );
+   hashmap_put( &h, &str_key_hit, blob, VFALSE );
 
    test_blob = hashmap_get( &h, &str_key_hit );
 
@@ -36,13 +36,13 @@ START_TEST( test_hashmap_delete ) {
 
    hashmap_init( &h );
    blob = create_blob( 7171, 4350, 32, 4311 );
-   hashmap_put( &h, &str_key_also2, blob, FALSE );
+   hashmap_put( &h, &str_key_also2, blob, VFALSE );
    ck_assert_int_eq( hashmap_count( &h ), 1 );
    blob = create_blob( 12121, 4300, 32, 4545 );
-   hashmap_put( &h, &str_key_hit, blob, FALSE );
+   hashmap_put( &h, &str_key_hit, blob, VFALSE );
    ck_assert_int_eq( hashmap_count( &h ), 2 );
    blob = create_blob( 7878, 4300, 32, 4300 );
-   hashmap_put( &h, &str_key_also1, blob, FALSE );
+   hashmap_put( &h, &str_key_also1, blob, VFALSE );
    ck_assert_int_eq( hashmap_count( &h ), 3 );
 
    hashmap_remove( &h, &str_key_also2 );

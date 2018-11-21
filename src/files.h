@@ -13,7 +13,7 @@ __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */
 ;
 SCAFFOLD_SIZE_SIGNED files_write(
-   bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs
+   bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, VBOOL mkdirs
 )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
@@ -21,14 +21,14 @@ __attribute__ ((warn_unused_result))
 ;
 void files_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
-   BOOL dir_only, BOOL show_hidden
+   VBOOL dir_only, VBOOL show_hidden
 );
 bstring files_basename( bstring path )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */
 ;
-BOOL files_check_directory( const bstring path )
+VBOOL files_check_directory( const bstring path )
 #ifdef USE_GNUC_EXTENSIONS
 __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */

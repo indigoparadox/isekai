@@ -3,7 +3,7 @@
 #include "../ipc.h"
 
 struct CONNECTION {
-   BOOL connected;
+   VBOOL connected;
 };
 
 void ipc_setup() {
@@ -19,18 +19,18 @@ struct CONNECTION* ipc_alloc() {
 void ipc_free( struct CONNECTION** n ) {
 }
 
-BOOL ipc_connected( struct CONNECTION* n ) {
+VBOOL ipc_connected( struct CONNECTION* n ) {
    return n->connected;
 }
 
-BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
+VBOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
 }
 
-BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
-   n->connected = TRUE;
+VBOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
+   n->connected = VTRUE;
 }
 
-BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
+VBOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
 }
 
 /*
@@ -51,5 +51,5 @@ uint16_t ipc_get_port( struct CONNECTION* n ) {
    return 0;
 }
 
-BOOL ipc_is_listening( struct CONNECTION* n ) {
+VBOOL ipc_is_listening( struct CONNECTION* n ) {
 }

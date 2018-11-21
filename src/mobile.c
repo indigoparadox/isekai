@@ -1189,7 +1189,7 @@ enum MOBILE_FACING mobile_get_facing( const struct MOBILE* o ) {
 
 VBOOL mobile_get_animation_reset( const struct MOBILE* o ) {
    if( NULL == o ) {
-      return FALSE;
+      return VFALSE;
    }
    return o->animation_reset;
 }
@@ -1201,15 +1201,6 @@ struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
       return NULL;
    }
    return vector_get( o->sprite_defs, index );
-}
-
-struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
-   const struct MOBILE* o
-) {
-   if( NULL == o || NULL == o->sprite_defs ) {
-      return NULL;
-   }
-   return vector_get( o->sprite_defs, o->current_frame );
 }
 
 void* mobile_get_mode_data( struct MOBILE* o ) {

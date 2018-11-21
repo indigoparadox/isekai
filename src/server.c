@@ -67,9 +67,9 @@ static void server_free_final( const struct REF* ref ) {
    mem_free( s );
 }
 
-BOOL server_free( struct SERVER* s ) {
+VBOOL server_free( struct SERVER* s ) {
    if( NULL == s ) {
-      return FALSE;
+      return VFALSE;
    }
    return refcount_dec( &(s->self), "server" );
 }
@@ -85,7 +85,7 @@ cleanup:
 
 void server_init( struct SERVER* s, const bstring myhost ) {
    int bstr_result;
-   s->self.local_client = FALSE;
+   s->self.local_client = VFALSE;
    client_init( &(s->self) );
    s->self.refcount.gc_free = server_free_final;
    s->clients = hashmap_new();
@@ -119,7 +119,7 @@ void server_stop( struct SERVER* s ) {
    */
    scaffold_assert( 0 == hashmap_count( s->self.channels ) );
    scaffold_assert( 0 == hashmap_count( s->clients ) );
-   s->self.running = FALSE;
+   s->self.running = VFALSE;
 }
 
 short server_add_client( struct SERVER* s, struct CLIENT* c ) {
@@ -130,7 +130,7 @@ short server_add_client( struct SERVER* s, struct CLIENT* c ) {
       } while( NULL != hashmap_get( s->clients, client_get_nick( c ) ) );
    }
    scaffold_assert( NULL == hashmap_get( s->clients, client_get_nick( c ) ) );
-   if( hashmap_put( s->clients, client_get_nick( c ), c, FALSE ) ) {
+   if( hashmap_put( s->clients, client_get_nick( c ), c, VFALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add client: %b\n",
          client_get_nick( c ) );
       client_free( c );
@@ -155,7 +155,7 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
 
    if( NULL == l ) {
       /* Create a new channel on the server. */
-      channel_new( l, l_name, FALSE, &(s->self) );
+      channel_new( l, l_name, VFALSE, &(s->self) );
       client_add_channel( &(s->self), l );
       lg_debug(
          __FILE__, "Server: Channel created: %s\n", bdata( l->name ) );
@@ -232,7 +232,7 @@ void server_channel_add_client( struct CHANNEL* l, struct CLIENT* c ) {
       goto cleanup;
    }
 
-   channel_add_client( l, c, TRUE );
+   channel_add_client( l, c, VTRUE );
 
    hashmap_iterate( l->clients, callback_send_mobs_to_channel, l );
 
@@ -253,7 +253,7 @@ struct CHANNEL* server_get_channel_by_name( struct SERVER* s, const bstring nick
 }
 
 void server_drop_client( struct SERVER* s, const bstring nick ) {
-   BOOL deffered_lock = FALSE;
+   VBOOL deffered_lock = VFALSE;
 #ifdef DEBUG
    SCAFFOLD_SIZE deleted;
    SCAFFOLD_SIZE old_count = 0, new_count = 0;
@@ -265,15 +265,15 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
    /* TODO: Remove the client from all of the other lists that have upped its *
     *       ref count.                                                        */
    if( hashmap_is_locked( s->clients ) ) {
-      deffered_lock = TRUE;
-      hashmap_lock( s->clients, FALSE );
+      deffered_lock = VTRUE;
+      hashmap_lock( s->clients, VFALSE );
    }
 #ifdef DEBUG
    deleted =
 #endif /* DEBUG */
       hashmap_remove_cb( s->clients, callback_h_free_clients, nick );
    if( deffered_lock ) {
-      hashmap_lock( s->clients, TRUE );
+      hashmap_lock( s->clients, VTRUE );
    }
 #ifdef DEBUG
    lg_debug(
@@ -307,23 +307,23 @@ cleanup:
    return;
 }
 
-BOOL server_listen( struct SERVER* s, int port ) {
-   BOOL connected = FALSE;
+VBOOL server_listen( struct SERVER* s, int port ) {
+   VBOOL connected = VFALSE;
 
    connected = ipc_listen( s->self.link, port );
-   if( FALSE == connected ) {
+   if( VFALSE == connected ) {
       lg_error(
          __FILE__, "Server: Unable to bind to specified port. Exiting.\n" );
    } else {
-      s->self.running = TRUE;
+      s->self.running = VTRUE;
    }
 
    return connected;
 }
 
-BOOL server_poll_new_clients( struct SERVER* s ) {
+VBOOL server_poll_new_clients( struct SERVER* s ) {
    static struct CLIENT* c = NULL;
-   BOOL new_clients = FALSE;
+   VBOOL new_clients = VFALSE;
 #ifdef DEBUG
    SCAFFOLD_SIZE_SIGNED old_client_count = 0;
 
@@ -355,7 +355,7 @@ BOOL server_poll_new_clients( struct SERVER* s ) {
       //refcount_dec( c, "client" ); Hashmap is no longer a ref!
       c = NULL;
 
-      new_clients = TRUE;
+      new_clients = VTRUE;
    }
 
 cleanup:
@@ -365,10 +365,10 @@ cleanup:
 static void* server_srv_cb( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    struct SERVER* s = (struct SERVER*)arg;
-   BOOL keep_going = TRUE;
+   VBOOL keep_going = VTRUE;
 
    keep_going = proto_dispatch( c, s );
-   if( FALSE == keep_going ) {
+   if( VFALSE == keep_going ) {
       return c;
    }
 
@@ -376,10 +376,10 @@ static void* server_srv_cb( bstring idx, void* iter, void* arg ) {
 }
 
 /**
- * \return TRUE if a command was executed, or FALSE otherwise.
+ * \return VTRUE if a command was executed, or VFALSE otherwise.
  */
-BOOL server_service_clients( struct SERVER* s ) {
-   BOOL retval = FALSE;
+VBOOL server_service_clients( struct SERVER* s ) {
+   VBOOL retval = VFALSE;
    struct CLIENT* c_stop = NULL;
 
    scaffold_set_server();
@@ -437,11 +437,11 @@ cleanup:
    return;
 }
 
-BOOL server_is_running( struct SERVER* s ) {
+VBOOL server_is_running( struct SERVER* s ) {
    return client_is_running( &(s->self) );
 }
 
-BOOL server_is_listening( struct SERVER* s ) {
+VBOOL server_is_listening( struct SERVER* s ) {
    return client_is_listening( &(s->self) );
 }
 

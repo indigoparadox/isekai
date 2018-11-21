@@ -29,9 +29,9 @@ void check_channel_setup_checked() {
    bstring nick = NULL,
       uname = NULL,
       rname = NULL;
-   BOOL connected = FALSE,
-      server_ret = FALSE,
-      client_ret = FALSE;
+   VBOOL connected = VFALSE,
+      server_ret = VFALSE,
+      client_ret = VFALSE;
    int attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
 
    ipc_setup();
@@ -64,7 +64,7 @@ void check_channel_setup_checked() {
       clients[i] = client_new();
       scaffold_set_client();
       /* client_init( clients[i] ); */
-      client_set_local( clients[i], TRUE );
+      client_set_local( clients[i], VTRUE );
       bassignformat( nick, "TestNick%d", i );
       bassignformat( uname, "Test Username %d", i );
       bassignformat( rname, "Test Real Name %d", i );
@@ -86,19 +86,19 @@ void check_channel_setup_checked() {
       } while( LGC_ERROR_NONE != lgc_error );
 
       /* Receive the connection. */
-      connected = FALSE;
+      connected = VFALSE;
       attempts = CHECK_CHANNEL_CLIENT_CONNECT_COUNT;
       do {
          scaffold_set_server();
          connected = server_poll_new_clients( server );
          attempts--;
          ck_assert_int_ne( 0, attempts );
-      } while( FALSE == connected );
+      } while( VFALSE == connected );
       do {
          scaffold_set_server();
-         server_ret = server_service_clients( server ) ? TRUE : server_ret;
+         server_ret = server_service_clients( server ) ? VTRUE : server_ret;
          scaffold_set_client();
-         client_ret = client_update( clients[i], NULL ) ? TRUE : client_ret;
+         client_ret = client_update( clients[i], NULL ) ? VTRUE : client_ret;
       } while( !server_ret && !client_ret );
       ck_assert( i + 1 == server_get_client_count( server ) );
 
@@ -117,8 +117,8 @@ cleanup:
 
 void check_channel_teardown_checked() {
    int i;
-   BOOL server_ret = FALSE,
-      client_ret = FALSE;
+   VBOOL server_ret = VFALSE,
+      client_ret = VFALSE;
 
    for( i = CHECK_CHANNEL_CLIENT_COUNT - 1 ; 0 <= i ; i-- ) {
       lg_color(
@@ -130,9 +130,9 @@ void check_channel_teardown_checked() {
       proto_client_stop( clients[i] );
       do {
          scaffold_set_server();
-         server_ret = server_service_clients( server ) ? TRUE : server_ret;
+         server_ret = server_service_clients( server ) ? VTRUE : server_ret;
          scaffold_set_client();
-         client_ret = client_update( clients[i], NULL ) ? TRUE : client_ret;
+         client_ret = client_update( clients[i], NULL ) ? VTRUE : client_ret;
       } while( !server_ret && !client_ret );
       //ck_assert( client_connected( &(clients[i]) ) );
       lg_color(
@@ -143,7 +143,7 @@ void check_channel_teardown_checked() {
 
    lg_debug( __FILE__, "Server stopping...\n" );
    scaffold_set_server();
-   while( FALSE != server_service_clients( server ) );
+   while( VFALSE != server_service_clients( server ) );
 
    ck_assert_int_eq( 0, server_get_channels_count( server ) );
 
@@ -179,7 +179,7 @@ START_TEST( test_channel_server_channel ) {
 
       /* Finish server processing. */
       scaffold_set_server();
-      while( FALSE != server_service_clients( server ) );
+      while( VFALSE != server_service_clients( server ) );
 
       l = server_get_channel_by_name( server, &testchannel );
       ck_assert_ptr_ne( NULL, l );

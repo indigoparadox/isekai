@@ -14,7 +14,7 @@ struct CONNECTION {
    IPC_END type;
    SYNCBUFF_STATE state;
    SCAFFOLD_SIZE client_count;
-   BOOL local;
+   VBOOL local;
 } CONNECTION;
 
 #define SYNCBUFF_LINE_DEFAULT 255
@@ -80,21 +80,21 @@ void ipc_free( struct CONNECTION** n ) {
    n = NULL;
 }
 
-BOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
-   BOOL retval = FALSE;
+VBOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
+   VBOOL retval = VFALSE;
 
 #ifdef SYNCBUFF_STRICT
    scaffold_assert( SYNCBUFF_STATE_LISTENING != n->state );
 #else
    if( SYNCBUFF_STATE_LISTENING == n->state ) {
-      retval = FALSE;
+      retval = VFALSE;
       goto cleanup;
    }
 #endif /* SYNCBUFF_STRICT */
 
    n->type = IPC_END_SERVER;
    n->state = SYNCBUFF_STATE_LISTENING;
-   retval = TRUE;
+   retval = VTRUE;
 
 cleanup:
    //if( SCAFFOLD_ERROR_NEGATIVE == scaffold_error ) {
@@ -104,23 +104,23 @@ cleanup:
    return retval;
 }
 
-BOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
+VBOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
    scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
    n->state = SYNCBUFF_STATE_CONNECTED;
    n->type = IPC_END_CLIENT;
-   n->local = TRUE;
-   return TRUE;
+   n->local = VTRUE;
+   return VTRUE;
 }
 
-BOOL ipc_connected( struct CONNECTION* n ) {
+VBOOL ipc_connected( struct CONNECTION* n ) {
    if(
       NULL != n &&
       (SYNCBUFF_STATE_CONNECTED == n->state ||
       SYNCBUFF_STATE_LISTENING == n->state)
    ) {
-      return TRUE;
+      return VTRUE;
    }
-   return FALSE;
+   return VFALSE;
 }
 
 void ipc_stop( struct CONNECTION* n ) {
@@ -128,7 +128,7 @@ void ipc_stop( struct CONNECTION* n ) {
    n->state = SYNCBUFF_STATE_DISCONNECTED;
 }
 
-BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
+VBOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
    scaffold_assert( SYNCBUFF_STATE_LISTENING == n_server->state );
    scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
    scaffold_assert( IPC_END_SERVER == n_server->type );
@@ -136,9 +136,9 @@ BOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
       n->state = SYNCBUFF_STATE_CONNECTED;
       n->type = IPC_END_CLIENT;
       n_server->client_count++;
-      return TRUE;
+      return VTRUE;
    } else {
-      return FALSE;
+      return VFALSE;
    }
 }
 
@@ -151,7 +151,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
 
    scaffold_assert( NULL != buffer );
 
-   if( FALSE == n->local ) {
+   if( VFALSE == n->local ) {
       /* We're sending stuff TO the client. */
       dest = IPC_END_CLIENT;
    }
@@ -212,7 +212,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    scaffold_assert( NULL != buffer );
    scaffold_assert( NULL != n );
 
-   if( FALSE != n->local ) {
+   if( VFALSE != n->local ) {
       dest = IPC_END_CLIENT;
    }
 
@@ -250,15 +250,15 @@ IPC_END ipc_get_type( struct CONNECTION* n ) {
    return n->type;
 }
 
-BOOL ipc_is_local_client( struct CONNECTION* n ) {
+VBOOL ipc_is_local_client( struct CONNECTION* n ) {
    return n->local;
 }
 
-BOOL ipc_is_listening( struct CONNECTION* n ) {
+VBOOL ipc_is_listening( struct CONNECTION* n ) {
    if( SYNCBUFF_STATE_LISTENING == n->state ) {
-      return TRUE;
+      return VTRUE;
    }
-   return FALSE;
+   return VFALSE;
 }
 
 uint16_t ipc_get_port( struct CONNECTION* n ) {

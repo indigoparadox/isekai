@@ -28,7 +28,7 @@ extern struct VECTOR mode_list_short;
 
 bstring client_input_from_ui = NULL;
 
-BOOL callback_proc_client_delayed_files(
+VBOOL callback_proc_client_delayed_files(
    size_t idx, void* iter, void* arg
 ) {
    struct CLIENT_DELAYED_REQUEST* req = (struct CLIENT_DELAYED_REQUEST*)iter;
@@ -41,17 +41,17 @@ BOOL callback_proc_client_delayed_files(
 
    bdestroy( req->filename );
    mem_free( req );
-   return TRUE;
+   return VTRUE;
 }
 
 #ifdef USE_CHUNKS
-static BOOL callback_remove_chunkers( size_t idx, void* iter, void* arg ) {
+static VBOOL callback_remove_chunkers( size_t idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)arg;
    struct CHUNKER* h = (struct CHUNKER*)iter;
 
    client_handle_finished_chunker( c, h );
 
-   return TRUE;
+   return VTRUE;
 }
 
 void* callback_send_chunkers_l( bstring idx, void* iter, void* arg ) {
@@ -89,14 +89,14 @@ void* callback_proc_chunkers( bstring idx, void* iter, void* arg ) {
 
 #ifdef USE_ITEMS
 
-static BOOL callback_remove_items( size_t idx, void* iter, void* arg ) {
+static VBOOL callback_remove_items( size_t idx, void* iter, void* arg ) {
    struct ITEM* e = (struct ITEM*)iter;
 
    if( NULL != e ) {
       item_free( e );
    }
 
-   return TRUE;
+   return VTRUE;
 }
 
 #endif /* USE_ITEMS */
@@ -156,7 +156,7 @@ cleanup:
 void client_init( struct CLIENT* c ) {
    ref_init( &(c->refcount), client_cleanup );
 
-   scaffold_assert( FALSE == c->running );
+   scaffold_assert( VFALSE == c->running );
 
    c->channels = hashmap_new();
    c->sprites = hashmap_new();
@@ -178,16 +178,16 @@ void client_init( struct CLIENT* c ) {
    c->protocol_data = NULL;
 
    c->sentinal = CLIENT_SENTINAL;
-   c->running = TRUE;
+   c->running = VTRUE;
 }
 
 /** \brief Mark this struct as the MAIN local client.
  */
-void client_set_local( struct CLIENT* c, BOOL val ) {
+void client_set_local( struct CLIENT* c, VBOOL val ) {
    c->local_client = val;
 }
 
-BOOL client_is_local( struct CLIENT* c ) {
+VBOOL client_is_local( struct CLIENT* c ) {
    return c->local_client;
 }
 
@@ -195,18 +195,18 @@ BOOL client_is_local( struct CLIENT* c ) {
   *         an infinite loop.
   *
   * \param c - The CLIENT struct from inside of the struct SERVER being freed.
-  * \return TRUE for now.
+  * \return VTRUE for now.
   *
   */
-BOOL client_free_from_server( struct CLIENT* c ) {
+VBOOL client_free_from_server( struct CLIENT* c ) {
    /* Kind of a hack, but make sure "running" is set to true to fool the      *
     * client_stop() call that comes later.                                    */
-   //c->running = TRUE;
+   //c->running = VTRUE;
    //client_cleanup( &(c->refcount) );
-   return TRUE;
+   return VTRUE;
 }
 
-BOOL client_free( struct CLIENT* c ) {
+VBOOL client_free( struct CLIENT* c ) {
    return refcount_dec( c, "client" );
 }
 
@@ -228,8 +228,8 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
    return hashmap_get( c->channels, name );
 }
 
-BOOL client_connect( struct CLIENT* c, const bstring server, int port ) {
-   BOOL connected = FALSE;
+VBOOL client_connect( struct CLIENT* c, const bstring server, int port ) {
+   VBOOL connected = VFALSE;
 
    scaffold_set_client();
 
@@ -238,12 +238,12 @@ BOOL client_connect( struct CLIENT* c, const bstring server, int port ) {
    );
 
    connected = ipc_connect( c->link, server , port );
-   if( FALSE == connected ) {
+   if( VFALSE == connected ) {
       goto cleanup;
    }
 
    lg_info( __FILE__, "Client connected and running.\n" );
-   c->running = TRUE;
+   c->running = VTRUE;
 
    lg_debug( __FILE__, "Client sending registration...\n" );
    proto_register( c );
@@ -254,10 +254,10 @@ cleanup:
 }
 
 /** \brief This runs on the local client.
- * \return TRUE if a command was executed, or FALSE otherwise.
+ * \return VTRUE if a command was executed, or VFALSE otherwise.
  */
-BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
-   BOOL retval = FALSE;
+VBOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
+   VBOOL retval = VFALSE;
 #ifdef DEBUG_TILES
    int bstr_ret;
    SCAFFOLD_SIZE steps_remaining_x,
@@ -265,7 +265,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    static bstring pos = NULL;
    struct MOBILE* o = NULL;
 #endif /* DEBUG_TILES */
-   BOOL keep_going = FALSE;
+   VBOOL keep_going = VFALSE;
    struct VECTOR* chunker_removal_queue = NULL;
    struct TWINDOW* twindow = NULL;
 
@@ -275,7 +275,7 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    keep_going = proto_dispatch( c, NULL );
 
    /* TODO: Is this ever called? */
-   if( FALSE == keep_going ) {
+   if( VFALSE == keep_going ) {
       lg_info( __FILE__, "Remote server disconnected.\n" );
       client_stop( c );
    }
@@ -288,8 +288,8 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    }
 
    if( NULL != o ) {
-      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
-      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+      steps_remaining_x = mobile_get_steps_remaining_x( o, VFALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, VFALSE );
 
       bstr_ret = bassignformat( pos,
          "Player: %d (%d)[%d], %d (%d)[%d]",
@@ -366,14 +366,14 @@ void client_stop( struct CLIENT* c ) {
 
    scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
-   if( FALSE != ipc_connected( c->link ) ) {
+   if( VFALSE != ipc_connected( c->link ) ) {
       lg_info( __FILE__, "Client connection stopping...\n" );
       ipc_stop( c->link );
    }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-   if( FALSE != client_is_local( c ) ) {
+   if( VFALSE != client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -402,7 +402,7 @@ void client_stop( struct CLIENT* c ) {
    //client_set_active_t( c, NULL );
 #ifdef ENABLE_LOCAL_CLIENT
    // XXX: Free these after removing all?
-   if( FALSE != client_is_local( c ) ) {
+   if( VFALSE != client_is_local( c ) ) {
       hashmap_remove_cb( c->sprites, callback_free_graphics, NULL );
       hashmap_remove_all( c->tilesets );
 #ifdef USE_ITEMS
@@ -412,13 +412,13 @@ void client_stop( struct CLIENT* c ) {
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   scaffold_assert( FALSE == ipc_connected( c->link ) );
-   c->running = FALSE;
+   scaffold_assert( VFALSE == ipc_connected( c->link ) );
+   c->running = VFALSE;
 
 #ifdef DEBUG
 
-   if( FALSE != client_is_local( c ) ) {
-      scaffold_assert( FALSE == c->running );
+   if( VFALSE != client_is_local( c ) ) {
+      scaffold_assert( VFALSE == c->running );
 
       test_count = hashmap_count( c->channels );
       scaffold_assert( 0 == test_count );
@@ -453,7 +453,7 @@ cleanup:
 }
 
 short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
-   if( hashmap_put( c->channels, l->name, l, FALSE ) ) {
+   if( hashmap_put( c->channels, l->name, l, VFALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add channel...\n" );
       return 1;
    }
@@ -467,7 +467,7 @@ void client_send_file(
    const bstring serverpath, const bstring filepath
 ) {
    struct CHUNKER* h = NULL;
-   BOOL valid_file;
+   VBOOL valid_file;
 
    lg_debug(
       __FILE__, "Sending file to client %p: %s\n", c, bdata( filepath )
@@ -485,7 +485,7 @@ void client_send_file(
       64
    );
 
-   if( FALSE == valid_file ) {
+   if( VFALSE == valid_file ) {
       lg_error(
          __FILE__, "Server: File not found, canceling: %b\n", filepath
       );
@@ -495,7 +495,7 @@ void client_send_file(
    lg_debug(
       __FILE__, "Server: Adding chunker to send: %b\n", filepath
    );
-   hashmap_put( c->chunkers, filepath, h, TRUE );
+   hashmap_put( c->chunkers, filepath, h, VTRUE );
 
 cleanup:
    if( NULL != h ) {
@@ -568,16 +568,16 @@ void client_request_file_later(
 ) {
    struct CLIENT_DELAYED_REQUEST* request = NULL;
    SCAFFOLD_SIZE_SIGNED verr;
-   BOOL deffered_lock = FALSE;
+   VBOOL deffered_lock = VFALSE;
 
    /* Make sure request wasn't made already. */
    if( vector_is_locked( c->delayed_files ) ) {
-      deffered_lock = TRUE;
-      vector_lock( c->delayed_files, FALSE ); /* Hack, recursive locking. */
+      deffered_lock = VTRUE;
+      vector_lock( c->delayed_files, VFALSE ); /* Hack, recursive locking. */
    }
    request = vector_iterate( c->delayed_files, client_dr_cb, filename );
    if( deffered_lock ) {
-      vector_lock( c->delayed_files, TRUE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, VTRUE ); /* Hack, recursive locking. */
    }
    if( NULL != request ) {
       goto cleanup; /* Silently. */
@@ -592,12 +592,12 @@ void client_request_file_later(
    request->type = type;
 
    if( vector_is_locked( c->delayed_files ) ) {
-      deffered_lock = TRUE;
-      vector_lock( c->delayed_files, FALSE ); /* Hack, recursive locking. */
+      deffered_lock = VTRUE;
+      vector_lock( c->delayed_files, VFALSE ); /* Hack, recursive locking. */
    }
    verr = vector_add( c->delayed_files, request );
    if( deffered_lock ) {
-      vector_lock( c->delayed_files, TRUE ); /* Hack, recursive locking. */
+      vector_lock( c->delayed_files, VTRUE ); /* Hack, recursive locking. */
    }
    lgc_negative( verr );
 
@@ -611,7 +611,7 @@ void client_request_file(
 #ifdef USE_CHUNKS
    struct CHUNKER* h = NULL;
 
-   if( FALSE != hashmap_contains_key( c->chunkers, filename ) ) {
+   if( VFALSE != hashmap_contains_key( c->chunkers, filename ) ) {
       /* File already requested, so just be patient. */
       goto cleanup;
    }
@@ -626,7 +626,7 @@ void client_request_file(
       chunker_unchunk_start(
          h, type, filename, &str_client_cache_path
       );
-      hashmap_put( c->chunkers, filename, h, TRUE );
+      hashmap_put( c->chunkers, filename, h, VTRUE );
       lg_debug( __FILE__, "scaffold_error: %d\n", lgc_error );
       lgc_nonzero( lgc_error );
 
@@ -653,7 +653,7 @@ cleanup:
 void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    struct CHUNKER* h = NULL;
    int8_t chunker_percent;
-   BOOL remove_ok;
+   VBOOL remove_ok;
 
    scaffold_assert( 0 < blength( cp->filename ) );
 
@@ -682,7 +682,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
          __FILE__, "Removing invalid chunker: %b\n", h->filename );
       remove_ok = hashmap_remove( c->chunkers, cp->filename );
       chunker_free( h );
-      scaffold_assert( FALSE != remove_ok );
+      scaffold_assert( VFALSE != remove_ok );
       goto cleanup;
    }
 
@@ -690,7 +690,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
 
    chunker_unchunk_pass( h, cp->data, cp->current, cp->total, cp->chunk_size );
 
-   chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
+   chunker_percent = chunker_unchunk_percent_progress( h, VFALSE );
    if( 0 < chunker_percent ) {
       lg_debug(
          __FILE__, "Chunker: %b: %d%%\n", h->filename, chunker_percent );
@@ -711,7 +711,7 @@ cleanup:
 
 void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 
-   assert( TRUE == chunker_unchunk_finished( h ) );
+   assert( VTRUE == chunker_unchunk_finished( h ) );
 
    datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
 
@@ -728,14 +728,14 @@ void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 /** \brief
  * \param
  * \param
- * \return TRUE if input is consumed, or FALSE otherwise.
+ * \return VTRUE if input is consumed, or VFALSE otherwise.
  */
-BOOL client_poll_ui(
+VBOOL client_poll_ui(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
 ) {
    struct TILEMAP* t = NULL;
    int bstr_ret;
-   BOOL retval = FALSE;
+   VBOOL retval = VFALSE;
    struct TWINDOW* w = NULL;
 
    if( NULL != c && NULL != mobile_get_channel( c->puppet ) ) {
@@ -745,7 +745,7 @@ BOOL client_poll_ui(
 #ifdef DEBUG_VM
    /* Poll window: REPL */
    if( NULL != ui_window_by_id( c->ui, &str_client_window_id_repl ) ) {
-      retval = TRUE; /* Whatever the window does, it consumes input. */
+      retval = VTRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
          c->ui, p, &str_client_window_id_repl
       ) ) {
@@ -766,7 +766,7 @@ BOOL client_poll_ui(
    w = client_get_local_window( c );
    lgc_null( w );
    if( NULL != ui_window_by_id( client_get_ui( c ), &str_client_window_id_chat ) ) {
-      retval = TRUE; /* Whatever the window does, it consumes input. */
+      retval = VTRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
          client_get_ui( c ), p, &str_client_window_id_chat
       ) ) {
@@ -784,7 +784,7 @@ BOOL client_poll_ui(
 
    /* Poll window: Chat */
    if( NULL != ui_window_by_id( client_get_ui( c ), &str_client_window_id_inv ) ) {
-      retval = TRUE; /* Whatever the window does, it consumes input. */
+      retval = VTRUE; /* Whatever the window does, it consumes input. */
       if( 0 != ui_poll_input(
          client_get_ui( c ), p, &str_client_window_id_inv
       ) ) {
@@ -895,7 +895,7 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
 
       item_free( e );
    } else {
-      vector_set( &(c->unique_items), serial, e, TRUE );
+      vector_set( &(c->unique_items), serial, e, VTRUE );
    }
 
 cleanup:
@@ -925,7 +925,7 @@ cleanup:
 struct TILEMAP* client_get_tilemap_active( struct CLIENT* c ) {
    struct CHANNEL* l = NULL;
    struct TILEMAP* t = NULL;
-   BOOL previously_silent = lgc_error_silent;
+   VBOOL previously_silent = lgc_error_silent;
 
    lgc_silence();
    lgc_null( c );
@@ -976,7 +976,7 @@ void client_load_tileset_data( struct CLIENT* c, const bstring filename, BYTE* d
    set = client_get_tileset( c, filename );
    scaffold_assert( NULL != set );
    datafile_parse_ezxml_string(
-      set, data, length, TRUE, DATAFILE_TYPE_TILESET, filename
+      set, data, length, VTRUE, DATAFILE_TYPE_TILESET, filename
    );
 
    /* External tileset loaded. */
@@ -1010,7 +1010,7 @@ void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* d
 #ifdef USE_EZXML
    scaffold_assert( TILEMAP_SENTINAL != l->tilemap->sentinal );
    c->tilesets_loaded += datafile_parse_tilemap_ezxml_t(
-      l->tilemap, xml_data, filename, TRUE
+      l->tilemap, xml_data, filename, VTRUE
    );
    scaffold_assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
 
@@ -1057,8 +1057,8 @@ size_t client_get_chunker_count(  )
       goto cleanup; \
    }
 
-BOOL client_is_loaded( struct CLIENT* c ) {
-   BOOL loaded = FALSE;
+VBOOL client_is_loaded( struct CLIENT* c ) {
+   VBOOL loaded = VFALSE;
    static size_t
       last_tilesets_loaded = 0,
       last_delayed = 0,
@@ -1112,7 +1112,7 @@ BOOL client_is_loaded( struct CLIENT* c ) {
    }
 
    /* We made it this far... */
-   loaded = TRUE;
+   loaded = VTRUE;
 
 cleanup:
    return loaded;
@@ -1128,17 +1128,17 @@ cleanup:
    return l;
 }
 
-BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
-   BOOL already_present = FALSE;
+VBOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
+   VBOOL already_present = VFALSE;
 
    lg_debug(
       __FILE__, "Setting sprites for client: %b\n", client_get_nick( c ) );
 
-   already_present = hashmap_put( c->sprites, filename, g, FALSE );
+   already_present = hashmap_put( c->sprites, filename, g, VFALSE );
    if( already_present ) {
       lg_error(
          __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
-      return FALSE;
+      return VFALSE;
    } else {
       client_iterate_channels( c, callback_attach_channel_mob_sprites, c );
       lg_debug(
@@ -1150,14 +1150,14 @@ BOOL client_set_sprite( struct CLIENT* c, bstring filename, GRAPHICS* g ) {
    return !already_present;
 }
 
-BOOL client_set_tileset( struct CLIENT* c, bstring filename, struct TILEMAP_TILESET* set ) {
-   BOOL already_present = FALSE;
+VBOOL client_set_tileset( struct CLIENT* c, bstring filename, struct TILEMAP_TILESET* set ) {
+   VBOOL already_present = VFALSE;
 
-   already_present = hashmap_put( c->tilesets, filename, set, TRUE );
+   already_present = hashmap_put( c->tilesets, filename, set, VTRUE );
    if( already_present ) {
       lg_error(
          __FILE__, "Attempted to double-add spritesheet: %b\n", filename );
-      return FALSE;
+      return VFALSE;
    } else {
       client_iterate_channels( c, callback_attach_channel_mob_sprites, c );
       lg_debug(
@@ -1169,7 +1169,7 @@ BOOL client_set_tileset( struct CLIENT* c, bstring filename, struct TILEMAP_TILE
    return !already_present;
 }
 
-BOOL client_is_running( struct CLIENT* c ) {
+VBOOL client_is_running( struct CLIENT* c ) {
    return c->running;
 }
 
@@ -1185,12 +1185,12 @@ struct TWINDOW* client_get_local_window( struct CLIENT* c ) {
    return c->local_window;
 }
 
-BOOL client_is_listening( struct CLIENT* c ) {
+VBOOL client_is_listening( struct CLIENT* c ) {
    return NULL != c && ipc_is_listening( c->link );
 }
 
-BOOL client_is_connected( struct CLIENT* c ) {
-   return (FALSE != ipc_connected( c->link ) && TRUE == (c)->running);
+VBOOL client_is_connected( struct CLIENT* c ) {
+   return (VFALSE != ipc_connected( c->link ) && VTRUE == (c)->running);
 }
 
 CLIENT_FLAGS client_test_flags( struct CLIENT* c, CLIENT_FLAGS flags ) {
