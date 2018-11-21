@@ -312,6 +312,7 @@ TILEMAP_EXCLUSION tilemap_inside_window_deadzone_x(
    TILEMAP_COORD_TILE x, struct TWINDOW* twindow );
 TILEMAP_EXCLUSION tilemap_inside_window_deadzone_y(
    TILEMAP_COORD_TILE y, struct TWINDOW* twindow );
+struct TWINDOW* tilemap_get_local_window( struct TILEMAP* t );
 
 #ifdef TILEMAP_C
 

@@ -241,6 +241,17 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       //local_window = client_get_local_window( main_client );
       twindow_update_details( local_window );
 
+      /* Make sure we have the correct mode data. */
+
+      if( NULL != client_get_mode_data( main_client ) ) {
+         plugin_call(
+            PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
+            PLUGIN_CLIENT_FREE, main_client );
+      }
+      plugin_call(
+         PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
+         PLUGIN_CLIENT_INIT, main_client );
+
       backlog_height_px =
          backlog_height_tiles * twindow_get_grid_h( local_window );
 
@@ -684,7 +695,7 @@ int main( int argc, char** argv ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_set_client();
-   main_client = client_new();
+   main_client = client_new( NULL );
    client_set_local( main_client, VTRUE );
    twindow_set_local_client( local_window, main_client );
    client_set_local_window( main_client, local_window );

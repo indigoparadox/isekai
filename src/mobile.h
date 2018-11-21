@@ -47,7 +47,9 @@ struct MOBILE_SPRITE_DEF {
 #define MOBILE_SPRITE_SIZE 32
 
 void mobile_gen_serial( struct MOBILE* o, struct VECTOR* mobiles );
-struct MOBILE* mobile_new( bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y );
+struct MOBILE* mobile_new(
+   bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
+);
 void mobile_free( struct MOBILE* o );
 void mobile_init(
    struct MOBILE* o, const bstring mob_id, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y
@@ -56,8 +58,7 @@ void mobile_animation_free( struct MOBILE_ANI_DEF* animation );
 void mobile_load_local( struct MOBILE* o );
 void mobile_animate( struct MOBILE* o );
 void mobile_get_spritesheet_pos_ortho(
-   struct MOBILE* o, SCAFFOLD_SIZE gid,
-   GFX_COORD_PIXEL* x, GFX_COORD_PIXEL* y
+   struct MOBILE* o, GRAPHICS_RECT* sprite_frame, size_t gid
 );
 void mobile_apply_steps_remaining(
    struct MOBILE* o, SCAFFOLD_SIZE* x, SCAFFOLD_SIZE* y, VBOOL reverse
@@ -151,6 +152,21 @@ void* mobile_get_mode_data( struct MOBILE* o );
 void mobile_set_mode_data( struct MOBILE* o, void* mode_data );
 struct MOBILE_SPRITE_DEF* mobile_get_animation_frame(
    const struct MOBILE* o, size_t index
+);
+GRAPHICS_COLOR mobile_spritesheet_get_pixel(
+   struct MOBILE* o, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y
+);
+void mobile_spritesheet_set_pixel(
+   struct MOBILE* o, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS_COLOR pixel
+);
+void mobile_set_animation_reset( struct MOBILE* o, VBOOL reset );
+GFX_COORD_PIXEL mobile_get_sprite_width( struct MOBILE* o );
+GFX_COORD_PIXEL mobile_get_sprite_height( struct MOBILE* o );
+struct MOBILE_SPRITE_DEF* mobile_get_animation_frame_current(
+   const struct MOBILE* o
+);
+struct MOBILE_ANI_DEF* mobile_get_animation_current(
+   const struct MOBILE* o
 );
 
 #ifdef MOBILE_C
