@@ -39,17 +39,18 @@ struct POV_MOBILE_DATA {
 extern bstring client_input_from_ui;
 
 struct tagbstring mode_name = bsStatic( "POV" );
+struct tagbstring mode_key = bsStatic( "pov" );
 
 static GRAPHICS* ray_view = NULL;
 struct HASHMAP* tileset_status;
 
 PLUGIN_RESULT mode_pov_mobile_init( struct MOBILE* o, struct CHANNEL* l ) {
-   mobile_set_mode_data( o, mem_alloc( 1, struct POV_MOBILE_DATA ) );
+   mobile_set_mode_data( o, &mode_key, l, mem_alloc( 1, struct POV_MOBILE_DATA ) );
    return PLUGIN_SUCCESS;
 }
 
 PLUGIN_RESULT mode_pov_client_init( struct CLIENT* c, struct CHANNEL* l ) {
-   client_set_mode_data( c, l->name, mem_alloc( 1, struct POV_CLIENT_DATA ) );
+   client_set_mode_data( c, &mode_key, l, mem_alloc( 1, struct POV_CLIENT_DATA ) );
    return PLUGIN_SUCCESS;
 }
 
@@ -60,9 +61,12 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
    struct MOBILE* puppet = NULL;
    struct MOBILE_ANI_DEF* o_animation = NULL;
    struct POV_MOBILE_DATA* o_data = NULL;
+   struct CHANNEL* l = NULL;
 
+   l = mobile_get_channel( o );
+   lgc_null( l );
    o_facing = mobile_get_facing( o );
-   o_data = mobile_get_mode_data( o );
+   o_data = mobile_get_mode_data( o, &mode_key, l );
 
    puppet = client_get_puppet( c );
    if( NULL == puppet ) {
@@ -172,13 +176,13 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
 
    l = mobile_get_channel( o );
    lgc_null( l );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
    plane_pos = &(c_data->plane_pos);
    lgc_null( plane_pos );
-   o_data = mobile_get_mode_data( o );
+   o_data = mobile_get_mode_data( o, &mode_key, l );
    lgc_null( o_data );
    z_buffer = c_data->z_buffer;
    lgc_null( z_buffer );
@@ -343,7 +347,7 @@ static void* mode_pov_mob_calc_dist_cb( size_t idx, void* iter, void* arg ) {
    lgc_null( t );
    l = client_get_channel_active( c );
    lgc_null( l );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -353,7 +357,7 @@ static void* mode_pov_mob_calc_dist_cb( size_t idx, void* iter, void* arg ) {
       goto cleanup; /* Silently. */
    }
 
-   o_data = mobile_get_mode_data( o );
+   o_data = mobile_get_mode_data( o, &mode_key, l );
    lgc_null( o_data );
 
    o_data->ray_distance =
@@ -421,7 +425,7 @@ static void mode_pov_set_facing( struct CLIENT* c, MOBILE_FACING facing ) {
 
    l = client_get_channel_active( c );
    lgc_null( l );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -505,7 +509,7 @@ static VBOOL mode_pov_draw_floor(
 
    l = client_get_channel_active( c );
    lgc_null( l );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    cam_pos = &(c_data->cam_pos);
    lgc_null( cam_pos );
@@ -612,7 +616,7 @@ static VBOOL mode_pov_update_view(
    lgc_null( t );
    l = tilemap_get_channel( t );
    lgc_null( l );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    z_buffer = c_data->z_buffer;
    lgc_null( z_buffer );
@@ -740,11 +744,11 @@ PLUGIN_RESULT mode_pov_draw(
    lgc_null( t );
    player = client_get_puppet( c );
    lgc_null( player );
-   c_data = client_get_mode_data( c, l->name );
+   c_data = client_get_mode_data( c, &mode_key, l );
    //assert( NULL != c_data );
    if( NULL == c_data ) { goto cleanup; }
    lgc_null( c_data );
-   o_data = mobile_get_mode_data( player );
+   o_data = mobile_get_mode_data( player, &mode_key, l );
    if( NULL == o_data ) { goto cleanup; }
    lgc_null( o_data );
    cam_pos = &(c_data->cam_pos);

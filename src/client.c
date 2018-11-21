@@ -123,6 +123,7 @@ static void client_cleanup( const struct REF *ref ) {
    hashmap_remove_all( c->tilesets );
    hashmap_free( &(c->tilesets) );
 
+   /* XXX: Free all sub-hashmaps. */
    hashmap_free( &(c->mode_data) );
 
 #ifdef USE_ITEMS
@@ -1264,36 +1265,73 @@ void client_set_local_window( struct CLIENT* c, struct TWINDOW* w ) {
    c->local_window = w;
 }
 
-void* client_get_mode_data( struct CLIENT* c, bstring l_name ) {
-   if( NULL == c ) {
-      return NULL;
-   }
-   return hashmap_get( c->mode_data, l_name );
-}
+void* client_get_mode_data( struct CLIENT* c, bstring mode, struct CHANNEL* l ) {
+   struct HASHMAP* channels = NULL;
+   void* mode_data = NULL;
 
-/*
-void client_set_mode(
-   struct CLIENT* c, bstring l_name, const bstring mode, void* mode_data
-) {
+   assert( NULL != l && NULL != l->name );
+   assert( NULL != mode );
+
    lgc_null( c );
-   assert( NULL != l_name );
-   hashmap_put( c->mode_data, l_name, mode_data, VFALSE );
-   if( NULL == hashmap_get( c->mode, l_name ) ) {
-      hashmap_put( c->mode, l_name, bstrcpy( mode ), VFALSE );
-   } else {
-      bassign( hashmap_get( c->mode, l_name ), mode );
+
+   channels = hashmap_get( c->mode_data, mode );
+   if( NULL == channels ) {
+      lg_debug( __FILE__, "Creating channel list for %b for client %b...\n", mode, c->nick );
+      channels = hashmap_new();
+      hashmap_put( c->mode_data, mode, channels, VFALSE );
    }
+
+   mode_data = hashmap_get( channels, l->name );
+   if( NULL == mode_data ) {
+      plugin_call( PLUGIN_MODE, mode, PLUGIN_CLIENT_INIT, c, l );
+   }
+   mode_data = hashmap_get( channels, l->name );
+
 cleanup:
-   return;
+   return mode_data;
 }
-*/
 
 void client_set_mode_data(
-   struct CLIENT* c, bstring l_name, void* mode_data
+   struct CLIENT* c, const bstring mode, struct CHANNEL* l, void* mode_data
 ) {
+   struct HASHMAP* channels = NULL;
+
+   assert( NULL != l && NULL != l->name );
+   assert( NULL != mode );
+
    lgc_null( c );
-   assert( NULL != l_name );
-   hashmap_put( c->mode_data, l_name, mode_data, VFALSE );
+
+   channels = hashmap_get( c->mode_data, mode );
+   if( NULL == channels ) {
+      lg_debug( __FILE__, "Creating channel list for %b for client %b...\n", mode, c->nick );
+      channels = hashmap_new();
+      hashmap_put( c->mode_data, mode, channels, VFALSE );
+   }
+
+   assert( NULL == hashmap_get( channels, l->name ) );
+   hashmap_put( channels, l->name, mode_data, FALSE );
+
 cleanup:
    return;
 }
+
+/* void client_set_mode_data(
+   struct CLIENT* c, bstring mode, struct CHANNEL* l, void* mode_data
+) {
+   struct HASHMAP* channels = NULL;
+
+   lgc_null( c );
+   assert( NULL != l && NULL != l->name );
+   assert( NULL != mode );
+
+   channels = hashmap_get( c->mode_data, mode );
+   if( NULL == channels ) {
+      lg_debug( __FILE__, "Creating channel list for %b for mobile %b...\n", mode, c->nick );
+      channels = hashmap_new();
+      hashmap_put( c->mode_data, mode, channels, VFALSE );
+   }
+
+   hashmap_put( channels, l->name, mode_data, VFALSE );
+cleanup:
+   return;
+} */
