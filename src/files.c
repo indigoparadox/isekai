@@ -139,7 +139,7 @@ cleanup:
 }
 
 SCAFFOLD_SIZE_SIGNED files_write(
-   bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, BOOL mkdirs
+   bstring path, BYTE* data, SCAFFOLD_SIZE_SIGNED len, VBOOL mkdirs
 ) {
    FILE* outputfile = NULL;
    char* path_c = NULL;
@@ -232,7 +232,7 @@ cleanup:
 
 void files_list_dir(
    const bstring path, struct VECTOR* list, const bstring filter,
-   BOOL dir_only, BOOL show_hidden
+   VBOOL dir_only, VBOOL show_hidden
 ) {
 
    /* FIXME: Detect directories under WIN16 or DOS. */
@@ -248,7 +248,7 @@ void files_list_dir(
    int bstr_result;
    SCAFFOLD_SIZE_SIGNED verr;
    struct stat stat_buff;
-   BOOL is_dir = FALSE;
+   VBOOL is_dir = VFALSE;
    int stat_result;
 
    path_c = bdata( path );
@@ -287,10 +287,10 @@ void files_list_dir(
 #ifdef _DIRENT_HAVE_D_TYPE
       if( DT_DIR == entry->d_type ) {
          /* Directory. */
-         is_dir = TRUE;
+         is_dir = VTRUE;
       } else if( DT_UNKNOWN != entry->d_type ) {
          /* Not a directory. */
-         is_dir = FALSE;
+         is_dir = VFALSE;
       } else {
 #endif /* _DIRENT_HAVE_D_TYPE */
          /* No dirent, so do this the hard way. */
@@ -301,12 +301,12 @@ void files_list_dir(
       }
 #endif /* _DIRENT_HAVE_D_TYPE */
 
-      if( FALSE == is_dir ) {
+      if( VFALSE == is_dir ) {
          lg_debug( __FILE__, "Found file: %b\n", child_path );
 #endif /* _WIN32 */
          if(
-            FALSE == dir_only &&
-            (FALSE != show_hidden || '.' != entry->d_name[0])
+            VFALSE == dir_only &&
+            (VFALSE != show_hidden || '.' != entry->d_name[0])
          ) {
             /* We're tracking files, so add this, too. */
             verr = vector_add( list, child_path );
@@ -343,7 +343,7 @@ cleanup:
 #endif // DJGPP
 }
 
-BOOL files_check_directory( const bstring path ) {
+VBOOL files_check_directory( const bstring path ) {
    struct stat dir_info = { 0 };
    char* path_c = NULL;
    bstring zero_error = NULL;
@@ -369,14 +369,14 @@ cleanup:
    case LGC_ERROR_NONZERO:
       lg_error(
          __FILE__, "Unable to open directory: %s\n", bdata( path ) );
-      return FALSE;
+      return VFALSE;
 
    case LGC_ERROR_ZERO:
       lg_error( __FILE__, "Not a directory: %s\n", bdata( path ) );
-      return FALSE;
+      return VFALSE;
 
    default:
-      return TRUE;
+      return VTRUE;
    }
 }
 
@@ -465,7 +465,7 @@ bstring files_search( bstring search_filename ) {
    bstring path_out = NULL;
 
    files = vector_new();
-   files_list_dir( files_root( NULL ), files, NULL, FALSE, FALSE );
+   files_list_dir( files_root( NULL ), files, NULL, VFALSE, VFALSE );
    path_out = vector_iterate( files, files_search_cb, search_filename );
 
 cleanup:

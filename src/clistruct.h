@@ -1,11 +1,13 @@
 
+#include <graphics.h>
+
 struct CLIENT {
    struct REF refcount; /*!< Parent "class". The "root" class is REF. */
 
    struct CONNECTION* link;
 
    /* Items shared between server and client. */
-   BOOL running;
+   VBOOL running;
    bstring nick;
    bstring username;
    bstring realname;
@@ -48,7 +50,7 @@ struct CLIENT {
    GFX_COORD_FPP* z_buffer;
 #endif /* !DISABLE_MODE_POV */
 
-   BOOL local_client;
+   VBOOL local_client;
 
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };

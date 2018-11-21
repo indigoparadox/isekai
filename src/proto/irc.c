@@ -129,7 +129,7 @@ static void proto_send( struct CLIENT* c, const bstring buffer ) {
    client_write( c, buffer_copy );
 
 #ifdef DEBUG_NETWORK
-   if( FALSE != client_is_local( c ) ) {
+   if( VFALSE != client_is_local( c ) ) {
       lg_debug( __FILE__, "Client sent to server: %b\n", buffer );
    } else {
       lg_debug( __FILE__, "Server sent to client: %b\n", buffer );
@@ -139,7 +139,7 @@ static void proto_send( struct CLIENT* c, const bstring buffer ) {
 cleanup:
    bdestroy( buffer_copy );
 #ifdef ENABLE_LOCAL_CLIENT
-   if( FALSE != client_is_local( c ) ) {
+   if( VFALSE != client_is_local( c ) ) {
       scaffold_assert_client();
    } else {
       scaffold_assert_server();
@@ -397,7 +397,7 @@ static void* proto_send_item_cb(
 }
 
 void proto_send_container( struct CLIENT* c, struct ITEM* e ) {
-   if( FALSE != item_is_container( e ) ) {
+   if( VFALSE != item_is_container( e ) ) {
 
       proto_printf(
          c, "CONTAINER_START %d",
@@ -797,7 +797,7 @@ static void irc_server_ison(
    /* TODO: Root the command stuff out of args. */
    ison = server_get_clients_online( s, args );
    lgc_null( ison );
-   vector_lock( ison, TRUE );
+   vector_lock( ison, VTRUE );
    for( i = 0 ; vector_count( ison ) > i ; i++ ) {
       c_iter = (struct CLIENT*)vector_get( ison, i );
       /* 1 for the main list + 1 for the vector. */
@@ -807,7 +807,7 @@ static void irc_server_ison(
       bstr_result = bconchar( response, ' ' );
       lgc_nonzero( bstr_result );
    }
-   vector_lock( ison, FALSE );
+   vector_lock( ison, VFALSE );
    lgc_null( response );
 
    proto_printf( c, ":%b 303 %b :%b", server_get_remote( s ), client_get_nick( c ), response );
@@ -844,7 +844,7 @@ static void irc_server_join(
    bstr_result = btrimws( namehunt );
    lgc_nonzero( bstr_result );
 
-   if( TRUE != scaffold_string_is_printable( namehunt ) ) {
+   if( VTRUE != scaffold_string_is_printable( namehunt ) ) {
       proto_printf(
          c, ":%b 403 %b %b :No such channel",
          server_get_remote( s ), client_get_username( c ), namehunt
@@ -1178,9 +1178,9 @@ static void irc_client_join(
    l = client_get_channel_by_name( c, l_name );
    if( NULL == l ) {
       /* Create a new client-side channel mirror. */
-      channel_new( l, l_name, FALSE, c );
+      channel_new( l, l_name, VFALSE, c );
       client_add_channel( c, l );
-      channel_add_client( l, c, FALSE );
+      channel_add_client( l, c, VFALSE );
       lg_debug(
          __FILE__, "Client created local channel mirror: %s\n", bdata( l_name )
       );
@@ -1300,7 +1300,7 @@ static void irc_client_item_cache_start(
       );
    }
 
-   cache = tilemap_get_item_cache( l->tilemap, x, y, TRUE );
+   cache = tilemap_get_item_cache( l->tilemap, x, y, VTRUE );
 
    /* Empty the cache in preparation for a refresh. */
    vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
@@ -1498,8 +1498,8 @@ IRC_COMMAND_TABLE_END() };
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
-   BOOL keep_going = TRUE;
+VBOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
+   VBOOL keep_going = VTRUE;
    SCAFFOLD_SIZE last_read_count = 0;
    const IRC_COMMAND* table = proto_table_server;
    int bstr_result;
@@ -1530,7 +1530,7 @@ BOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
    //if( !ipc_connected( c->link ) ) {
    if( !client_is_connected( c ) ) {
       /* Return an empty command to force abortion of the iteration. */
-      keep_going = FALSE;
+      keep_going = VFALSE;
       goto cleanup;
    }
 

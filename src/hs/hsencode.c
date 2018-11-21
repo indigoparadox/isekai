@@ -296,7 +296,7 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
    uint16_t msi = hse->match_scan_index;
    uint16_t match_length;
    uint16_t input_offset;
-   BOOL fin;
+   VBOOL fin;
    uint16_t end;
    uint16_t start;
    uint16_t max_possible;
@@ -635,7 +635,7 @@ static uint8_t push_outgoing_bits(heatshrink_encoder* hse, output_info* oi) {
 static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
                       output_info* oi) {
    int i;
-   BOOL bit;
+   VBOOL bit;
 
    scaffold_assert(count <= 8);
 #ifdef DEBUG_HEATSHRINK

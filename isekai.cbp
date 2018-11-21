@@ -129,6 +129,8 @@
 					<Add library="ubsan" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Strict (Linux-NET-Allegro4)">
@@ -177,6 +179,8 @@
 					<Add library="ubsan" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (MingW32-NET)">
@@ -416,6 +420,8 @@
 					<Add library="ubsan" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4)">
@@ -434,9 +440,9 @@
 					<Add option="-Wunreachable-code" />
 					<Add option="-Wmissing-declarations" />
 					<Add option="-Wswitch-enum" />
-					<Add option="-Wunused" />
 					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-Wunused" />
 					<Add option="-std=gnu99" />
 					<Add option="-Wstack-protector" />
 					<Add option="-fstack-protector-all" />
@@ -470,6 +476,8 @@
 					<Add library="ubsan" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-TLS)">
@@ -524,6 +532,8 @@
 					<Add library="mbedtls" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-SDL)">
@@ -638,6 +648,8 @@
 					<Add library="loadpng" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-TCC)">
@@ -660,6 +672,8 @@
 					<Add library="alleg" />
 					<Add library="dl" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Curses-Threaded)">
@@ -916,9 +930,13 @@
 			<Add option="-DUSE_ITERATOR_CACHE" />
 			<Add option="-DUSE_VECTOR_SCALAR" />
 			<Add directory="../libvcol/src" />
+			<Add directory="../camgraph/src" />
+			<Add directory="../camin/src" />
 		</Compiler>
 		<Linker>
 			<Add library="vcol" />
+			<Add library="camgraph" />
+			<Add library="camin" />
 		</Linker>
 		<Unit filename="isekai.def">
 			<Option target="Debug (Palm-SB)" />
@@ -1091,7 +1109,6 @@
 		</Unit>
 		<Unit filename="src/client.h" />
 		<Unit filename="src/clistruct.h" />
-		<Unit filename="src/colors.h" />
 		<Unit filename="src/config.h" />
 		<Unit filename="src/datafile.c">
 			<Option compilerVar="CC" />
@@ -1199,74 +1216,6 @@
 			<Option target="Debug (DOS32-SB-Allegro4)" />
 		</Unit>
 		<Unit filename="src/files.h" />
-		<Unit filename="src/font.h" />
-		<Unit filename="src/graphics.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Palm-SB)" />
-			<Option target="Strict (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-		</Unit>
-		<Unit filename="src/graphics.h" />
-		<Unit filename="src/graphics/allegrog.c">
-			<Option compilerVar="CC" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Strict (Linux-NET-Allegro4)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-		</Unit>
-		<Unit filename="src/graphics/cursesg.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-		</Unit>
-		<Unit filename="src/graphics/nullg.c">
-			<Option compilerVar="CC" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (Palm-SB)" />
-		</Unit>
-		<Unit filename="src/graphics/sdlg.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-		</Unit>
-		<Unit filename="src/graphics/win32g.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-SB)" />
-		</Unit>
 		<Unit filename="src/hs/hs_com.h">
 			<Option target="Debug" />
 			<Option target="Release" />
@@ -1415,45 +1364,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/htmtree.h" />
-		<Unit filename="src/input.h" />
-		<Unit filename="src/input/allegroi.c">
-			<Option compilerVar="CC" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Strict (Linux-NET-Allegro4)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-		</Unit>
-		<Unit filename="src/input/cursesi.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-		</Unit>
-		<Unit filename="src/input/nulli.c">
-			<Option compilerVar="CC" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (Palm-SB)" />
-		</Unit>
-		<Unit filename="src/input/sdli.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-		</Unit>
-		<Unit filename="src/input/win32i.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-SB)" />
-		</Unit>
 		<Unit filename="src/ipc.h" />
 		<Unit filename="src/ipc/netipc.c">
 			<Option compilerVar="CC" />

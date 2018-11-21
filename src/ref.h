@@ -48,7 +48,7 @@ static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const c
 #endif /* DEBUG_REF */
 }
 
-static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
+static REF_INLINE VBOOL ref_dec( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
 
    if( 1 == ((struct REF*)ref)->count ) {
@@ -59,7 +59,7 @@ static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const c
 #endif /* DEBUG_REF */
       ((struct REF*)ref)->count = 0;
       ref->gc_free( ref );
-      return TRUE;
+      return VTRUE;
    } else if( 0 == ((struct REF*)ref)->count ) {
       lg_error( __FILE__, "Reference count negative!\n" );
       goto cleanup;
@@ -77,26 +77,26 @@ static REF_INLINE BOOL ref_dec( const struct REF* ref, const char* type, const c
 #endif /* DEBUG_REF */
 
 cleanup:
-   return FALSE;
+   return VFALSE;
 }
 
 #ifdef ENABLE_REF_TEST
 
-static SCAFFOLD_INLINE BOOL ref_test_inc( void* data, const char* func ) {
+static SCAFFOLD_INLINE VBOOL ref_test_inc( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
       ref_inc( (struct REF*)data, "void", func );
-      return TRUE;
+      return VTRUE;
    }
-   return FALSE;
+   return VFALSE;
 }
 
-static SCAFFOLD_INLINE BOOL ref_test_dec( void* data, const char* func ) {
+static SCAFFOLD_INLINE VBOOL ref_test_dec( void* data, const char* func ) {
    uint8_t* data_uint = (uint8_t*)data;
    if( REF_SENTINAL == *data_uint ) {
       return ref_dec( (struct REF*)data, "void", func );
    }
-   return FALSE;
+   return VFALSE;
 }
 
 #endif /* ENABLE_REF_TEST */

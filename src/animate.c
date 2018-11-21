@@ -6,15 +6,15 @@ void animate_init() {
    animations = hashmap_new();
 }
 
-static BOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
+static VBOOL animate_del_cb( bstring idx, void* iter, void* arg ) {
    bstring key_search = (bstring)arg;
-   BOOL remove = FALSE;
+   VBOOL remove = VFALSE;
    struct ANIMATION* a = (struct ANIMATION*)iter;
    if( NULL == arg || 0 == bstrcmp( idx, key_search ) ) {
       if( NULL != a ) {
          animate_free_animation( &a );
       }
-      remove = TRUE;
+      remove = VTRUE;
    }
 /* cleanup: */
    return remove;
@@ -86,16 +86,16 @@ static struct ANIMATION_FRAME* animate_new_last_frame(
 void animate_create_movement(
    struct ANIMATION* a, GRAPHICS* target,
    GFX_COORD_PIXEL end_x, GFX_COORD_PIXEL end_y,
-   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, BOOL block
+   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, VBOOL block
 ) {
    struct ANIMATION_FRAME* last_frame = NULL,
       * new_frame = NULL;
-   BOOL x_adjusted = TRUE;
+   VBOOL x_adjusted = VTRUE;
 
    /* TODO: Copy graphic target. */
 
    a->blocking = block;
-   a->indefinite = FALSE;
+   a->indefinite = VFALSE;
 
    last_frame = animate_get_last_frame( a, target );
    new_frame = animate_new_last_frame( a, target, ms_per_frame );
@@ -113,7 +113,7 @@ void animate_create_movement(
    } else if( last_frame->x > end_x ) {
       last_frame->next_frame->x -= inc;
    } else {
-      x_adjusted = FALSE;
+      x_adjusted = VFALSE;
    }
 
    if( last_frame->y < end_y ) {
@@ -121,7 +121,7 @@ void animate_create_movement(
    } else if( last_frame->y > end_y ) {
       last_frame->next_frame->y -= inc;
    } else {
-      if( FALSE == x_adjusted ) {
+      if( VFALSE == x_adjusted ) {
          /* If neither width nor height was adjusted, this is pointless. */
          goto cleanup;
       }
@@ -140,11 +140,11 @@ cleanup:
 void animate_create_resize(
    struct ANIMATION* a, GRAPHICS* target,
    GFX_COORD_PIXEL end_w, GFX_COORD_PIXEL end_h,
-   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, BOOL block
+   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, VBOOL block
 ) {
    struct ANIMATION_FRAME* last_frame = NULL,
       * new_frame = NULL;
-   BOOL width_adjusted = TRUE;
+   VBOOL width_adjusted = VTRUE;
 
    /* Copy graphic target. */
    if( NULL == a->target ) {
@@ -152,7 +152,7 @@ void animate_create_resize(
    }
 
    a->blocking = block;
-   a->indefinite = FALSE;
+   a->indefinite = VFALSE;
 
    last_frame = animate_get_last_frame( a, target );
    new_frame = animate_new_last_frame( a, target, ms_per_frame );
@@ -170,7 +170,7 @@ void animate_create_resize(
    } else if( last_frame->width > end_w ) {
       new_frame->width -= inc;
    } else {
-      width_adjusted = FALSE;
+      width_adjusted = VFALSE;
    }
 
    if( last_frame->height < end_h ) {
@@ -178,7 +178,7 @@ void animate_create_resize(
    } else if( last_frame->height > end_h ) {
       new_frame->height -= inc;
    } else {
-      if( FALSE == width_adjusted ) {
+      if( VFALSE == width_adjusted ) {
          /* If neither width nor height was adjusted, this is pointless. */
          goto cleanup;
       }
@@ -196,7 +196,7 @@ cleanup:
 
 void animate_create_blink_color(
    struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
-   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, BOOL block
+   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, VBOOL block
 ) {
    struct ANIMATION_FRAME* last_frame = NULL;
       /* * new_frame = NULL; */
@@ -204,7 +204,7 @@ void animate_create_blink_color(
    /* TODO: Copy graphic target. */
 
    a->blocking = block;
-   a->indefinite = FALSE;
+   a->indefinite = VFALSE;
 
    last_frame = animate_get_last_frame( a, target );
    /* new_frame = animate_new_last_frame( a, target, ms_per_frame ); */
@@ -236,7 +236,7 @@ cleanup:
 
 short animate_add_animation( struct ANIMATION* a, bstring key ) {
    /* TODO: What if key exists? */
-   if( hashmap_put( animations, key, a, FALSE ) ) {
+   if( hashmap_put( animations, key, a, VFALSE ) ) {
       lg_error( __FILE__, "Attempted to double-add animation...\n" );
       return 1;
    }
@@ -248,7 +248,7 @@ struct ANIMATION* animate_get_animation( bstring key ) {
 }
 
 void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
-   BOOL removed;
+   VBOOL removed;
    struct ANIMATION* a = NULL;
 
    a = hashmap_get( animations, key );
@@ -301,12 +301,12 @@ cleanup:
    return;
 }
 
-static BOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
+static VBOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
-   BOOL remove = FALSE;
+   VBOOL remove = VFALSE;
    struct ANIMATION_FRAME* current_frame = NULL;
 
-   if( FALSE != a->global ) {
+   if( VFALSE != a->global ) {
       /* Leave this for the global cycler. */
       goto cleanup;
    }
@@ -321,15 +321,15 @@ static BOOL animate_cyc_ani_cb( bstring idx, void* iter, void* arg ) {
       a->current_frame = current_frame->next_frame;
    }
 
-   if( NULL == a->current_frame && FALSE == a->indefinite ) {
+   if( NULL == a->current_frame && VFALSE == a->indefinite ) {
       /* The animation has expired. */
       lg_debug(
          __FILE__, "Animation finished: %b", idx
       );
       animate_free_animation( &a );
-      remove = TRUE;
+      remove = VTRUE;
       goto cleanup;
-   } else if( NULL == a->current_frame && FALSE != a->indefinite ) {
+   } else if( NULL == a->current_frame && VFALSE != a->indefinite ) {
       a->current_frame = a->first_frame;
    }
 
@@ -378,18 +378,18 @@ void animate_draw_animations( GRAPHICS* g ) {
 
 static void* animate_blocker_cb( bstring idx, void* iter, void* arg ) {
    struct ANIMATION* a = (struct ANIMATION*)iter;
-   if( FALSE != a->blocking ) {
+   if( VFALSE != a->blocking ) {
       return a;
    }
    return NULL;
 }
 
-BOOL animate_is_blocking() {
+VBOOL animate_is_blocking() {
    struct ANIMATION* blocker = NULL;
    blocker = hashmap_iterate( animations, animate_blocker_cb, NULL );
    if( NULL != blocker ) {
-      return TRUE;
+      return VTRUE;
    } else {
-      return FALSE;
+      return VFALSE;
    }
 }

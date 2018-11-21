@@ -45,7 +45,7 @@ struct VM_CADDY {
    SCAFFOLD_SIZE exec_start; /** When the current script started in ticks. */
    VM_LANG lang;
    void* vm;
-   BOOL vm_started;
+   VBOOL vm_started;
    struct HASHMAP* vm_scripts;
    struct HASHMAP* vm_globals;
 };
@@ -60,14 +60,14 @@ struct CHANNEL;
 
 #ifdef USE_VM
 void vm_tick();
-BOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev );
+VBOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev );
 void vm_caddy_init( struct VM_CADDY* vmc );
 void vm_caddy_start( struct VM_CADDY* vmc );
 void vm_caddy_do_event( struct VM_CADDY* vmc, const bstring event );
 void vm_caddy_end( struct VM_CADDY* vmc );
 void vm_caddy_free( struct VM_CADDY* vmc );
-BOOL vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event );
-BOOL vm_caddy_put(
+VBOOL vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event );
+VBOOL vm_caddy_put(
    struct VM_CADDY* vmc, VM_MEMBER type, const bstring key, const bstring val
 );
 SCAFFOLD_SIZE vm_caddy_scripts_count( const struct VM_CADDY* vmc );

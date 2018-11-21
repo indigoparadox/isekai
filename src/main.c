@@ -56,7 +56,7 @@ struct INPUT* input = NULL;
 //struct CHANNEL* l = NULL;
 bstring buffer_host = NULL;
 bstring buffer_channel = NULL;
-BOOL showed_readme = FALSE;
+VBOOL showed_readme = VFALSE;
 #endif /* ENABLE_LOCAL_CLIENT */
 
 struct VECTOR* mode_list_pretty;
@@ -107,13 +107,13 @@ static double calc_fps( int newtick ) {
 }
 #endif /* DEBUG_FPS */
 
-static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
-   BOOL keep_going = TRUE;
+static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
+   VBOOL keep_going = VTRUE;
    int i;
    struct ANIMATION* a = NULL;
    GRAPHICS* throbber = NULL;
    GRAPHICS_RECT r;
-   static BOOL load_complete = FALSE;
+   static VBOOL load_complete = VFALSE;
    GFX_COORD_PIXEL backlog_height_tiles = CONFIG_BACKLOG_TILES_HEIGHT;
    GFX_COORD_PIXEL backlog_height_px = 0;
    struct MOBILE* o = NULL;
@@ -126,7 +126,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    action_queue_proc( vector_get( mode_list_short, gfx_mode ), ACTION_QUEUE_SERVER );
 
    if( !server_is_running( main_server ) ) {
-      keep_going = FALSE;
+      keep_going = VFALSE;
       goto cleanup;
    }
 
@@ -148,7 +148,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    scaffold_set_client();
    ui = twindow_get_ui( local_window );
 
-   if( FALSE == animate_is_blocking() ) {
+   if( VFALSE == animate_is_blocking() ) {
       plugin_call(
          PLUGIN_MODE, vector_get( mode_list_short, gfx_mode ),
          PLUGIN_POLL_INPUT, main_client, l, input );
@@ -160,7 +160,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
 
    /* Do drawing. */
    l = client_get_channel_active( main_client );
-   if( FALSE != channel_has_error( l ) ) {
+   if( VFALSE != channel_has_error( l ) ) {
       /* Abort and go back to connect dialog. */
       /* We need to stop both client AND server, 'cause the data is bad! */
       /* TODO
@@ -179,10 +179,10 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    } else if( !channel_is_loaded( l ) ) {
       /* Make sure the loading animation is running. */
       if( NULL == animate_get_animation( &str_loading ) ) {
-         load_complete = FALSE;
+         load_complete = VFALSE;
          lg_debug( __FILE__, "Creating loading animation...\n" );
          graphics_surface_new( throbber, 0, 0, 32, 32 );
-         graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_WHITE, TRUE );
+         graphics_draw_rect( throbber, 0, 0, 32, 32, GRAPHICS_COLOR_WHITE, VTRUE );
 
          graphics_measure_text( g_screen, &r, GRAPHICS_FONT_SIZE_16, &str_loading );
 
@@ -190,8 +190,8 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
          throbber->virtual_y = (GRAPHICS_SCREEN_HEIGHT / 2) - 8;
 
          a = mem_alloc( 1, struct ANIMATION );
-         animate_create_resize( a, throbber, 16, 16, 1, 1, FALSE );
-         a->indefinite = TRUE;
+         animate_create_resize( a, throbber, 16, 16, 1, 1, VFALSE );
+         a->indefinite = VTRUE;
 
          graphics_surface_free( throbber );
          throbber = NULL;
@@ -203,7 +203,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       graphics_draw_text(
          g_screen, GRAPHICS_SCREEN_WIDTH / 2, GRAPHICS_SCREEN_HEIGHT / 2,
          GRAPHICS_TEXT_ALIGN_CENTER, GRAPHICS_COLOR_WHITE,
-         GRAPHICS_FONT_SIZE_16, &str_loading, FALSE
+         GRAPHICS_FONT_SIZE_16, &str_loading, VFALSE
       );
       ui_draw( ui, g_screen );
 
@@ -218,7 +218,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       lg_debug( __FILE__, "Stopping server...\n" );
       server_stop( main_server );
 #ifndef USE_NETWORK
-      keep_going = FALSE;
+      keep_going = VFALSE;
 #endif /* USE_NETWORK */
       goto cleanup;
 
@@ -235,7 +235,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       lg_info( __FILE__, "Channel load complete.\n" );
       lg_debug( __FILE__, "Unloading loading animation...\n" );
       animate_cancel_animation( NULL, &str_loading );
-      load_complete = TRUE;
+      load_complete = VTRUE;
 
       /* Setup the window for drawing tiles, etc. */
       //local_window = client_get_local_window( main_client );
@@ -291,7 +291,7 @@ static BOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
       GRAPHICS_SCREEN_WIDTH,
       backlog_height_px,
       GRAPHICS_COLOR_CHARCOAL,
-      TRUE
+      VTRUE
    );
 
    /* XXX Tilegrid support.
@@ -307,8 +307,8 @@ cleanup:
    return keep_going;
 }
 
-static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
-   BOOL keep_going = TRUE;
+static VBOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
+   VBOOL keep_going = VTRUE;
    bstring server_address = NULL;
    int bstr_result = 0,
       input_res = 0;
@@ -349,7 +349,7 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
 
       html_buffer = files_read_contents_b( &str_readme_filename );
       ui_control_new(
-         ui, control, html_buffer, UI_CONTROL_TYPE_HTML, TRUE, TRUE,
+         ui, control, html_buffer, UI_CONTROL_TYPE_HTML, VTRUE, VTRUE,
          NULL, -1, -1, -1, -1
       );
       ui_control_add( win, &str_readme_id, control );
@@ -387,13 +387,13 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_host,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, VTRUE, VTRUE, buffer_host,
          -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_host, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_channel,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, VTRUE, VTRUE, buffer_channel,
          -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_channel, control );
@@ -401,13 +401,13 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       scaffold_assert( NULL == buffer_nick );
       buffer_nick = bstrcpy( client_get_nick( main_client ) );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE, buffer_nick,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, VTRUE, VTRUE, buffer_nick,
          -1, -1, -1, -1
       );
       ui_control_add( win, &str_cid_connect_nick, control );
 
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, TRUE, TRUE, NULL,
+         ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, VTRUE, VTRUE, NULL,
          -1, -1, -1, -1
       );
       /* TODO: Encapsulate list structure. */
@@ -434,7 +434,7 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       /* FIXME */
       bdestroy( buffer_nick );
       buffer_nick = NULL;
-      return FALSE;
+      return VFALSE;
    }
 
 
@@ -444,7 +444,7 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
     */
    input_res = ui_poll_input( ui, input, &str_readme_id );
    if( UI_INPUT_RETURN_KEY_ENTER == input_res  ) {
-      showed_readme = TRUE;
+      showed_readme = VTRUE;
       ui_window_destroy( ui, &str_readme_id );
       goto cleanup;
    }
@@ -483,8 +483,8 @@ static BOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       buffer_channel = &str_default_channel;
 #endif /* USE_CONNECT_DIALOG */
 
-      if( FALSE == server_is_listening( main_server ) ) {
-         if( FALSE == server_listen( main_server, server_port ) ) {
+      if( VFALSE == server_is_listening( main_server ) ) {
+         if( VFALSE == server_listen( main_server, server_port ) ) {
             goto cleanup;
          }
       }
@@ -518,9 +518,9 @@ cleanup:
    return keep_going; /* TODO: ESC to quit. */
 }
 
-static BOOL loop_master( struct TWINDOW* local_screen ) {
-   BOOL retval = FALSE;
-   BOOL connected = FALSE;
+static VBOOL loop_master( struct TWINDOW* local_screen ) {
+   VBOOL retval = VFALSE;
+   VBOOL connected = VFALSE;
    uint16_t main_client_joined = 0;
    int bstr_ret;
    static int gfx_mode = 0;
@@ -532,15 +532,15 @@ static BOOL loop_master( struct TWINDOW* local_screen ) {
    main_client_joined = client_test_flags( main_client, CLIENT_FLAGS_SENT_CHANNEL_JOIN );
 
    if(
-      FALSE == connected
+      VFALSE == connected
 #ifndef USE_CONNECT_DIALOG
       && 0 >= loop_count
 #endif /* !USE_CONNECT_DIALOG */
    ) {
       retval = loop_connect( &gfx_mode, local_screen );
 #ifndef USE_CONNECT_DIALOG
-   } else if( FALSE == connected && 0 < loop_count ) {
-      retval = FALSE;
+   } else if( VFALSE == connected && 0 < loop_count ) {
+      retval = VFALSE;
 #endif /* !USE_CONNECT_DIALOG */
    } else if( connected && (!main_client_joined) ) {
       lg_debug(
@@ -549,7 +549,7 @@ static BOOL loop_master( struct TWINDOW* local_screen ) {
       twindow_set_screen( local_screen, g_screen );
       twindow_set_local_client( local_screen, main_client );
       proto_client_join( main_client, buffer_channel );
-      retval = TRUE;
+      retval = VTRUE;
 
 #ifdef DEBUG_FPS
       ui_debug_window(
@@ -582,7 +582,7 @@ cleanup:
 }
 
 static void loop_error() {
-   BOOL cont = TRUE;
+   VBOOL cont = VTRUE;
    struct UI_WINDOW* dialog = NULL;
    int input_res = 0;
 
@@ -597,7 +597,7 @@ static void loop_error() {
          UI_INPUT_RETURN_KEY_ENTER == input_res ||
          0 < input_res
       ) {
-         cont = FALSE;
+         cont = VFALSE;
       }
 
       ui_draw( ui_get_local(), g_screen );
@@ -685,7 +685,7 @@ int main( int argc, char** argv ) {
 #ifdef ENABLE_LOCAL_CLIENT
    scaffold_set_client();
    main_client = client_new();
-   client_set_local( main_client, TRUE );
+   client_set_local( main_client, VTRUE );
    twindow_set_local_client( local_window, main_client );
    client_set_local_window( main_client, local_window );
 #endif /* ENABLE_LOCAL_CLIENT */

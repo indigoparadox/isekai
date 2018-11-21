@@ -82,7 +82,7 @@ struct UI_WINDOW {
    bstring title;
    struct HASHMAP* controls;
    GRAPHICS* element;
-   BOOL modal;
+   VBOOL modal;
    struct UI_CONTROL* active_control;
    GRAPHICS_RECT area;
    GRAPHICS_RECT grid_pos;
@@ -91,7 +91,7 @@ struct UI_WINDOW {
    void* attachment; /*!< Struct to draw data from. */
    SCAFFOLD_SIZE selection;
    SCAFFOLD_SIZE grid_iter;
-   BOOL dirty;
+   VBOOL dirty;
    struct UI_CONTROL* first_control;
 #ifdef DEBUG
    uint32_t sentinal;
@@ -101,10 +101,10 @@ struct UI_WINDOW {
 struct UI_CONTROL {
    struct UI_WINDOW self; /* Parent Class */
    bstring text;
-   BOOL can_focus;
+   VBOOL can_focus;
    UI_CONTROL_TYPE type;
    struct UI_WINDOW* owner;
-   BOOL borrowed_text_field;
+   VBOOL borrowed_text_field;
    SCAFFOLD_SIZE_SIGNED min;
    SCAFFOLD_SIZE_SIGNED max;
    UI_OPT_STATE new_row;
@@ -144,7 +144,7 @@ void ui_window_cleanup( struct UI_WINDOW* win );
 void ui_window_free( struct UI_WINDOW* win );
 void ui_control_init(
    struct UI_CONTROL* control,
-   const bstring text, UI_CONTROL_TYPE type, BOOL can_focus, BOOL new_row,
+   const bstring text, UI_CONTROL_TYPE type, VBOOL can_focus, VBOOL new_row,
    bstring buffer, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y,
    GFX_COORD_PIXEL width, GFX_COORD_PIXEL height
 );
@@ -172,7 +172,7 @@ struct UI_WINDOW* ui_window_by_id( struct UI* ui, const bstring wid );
 void ui_message_box( struct UI* ui, const bstring message );
 struct UI_CONTROL* ui_control_by_id( struct UI_WINDOW* win, const bstring id );
 void ui_debug_window( struct UI* ui, const bstring id, bstring buffer );
-BOOL ui_window_destroy( struct UI* ui, const bstring wid );
+VBOOL ui_window_destroy( struct UI* ui, const bstring wid );
 void ui_window_next_active_control( struct UI_WINDOW* win );
 void ui_window_draw_grid( struct UI* ui, struct TWINDOW* twindow );
 

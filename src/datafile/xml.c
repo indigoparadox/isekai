@@ -25,7 +25,7 @@
 
 void datafile_parse_item_sprites_ezxml_t(
    struct ITEM_SPRITESHEET* spritesheet, ezxml_t xml_sprites,
-   bstring def_path, BOOL local_images
+   bstring def_path, VBOOL local_images
 ) {
    ezxml_t xml_sprite = NULL;
    const char* xml_attr = NULL;
@@ -64,7 +64,7 @@ void datafile_parse_item_sprites_ezxml_t(
       );
 
       scaffold_assert( NULL == vector_get( &(spritesheet->sprites), sprite_id ) );
-      vector_set( &(spritesheet->sprites), sprite_id, sprite, TRUE );
+      vector_set( &(spritesheet->sprites), sprite_id, sprite, VTRUE );
       sprite = NULL;
 
       xml_sprite = ezxml_next( xml_sprite );
@@ -75,7 +75,7 @@ cleanup:
 }
 
 void datafile_parse_item_ezxml_t(
-   struct ITEM* e, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct ITEM* e, ezxml_t xml_data, bstring def_path, VBOOL local_images
 ) {
 }
 
@@ -108,7 +108,7 @@ cleanup:
 }
 
 static void datafile_mobile_parse_sprite_ezxml(
-   struct MOBILE* o, ezxml_t xml_sprite, BOOL local_images
+   struct MOBILE* o, ezxml_t xml_sprite, VBOOL local_images
 ) {
    const char* xml_attr = NULL;
    struct MOBILE_SPRITE_DEF* sprite = NULL;
@@ -322,7 +322,7 @@ cleanup:
 }
 
 void datafile_parse_mobile_ezxml_t(
-   struct MOBILE* o, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct MOBILE* o, ezxml_t xml_data, bstring def_path, VBOOL local_images
 ) {
    ezxml_t xml_sprites = NULL,
       xml_sprite_iter = NULL,
@@ -490,7 +490,7 @@ next_script:
       str_mobile_facing[MOBILE_FACING_DOWN].data
    );
 
-   mobile_set_initialized( o, TRUE );
+   mobile_set_initialized( o, VTRUE );
    mobile_set_facing( o, MOBILE_FACING_DOWN );
    lg_debug(
       __FILE__, "Mobile animation defaulting to: %b\n", walk_ani_key
@@ -572,9 +572,9 @@ static void datafile_tilemap_parse_properties_ezxml( struct TILEMAP* t, ezxml_t 
 
       if( 0 == strcmp( ezxml_attr( xml_prop_iter, "name" ), "time_moves" ) ) {
           if( 0 == strcmp( ezxml_attr( xml_prop_iter, "value" ), "true" ) ) {
-             map_out->time_moves = TRUE;
+             map_out->time_moves = VTRUE;
           } else {
-             map_out->time_moves = FALSE;
+             map_out->time_moves = VFALSE;
           }
 #endif
 
@@ -588,7 +588,7 @@ cleanup:
 #ifdef ENABLE_LOCAL_CLIENT
 
 static void datafile_tilemap_parse_tileset_ezxml_image(
-   struct TILEMAP_TILESET* set, ezxml_t xml_image, BOOL local_images
+   struct TILEMAP_TILESET* set, ezxml_t xml_image, VBOOL local_images
 ) {
    GRAPHICS* g_image = NULL;
    const char* xml_attr;
@@ -712,8 +712,8 @@ cleanup:
 
 #define TERRAIN_ID_C_BUFFER_LENGTH 4
 
-BOOL datafile_tilemap_parse_tileset_ezxml(
-   struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path, BOOL local_images
+VBOOL datafile_tilemap_parse_tileset_ezxml(
+   struct TILEMAP_TILESET* set, ezxml_t xml_tileset, bstring def_path, VBOOL local_images
 ) {
    ezxml_t
       xml_image = NULL,
@@ -732,7 +732,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
 #endif /* DEBUG_TILES_VERBOSE */
-   BOOL loaded_fully = FALSE;
+   VBOOL loaded_fully = VFALSE;
    GFX_COORD_PIXEL val_tmp = 0;
 
    lgc_error = 0;
@@ -767,7 +767,7 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
 #endif /* ENABLE_LOCAL_CLIENT */
 
    /* We can live without terrain information. */
-   loaded_fully = TRUE;
+   loaded_fully = VTRUE;
 
    /* Parse the terrain information. */
    xml_terraintypes = ezxml_child( xml_tileset, "terraintypes" );
@@ -916,7 +916,7 @@ static void datafile_tilemap_parse_layer_ezxml(
       layer->name = bfromcstr( "" );
    }
 
-   vector_set( t->layers, layer_index, layer, TRUE );
+   vector_set( t->layers, layer_index, layer, VTRUE );
 
    /* The map is as large as the largest layer. */
    if( layer->width > t->width ) { t->width = layer->width; }
@@ -968,7 +968,7 @@ static void datafile_tilemap_parse_object_ezxml( struct TILEMAP* t, ezxml_t xml_
          xml_attr = ezxml_attr( xml_prop_iter, "value" );
          lgc_null_continue( xml_attr );
          if( 0 == scaffold_strcmp_caseless( xml_attr, "false" ) ) {
-            obj_out->active = FALSE;
+            obj_out->active = VFALSE;
          }
 
       }
@@ -1051,7 +1051,7 @@ cleanup:
 }
 
 SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
-   struct TILEMAP* t, ezxml_t xml_data, bstring def_path, BOOL local_images
+   struct TILEMAP* t, ezxml_t xml_data, bstring def_path, VBOOL local_images
 ) {
    ezxml_t xml_layer = NULL,
       xml_props = NULL,
@@ -1137,7 +1137,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
       }
 
       ezxml_int( firstgid, xml_attr, xml_tileset, "firstgid" );
-      vector_set( t->tilesets, firstgid, set, TRUE );
+      vector_set( t->tilesets, firstgid, set, VTRUE );
       lg_debug(
          __FILE__, "Tileset %b assigned to tilemap %b with first GID: %d\n",
          tileset_id, t->lname, firstgid
@@ -1174,7 +1174,7 @@ cleanup:
 }
 
 void datafile_parse_ezxml_string(
-   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, BOOL local_images,
+   void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, VBOOL local_images,
    DATAFILE_TYPE type, bstring def_path
 ) {
    ezxml_t xml_data = NULL;
