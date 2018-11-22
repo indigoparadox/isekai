@@ -38,6 +38,8 @@
 			<Add option="-fPIC" />
 			<Add directory="../../src" />
 			<Add directory="../../../libvcol/src" />
+			<Add directory="../../../camin/src" />
+			<Add directory="../../../camgraph/src" />
 		</Compiler>
 		<Unit filename="topdown.c">
 			<Option compilerVar="CC" />

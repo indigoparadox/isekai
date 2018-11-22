@@ -78,7 +78,6 @@ VBOOL callback_proc_client_delayed_files(
    size_t idx, void* iter, void* arg );
 void* callback_proc_channel_spawners(
    size_t idx, void* iter, void* arg );
-void* callback_search_tilesets_gid( size_t idx, void* iter, void* arg );
 VBOOL callback_free_mobiles( size_t idx, void* iter, void* arg );
 VBOOL callback_free_sprites( size_t idx, void* iter, void* arg );
 VBOOL callback_free_item_cache_items(

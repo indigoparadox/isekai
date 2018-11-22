@@ -493,7 +493,7 @@ static VBOOL mode_pov_draw_floor(
    GFX_COORD_PIXEL i_y = 0;
    struct TILEMAP_TILESET* set = NULL;
    struct TILEMAP* t = NULL;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
    GRAPHICS* g_tileset = NULL;
    VBOOL ret_error = VFALSE;
    GRAPHICS_RECT tile_tilesheet_pos = { 0 };
@@ -609,7 +609,6 @@ static VBOOL mode_pov_update_view(
       pov_incr = 0;
    VBOOL recurse = VTRUE;
    struct POV_CLIENT_DATA* c_data = NULL;
-   GFX_COORD_FPP* z_buffer = NULL;
    struct CHANNEL* l = NULL;
 
    t = client_get_tilemap_active( c );
@@ -618,8 +617,9 @@ static VBOOL mode_pov_update_view(
    lgc_null( l );
    c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
-   z_buffer = c_data->z_buffer;
-   lgc_null( z_buffer );
+   if( NULL == c_data->z_buffer ) {
+      c_data->z_buffer = mem_alloc( graphics_surface_get_width( g ), GFX_COORD_FPP );
+   }
 
    /* Do the actual casting. */
    wall_hit = VFALSE;
@@ -658,7 +658,7 @@ static VBOOL mode_pov_update_view(
       }
    }
 
-   z_buffer[i_x] = wall_map_pos.perpen_dist;
+   c_data->z_buffer[i_x] = wall_map_pos.perpen_dist;
 
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
 

@@ -39,20 +39,16 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    struct TILEMAP* t = NULL;
    int layer_idx = 0;
    int layer_max;
-   uint32_t tile;
 
    t = twindow_get_tilemap_active( twindow );
    lgc_null( t );
 
-   // XXX
-   //vector_lock( &(t->layers), TRUE );
    layer_max = vector_count( t->layers );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( t->layers, layer_idx );
       mode_topdown_tilemap_draw_tile(
          layer, twindow, pos->x, pos->y );
    }
-   //vector_lock( &(t->layers), FALSE );
 
 cleanup:
    return NULL;
@@ -165,13 +161,13 @@ static void mode_topdown_tilemap_draw_tile_debug(
          lgc_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 10, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, VFALSE
          );
          bstr_result = bassignformat( bnum, "%d", tile_y );
          lgc_nonzero( bstr_result );
          graphics_draw_text(
             g, pix_x + 16, pix_y + 22, GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, VFALSE
          );
          bdestroy( bnum );
       }
@@ -188,7 +184,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
          graphics_draw_text(
             g, pix_x + 16, pix_y + (10 * layer->z),
             GRAPHICS_TEXT_ALIGN_CENTER,
-            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, FALSE
+            GRAPHICS_COLOR_DARK_BLUE, GRAPHICS_FONT_SIZE_8, bnum, VFALSE
          );
       }
       break;
@@ -211,7 +207,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
             GRAPHICS_TEXT_ALIGN_CENTER,
             td_i + 4, GRAPHICS_FONT_SIZE_8,
             bnum,
-            FALSE
+            VFALSE
          );
       }
       break;
@@ -221,7 +217,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
          !tilemap_inside_inner_map_y( tile_y, twin )
       ) {
          graphics_draw_rect(
-            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED, TRUE
+            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_RED, VTRUE
          );
       }
       if(
@@ -229,7 +225,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
          !tilemap_inside_window_deadzone_y( tile_y, twin )
       ) {
          graphics_draw_rect(
-            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN, TRUE
+            g, pix_x, pix_y, 32, 32, GRAPHICS_COLOR_DARK_CYAN, VTRUE
          );
       }
       break;
@@ -250,7 +246,7 @@ static void mode_topdown_tilemap_draw_tile(
    struct CLIENT* local_client = NULL;
    struct TILEMAP* t = NULL;
    const struct MOBILE* o_player = NULL;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
    GFX_COORD_PIXEL screen_x = 0,
       screen_y = 0;
 #ifdef USE_ITEMS
@@ -299,7 +295,7 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_x( mobile_get_x( o_player ), twindow )
       )
    ) {
-      screen_x += mobile_get_steps_remaining_x( o_player, TRUE );
+      screen_x += mobile_get_steps_remaining_x( o_player, VTRUE );
    }
 
    if(
@@ -314,14 +310,14 @@ static void mode_topdown_tilemap_draw_tile(
          tilemap_inside_inner_map_y( mobile_get_y( o_player ), twindow )
       )
    ) {
-      screen_y += mobile_get_steps_remaining_y( o_player, TRUE );
+      screen_y += mobile_get_steps_remaining_y( o_player, VTRUE );
    }
 
    tilemap_tile_draw_ortho( layer, x, y, screen_x, screen_y, set, twindow );
 
 #ifdef USE_ITEMS
 
-   cache = tilemap_get_item_cache( t, x, y, FALSE );
+   cache = tilemap_get_item_cache( t, x, y, VFALSE );
    if( NULL != cache ) {
       vector_iterate(
          &(cache->items), mode_topdown_tilemap_draw_items_cb, &tile_screen_rect
@@ -487,7 +483,6 @@ static void mode_topdown_tilemap_update_window(
       twindow_get_bottom( twindow ) <= t->height
       ? twindow_get_y( twindow ) - border_y : 0 );
 
-cleanup:
    return;
 }
 
@@ -584,7 +579,7 @@ cleanup:
    return ret;
 }
 
-static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static VBOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct ACTION_PACKET* update = NULL;
    struct UI* ui = NULL;
@@ -608,7 +603,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
-      return FALSE; /* Silently ignore input until animations are done. */
+      return VFALSE; /* Silently ignore input until animations are done. */
    } else {
       l = mobile_get_channel( puppet );
       lgc_null( l );
@@ -617,40 +612,40 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
    /* If no windows need input, then move on to game input. */
    switch( p->character ) {
-   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return TRUE;
+   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return VTRUE;
    case INPUT_ASSIGNMENT_UP:
       action_packet_set_op( update, ACTION_OP_MOVEUP );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
       proto_client_send_update( c, update );
-      return TRUE;
+      return VTRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
       action_packet_set_op( update, ACTION_OP_MOVELEFT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return TRUE;
+      return VTRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
       action_packet_set_op( update, ACTION_OP_MOVEDOWN );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
       proto_client_send_update( c, update );
-      return TRUE;
+      return VTRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
       action_packet_set_op( update, ACTION_OP_MOVERIGHT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return TRUE;
+      return VTRUE;
 
    case INPUT_ASSIGNMENT_ATTACK:
       action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
       proto_client_send_update( c, update );
-      return TRUE;
+      return VTRUE;
 
 #ifdef USE_ITEMS
    case INPUT_ASSIGNMENT_INV:
@@ -663,21 +658,21 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_inv, NULL, -1, -1, 600, 380
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, VTRUE, VFALSE,
          client_input_from_ui, 0, UI_CONST_HEIGHT_FULL, 300,
          UI_CONST_HEIGHT_FULL
       );
       ui_control_add( win, &str_client_control_id_inv_self, control );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, TRUE, FALSE,
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, VTRUE, VFALSE,
          client_input_from_ui, 300, UI_CONST_HEIGHT_FULL, 300,
          UI_CONST_HEIGHT_FULL
       );
-      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, TRUE );
+      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, VTRUE );
       ui_set_inventory_pane_list( control, &(cache->items) );
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
-      return TRUE;
+      return VTRUE;
 #endif // USE_ITEMS
 
    case '\\':
@@ -692,26 +687,26 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, TRUE, TRUE,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, VTRUE, VTRUE,
          client_input_from_ui, -1, -1, -1, -1
       );
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );
-      return TRUE;
+      return VTRUE;
 #ifdef DEBUG_VM
-   //case 'p': windef_show_repl( ui ); return TRUE;
+   //case 'p': windef_show_repl( ui ); return VTRUE;
 #endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
    case 't':
       if( 0 == p->repeat ) {
          tilemap_toggle_debug_state();
-         return TRUE;
+         return VTRUE;
       }
       break;
    case 'l':
       if( 0 == p->repeat ) {
          tilemap_dt_layer++;
-         return TRUE;
+         return VTRUE;
       }
       break;
 #endif /* DEBUG_TILES */
@@ -719,7 +714,7 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
 cleanup:
    action_packet_free( &update );
-   return FALSE;
+   return VFALSE;
 }
 
 PLUGIN_RESULT mode_topdown_poll_input(
@@ -741,7 +736,7 @@ PLUGIN_RESULT mode_topdown_free( struct CLIENT* c ) {
    #if 0
 
    if(
-      TRUE == client_is_local( c ) &&
+      VTRUE == client_is_local( c ) &&
       hashmap_is_valid( &(c->sprites ) )
    ) {
       /* FIXME: This causes crash on re-login. */
