@@ -364,7 +364,7 @@ void client_stop( struct CLIENT* c ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE test_count = 0;
 
-   scaffold_assert( CLIENT_SENTINAL == c->sentinal );
+   //scaffold_assert( CLIENT_SENTINAL == c->sentinal );
 
    if( VFALSE != ipc_connected( c->link ) ) {
       lg_info( __FILE__, "Client connection stopping...\n" );

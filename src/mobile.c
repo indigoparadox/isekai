@@ -57,7 +57,7 @@ struct MOBILE {
    struct VECTOR* walking_queue; /* Only used for certain modes. Think RTS. */
    struct AUDI_CONTEXT* ai;
    bstring mode;
-   void* mode_data;
+   struct HASHMAP* mode_data;
 #ifdef USE_ITEMS
    struct VECTOR* items;
 #endif // USE_ITEMS
@@ -174,6 +174,8 @@ void mobile_init(
 #ifdef USE_ITEMS
    vector_init( &(o->items) );
 #endif // USE_ITEMS
+
+   o->mode_data = hashmap_new();
 
    o->x = x;
    o->prev_x = x;
@@ -1260,6 +1262,7 @@ void* mobile_get_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l ) 
    assert( NULL != mode );
 
    lgc_null( o );
+   assert( NULL != o->mode_data );
 
    channels = hashmap_get( o->mode_data, mode );
    if( NULL == channels ) {
@@ -1285,6 +1288,7 @@ void* mobile_set_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l, v
    assert( NULL != mode );
 
    lgc_null( o );
+   assert( NULL != o->mode_data );
 
    channels = hashmap_get( o->mode_data, mode );
    if( NULL == channels ) {

@@ -1,20 +1,16 @@
 
-#define MODE_C
-//#include <mode.h>
-
 #include <stdlib.h>
 
 #include <graphics.h>
 #include <vbool.h>
-//#include <callback.h>
-#include <ui.h>
-#include <ipc.h>
 #include <channel.h>
-#include <proto.h>
 #include <mobile.h>
 #include <math.h>
 #include <plugin.h>
 #include <client.h>
+#include <action.h>
+#include <proto.h>
+#include <callback.h>
 
 typedef enum {
    POV_LAYER_LEVEL_MAX = 4,
@@ -37,6 +33,15 @@ struct POV_MOBILE_DATA {
 };
 
 extern bstring client_input_from_ui;
+
+extern struct tagbstring str_client_cache_path;
+extern struct tagbstring str_wid_debug_tiles_pos;
+extern struct tagbstring str_client_window_id_chat;
+extern struct tagbstring str_client_window_title_chat;
+extern struct tagbstring str_client_control_id_chat;
+extern struct tagbstring str_client_window_id_inv;
+extern struct tagbstring str_client_window_title_inv;
+extern struct tagbstring str_client_control_id_inv_self;
 
 struct tagbstring mode_name = bsStatic( "POV" );
 struct tagbstring mode_key = bsStatic( "pov" );
@@ -493,7 +498,7 @@ static VBOOL mode_pov_draw_floor(
    GFX_COORD_PIXEL i_y = 0;
    struct TILEMAP_TILESET* set = NULL;
    struct TILEMAP* t = NULL;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
    GRAPHICS* g_tileset = NULL;
    VBOOL ret_error = VFALSE;
    GRAPHICS_RECT tile_tilesheet_pos = { 0 };
@@ -609,7 +614,6 @@ static VBOOL mode_pov_update_view(
       pov_incr = 0;
    VBOOL recurse = VTRUE;
    struct POV_CLIENT_DATA* c_data = NULL;
-   GFX_COORD_FPP* z_buffer = NULL;
    struct CHANNEL* l = NULL;
 
    t = client_get_tilemap_active( c );
@@ -618,8 +622,9 @@ static VBOOL mode_pov_update_view(
    lgc_null( l );
    c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
-   z_buffer = c_data->z_buffer;
-   lgc_null( z_buffer );
+   if( NULL == c_data->z_buffer ) {
+      c_data->z_buffer = mem_alloc( graphics_surface_get_width( g ), GFX_COORD_FPP );
+   }
 
    /* Do the actual casting. */
    wall_hit = VFALSE;
@@ -658,7 +663,7 @@ static VBOOL mode_pov_update_view(
       }
    }
 
-   z_buffer[i_x] = wall_map_pos.perpen_dist;
+   c_data->z_buffer[i_x] = wall_map_pos.perpen_dist;
 
    cell_height = (int)(g->h / wall_map_pos.perpen_dist);
 
@@ -791,6 +796,7 @@ PLUGIN_RESULT mode_pov_draw(
       }
    }
 
+   /* Cast a ray on each vertical line in the canvas. */
    for( i_x = 0 ; g->w > i_x ; i_x++ ) {
       /* Calculate ray position and direction. */
       graphics_raycast_wall_create(
@@ -812,7 +818,7 @@ PLUGIN_RESULT mode_pov_draw(
       o_data->last_pos.facing = mobile_get_facing( player );
    }
 
-   if( VFALSE == draw_failed ) {
+   if( !draw_failed ) {
       /* Draw the cached background. */
       graphics_blit( g, 0, 0, ray_view );
    }
@@ -839,74 +845,73 @@ PLUGIN_RESULT mode_pov_update(
    return PLUGIN_SUCCESS;
 }
 
-#if 0
 static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
-   struct MOBILE_UPDATE_PACKET update = { 0 };
+   struct ACTION_PACKET* update = NULL;
    struct UI* ui = NULL;
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
    struct CHANNEL* l = NULL;
+#ifdef USE_ITEMS
    struct TILEMAP* t = NULL;
    struct TILEMAP_ITEM_CACHE* cache = NULL;
+#endif // USE_ITEMS
+
+   puppet = client_get_puppet( c );
 
    /* Make sure the buffer that all windows share is available. */
    if(
-      NULL == c->puppet ||
-      (c->puppet->steps_remaining < -8 || c->puppet->steps_remaining > 8)
+      NULL == puppet ||
+      (mobile_get_steps_remaining( puppet ) < -8 ||
+      mobile_get_steps_remaining( puppet ) > 8)
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
       return VFALSE; /* Silently ignore input until animations are done. */
    } else {
-      puppet = c->puppet;
-      ui = c->ui;
-      update.o = puppet;
-      update.l = puppet->channel;
-      lgc_null( update.l );
-      l = puppet->channel;
-      lgc_null_msg( l, "No channel loaded." );
-      t = &(l->tilemap);
-      lgc_null_msg( t, "No tilemap loaded." );
+      l = mobile_get_channel( puppet );
+      lgc_null( l );
+      update = action_packet_new( l, puppet, ACTION_OP_NONE, 0, 0, NULL );
    }
 
    /* If no windows need input, then move on to game input. */
    switch( p->character ) {
    case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return VTRUE;
    case INPUT_ASSIGNMENT_UP:
-      update.update = MOBILE_UPDATE_MOVEUP;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y - 1;
-      proto_client_send_update( c, &update );
+      action_packet_set_op( update, ACTION_OP_MOVEUP );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
+      proto_client_send_update( c, update );
       return VTRUE;
 
    case INPUT_ASSIGNMENT_LEFT:
-      update.update = MOBILE_UPDATE_MOVELEFT;
-      update.x = c->puppet->x - 1;
-      update.y = c->puppet->y;
-      proto_client_send_update( c, &update );
+      action_packet_set_op( update, ACTION_OP_MOVELEFT );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) );
+      proto_client_send_update( c, update );
       return VTRUE;
 
    case INPUT_ASSIGNMENT_DOWN:
-      update.update = MOBILE_UPDATE_MOVEDOWN;
-      update.x = c->puppet->x;
-      update.y = c->puppet->y + 1;
-      proto_client_send_update( c, &update );
+      action_packet_set_op( update, ACTION_OP_MOVEDOWN );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
+      proto_client_send_update( c, update );
       return VTRUE;
 
    case INPUT_ASSIGNMENT_RIGHT:
-      update.update = MOBILE_UPDATE_MOVERIGHT;
-      update.x = c->puppet->x + 1;
-      update.y = c->puppet->y;
-      proto_client_send_update( c, &update );
+      action_packet_set_op( update, ACTION_OP_MOVERIGHT );
+      action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
+      action_packet_set_tile_y( update, mobile_get_y( puppet ) );
+      proto_client_send_update( c, update );
       return VTRUE;
 
    case INPUT_ASSIGNMENT_ATTACK:
-      update.update = MOBILE_UPDATE_ATTACK;
+      action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
-      proto_client_send_update( c, &update );
-      return VTRUE;bstring
+      proto_client_send_update( c, update );
+      return VTRUE;
 
+#ifdef USE_ITEMS
    case INPUT_ASSIGNMENT_INV:
       if( NULL == client_input_from_ui ) {
          client_input_from_ui = bfromcstralloc( 80, "" );
@@ -932,6 +937,7 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
       return VTRUE;
+#endif // USE_ITEMS
 
    case '\\':
       if( NULL == client_input_from_ui ) {
@@ -971,15 +977,8 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 cleanup:
    return VFALSE;
 }
-#endif
 
 PLUGIN_RESULT mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
-   // XXX
-   return PLUGIN_SUCCESS;
-}
-
-#if 0
-void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {
    scaffold_set_client();
    input_get_event( p );
    if( INPUT_TYPE_CLOSE == p->type ) {
@@ -989,9 +988,8 @@ void mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p )
          mode_pov_poll_keyboard( c, p );
       }
    }
-   return;
+   return PLUGIN_SUCCESS;
 }
-#endif // 0
 
 PLUGIN_RESULT mode_pov_free( struct CLIENT* c ) {
    if(
@@ -1005,5 +1003,119 @@ PLUGIN_RESULT mode_pov_free( struct CLIENT* c ) {
       graphics_surface_free( ray_view );
       ray_view = NULL;
    } */
+   return PLUGIN_SUCCESS;
+}
+
+/* Mobile action chain of events is roughly:
+ *
+ * (Client-Side) Keyboard > Protocol Message > Server Action
+ *
+ * During the server action, the movement is either determined to be blocked
+ * (and subsequently ignored) or allowed and propogated to all clients
+ * (including the one that initiated the action).
+ *
+ * Having the plugin decide how the chain of actions happens theoretically
+ * leaves the door open for plugins that are "smarter" at handling bad network
+ * conditions later on (e.g. by predicting movements client-side).
+ */
+
+PLUGIN_RESULT mode_pov_mobile_action_client( struct ACTION_PACKET* update ) {
+   struct MOBILE* o = NULL;
+   GFX_COORD_PIXEL steps_increment = 0;
+   struct TILEMAP* t = NULL;
+
+   scaffold_assert_client();
+
+   o = action_packet_get_mobile( update );
+   lgc_null( o );
+   t = mobile_get_tilemap( o );
+   lgc_null( t );
+
+   steps_increment = mobile_calculate_terrain_steps_inc(
+      t,
+      mobile_get_steps_inc_default( o ),
+      action_packet_get_tile_x( update ),
+      action_packet_get_tile_y( update )
+   );
+
+   lg_debug(
+      __FILE__, "Mobile %d walking with speed: %d\n",
+      mobile_get_serial( o ), steps_increment
+   );
+
+   mobile_walk(
+      o,
+      action_packet_get_tile_x( update ),
+      action_packet_get_tile_y( update ),
+      steps_increment
+   );
+
+cleanup:
+   return PLUGIN_SUCCESS;
+}
+
+PLUGIN_RESULT mode_pov_mobile_action_server( struct ACTION_PACKET* update ) {
+   struct MOBILE* o = NULL;
+   struct CHANNEL* l = NULL;
+   GFX_COORD_PIXEL steps_increment = 0;
+   struct TILEMAP* t = NULL;
+   TILEMAP_COORD_TILE dest_x = 0,
+      dest_y = 0;
+
+// XXX: Call movement stuff.
+
+   /* Check for valid movement range. */
+   /* if(
+      dest_x != start_x - 1 &&
+      dest_x != start_x + 1 &&
+      dest_y != start_y - 1 &&
+      dest_y != start_y + 1
+   ) {
+      lg_error( __FILE__,
+         "Mobile (%d) attempted to walk invalid distance: %d, %d to %d, %d\n",
+         mobile_get_serial( o ), start_x, start_y, dest_x, dest_y
+      );
+      goto cleanup;
+   } */
+
+   o = action_packet_get_mobile( update );
+   lgc_null( o );
+   t = mobile_get_tilemap( o );
+   lgc_null( t );
+
+   dest_x = action_packet_get_tile_x( update );
+   dest_y = action_packet_get_tile_y( update );
+
+   steps_increment = mobile_calculate_terrain_steps_inc(
+      t, mobile_get_steps_inc_default( o ), dest_x, dest_y );
+
+   /* Check for blockers. */
+   if(
+      0 >= steps_increment ||
+      !mobile_calculate_mobile_collision(
+         o,
+         mobile_get_x( o ), mobile_get_y( o ),
+         dest_x, dest_y
+      )
+   ) {
+      lg_error( __FILE__,
+         "Mobile walking blocked: %d, %d to %d, %d\n",
+         mobile_get_x( o ),  mobile_get_y( o ), dest_x, dest_y
+      );
+      goto cleanup;
+   }
+
+   scaffold_assert_server();
+   o = action_packet_get_mobile( update );
+   /* TODO: Check obstacles. */
+   mobile_set_x( o, action_packet_get_tile_x( update ) );
+   mobile_set_y( o, action_packet_get_tile_y( update ) );
+   mobile_set_prev_x( o, action_packet_get_tile_x( update ) );
+   mobile_set_prev_y( o, action_packet_get_tile_y( update ) );
+
+   l = action_packet_get_channel( update );
+   hashmap_iterate( l->clients, callback_send_updates_to_client, update );
+
+cleanup:
    return PLUGIN_SUCCESS;
 }

@@ -523,18 +523,6 @@ void* callback_search_item_type(
 
 #endif /* USE_ITEMS */
 
-void* callback_search_tilesets_gid( size_t idx, void* iter, void* arg ) {
-   size_t* gid = (size_t*)arg;
-   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-
-   if( NULL != set && idx <= *gid ) {
-      *gid = idx;
-      return set;
-   }
-
-   return NULL;
-}
-
 #ifdef ENABLE_LOCAL_CLIENT
 
 void* callback_search_tilesets_small(
