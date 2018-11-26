@@ -128,7 +128,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 
 #include <libvcol.h>
 #include "bstrglue.h"
-#include "colors.h"
+#include <colors.h>
 
 COLOR_TABLE( SCAFFOLD )
 

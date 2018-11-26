@@ -302,6 +302,18 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
 
 #ifndef USE_CURSES
 
+void* cb_tilemap_tilesets_search_gid( size_t idx, void* iter, void* arg ) {
+   size_t* gid = (size_t*)arg;
+   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
+
+   if( NULL != set && idx <= *gid ) {
+      *gid = idx;
+      return set;
+   }
+
+   return NULL;
+}
+
 /** \brief Given a tile GID, get the tileset it belongs to.
  * \param[in]  t            The tilemap on which the tile resides.
  * \param[in]  gid          The GID of the tile information to fetch.
@@ -309,15 +321,15 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
  *                          tilemap.
  * \return The tileset containing the tile with the requested GID.
  */
-SCAFFOLD_INLINE struct TILEMAP_TILESET* tilemap_get_tileset(
-   const struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
+struct TILEMAP_TILESET* tilemap_get_tileset(
+   const struct TILEMAP* t, size_t gid, size_t* set_firstgid
 ) {
    struct TILEMAP_TILESET* set = NULL;
    /* The gid variable does double-duty, here. It provides a GID to search for,
     * and a place to keep the first GID of the found tileset for this tilemap
     * when the tileset is found.
     */
-   set = vector_iterate( t->tilesets, callback_search_tilesets_gid, &gid );
+   set = vector_iterate( t->tilesets, cb_tilemap_tilesets_search_gid, &gid );
    if( NULL != set && NULL != set_firstgid ) {
       *set_firstgid = gid;
    }
@@ -379,7 +391,10 @@ TILEMAP_TILE tilemap_layer_get_tile_gid(
 ) {
    SCAFFOLD_SIZE index = (y * layer->width) + x;
    TILEMAP_TILE gid_out = 0;
-   scaffold_assert( layer->tile_gids_len > index );
+   if( layer->tile_gids_len <= index ) {
+      // Should this ever fail?
+      return 0;
+   }
    gid_out = layer->tile_gids[index];
    scaffold_assert( gid_out >= 0 );
    return layer->tile_gids[index] - 1;

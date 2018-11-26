@@ -247,7 +247,7 @@ void tilemap_tileset_cleanup( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_free( struct TILEMAP_TILESET* tileset );
 void tilemap_tileset_init( struct TILEMAP_TILESET* tileset, bstring def_path );
 struct TILEMAP_TILESET* tilemap_get_tileset(
-   const struct TILEMAP* t, SCAFFOLD_SIZE gid, SCAFFOLD_SIZE* set_firstgid
+   const struct TILEMAP* t, size_t gid, size_t* set_firstgid
 );
 void tilemap_get_tile_tileset_pos(
    struct TILEMAP_TILESET* set, SCAFFOLD_SIZE set_firstgid, GRAPHICS* g_set,

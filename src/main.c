@@ -287,7 +287,7 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
 
    plugin_call(
       PLUGIN_MODE, l->mode,
-      PLUGIN_DRAW, main_client, o, l );
+      PLUGIN_DRAW, main_client, l );
 
    /* Draw masks to cover up garbage from mismatch between viewport and window.
     */
