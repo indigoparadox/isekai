@@ -1,4 +1,5 @@
 glob:deps
+glob:web/node_modules
 glob:junk
 glob:wiki
 glob:*.layout
