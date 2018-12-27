@@ -639,6 +639,8 @@ int main( int argc, char** argv ) {
    lg_add_trace_cat( "CLIENT", LG_COLOR_CYAN );
    lg_add_trace_cat( "SERVER", LG_COLOR_GREEN );
 
+   storage_init();
+
 #ifdef ENABLE_LOCAL_CLIENT
    g_screen = mem_alloc( 1, GRAPHICS );
    lgc_null( g_screen );

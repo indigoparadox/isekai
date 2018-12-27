@@ -5,6 +5,7 @@
 		<Option title="isekai" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="src/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/isekai" prefix_auto="1" extension_auto="1" />
@@ -468,6 +469,7 @@
 					<Add option="-DxUSE_TINYPY" />
 					<Add option="-DxUSE_VM" />
 					<Add option="-DDEBUG_NETWORK" />
+					<Add option="-DUSE_SQLITE" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -475,6 +477,7 @@
 					<Add library="alleg" />
 					<Add library="ubsan" />
 					<Add library="dl" />
+					<Add library="sqlite3" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
@@ -1518,6 +1521,27 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/server.h" />
+		<Unit filename="src/storage.h" />
+		<Unit filename="src/storage/sqlite.c">
+			<Option compilerVar="CC" />
+			<Option target="Strict (Linux-SB-Allegro4)" />
+			<Option target="Strict (Linux-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET)" />
+			<Option target="Debug (MingW32-NET-Allegro4)" />
+			<Option target="Debug (MingW32-NET-SDL)" />
+			<Option target="Debug (MingW32-SB)" />
+			<Option target="Debug (Linux-SB-Curses)" />
+			<Option target="Debug (Linux-NET-Curses)" />
+			<Option target="Debug (Linux-SB-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
+			<Option target="Debug (Linux-NET-SDL)" />
+			<Option target="Debug (Linux-SHM-Allegro4)" />
+			<Option target="Debug (Linux-Allegro4-CLANG)" />
+			<Option target="Debug (Linux-Allegro4-TCC)" />
+			<Option target="Debug (Linux-Curses-Threaded)" />
+			<Option target="Release (Linux-Allegro4)" />
+		</Unit>
 		<Unit filename="src/tilemap.c">
 			<Option compilerVar="CC" />
 		</Unit>
