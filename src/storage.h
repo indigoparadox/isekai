@@ -21,6 +21,7 @@ VBOOL storage_init();
 void storage_free();
 bstring storage_client_get_string( bstring store, bstring key );
 void storage_client_set_string( bstring store, bstring key, bstring str );
-int storage_get( bstring store, enum STORAGE_HALF half, bstring key, enum STORAGE_VALUE_TYPE type, struct VECTOR* out );
+int storage_get( bstring store, enum STORAGE_HALF half, bstring key, enum STORAGE_VALUE_TYPE type, void* out );
+int storage_set( bstring store, enum STORAGE_HALF half, bstring key, enum STORAGE_VALUE_TYPE type, void* value );
 
 #endif /* STORAGE_H */
