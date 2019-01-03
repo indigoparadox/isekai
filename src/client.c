@@ -464,7 +464,8 @@ short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
 
 void client_send_file(
    struct CLIENT* c, DATAFILE_TYPE type,
-   const bstring serverpath, const bstring filepath
+   const bstring serverpath, const bstring filepath,
+   struct CHUNKER_PARMS* parms
 ) {
    struct CHUNKER* h = NULL;
    VBOOL valid_file;
@@ -476,6 +477,9 @@ void client_send_file(
    /* Begin transmitting tilemap. */
    h = mem_alloc( 1, struct CHUNKER );
    lgc_null( h );
+
+   lgc_null( parms );
+   h->parms = parms;
 
    valid_file = chunker_chunk_start_file(
       h,
