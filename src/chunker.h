@@ -40,6 +40,7 @@ struct CHUNKER_PROGRESS {
    bstring data;
    bstring filename;
    DATAFILE_TYPE type;
+   struct CHUNKER_PARMS* parms;
 };
 
 typedef struct _CHUNKER_TRACK {
@@ -60,15 +61,20 @@ struct heatshrink_encoder;
 #include "hs/hsencode.h"
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
+struct CHUNKER_PARMS {
+   int version;
+   VBOOL compression;
+};
+
 struct CHUNKER {
    struct REF refcount;
-#if HEATSHRINK_DYNAMIC_ALLOC
+//#if HEATSHRINK_DYNAMIC_ALLOC
    struct heatshrink_encoder* encoder;
    struct heatshrink_decoder* decoder;
-#else
-   struct heatshrink_encoder encoder;
-   struct heatshrink_decoder decoder;
-#endif /* HEATSHRINK_DYNAMIC_ALLOC */
+//#else
+//   struct heatshrink_encoder encoder;
+//   struct heatshrink_decoder decoder;
+//#endif /* HEATSHRINK_DYNAMIC_ALLOC */
    size_t raw_position;
    size_t raw_length;
    BYTE* raw_ptr;
@@ -80,6 +86,7 @@ struct CHUNKER {
    bstring filename;
    bstring serverpath;
    size_t last_percent;
+   struct CHUNKER_PARMS* parms;
    void* placeholder; /*!< For use by a parser function. */
 };
 
@@ -119,6 +126,8 @@ void chunker_unchunk_check_cache( struct CHUNKER* h );
 VBOOL chunker_unchunk_finished( struct CHUNKER* h );
 int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, VBOOL force );
 VBOOL chunker_unchunk_cached( struct CHUNKER* h );
+struct CHUNKER_PARMS* chunker_decode_block( bstring block );
+bstring chunker_encode_block( struct CHUNKER_PARMS* parms );
 
 #ifdef CHUNKER_C
 struct tagbstring chunker_type_names[] = {

@@ -14,6 +14,7 @@ struct CONNECTION;
 #ifdef USE_CHUNKS
 struct CHUNKER_PROGRESS;
 struct CHUNKER;
+struct CHUNKER_PARMS;
 #endif /* USE_CHUNKS */
 
 typedef enum _CLIENT_FLAGS {
@@ -63,7 +64,8 @@ void client_stop( struct CLIENT* c );
 #ifdef USE_CHUNKS
 void client_send_file(
    struct CLIENT* c, DATAFILE_TYPE type,
-   const bstring serverpath, const bstring filepath
+   const bstring serverpath, const bstring filepath,
+   struct CHUNKER_PARMS* parms
 );
 #endif /* USE_CHUNKS */
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o );

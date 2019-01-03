@@ -15,6 +15,16 @@
 #include "ref.h"
 #include "files.h"
 
+struct CHUNKER_PARMS* chunker_decode_block( bstring block ) {
+   return mem_alloc( 1, struct CHUNKER_PARMS );
+}
+
+bstring chunker_encode_block( struct CHUNKER_PARMS* parms ) {
+   // TODO
+   // TODO: Return default parms if parms is NULL.
+   return bfromcstr( "X" );
+}
+
 static void chunker_destroy( const struct REF* ref ) {
    struct CHUNKER* h = (struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
 
@@ -175,6 +185,8 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
 
    hs_buffer = (uint8_t*)calloc( hs_buffer_len, sizeof( uint8_t ) );
    lgc_null( hs_buffer );
+
+   /* TODO: Disable compression if parm block indicates to do so. */
 
    heatshrink_encoder_reset( chunker_get_encoder( h ) );
 

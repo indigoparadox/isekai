@@ -301,7 +301,8 @@ void proto_send_chunk(
    DATAFILE_TYPE type = DATAFILE_TYPE_INVALID;
    SCAFFOLD_SIZE chunk_len = 0,
       raw_len = 0;
-   bstring data_sent = NULL;
+   bstring data_sent = NULL,
+      parms_block = NULL;
 
    scaffold_assert_server();
 
@@ -312,19 +313,21 @@ void proto_send_chunk(
       chunk_len = h->tx_chunk_length;
       raw_len = h->raw_length;
       data_sent = bstrcpy( data );
+      parms_block = chunker_encode_block( h->parms );
    } else {
       /* Make things easy on the arg count validator. */
       data_sent = bfromcstr( "x" );
    }
 
    proto_printf(
-      c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
-      client_get_nick( c ), filename, type, start_pos,
+      c, ":server GDB %b TILEMAP %b %b %d %d %d %d : %b",
+      client_get_nick( c ), filename, parms_block, type, start_pos,
       chunk_len, raw_len, data_sent
    );
 
 /* cleanup: */
    bdestroy( data_sent );
+   bdestroy( parms_block );
    return;
 }
 
@@ -345,6 +348,7 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
  * \param type       Type of file requested. Used in return processing.
  */
 void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type ) {
+   bstring req_parms = NULL;
    scaffold_assert_client();
    scaffold_assert( 0 < blength( filename ) );
    /*
@@ -353,7 +357,9 @@ void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE
       chunker_type_names[type].data, bdata( filename )
    );
    */
-   proto_printf( c, "GRF %d %b", type, filename );
+   req_parms = chunker_encode_block( NULL );
+   proto_printf( c, "GRF %d %b %b", type, req_parms, filename );
+   bdestroy( req_parms );
 }
 
 #endif /* USE_CHUNKS */
@@ -1050,12 +1056,13 @@ static void irc_server_gamerequestfile(
    DATAFILE_TYPE type;
    bstring file_path_found = NULL,
       filename = NULL;
+   struct CHUNKER_PARMS* parms = NULL;
 
-   irc_detect_malformed( 3, "GRF", line );
+   irc_detect_malformed( 4, "GRF", line );
 
    type = (DATAFILE_TYPE)bgtoi( (bstring)vector_get( args, 1 ) );
 
-   filename = (bstring)vector_get( args, 2 );
+   filename = (bstring)vector_get( args, 3 );
 
    file_path_found = files_search( filename );
    if( NULL == file_path_found ) {
@@ -1064,7 +1071,11 @@ static void irc_server_gamerequestfile(
       goto cleanup;
    }
 
-   client_send_file( c, type, files_root( NULL ), file_path_found );
+   /* Decode the parameter block. */
+   parms = chunker_decode_block( (bstring)vector_get( args, 2 ) );
+   lgc_null( parms );
+
+   client_send_file( c, type, files_root( NULL ), file_path_found, parms );
 
 cleanup:
    bdestroy( file_path_found );
@@ -1297,14 +1308,16 @@ static void irc_client_gamedatablock(
 ) {
    struct CHUNKER_PROGRESS progress;
 
-   irc_detect_malformed( 11, "GDB", line );
+   irc_detect_malformed( 12, "GDB", line );
 
-   progress.type = bgtoi( (bstring)vector_get( args, 5 ) );
-   progress.current = bgtoi( (bstring)vector_get( args, 6 ) );
-   progress.chunk_size = bgtoi( (bstring)vector_get( args, 7 ) );
-   progress.total = bgtoi( (bstring)vector_get( args, 8 ) );
+   progress.parms = chunker_decode_block( (bstring)vector_get( args, 5 ) );
+   lg_debug( __FILE__, "Chunk parms: %b\n", (bstring)vector_get( args, 5 ) );
+   progress.type = bgtoi( (bstring)vector_get( args, 6 ) );
+   progress.current = bgtoi( (bstring)vector_get( args, 7 ) );
+   progress.chunk_size = bgtoi( (bstring)vector_get( args, 8 ) );
+   progress.total = bgtoi( (bstring)vector_get( args, 9 ) );
    progress.filename = (bstring)vector_get( args, 4 );
-   progress.data = (bstring)vector_get( args, 10 );
+   progress.data = (bstring)vector_get( args, 11 );
 
    client_process_chunk( c, &progress );
 
