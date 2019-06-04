@@ -133,3 +133,59 @@ void backlog_system( const bstring msg ) {
 cleanup:
    return;
 }
+
+static void* ui_control_draw_backlog_line(
+   size_t idx, void* iter, void* arg
+) {
+   struct UI_CONTROL* control = (struct UI_CONTROL*)arg;
+   struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
+   bstring nick_decorated = NULL;
+   GRAPHICS_RECT nick_size = { 0, 0, 0, 0 };
+   GRAPHICS_COLOR msg_fg = UI_TEXT_FG;
+   GRAPHICS_RECT* pos = &(control->self.grid_pos);
+
+   ui_window_advance_grid( &(control->self), NULL );
+
+   /* TODO: Divide multiline lines. */
+
+   if( NULL != line->nick ) {
+      /* Draw the nick, first. */
+      nick_decorated = bformat( "%s: ", bdata( line->nick ) );
+
+      graphics_measure_text( NULL, &nick_size, UI_TEXT_SIZE, nick_decorated );
+
+      graphics_draw_text(
+         control->owner->element, pos->x, pos->y,
+         GRAPHICS_TEXT_ALIGN_LEFT, UI_NICK_FG, UI_TEXT_SIZE,
+         nick_decorated, VFALSE
+      );
+
+      pos->x += nick_size.w;
+   } else {
+      msg_fg = GRAPHICS_COLOR_MAGENTA;
+   }
+
+   graphics_draw_text(
+      control->owner->element, pos->x, pos->y,
+      GRAPHICS_TEXT_ALIGN_LEFT, msg_fg, UI_TEXT_SIZE, line->line, VFALSE
+   );
+
+   bdestroy( nick_decorated );
+   return NULL;
+}
+
+/* TODO: Translate this to use abstract UI functions. */
+static void ui_control_draw_backlog(
+   struct UI_WINDOW* win, struct UI_CONTROL* backlog
+) {
+   win->grid_pos.w = ui_control_get_draw_width( backlog );
+   win->grid_pos.h = ui_control_get_draw_height( backlog );
+
+   memcpy(
+      &(backlog->self.grid_pos), &(win->grid_pos), sizeof( GRAPHICS_RECT )
+   );
+
+   backlog->self.grid_pos.y += UI_WINDOW_MARGIN;
+
+   backlog_iter( ui_control_draw_backlog_line, backlog );
+}

@@ -3,8 +3,9 @@
 #define TWINDOW_H
 
 #include "graphics.h"
-#include "tilemap.h"
 #include "ui.h"
+#include "tilemap.h"
+#include "callback.h"
 
 struct TWINDOW;
 struct UI;

@@ -279,15 +279,6 @@ void* callback_search_mobs_by_pos( size_t idx, void* iter, void* arg ) {
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-void* callback_search_windows( size_t idx, void* iter, void* arg ) {
-   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
-   bstring wid = (bstring)arg;
-   if( 0 == bstrcmp( win->id, wid ) ) {
-      return win;
-   }
-   return NULL;
-}
-
 /* Searches for a tileset containing the image named in bstring arg. */
 /** \brief
  *
@@ -801,24 +792,6 @@ VBOOL callback_free_generic( size_t idx, void* iter, void* arg ) {
    return VTRUE;
 }
 
-#ifdef ENABLE_LOCAL_CLIENT
-
-VBOOL callback_free_controls( bstring idx, void* iter, void* arg ) {
-   bstring key_search = (bstring)arg;
-   struct UI_CONTROL* control = (struct UI_CONTROL*)iter;
-
-   if(
-      NULL == arg ||
-      0 == bstrcmp( key_search, idx )
-   ) {
-      ui_control_free( control );
-      return VTRUE;
-   }
-   return VFALSE;
-}
-
-#endif /* ENABLE_LOCAL_CLIENT */
-
 VBOOL callback_v_free_strings( size_t idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       bdestroy( (bstring)iter );
@@ -852,18 +825,6 @@ VBOOL callback_free_backlog( size_t idx, void* iter, void* arg ) {
 VBOOL callback_free_graphics( bstring idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( (bstring)iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
-      return VTRUE;
-   }
-   return VFALSE;
-}
-
-VBOOL callback_free_windows( size_t idx, void* iter, void* arg ) {
-   bstring wid = (bstring)arg;
-   struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
-   scaffold_assert( NULL != iter );
-   scaffold_assert( ui_get_local() == win->ui );
-   if( NULL == arg || 0 == bstrcmp( wid, win->id ) ) {
-      ui_window_free( win );
       return VTRUE;
    }
    return VFALSE;

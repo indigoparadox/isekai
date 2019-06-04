@@ -481,6 +481,7 @@
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux-Allegro" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-TLS)">
@@ -935,11 +936,13 @@
 			<Add directory="../libvcol/src" />
 			<Add directory="../camgraph/src" />
 			<Add directory="../camin/src" />
+			<Add directory="../libtwin/src" />
 		</Compiler>
 		<Linker>
 			<Add library="vcol" />
 			<Add library="camgraph" />
 			<Add library="camin" />
+			<Add library="twin" />
 		</Linker>
 		<Unit filename="isekai.def">
 			<Option target="Debug (Palm-SB)" />
@@ -1359,13 +1362,7 @@
 			<Option target="Debug (DOS16-Allegro4)" />
 			<Option target="Debug (DOS32-SB-Allegro4)" />
 		</Unit>
-		<Unit filename="src/htmlrend.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/htmlrend.h" />
-		<Unit filename="src/htmtree.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/htmtree.h" />
 		<Unit filename="src/ipc.h" />
 		<Unit filename="src/ipc/netipc.c">
@@ -1643,32 +1640,6 @@
 		</Unit>
 		<Unit filename="src/twindow.h" />
 		<Unit filename="src/ui.h" />
-		<Unit filename="src/ui/graphicu.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Strict (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-SHM-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Palm-SB)" />
-			<Option target="Strict (Linux-NET-Allegro4)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-		</Unit>
 		<Unit filename="src/vm.c">
 			<Option compilerVar="CC" />
 		</Unit>
