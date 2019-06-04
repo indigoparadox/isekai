@@ -2,10 +2,6 @@
 #define TWINDOW_C
 #include "twindow.h"
 
-#include "tilemap.h"
-#include "client.h"
-#include "callback.h"
-
 struct UI;
 
 struct TWINDOW {
