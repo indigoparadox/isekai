@@ -1033,7 +1033,9 @@ void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* d
    );
 
 cleanup:
+#ifdef USE_EZXML
    ezxml_free( xml_data );
+#endif /* USE_EZXML */
    bdestroy( lname );
    return;
 }
