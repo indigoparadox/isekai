@@ -55,7 +55,7 @@ typedef unsigned char uint8_t;
 #define USE_CLOCK 1
 #define USE_FILE 1
 
-#elif defined( _WIN32 )
+#elif defined( _WIN32 ) && !defined( __MINGW32__ )
 
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
@@ -72,7 +72,7 @@ typedef long SCAFFOLD_SIZE_SIGNED;
 #define USE_CLOCK 1
 #define USE_FILE 1
 
-#elif defined( __linux ) || defined( DJGPP )
+#elif defined( __linux ) || defined( DJGPP ) || defined( __MINGW32__ )
 
 #define _GNU_SOURCE
 #undef _POSIX_SOURCE
@@ -154,23 +154,6 @@ typedef uint16_t BIG_SERIAL;
 #define USE_VM
 #endif /* !USE_VM */
 #endif /* USE_DUKTAPE || USE_TINYPY */
-
-/*
-typedef enum {
-   SCAFFOLD_ERROR_NONE,
-   SCAFFOLD_ERROR_MISC,
-   SCAFFOLD_ERROR_NULLPO,
-   SCAFFOLD_ERROR_OUTOFBOUNDS,
-   SCAFFOLD_ERROR_NEGATIVE,
-   SCAFFOLD_ERROR_NONZERO,
-   SCAFFOLD_ERROR_ZERO,
-   SCAFFOLD_ERROR_NOT_NULLPO,
-   SCAFFOLD_ERROR_DUPLICATE,
-   SCAFFOLD_ERROR_RANDOM,
-   SCAFFOLD_ERROR_CONNECTION_CLOSED,
-   SCAFFOLD_ERROR_UNEQUAL
-} SCAFFOLD_ERROR;
-*/
 
 #ifdef USE_INLINE
 #define SCAFFOLD_INLINE inline
@@ -450,11 +433,6 @@ struct VECTOR;
 #define scaffold_byte( number ) (0xff & number)
 
 VBOOL scaffold_is_numeric( bstring line );
-/*
-bstring scaffold_list_pop_string( struct bstrList* list );
-void scaffold_list_remove_string( struct bstrList* list, bstring str );
-void scaffold_list_append_string_cpy( struct bstrList* list, bstring str );
-*/
 VBOOL scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, ... );
 void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );
