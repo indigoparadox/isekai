@@ -1,12 +1,14 @@
 
 #define MODE_C
 
+#include <assert.h>
 #include <callback.h>
 #include <ui.h>
 #include <ipc.h>
 #include <channel.h>
 #include <proto.h>
 #include <plugin.h>
+#include <tilemap.h>
 #include <twindow.h>
 
 extern struct tagbstring str_client_cache_path;
@@ -105,7 +107,7 @@ static void* mode_topdown_tilemap_draw_layer_cb(
       x = 0,
       y = 0;
 
-   scaffold_assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
+   assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
 
    for( x = twindow_get_min_x( twindow ) ; twindow_get_max_x( twindow ) > x ; x++ ) {
       for( y = twindow_get_min_y( twindow ) ; twindow_get_max_y( twindow ) > y ; y++ ) {
@@ -259,7 +261,7 @@ static void mode_topdown_tilemap_draw_tile(
    if( 0 == gid ) {
       goto cleanup;
    }
-   scaffold_assert( gid < tilemap_get_tiles_count( layer ) );
+   //assert( gid < tilemap_get_tiles_count( layer ) );
 
    local_client = twindow_get_local_client( twindow );
    lgc_null( local_client );
