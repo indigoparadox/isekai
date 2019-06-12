@@ -475,18 +475,18 @@
 					<Add option="-DUSE_SQLITE" />
 					<Add option="-DxUSE_DYNAMIC_PLUGINS" />
 					<Add option="-DUSE_STATIC_MODE_TOPDOWN" />
+					<Add option="-DxUSE_STATIC_MODE_ISOMETRIC" />
+					<Add option="-DxUSE_STATIC_MODE_POV" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
-					<Add option="-export-dynamic" />
 					<Add library="alleg" />
 					<Add library="ubsan" />
-					<Add library="dl" />
 					<Add library="sqlite3" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
-					<Add directory="../libtwin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-Dynamic)">
@@ -549,7 +549,7 @@
 					<Add directory="../libtwin/bin/Debug-Linux-Allegro" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="cd src/plugins &amp;&amp; make" />
+					<Add after="#cd src/plugins &amp;&amp; make" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -642,7 +642,7 @@
 					<Add option="-DUSE_RANDOM_PORT" />
 					<Add option="-DxDEBUG_REF" />
 					<Add option="-DUSE_CONNECT_DIALOG" />
-					<Add option="-DDEBUG_TILES" />
+					<Add option="-DxDEBUG_TILES" />
 					<Add option="-DUSE_SDL_IMAGE" />
 					<Add option="-DUSE_COLORED_CONSOLE" />
 					<Add option="-DxDEBUG_PALETTE" />
@@ -650,15 +650,18 @@
 					<Add option="-DENABLE_LOCAL_CLIENT" />
 					<Add option="-DxUSE_DUKTAPE" />
 					<Add option="-DxDEBUG_VERBOSEGRAPHICS_COLOR" />
+					<Add option="-DUSE_STATIC_MODE_TOPDOWN" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
-					<Add option="-export-dynamic" />
 					<Add library="ubsan" />
 					<Add library="SDL" />
 					<Add library="SDL_image" />
-					<Add library="dl" />
+					<Add library="sqlite3" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-SDL" />
+					<Add directory="../camin/bin/Debug-Linux-SDL" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -1447,8 +1450,6 @@
 			<Option target="Debug (DOS32-SB-Allegro4)" />
 			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
 		</Unit>
-		<Unit filename="src/htmlrend.h" />
-		<Unit filename="src/htmtree.h" />
 		<Unit filename="src/ipc.h" />
 		<Unit filename="src/ipc/netipc.c">
 			<Option compilerVar="CC" />
@@ -1550,14 +1551,17 @@
 		<Unit filename="src/plugins/isometer.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/plugins/pov.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/plugins/topdown.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug (Linux-NET-Allegro4)" />
+			<Option target="Debug (Linux-NET-SDL)" />
 		</Unit>
 		<Unit filename="src/proto.h" />
 		<Unit filename="src/proto/irc.c">
@@ -1745,7 +1749,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/twindow.h" />
-		<Unit filename="src/ui.h" />
 		<Unit filename="src/vm.c">
 			<Option compilerVar="CC" />
 		</Unit>

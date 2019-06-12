@@ -2,6 +2,8 @@
 #define CLIENT_C
 #include "client.h"
 
+#include <stddef.h>
+
 #include "server.h"
 #include "callback.h"
 #include "proto.h"
@@ -314,7 +316,9 @@ VBOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    }
 #endif /* USE_CHUNKS */
 
-/* cleanup: */
+#ifdef DEBUG_TILES
+cleanup:
+#endif /* DEBUG_TILES */
 
    vector_remove_cb( c->delayed_files, callback_proc_client_delayed_files, c );
 
@@ -1315,7 +1319,7 @@ void client_set_mode_data(
    }
 
    assert( NULL == hashmap_get( channels, l->name ) );
-   hashmap_put( channels, l->name, mode_data, FALSE );
+   hashmap_put( channels, l->name, mode_data, VFALSE );
 
 cleanup:
    return;

@@ -1298,7 +1298,7 @@ void* mobile_set_mode_data( struct MOBILE* o, bstring mode, struct CHANNEL* l, v
    }
 
    assert( NULL == hashmap_get( channels, l->name ) );
-   hashmap_put( channels, l->name, mode_data, FALSE );
+   hashmap_put( channels, l->name, mode_data, false );
 
 cleanup:
    return mode_data;
