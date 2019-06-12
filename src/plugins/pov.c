@@ -1,4 +1,6 @@
 
+#if defined( USE_DYNAMIC_PLUGINS ) || defined( USE_STATIC_MODE_POV )
+
 #include <stdlib.h>
 
 #include <graphics.h>
@@ -1119,3 +1121,5 @@ PLUGIN_RESULT mode_pov_mobile_action_server( struct ACTION_PACKET* update ) {
 cleanup:
    return PLUGIN_SUCCESS;
 }
+
+#endif /* USE_DYNAMIC_PLUGINS || USE_STATIC_MODE_POV */

@@ -1,15 +1,17 @@
 
+#if defined( USE_DYNAMIC_PLUGINS ) || defined( USE_STATIC_MODE_TOPDOWN )
+
 #define MODE_C
 
 #include <assert.h>
-#include <callback.h>
+#include "../callback.h"
 #include <ui.h>
-#include <ipc.h>
-#include <channel.h>
-#include <proto.h>
-#include <plugin.h>
-#include <tilemap.h>
-#include <twindow.h>
+#include "../ipc.h"
+#include "../channel.h"
+#include "../proto.h"
+#include "../plugin.h"
+#include "../tilemap.h"
+#include "../twindow.h"
 
 extern struct tagbstring str_client_cache_path;
 extern struct tagbstring str_wid_debug_tiles_pos;
@@ -23,6 +25,9 @@ extern struct tagbstring str_client_control_id_inv_self;
 extern bstring client_input_from_ui;
 extern struct tagbstring str_client_control_id_inv_ground;
 
+#ifndef USE_DYNAMIC_PLUGINS
+struct tagbstring mode_short = bsStatic( "topdown" );
+#endif /* !USE_DYNAMIC_PLUGINS */
 struct tagbstring mode_name = bsStatic( "Top Down" );
 
 static void mode_topdown_tilemap_draw_tile(
@@ -131,7 +136,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
    SCAFFOLD_SIZE td_i;
    int bstr_result;
    struct TILEMAP* t = layer->tilemap;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
    SCAFFOLD_SIZE layers_count;
 
    bnum = bfromcstralloc( 10, "" );
@@ -141,9 +146,9 @@ static void mode_topdown_tilemap_draw_tile_debug(
    set = tilemap_get_tileset( t, gid, &set_firstgid );
    lgc_null( set );
    lgc_zero_against(
-      t->scaffold_error, set->tilewidth, "Tile width is zero." );
+      t->scaffold_error, tilemap_tileset_get_tile_width( set ), "Tile width is zero." );
    lgc_zero_against(
-      t->scaffold_error, set->tileheight, "Tile height is zero." );
+      t->scaffold_error, tilemap_tileset_get_tile_height( set ), "Tile height is zero." );
 
    layers_count = vector_count( &(t->layers) );
    if( layers_count <= tilemap_dt_layer ) {
@@ -155,7 +160,7 @@ static void mode_topdown_tilemap_draw_tile_debug(
       goto cleanup;
    }
 
-   tile_info = vector_get( &(set->tiles), gid - 1 );
+   tile_info = tilemap_tileset_get_tile( set, gid - 1 );
    switch( tilemap_dt_state ) {
    case TILEMAP_DEBUG_TERRAIN_COORDS:
       if( layers_count - 1 == layer->z ) {
@@ -330,7 +335,7 @@ static void mode_topdown_tilemap_draw_tile(
 
 #ifdef DEBUG_TILES
    mode_topdown_tilemap_draw_tile_debug(
-      layer, twindow->g, twindow, x, y,
+      layer, twindow_get_screen( twindow ), twindow, x, y,
       tile_screen_rect.x, tile_screen_rect.y, gid
    );
 #endif /* DEBUG_TILES */
@@ -861,3 +866,21 @@ PLUGIN_RESULT mode_topdown_mobile_action_server( struct ACTION_PACKET* update ) 
 cleanup:
    return PLUGIN_SUCCESS;
 }
+
+PLUGIN_RESULT mode_topdown_mobile_init( struct MOBILE* o, struct CHANNEL* l ) {
+   return PLUGIN_FAILURE;
+}
+
+PLUGIN_RESULT mode_topdown_mobile_free( struct MOBILE* o ) {
+   return PLUGIN_FAILURE;
+}
+
+PLUGIN_RESULT mode_topdown_client_init( struct CLIENT* c, struct CHANNEL* l ) {
+   return PLUGIN_FAILURE;
+}
+
+PLUGIN_RESULT mode_topdown_client_free( struct CLIENT* c ) {
+   return PLUGIN_FAILURE;
+}
+
+#endif /* USE_DYNAMIC_PLUGINS || USE_STATIC_MODE_TOPDOWN */

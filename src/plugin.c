@@ -11,10 +11,11 @@
 
 #include <dlfcn.h>
 
-extern struct VECTOR* mode_list_pretty;
-extern struct VECTOR* mode_list_short;
-
+#ifdef USE_DYNAMIC_PLUGINS
 static struct tagbstring str_mode = bsStatic( "mode" );
+
+struct VECTOR* mode_list_pretty;
+struct VECTOR* mode_list_short;
 
 #define plugin_setup( format, hook ) \
    hook_name = bformat( format, bdata( plug ) ); \
@@ -22,12 +23,16 @@ static struct tagbstring str_mode = bsStatic( "mode" );
    f.hook = dlsym( handle, bdata( hook_name ) ); \
    lgc_null( f.hook );
 
+#define plugin_f( method, ... ) \
+    f.method( __VA_ARGS__ )
+
 typedef PLUGIN_RESULT plugin_mode_init();
 typedef PLUGIN_RESULT plugin_mode_update( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_draw( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p );
 typedef PLUGIN_RESULT plugin_mode_free( struct CLIENT* c );
-typedef PLUGIN_RESULT plugin_mode_mobile_action( struct ACTION_PACKET* update );
+typedef PLUGIN_RESULT plugin_mode_mobile_action_client( struct ACTION_PACKET* update );
+typedef PLUGIN_RESULT plugin_mode_mobile_action_server( struct ACTION_PACKET* update );
 typedef PLUGIN_RESULT plugin_mode_mobile_init( struct MOBILE* o, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_client_init( struct CLIENT* c, struct CHANNEL* l );
 typedef PLUGIN_RESULT plugin_mode_mobile_free( struct MOBILE* o );
@@ -39,7 +44,8 @@ union PLUGIN_CALL_FUNC {
    plugin_mode_draw* draw;
    plugin_mode_poll_input* poll_input;
    plugin_mode_free* free;
-   plugin_mode_mobile_action* mobile_action;
+   plugin_mode_mobile_action_client* mobile_action_client;
+   plugin_mode_mobile_action_server* mobile_action_server;
    plugin_mode_mobile_init* mobile_init;
    plugin_mode_client_init* client_init;
    plugin_mode_mobile_free* mobile_free;
@@ -94,7 +100,7 @@ static void* cb_plugin_load( size_t idx, void* iter, void* arg ) {
       plugin_load( ptype, entry_base );
    }
 
-cleanup:
+/* cleanup: */
    bdestroy( entry_base );
    return NULL;
 }
@@ -112,10 +118,36 @@ static bstring plugin_get_path() {
    return plugin_path;
 }
 
+#else
+
+extern struct tagbstring mode_short;
+extern struct tagbstring mode_name;
+
+#define plugin_setup( format, hook )
+
+#define plugin_f( method, ... ) \
+   mode_topdown_ ## method( __VA_ARGS__ )
+   /*      ret = f.update( c, l );
+         ret = f.draw( c, l );
+         ret = f.poll_input( c, l, p );
+         ret = f.mobile_action( update );
+         ret = f.mobile_action( update );
+         ret = f.client_init( c, l );
+         ret = f.mobile_init( o, l );
+         ret = f.client_free( c );
+         ret = f.mobile_free( o );
+         ret = f.free( c ); */
+
+#endif /* USE_DYNAMIC_PLUGINS */
+
 PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
-   bstring plugin_path = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
+#ifdef USE_DYNAMIC_PLUGINS
+   bstring plugin_path = NULL;
    struct VECTOR* plugin_dir;
+
+   mode_list_pretty = vector_new();
+   mode_list_short = vector_new();
 
    plugin_list_mode = hashmap_new();
    plugin_dir = vector_new();
@@ -127,17 +159,21 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
 
    vector_iterate( plugin_dir, cb_plugin_load, &ptype );
 
-cleanup:
+/* cleanup: */
    bdestroy( plugin_path );
    vector_remove_cb( plugin_dir, callback_v_free_strings, NULL );
    vector_free( &plugin_dir );
+#else
+   ret = plugin_load( ptype, &mode_short );
+#endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
 
 PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
+   PLUGIN_RESULT ret = PLUGIN_FAILURE;
+#ifdef USE_DYNAMIC_PLUGINS
    void* handle = NULL;
    bstring plugin_path = NULL;
-   PLUGIN_RESULT ret = PLUGIN_FAILURE;
    bstring plugin_filename = NULL;
    bstring mode_name = NULL;
 
@@ -151,6 +187,7 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
    files_join_path( plugin_path, plugin_filename );
 
+   lg_debug( __FILE__, "Opening plugin from: %s\n", bdata( plugin_path ) );
    handle = dlopen( bdata( plugin_path ), RTLD_LAZY );
 
    if( NULL == handle ) {
@@ -163,7 +200,7 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
 
    if( PLUGIN_MODE == ptype ) {
       mode_name = dlsym( handle, "mode_name" );
-      lg_debug( __FILE__, "Adding %b to mode name list...\n", mode_name );
+      lg_debug( __FILE__, "Adding %s to mode name list...\n", bdata( mode_name ) );
       vector_add( mode_list_pretty, mode_name );
       vector_add( mode_list_short, bstrcpy( plugin_name ) );
    }
@@ -177,13 +214,21 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
 cleanup:
    bdestroy( plugin_path );
    bdestroy( plugin_filename );
+#else
+   ret = plugin_call( ptype, plugin_name, PLUGIN_INIT );
+#endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
 
 PLUGIN_RESULT plugin_unload_all( PLUGIN_TYPE ptype ) {
+#ifdef USE_DYNAMIC_PLUGINS
+   vector_free( &mode_list_pretty ); /* These are static strings. */
+   vector_free( &mode_list_short );
+#endif /* USE_DYNAMIC_PLUGINS */
 }
 
 PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
+#ifdef USE_DYNAMIC_PLUGINS
    void* handle = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
 
@@ -206,6 +251,9 @@ PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
 cleanup:
+#else
+   PLUGIN_RESULT ret = PLUGIN_SUCCESS;
+#endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
 
@@ -215,9 +263,7 @@ PLUGIN_RESULT plugin_call_all( PLUGIN_TYPE ptype, PLUGIN_CALL hook, ... ) {
 PLUGIN_RESULT plugin_call(
    PLUGIN_TYPE ptype, const bstring plug, PLUGIN_CALL hook, ...
 ) {
-   union PLUGIN_CALL_FUNC f = { 0 };
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
-   void* handle = NULL;
    bstring hook_name = NULL;
    va_list varg;
    struct CLIENT* c = NULL;
@@ -225,6 +271,10 @@ PLUGIN_RESULT plugin_call(
    struct INPUT* p = NULL;
    struct ACTION_PACKET* update = NULL;
    struct MOBILE* o = NULL;
+
+#ifdef USE_DYNAMIC_PLUGINS
+   void* handle = NULL;
+   union PLUGIN_CALL_FUNC f = { 0 };
 
    switch( ptype ) {
       case PLUGIN_MODE:
@@ -235,6 +285,7 @@ PLUGIN_RESULT plugin_call(
       lg_error( __FILE__, "Could not call plugin: %b\n", plug );
    }
    lgc_null( handle );
+#endif /* USE_DYNAMIC_PLUGINS */
 
    va_start( varg, hook );
    switch( hook ) {
@@ -243,7 +294,7 @@ PLUGIN_RESULT plugin_call(
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
-         ret = f.init();
+         ret = plugin_f( init );
          break;
 
       case PLUGIN_UPDATE:
@@ -253,7 +304,7 @@ PLUGIN_RESULT plugin_call(
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
-         ret = f.update( c, l );
+         ret = plugin_f( update, c, l );
          break;
 
       case PLUGIN_DRAW:
@@ -263,7 +314,7 @@ PLUGIN_RESULT plugin_call(
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
-         ret = f.draw( c, l );
+         ret = plugin_f( draw, c, l );
          break;
 
       case PLUGIN_POLL_INPUT:
@@ -274,63 +325,63 @@ PLUGIN_RESULT plugin_call(
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
          p = va_arg( varg, struct INPUT* );
-         ret = f.poll_input( c, l, p );
+         ret = plugin_f( poll_input, c, l, p );
          break;
 
       case PLUGIN_MOBILE_ACTION_SERVER:
-         plugin_setup( "mode_%s_mobile_action_server", mobile_action );
+         plugin_setup( "mode_%s_mobile_action_server", mobile_action_server );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          update = va_arg( varg, struct ACTION_PACKET* );
-         ret = f.mobile_action( update );
+         ret = plugin_f( mobile_action_server, update );
          break;
 
       case PLUGIN_MOBILE_ACTION_CLIENT:
-         plugin_setup( "mode_%s_mobile_action_client", mobile_action );
+         plugin_setup( "mode_%s_mobile_action_client", mobile_action_client );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          update = va_arg( varg, struct ACTION_PACKET* );
-         ret = f.mobile_action( update );
+         ret = plugin_f( mobile_action_client, update );
          break;
 
       case PLUGIN_CLIENT_INIT:
-         plugin_setup( "mode_%s_client_init", mobile_action );
+         plugin_setup( "mode_%s_client_init", client_init );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
          l = va_arg( varg, struct CHANNEL* );
-         ret = f.client_init( c, l );
+         ret = plugin_f( client_init, c, l );
          break;
 
       case PLUGIN_MOBILE_INIT:
-         plugin_setup( "mode_%s_mobile_init", mobile_action );
+         plugin_setup( "mode_%s_mobile_init", mobile_init );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          o = va_arg( varg, struct MOBILE* );
          l = va_arg( varg, struct CHANNEL* );
-         ret = f.mobile_init( o, l );
+         ret = plugin_f( mobile_init, o, l );
          break;
 
       case PLUGIN_CLIENT_FREE:
-         plugin_setup( "mode_%s_client_free", mobile_action );
+         plugin_setup( "mode_%s_client_free", client_free );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
-         ret = f.client_free( c );
+         ret = plugin_f( client_free, c );
          break;
 
       case PLUGIN_MOBILE_FREE:
-         plugin_setup( "mode_%s_mobile_free", mobile_action );
+         plugin_setup( "mode_%s_mobile_free", mobile_free );
          #ifdef DEBUG_PLUGIN_CALL
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          o = va_arg( varg, struct MOBILE* );
-         ret = f.mobile_free( o );
+         ret = plugin_f( mobile_free, o );
          break;
 
       case PLUGIN_FREE:
@@ -339,12 +390,44 @@ PLUGIN_RESULT plugin_call(
          lg_debug( __FILE__, "Calling plugin function: %b\n", hook_name );
          #endif /* DEBUG_PLUGIN_CALL */
          c = va_arg( varg, struct CLIENT* );
-         ret = f.free( c );
+         ret = plugin_f( free, c );
          break;
    }
    va_end( varg );
 
+#ifdef USE_DYNAMIC_PLUGINS
 cleanup:
+#endif /* USE_DYNAMIC_PLUGINS */
    bdestroy( hook_name );
    return ret;
 }
+
+bstring plugin_get_mode_short( int mode ) {
+#ifdef USE_DYNAMIC_PLUGINS
+   return vector_get( mode_list_short, mode );
+#else
+   return &mode_short;
+#endif /* USE_DYNAMIC_PLUGINS */
+}
+
+bstring plugin_get_mode_name( int mode ) {
+#ifdef USE_DYNAMIC_PLUGINS
+   return vector_get( mode_list_pretty, mode );
+#else
+   return &mode_short;
+#endif /* USE_DYNAMIC_PLUGINS */
+}
+
+int plugin_count() {
+#ifdef USE_DYNAMIC_PLUGINS
+   return vector_count( mode_list_short );
+#else
+   return 1;
+#endif /* USE_DYNAMIC_PLUGINS */
+}
+
+#ifdef USE_DYNAMIC_PLUGINS
+struct VECTOR* plugin_get_mode_name_list() {
+   return mode_list_pretty;
+}
+#endif /* USE_DYNAMIC_PLUGINS */

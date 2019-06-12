@@ -1,4 +1,7 @@
 
+
+=== Mode Plugins ===
+
 === Ideas ===
 
   * Implement "MUD/MUSE" mode for normal IRC clients:

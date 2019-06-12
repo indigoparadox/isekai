@@ -468,7 +468,7 @@ bstring files_search( bstring search_filename ) {
    files_list_dir( files_root( NULL ), files, NULL, VFALSE, VFALSE );
    path_out = vector_iterate( files, files_search_cb, search_filename );
 
-cleanup:
+/* cleanup: */
    if( NULL != files ) {
       vector_remove_cb( files, callback_v_free_strings, NULL );
    }

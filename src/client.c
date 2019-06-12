@@ -24,8 +24,6 @@ struct CLIENT_DELAYED_REQUEST {
 
 #include "clistruct.h"
 
-extern struct VECTOR mode_list_short;
-
 bstring client_input_from_ui = NULL;
 
 VBOOL callback_proc_client_delayed_files(
@@ -267,7 +265,9 @@ VBOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
 #endif /* DEBUG_TILES */
    VBOOL keep_going = VFALSE;
    struct VECTOR* chunker_removal_queue = NULL;
+#ifdef DEBUG_TILES
    struct TWINDOW* twindow = NULL;
+#endif /* DEBUG_TILES */
 
    scaffold_set_client();
 
@@ -300,6 +300,7 @@ VBOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       twindow = client_get_local_window( c );
       ui_debug_window( twindow_get_ui( twindow ), &str_wid_debug_tiles_pos, pos );
    }
+#endif /* DEBUG_TILES */
 
 #ifdef USE_CHUNKS
    /* Deal with chunkers that will never receive blocks that are finished via
@@ -313,8 +314,7 @@ VBOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    }
 #endif /* USE_CHUNKS */
 
-cleanup:
-#endif /* DEBUG_TILES */
+/* cleanup: */
 
    vector_remove_cb( c->delayed_files, callback_proc_client_delayed_files, c );
 

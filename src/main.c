@@ -15,6 +15,7 @@
 #include "files.h"
 #include "plugin.h"
 #include "twindow.h"
+#include "storage.h"
 
 #ifdef USE_CRYPTO
 #include "tnacl.h"
@@ -59,9 +60,6 @@ bstring buffer_channel = NULL;
 VBOOL showed_readme = VFALSE;
 #endif /* ENABLE_LOCAL_CLIENT */
 
-struct VECTOR* mode_list_pretty;
-struct VECTOR* mode_list_short;
-
 #ifdef USE_RANDOM_PORT
 bstring str_service = NULL;
 #endif /* USE_RANDOM_PORT */
@@ -79,7 +77,9 @@ static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_cid_connect_host = bsStatic( "connect_host" );
 static struct tagbstring str_cid_connect_nick = bsStatic( "connect_nick" );
 static struct tagbstring str_cid_connect_channel = bsStatic( "connect_channel" );
+#ifdef USE_DYNAMIC_PLUGINS
 static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" );
+#endif /* USE_DYNAMIC_PLUGINS */
 static struct tagbstring str_title = bsStatic( "isekai" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -126,7 +126,7 @@ static VBOOL loop_game( int gfx_mode, struct TWINDOW* local_window ) {
 
    l = client_get_channel_active( main_client );
    if( NULL != l ) {
-      l->mode = vector_get( mode_list_short, gfx_mode );
+      l->mode = plugin_get_mode_short( gfx_mode );
    }
 
    if( NULL != l && NULL != l->mode ) {
@@ -413,14 +413,16 @@ static VBOOL loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       );
       ui_control_add( win, &str_cid_connect_nick, control );
 
+#ifdef USE_DYNAMIC_PLUGINS
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, VTRUE, VTRUE, NULL,
          -1, -1, -1, -1
       );
       /* TODO: Encapsulate list structure. */
-      control->list = mode_list_pretty;
+      control->list = plugin_get_mode_name_list();
       control->self.attachment = gfx_mode;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
+#endif /* USE_DYNAMIC_PLUGINS */
 
       ui_window_push( ui, win );
       bstr_result =
@@ -556,7 +558,7 @@ static VBOOL loop_master( struct TWINDOW* local_screen ) {
       twindow_set_screen( local_screen, g_screen );
       twindow_set_local_client( local_screen, main_client );
       proto_client_join( main_client, buffer_channel,
-         vector_get( mode_list_short, gfx_mode ) );
+         plugin_get_mode_short( gfx_mode ) );
       retval = VTRUE;
 
 #ifdef DEBUG_FPS
@@ -645,9 +647,6 @@ int main( int argc, char** argv ) {
    g_screen = mem_alloc( 1, GRAPHICS );
    lgc_null( g_screen );
 
-   mode_list_pretty = vector_new();
-   mode_list_short = vector_new();
-
 #ifdef _WIN32
    graphics_screen_new(
       &g_screen, GRAPHICS_SCREEN_WIDTH, GRAPHICS_SCREEN_HEIGHT,
@@ -683,7 +682,7 @@ int main( int argc, char** argv ) {
 
    /* Setup a list of available modes. */
    plugin_load_all( PLUGIN_MODE );
-   if( 0 >= vector_count( mode_list_short ) ) {
+   if( 0 >= plugin_count() ) {
       loop_error();
       goto cleanup;
    }
@@ -715,8 +714,6 @@ cleanup:
    mem_free( input );
    backlog_shutdown();
    ui_cleanup( twindow_get_ui( local_window ) );
-   vector_free( &mode_list_pretty ); /* These are static strings. */
-   vector_free( &mode_list_short );
    scaffold_set_client();
    client_free( main_client );
 #endif /* ENABLE_LOCAL_CLIENT */

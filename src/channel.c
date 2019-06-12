@@ -261,7 +261,7 @@ void channel_set_mobile(
 
    tilemap_set_redraw_state( l->tilemap, TILEMAP_REDRAW_ALL );
 
-cleanup:
+/* cleanup: */
    return;
 }
 
@@ -465,6 +465,6 @@ void channel_set_mode( struct CHANNEL* l, const bstring mode ) {
       //hashmap_iterate( l->clients, cb_channel_client_pinit, l );
       //vector_iterate( l->mobiles, cb_channel_mobile_pinit, l );
    }
-cleanup:
+/* cleanup: */
    return;
 }
