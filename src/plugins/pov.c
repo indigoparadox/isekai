@@ -4,15 +4,15 @@
 #include <stdlib.h>
 
 #include <graphics.h>
-#include <vbool.h>
-#include <channel.h>
-#include <mobile.h>
+//#include <vbool.h>
+#include "../channel.h"
+#include "../mobile.h"
 #include <math.h>
-#include <plugin.h>
-#include <client.h>
-#include <action.h>
-#include <proto.h>
-#include <callback.h>
+#include "../plugin.h"
+#include "../client.h"
+#include "../action.h"
+#include "../proto.h"
+#include "../callback.h"
 
 typedef enum {
    POV_LAYER_LEVEL_MAX = 4,
@@ -1120,6 +1120,15 @@ PLUGIN_RESULT mode_pov_mobile_action_server( struct ACTION_PACKET* update ) {
 
 cleanup:
    return PLUGIN_SUCCESS;
+}
+
+PLUGIN_RESULT mode_pov_init() {
+}
+
+PLUGIN_RESULT mode_pov_client_free( struct CLIENT* c ) {
+}
+
+PLUGIN_RESULT mode_pov_mobile_free( struct MOBILE* o ) {
 }
 
 #endif /* USE_DYNAMIC_PLUGINS || USE_STATIC_MODE_POV */

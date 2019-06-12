@@ -65,6 +65,28 @@ PLUGIN_RESULT mode_topdown_mobile_free( struct MOBILE* o );
 PLUGIN_RESULT mode_topdown_client_init( struct CLIENT* c, struct CHANNEL* l );
 PLUGIN_RESULT mode_topdown_client_free( struct CLIENT* c );
 
+/* --- */
+
+PLUGIN_RESULT mode_pov_init();
+PLUGIN_RESULT mode_pov_draw(
+   struct CLIENT* c,
+   struct CHANNEL* l
+);
+PLUGIN_RESULT mode_pov_update(
+   struct CLIENT* c,
+   struct CHANNEL* l
+);
+PLUGIN_RESULT mode_pov_poll_input(
+   struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
+);
+PLUGIN_RESULT mode_pov_free( struct CLIENT* c );
+PLUGIN_RESULT mode_pov_mobile_action_client( struct ACTION_PACKET* update );
+PLUGIN_RESULT mode_pov_mobile_action_server( struct ACTION_PACKET* update );
+PLUGIN_RESULT mode_pov_mobile_init( struct MOBILE* o, struct CHANNEL* l );
+PLUGIN_RESULT mode_pov_mobile_free( struct MOBILE* o );
+PLUGIN_RESULT mode_pov_client_init( struct CLIENT* c, struct CHANNEL* l );
+PLUGIN_RESULT mode_pov_client_free( struct CLIENT* c );
+
 #endif /* USE_DYNAMIC_PLUGINS */
 
 #endif /* PLUGIN_H */
