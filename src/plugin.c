@@ -120,23 +120,23 @@ static bstring plugin_get_path() {
 
 #else
 
-extern struct tagbstring mode_short;
+extern struct tagbstring mode_key;
 extern struct tagbstring mode_name;
 
 #define plugin_setup( format, hook )
 
+#ifdef USE_STATIC_MODE_TOPDOWN
 #define plugin_f( method, ... ) \
    mode_topdown_ ## method( __VA_ARGS__ )
-   /*      ret = f.update( c, l );
-         ret = f.draw( c, l );
-         ret = f.poll_input( c, l, p );
-         ret = f.mobile_action( update );
-         ret = f.mobile_action( update );
-         ret = f.client_init( c, l );
-         ret = f.mobile_init( o, l );
-         ret = f.client_free( c );
-         ret = f.mobile_free( o );
-         ret = f.free( c ); */
+#elif defined( USE_STATIC_MODE_ISOMETRIC )
+#define plugin_f( method, ... ) \
+   mode_isometric_ ## method( __VA_ARGS__ )
+#elif defined( USE_STATIC_MODE_POV )
+#define plugin_f( method, ... ) \
+   mode_pov_ ## method( __VA_ARGS__ )
+#else
+#error No static mode specified!
+#endif /* USE_STATIC_MODE_TOPDOWN */
 
 #endif /* USE_DYNAMIC_PLUGINS */
 
@@ -164,7 +164,7 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    vector_remove_cb( plugin_dir, callback_v_free_strings, NULL );
    vector_free( &plugin_dir );
 #else
-   ret = plugin_load( ptype, &mode_short );
+   ret = plugin_load( ptype, &mode_key );
 #endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
@@ -406,7 +406,7 @@ bstring plugin_get_mode_short( int mode ) {
 #ifdef USE_DYNAMIC_PLUGINS
    return vector_get( mode_list_short, mode );
 #else
-   return &mode_short;
+   return &mode_key;
 #endif /* USE_DYNAMIC_PLUGINS */
 }
 
@@ -414,7 +414,7 @@ bstring plugin_get_mode_name( int mode ) {
 #ifdef USE_DYNAMIC_PLUGINS
    return vector_get( mode_list_pretty, mode );
 #else
-   return &mode_short;
+   return &mode_name;
 #endif /* USE_DYNAMIC_PLUGINS */
 }
 

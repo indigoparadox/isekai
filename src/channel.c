@@ -201,7 +201,7 @@ void channel_add_mobile( struct CHANNEL* l, struct MOBILE* o ) {
    mobile_set_channel( o, l );
    assert( 0 != mobile_get_serial( o ) );
    vector_set( l->mobiles, mobile_get_serial( o ), o, VTRUE );
-   plugin_call( PLUGIN_MODE, l->mode, PLUGIN_MOBILE_INIT, o );
+   plugin_call( PLUGIN_MODE, l->mode, PLUGIN_MOBILE_INIT, o, l );
 }
 
 void channel_set_mobile(

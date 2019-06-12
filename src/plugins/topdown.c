@@ -26,7 +26,7 @@ extern bstring client_input_from_ui;
 extern struct tagbstring str_client_control_id_inv_ground;
 
 #ifndef USE_DYNAMIC_PLUGINS
-struct tagbstring mode_short = bsStatic( "topdown" );
+struct tagbstring mode_key = bsStatic( "topdown" );
 #endif /* !USE_DYNAMIC_PLUGINS */
 struct tagbstring mode_name = bsStatic( "Top Down" );
 
