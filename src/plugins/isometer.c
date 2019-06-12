@@ -1,4 +1,6 @@
 
+#if defined( USE_DYNAMIC_PLUGINS ) || defined( USE_STATIC_MODE_ISOMETRIC )
+
 #define MODE_C
 //#include <mode.h>
 
@@ -741,3 +743,5 @@ PLUGIN_RESULT mode_isometer_poll_input(
    }
    return PLUGIN_SUCCESS;
 }
+
+#endif /* USE_DYNAMIC_PLUGINS || USE_STATIC_MODE_ISOMETRIC */

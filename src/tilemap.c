@@ -302,7 +302,7 @@ void tilemap_tileset_init( struct TILEMAP_TILESET* set, bstring def_path ) {
 
 #ifndef USE_CURSES
 
-void* cb_tilemap_tilesets_search_gid( size_t idx, void* iter, void* arg ) {
+static void* cb_tilemap_tilesets_search_gid( size_t idx, void* iter, void* arg ) {
    size_t* gid = (size_t*)arg;
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
 
@@ -416,7 +416,7 @@ TILEMAP_ORIENTATION tilemap_get_orientation( struct TILEMAP* t ) {
 
 SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t ) {
    struct TILEMAP_TILESET* set = NULL;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
 
    set = tilemap_get_tileset( t, 1, &set_firstgid );
 
@@ -429,7 +429,7 @@ SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_width( struct TILEMAP* t ) {
 
 SCAFFOLD_INLINE GFX_COORD_PIXEL tilemap_get_tile_height( struct TILEMAP* t ) {
    struct TILEMAP_TILESET* set = NULL;
-   SCAFFOLD_SIZE set_firstgid = 0;
+   size_t set_firstgid = 0;
 
    set = tilemap_get_tileset( t, 1, &set_firstgid );
 

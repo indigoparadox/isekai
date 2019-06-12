@@ -1430,7 +1430,7 @@ static void irc_client_item_cache_end(
    last_item_cache = NULL;
 }
 
-#endif // USE_ITEMS
+#endif /* USE_ITEMS */
 
 static void irc_server_gamenewsprite(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line

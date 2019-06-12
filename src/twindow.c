@@ -2,6 +2,8 @@
 #define TWINDOW_C
 #include "twindow.h"
 
+#include "client.h"
+
 struct UI;
 
 struct TWINDOW {

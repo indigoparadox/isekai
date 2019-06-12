@@ -166,6 +166,10 @@ int storage_get(
          }
          ret_count++;
          break;
+
+      case STORAGE_VALUE_NONE:
+         /* PASS */
+         break;
       }
    }
 
@@ -276,6 +280,10 @@ int storage_set(
 
       lg_debug( __FILE__, "Storage set: %b: %b\n", key, value_str_ptr );
       ret_count++;
+      break;
+
+   case STORAGE_VALUE_NONE:
+      /* PASS */
       break;
    }
 
