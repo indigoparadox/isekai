@@ -242,7 +242,7 @@ void proto_client_join( struct CLIENT* c, const bstring name, const bstring mode
    int bstr_retval;
    /* We won't record the channel in our list until the server confirms it. */
 
-   scaffold_assert( NULL != name );
+   assert( NULL != name );
 
    scaffold_set_client();
 
@@ -350,7 +350,7 @@ void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
 void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type ) {
    bstring req_parms = NULL;
    scaffold_assert_client();
-   scaffold_assert( 0 < blength( filename ) );
+   assert( 0 < blength( filename ) );
    /*
    lg_debug(
       __FILE__, "Client: Requesting %b file: %s\n",
@@ -370,17 +370,17 @@ void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    bstring channel_name = NULL;
 
    scaffold_assert_server();
-   scaffold_assert( NULL != o );
-   //scaffold_assert( NULL != o->mob_id );
-   //scaffold_assert( NULL != o->def_filename );
+   assert( NULL != o );
+   //assert( NULL != o->mob_id );
+   //assert( NULL != o->def_filename );
 
    l = mobile_get_channel( o );
-   scaffold_assert( NULL != l );
+   assert( NULL != l );
    channel_name = channel_get_name( l );
-   scaffold_assert( NULL != channel_name );
+   assert( NULL != channel_name );
 
    if( NULL != mobile_get_owner( o ) ) {
-      scaffold_assert( NULL != client_get_nick( mobile_get_owner( o ) ) );
+      assert( NULL != client_get_nick( mobile_get_owner( o ) ) );
       owner_nick = client_get_nick( mobile_get_owner( o ) );
    } else {
       owner_nick = &scaffold_null;
@@ -403,7 +403,7 @@ static void* proto_send_item_cb(
 
    scaffold_assert_server();
 
-   scaffold_assert( 0 < blength( e->catalog_name ) );
+   assert( 0 < blength( e->catalog_name ) );
 
    proto_printf(
       c, "ITEM %d %b %d %b %d",
@@ -911,8 +911,8 @@ static void irc_server_join(
       server_get_remote( s ), client_get_nick( c ), l->name
    );
 
-   scaffold_assert( client_get_channels_count( c ) > 0 );
-   scaffold_assert( server_get_channels_count( s ) > 0 );
+   assert( client_get_channels_count( c ) > 0 );
+   assert( server_get_channels_count( s ) > 0 );
 
 cleanup:
    if( NULL != cat_names ) {
@@ -1267,7 +1267,7 @@ static void irc_client_join(
       __FILE__, "Client joined channel: %s\n", bdata( l_name )
    );
 
-   scaffold_assert( client_get_channels_count( c ) > 0 );
+   assert( client_get_channels_count( c ) > 0 );
 
 cleanup:
    bdestroy( l_filename );
@@ -1587,7 +1587,7 @@ bool proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
       table = proto_table_client;
    } else {
 #endif /* ENABLE_LOCAL_CLIENT */
-      scaffold_assert( NULL != s );
+      assert( NULL != s );
 #ifdef ENABLE_LOCAL_CLIENT
    }
 #endif /* ENABLE_LOCAL_CLIENT */

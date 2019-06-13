@@ -196,7 +196,7 @@ static void audition_parse_char(
 
       case AUDI_STATE_NUMBER:
          /* Doing a math op. */
-         scaffold_assert( AUDI_OP_NONE == (*current)->op || AUDI_OP_ASSIGN == (*current)->op );
+         assert( AUDI_OP_NONE == (*current)->op || AUDI_OP_ASSIGN == (*current)->op );
 
          break;
 

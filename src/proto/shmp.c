@@ -34,8 +34,8 @@ void proto_client_join( struct CLIENT* c, const bstring name ) {
 
    /* TODO: Call client's join stuff. */
 
-   scaffold_assert( hashmap_count( &(c->channels) ) > 0 );
-   scaffold_assert( hashmap_count( &(main_server->self.channels) ) > 0 );
+   assert( hashmap_count( &(c->channels) ) > 0 );
+   assert( hashmap_count( &(main_server->self.channels) ) > 0 );
 
    c->flags |= CLIENT_FLAGS_SENT_CHANNEL_JOIN;
 

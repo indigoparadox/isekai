@@ -38,7 +38,7 @@ static void server_cleanup( struct SERVER* s ) {
    /* Remove clients. */
    server_free_clients( s );
 
-   scaffold_assert( 0 == s->self.refcount.count );
+   assert( 0 == s->self.refcount.count );
 }
 
 void server_free_clients( struct SERVER* s ) {
@@ -117,8 +117,8 @@ void server_stop( struct SERVER* s ) {
    client_free_channels( &(s->self) );
    server_free_clients( s );
    */
-   scaffold_assert( 0 == hashmap_count( s->self.channels ) );
-   scaffold_assert( 0 == hashmap_count( s->clients ) );
+   assert( 0 == hashmap_count( s->self.channels ) );
+   assert( 0 == hashmap_count( s->clients ) );
    s->self.running = false;
 }
 
@@ -129,7 +129,7 @@ short server_add_client( struct SERVER* s, struct CLIENT* c ) {
          scaffold_random_string( client_get_nick( c ), SERVER_RANDOM_NICK_LEN );
       } while( NULL != hashmap_get( s->clients, client_get_nick( c ) ) );
    }
-   scaffold_assert( NULL == hashmap_get( s->clients, client_get_nick( c ) ) );
+   assert( NULL == hashmap_get( s->clients, client_get_nick( c ) ) );
    if( hashmap_put( s->clients, client_get_nick( c ), c, false ) ) {
       lg_error( __FILE__, "Attempted to double-add client: %b\n",
          client_get_nick( c ) );
@@ -189,9 +189,9 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
    /* TODO: Make this dump us back at the menu. */
    /* Problem is: couldn't find map file! */
    //old_count = c_first->refcount.count;
-   /* scaffold_assert( 0 < c_first->refcount.count );
-   scaffold_assert( 0 < l->refcount.count );
-   scaffold_assert( c_first->refcount.count > old_count ); */
+   /* assert( 0 < c_first->refcount.count );
+   assert( 0 < l->refcount.count );
+   assert( c_first->refcount.count > old_count ); */
    /*if(
       0 < c_first->refcount.count &&
       0 < l->refcount.count
@@ -211,15 +211,15 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          __FILE__, "Unable to add %b to channel %b on server.\n",
          client_get_nick( c_first ), l->name
       );
-      scaffold_assert( NULL != l->error );
+      assert( NULL != l->error );
    }*/
-   //scaffold_assert( c_first->refcount.count > old_count );
+   //assert( c_first->refcount.count > old_count );
 //#endif /* DEBUG */
 
 cleanup:
    if( NULL != l ) {
-      scaffold_assert( 0 < hashmap_count( l->clients ) );
-      scaffold_assert( 0 < client_get_channels_count( c_first ) );
+      assert( 0 < hashmap_count( l->clients ) );
+      assert( 0 < client_get_channels_count( c_first ) );
    }
    return l;
 }
@@ -286,7 +286,7 @@ void server_drop_client( struct SERVER* s, const bstring nick ) {
 
 #ifdef DEBUG
    new_count = hashmap_count( s->clients );
-   scaffold_assert( new_count == old_count - deleted );
+   assert( new_count == old_count - deleted );
 
    old_count = hashmap_count( s->self.channels );
 #endif /* DEBUG */
@@ -347,7 +347,7 @@ bool server_poll_new_clients( struct SERVER* s ) {
       server_add_client( s, c );
 
 #ifdef DEBUG
-      scaffold_assert( old_client_count < hashmap_count( s->clients ) );
+      assert( old_client_count < hashmap_count( s->clients ) );
 #endif /* DEBUG */
 
       /* The only association this client should start with is the server's   *

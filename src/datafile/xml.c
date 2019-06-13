@@ -63,7 +63,7 @@ void datafile_parse_item_sprites_ezxml_t(
          __FILE__, "Loading proto-item: %b\n", sprite->display_name
       );
 
-      scaffold_assert( NULL == vector_get( &(spritesheet->sprites), sprite_id ) );
+      assert( NULL == vector_get( &(spritesheet->sprites), sprite_id ) );
       vector_set( &(spritesheet->sprites), sprite_id, sprite, true );
       sprite = NULL;
 
@@ -90,7 +90,7 @@ ezxml_t datafile_mobile_ezxml_peek_mob_id(
    const char* mob_id_c = NULL;
    int bstr_retval;
 
-   scaffold_assert( NULL != mob_id_buffer );
+   assert( NULL != mob_id_buffer );
    lgc_null( tmdata );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
@@ -217,8 +217,8 @@ void datafile_mobile_parse_script(
    struct MOBILE* o, ezxml_t xml_data
 ) {
    ezxml_t xml_scripts = NULL,
-      xml_script_iter = NULL,
-      xml_attr = NULL;
+      xml_script_iter = NULL;
+   char* xml_attr = NULL;
    int bstr_retval = 0;
    bstring vm_val_buffer = NULL,
       vm_key_buffer = NULL;
@@ -299,7 +299,7 @@ next_global:
          /* TODO: Make lang per-script, not per-object/mobile/caddy. */
          if( VM_LANG_NONE != o->vm_caddy->lang ) {
             /* For now, crash if we try to mix languages in a mobile. */
-            scaffold_assert( VM_LANG_JS == o->vm_caddy->lang );
+            assert( VM_LANG_JS == o->vm_caddy->lang );
          }
          o->vm_caddy->lang = VM_LANG_JS;
          vm_caddy_put(
@@ -315,7 +315,7 @@ next_script:
    //   mobile_vm_start( o );
    //}
 
-cleanup:
+/* cleanup: */
    bdestroy( vm_val_buffer );
    bdestroy( vm_key_buffer );
    return;
@@ -459,7 +459,7 @@ next_global:
          /* TODO: Make lang per-script, not per-object/mobile/caddy. */
          if( VM_LANG_NONE != o->vm_caddy->lang ) {
             /* For now, crash if we try to mix languages in a mobile. */
-            scaffold_assert( VM_LANG_JS == o->vm_caddy->lang );
+            assert( VM_LANG_JS == o->vm_caddy->lang );
          }
          o->vm_caddy->lang = VM_LANG_JS;
          vm_caddy_put(
@@ -517,7 +517,7 @@ ezxml_t datafile_tilemap_ezxml_peek_lname(
    const char* channel_c = NULL;
    int bstr_retval;
 
-   scaffold_assert( NULL != lname_buffer );
+   assert( NULL != lname_buffer );
    lgc_null( tmdata );
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );
@@ -1109,7 +1109,7 @@ SCAFFOLD_SIZE datafile_parse_tilemap_ezxml_t(
           * that, OK?
           */
          bstr_retval = bassign( tileset_id, t->lname );
-         scaffold_assert( 0 == bstr_retval );
+         assert( 0 == bstr_retval );
          lgc_nonzero( bstr_retval );
          bstr_retval = bconchar( tileset_id, ':' );
          lgc_nonzero( bstr_retval );
@@ -1186,7 +1186,7 @@ void datafile_parse_ezxml_string(
 
 #ifdef EZXML_STRICT
    datasize_check = strlen( (const char*)o );
-   scaffold_assert( datasize_check == datasize );
+   assert( datasize_check == datasize );
 #endif /* EZXML_STRICT */
 
    xml_data = ezxml_parse_str( (char*)tmdata, datasize );

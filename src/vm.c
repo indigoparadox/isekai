@@ -26,7 +26,7 @@ bool vm_caddy_started( struct VM_CADDY* vmc ) {
 /** \brief Create a VM caddy, but don't start it.
  */
 void vm_caddy_init( struct VM_CADDY* vmc ) {
-   scaffold_assert( NULL != vmc );
+   assert( NULL != vmc );
 
    vmc->vm = NULL;
    vmc->vm_started = false;
@@ -37,7 +37,7 @@ void vm_caddy_init( struct VM_CADDY* vmc ) {
 /** \brief Start a created VM caddy.
  */
 void vm_caddy_start( struct VM_CADDY* vmc ) {
-   scaffold_assert( NULL != vmc );
+   assert( NULL != vmc );
 
    switch( vmc->lang ) {
    case VM_LANG_NONE:
@@ -72,7 +72,7 @@ cleanup:
 }
 
 void vm_caddy_end( struct VM_CADDY* vmc ) {
-   scaffold_assert( NULL != vmc );
+   assert( NULL != vmc );
 
    switch( vmc->lang ) {
    case VM_LANG_NONE:
@@ -178,7 +178,7 @@ bool vm_caddy_put(
    struct HASHMAP* dest = NULL;
    bool retval = false;
 
-   scaffold_assert( NULL != vmc );
+   assert( NULL != vmc );
 
    switch( type ) {
    case VM_MEMBER_NONE:
@@ -191,7 +191,7 @@ bool vm_caddy_put(
       break;
    }
 
-   scaffold_assert( NULL != dest );
+   assert( NULL != dest );
 
    if( hashmap_put(
       dest, key, bstrcpy( val ), false

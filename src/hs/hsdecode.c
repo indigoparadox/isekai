@@ -250,7 +250,7 @@ static HSD_state st_backref_index_msb(heatshrink_decoder* hsd) {
    uint8_t bit_ct = BACKREF_INDEX_BITS(hsd);
    uint16_t bits;
 
-   scaffold_assert(bit_ct > 8);
+   assert(bit_ct > 8);
    bits = get_bits(hsd, bit_ct - 8);
 #ifdef DEBUG_HEATSHRINK
    lg_debug( __FILE__, "-- backref index (msb), got 0x%04x (+1)\n", bits);
@@ -284,7 +284,7 @@ static HSD_state st_backref_count_msb(heatshrink_decoder* hsd) {
    uint8_t br_bit_ct = BACKREF_COUNT_BITS(hsd);
    uint16_t bits;
 
-   scaffold_assert(br_bit_ct > 8);
+   assert(br_bit_ct > 8);
    bits = get_bits(hsd, br_bit_ct - 8);
 #ifdef DEBUG_HEATSHRINK
    lg_debug( __FILE__, "-- backref count (msb), got 0x%04x (+1)\n", bits);
@@ -326,8 +326,8 @@ static HSD_state st_yield_backref( heatshrink_decoder* hsd, output_info* oi) {
 #ifdef DEBUG_HEATSHRINK
       lg_debug( __FILE__, "-- emitting %zu bytes from -%u bytes back\n", count, neg_offset);
 #endif /* DEBUG_HEATSHRINK */
-      scaffold_assert(neg_offset <= mask + 1);
-      scaffold_assert(count <= (SCAFFOLD_SIZE)(1 << BACKREF_COUNT_BITS(hsd)));
+      assert(neg_offset <= mask + 1);
+      assert(count <= (SCAFFOLD_SIZE)(1 << BACKREF_COUNT_BITS(hsd)));
 
       for (i=0; i<count; i++) {
          c = buf[(hsd->head_index - neg_offset) & mask];

@@ -36,7 +36,7 @@ static REF_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF
 #define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
 
 static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const char* func ) {
-   scaffold_assert( REF_SENTINAL == ref->sentinal );
+   assert( REF_SENTINAL == ref->sentinal );
    ((struct REF*)ref)->count++;
 #ifdef DEBUG_REF
    if( NULL != type && NULL != func ) {
@@ -49,7 +49,7 @@ static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const c
 }
 
 static REF_INLINE bool ref_dec( const struct REF* ref, const char* type, const char* func ) {
-   scaffold_assert( REF_SENTINAL == ref->sentinal );
+   assert( REF_SENTINAL == ref->sentinal );
 
    if( 1 == ((struct REF*)ref)->count ) {
 #ifdef DEBUG_REF

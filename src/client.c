@@ -155,7 +155,7 @@ cleanup:
 void client_init( struct CLIENT* c ) {
    ref_init( &(c->refcount), client_cleanup );
 
-   scaffold_assert( false == c->running );
+   assert( false == c->running );
 
    c->channels = hashmap_new();
    c->sprites = hashmap_new();
@@ -340,7 +340,7 @@ void client_free_channels( struct CLIENT* c ) {
       deleted, hashmap_count( c->channels )
    );
 #endif /* DEBUG */
-   scaffold_assert( 0 == hashmap_count( c->channels ) );
+   assert( 0 == hashmap_count( c->channels ) );
 }
 
 #ifdef USE_CHUNKS
@@ -358,7 +358,7 @@ void client_free_chunkers( struct CLIENT* c ) {
       "Removed %d chunkers. %d remaining.\n",
       deleted, hashmap_count( c->chunkers )
    );
-   scaffold_assert( 0 == hashmap_count( c->chunkers ) );
+   assert( 0 == hashmap_count( c->chunkers ) );
 #endif /* DEBUG */
 }
 #endif /* USE_CHUNKS */
@@ -368,7 +368,7 @@ void client_stop( struct CLIENT* c ) {
 #ifdef DEBUG
    SCAFFOLD_SIZE test_count = 0;
 
-   //scaffold_assert( CLIENT_SENTINAL == c->sentinal );
+   //assert( CLIENT_SENTINAL == c->sentinal );
 
    if( false != ipc_connected( c->link ) ) {
       lg_info( __FILE__, "Client connection stopping...\n" );
@@ -416,37 +416,37 @@ void client_stop( struct CLIENT* c ) {
    }
 #endif /* ENABLE_LOCAL_CLIENT */
 
-   scaffold_assert( false == ipc_connected( c->link ) );
+   assert( false == ipc_connected( c->link ) );
    c->running = false;
 
 #ifdef DEBUG
 
    if( false != client_is_local( c ) ) {
-      scaffold_assert( false == c->running );
+      assert( false == c->running );
 
       test_count = hashmap_count( c->channels );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 
       test_count = hashmap_count( c->sprites );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 
 #ifdef USE_CHUNKS
       test_count = hashmap_count( c->chunkers );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 #endif /* USE_CHUNKS */
 
       test_count = vector_count( c->delayed_files );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 
       test_count = hashmap_count( c->tilesets );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 
 #ifdef USE_ITEMS
       test_count = hashmap_count( c->item_catalogs );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 
       test_count = vector_count( c->unique_items );
-      scaffold_assert( 0 == test_count );
+      assert( 0 == test_count );
 #endif // USE_ITEMS
    }
 #endif // DEBUG
@@ -560,7 +560,7 @@ static void client_request_file_local(
    lg_debug( __FILE__, "Loading local resource: %b\n", filepath );
 
    bytes_read = files_read_contents( filepath, &data, &length );
-   scaffold_assert( 0 < bytes_read );
+   assert( 0 < bytes_read );
    lgc_null_msg( data, "Unable to load resource data." );
    lgc_zero( bytes_read, "Resource is empty." );
    datafile_handle_stream( type, filename, data, length, c );
@@ -663,7 +663,7 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    int8_t chunker_percent;
    bool remove_ok;
 
-   scaffold_assert( 0 < blength( cp->filename ) );
+   assert( 0 < blength( cp->filename ) );
 
    if( cp->current > cp->total ) {
       lg_error(
@@ -685,16 +685,16 @@ void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
    }
 
    if( DATAFILE_TYPE_INVALID == cp->type ) {
-      scaffold_assert( NULL != h );
+      assert( NULL != h );
       lg_debug(
          __FILE__, "Removing invalid chunker: %b\n", h->filename );
       remove_ok = hashmap_remove( c->chunkers, cp->filename );
       chunker_free( h );
-      scaffold_assert( false != remove_ok );
+      assert( false != remove_ok );
       goto cleanup;
    }
 
-   scaffold_assert( 0 < blength( cp->data ) );
+   assert( 0 < blength( cp->data ) );
 
    chunker_unchunk_pass( h, cp->data, cp->current, cp->total, cp->chunk_size );
 
@@ -829,7 +829,7 @@ int client_set_names(
 
    /* TODO: Handle this if we're connected. */
    if( client_is_local( c ) ) {
-      scaffold_assert( !client_is_connected( c ) );
+      assert( !client_is_connected( c ) );
    }
 
    if( NULL != nick ) {
@@ -982,7 +982,7 @@ void client_load_tileset_data( struct CLIENT* c, const bstring filename, BYTE* d
 
    /* TODO: Fetch this tileset from other tilemaps, too. */
    set = client_get_tileset( c, filename );
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    datafile_parse_ezxml_string(
       set, data, length, true, DATAFILE_TYPE_TILESET, filename
    );
@@ -1016,11 +1016,11 @@ void client_load_tilemap_data( struct CLIENT* c, const bstring filename, BYTE* d
    }
 
 #ifdef USE_EZXML
-   scaffold_assert( TILEMAP_SENTINAL != l->tilemap->sentinal );
+   assert( TILEMAP_SENTINAL != l->tilemap->sentinal );
    c->tilesets_loaded += datafile_parse_tilemap_ezxml_t(
       l->tilemap, xml_data, filename, true
    );
-   scaffold_assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
+   assert( TILEMAP_SENTINAL == l->tilemap->sentinal );
 
    /* Download missing tilesets. */
    hashmap_iterate( c->tilesets, callback_download_tileset, c );
@@ -1270,8 +1270,8 @@ size_t client_remove_chunkers( struct CLIENT* c, bstring filter ) {
 } */
 
 void client_set_local_window( struct CLIENT* c, struct TWINDOW* w ) {
-   scaffold_assert( NULL != w );
-   scaffold_assert( NULL != c );
+   assert( NULL != w );
+   assert( NULL != c );
    c->local_window = w;
 }
 

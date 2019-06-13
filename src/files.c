@@ -110,7 +110,7 @@ size_t files_read_contents(
    sz_out = read( inputfd, *buffer, *len );
 #endif /* _WIN32 || WIN16 */
    lgc_zero( sz_out, bdata( zero_error ) );
-   scaffold_assert( sz_out == *len );
+   assert( sz_out == *len );
 
 cleanup:
    bdestroy( zero_error );
@@ -153,8 +153,8 @@ SCAFFOLD_SIZE_SIGNED files_write(
    int res = 0;
    size_t p_count = 0;
 
-   scaffold_assert( NULL != data );
-   scaffold_assert( 0 != len );
+   assert( NULL != data );
+   assert( 0 != len );
 
    zero_error = bformat( "Zero bytes written to: %s", bdata( path ) );
 
@@ -217,7 +217,7 @@ write_file:
 
    sz_out = fwrite( data, sizeof( BYTE ), len, outputfile );
    lgc_zero( sz_out, bdata( zero_error ) );
-   scaffold_assert( sz_out == len );
+   assert( sz_out == len );
 
 cleanup:
    bdestroy( zero_error );
@@ -348,7 +348,7 @@ bool files_check_directory( const bstring path ) {
    char* path_c = NULL;
    bstring zero_error = NULL;
 
-   scaffold_assert( NULL != path );
+   assert( NULL != path );
 
    zero_error = bformat( "Not a directory: %s", bdata( path ) );
 
@@ -356,7 +356,7 @@ bool files_check_directory( const bstring path ) {
    lgc_silence();
 
    path_c = bdata( path );
-   scaffold_assert( NULL != path_c );
+   assert( NULL != path_c );
 #ifndef DJGPP
    lgc_nonzero( stat( path_c, &dir_info ) );
    lgc_zero( (dir_info.st_mode & S_IFDIR), bdata( zero_error ) );

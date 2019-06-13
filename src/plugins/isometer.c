@@ -47,7 +47,7 @@ static void* mode_isometer_tilemap_draw_tile_cb(
    layer_max = vector_count( t->layers );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( t->layers, layer_idx );
-      scaffold_assert(
+      assert(
          TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
       tile = tilemap_layer_get_tile_gid( layer, pos->x, pos->y );
       if( 0 < tile ) {
@@ -108,7 +108,7 @@ static void* mode_isometer_tilemap_draw_layer_cb(
    uint32_t tile;
    //struct VECTOR* tiles = NULL;
 
-   //scaffold_assert( TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
+   //assert( TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
 
    /* TODO: Do culling in iso-friendly way. */
    for( x = twindow_get_min_x( twindow ) ; twindow_get_max_x( twindow ) > x ; x++ ) {

@@ -171,24 +171,9 @@ extern FILE* scaffold_log_handle_err;
 #define scaffold_log_handle_err stderr
 #endif /* SCAFFOLD_LOG_FILE */
 
-void scaffold_print_debug( const bstring module, const char* message, ... );
-void scaffold_print_info( const bstring module, const char* message, ... );
-void scaffold_print_error( const bstring module, const char* message, ... );
-void scaffold_print_warning( const bstring mod_in, const char* message, ... );
-void scaffold_print_debug_color(
-   const bstring mod_in, SCAFFOLD_COLOR color, const char* message, ...
-);
-
-#ifdef DEBUG
-
-#define scaffold_assert( arg ) assert( arg )
-
-#else
-
+#ifndef DEBUG
 /* Disable debug-level notifications. */
-
-#define scaffold_assert( expr )
-
+#define assert( expr )
 #endif /* DEBUG */
 
 #if defined( DEBUG ) && !defined( DEBUG_NO_CLIENT_SERVER_MODEL )

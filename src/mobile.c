@@ -149,7 +149,7 @@ void mobile_init(
 
    ref_init( &(o->refcount), mobile_cleanup );
 
-   //scaffold_assert( NULL != mob_id );
+   //assert( NULL != mob_id );
 
    o->ai = audition_context_new();
    o->sprites_filename = NULL;
@@ -215,9 +215,9 @@ void mobile_load_local( struct MOBILE* o ) {
    BYTE* mobdata_buffer = NULL;
    bstring mobdata_path = NULL;
 
-   scaffold_assert( NULL != o );
-   scaffold_assert( NULL != o->mob_id );
-   scaffold_assert( NULL != o->def_filename );
+   assert( NULL != o );
+   assert( NULL != o->mob_id );
+   assert( NULL != o->def_filename );
 
    mobdata_path = files_root( o->def_filename );
 
@@ -265,7 +265,7 @@ static GFX_COORD_PIXEL mobile_calculate_terrain_sprite_height(
    pos_end.x = x_2;
    pos_end.y = y_2;
 
-   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+   assert( TILEMAP_SENTINAL == t->sentinal );
 
    /* Fetch the destination tile on all layers. */
    tiles_end =
@@ -405,7 +405,7 @@ void mobile_draw_ortho( struct MOBILE* o, struct CLIENT* local_client, struct TW
 
    scaffold_assert_client();
 
-   scaffold_assert( NULL != o );
+   assert( NULL != o );
    if( NULL == o->sprites_filename ) {
       /* Nothing to load, nothing to see here. */
       goto cleanup;
@@ -623,7 +623,7 @@ void mobile_speak( struct MOBILE* o, bstring speech ) {
    } else {
       line_nick = o->display_name;
    }
-   scaffold_assert( NULL != line_nick );
+   assert( NULL != line_nick );
 
 #ifndef DISABLE_BACKLOG
    backlog_speak( line_nick, speech );
@@ -690,7 +690,7 @@ void mobile_do_reset_2d_animation( struct MOBILE* o ) {
          bdata( o->current_animation->name ),
          str_mobile_facing[o->facing].data
       );
-      scaffold_assert( NULL != ani_key_buffer );
+      assert( NULL != ani_key_buffer );
       /* Grab the animation from the mobiles linked animation list, if any. */
       if( NULL != hashmap_get( o->ani_defs, ani_key_buffer ) ) {
          o->current_animation = hashmap_get( o->ani_defs, ani_key_buffer );
@@ -767,7 +767,7 @@ struct TILEMAP* mobile_get_tilemap( const struct MOBILE* o ) {
 size_t mobile_set_sprite(
    struct MOBILE* o, size_t id, struct MOBILE_SPRITE_DEF* sprite
 ) {
-   scaffold_assert( NULL != o );
+   assert( NULL != o );
    return vector_set( o->sprite_defs, id, sprite, true );
 }
 bool mobile_add_animation(
@@ -834,7 +834,7 @@ void mobile_set_animation( struct MOBILE* o, bstring ani_key ) {
    lgc_null( ani_def );
    o->current_animation = ani_def;
    /* TODO: Don't die if this fails. */
-   //scaffold_assert( NULL != o->current_animation );
+   //assert( NULL != o->current_animation );
 cleanup:
    return;
 }
@@ -941,7 +941,7 @@ cleanup:
 
 void mobile_set_sprites( struct MOBILE* o, struct GRAPHICS* sheet ) {
    lgc_null( o );
-   scaffold_assert( NULL == o->sprites );
+   assert( NULL == o->sprites );
    o->sprites = sheet;
 cleanup:
    return;

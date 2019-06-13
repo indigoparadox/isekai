@@ -55,7 +55,7 @@ static void syncbuff_realloc( IPC_END dest, SCAFFOLD_SIZE new_alloc ) {
    syncbuff_lines[dest] = mem_realloc(
       syncbuff_lines[dest], syncbuff_size[dest], bstring
    );
-   scaffold_assert( NULL != syncbuff_lines[dest] );
+   assert( NULL != syncbuff_lines[dest] );
 
    for( i = syncbuff_count[dest] ; syncbuff_size[dest] > i ; i++ ) {
       syncbuff_lines[dest][i] = bfromcstralloc( SYNCBUFF_LINE_DEFAULT, "" );
@@ -84,7 +84,7 @@ bool ipc_listen( struct CONNECTION* n, uint16_t port ) {
    bool retval = false;
 
 #ifdef SYNCBUFF_STRICT
-   scaffold_assert( SYNCBUFF_STATE_LISTENING != n->state );
+   assert( SYNCBUFF_STATE_LISTENING != n->state );
 #else
    if( SYNCBUFF_STATE_LISTENING == n->state ) {
       retval = false;
@@ -105,7 +105,7 @@ cleanup:
 }
 
 bool ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
-   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
+   assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
    n->state = SYNCBUFF_STATE_CONNECTED;
    n->type = IPC_END_CLIENT;
    n->local = true;
@@ -124,14 +124,14 @@ bool ipc_connected( struct CONNECTION* n ) {
 }
 
 void ipc_stop( struct CONNECTION* n ) {
-   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED != n->state );
+   assert( SYNCBUFF_STATE_DISCONNECTED != n->state );
    n->state = SYNCBUFF_STATE_DISCONNECTED;
 }
 
 bool ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
-   scaffold_assert( SYNCBUFF_STATE_LISTENING == n_server->state );
-   scaffold_assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
-   scaffold_assert( IPC_END_SERVER == n_server->type );
+   assert( SYNCBUFF_STATE_LISTENING == n_server->state );
+   assert( SYNCBUFF_STATE_DISCONNECTED == n->state );
+   assert( IPC_END_SERVER == n_server->type );
    if( 0 == n_server->client_count ) {
       n->state = SYNCBUFF_STATE_CONNECTED;
       n->type = IPC_END_CLIENT;
@@ -149,7 +149,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
    SCAFFOLD_SIZE_SIGNED size_out = 0;
    IPC_END dest = IPC_END_SERVER;
 
-   scaffold_assert( NULL != buffer );
+   assert( NULL != buffer );
 
    if( false == n->local ) {
       /* We're sending stuff TO the client. */
@@ -170,7 +170,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
       );
       bstr_result =
          bassignformat( syncbuff_lines[dest][i + 1], "%s", bdata( syncbuff_lines[dest][i] ) );
-      scaffold_assert( NULL != syncbuff_lines[dest][i + 1] );
+      assert( NULL != syncbuff_lines[dest][i + 1] );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
@@ -184,8 +184,8 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
    );
    bstr_result =
       bassignformat( syncbuff_lines[dest][0], "%s", bdata( buffer ) );
-   scaffold_assert( NULL != syncbuff_lines[dest][0] );
-   scaffold_assert( blength( buffer ) == blength( syncbuff_lines[dest][0] ) );
+   assert( NULL != syncbuff_lines[dest][0] );
+   assert( blength( buffer ) == blength( syncbuff_lines[dest][0] ) );
    if( 0 != bstr_result ) {
       goto cleanup;
    }
@@ -195,7 +195,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
 
    (syncbuff_count[dest])++;
 
-   scaffold_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][0] ) );
+   assert( bdata( buffer ) != bdata( syncbuff_lines[dest][0] ) );
 
    size_out = blength( syncbuff_lines[dest][0] );
 
@@ -209,15 +209,15 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
    SCAFFOLD_SIZE_SIGNED size_out = -1;
    IPC_END dest = IPC_END_SERVER;
 
-   scaffold_assert( NULL != buffer );
-   scaffold_assert( NULL != n );
+   assert( NULL != buffer );
+   assert( NULL != n );
 
    if( false != n->local ) {
       dest = IPC_END_CLIENT;
    }
 
    bstr_result = btrunc( buffer, 0 );
-   scaffold_assert( 0 == blength( buffer ) );
+   assert( 0 == blength( buffer ) );
    if( 0 != bstr_result ) {
       lg_debug( __FILE__,  "btrunc error on line: %d\n", __LINE__ );
       goto cleanup;
@@ -225,10 +225,10 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
 
    if( 0 < syncbuff_count[dest] ) {
       (syncbuff_count[dest])--;
-      scaffold_assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
+      assert( NULL != syncbuff_lines[dest][syncbuff_count[dest]] );
       bstr_result =
          bassignformat( buffer, "%s", bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
-      scaffold_assert( NULL != buffer );
+      assert( NULL != buffer );
       if( 0 != bstr_result ) {
          goto cleanup;
       }
@@ -238,7 +238,7 @@ SCAFFOLD_SIZE_SIGNED ipc_read( struct CONNECTION* n, bstring buffer ) {
       }
    }
 
-   scaffold_assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
+   assert( bdata( buffer ) != bdata( syncbuff_lines[dest][syncbuff_count[dest]] ) );
 
    size_out = blength( buffer );
 
