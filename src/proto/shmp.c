@@ -120,7 +120,7 @@ void proto_client_debug_vm(
 };
 #endif /* DEBUG_VM */
 
-VBOOL proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
+bool proto_dispatch( struct CLIENT* c, struct SERVER* s ) {
 }
 
 void proto_setup() {

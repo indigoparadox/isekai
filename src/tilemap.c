@@ -17,19 +17,19 @@ struct TILEMAP_TILESET {
    bstring def_path;
 };
 
-static VBOOL tilemap_layer_free_cb(
+static bool tilemap_layer_free_cb(
    size_t idx, void* iter, void* arg
 ) {
    struct TILEMAP_LAYER* layer = (struct TILEMAP_LAYER*)iter;
    tilemap_layer_free( layer );
-   return VTRUE;
+   return true;
 }
 
-static VBOOL tilemap_tileset_free_cb(
+static bool tilemap_tileset_free_cb(
    size_t idx, void* iter, void* arg
 ) {
    tilemap_tileset_free( (struct TILEMAP_TILESET*)iter );
-   return VTRUE;
+   return true;
 }
 
 static void tilemap_cleanup( const struct REF* ref ) {
@@ -58,7 +58,7 @@ static void tilemap_cleanup( const struct REF* ref ) {
 }
 
 void tilemap_init(
-   struct TILEMAP* t, VBOOL local_images, struct CLIENT* server,
+   struct TILEMAP* t, bool local_images, struct CLIENT* server,
    struct CHANNEL* l
 ) {
    ref_init( &(t->refcount), tilemap_cleanup );
@@ -89,7 +89,7 @@ void tilemap_spawner_init(
    ts->tilemap = t;
    ts->last_spawned = 0;
    ts->countdown_remaining = 0;
-   ts->active = VTRUE;
+   ts->active = true;
    ts->pos.x = 0;
    ts->pos.y = 0;
    ts->type = type;
@@ -160,7 +160,7 @@ size_t tilemap_tileset_set_tile(
 ) {
    scaffold_assert( NULL != set );
    scaffold_assert( vector_is_valid( set->tiles ) );
-   return vector_set( set->tiles, gid, tile_info, VTRUE );
+   return vector_set( set->tiles, gid, tile_info, true );
 }
 
 GFX_COORD_PIXEL tilemap_tileset_get_tile_width(
@@ -191,27 +191,27 @@ void tilemap_tileset_set_tile_height(
    set->tileheight = height;
 }
 
-VBOOL tilemap_tileset_has_image(
+bool tilemap_tileset_has_image(
    const struct TILEMAP_TILESET* set, bstring filename
 ) {
    if( NULL == set ) {
-      return VFALSE;
+      return false;
    }
    if( hashmap_iterate( set->images, callback_search_graphics, filename ) ) {
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL tilemap_tileset_set_image(
+bool tilemap_tileset_set_image(
    struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g
 ) {
    scaffold_assert( NULL != set );
    scaffold_assert( hashmap_is_valid( set->images ) );
-   if( hashmap_put( set->images, filename, g, VFALSE ) ) {
-      return VTRUE;
+   if( hashmap_put( set->images, filename, g, false ) ) {
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 static void* cb_tilemap_tileset_img_get_or_dl( bstring idx, void* iter, void* arg ) {
@@ -239,15 +239,15 @@ struct GRAPHICS* tilemap_tileset_get_image_default(
       set->images, cb_tilemap_tileset_img_get_or_dl, c );
 }
 
-VBOOL tilemap_tileset_add_terrain(
+bool tilemap_tileset_add_terrain(
    struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info
 ) {
    scaffold_assert( NULL != set );
    scaffold_assert( vector_is_valid( set->terrain ) );
    if( 0 > vector_add( set->terrain, terrain_info ) ) {
-      return VFALSE;
+      return false;
    }
-   return VTRUE;
+   return true;
 }
 
 struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
@@ -701,7 +701,7 @@ void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* 
  * \return The cache for the given tile or a new, empty cache if none exists.
  */
 struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
-   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, VBOOL force
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, bool force
 ) {
    struct TILEMAP_POSITION tile_map_pos;
    struct TILEMAP_ITEM_CACHE* cache_out = NULL;
@@ -714,7 +714,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
       &(t->item_caches), callback_search_item_caches, &tile_map_pos
    );
 
-   if( NULL == cache_out && VFALSE != force ) {
+   if( NULL == cache_out && false != force ) {
       tilemap_item_cache_new( cache_out, t, x, y );
       lgc_null( cache_out );
       verr = vector_add( &(t->item_caches), cache_out );

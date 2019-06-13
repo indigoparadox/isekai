@@ -26,7 +26,7 @@ static void* callback_parse_mobs( size_t idx, void* iter, void* arg ) {
       lg_debug(
          __FILE__, "Client: Found mobile with ID: %b\n", mobile_get_id( o )
       );
-      datafile_parse_mobile_ezxml_t( o, xml_data, NULL, VTRUE );
+      datafile_parse_mobile_ezxml_t( o, xml_data, NULL, true );
 
       return o;
    }
@@ -38,7 +38,7 @@ cleanup:
 }
 
 /*
-static VBOOL cb_datafile_prune_spriteless_mobs( size_t idx, void* iter, void* arg ) {
+static bool cb_datafile_prune_spriteless_mobs( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    struct MOBILE* o_player = NULL;
    struct CLIENT* local_client = (struct CLIENT*)arg;
@@ -51,9 +51,9 @@ static VBOOL cb_datafile_prune_spriteless_mobs( size_t idx, void* iter, void* ar
       NULL == mobile_get_sprites_filename( o )
    ) {
       lg_debug( __FILE__, "Removing spriteless mobile: %b (%d)\n", o->display_name, o->serial );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 */
 
@@ -180,10 +180,10 @@ void datafile_handle_stream(
 
 #ifdef USE_EZXML
       datafile_parse_ezxml_string(
-         catalog, data, length, VTRUE, DATAFILE_TYPE_ITEM_CATALOG,
+         catalog, data, length, true, DATAFILE_TYPE_ITEM_CATALOG,
          filename
       );
-      if( hashmap_put( &(c->item_catalogs), filename, catalog, VFALSE ) ) {
+      if( hashmap_put( &(c->item_catalogs), filename, catalog, false ) ) {
          lg_error( __FILE__, "Attempted to double-add catalog: %b\n",
             filename );
          item_spritesheet_free( catalog );

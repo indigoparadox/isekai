@@ -14,24 +14,24 @@ FILE* scaffold_log_handle_err = NULL;
 #include <stdlib.h>
 
 //int8_t scaffold_error = SCAFFOLD_ERROR_NONE;
-VBOOL scaffold_error_silent = VFALSE;
-VBOOL scaffold_warning_silent = VFALSE;
+bool scaffold_error_silent = false;
+bool scaffold_warning_silent = false;
 bstring scaffold_print_buffer = NULL;
 
 static char scaffold_random_chars[] =
    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-VBOOL scaffold_is_numeric( bstring line ) {
+bool scaffold_is_numeric( bstring line ) {
    int i;
-   VBOOL is_numeric = VTRUE;
+   bool is_numeric = true;
 
    if( NULL == line ) {
-      return VFALSE;
+      return false;
    }
 
    for( i = 0 ; blength( line ) > i ; i++ ) {
       if( !isdigit( bdata( line )[i] ) ) {
-         is_numeric = VFALSE;
+         is_numeric = false;
          break;
       }
    }
@@ -39,18 +39,18 @@ VBOOL scaffold_is_numeric( bstring line ) {
    return is_numeric;
 }
 
-VBOOL scaffold_string_is_printable( bstring str ) {
-   VBOOL is_printable = VTRUE;
+bool scaffold_string_is_printable( bstring str ) {
+   bool is_printable = true;
    int i;
    const char* strdata = bdata( str );
 
    if( NULL == strdata ) {
-      return VFALSE;
+      return false;
    }
 
    for( i = 0 ; blength( str ) > i ; i++ ) {
       if( !scaffold_char_is_printable( strdata[i] ) ) {
-         is_printable = VFALSE;
+         is_printable = false;
          break;
       }
    }

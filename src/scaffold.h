@@ -14,7 +14,7 @@
 #ifdef __palmos__
 
 typedef unsigned char BYTE;
-typedef unsigned char VBOOL;
+typedef unsigned char bool;
 typedef unsigned long SCAFFOLD_SIZE;
 typedef long SCAFFOLD_SIZE_SIGNED;
 #define SCAFFOLD_SIZE_MAX ULONG_MAX
@@ -27,8 +27,8 @@ typedef char int8_t;
 typedef unsigned char uint8_t;
 #define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
-#define VTRUE 1
-#define VFALSE 0
+#define true 1
+#define false 0
 #define USE_SYNCBUFF
 #undef __GNUC__
 #define EZXML_NOMMAP
@@ -87,17 +87,17 @@ typedef uint8_t BYTE;
 #endif /* BYTE */
 
 #if 0
-#if !defined( VBOOL ) && !defined( WIN32 )
-typedef uint8_t VBOOL;
-#endif /* VBOOL */
+#if !defined( bool ) && !defined( WIN32 )
+typedef uint8_t bool;
+#endif /* bool */
 
-#ifndef VTRUE
-#define VTRUE 1
-#endif /* VTRUE */
+#ifndef true
+#define true 1
+#endif /* true */
 
-#ifndef VFALSE
-#define VFALSE 0
-#endif /* VFALSE */
+#ifndef false
+#define false 0
+#endif /* false */
 #endif
 
 #ifdef USE_SIZET
@@ -252,13 +252,13 @@ struct CONTAINER_IDX {
       lgc_nonzero( retval ); \
    }
 
-#define scaffold_check_silence() scaffold_error_silent = VTRUE;
-#define scaffold_check_unsilence() scaffold_error_silent = VFALSE;
+#define scaffold_check_silence() scaffold_error_silent = true;
+#define scaffold_check_unsilence() scaffold_error_silent = false;
 
 #define scaffold_check_null_msg( pointer, message ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, \
                "Scaffold: Null pointer on line: %d: %s\n", \
@@ -272,7 +272,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_null_warning( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        if( VTRUE != scaffold_warning_silent ) { \
+        if( true != scaffold_warning_silent ) { \
             scaffold_print_warning( \
                __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         } \
@@ -284,7 +284,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_null( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
         } \
@@ -296,7 +296,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_null_continue( pointer ) \
     if( NULL == pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NULLPO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, "Scaffold: Null pointer on line: %d\n", __LINE__ ); \
             scaffold_print_debug( __FILE__, "Continuing loop..." ); \
@@ -309,7 +309,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_not_null( pointer ) \
     if( NULL != pointer ) { \
         scaffold_error = SCAFFOLD_ERROR_NOT_NULLPO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, \
                "Scaffold: Non-null pointer on line: %d\n", __LINE__ ); \
@@ -322,7 +322,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_bounds( index, bound ) \
     if( index >= bound ) { \
         scaffold_error = SCAFFOLD_ERROR_OUTOFBOUNDS; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, "Scaffold: Out of bounds on line: %d\n", __LINE__ ); \
         } \
@@ -334,7 +334,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_negative( value ) \
     if( 0 > value ) { \
         scaffold_error = SCAFFOLD_ERROR_NEGATIVE; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, "Scaffold: Bad negative on line: %d\n", __LINE__ ); \
         } \
@@ -346,7 +346,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_nonzero( value ) \
     if( 0 != value ) { \
         scaffold_error = SCAFFOLD_ERROR_NONZERO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, "Scaffold: Nonzero error on line: %d\n", __LINE__ ); \
         } \
@@ -358,7 +358,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_zero_msg( value, message ) \
     if( 0 == value ) { \
         scaffold_error = SCAFFOLD_ERROR_ZERO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, \
                "Scaffold: Zero error on line: %d: %s\n", __LINE__, message ); \
@@ -372,7 +372,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_zero_against_warning( last, value, msg ) \
     if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_ZERO; \
-        if( VTRUE != scaffold_warning_silent ) { \
+        if( true != scaffold_warning_silent ) { \
             scaffold_print_warning( \
                __FILE__, \
                "Scaffold: Zero warning on line: %d: %s\n", __LINE__, msg ); \
@@ -385,7 +385,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_zero_against( last, value, msg ) \
     if( 0 == value && SCAFFOLD_ERROR_ZERO != last ) { \
         last = SCAFFOLD_ERROR_ZERO; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__, \
                "Scaffold: Zero error on line: %d: %s\n", __LINE__, msg ); \
@@ -398,7 +398,7 @@ struct CONTAINER_IDX {
 #define scaffold_check_equal( value1, value2 ) \
     if( value1 != value2 ) { \
         scaffold_error = SCAFFOLD_ERROR_UNEQUAL; \
-        if( VTRUE != scaffold_error_silent ) { \
+        if( true != scaffold_error_silent ) { \
             scaffold_print_error( \
                __FILE__,\
                "Values not equal: %d and %d: error on line: %d\n", \
@@ -432,15 +432,15 @@ struct VECTOR;
 
 #define scaffold_byte( number ) (0xff & number)
 
-VBOOL scaffold_is_numeric( bstring line );
-VBOOL scaffold_string_is_printable( bstring str );
+bool scaffold_is_numeric( bstring line );
+bool scaffold_string_is_printable( bstring str );
 void scaffold_snprintf( bstring buffer, const char* message, ... );
 void scaffold_vsnprintf( bstring buffer, const char* message, va_list varg );
 void scaffold_random_string( bstring rand_str, SCAFFOLD_SIZE len );
-VBOOL scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
+bool scaffold_random_bytes( BYTE* ptr, SCAFFOLD_SIZE length );
 void scaffold_colorize( bstring str, SCAFFOLD_COLOR color );
 int scaffold_strcmp_caseless( const char* s0, const char* s1 );
-VBOOL scaffold_buffer_grow(
+bool scaffold_buffer_grow(
    BYTE** buffer, SCAFFOLD_SIZE* len, SCAFFOLD_SIZE new_len
 );
 
@@ -461,8 +461,8 @@ extern struct tagbstring scaffold_colon_string;
 extern struct tagbstring scaffold_exclamation_string;
 extern struct tagbstring scaffold_null;
 extern uint8_t scaffold_error;
-extern VBOOL scaffold_error_silent;
-extern VBOOL scaffold_warning_silent;
+extern bool scaffold_error_silent;
+extern bool scaffold_warning_silent;
 
 #endif /* SCAFFOLD_C */
 

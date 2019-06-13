@@ -12,8 +12,8 @@ struct tagbstring str_sql_select_index = bsStatic( "SELECT value FROM %s WHERE h
 struct tagbstring str_sql_insert = bsStatic( "INSERT INTO %s (value, half, key, idx) VALUES (?, ?, ?, ?)" );
 struct tagbstring str_sql_update = bsStatic( "UPDATE %s SET value=? WHERE half = ? AND key = ? AND idx = ?" );
 
-VBOOL storage_init() {
-   int res = VFALSE;
+bool storage_init() {
+   int res = false;
    int* version_scalar = NULL;
 
    res = sqlite3_open( "storage.db", &db );
@@ -41,16 +41,16 @@ VBOOL storage_init() {
       lgc_null( version_scalar );
       *version_scalar = STORAGE_VERSION_CURRENT;
       storage_set_single( &str_settings, STORAGE_HALF_SERVER, &str_version, 0, STORAGE_VALUE_INT, version_scalar );
-      res = VTRUE;
+      res = true;
       goto cleanup;
    } else if( STORAGE_VERSION_CURRENT < *version_scalar ) {
       lg_error( __FILE__, "Client storage version is too new: %d\n", *version_scalar );
-      res = VTRUE;
+      res = true;
       goto cleanup;
    } else if( STORAGE_VERSION_CURRENT > *version_scalar ) {
       lg_error( __FILE__, "Client storage version is too old: %d\n", *version_scalar );
       /* TODO: Upgrade. */
-      //res = VTRUE;
+      //res = true;
       //goto cleanup;
 
       /* Save the new version to database after upgrading (if applicable). */

@@ -118,10 +118,10 @@ void audition_node_free( struct AUDI_NODE** node ) {
    }
 }
 
-static VBOOL cb_audition_free_vars( bstring idx, void* iter, void* arg ) {
+static bool cb_audition_free_vars( bstring idx, void* iter, void* arg ) {
    struct AUDI_VARIABLE* var = (struct AUDI_VARIABLE*)iter;
    audition_variable_cleanup( var );
-   return VTRUE;
+   return true;
 }
 
 static void audition_context_cleanup( struct AUDI_CONTEXT* node ) {
@@ -149,8 +149,8 @@ void audition_context_step( struct AUDI_CONTEXT* ctx ) {
 
 }
 
-static VBOOL validate_node( struct AUDI_NODE* node ) {
-   VBOOL res = VTRUE;
+static bool validate_node( struct AUDI_NODE* node ) {
+   bool res = true;
 
 
 
@@ -270,7 +270,7 @@ void audition_context_add_var(
    lgc_null( node );
    val_cpy = bstrcpy( val );
 
-   hashmap_put( node->variables, key, val_cpy, VFALSE );
+   hashmap_put( node->variables, key, val_cpy, false );
 cleanup:
    return;
 }

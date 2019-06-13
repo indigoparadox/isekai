@@ -44,9 +44,9 @@ mbedtls_ctr_drbg_context ctr_drbg;
 #endif /* USE_MBED_TLS */
 
 struct CONNECTION {
-   VBOOL listening;
+   bool listening;
    IPC_END type;
-   VBOOL local_client;
+   bool local_client;
    uint16_t port;
    void* (*callback)( void* client );
    void* arg;
@@ -102,8 +102,8 @@ struct CONNECTION* ipc_alloc() {
 
    n_out =  mem_alloc( 1, struct CONNECTION );
    lgc_null_msg( n_out, "Unable to alloc connection." );
-   n_out->local_client = VFALSE;
-   n_out->listening = VFALSE;
+   n_out->local_client = false;
+   n_out->listening = false;
 
 #ifdef USE_MBED_TLS
    mbedtls_net_init( &(n->ssl_net) );
@@ -135,20 +135,20 @@ void ipc_free( struct CONNECTION** n ) {
    n = NULL;
 }
 
-VBOOL ipc_connected( struct CONNECTION* n ) {
+bool ipc_connected( struct CONNECTION* n ) {
 #ifdef USE_MBED_TLS
 #error TODO
 #else
    if( NULL != n && 0 < n->socket ) {
-      return VTRUE;
+      return true;
    } else {
-      return VFALSE;
+      return false;
    }
 #endif /* USE_MBED_TLS */
 }
 
-VBOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
-   VBOOL connected = VFALSE;
+bool ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
+   bool connected = false;
    int connect_result;
 #ifdef _WIN32
    u_long mode = 1;
@@ -165,7 +165,7 @@ VBOOL ipc_connect( struct CONNECTION* n, const bstring server, uint16_t port ) {
    struct sockaddr_in dest = { 0 };
 #endif /* USE_MBED_TLS || USE_NETWORK || USE_LEGACY_NETWORK */
 
-   n->local_client = VTRUE;
+   n->local_client = true;
    n->type = IPC_END_CLIENT;
 
 #ifdef USE_MBED_TLS
@@ -253,7 +253,7 @@ cleanup:
    fcntl( n->socket, F_SETFL, O_NONBLOCK );
 #endif /* _WIN32 */
 
-   connected = VTRUE;
+   connected = true;
    n->port = port;
 
 cleanup:
@@ -297,8 +297,8 @@ cleanup:
    return sent;
 }
 
-VBOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
-   VBOOL connected = VFALSE;
+bool ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
+   bool connected = false;
    unsigned int address_length;
    struct sockaddr_in address;
    #ifdef _WIN32
@@ -334,21 +334,21 @@ VBOOL ipc_accept( struct CONNECTION* n_server, struct CONNECTION* n ) {
       goto cleanup;
    }
 
-   connected = VTRUE;
-   n->local_client = VFALSE;
+   connected = true;
+   n->local_client = false;
    n->type = IPC_END_CLIENT;
 
 cleanup:
    return connected;
 }
 
-VBOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
+bool ipc_listen( struct CONNECTION* n, uint16_t port ) {
    int connect_result;
 #ifndef USE_MBED_TLS
    struct sockaddr_in address;
 #endif /* !USE_MBED_TLS */
 
-   if( VFALSE != n->listening ) {
+   if( false != n->listening ) {
       lg_error( __FILE__, "Server already listening!\n" );
       goto cleanup;
    }
@@ -398,8 +398,8 @@ VBOOL ipc_listen( struct CONNECTION* n, uint16_t port ) {
       goto cleanup;
    }
 
-   n->listening = VTRUE;
-   n->local_client = VFALSE;
+   n->listening = true;
+   n->local_client = false;
    n->type = IPC_END_SERVER;
    lg_debug( __FILE__, "Now listening for connection on port %d...\n", port );
 
@@ -445,7 +445,7 @@ cleanup:
 
 void ipc_stop( struct CONNECTION* n ) {
    net_ipc_cleanup_socket( n );
-   n->listening = VFALSE;
+   n->listening = false;
 }
 
 IPC_END ipc_get_type( struct CONNECTION* n ) {
@@ -453,16 +453,16 @@ IPC_END ipc_get_type( struct CONNECTION* n ) {
 }
 
 #if 0
-VBOOL ipc_is_local_client( struct CONNECTION* n ) {
+bool ipc_is_local_client( struct CONNECTION* n ) {
    if( NULL == n ) {
       /* The local client wouldn't ever be at this point. */
-      return VFALSE;
+      return false;
    }
    return n->local_client;
 }
 #endif // 0
 
-VBOOL ipc_is_listening( struct CONNECTION* n ) {
+bool ipc_is_listening( struct CONNECTION* n ) {
    return n->listening;
 }
 

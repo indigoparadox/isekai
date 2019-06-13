@@ -106,7 +106,7 @@ struct TILEMAP_SPAWNER {
    SERIAL last_spawned;
    SCAFFOLD_SIZE_SIGNED respawn_countdown;
    SCAFFOLD_SIZE_SIGNED countdown_remaining;
-   VBOOL active;
+   bool active;
 };
 
 struct TILEMAP_LAYER {
@@ -196,7 +196,7 @@ struct TILEMAP {
     mem_free( position );
 
 void tilemap_init(
-   struct TILEMAP* t, VBOOL local_images, struct CLIENT* server,
+   struct TILEMAP* t, bool local_images, struct CLIENT* server,
    struct CHANNEL* l
 );
 void tilemap_free( struct TILEMAP* t );
@@ -230,11 +230,11 @@ void tilemap_tileset_set_tile_width(
    struct TILEMAP_TILESET* set, GFX_COORD_PIXEL width );
 void tilemap_tileset_set_tile_height(
    struct TILEMAP_TILESET* set, GFX_COORD_PIXEL height );
-VBOOL tilemap_tileset_has_image(
+bool tilemap_tileset_has_image(
    const struct TILEMAP_TILESET* set, bstring filename );
-VBOOL tilemap_tileset_set_image(
+bool tilemap_tileset_set_image(
    struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g );
-VBOOL tilemap_tileset_add_terrain(
+bool tilemap_tileset_add_terrain(
    struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info );
 struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
    struct TILEMAP_TILESET* set, size_t gid
@@ -300,7 +300,7 @@ struct TILEMAP_ITEM_CACHE* tilemap_drop_item(
 );
 void tilemap_drop_item_in_cache( struct TILEMAP_ITEM_CACHE* cache, struct ITEM* e );
 struct TILEMAP_ITEM_CACHE* tilemap_get_item_cache(
-   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, VBOOL force
+   struct TILEMAP* t, TILEMAP_COORD_TILE x, TILEMAP_COORD_TILE y, bool force
 );
 #endif /* USE_ITEMS */
 struct CHANNEL* tilemap_get_channel( const struct TILEMAP* t );

@@ -76,19 +76,19 @@ START_TEST( test_vector_add_scalar ) {
    ck_assert_int_eq( vector_count( v ), 0 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      vector_add_scalar( v, 3, VTRUE );
+      vector_add_scalar( v, 3, true );
    }
 
    ck_assert_int_eq( vector_count( v ), 3 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      vector_add_scalar( v, 3 * i, VFALSE );
+      vector_add_scalar( v, 3 * i, false );
    }
 
    ck_assert_int_eq( vector_count( v ), 5 );
 
    for( i = 0 ; 3 > i ; i++ ) {
-      vector_add_scalar( v, 2 * i, VTRUE );
+      vector_add_scalar( v, 2 * i, true );
    }
 
    ck_assert_int_eq( vector_count( v ), 8 );
