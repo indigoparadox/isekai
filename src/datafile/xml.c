@@ -498,6 +498,7 @@ next_script:
    mobile_set_animation( o, walk_ani_key );
 
 cleanup:
+   bdestroy( xml_val_buffer );
    bdestroy( walk_ani_key );
 #ifdef USE_VM
    bdestroy( vm_key_buffer );

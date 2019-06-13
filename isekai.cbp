@@ -426,6 +426,8 @@
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4)">
@@ -483,10 +485,12 @@
 					<Add library="alleg" />
 					<Add library="ubsan" />
 					<Add library="sqlite3" />
+					<Add library="hs" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-Dynamic)">
@@ -535,6 +539,7 @@
 					<Add option="-DDEBUG_NETWORK" />
 					<Add option="-DUSE_SQLITE" />
 					<Add option="-DUSE_DYNAMIC_PLUGINS" />
+					<Add option="-DHEATSHRINK_DYNAMIC_ALLOC=0" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -543,10 +548,12 @@
 					<Add library="ubsan" />
 					<Add library="dl" />
 					<Add library="sqlite3" />
+					<Add library="hs" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
-					<Add directory="../libtwin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="#cd src/plugins &amp;&amp; make" />
@@ -604,9 +611,12 @@
 					<Add library="ubsan" />
 					<Add library="mbedtls" />
 					<Add library="dl" />
+					<Add library="hs" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-SDL)">
@@ -658,10 +668,12 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="sqlite3" />
+					<Add library="hs" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-SDL" />
 					<Add directory="../camin/bin/Debug-Linux-SDL" />
 					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -691,7 +703,12 @@
 					<Add option="-export-dynamic" />
 					<Add library="alleg" />
 					<Add library="dl" />
+					<Add library="hs" />
 					<Add directory="../libvcol/bin/Debug-Linux" />
+					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
+					<Add directory="../camin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-CLANG)">
@@ -726,6 +743,8 @@
 					<Add directory="../libvcol/bin/Debug-Linux" />
 					<Add directory="../camgraph/bin/Debug-Linux-Allegro" />
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
+					<Add directory="../libtwin/bin/Debug-Linux" />
+					<Add directory="../hs/bin/Debug-Linux-Static" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-Allegro4-TCC)">
@@ -1304,152 +1323,6 @@
 			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
 		</Unit>
 		<Unit filename="src/files.h" />
-		<Unit filename="src/hs/hs_com.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
-		<Unit filename="src/hs/hs_conf.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
-		<Unit filename="src/hs/hsdecode.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
-		<Unit filename="src/hs/hsdecode.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
-		<Unit filename="src/hs/hsencode.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
-		<Unit filename="src/hs/hsencode.h">
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (MingW32-NET)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-SB)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
 		<Unit filename="src/ipc.h" />
 		<Unit filename="src/ipc/netipc.c">
 			<Option compilerVar="CC" />
