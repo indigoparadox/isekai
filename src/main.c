@@ -719,6 +719,7 @@ cleanup:
 #ifdef ENABLE_LOCAL_CLIENT
 #ifdef USE_RANDOM_PORT
    bdestroy( str_service );
+   storage_free();
 #endif /* USE_RANDOM_PORT */
    graphics_shutdown( g_screen );
    /* mem_free( g_screen ); */

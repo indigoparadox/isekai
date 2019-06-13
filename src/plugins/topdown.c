@@ -593,6 +593,7 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
    struct CHANNEL* l = NULL;
+   bool retval = false;
    //struct TILEMAP* t = NULL;
 #ifdef USE_ITEMS
    struct TILEMAP_ITEM_CACHE* cache = NULL;
@@ -610,7 +611,7 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
-      return false; /* Silently ignore input until animations are done. */
+      goto cleanup; /* Silently ignore input until animations are done. */
    } else {
       l = mobile_get_channel( puppet );
       lgc_null( l );
@@ -625,34 +626,39 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
       proto_client_send_update( c, update );
-      return true;
+      retval = true;
+      goto cleanup;
 
    case INPUT_ASSIGNMENT_LEFT:
       action_packet_set_op( update, ACTION_OP_MOVELEFT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return true;
+      retval = true;
+      goto cleanup;
 
    case INPUT_ASSIGNMENT_DOWN:
       action_packet_set_op( update, ACTION_OP_MOVEDOWN );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
       proto_client_send_update( c, update );
-      return true;
+      retval = true;
+      goto cleanup;
 
    case INPUT_ASSIGNMENT_RIGHT:
       action_packet_set_op( update, ACTION_OP_MOVERIGHT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return true;
+      retval = true;
+      goto cleanup;
 
    case INPUT_ASSIGNMENT_ATTACK:
       action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
       proto_client_send_update( c, update );
-      return true;
+      retval = true;
+      goto cleanup;
 
 #ifdef USE_ITEMS
    case INPUT_ASSIGNMENT_INV:
@@ -679,7 +685,8 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_set_inventory_pane_list( control, &(cache->items) );
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
-      return true;
+      retval = true;
+      goto cleanup;
 #endif // USE_ITEMS
 
    case '\\':
@@ -699,7 +706,8 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       );
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );
-      return true;
+      retval = true;
+      goto cleanup;
 #ifdef DEBUG_VM
    //case 'p': windef_show_repl( ui ); return true;
 #endif /* DEBUG_VM */
@@ -707,13 +715,15 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    case 't':
       if( 0 == p->repeat ) {
          tilemap_toggle_debug_state();
-         return true;
+         retval = true;
+         goto cleanup;
       }
       break;
    case 'l':
       if( 0 == p->repeat ) {
          tilemap_dt_layer++;
-         return true;
+         retval = true;
+         goto cleanup;
       }
       break;
 #endif /* DEBUG_TILES */
@@ -721,7 +731,7 @@ static bool mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
 cleanup:
    action_packet_free( &update );
-   return false;
+   return retval;
 }
 
 PLUGIN_RESULT mode_topdown_poll_input(
