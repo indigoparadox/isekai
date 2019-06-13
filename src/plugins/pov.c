@@ -30,7 +30,7 @@ struct POV_CLIENT_DATA {
 
 struct POV_MOBILE_DATA {
    double ray_distance;
-   VBOOL animation_flipped; /*!< VTRUE if looking in - direction in POV. */
+   bool animation_flipped; /*!< true if looking in - direction in POV. */
    struct TILEMAP_POSITION last_pos;
 };
 
@@ -84,7 +84,7 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
 
    if( mobile_get_animation_reset( o ) || mobile_get_animation_reset( puppet ) ) {
       if( MOBILE_FACING_DOWN == puppet_facing ) {
-         o_data->animation_flipped = VTRUE;
+         o_data->animation_flipped = true;
          switch( o_facing ) {
          case MOBILE_FACING_DOWN:
             o_facing =  MOBILE_FACING_UP;
@@ -115,7 +115,7 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
             break;
          }
       } else if( MOBILE_FACING_RIGHT == puppet_facing ) {
-         o_data->animation_flipped = VTRUE;
+         o_data->animation_flipped = true;
          switch( o_facing ) {
          case MOBILE_FACING_DOWN:
             o_facing =  MOBILE_FACING_RIGHT;
@@ -143,7 +143,7 @@ static void mode_pov_mobile_set_animation( struct MOBILE* o, struct CLIENT* c ) 
       mobile_set_animation( o, buffer );
    }
 
-   mobile_set_animation_reset( o, VFALSE );
+   mobile_set_animation_reset( o, false );
 
 cleanup:
    bdestroy( buffer );
@@ -261,9 +261,9 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
       stepped_x = stripe;
       if(
          MOBILE_FACING_LEFT == mobile_get_facing( o ) &&
-            VFALSE == o_data->animation_flipped ||
+            false == o_data->animation_flipped ||
          MOBILE_FACING_RIGHT == mobile_get_facing( o ) &&
-            VFALSE == o_data->animation_flipped
+            false == o_data->animation_flipped
       ) {
          stepped_x = (stripe - sprite_screen_w) + mobile_get_steps_remaining( o );
       } else {
@@ -487,7 +487,7 @@ cleanup:
    return;
 }
 
-static VBOOL mode_pov_draw_floor(
+static bool mode_pov_draw_floor(
    GFX_RAY_FLOOR* floor_pos,
    GFX_COORD_PIXEL i_x,
    GFX_COORD_PIXEL above_wall_draw_end,
@@ -502,7 +502,7 @@ static VBOOL mode_pov_draw_floor(
    struct TILEMAP* t = NULL;
    size_t set_firstgid = 0;
    GRAPHICS* g_tileset = NULL;
-   VBOOL ret_error = VFALSE;
+   bool ret_error = false;
    GRAPHICS_RECT tile_tilesheet_pos = { 0 };
    int tex_x = 0,
       tex_y = 0;
@@ -565,7 +565,7 @@ static VBOOL mode_pov_draw_floor(
       g_tileset = tilemap_tileset_get_image_default( set, c );
       if( NULL == g_tileset ) {
          /* Tileset not yet loaded, so fail gracefully. */
-         ret_error = VTRUE;
+         ret_error = true;
          continue;
       }
 
@@ -589,10 +589,10 @@ cleanup:
  *
  * \param
  * \param
- * \return VTRUE on error, VFALSE otherwise.
+ * \return true on error, false otherwise.
  *
  */
-static VBOOL mode_pov_update_view(
+static bool mode_pov_update_view(
    GFX_COORD_PIXEL i_x, int layer_max, int layer_pov, GRAPHICS_RAY* ray,
    GFX_COORD_PIXEL prev_wall_top, GFX_COORD_PIXEL prev_wall_height,
    struct CLIENT* c, GRAPHICS* g
@@ -600,9 +600,9 @@ static VBOOL mode_pov_update_view(
    GFX_RAY_FLOOR floor_pos = { 0 };
    uint32_t tile = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
-   VBOOL wall_hit = VFALSE;
-   VBOOL ret_error = VFALSE,
-      ret_tmp = VFALSE;
+   bool wall_hit = false;
+   bool ret_error = false,
+      ret_tmp = false;
    GRAPHICS_DELTA wall_map_pos = { 0 };
    struct TILEMAP* t = NULL;
    GFX_COORD_PIXEL cell_height = 0,
@@ -614,7 +614,7 @@ static VBOOL mode_pov_update_view(
    int layer_index = 0,
       opaque_index = 0,
       pov_incr = 0;
-   VBOOL recurse = VTRUE;
+   bool recurse = true;
    struct POV_CLIENT_DATA* c_data = NULL;
    struct CHANNEL* l = NULL;
 
@@ -629,14 +629,14 @@ static VBOOL mode_pov_update_view(
    }
 
    /* Do the actual casting. */
-   wall_hit = VFALSE;
-   while( VFALSE == wall_hit ) {
+   wall_hit = false;
+   while( false == wall_hit ) {
       graphics_raycast_wall_iterate( &wall_map_pos, ray, prev_wall_height, g );
 
       if( graphics_raycast_point_is_infinite( &wall_map_pos ) ) {
          /* The ray has to stop at some point, or this will become an
           * infinite loop! */
-         recurse = VFALSE;
+         recurse = false;
          break;
       }
 
@@ -655,9 +655,9 @@ static VBOOL mode_pov_update_view(
             tile = tilemap_layer_get_tile_gid(
                opaque_layer, wall_map_pos.map_x, wall_map_pos.map_y );
             if( 0 != tile ) {
-               wall_hit = VTRUE;
+               wall_hit = true;
                if( POV_LAYER_LEVEL_WALL <= opaque_index ) {
-                  recurse = VFALSE;
+                  recurse = false;
                }
                break;
             }
@@ -686,15 +686,15 @@ static VBOOL mode_pov_update_view(
    if( recurse ) {
       ret_tmp = mode_pov_update_view(
          i_x, layer_max, layer_pov + pov_incr, ray, wall_draw_top, cell_height, c, g );
-      if( VFALSE != ret_tmp ) {
-         ret_error = VTRUE;
+      if( false != ret_tmp ) {
+         ret_error = true;
          goto cleanup;
       }
    }
 
    /* Draw the pixels of the stripe as a vertical line. */
    if( 0 < cell_height ) {
-      if( VFALSE != wall_hit ) {
+      if( false != wall_hit ) {
          /* Choose wall color. */
          color = get_wall_color( &wall_map_pos );
 #ifdef RAYCAST_FOG
@@ -714,8 +714,8 @@ static VBOOL mode_pov_update_view(
       ret_tmp = mode_pov_draw_floor(
          &floor_pos, i_x, wall_draw_bottom, prev_wall_top, prev_wall_height,
          &wall_map_pos, layer, ray, c, g );
-      if( VFALSE != ret_tmp ) {
-         ret_error = VTRUE;
+      if( false != ret_tmp ) {
+         ret_error = true;
       }
    }
 
@@ -729,7 +729,7 @@ PLUGIN_RESULT mode_pov_draw(
 ) {
    GRAPHICS* g = NULL;
    struct MOBILE* player = NULL;
-   static VBOOL draw_failed = VFALSE;
+   static bool draw_failed = false;
    struct TILEMAP* t = NULL;
    int i_x = 0,
       layer_max = 0,
@@ -784,7 +784,7 @@ PLUGIN_RESULT mode_pov_draw(
 #else
          g,
 #endif /* RAYCAST_CACHE */
-      0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, VTRUE
+      0, 0, g->w, g->h, GRAPHICS_COLOR_CYAN, true
    );
 
    layer_max = vector_count( t->layers );
@@ -847,7 +847,7 @@ PLUGIN_RESULT mode_pov_update(
    return PLUGIN_SUCCESS;
 }
 
-static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
+static bool mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    struct MOBILE* puppet = NULL;
    struct ACTION_PACKET* update = NULL;
    struct UI* ui = NULL;
@@ -869,7 +869,7 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
    ) {
       /* TODO: Handle limited input while loading. */
       input_clear_buffer( p );
-      return VFALSE; /* Silently ignore input until animations are done. */
+      return false; /* Silently ignore input until animations are done. */
    } else {
       l = mobile_get_channel( puppet );
       lgc_null( l );
@@ -878,40 +878,40 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
 
    /* If no windows need input, then move on to game input. */
    switch( p->character ) {
-   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return VTRUE;
+   case INPUT_ASSIGNMENT_QUIT: proto_client_stop( c ); return true;
    case INPUT_ASSIGNMENT_UP:
       action_packet_set_op( update, ACTION_OP_MOVEUP );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) - 1 );
       proto_client_send_update( c, update );
-      return VTRUE;
+      return true;
 
    case INPUT_ASSIGNMENT_LEFT:
       action_packet_set_op( update, ACTION_OP_MOVELEFT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) - 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return VTRUE;
+      return true;
 
    case INPUT_ASSIGNMENT_DOWN:
       action_packet_set_op( update, ACTION_OP_MOVEDOWN );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) + 1 );
       proto_client_send_update( c, update );
-      return VTRUE;
+      return true;
 
    case INPUT_ASSIGNMENT_RIGHT:
       action_packet_set_op( update, ACTION_OP_MOVERIGHT );
       action_packet_set_tile_x( update, mobile_get_x( puppet ) + 1 );
       action_packet_set_tile_y( update, mobile_get_y( puppet ) );
       proto_client_send_update( c, update );
-      return VTRUE;
+      return true;
 
    case INPUT_ASSIGNMENT_ATTACK:
       action_packet_set_op( update, ACTION_OP_ATTACK );
       /* TODO: Get attack target. */
       proto_client_send_update( c, update );
-      return VTRUE;
+      return true;
 
 #ifdef USE_ITEMS
    case INPUT_ASSIGNMENT_INV:
@@ -924,21 +924,21 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_inv, NULL, -1, -1, 600, 380
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, VTRUE, VFALSE,
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, true, false,
          client_input_from_ui, 0, UI_CONST_HEIGHT_FULL, 300,
          UI_CONST_HEIGHT_FULL
       );
       ui_control_add( win, &str_client_control_id_inv_self, control );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, VTRUE, VFALSE,
+         ui, control, NULL, UI_CONTROL_TYPE_INVENTORY, true, false,
          client_input_from_ui, 300, UI_CONST_HEIGHT_FULL, 300,
          UI_CONST_HEIGHT_FULL
       );
-      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, VTRUE );
+      cache = tilemap_get_item_cache( t, puppet->x, puppet->y, true );
       ui_set_inventory_pane_list( control, &(cache->items) );
       ui_control_add( win, &str_client_control_id_inv_ground, control );
       ui_window_push( ui, win );
-      return VTRUE;
+      return true;
 #endif // USE_ITEMS
 
    case '\\':
@@ -951,33 +951,33 @@ static VBOOL mode_pov_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
          &str_client_window_title_chat, NULL, -1, -1, -1, -1
       );
       ui_control_new(
-         ui, control, NULL, UI_CONTROL_TYPE_TEXT, VTRUE, VTRUE,
+         ui, control, NULL, UI_CONTROL_TYPE_TEXT, true, true,
          client_input_from_ui, -1, -1, -1, -1
       );
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );
-      return VTRUE;
+      return true;
 #ifdef DEBUG_VM
-   case 'p': windef_show_repl( ui ); return VTRUE;
+   case 'p': windef_show_repl( ui ); return true;
 #endif /* DEBUG_VM */
 #ifdef DEBUG_TILES
    case 't':
       if( 0 == p->repeat ) {
          tilemap_toggle_debug_state();
-         return VTRUE;
+         return true;
       }
       break;
    case 'l':
       if( 0 == p->repeat ) {
          tilemap_dt_layer++;
-         return VTRUE;
+         return true;
       }
       break;
 #endif /* DEBUG_TILES */
    }
 
 cleanup:
-   return VFALSE;
+   return false;
 }
 
 PLUGIN_RESULT mode_pov_poll_input( struct CLIENT* c, struct CHANNEL* l, struct INPUT* p ) {

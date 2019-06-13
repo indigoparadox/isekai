@@ -68,7 +68,7 @@ static void* cb_plugin_load( size_t idx, void* iter, void* arg ) {
       if( '/' == i ) {
          /* Whatever we were looking at was just a directory. */
          btrunc( entry_base, 0 );
-         found = VFALSE;
+         found = false;
       } else {
          if(
             (0 == found && 'l' == i) ||
@@ -155,7 +155,7 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    plugin_path = plugin_get_path();
 
    lg_debug( __FILE__, "Loading mode plugins from path: %b\n", plugin_path );
-   files_list_dir( plugin_path, plugin_dir, NULL, VFALSE, VFALSE );
+   files_list_dir( plugin_path, plugin_dir, NULL, false, false );
 
    vector_iterate( plugin_dir, cb_plugin_load, &ptype );
 
@@ -196,7 +196,7 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
    /* TODO: Error check. */
-   hashmap_put( plugin_list_mode, plugin_name, handle, VFALSE );
+   hashmap_put( plugin_list_mode, plugin_name, handle, false );
 
    if( PLUGIN_MODE == ptype ) {
       mode_name = dlsym( handle, "mode_name" );

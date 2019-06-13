@@ -96,7 +96,7 @@ static void chunker_chunk_setup_internal(
       h->tracks = vector_new();
    }
 
-   h->force_finish = VFALSE;
+   h->force_finish = false;
    h->raw_position = 0;
    h->tx_chunk_length = tx_chunk_length;
    h->type = type;
@@ -137,13 +137,13 @@ cleanup:
    return;
 }
 
-VBOOL chunker_chunk_start_file(
+bool chunker_chunk_start_file(
    struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 ) {
    bstring full_file_path = NULL;
    SCAFFOLD_SIZE_SIGNED bytes_read;
-   VBOOL read_ok = VFALSE;
+   bool read_ok = false;
 
    chunker_chunk_setup_internal( h, type, tx_chunk_length );
 
@@ -162,7 +162,7 @@ VBOOL chunker_chunk_start_file(
       files_read_contents( full_file_path, &h->raw_ptr, &h->raw_length );
    lgc_zero( bytes_read, "Zero bytes read from input file." );
 
-   read_ok = VTRUE;
+   read_ok = true;
 
 cleanup:
    bdestroy( full_file_path );
@@ -243,8 +243,8 @@ cleanup:
    return start_pos;
 }
 
-VBOOL chunker_chunk_finished( struct CHUNKER* h ) {
-   return (h->raw_position >= h->raw_length) ? VTRUE : VFALSE;
+bool chunker_chunk_finished( struct CHUNKER* h ) {
+   return (h->raw_position >= h->raw_length) ? true : false;
 }
 
 /* The chunker should NOT free or modify any buffers passed to it. */
@@ -253,7 +253,7 @@ void chunker_unchunk_start(
    const bstring filename, const bstring filecache_path
 ) {
    char* filename_c = NULL;
-   VBOOL filecache_status = VTRUE;
+   bool filecache_status = true;
 
    scaffold_assert( NULL != h );
    scaffold_assert( NULL != filename );
@@ -278,7 +278,7 @@ void chunker_unchunk_start(
 
    /* TODO: Shouldn't need to check for NULL here since chunker should be     *
     *       destroyed after user.                                             */
-   h->force_finish = VFALSE;
+   h->force_finish = false;
    h->raw_position = 0;
    h->raw_length = 0;
    h->type = type;
@@ -292,7 +292,7 @@ void chunker_unchunk_start(
 
 #ifdef USE_FILE_CACHE
    filecache_status = files_check_directory( filecache_path );
-   if( NULL != filecache_path && VFALSE != filecache_status ) {
+   if( NULL != filecache_path && false != filecache_status ) {
       lg_debug(
          __FILE__,
          "Chunker: Activating cache: %s\n",
@@ -340,7 +340,7 @@ void chunker_unchunk_pass(
    }
 
 #ifdef USE_FILE_CACHE
-   if( VFALSE != h->force_finish ) {
+   if( false != h->force_finish ) {
       goto cleanup;
    } else
 #endif
@@ -466,12 +466,12 @@ cleanup:
 #ifdef USE_FILE_CACHE
 
 /***
- * @return VTRUE if successful, VFALSE otherwise.
+ * @return true if successful, false otherwise.
  */
-VBOOL chunker_unchunk_save_cache( struct CHUNKER* h ) {
+bool chunker_unchunk_save_cache( struct CHUNKER* h ) {
    bstring cache_filename = NULL;
    SCAFFOLD_SIZE written;
-   VBOOL retval = VFALSE;
+   bool retval = false;
 
    cache_filename = bstrcpy( h->filecache_path );
    //lgc_silence(); /* Caching disabled is a non-event. */
@@ -480,7 +480,7 @@ VBOOL chunker_unchunk_save_cache( struct CHUNKER* h ) {
    files_join_path( cache_filename, h->filename );
 
    written =
-      files_write( cache_filename, h->raw_ptr, h->raw_length, VTRUE );
+      files_write( cache_filename, h->raw_ptr, h->raw_length, true );
    if( 0 >= written ) {
       lg_error(
          __FILE__, "Error writing cache file: %b, Dir: %b\n",
@@ -488,7 +488,7 @@ VBOOL chunker_unchunk_save_cache( struct CHUNKER* h ) {
          h->filecache_path
       );
    } else {
-      retval = VTRUE;
+      retval = true;
    }
 
 cleanup:
@@ -526,7 +526,7 @@ void chunker_unchunk_check_cache( struct CHUNKER* h ) {
       bdata( cache_filename )
    );
 
-   h->force_finish = VTRUE;
+   h->force_finish = true;
 
 cleanup:
 
@@ -547,33 +547,33 @@ cleanup:
 
 #endif /* USE_FILE_CACHE */
 
-VBOOL chunker_unchunk_finished( struct CHUNKER* h ) {
-   VBOOL finished = VTRUE;
+bool chunker_unchunk_finished( struct CHUNKER* h ) {
+   bool finished = true;
    CHUNKER_TRACK* prev_track = NULL,
       * iter_track = NULL;
    SCAFFOLD_SIZE i,
       tracks_count;
-   VBOOL chunks_locked = VFALSE;
+   bool chunks_locked = false;
 
 #ifdef USE_FILE_CACHE
-   if( VFALSE != h->force_finish ) {
+   if( false != h->force_finish ) {
       /* Force finish, probably due to cache. */
       lg_debug(
          __FILE__, "Chunker: Assuming cached file finished: %s\n",
          bdata( h->filename )
       );
-      finished = VTRUE;
+      finished = true;
       goto cleanup;
    }
 #endif /* USE_FILE_CACHE */
 
    /* Ensure chunks are contiguous and complete. */
    vector_sort_cb( h->tracks, callback_sort_chunker_tracks );
-   //vector_lock( h->tracks, VTRUE );
+   //vector_lock( h->tracks, true );
    tracks_count = vector_count( h->tracks );
-   chunks_locked = VTRUE;
+   chunks_locked = true;
    if( 0  == tracks_count ) {
-      finished = VFALSE;
+      finished = false;
       goto cleanup;
    }
    for( i = 0 ; tracks_count > i ; i++ ) {
@@ -585,13 +585,13 @@ VBOOL chunker_unchunk_finished( struct CHUNKER* h ) {
          (NULL == iter_track && NULL != prev_track &&
             (prev_track->start + prev_track->length) < h->raw_length)
       ) {
-         finished = VFALSE;
+         finished = false;
       }
    }
 
 #ifdef USE_FILE_CACHE
    /* If the file is complete and the cache is enabled, then do that. */
-   if( VFALSE != finished ) {
+   if( false != finished ) {
       lg_debug(
          __FILE__,
          "Chunker: Saving cached copy of finished file: %s\n",
@@ -603,22 +603,22 @@ VBOOL chunker_unchunk_finished( struct CHUNKER* h ) {
    }
 #endif /* USE_FILE_CACHE */
 cleanup:
-   if( VFALSE != chunks_locked ){
-      //vector_lock( h->tracks, VFALSE );
+   if( false != chunks_locked ){
+      //vector_lock( h->tracks, false );
    }
 
    return finished;
 }
 
-VBOOL chunker_unchunk_cached(struct CHUNKER* h) {
+bool chunker_unchunk_cached(struct CHUNKER* h) {
 #ifdef USE_FILE_CACHE
    return h->force_finish;
 #else
-   return VFALSE;
+   return false;
 #endif /* USE_FILE_CACHE */
 }
 
-int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, VBOOL force ) {
+int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, bool force ) {
    SCAFFOLD_SIZE new_percent = 0;
    SCAFFOLD_SIZE current_bytes = 0;
    CHUNKER_TRACK* iter_track;
@@ -633,7 +633,7 @@ int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, VBOOL force ) {
       new_percent = (current_bytes * 100) / h->raw_length;
    }
 
-   if( new_percent > h->last_percent || VTRUE == force ) {
+   if( new_percent > h->last_percent || true == force ) {
       h->last_percent = new_percent;
       return new_percent;
    } else {

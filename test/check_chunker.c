@@ -118,13 +118,13 @@ void check_chunker_chunk_checked(
       chunk_len
    );
 
-   while( VTRUE != chunker_chunk_finished( h ) ) {
+   while( true != chunker_chunk_finished( h ) ) {
       current_pos = (SCAFFOLD_SIZE*)calloc( 1, sizeof( SCAFFOLD_SIZE ) );
       *current_pos = h->raw_position;
       ck_assert( *current_pos <= h->raw_length );
       vector_add( v_starts, current_pos );
       chunker_chunk_pass( h, chunk_buffer );
-      if( VTRUE != chunker_chunk_finished( h ) ) {
+      if( true != chunker_chunk_finished( h ) ) {
          if( previous_pos == h->raw_position ) {
             ck_abort_msg( "Chunker position not incrementing." );
          }
@@ -193,7 +193,7 @@ void check_chunker_unchunk_checked(
       if( *curr_start >= data_source_len ) {
          break;
       }
-      ck_assert_int_eq( VFALSE, chunker_unchunk_finished( h ) );
+      ck_assert_int_eq( false, chunker_unchunk_finished( h ) );
       chunker_unchunk_pass(
          h, unchunk_buffer, *curr_start, data_source_len, chunk_len
       );
@@ -204,7 +204,7 @@ void check_chunker_unchunk_checked(
    chunks_count = h->raw_length / h->tx_chunk_length;
    ck_assert_int_eq( chunk_index, chunks_count + 1 );
    printf( "%d of %d %d-byte chunks complete.\n", chunk_index, chunks_count, h->tx_chunk_length );
-   ck_assert_int_eq( VTRUE, chunker_unchunk_finished( h ) );
+   ck_assert_int_eq( true, chunker_unchunk_finished( h ) );
 
    ck_assert( NULL != h->raw_ptr );
    if( NULL != h->raw_ptr ) {
@@ -284,13 +284,13 @@ START_TEST( test_chunker_unchunk_cache_integrity ) {
 
    cache_file_path = bstrcpy( &chunker_test_cachepath );
    files_join_path( cache_file_path, (const bstring)&chunker_test_map_filename );
-   scaffold_error_silent = VTRUE;
+   scaffold_error_silent = true;
    files_read_contents(
       cache_file_path,
       &cache_file_contents,
       &cache_file_size
    );
-   scaffold_error_silent = VFALSE;
+   scaffold_error_silent = false;
 
    if( LGC_ERROR_NONE != lgc_error ) {
       ck_abort_msg( "Unable to open cached tilemap file." );
@@ -385,7 +385,7 @@ START_TEST( test_chunker_unchunk_output ) {
       if( *curr_start >= chunker_mapsize ) {
          break;
       }
-      ck_assert_int_eq( VFALSE, chunker_unchunk_finished( h ) );
+      ck_assert_int_eq( false, chunker_unchunk_finished( h ) );
       chunker_unchunk_pass( h, unchunk_buffer, *curr_start, chunker_mapsize, current_chunk_len );
       chunk_index++;
    }

@@ -194,7 +194,7 @@ void* callback_load_local_tilesets( bstring idx, void* iter, void* arg ) {
       lgc_zero_msg( bytes_read, "Unable to load tilemap data." );
 
       datafile_parse_ezxml_string(
-         set, setdata_buffer, setdata_size, VFALSE,
+         set, setdata_buffer, setdata_size, false,
          DATAFILE_TYPE_TILESET, idx
       );
 
@@ -240,7 +240,7 @@ void* callback_load_spawner_catalogs(
 #ifdef USE_EZXML
 
       datafile_parse_ezxml_string(
-         catalog, catdata, catdata_length, VFALSE, DATAFILE_TYPE_ITEM_CATALOG,
+         catalog, catdata, catdata_length, false, DATAFILE_TYPE_ITEM_CATALOG,
          catdata_path
       );
 
@@ -625,7 +625,7 @@ void* callback_stop_clients( bstring idx, void* iter, void* arg ) {
    return NULL;
 }
 
-VBOOL callback_v_free_clients( size_t idx, void* iter, void* arg ) {
+bool callback_v_free_clients( size_t idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
 
@@ -639,12 +639,12 @@ VBOOL callback_v_free_clients( size_t idx, void* iter, void* arg ) {
 #endif /* DEBUG_VERBOSE */
       /* This is just a refdec. */
       client_free( c );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_h_free_clients( bstring idx, void* iter, void* arg ) {
+bool callback_h_free_clients( bstring idx, void* iter, void* arg ) {
    struct CLIENT* c = (struct CLIENT*)iter;
    bstring nick = (bstring)arg;
 
@@ -658,12 +658,12 @@ VBOOL callback_h_free_clients( bstring idx, void* iter, void* arg ) {
 #endif /* DEBUG_VERBOSE */
       /* This is just a refdec. */
       client_free( c );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_channels( bstring idx, void* iter, void* arg ) {
+bool callback_free_channels( bstring idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
    bstring name = (bstring)arg;
 
@@ -680,98 +680,98 @@ VBOOL callback_free_channels( bstring idx, void* iter, void* arg ) {
       } */
 
       channel_free( l );
-      return VTRUE;
+      return true;
    }
 
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_empty_channels( bstring idx, void* iter, void* arg ) {
+bool callback_free_empty_channels( bstring idx, void* iter, void* arg ) {
    struct CHANNEL* l = (struct CHANNEL*)iter;
 
    if( 0 >= hashmap_count( l->clients ) ) {
       channel_free( l );
-      return VTRUE;
+      return true;
    }
 
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_mobiles( size_t idx, void* iter, void* arg ) {
+bool callback_free_mobiles( size_t idx, void* iter, void* arg ) {
    struct MOBILE* o = (struct MOBILE*)iter;
    size_t* serial = (size_t*)arg;
    /*if( NULL == 0 ) {
-      return VTRUE;
+      return true;
    }*/
    if( NULL == arg || *serial == mobile_get_serial( o ) ) {
       mobile_free( o );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_tilesets( bstring idx, void* iter, void* arg ) {
+bool callback_free_tilesets( bstring idx, void* iter, void* arg ) {
    struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
    if( NULL == arg ) {
       tilemap_tileset_free( set );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 #ifdef USE_ITEMS
 
-VBOOL callback_free_sprites( size_t idx, void* iter, void* arg ) {
+bool callback_free_sprites( size_t idx, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
       item_sprite_free( sprite );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_catalogs( bstring idx, void* iter, void* arg ) {
+bool callback_free_catalogs( bstring idx, void* iter, void* arg ) {
    struct ITEM_SPRITESHEET* cat = (struct ITEM_SPRITESHEET*)iter;
    if( NULL == arg ) {
       item_spritesheet_free( cat );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_item_cache_items( size_t idx, void* iter, void* arg ) {
+bool callback_free_item_cache_items( size_t idx, void* iter, void* arg ) {
    struct ITEM* e = (struct ITEM*)iter;
    size_t serial = *((size_t*)arg);
    if( NULL == arg || serial == e->serial ) {
       item_free( e );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_item_caches( size_t idx, void* iter, void* arg ) {
+bool callback_free_item_caches( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
    if( NULL == arg ) {
       tilemap_item_cache_free( cache );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 #endif /* USE_ITEMS */
 
 #ifdef USE_CHUNKS
 
-VBOOL callback_free_chunkers( bstring idx, void* iter, void* arg ) {
+bool callback_free_chunkers( bstring idx, void* iter, void* arg ) {
    bstring filename = (bstring)arg;
    if( NULL == filename || 0 == bstrcmp( idx, filename ) ) {
       struct CHUNKER* h = (struct CHUNKER*)iter;
       chunker_free( h );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_finished_chunkers(
+bool callback_free_finished_chunkers(
    bstring idx, void* iter, void* arg
 ) {
    struct CHUNKER* h = (struct CHUNKER*)iter;
@@ -780,54 +780,54 @@ VBOOL callback_free_finished_chunkers(
       lg_debug(
          __FILE__, "(Un)chunker for %b has finished. Removing...\n", idx );
       chunker_free( h );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 #endif /* USE_CHUNKS */
 
-VBOOL callback_free_generic( size_t idx, void* iter, void* arg ) {
+bool callback_free_generic( size_t idx, void* iter, void* arg ) {
    mem_free( iter );
-   return VTRUE;
+   return true;
 }
 
-VBOOL callback_v_free_strings( size_t idx, void* iter, void* arg ) {
+bool callback_v_free_strings( size_t idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       bdestroy( (bstring)iter );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_h_free_strings( bstring idx, void* iter, void* arg ) {
+bool callback_h_free_strings( bstring idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( iter, (bstring)arg ) ) {
       bdestroy( (bstring)iter );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_backlog( size_t idx, void* iter, void* arg ) {
+bool callback_free_backlog( size_t idx, void* iter, void* arg ) {
    struct BACKLOG_LINE* line = (struct BACKLOG_LINE*)iter;
    /* TODO: Implement retroactively deleting lines by ID or something. */
    if( NULL == arg ) {
       bdestroy( line->line );
       bdestroy( line->nick );
       mem_free( line );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
-VBOOL callback_free_graphics( bstring idx, void* iter, void* arg ) {
+bool callback_free_graphics( bstring idx, void* iter, void* arg ) {
    if( NULL == arg || 0 == bstrcmp( (bstring)iter, (bstring)arg ) ) {
       graphics_surface_free( (GRAPHICS*)iter );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 #ifdef DEBUG
@@ -835,28 +835,28 @@ void* callback_assert_windows( size_t idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
    scaffold_assert( NULL != iter );
    scaffold_assert( ui_get_local() == win->ui );
-   return VFALSE;
+   return false;
 }
 #endif /* DEBUG */
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
-VBOOL callback_free_ani_defs( bstring idx, void* iter, void* arg ) {
+bool callback_free_ani_defs( bstring idx, void* iter, void* arg ) {
    struct MOBILE_ANI_DEF* animation = (struct MOBILE_ANI_DEF*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, animation->name ) ) {
       mobile_animation_free( animation );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
-VBOOL callback_free_spawners( size_t idx, void* iter, void* arg ) {
+bool callback_free_spawners( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_SPAWNER* spawner = (struct TILEMAP_SPAWNER*)iter;
    if( NULL == arg || 0 == bstrcmp( (bstring)arg, spawner->id ) ) {
       bdestroy( spawner->id );
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 }
 
 VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {

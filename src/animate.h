@@ -20,10 +20,10 @@ struct ANIMATION_FRAME {
 struct ANIMATION {
    struct ANIMATION_FRAME* first_frame;
    struct ANIMATION_FRAME* current_frame;
-   VBOOL blocking;
-   VBOOL indefinite;
+   bool blocking;
+   bool indefinite;
    GRAPHICS* target;
-   VBOOL global; /* If VTRUE, update frame current centrally. */
+   bool global; /* If true, update frame current centrally. */
 };
 
 void animate_init();
@@ -31,16 +31,16 @@ void animate_shutdown();
 void animate_create_movement(
    struct ANIMATION* a, GRAPHICS* target,
    GFX_COORD_PIXEL end_x, GFX_COORD_PIXEL end_y,
-   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, VBOOL block
+   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, bool block
 );
 void animate_create_resize(
    struct ANIMATION* a, GRAPHICS* target,
    GFX_COORD_PIXEL end_w, GFX_COORD_PIXEL end_h,
-   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, VBOOL block
+   INTERVAL ms_per_frame, GFX_COORD_PIXEL inc, bool block
 );
 void animate_create_blink_color(
    struct ANIMATION* a, GRAPHICS* target, GRAPHICS_COLOR end_color,
-   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, VBOOL block
+   INTERVAL ms_per_frame, SCAFFOLD_SIZE reps, GFX_COORD_PIXEL inc, bool block
 );
 short animate_add_animation( struct ANIMATION* a, bstring key )
 #ifdef USE_GNUC_EXTENSIONS
@@ -53,7 +53,7 @@ void animate_cleanup_animation( struct ANIMATION* a );
 void animate_free_animation( struct ANIMATION** a );
 void animate_cycle_animations( GRAPHICS* g );
 void animate_draw_animations( GRAPHICS* g );
-VBOOL animate_is_blocking();
+bool animate_is_blocking();
 
 #ifdef ANIMATE_C
 static struct HASHMAP* animations;

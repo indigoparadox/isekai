@@ -5,7 +5,7 @@ struct CLIENT {
    struct CONNECTION* link;
 
    /* Items shared between server and client. */
-   VBOOL running;
+   bool running;
    bstring nick;
    bstring username;
    bstring realname;
@@ -43,7 +43,7 @@ struct CLIENT {
    struct HASHMAP* chunkers;
 #endif /* USE_CHUNKS */
 
-   VBOOL local_client;
+   bool local_client;
 
    int sentinal;     /*!< Used in release version to distinguish from server. */
 };

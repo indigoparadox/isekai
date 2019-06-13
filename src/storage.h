@@ -17,7 +17,7 @@ enum STORAGE_HALF {
 
 #define STORAGE_VERSION_CURRENT 1
 
-VBOOL storage_init();
+bool storage_init();
 void storage_free();
 bstring storage_client_get_string( bstring store, bstring key );
 void storage_client_set_string( bstring store, bstring key, bstring str );

@@ -19,7 +19,7 @@
 
 static SCAFFOLD_SIZE vm_tick_count = 0;
 
-VBOOL vm_caddy_started( struct VM_CADDY* vmc ) {
+bool vm_caddy_started( struct VM_CADDY* vmc ) {
    return vmc->vm_started;
 }
 
@@ -29,7 +29,7 @@ void vm_caddy_init( struct VM_CADDY* vmc ) {
    scaffold_assert( NULL != vmc );
 
    vmc->vm = NULL;
-   vmc->vm_started = VFALSE;
+   vmc->vm_started = false;
    hashmap_init( &(vmc->vm_scripts) );
    hashmap_init( &(vmc->vm_globals) );
 }
@@ -65,7 +65,7 @@ void vm_caddy_start( struct VM_CADDY* vmc ) {
 #endif /* USE_DUKTAPE */
    }
 
-   vmc->vm_started = VTRUE;
+   vmc->vm_started = true;
 
 cleanup:
    return;
@@ -87,7 +87,7 @@ void vm_caddy_end( struct VM_CADDY* vmc ) {
 #endif /* USE_DUKTAPE */
    }
 
-   vmc->vm_started = VFALSE;
+   vmc->vm_started = false;
 
 cleanup:
    return;
@@ -97,17 +97,17 @@ void vm_tick() {
    vm_tick_count++;
 }
 
-/** \brief Returns VTRUE if mobiles should be acting.
+/** \brief Returns true if mobiles should be acting.
  */
-VBOOL vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
+bool vm_get_tick( SCAFFOLD_SIZE vm_tick_prev ) {
 #ifdef USE_TURNS
    return vm_tick_count != vm_tick_prev;
 #else
    if( 0 == vm_tick_count % VM_TICK_FREQUENCY ) {
       /* lg_debug( __FILE__, "%d\n", vm_tick_count % VM_TICK_FREQUENCY ); */
-      return VTRUE;
+      return true;
    }
-   return VFALSE;
+   return false;
 #endif /* USE_TURNS */
 }
 
@@ -125,15 +125,15 @@ cleanup:
    return;
 }
 
-VBOOL vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event ) {
-   VBOOL retval = VFALSE;
+bool vm_caddy_has_event( struct VM_CADDY* vmc, const bstring event ) {
+   bool retval = false;
 
    if(
       NULL != vmc &&
       0 != vm_caddy_scripts_count( vmc ) &&
       NULL != hashmap_get( &(vmc->vm_scripts), event )
    ) {
-      retval = VTRUE;
+      retval = true;
    }
 
 /* cleanup: */
@@ -172,11 +172,11 @@ cleanup:
    return;
 }
 
-VBOOL vm_caddy_put(
+bool vm_caddy_put(
    struct VM_CADDY* vmc, VM_MEMBER type, const bstring key, const bstring val
 ) {
    struct HASHMAP* dest = NULL;
-   VBOOL retval = VFALSE;
+   bool retval = false;
 
    scaffold_assert( NULL != vmc );
 
@@ -194,11 +194,11 @@ VBOOL vm_caddy_put(
    scaffold_assert( NULL != dest );
 
    if( hashmap_put(
-      dest, key, bstrcpy( val ), VFALSE
+      dest, key, bstrcpy( val ), false
    ) ) {
       lg_error( __FILE__,
          "Attempted to double-put script element \"%b\"\n", key );
-      retval = VFALSE;
+      retval = false;
    }
 
    lg_debug(

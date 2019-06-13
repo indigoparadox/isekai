@@ -21,8 +21,8 @@ void rng_init() {
 /** \brief Provides length number of pseudo-random bytes from a good entropy
  *         source.
  */
-VBOOL rng_bytes( BYTE* ptr, SCAFFOLD_SIZE length ) {
-   VBOOL ok = VTRUE;
+bool rng_bytes( BYTE* ptr, SCAFFOLD_SIZE length ) {
+   bool ok = true;
    #ifdef WIN32
    static HCRYPTPROV prov = 0;
 
@@ -30,14 +30,14 @@ VBOOL rng_bytes( BYTE* ptr, SCAFFOLD_SIZE length ) {
       if( !CryptAcquireContext( &prov, NULL, NULL, PROV_RSA_FULL, 0 ) ) {
          lg_error( __FILE__, "Unable to open crypto context.\n" );
          //scaffold_error = SCAFFOLD_ERROR_RANDOM;
-         ok = VFALSE;
+         ok = false;
          goto cleanup;
       }
    }
    if( !CryptGenRandom( prov, length, ptr ) ) {
       lg_error( __FILE__, "Unable to generate random bytes.\n" );
       //scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = VFALSE;
+      ok = false;
       goto cleanup;
    }
 
@@ -48,14 +48,14 @@ cleanup:
    if( randhand == NULL ) {
       lg_error( __FILE__, "Unable to open entropy source.\n" );
       //scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = VFALSE;
+      ok = false;
       goto cleanup;
    }
 
    if( 0 == fread( ptr, length, 1, randhand ) ) {
       lg_error( __FILE__, "Unable to read random bytes.\n" );
       //scaffold_error = SCAFFOLD_ERROR_RANDOM;
-      ok = VFALSE;
+      ok = false;
       goto cleanup;
    }
 
@@ -64,7 +64,7 @@ cleanup:
       fclose( randhand );
    }
    #endif
-   if( VFALSE != ok ) {
+   if( false != ok ) {
       //scaffold_error = SCAFFOLD_ERROR_NONE;
       lgc_error = LGC_ERROR_NONE;
    }

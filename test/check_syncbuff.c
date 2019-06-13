@@ -36,12 +36,12 @@ START_TEST( test_syncbuff_write_to_server ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = ipc_write( ipc_test, &str_key_also1, VFALSE );
+   res = ipc_write( ipc_test, &str_key_also1, false );
    ck_assert_int_eq( res, str_key_also1.slen );
-   ck_assert_int_eq( 1, syncbuff_get_count( VFALSE ) );
-   res = ipc_write( ipc_test, &str_key_also2, VFALSE );
+   ck_assert_int_eq( 1, syncbuff_get_count( false ) );
+   res = ipc_write( ipc_test, &str_key_also2, false );
    ck_assert_int_eq( res, str_key_also2.slen );
-   ck_assert_int_eq( 2, syncbuff_get_count( VFALSE ) );
+   ck_assert_int_eq( 2, syncbuff_get_count( false ) );
 
    mem_free( ipc_test );
    bdestroy( buffer );
@@ -57,9 +57,9 @@ START_TEST( test_syncbuff_write_to_client ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = ipc_write( ipc_test, &str_key_also1, VTRUE );
+   res = ipc_write( ipc_test, &str_key_also1, true );
    ck_assert_int_eq( res, str_key_also1.slen );
-   res = ipc_write( ipc_test, &str_key_also2, VTRUE );
+   res = ipc_write( ipc_test, &str_key_also2, true );
    ck_assert_int_eq( res, str_key_also2.slen );
 
    mem_free( ipc_test );
@@ -77,19 +77,19 @@ START_TEST( test_syncbuff_read_from_server ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = ipc_read( ipc_test, buffer, VTRUE );
+   res = ipc_read( ipc_test, buffer, true );
    bdata_c = bdata( buffer );
    ck_assert_str_eq( bdata_c, (const char*)str_key_also1.data );
    ck_assert_int_eq( res, str_key_also1.slen );
-   ck_assert_int_eq( 1, syncbuff_get_count( VTRUE ) );
+   ck_assert_int_eq( 1, syncbuff_get_count( true ) );
 
-   res = ipc_read( ipc_test, buffer, VTRUE );
+   res = ipc_read( ipc_test, buffer, true );
    bdata_c = bdata( buffer );
    ck_assert_str_eq( bdata_c, (const char*)str_key_also2.data );
    ck_assert_int_eq( res, str_key_also2.slen );
-   ck_assert_int_eq( 0, syncbuff_get_count( VTRUE ) );
+   ck_assert_int_eq( 0, syncbuff_get_count( true ) );
 
-   res = ipc_read( ipc_test, buffer, VTRUE );
+   res = ipc_read( ipc_test, buffer, true );
    ck_assert_int_eq( res, 0 );
 
    mem_free( ipc_test );
@@ -106,11 +106,11 @@ START_TEST( test_syncbuff_read_from_client ) {
 
    buffer = bfromcstralloc( 80, "" );
 
-   res = ipc_read( ipc_test, buffer, VFALSE );
+   res = ipc_read( ipc_test, buffer, false );
    ck_assert_int_eq( res, str_key_also1.slen );
-   res = ipc_read( ipc_test, buffer, VFALSE );
+   res = ipc_read( ipc_test, buffer, false );
    ck_assert_int_eq( res, str_key_also2.slen );
-   res = ipc_read( ipc_test, buffer, VFALSE );
+   res = ipc_read( ipc_test, buffer, false );
    ck_assert_int_eq( res, 0 );
 
    mem_free( ipc_test );

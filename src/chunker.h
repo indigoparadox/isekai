@@ -63,7 +63,7 @@ struct heatshrink_encoder;
 
 struct CHUNKER_PARMS {
    int version;
-   VBOOL compression;
+   bool compression;
 };
 
 struct CHUNKER {
@@ -79,7 +79,7 @@ struct CHUNKER {
    size_t raw_length;
    BYTE* raw_ptr;
    size_t tx_chunk_length;
-   VBOOL force_finish;
+   bool force_finish;
    DATAFILE_TYPE type;
    struct VECTOR* tracks;
    bstring filecache_path;
@@ -103,7 +103,7 @@ void chunker_chunk_start(
    struct CHUNKER* h, DATAFILE_TYPE type,  void* src_buffer,
    SCAFFOLD_SIZE src_length, SCAFFOLD_SIZE tx_chunk_length
 );
-VBOOL chunker_chunk_start_file(
+bool chunker_chunk_start_file(
    struct CHUNKER* h, DATAFILE_TYPE type, bstring serverpath,
    bstring filepath, SCAFFOLD_SIZE tx_chunk_length
 );
@@ -112,7 +112,7 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer )
 __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */
 ;
-VBOOL chunker_chunk_finished( struct CHUNKER* h );
+bool chunker_chunk_finished( struct CHUNKER* h );
 void chunker_unchunk_start(
    struct CHUNKER* h, DATAFILE_TYPE type,
    const bstring filename, const bstring filecache_path
@@ -121,11 +121,11 @@ void chunker_unchunk_pass(
    struct CHUNKER* h, bstring rx_buffer, SCAFFOLD_SIZE src_chunk_start,
    SCAFFOLD_SIZE src_len, SCAFFOLD_SIZE src_chunk_len
 );
-VBOOL chunker_unchunk_save_cache( struct CHUNKER* h );
+bool chunker_unchunk_save_cache( struct CHUNKER* h );
 void chunker_unchunk_check_cache( struct CHUNKER* h );
-VBOOL chunker_unchunk_finished( struct CHUNKER* h );
-int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, VBOOL force );
-VBOOL chunker_unchunk_cached( struct CHUNKER* h );
+bool chunker_unchunk_finished( struct CHUNKER* h );
+int8_t chunker_unchunk_percent_progress( struct CHUNKER* h, bool force );
+bool chunker_unchunk_cached( struct CHUNKER* h );
 struct CHUNKER_PARMS* chunker_decode_block( bstring block );
 bstring chunker_encode_block( struct CHUNKER_PARMS* parms );
 
