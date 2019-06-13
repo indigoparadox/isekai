@@ -273,7 +273,7 @@ SCAFFOLD_SIZE_SIGNED ipc_write( struct CONNECTION* n, const bstring buffer ) {
       total_sent = 0;
 
    buffer_chars = bdata( buffer );
-   scaffold_assert( NULL != buffer_chars );
+   assert( NULL != buffer_chars );
 
    dest_socket = n->socket;
    buffer_len = blength( buffer );

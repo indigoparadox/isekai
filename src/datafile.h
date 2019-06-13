@@ -59,8 +59,8 @@ void datafile_parse_ezxml_string(
    void* object, BYTE* tmdata, SCAFFOLD_SIZE datasize, bool local_images,
    DATAFILE_TYPE type, bstring def_path
 );
+void datafile_mobile_parse_script( struct MOBILE* o, ezxml_t xml_data );
 #endif /* USE_EZXML */
-
 
 void datafile_handle_stream(
    DATAFILE_TYPE type, bstring filename, BYTE* data, size_t length,

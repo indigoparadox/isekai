@@ -99,7 +99,7 @@ void datafile_handle_stream(
    case DATAFILE_TYPE_TILESET_TILES:
 
       l = client_iterate_channels( c, callback_search_channels_tilemap_img_name, filename );
-      scaffold_assert( NULL != l );
+      assert( NULL != l );
 
       graphics_surface_new( g, 0, 0, 0, 0 );
       lgc_null( g );

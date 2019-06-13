@@ -256,7 +256,7 @@ void animate_cancel_animation( struct ANIMATION** a_out, bstring key ) {
    if( NULL != a ) {
       lg_debug( __FILE__, "Removing \"%b\" animation...\n", key );
       removed = hashmap_remove( animations, key );
-      scaffold_assert( 1 == removed );
+      assert( 1 == removed );
       if( NULL != a_out ) {
          *a_out = a;
       } else {

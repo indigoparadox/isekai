@@ -68,7 +68,7 @@ static void chunker_chunk_setup_internal(
    struct CHUNKER* h, DATAFILE_TYPE type, SCAFFOLD_SIZE tx_chunk_length
 ) {
 
-   scaffold_assert( NULL != h );
+   assert( NULL != h );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_destroy );
@@ -116,7 +116,7 @@ static void chunker_chunk_setup_internal(
 
    h->last_percent = 0;
 
-cleanup:
+/* cleanup: */
    return;
 }
 
@@ -228,9 +228,9 @@ SCAFFOLD_SIZE chunker_chunk_pass( struct CHUNKER* h, bstring tx_buffer ) {
             &exhumed
          );
          hs_buffer_pos += exhumed;
-         scaffold_assert( h->raw_position + raw_buffer_len <= h->raw_length );
+         assert( h->raw_position + raw_buffer_len <= h->raw_length );
       } while( HSER_POLL_MORE == poll_res );
-      scaffold_assert( HSER_POLL_EMPTY == poll_res );
+      assert( HSER_POLL_EMPTY == poll_res );
    } while( 0 < raw_buffer_len );
 
    b64_encode( hs_buffer, hs_buffer_pos, tx_buffer, -1 );
@@ -255,9 +255,9 @@ void chunker_unchunk_start(
    char* filename_c = NULL;
    bool filecache_status = true;
 
-   scaffold_assert( NULL != h );
-   scaffold_assert( NULL != filename );
-   scaffold_assert( NULL == h->raw_ptr );
+   assert( NULL != h );
+   assert( NULL != filename );
+   assert( NULL == h->raw_ptr );
 
    if( REF_SENTINAL != h->refcount.sentinal ) {
       ref_init( &(h->refcount), chunker_destroy );
@@ -330,13 +330,13 @@ void chunker_unchunk_pass(
 #endif /* DEBUG */
 
 #if HEATSHRINK_DYNAMIC_ALLOC
-   scaffold_assert( NULL == h->encoder );
+   assert( NULL == h->encoder );
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
    if( 0 >= h->tx_chunk_length ) {
       h->tx_chunk_length = src_chunk_len;
    } else {
-      scaffold_assert( h->tx_chunk_length == src_chunk_len );
+      assert( h->tx_chunk_length == src_chunk_len );
    }
 
 #ifdef USE_FILE_CACHE
@@ -346,7 +346,7 @@ void chunker_unchunk_pass(
 #endif
    if( NULL == h->raw_ptr && 0 == h->raw_length ) {
 #if HEATSHRINK_DYNAMIC_ALLOC
-      scaffold_assert( NULL == h->decoder );
+      assert( NULL == h->decoder );
       h->decoder = heatshrink_decoder_alloc(
          mid_buffer_length, /* TODO */
          CHUNKER_WINDOW_SIZE,
@@ -357,11 +357,11 @@ void chunker_unchunk_pass(
       h->raw_ptr = (BYTE*)mem_alloc( src_len, BYTE );
    } else {
 #if HEATSHRINK_DYNAMIC_ALLOC
-      scaffold_assert( NULL != h->decoder );
+      assert( NULL != h->decoder );
 #endif /* HEATSHRINK_DYNAMIC_ALLOC */
 
       /* TODO: Delete corrupt files that don't match. */
-      scaffold_assert( src_len == h->raw_length );
+      assert( src_len == h->raw_length );
    }
 
    mid_buffer = (uint8_t*)mem_alloc( mid_buffer_length, uint8_t );
@@ -373,7 +373,7 @@ void chunker_unchunk_pass(
    b64_res =
 #endif /* DEBUG */
       b64_decode( rx_buffer, mid_buffer, &mid_buffer_length );
-   scaffold_assert( 0 == b64_res );
+   assert( 0 == b64_res );
 
    heatshrink_decoder_reset( chunker_get_decoder( h ) );
 
@@ -418,12 +418,12 @@ void chunker_unchunk_pass(
             &exhumed
          );
          h->raw_position += exhumed;
-         scaffold_assert( h->raw_position <= h->raw_length );
+         assert( h->raw_position <= h->raw_length );
 
       } while( HSDR_POLL_MORE == poll_res && 0 != exhumed );
    } while( 0 < mid_buffer_length );
 
-   scaffold_assert( h->raw_position <= h->raw_length );
+   assert( h->raw_position <= h->raw_length );
 
    if( HSDR_POLL_MORE == poll_res ) {
       tail_output_alloc = 1;
@@ -438,15 +438,15 @@ void chunker_unchunk_pass(
          &exhumed
       );
       tail_output_pos += exhumed;
-      scaffold_assert( tail_output_pos <= tail_output_alloc );
+      assert( tail_output_pos <= tail_output_alloc );
       if( tail_output_pos == tail_output_alloc ) {
          tail_output_alloc *= 2;
          tail_output_buffer = mem_realloc( tail_output_buffer, tail_output_alloc, BYTE );
       }
    }
 
-   scaffold_assert( h->raw_position <= h->raw_length );
-   scaffold_assert( HSDR_POLL_EMPTY == poll_res );
+   assert( h->raw_position <= h->raw_length );
+   assert( HSDR_POLL_EMPTY == poll_res );
 
    if( 0 < tail_output_pos ) {
       h->raw_position -= tail_output_pos;

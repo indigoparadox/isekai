@@ -29,7 +29,7 @@ void backlog_ensure_window( struct UI* ui, GFX_COORD_PIXEL height ) {
    struct UI_WINDOW* win = NULL;
    struct UI_CONTROL* control = NULL;
 
-   scaffold_assert( 0 < height );
+   assert( 0 < height );
 
    win = ui_window_by_id( ui, &str_backlog_id );
    if( NULL == win ) {

@@ -187,8 +187,8 @@ void duk_vm_mobile_run( struct VM_CADDY* vmc, const bstring code ) {
    int duk_result = 0;
    struct MOBILE* o = vmc->caller;
 
-   scaffold_assert( NULL != code_c );
-   scaffold_assert( NULL != o );
+   assert( NULL != code_c );
+   assert( NULL != o );
 
    duk_push_global_object( (duk_context*)vmc->vm );
    duk_push_object( (duk_context*)vmc->vm );

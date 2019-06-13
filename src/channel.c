@@ -36,13 +36,13 @@ static void channel_free_final( const struct REF *ref ) {
 
    /* These need to be freed first! */
    if( hashmap_is_valid( l->clients ) ) {
-      scaffold_assert( 0 == hashmap_count( l->clients ) );
+      assert( 0 == hashmap_count( l->clients ) );
       hashmap_free( &(l->clients) );
    }
 
    if( vector_is_valid( l->mobiles ) ) {
       vector_remove_cb( l->mobiles, callback_free_mobiles, NULL );
-      scaffold_assert( 0 == vector_count( l->mobiles ) );
+      assert( 0 == vector_count( l->mobiles ) );
       vector_free( &(l->mobiles) );
    }
 
@@ -216,14 +216,14 @@ void channel_set_mobile(
 
    nick_c = bdata( mob_nick );
    lname_c = bdata( l->name );
-   scaffold_assert( NULL != nick_c );
-   scaffold_assert( NULL != lname_c );
+   assert( NULL != nick_c );
+   assert( NULL != lname_c );
 
    lg_debug(
       __FILE__, "Adding player mobile to channel: %b (%d)\n", mob_nick, serial
    );
 
-   scaffold_assert( 0 != serial );
+   assert( 0 != serial );
 
    o = vector_get( l->mobiles, serial );
    if( NULL == o ) {
@@ -233,7 +233,7 @@ void channel_set_mobile(
          __FILE__, "Player mobile does not exist. Creating with serial: %d\n",
          mobile_get_serial( o )
       );
-      scaffold_assert( NULL != mobile_get_def_filename( o ) );
+      assert( NULL != mobile_get_def_filename( o ) );
       mobile_set_channel( o, l );
       vector_set( l->mobiles, mobile_get_serial( o ), o, true );
 #ifdef ENABLE_LOCAL_CLIENT
@@ -251,7 +251,7 @@ void channel_set_mobile(
       mobile_update_coords( o, x, y );
    }
 
-   scaffold_assert( 0 < hashmap_count( l->clients ) );
+   assert( 0 < hashmap_count( l->clients ) );
    mobile_c = channel_get_client_by_name( l, mob_nick );
    if( NULL != mobile_c && 0 == bstrcmp( client_get_nick( mobile_c ), mob_nick ) ) {
       client_set_puppet( mobile_c, o );

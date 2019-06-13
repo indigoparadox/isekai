@@ -343,7 +343,7 @@ static HSE_state st_step_search(heatshrink_encoder* hse) {
 #endif /* DEBUG_HEATSHRINK */
       hse->match_pos = match_pos;
       hse->match_length = match_length;
-      scaffold_assert(match_pos <= 1 << HEATSHRINK_ENCODER_WINDOW_BITS(hse) /*window_length*/);
+      assert(match_pos <= 1 << HEATSHRINK_ENCODER_WINDOW_BITS(hse) /*window_length*/);
 
       return HSES_YIELD_TAG_BIT;
    }
@@ -637,7 +637,7 @@ static void push_bits(heatshrink_encoder* hse, uint8_t count, uint8_t bits,
    int i;
    bool bit;
 
-   scaffold_assert(count <= 8);
+   assert(count <= 8);
 #ifdef DEBUG_HEATSHRINK
    lg_debug( __FILE__, "++ push_bits: %d bits, input of 0x%02x\n", count, bits);
 #endif /* DEBUG_HEATSHRINK */

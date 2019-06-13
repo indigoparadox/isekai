@@ -280,7 +280,7 @@ static bool loop_game( int gfx_mode, struct TWINDOW* local_window ) {
    animate_cycle_animations( g_screen );
 
    /* If there's no puppet then there should be a load screen. */
-   scaffold_assert( NULL != o );
+   assert( NULL != o );
 
    plugin_call(
       PLUGIN_MODE, l->mode,
@@ -357,7 +357,7 @@ static bool loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
          NULL, -1, -1, -1, -1
       );
       ui_control_add( win, &str_readme_id, control );
-      scaffold_assert( NULL == control->self.attachment );
+      assert( NULL == control->self.attachment );
 
       ui_window_push( ui, win );
    } else if(
@@ -402,7 +402,7 @@ static bool loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       );
       ui_control_add( win, &str_cid_connect_channel, control );
 
-      scaffold_assert( NULL == buffer_nick );
+      assert( NULL == buffer_nick );
       buffer_nick = bstrcpy( client_get_nick( main_client ) );
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_TEXT, true, true, buffer_nick,

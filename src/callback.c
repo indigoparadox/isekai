@@ -129,7 +129,7 @@ void* callback_get_tile_stack_l( size_t idx, void* iter, void* arg ) {
    uint32_t gid = 0;
    struct TILEMAP_TILE_DATA* tdata = NULL;
 
-   scaffold_assert( TILEMAP_SENTINAL == t->sentinal );
+   assert( TILEMAP_SENTINAL == t->sentinal );
 
    gid = tilemap_layer_get_tile_gid( layer, pos->x, pos->y );
    set = tilemap_get_tileset( t, gid, NULL );
@@ -420,7 +420,7 @@ void* callback_proc_channel_spawners(
 #endif /* USE_ITEMS */
 
    l = tilemap_get_channel( t );
-   scaffold_assert( CHANNEL_SENTINAL == l->sentinal );
+   assert( CHANNEL_SENTINAL == l->sentinal );
 
    if( -1 >= ts->countdown_remaining ) {
       /* Spawner has been disabled. */
@@ -467,10 +467,10 @@ void* callback_proc_channel_spawners(
             client_get_spritesheet( s ), server_get_unique_items( s )
          );
       }
-      scaffold_assert( 0 != e->sprite_id );
-      scaffold_assert( 0 < blength( e->catalog_name ) );
+      assert( 0 != e->sprite_id );
+      assert( 0 < blength( e->catalog_name ) );
       cache = tilemap_drop_item( l->tilemap, e, ts->pos.x, ts->pos.y );
-      scaffold_assert( NULL != cache );
+      assert( NULL != cache );
       /* TODO: Only send item updates to those nearby. */
       if( NULL != cache ) {
          proto_send_tile_cache_channel( l, cache );
@@ -833,8 +833,8 @@ bool callback_free_graphics( bstring idx, void* iter, void* arg ) {
 #ifdef DEBUG
 void* callback_assert_windows( size_t idx, void* iter, void* arg ) {
    struct UI_WINDOW* win = (struct UI_WINDOW*)iter;
-   scaffold_assert( NULL != iter );
-   scaffold_assert( ui_get_local() == win->ui );
+   assert( NULL != iter );
+   assert( ui_get_local() == win->ui );
    return false;
 }
 #endif /* DEBUG */

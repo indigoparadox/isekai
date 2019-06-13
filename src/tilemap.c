@@ -84,8 +84,8 @@ void tilemap_free( struct TILEMAP* t ) {
 void tilemap_spawner_init(
    struct TILEMAP_SPAWNER* ts, struct TILEMAP* t, TILEMAP_SPAWNER_TYPE type
 ) {
-   scaffold_assert( NULL != t );
-   scaffold_assert( NULL != ts );
+   assert( NULL != t );
+   assert( NULL != ts );
    ts->tilemap = t;
    ts->last_spawned = 0;
    ts->countdown_remaining = 0;
@@ -150,44 +150,44 @@ cleanup:
 struct TILEMAP_TILE_DATA* tilemap_tileset_get_tile(
    const struct TILEMAP_TILESET* set, int gid
 ) {
-   scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( set->tiles ) );
+   assert( NULL != set );
+   assert( vector_is_valid( set->tiles ) );
    return vector_get( set->tiles, gid );
 }
 
 size_t tilemap_tileset_set_tile(
    struct TILEMAP_TILESET* set, int gid, struct TILEMAP_TILE_DATA* tile_info
 ) {
-   scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( set->tiles ) );
+   assert( NULL != set );
+   assert( vector_is_valid( set->tiles ) );
    return vector_set( set->tiles, gid, tile_info, true );
 }
 
 GFX_COORD_PIXEL tilemap_tileset_get_tile_width(
    const struct TILEMAP_TILESET* set
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    return set->tilewidth;
 }
 
 GFX_COORD_PIXEL tilemap_tileset_get_tile_height(
    const struct TILEMAP_TILESET* set
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    return set->tileheight;
 }
 
 void tilemap_tileset_set_tile_width(
    struct TILEMAP_TILESET* set, GFX_COORD_PIXEL width
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    set->tilewidth = width;
 }
 
 void tilemap_tileset_set_tile_height(
    struct TILEMAP_TILESET* set, GFX_COORD_PIXEL height
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    set->tileheight = height;
 }
 
@@ -206,8 +206,8 @@ bool tilemap_tileset_has_image(
 bool tilemap_tileset_set_image(
    struct TILEMAP_TILESET* set, bstring filename, struct GRAPHICS* g
 ) {
-   scaffold_assert( NULL != set );
-   scaffold_assert( hashmap_is_valid( set->images ) );
+   assert( NULL != set );
+   assert( hashmap_is_valid( set->images ) );
    if( hashmap_put( set->images, filename, g, false ) ) {
       return true;
    }
@@ -233,7 +233,7 @@ static void* cb_tilemap_tileset_img_get_or_dl( bstring idx, void* iter, void* ar
 struct GRAPHICS* tilemap_tileset_get_image_default(
    const struct TILEMAP_TILESET* set, struct CLIENT* c
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    //return (GRAPHICS*)hashmap_get_first( &(set->images) );
    return hashmap_iterate(
       set->images, cb_tilemap_tileset_img_get_or_dl, c );
@@ -242,8 +242,8 @@ struct GRAPHICS* tilemap_tileset_get_image_default(
 bool tilemap_tileset_add_terrain(
    struct TILEMAP_TILESET* set, struct TILEMAP_TERRAIN_DATA* terrain_info
 ) {
-   scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( set->terrain ) );
+   assert( NULL != set );
+   assert( vector_is_valid( set->terrain ) );
    if( 0 > vector_add( set->terrain, terrain_info ) ) {
       return false;
    }
@@ -253,15 +253,15 @@ bool tilemap_tileset_add_terrain(
 struct TILEMAP_TERRAIN_DATA* tilemap_tileset_get_terrain(
    struct TILEMAP_TILESET* set, size_t gid
 ) {
-   scaffold_assert( NULL != set );
-   scaffold_assert( vector_is_valid( set->terrain ) );
+   assert( NULL != set );
+   assert( vector_is_valid( set->terrain ) );
    return vector_get( set->terrain, gid );
 }
 
 bstring tilemap_tileset_get_definition_path(
    const struct TILEMAP_TILESET* set
 ) {
-   scaffold_assert( NULL != set );
+   assert( NULL != set );
    return set->def_path;
 }
 
@@ -359,8 +359,8 @@ SCAFFOLD_INLINE void tilemap_get_tile_tileset_pos(
    tile_screen_rect->y = (gid / tiles_wide) * set->tileheight;
    tile_screen_rect->x = (gid % tiles_wide) * set->tilewidth;
 
-   /* scaffold_assert( *y < (set->tileheight * tiles_high) );
-   scaffold_assert( *x < (set->tilewidth * tiles_wide) ); */
+   /* assert( *y < (set->tileheight * tiles_high) );
+   assert( *x < (set->tilewidth * tiles_wide) ); */
 cleanup:
    return;
 }
@@ -396,14 +396,14 @@ TILEMAP_TILE tilemap_layer_get_tile_gid(
       return 0;
    }
    gid_out = layer->tile_gids[index];
-   scaffold_assert( gid_out >= 0 );
+   assert( gid_out >= 0 );
    return layer->tile_gids[index] - 1;
 }
 
 void tilemap_layer_set_tile_gid(
    struct TILEMAP_LAYER* layer, size_t index, TILEMAP_TILE gid
 ) {
-   scaffold_assert( layer->tile_gids_len > index );
+   assert( layer->tile_gids_len > index );
    layer->tile_gids[index] = gid;
 }
 
@@ -452,7 +452,7 @@ void tilemap_set_redraw_state( struct TILEMAP* t, TILEMAP_REDRAW_STATE st ) {
 
    /* Always reset dirty tiles. */
    vector_remove_cb( t->dirty_tiles, callback_free_generic, NULL );
-   scaffold_assert( 0 == vector_count( t->dirty_tiles ) );
+   assert( 0 == vector_count( t->dirty_tiles ) );
 #endif /* ENABLE_LOCAL_CLIENT */
 }
 
