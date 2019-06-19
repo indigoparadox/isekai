@@ -45,7 +45,7 @@ struct ITEM {
 /* Item representation on a map. Merge into containers? */
 struct ITEM_CACHE {
    struct TILEMAP_POSITION position;
-   struct VECTOR items;
+   struct VECTOR* items;
    struct TILEMAP* tilemap;
 };
 
