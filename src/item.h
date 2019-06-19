@@ -5,6 +5,8 @@
 #include "scaffold.h"
 #include "graphics.h"
 
+#include <stdbool.h>
+
 typedef enum ITEM_TYPE {
    ITEM_TYPE_GENERIC = 0,
    ITEM_TYPE_ARMOR_MIN,
@@ -53,41 +55,6 @@ typedef enum ITEM_TYPE {
    ITEM_TYPE_MAX
 } ITEM_TYPE;
 
-union ITEM_CONTENT {
-   bstring book_text;
-   struct VECTOR* container;
-};
-
-struct ITEM_SPRITE {
-   bstring display_name;
-   ITEM_TYPE type;
-};
-
-struct ITEM_SPRITESHEET {
-   struct REF refcount;
-   /* bstring name; */
-   GRAPHICS* sprites_image;
-   bstring sprites_filename;
-   BOOL sprites_requested;
-   GFX_COORD_PIXEL spritewidth;
-   GFX_COORD_PIXEL spriteheight;
-   struct CLIENT* client_or_server;
-   struct VECTOR sprites;
-};
-
-struct ITEM {
-   struct REF refcount;
-   BIG_SERIAL serial;
-   /* struct ITEM_SPRITE* sprite;
-   struct ITEM_SPRITESHEET* catalog; */
-   bstring catalog_name;
-   SCAFFOLD_SIZE sprite_id;
-   bstring display_name;
-   union ITEM_CONTENT content;
-   SCAFFOLD_SIZE count;
-   struct CLIENT* client_or_server;
-};
-
 #define item_new( e, display_name, count, catalog, sprite, c ) \
     e = mem_alloc( 1, struct ITEM ); \
     lgc_null( e ); \
@@ -105,7 +72,7 @@ struct ITEM {
 
 void item_init(
    struct ITEM* e, const bstring display_name,
-   SCAFFOLD_SIZE count, bstring catalog_name,
+   SCAFFOLD_SIZE count, const bstring catalog_name,
    SCAFFOLD_SIZE sprite_id, struct CLIENT* c
 );
 void item_random_init(
@@ -132,7 +99,7 @@ void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 );
 void item_set_contents( struct ITEM* e, union ITEM_CONTENT content );
-BOOL item_is_container( struct ITEM* e );
+bool item_is_container( struct ITEM* e );
 
 #ifdef ITEM_C
 

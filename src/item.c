@@ -7,6 +7,48 @@
 #include "client.h"
 #include "rng.h"
 
+union ITEM_CONTENT {
+   bstring book_text;
+   struct VECTOR* container;
+};
+
+struct ITEM_SPRITE {
+   bstring display_name;
+   ITEM_TYPE type;
+};
+
+struct ITEM_SPRITESHEET {
+   struct REF refcount;
+   /* bstring name; */
+   GRAPHICS* sprites_image;
+   bstring sprites_filename;
+   bool sprites_requested;
+   GFX_COORD_PIXEL spritewidth;
+   GFX_COORD_PIXEL spriteheight;
+   struct CLIENT* client_or_server;
+   struct VECTOR* sprites;
+};
+
+struct ITEM {
+   struct REF refcount;
+   BIG_SERIAL serial;
+   /* struct ITEM_SPRITE* sprite;
+   struct ITEM_SPRITESHEET* catalog; */
+   bstring catalog_name;
+   SCAFFOLD_SIZE sprite_id;
+   bstring display_name;
+   union ITEM_CONTENT content;
+   SCAFFOLD_SIZE count;
+   struct CLIENT* client_or_server;
+};
+
+/* Item representation on a map. Merge into containers? */
+struct ITEM_CACHE {
+   struct TILEMAP_POSITION position;
+   struct VECTOR items;
+   struct TILEMAP* tilemap;
+};
+
 static void item_free_final( const struct REF* ref ) {
    struct ITEM* e = scaffold_container_of( ref, struct ITEM, refcount );
 
@@ -228,7 +270,7 @@ void item_set_contents( struct ITEM* e, union ITEM_CONTENT content ) {
    e->content = content;
 }
 
-BOOL item_is_container( struct ITEM* e ) {
+bool item_is_container( struct ITEM* e ) {
    struct ITEM_SPRITE* sprite;
    struct ITEM_SPRITESHEET* catalog;
 
@@ -243,4 +285,22 @@ BOOL item_is_container( struct ITEM* e ) {
 
    return ITEM_TYPE_CONTAINER == sprite->type &&
       NULL != e->content.container;
+}
+
+void item_cache_init(
+   struct ITEM_CACHE* cache,
+   struct TILEMAP* t,
+   TILEMAP_COORD_TILE x,
+   TILEMAP_COORD_TILE y
+) {
+   vector_init( &(cache->items) );
+   cache->position.x = x;
+   cache->position.y = y;
+   cache->tilemap = t;
+}
+
+void item_cache_free( struct ITEM_CACHE* cache ) {
+   vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
+   vector_cleanup( &(cache->items) );
+   mem_free( cache );
 }
