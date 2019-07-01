@@ -4,13 +4,7 @@
 
 #include "callback.h"
 #include "chunker.h"
-#include "client.h"
 #include "rng.h"
-
-union ITEM_CONTENT {
-   bstring book_text;
-   struct VECTOR* container;
-};
 
 struct ITEM_SPRITE {
    bstring display_name;
@@ -98,7 +92,7 @@ void item_random_init(
 
    item_init( e, sprite->display_name, 1, catalog_name, sprite_id, c );
    rng_gen_serial(
-      e, &(catalog->client_or_server->unique_items), SERIAL_MIN, BIG_SERIAL_MAX
+      e, client_get_unique_items( catalog->client_or_server ), SERIAL_MIN, BIG_SERIAL_MAX
    );
 
 cleanup:
@@ -120,8 +114,8 @@ static void item_spritesheet_free_final( const struct REF* ref ) {
    struct ITEM_SPRITESHEET* catalog =
       scaffold_container_of( ref, struct ITEM_SPRITESHEET, refcount );
    if( NULL != catalog ) {
-      vector_remove_cb( &(catalog->sprites), callback_free_sprites, NULL );
-      vector_cleanup( &(catalog->sprites) );
+      vector_remove_cb( catalog->sprites, callback_free_sprites, NULL );
+      vector_free( &(catalog->sprites) );
 
       graphics_surface_free( catalog->sprites_image );
       catalog->sprites_image = NULL;
@@ -153,7 +147,7 @@ struct ITEM_SPRITE* item_spritesheet_get_sprite(
 ) {
    struct ITEM_SPRITE* sprite_out = NULL;
 
-   sprite_out = vector_get(  &(catalog->sprites), sprite_id );
+   sprite_out = vector_get(  catalog->sprites, sprite_id );
 
    return sprite_out;
 }
@@ -181,7 +175,7 @@ SCAFFOLD_SIZE item_random_sprite_id_of_type(
    SCAFFOLD_SIZE selection = 0;
 
    candidates = vector_iterate_v(
-      &(catalog->sprites), callback_search_item_type, &type
+      catalog->sprites, callback_search_item_type, &type
    );
    lgc_null_msg( candidates, "No sprite candidates found." );
 
@@ -248,10 +242,10 @@ void item_draw_ortho(
    tilemap_add_dirty_tile( twindow->t, o->prev_x, o->prev_y ); */
    if(
       NULL == catalog->sprites_image &&
-      NULL != hashmap_get( &(e->client_or_server->sprites), catalog->sprites_filename )
+      NULL != client_get_sprite( e->client_or_server, catalog->sprites_filename )
    ) {
       catalog->sprites_image =
-         (GRAPHICS*)hashmap_get( &(e->client_or_server->sprites), catalog->sprites_filename );
+         client_get_sprite( e->client_or_server, catalog->sprites_filename );
    }
 
    graphics_blit_partial(
@@ -275,13 +269,13 @@ bool item_is_container( struct ITEM* e ) {
    struct ITEM_SPRITESHEET* catalog;
 
    if( NULL == e ) {
-      return FALSE;
+      return false;
    }
 
    catalog = client_get_catalog( e->client_or_server, e->catalog_name );
-   if( NULL == catalog ) { return FALSE; }
+   if( NULL == catalog ) { return false; }
    sprite = item_spritesheet_get_sprite( catalog, e->sprite_id );
-   if( NULL == sprite ) { return FALSE; }
+   if( NULL == sprite ) { return false; }
 
    return ITEM_TYPE_CONTAINER == sprite->type &&
       NULL != e->content.container;
@@ -293,14 +287,14 @@ void item_cache_init(
    TILEMAP_COORD_TILE x,
    TILEMAP_COORD_TILE y
 ) {
-   vector_init( &(cache->items) );
+   cache->items = vector_new();
    cache->position.x = x;
    cache->position.y = y;
    cache->tilemap = t;
 }
 
 void item_cache_free( struct ITEM_CACHE* cache ) {
-   vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
-   vector_cleanup( &(cache->items) );
+   vector_remove_cb( cache->items, callback_free_item_cache_items, NULL );
+   vector_free( &(cache->items) );
    mem_free( cache );
 }
