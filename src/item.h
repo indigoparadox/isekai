@@ -3,9 +3,20 @@
 #define ITEM_H
 
 #include "scaffold.h"
-#include "graphics.h"
+#include <graphics.h>
+#include "client.h"
 
 #include <stdbool.h>
+
+union ITEM_CONTENT {
+   bstring book_text;
+   struct VECTOR* container;
+};
+
+struct ITEM_SPRITE;
+struct ITEM_SPRITESHEET;
+struct ITEM;
+struct ITEM_CACHE;
 
 typedef enum ITEM_TYPE {
    ITEM_TYPE_GENERIC = 0,
@@ -100,6 +111,13 @@ void item_draw_ortho(
 );
 void item_set_contents( struct ITEM* e, union ITEM_CONTENT content );
 bool item_is_container( struct ITEM* e );
+void item_cache_init(
+   struct ITEM_CACHE* cache,
+   struct TILEMAP* t,
+   TILEMAP_COORD_TILE x,
+   TILEMAP_COORD_TILE y
+);
+void item_cache_free( struct ITEM_CACHE* cache );
 
 #ifdef ITEM_C
 
