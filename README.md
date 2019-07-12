@@ -13,4 +13,8 @@
     * Separate heatshrink out.
     * Convert to C89.
   * Cache counts for hashmap, ensure it's fully encapsulated first!
+  * Weapons:
+    * Item, on use, creates animation.
+    * Item properties determine animation start, sprite, travel range.
+    * Modes can have transformation function to modify animation.
 

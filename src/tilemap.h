@@ -87,16 +87,6 @@ struct TILEMAP_POSITION {
    uint8_t facing;
 };
 
-#ifdef USE_ITEMS
-
-struct TILEMAP_ITEM_CACHE {
-   struct TILEMAP_POSITION position;
-   struct VECTOR items;
-   struct TILEMAP* tilemap;
-};
-
-#endif // USE_ITEMS
-
 struct TILEMAP_SPAWNER {
    struct TILEMAP_POSITION pos;
    struct TILEMAP* tilemap;
