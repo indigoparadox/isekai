@@ -491,6 +491,8 @@
 					<Add directory="../camin/bin/Debug-Linux-Allegro" />
 					<Add directory="../libtwin/bin/Debug-Linux" />
 					<Add directory="../hs/bin/Debug-Linux-Static" />
+					<Add directory="../mfat/bin/Debug-Linux" />
+					<Add directory="../chiipy/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-NET-Allegro4-Dynamic)">
@@ -674,6 +676,8 @@
 					<Add directory="../camin/bin/Debug-Linux-SDL" />
 					<Add directory="../libtwin/bin/Debug-Linux" />
 					<Add directory="../hs/bin/Debug-Linux-Static" />
+					<Add directory="../mfat/bin/Debug-Linux" />
+					<Add directory="../chiipy/bin/Debug-Linux" />
 				</Linker>
 			</Target>
 			<Target title="Debug (Linux-SHM-Allegro4)">
@@ -1028,12 +1032,16 @@
 			<Add directory="../camgraph/src" />
 			<Add directory="../camin/src" />
 			<Add directory="../libtwin/src" />
+			<Add directory="../mfat/src" />
+			<Add directory="../chiipy/src" />
 		</Compiler>
 		<Linker>
 			<Add library="vcol" />
 			<Add library="camgraph" />
 			<Add library="camin" />
 			<Add library="twin" />
+			<Add library="mfat" />
+			<Add library="chiipy" />
 		</Linker>
 		<Unit filename="ISEKAI.DEF">
 			<Option target="Debug (Palm-SB)" />
@@ -1522,30 +1530,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/tilemap.h" />
-		<Unit filename="src/tinypy/tinypy.c">
-			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-			<Option target="Check (Linux-C99)" />
-			<Option target="Debug (Linux-SB-Curses)" />
-			<Option target="Debug (Linux-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4)" />
-			<Option target="Debug (Linux-Allegro4-CLANG)" />
-			<Option target="Debug (Linux-Allegro4-TCC)" />
-			<Option target="Debug (Linux-Curses-Threaded)" />
-			<Option target="Release (Linux-Allegro4)" />
-			<Option target="Debug (Linux-NET-SDL)" />
-			<Option target="Debug (Linux-NET-Server)" />
-			<Option target="Check (Linux-C89)" />
-			<Option target="Debug (Emscripten-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-SDL)" />
-			<Option target="Debug (MingW32-NET-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-TLS)" />
-			<Option target="Debug (Linux-NET-Curses)" />
-			<Option target="Debug (DOS16-Allegro4)" />
-			<Option target="Debug (DOS32-SB-Allegro4)" />
-			<Option target="Debug (Linux-NET-Allegro4-Dynamic)" />
-		</Unit>
 		<Unit filename="src/tinypy/tinypy.h">
 			<Option target="Debug" />
 			<Option target="Release" />
