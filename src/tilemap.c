@@ -102,28 +102,6 @@ void tilemap_spawner_free( struct TILEMAP_SPAWNER* ts ) {
    mem_free( ts );
 }
 
-#ifdef USE_ITEMS
-
-void tilemap_item_cache_init(
-   struct TILEMAP_ITEM_CACHE* cache,
-   struct TILEMAP* t,
-   TILEMAP_COORD_TILE x,
-   TILEMAP_COORD_TILE y
-) {
-   vector_init( &(cache->items) );
-   cache->position.x = x;
-   cache->position.y = y;
-   cache->tilemap = t;
-}
-
-void tilemap_item_cache_free( struct TILEMAP_ITEM_CACHE* cache ) {
-   vector_remove_cb( &(cache->items), callback_free_item_cache_items, NULL );
-   vector_cleanup( &(cache->items) );
-   mem_free( cache );
-}
-
-#endif // USE_ITEMS
-
 void tilemap_layer_init( struct TILEMAP_LAYER* layer, size_t tiles_length ) {
    //vector_init( &(layer->tiles) );
    layer->tile_gids = mem_alloc( tiles_length, TILEMAP_TILE );
@@ -234,7 +212,6 @@ struct GRAPHICS* tilemap_tileset_get_image_default(
    const struct TILEMAP_TILESET* set, struct CLIENT* c
 ) {
    assert( NULL != set );
-   //return (GRAPHICS*)hashmap_get_first( &(set->images) );
    return hashmap_iterate(
       set->images, cb_tilemap_tileset_img_get_or_dl, c );
 }

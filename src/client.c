@@ -227,6 +227,10 @@ struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name
    return hashmap_get( c->channels, name );
 }
 
+struct VECTOR* client_get_unique_items( struct CLIENT* c ) {
+   return c->unique_items;
+}
+
 bool client_connect( struct CLIENT* c, const bstring server, int port ) {
    bool connected = false;
 
@@ -871,8 +875,6 @@ struct MOBILE* client_get_puppet( struct CLIENT* c ) {
    return c->puppet;
 }
 
-#ifdef USE_ITEMS
-
 struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial ) {
    return vector_get( &(c->unique_items), serial );
 }
@@ -902,14 +904,12 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
 
       item_free( e );
    } else {
-      vector_set( &(c->unique_items), serial, e, true );
+      vector_set( c->unique_items, serial, e, true );
    }
 
 cleanup:
    return;
 }
-
-#endif // USE_ITEMS
 
 GRAPHICS* client_get_screen( struct CLIENT* c ) {
    struct TWINDOW* w = NULL;
