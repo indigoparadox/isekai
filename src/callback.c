@@ -497,23 +497,6 @@ void* callback_proc_server_spawners( bstring idx, void* iter, void* arg ) {
    return NULL;
 }
 
-#ifdef USE_ITEMS
-
-void* callback_search_item_type(
-   size_t idx, void* iter, void* arg
-) {
-   ITEM_TYPE type = *((ITEM_TYPE*)arg);
-   struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
-
-   if( NULL != sprite && type == sprite->type ) {
-      return sprite;
-   }
-
-   return NULL;
-}
-
-#endif /* USE_ITEMS */
-
 #ifdef ENABLE_LOCAL_CLIENT
 
 void* callback_search_tilesets_small(
@@ -719,8 +702,6 @@ bool callback_free_tilesets( bstring idx, void* iter, void* arg ) {
    return false;
 }
 
-#ifdef USE_ITEMS
-
 bool callback_free_sprites( size_t idx, void* iter, void* arg ) {
    struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
    if( NULL == arg ) {
@@ -742,7 +723,7 @@ bool callback_free_catalogs( bstring idx, void* iter, void* arg ) {
 bool callback_free_item_cache_items( size_t idx, void* iter, void* arg ) {
    struct ITEM* e = (struct ITEM*)iter;
    size_t serial = *((size_t*)arg);
-   if( NULL == arg || serial == e->serial ) {
+   if( NULL == arg || serial == item_get_serial( e ) ) {
       item_free( e );
       return true;
    }
@@ -752,12 +733,11 @@ bool callback_free_item_cache_items( size_t idx, void* iter, void* arg ) {
 bool callback_free_item_caches( size_t idx, void* iter, void* arg ) {
    struct TILEMAP_ITEM_CACHE* cache = (struct TILEMAP_ITEM_CACHE*)iter;
    if( NULL == arg ) {
-      tilemap_item_cache_free( cache );
+      item_cache_free( cache );
       return true;
    }
    return false;
 }
-#endif /* USE_ITEMS */
 
 #ifdef USE_CHUNKS
 
