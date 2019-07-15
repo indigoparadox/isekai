@@ -889,26 +889,30 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
    struct ITEM* c_e = NULL;
    int retval = 0;
 
+   /* TODO */
+   #if 0
    c_e = vector_get( &(c->unique_items), serial );
 
    if( c_e == e ) {
       goto cleanup;
    } else if( NULL != c_e ) {
+      /* Add this item to the stack. */
       c_e->count = e->count;
       retval = bassign( c_e->catalog_name, e->catalog_name );
       lgc_nonzero( retval );
       scaffold_assign_or_cpy_c( c_e->display_name, bdata( e->display_name ), retval );
       c_e->sprite_id = e->sprite_id;
 
-      /* Don't overwrite contents. */
-
+      /* Get rid of the unique instance. */
       item_free( e );
    } else {
       vector_set( c->unique_items, serial, e, true );
+      c_e = e;
    }
+   #endif
 
 cleanup:
-   return;
+   return c_e;
 }
 
 GRAPHICS* client_get_screen( struct CLIENT* c ) {

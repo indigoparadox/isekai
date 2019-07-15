@@ -6,42 +6,18 @@
 #include "chunker.h"
 #include "rng.h"
 
-struct ITEM_SPRITE {
-   bstring display_name;
-   ITEM_TYPE type;
-};
+void* callback_search_item_type(
+   size_t idx, void* iter, void* arg
+) {
+   ITEM_TYPE type = *((ITEM_TYPE*)arg);
+   struct ITEM_SPRITE* sprite = (struct ITEM_SPRITE*)iter;
 
-struct ITEM_SPRITESHEET {
-   struct REF refcount;
-   /* bstring name; */
-   GRAPHICS* sprites_image;
-   bstring sprites_filename;
-   bool sprites_requested;
-   GFX_COORD_PIXEL spritewidth;
-   GFX_COORD_PIXEL spriteheight;
-   struct CLIENT* client_or_server;
-   struct VECTOR* sprites;
-};
+   if( NULL != sprite && type == sprite->type ) {
+      return sprite;
+   }
 
-struct ITEM {
-   struct REF refcount;
-   BIG_SERIAL serial;
-   /* struct ITEM_SPRITE* sprite;
-   struct ITEM_SPRITESHEET* catalog; */
-   bstring catalog_name;
-   SCAFFOLD_SIZE sprite_id;
-   bstring display_name;
-   union ITEM_CONTENT content;
-   SCAFFOLD_SIZE count;
-   struct CLIENT* client_or_server;
-};
-
-/* Item representation on a map. Merge into containers? */
-struct ITEM_CACHE {
-   struct TILEMAP_POSITION position;
-   struct VECTOR* items;
-   struct TILEMAP* tilemap;
-};
+   return NULL;
+}
 
 static void item_free_final( const struct REF* ref ) {
    struct ITEM* e = scaffold_container_of( ref, struct ITEM, refcount );
@@ -232,9 +208,9 @@ void item_draw_ortho(
    sprite_rect.h = catalog->spriteheight;
 
    /* TODO: Figure out the graphical sprite to draw from. */
-   graphics_get_spritesheet_pos_ortho(
+   /*graphics_get_spritesheet_pos_ortho(
       catalog->sprites_image, &sprite_rect, e->sprite_id
-   );
+   );*/
 
    /* Add dirty tiles to list before drawing. */
    /* TODO: This goes in tilemap function if that's calling us. */
@@ -297,4 +273,12 @@ void item_cache_free( struct ITEM_CACHE* cache ) {
    vector_remove_cb( cache->items, callback_free_item_cache_items, NULL );
    vector_free( &(cache->items) );
    mem_free( cache );
+}
+
+void item_stack_push( struct ITEM* item_stack, struct ITEM* new_item ) {
+   /* TODO */
+}
+
+BIG_SERIAL item_get_serial( struct ITEM* e ) {
+   return e->serial;
 }

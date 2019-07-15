@@ -118,8 +118,9 @@ void item_cache_init(
    TILEMAP_COORD_TILE y
 );
 void item_cache_free( struct ITEM_CACHE* cache );
+BIG_SERIAL item_get_serial( struct ITEM* e );
 
-#ifdef ITEM_C
+#if defined( ITEM_C ) || defined( DOXY_C )
 
 const struct tagbstring item_type_strings[ITEM_TYPE_MAX] = {
    bsStatic( "" ),
@@ -166,6 +167,47 @@ const struct tagbstring item_type_strings[ITEM_TYPE_MAX] = {
    bsStatic( "food_vegetable" ),
    bsStatic( "food_meat" ),
    bsStatic( "food_misc" )
+};
+
+struct ITEM_SPRITE {
+   bstring display_name;
+   ITEM_TYPE type;
+};
+
+struct ITEM_SPRITESHEET {
+   struct REF refcount;
+   /* bstring name; */
+   GRAPHICS* sprites_image;
+   bstring sprites_filename;
+   bool sprites_requested;
+   GFX_COORD_PIXEL spritewidth;
+   GFX_COORD_PIXEL spriteheight;
+   struct CLIENT* client_or_server;
+   struct VECTOR* sprites;
+};
+
+struct ITEM {
+   struct REF refcount;
+   /*! \brief Unique item identifier identifies a specific item, NOT item type. */
+   BIG_SERIAL serial;
+   /* struct ITEM_SPRITE* sprite;
+   struct ITEM_SPRITESHEET* catalog; */
+   bstring catalog_name;
+   /*! \brief An item type used specifically to determine if an item can stack
+    *         with another. */
+   bstring stack_type;
+   SCAFFOLD_SIZE sprite_id;
+   bstring display_name;
+   union ITEM_CONTENT content;
+   SCAFFOLD_SIZE count;
+   struct CLIENT* client_or_server;
+};
+
+/* Item representation on a map. Merge into containers? */
+struct ITEM_CACHE {
+   struct TILEMAP_POSITION position;
+   struct VECTOR* items;
+   struct TILEMAP* tilemap;
 };
 
 #else
