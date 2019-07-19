@@ -1,4 +1,5 @@
 
+#define PLUGIN_C
 #include "scaffold.h"
 #include "plugin.h"
 
@@ -9,13 +10,10 @@
 #include "callback.h"
 #include "action.h"
 
+#ifdef USE_DYNAMIC_PLUGINS
 #include <dlfcn.h>
 
-#ifdef USE_DYNAMIC_PLUGINS
 static struct tagbstring str_mode = bsStatic( "mode" );
-
-struct VECTOR* mode_list_pretty;
-struct VECTOR* mode_list_short;
 
 #define plugin_setup( format, hook ) \
    hook_name = bformat( format, bdata( plug ) ); \
@@ -25,6 +23,19 @@ struct VECTOR* mode_list_short;
 
 #define plugin_f( method, ... ) \
     f.method( __VA_ARGS__ )
+
+#else
+
+#define plugin_setup( format, hook ) \
+   hook_name = bformat( format, bdata( plug ) ); \
+   lgc_null( hook_name ); \
+   f.hook = hashmap_get( plugin_list_mode, hook_name ); \
+   lgc_null( f.hook );
+
+#define plugin_f( method, ... ) \
+    f.method( __VA_ARGS__ )
+
+#endif /* USE_DYNAMIC_PLUGINS */
 
 typedef PLUGIN_RESULT plugin_mode_init();
 typedef PLUGIN_RESULT plugin_mode_update( struct CLIENT* c, struct CHANNEL* l );
@@ -52,8 +63,21 @@ union PLUGIN_CALL_FUNC {
    plugin_mode_client_free* client_free;
 };
 
-static struct HASHMAP* plugin_list_mode;
+struct PLUGIN_CALL_CONTAINER {
+   plugin_mode_init* init;
+   plugin_mode_update* update;
+   plugin_mode_draw* draw;
+   plugin_mode_poll_input* poll_input;
+   plugin_mode_free* free;
+   plugin_mode_mobile_action_client* mobile_action_client;
+   plugin_mode_mobile_action_server* mobile_action_server;
+   plugin_mode_mobile_init* mobile_init;
+   plugin_mode_client_init* client_init;
+   plugin_mode_mobile_free* mobile_free;
+   plugin_mode_client_free* client_free;
+};
 
+#ifdef USE_DYNAMIC_PLUGINS
 static void* cb_plugin_load( size_t idx, void* iter, void* arg ) {
    bstring entry = (bstring)iter;
    bstring entry_base = NULL;
@@ -120,36 +144,78 @@ static bstring plugin_get_path() {
 
 #else
 
-extern struct tagbstring mode_key;
-extern struct tagbstring mode_name;
+#if defined( USE_STATIC_MODE_ISOMETRIC )
+struct tagbstring mode_name_isometric = bsStatic( "Isometric" );
+struct PLUGIN_CALL_CONTAINER ctr_isometer = {
+   mode_pov_init,
+   mode_pov_update,
+   mode_pov_draw,
+   mode_pov_poll_input,
+   mode_pov_free,
+   mode_pov_mobile_action_client,
+   mode_pov_mobile_action_server,
+   mode_pov_mobile_init,
+   mode_pov_client_init,
+   mode_pov_mobile_free,
+   mode_pov_client_free
+};
+#endif /* USE_STATIC_MODE_ISOMETRIC */
 
-#define plugin_setup( format, hook )
+#if defined( USE_STATIC_MODE_POV )
+struct tagbstring mode_name_pov = bsStatic( "POV" );
+struct PLUGIN_CALL_CONTAINER ctr_pov = {
+   mode_pov_init,
+   mode_pov_update,
+   mode_pov_draw,
+   mode_pov_poll_input,
+   mode_pov_free,
+   mode_pov_mobile_action_client,
+   mode_pov_mobile_action_server,
+   mode_pov_mobile_init,
+   mode_pov_client_init,
+   mode_pov_mobile_free,
+   mode_pov_client_free
+};
+#endif /* USE_STATIC_MODE_POV */
 
-#ifdef USE_STATIC_MODE_TOPDOWN
-#define plugin_f( method, ... ) \
-   mode_topdown_ ## method( __VA_ARGS__ )
-#elif defined( USE_STATIC_MODE_ISOMETRIC )
-#define plugin_f( method, ... ) \
-   mode_isometric_ ## method( __VA_ARGS__ )
-#elif defined( USE_STATIC_MODE_POV )
-#define plugin_f( method, ... ) \
-   mode_pov_ ## method( __VA_ARGS__ )
-#else
-#error No static mode specified!
-#endif /* USE_STATIC_MODE_TOPDOWN */
+#if defined( USE_STATIC_MODE_POV )
+struct tagbstring mode_name_topdown = bsStatic( "Top Down" );
+struct PLUGIN_CALL_CONTAINER ctr_topdown = {
+   mode_topdown_init,
+   mode_topdown_update,
+   mode_topdown_draw,
+   mode_topdown_poll_input,
+   mode_topdown_free,
+   mode_topdown_mobile_action_client,
+   mode_topdown_mobile_action_server,
+   mode_topdown_mobile_init,
+   mode_topdown_client_init,
+   mode_topdown_mobile_free,
+   mode_topdown_client_free
+};
+#endif /* USE_STATIC_MODE_POV */
 
 #endif /* USE_DYNAMIC_PLUGINS */
 
+/*
+extern struct tagbstring mode_key;
+extern struct tagbstring mode_name;
+*/
+
 PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
-#ifdef USE_DYNAMIC_PLUGINS
    bstring plugin_path = NULL;
+#ifdef USE_DYNAMIC_PLUGINS
    struct VECTOR* plugin_dir;
+
+#endif /* USE_DYNAMIC_PLUGINS */
 
    mode_list_pretty = vector_new();
    mode_list_short = vector_new();
 
    plugin_list_mode = hashmap_new();
+
+#ifdef USE_DYNAMIC_PLUGINS
    plugin_dir = vector_new();
 
    plugin_path = plugin_get_path();
@@ -159,19 +225,48 @@ PLUGIN_RESULT plugin_load_all( PLUGIN_TYPE ptype ) {
 
    vector_iterate( plugin_dir, cb_plugin_load, &ptype );
 
-/* cleanup: */
    bdestroy( plugin_path );
    vector_remove_cb( plugin_dir, callback_v_free_strings, NULL );
    vector_free( &plugin_dir );
 #else
-   ret = plugin_load( ptype, &mode_key );
+
+#if defined( USE_STATIC_MODE_ISOMETRIC )
+   ret = mode_isometer_init();
+   if( PLUGIN_FAILURE == ret ) {
+      goto cleanup;
+   }
+   hashmap_put( plugin_list_mode, &mode_name_isometric, &ctr_isometer, false );
+   vector_add( mode_list_pretty, &mode_name_isometric );
+   vector_add( mode_list_short, bfromcstr( "isometer" ) );
+#endif /* USE_STATIC_MODE_ISOMETRIC */
+#if defined( USE_STATIC_MODE_POV )
+   ret = mode_pov_init();
+   if( PLUGIN_FAILURE == ret ) {
+      goto cleanup;
+   }
+   hashmap_put( plugin_list_mode, &mode_name_pov, &ctr_pov, false );
+   vector_add( mode_list_pretty, &mode_name_pov );
+   vector_add( mode_list_short, bfromcstr( "pov" ) );
+#endif /* USE_STATIC_MODE_POV */
+#if defined( USE_STATIC_MODE_TOPDOWN )
+   ret = mode_topdown_init();
+   if( PLUGIN_FAILURE == ret ) {
+      goto cleanup;
+   }
+   hashmap_put( plugin_list_mode, &mode_name_topdown, &ctr_topdown, false );
+   vector_add( mode_list_pretty, &mode_name_topdown );
+   vector_add( mode_list_short, bfromcstr( "topdown" ) );
+#endif /* USE_STATIC_MODE_TOPDOWN */
+
 #endif /* USE_DYNAMIC_PLUGINS */
+
+cleanup:
    return ret;
 }
 
+#ifdef USE_DYNAMIC_PLUGINS
 PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
-#ifdef USE_DYNAMIC_PLUGINS
    void* handle = NULL;
    bstring plugin_path = NULL;
    bstring plugin_filename = NULL;
@@ -214,21 +309,18 @@ PLUGIN_RESULT plugin_load( PLUGIN_TYPE ptype, bstring plugin_name ) {
 cleanup:
    bdestroy( plugin_path );
    bdestroy( plugin_filename );
-#else
    ret = plugin_call( ptype, plugin_name, PLUGIN_INIT );
-#endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
+#endif /* USE_DYNAMIC_PLUGINS */
 
 PLUGIN_RESULT plugin_unload_all( PLUGIN_TYPE ptype ) {
-#ifdef USE_DYNAMIC_PLUGINS
    vector_free( &mode_list_pretty ); /* These are static strings. */
    vector_free( &mode_list_short );
-#endif /* USE_DYNAMIC_PLUGINS */
 }
 
-PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
 #ifdef USE_DYNAMIC_PLUGINS
+PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
    void* handle = NULL;
    PLUGIN_RESULT ret = PLUGIN_FAILURE;
 
@@ -251,11 +343,9 @@ PLUGIN_RESULT plugin_unload( PLUGIN_TYPE ptype, bstring plugin_name ) {
    }
 
 cleanup:
-#else
-   PLUGIN_RESULT ret = PLUGIN_SUCCESS;
-#endif /* USE_DYNAMIC_PLUGINS */
    return ret;
 }
+#endif /* USE_DYNAMIC_PLUGINS */
 
 PLUGIN_RESULT plugin_call_all( PLUGIN_TYPE ptype, PLUGIN_CALL hook, ... ) {
 }
@@ -285,6 +375,8 @@ PLUGIN_RESULT plugin_call(
       lg_error( __FILE__, "Could not call plugin: %b\n", plug );
    }
    lgc_null( handle );
+#else
+   struct PLUGIN_CALL_CONTAINER f = { 0 };
 #endif /* USE_DYNAMIC_PLUGINS */
 
    va_start( varg, hook );
@@ -395,39 +487,23 @@ PLUGIN_RESULT plugin_call(
    }
    va_end( varg );
 
-#ifdef USE_DYNAMIC_PLUGINS
 cleanup:
-#endif /* USE_DYNAMIC_PLUGINS */
    bdestroy( hook_name );
    return ret;
 }
 
 bstring plugin_get_mode_short( int mode ) {
-#ifdef USE_DYNAMIC_PLUGINS
    return vector_get( mode_list_short, mode );
-#else
-   return &mode_key;
-#endif /* USE_DYNAMIC_PLUGINS */
 }
 
 bstring plugin_get_mode_name( int mode ) {
-#ifdef USE_DYNAMIC_PLUGINS
    return vector_get( mode_list_pretty, mode );
-#else
-   return &mode_name;
-#endif /* USE_DYNAMIC_PLUGINS */
 }
 
 int plugin_count() {
-#ifdef USE_DYNAMIC_PLUGINS
    return vector_count( mode_list_short );
-#else
-   return 1;
-#endif /* USE_DYNAMIC_PLUGINS */
 }
 
-#ifdef USE_DYNAMIC_PLUGINS
 struct VECTOR* plugin_get_mode_name_list() {
    return mode_list_pretty;
 }
-#endif /* USE_DYNAMIC_PLUGINS */

@@ -46,6 +46,7 @@ __attribute__ ((warn_unused_result))
 #endif /* USE_GNUC_EXTENSIONS */
 ;
 struct CHANNEL* client_get_channel_by_name( struct CLIENT* c, const bstring name );
+struct VECTOR* client_get_unique_items( struct CLIENT* c );
 bool client_connect( struct CLIENT* c, const bstring server, int port );
 void client_set_local( struct CLIENT* c, bool val );
 bool client_is_local( struct CLIENT* c );

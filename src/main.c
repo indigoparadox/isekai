@@ -77,9 +77,7 @@ static struct tagbstring str_wid_debug_ip = bsStatic( "debug_ip" );
 static struct tagbstring str_cid_connect_host = bsStatic( "connect_host" );
 static struct tagbstring str_cid_connect_nick = bsStatic( "connect_nick" );
 static struct tagbstring str_cid_connect_channel = bsStatic( "connect_channel" );
-#ifdef USE_DYNAMIC_PLUGINS
 static struct tagbstring str_cid_connect_gfxmode = bsStatic( "connect_gfxmode" );
-#endif /* USE_DYNAMIC_PLUGINS */
 static struct tagbstring str_title = bsStatic( "isekai" );
 static struct tagbstring str_loading = bsStatic( "Loading" );
 static struct tagbstring str_localhost = bsStatic( "127.0.0.1" );
@@ -410,7 +408,6 @@ static bool loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       );
       ui_control_add( win, &str_cid_connect_nick, control );
 
-#ifdef USE_DYNAMIC_PLUGINS
       ui_control_new(
          ui, control, NULL, UI_CONTROL_TYPE_DROPDOWN, true, true, NULL,
          -1, -1, -1, -1
@@ -419,7 +416,6 @@ static bool loop_connect( int* gfx_mode, struct TWINDOW* local_window ) {
       control->list = plugin_get_mode_name_list();
       control->self.attachment = gfx_mode;
       ui_control_add( win, &str_cid_connect_gfxmode, control );
-#endif /* USE_DYNAMIC_PLUGINS */
 
       ui_window_push( ui, win );
       bstr_result =

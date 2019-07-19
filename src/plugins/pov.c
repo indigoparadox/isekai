@@ -45,8 +45,8 @@ extern struct tagbstring str_client_window_id_inv;
 extern struct tagbstring str_client_window_title_inv;
 extern struct tagbstring str_client_control_id_inv_self;
 
-struct tagbstring mode_name = bsStatic( "POV" );
-struct tagbstring mode_key = bsStatic( "pov" );
+static struct tagbstring mode_name = bsStatic( "POV" );
+static struct tagbstring mode_key = bsStatic( "pov" );
 
 static GRAPHICS* ray_view = NULL;
 struct HASHMAP* tileset_status;
@@ -625,7 +625,7 @@ static bool mode_pov_update_view(
    c_data = client_get_mode_data( c, &mode_key, l );
    lgc_null( c_data );
    if( NULL == c_data->z_buffer ) {
-      c_data->z_buffer = mem_alloc( graphics_surface_get_width( g ), GFX_COORD_FPP );
+      c_data->z_buffer = mem_alloc( graphics_surface_get_w( g ), GFX_COORD_FPP );
    }
 
    /* Do the actual casting. */

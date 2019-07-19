@@ -476,9 +476,9 @@
 					<Add option="-DDEBUG_NETWORK" />
 					<Add option="-DUSE_SQLITE" />
 					<Add option="-DxUSE_DYNAMIC_PLUGINS" />
+					<Add option="-DUSE_STATIC_MODE_ISOMETRIC" />
+					<Add option="-DUSE_STATIC_MODE_POV" />
 					<Add option="-DUSE_STATIC_MODE_TOPDOWN" />
-					<Add option="-DxUSE_STATIC_MODE_ISOMETRIC" />
-					<Add option="-DxUSE_STATIC_MODE_POV" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />
@@ -663,6 +663,8 @@
 					<Add option="-DxUSE_DUKTAPE" />
 					<Add option="-DxDEBUG_VERBOSEGRAPHICS_COLOR" />
 					<Add option="-DUSE_STATIC_MODE_TOPDOWN" />
+					<Add option="-DxUSE_STATIC_MODE_ISOMETRIC" />
+					<Add option="-DUSE_STATIC_MODE_POV" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg" />

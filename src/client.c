@@ -876,13 +876,13 @@ struct MOBILE* client_get_puppet( struct CLIENT* c ) {
 }
 
 struct ITEM* client_get_item( struct CLIENT* c, SCAFFOLD_SIZE serial ) {
-   return vector_get( &(c->unique_items), serial );
+   return vector_get( c->unique_items, serial );
 }
 
 struct ITEM_SPRITESHEET* client_get_catalog(
    struct CLIENT* c, const bstring name
 ) {
-   return hashmap_get( &(c->item_catalogs), name );
+   return hashmap_get( c->item_catalogs, name );
 }
 
 void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
@@ -909,10 +909,10 @@ void client_set_item( struct CLIENT* c, SCAFFOLD_SIZE serial, struct ITEM* e ) {
       vector_set( c->unique_items, serial, e, true );
       c_e = e;
    }
-   #endif
 
 cleanup:
    return c_e;
+   #endif
 }
 
 GRAPHICS* client_get_screen( struct CLIENT* c ) {
