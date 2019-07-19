@@ -4,12 +4,11 @@
 #define MODE_C
 //#include <mode.h>
 
-#include <callback.h>
-#include <ui.h>
-#include <ipc.h>
-#include <channel.h>
-#include <proto.h>
-#include <plugin.h>
+#include "../callback.h"
+#include "../ipc.h"
+#include "../channel.h"
+#include "../proto.h"
+#include "../plugin.h"
 
 extern bstring client_input_from_ui;
 extern struct tagbstring str_client_window_id_chat;

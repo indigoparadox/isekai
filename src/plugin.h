@@ -44,6 +44,8 @@ bstring plugin_get_mode_name( int mode );
 int plugin_count();
 struct VECTOR* plugin_get_mode_name_list();
 
+#ifdef PLUGIN_C
+
 #ifndef USE_DYNAMIC_PLUGINS
 PLUGIN_RESULT mode_topdown_init();
 PLUGIN_RESULT mode_topdown_draw(
@@ -87,6 +89,12 @@ PLUGIN_RESULT mode_pov_mobile_free( struct MOBILE* o );
 PLUGIN_RESULT mode_pov_client_init( struct CLIENT* c, struct CHANNEL* l );
 PLUGIN_RESULT mode_pov_client_free( struct CLIENT* c );
 
-#endif /* USE_DYNAMIC_PLUGINS */
+#endif /* !USE_DYNAMIC_PLUGINS */
+
+struct VECTOR* mode_list_pretty;
+struct VECTOR* mode_list_short;
+
+static struct HASHMAP* plugin_list_mode;
+#endif
 
 #endif /* PLUGIN_H */

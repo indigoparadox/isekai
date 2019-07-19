@@ -26,9 +26,9 @@ extern bstring client_input_from_ui;
 extern struct tagbstring str_client_control_id_inv_ground;
 
 #ifndef USE_DYNAMIC_PLUGINS
-struct tagbstring mode_key = bsStatic( "topdown" );
+static struct tagbstring mode_key = bsStatic( "topdown" );
 #endif /* !USE_DYNAMIC_PLUGINS */
-struct tagbstring mode_name = bsStatic( "Top Down" );
+static struct tagbstring mode_name = bsStatic( "Top Down" );
 
 static void mode_topdown_tilemap_draw_tile(
    struct TILEMAP_LAYER* layer, struct TWINDOW* twindow,
