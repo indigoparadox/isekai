@@ -52,7 +52,7 @@ add_executable(isekai ${ISEKAI_C_FILES})
 
 set_property(TARGET isekai PROPERTY C_STANDARD 90)
 
-target_link_libraries(isekai ${ISEKAI_INCLUDES})
+target_link_libraries(isekai ${ISEKAI_LIBS})
 
 include_directories(${ISEKAI_INCLUDES})
 
