@@ -123,23 +123,13 @@ CHANNEL_DEP = t:\procircd\src\channel.h \
 	t:\procircd\src\server.h \
 	t:\procircd\src\connect.h \
 	t:\procircd\src\proto.h \
-	t:\procircd\src\ref.h \
-	t:\procircd\src\chunker.h \
-	t:\procircd\src\tinypy/tinypy.h \
-	t:\procircd\src\duktape/duktape.h \
-	t:\procircd\src\duktape/dukhelp.h
+	t:\procircd\src\ref.h
 
 
-CHUNKER_DEP = t:\procircd\src\chunker.h \
-	t:\procircd\src\bstrlib/bstrlib.h \
+CHUNKER_DEP = t:\procircd\src\bstrlib/bstrlib.h \
 	t:\procircd\src\ref.h \
 	t:\procircd\src\vector.h \
 	t:\procircd\src\scaffold.h \
-	t:\procircd\src\b64.h \
-	t:\procircd\src\hs/hsdecode.h \
-	t:\procircd\src\hs/\hs_com.h \
-	t:\procircd\src\hs/\hs_conf.h \
-	t:\procircd\src\hs/hsencode.h \
 	t:\procircd\src\callback.h \
 	t:\procircd\src\hashmap.h
 
@@ -167,8 +157,7 @@ CLIENT_DEP = t:\procircd\src\client.h \
 	t:\procircd\src\proto.h \
 	t:\procircd\src\input.h \
 	t:\procircd\src\datafile.h \
-	t:\procircd\src\ui.h \
-	t:\procircd\src\tinypy/tinypy.h
+	t:\procircd\src\ui.h
 
 
 CONNECT_DEP = t:\procircd\src\connect.h \
@@ -222,15 +211,9 @@ MOBILE_DEP = t:\procircd\src\mobile.h \
 	t:\procircd\src\server.h \
 	t:\procircd\src\chunker.h \
 	t:\procircd\src\vector.h \
-	t:\procircd\src\scaffold.h \
-	t:\procircd\src\b64.h \
-	t:\procircd\src\hs/hsdecode.h \
-	t:\procircd\src\hs/\hs_com.h \
-	t:\procircd\src\hs/\hs_conf.h \
-	t:\procircd\src\hs/hsencode.h \
+	t:\procircd\src\scaffold.h
 	t:\procircd\src\hashmap.h \
-	t:\procircd\src\callback.h \
-	t:\procircd\src\tinypy/tinypy.h
+	t:\procircd\src\callback.h
 
 
 PROTO_DEP = t:\procircd\src\proto.h \

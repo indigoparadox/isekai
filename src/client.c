@@ -9,7 +9,6 @@
 #include "tilemap.h"
 #include "datafile.h"
 #include "ui.h"
-#include "tinypy/tinypy.h"
 #include "windefs.h"
 #include "channel.h"
 #include "ipc.h"

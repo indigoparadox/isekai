@@ -120,13 +120,15 @@ SCAFFOLD_SIZE_SIGNED files_write(
    bstring test_path = NULL;
    struct VECTOR* path_dirs = NULL;
    SCAFFOLD_SIZE true_qty;
-   struct stat test_path_stat = { 0 };
+   struct stat test_path_stat;
    int stat_res;
    SCAFFOLD_SIZE_SIGNED sz_out = -1;
    bstring zero_error = NULL;
 
    scaffold_assert( NULL != data );
    scaffold_assert( 0 != len );
+
+   memset( &test_path_stat, '\0', sizeof( struct stat ) );
 
    zero_error = bformat( "Zero bytes written to: %s", bdata( path ) );
 

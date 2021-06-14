@@ -6,8 +6,6 @@
 #include "../callback.h"
 #include "../channel.h"
 
-#include <stdlib.h>
-
 #define ezxml_node( target, parent, id ) \
    target = ezxml_child( parent, id ); \
    scaffold_check_null( target );
@@ -595,12 +593,14 @@ BOOL datafile_tilemap_parse_tileset_ezxml(
    SCAFFOLD_SIZE terrain_id = 0;
    struct TILEMAP_TERRAIN_DATA* terrain_info = NULL;
    const char* terrain_c = NULL;
-   char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1] = { 0 };
+   char terrain_id_c[TERRAIN_ID_C_BUFFER_LENGTH + 1];
 #ifdef DEBUG_TILES_VERBOSE
    SCAFFOLD_SIZE dbg_terrain_id[4];
    const char* dbg_terrain_name[4];
 #endif /* DEBUG_TILES_VERBOSE */
    BOOL loaded_fully = FALSE;
+
+   memset(terrain_id_c, '\0', TERRAIN_ID_C_BUFFER_LENGTH + 1);
 
    scaffold_error = 0;
 

@@ -1,5 +1,4 @@
 
-#include <stdlib.h>
 #include <check.h>
 
 #include "../src/vector.h"

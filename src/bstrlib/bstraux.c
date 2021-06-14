@@ -24,7 +24,6 @@
 #include <limits.h>
 
 #ifndef __palmos__
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #endif /* __palmos __ */

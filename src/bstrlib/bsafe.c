@@ -15,7 +15,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "bsafe.h"
 
 static int bsafeShouldExit = 1;

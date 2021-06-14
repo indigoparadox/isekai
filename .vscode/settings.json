@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "datafile.h": "c",
-        "channel.h": "c"
+        "channel.h": "c",
+        "hashmap.h": "c",
+        "random": "cpp"
     }
 }

@@ -3,6 +3,7 @@
 
 #if defined( __STDC_VERSION__ ) && __STDC_VERSION__ >= 199901L
 #define C99
+#error "C99 not supported!"
 #endif /* C99 */
 
 #ifdef USE_SHM
@@ -13,19 +14,6 @@
 
 #ifdef __palmos__
 
-typedef unsigned char BYTE;
-typedef unsigned char BOOL;
-typedef unsigned long SCAFFOLD_SIZE;
-typedef long SCAFFOLD_SIZE_SIGNED;
-#define SCAFFOLD_SIZE_MAX ULONG_MAX
-#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
-typedef int int16_t;
-typedef unsigned int uint16_t;
-typedef long int32_t;
-typedef unsigned long uint32_t;
-typedef char int8_t;
-typedef unsigned char uint8_t;
-#define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
 #define TRUE 1
 #define FALSE 0
@@ -37,16 +25,6 @@ typedef unsigned char uint8_t;
 
 #include <windows.h>
 
-typedef unsigned char BYTE;
-typedef unsigned long SCAFFOLD_SIZE;
-typedef long SCAFFOLD_SIZE_SIGNED;
-typedef int int16_t;
-typedef unsigned int uint16_t;
-typedef long int32_t;
-typedef unsigned long uint32_t;
-typedef char int8_t;
-typedef unsigned char uint8_t;
-#define __FUNCTION__ "Unavailable:"
 #define SNPRINTF_UNAVAILABLE
 
 #define SCAFFOLD_SIZE_MAX ULONG_MAX
@@ -60,14 +38,6 @@ typedef unsigned char uint8_t;
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #include <windows.h>
-#include <stdint.h>
-
-typedef unsigned char BYTE;
-typedef unsigned long SCAFFOLD_SIZE;
-typedef long SCAFFOLD_SIZE_SIGNED;
-
-#define SCAFFOLD_SIZE_MAX ULONG_MAX
-#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
 
 #define USE_CLOCK 1
 #define USE_FILE 1
@@ -80,7 +50,27 @@ typedef long SCAFFOLD_SIZE_SIGNED;
 #undef __USE_POSIX
 #define __USE_POSIX 1
 
+#include <stdlib.h>
+
+#define USE_CLOCK 1
+#define USE_FILE 1
+
+#endif /* __palmos__ || WIN16 || _WIN32 || __linux */
+
+#ifndef USE_FUNCTION
+#define __FUNCTION__ "Unavailable:"
+#endif /* !USE_FUNCTION */
+
+#ifdef USE_STDINT
 #include <stdint.h>
+#else
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef long int32_t;
+typedef unsigned long uint32_t;
+typedef char int8_t;
+typedef unsigned char uint8_t;
+#endif /* USE_STDINT */
 
 #ifndef BYTE
 typedef uint8_t BYTE;
@@ -107,11 +97,6 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 #define SCAFFOLD_SIZE_MAX UINT_MAX
 #define SCAFFOLD_SIZE_SIGNED_MAX INT_MAX
 #endif /* USE_SIZET */
-
-#define USE_CLOCK 1
-#define USE_FILE 1
-
-#endif /* __palmos__ || WIN16 || _WIN32 || __linux */
 
 /* = Debug = */
 
@@ -460,7 +445,7 @@ struct CONTAINER_IDX {
  * \param member     Name of the class member in the container that ptr is.
  */
 #define scaffold_container_of( ptr, type, member ) \
-    ((type *)((char *)(ptr) - offsetof( type, member )))
+    ((type *)((char *)(ptr) - ((int) &((type *) 0)->member)))
 
 struct VECTOR;
 

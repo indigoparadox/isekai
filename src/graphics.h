@@ -51,7 +51,7 @@ typedef uint32_t GRAPHICS_HICOLOR;
 #endif /* USE_HICOLOR */
 
 typedef long GFX_COORD_PIXEL;
-typedef int64_t GFX_COORD_FPP;
+typedef unsigned long GFX_COORD_FPP;
 
 typedef enum {
    GRAPHICS_ISO_ROTATE_90 = 90,

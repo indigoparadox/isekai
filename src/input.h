@@ -1,7 +1,7 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <stdint.h>
+#include "scaffold.h"
 
 typedef enum _INPUT_TYPE {
    INPUT_TYPE_NONE,
@@ -18,7 +18,6 @@ struct INPUT {
    uint16_t repeat;
 };
 
-#include "scaffold.h"
 #include "client.h"
 
 #ifdef USE_ALLEGRO

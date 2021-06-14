@@ -1,9 +1,6 @@
 
 #define UI_C
 #include "../ui.h"
-
-#include <stdlib.h>
-
 #include "../callback.h"
 
 const struct tagbstring str_dialog_control_default_id =

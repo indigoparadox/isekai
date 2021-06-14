@@ -7,12 +7,16 @@
 #define REF_SENTINAL 170
 #define REF_DISABLED {0, NULL, 0}
 
+#ifdef USE_REF_INLINE
 /* This is a hack to turn on inline for the ref_* static functions to avoid
  * -Wunused-function in gcc. as it ignores inline functions. Still lets us
  * turn off inlines for ancient compilers without messing with other inlines,
  * though.
  */
 #define REF_INLINE inline
+#else
+#define REF_INLINE
+#endif /* USE_REF_INLINE */
 
 #ifndef USE_THREADS
 
@@ -29,13 +33,6 @@ static REF_INLINE void ref_init( struct REF* ref, void (*free)( const struct REF
 }
 
 static struct tagbstring ref_module = bsStatic( "ref.h" );
-
-#define refcount_inc( obj, type ) \
-   ref_inc( &((obj)->refcount), type, __FUNCTION__ )
-#define refcount_dec( obj, type ) \
-   ref_dec( &((obj)->refcount), type, __FUNCTION__ )
-#define refcount_test_inc( obj ) ref_test_inc( obj, __FUNCTION__ )
-#define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
 
 static REF_INLINE void ref_inc( const struct REF* ref, const char* type, const char* func ) {
    scaffold_assert( REF_SENTINAL == ref->sentinal );
@@ -101,6 +98,15 @@ static SCAFFOLD_INLINE BOOL ref_test_dec( void* data, const char* func ) {
    return FALSE;
 }
 
+#endif /* ENABLE_REF_TEST */
+
+#define refcount_inc( obj, type ) \
+   ref_inc( &((obj)->refcount), type, __FUNCTION__ )
+#define refcount_dec( obj, type ) \
+   ref_dec( &((obj)->refcount), type, __FUNCTION__ )
+#ifdef ENABLE_REF_TEST
+#define refcount_test_inc( obj ) ref_test_inc( obj, __FUNCTION__ )
+#define refcount_test_dec( obj ) ref_test_dec( obj, __FUNCTION__ )
 #endif /* ENABLE_REF_TEST */
 
 #endif /* USE_THREADS */

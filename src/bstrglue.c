@@ -8,8 +8,6 @@ SCAFFOLD_MODULE( "bstrglue.c" );
 
 #include "vector.h"
 
-#include <stdlib.h>
-
 struct VECTOR* bgsplit( const_bstring str, char split ) {
    int i = 0;
    unsigned char* chr;

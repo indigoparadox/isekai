@@ -4,8 +4,6 @@
 
 #ifndef DISABLE_MODE_POV
 
-#include <stdlib.h>
-
 #include "../callback.h"
 #include "../ui.h"
 #include "../ipc.h"

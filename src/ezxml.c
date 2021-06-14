@@ -29,12 +29,10 @@
 #endif /* __linux */
 
 #ifndef __palmos__
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #endif /* __palmos__ */
 
 #include <stdio.h>
@@ -642,10 +640,10 @@ ezxml_t ezxml_parse_str(char *s, SCAFFOLD_SIZE len) {
          for (l = 0; *s && *s != '/' && *s != '>'; l += 2) { /* new attrib */
             /* FIXME: Soft realloc. */
             attr = (l) ? mem_realloc(attr, (l + 4), char*)
-                  : calloc(4,sizeof(char *)); /* allocate space */
+                  : (char**)calloc(4,sizeof(char *)); /* allocate space */
             /* FIXME: Soft realloc. */
             attr[l + 3] = (l) ? mem_realloc(attr[l + 1], (l / 2) + 2, char)
-                       : calloc(2,sizeof(char)); /* mem for list of maloced vals */
+                       : (char*)calloc(2,sizeof(char)); /* mem for list of maloced vals */
             strcpy(attr[l + 3] + (l / 2), " "); /* value is not malloced */
             attr[l + 2] = NULL; /* null terminate list */
             attr[l + 1] = ""; /* temporary attribute value */
@@ -695,7 +693,10 @@ ezxml_t ezxml_parse_str(char *s, SCAFFOLD_SIZE len) {
          if (! (q = *s) && e != '>') return ezxml_err(root, d, "missing >");
          *s = '\0'; /* temporarily null terminate tag name */
          if (ezxml_close_tag(root, d, s)) return &root->xml;
-         if (isspace(*s = q)) s += strspn(s, EZXML_WS);
+         *s = q;
+         if (isspace(*s)) {
+            s += strspn(s, EZXML_WS);
+         }
       } else if (! strncmp(s, "!--", 3)) { /* xml comment */
          if (! (s = strstr(s + 3, "--")) || (*(s += 2) != '>' && *s) ||
                (! *s && e != '>')) return ezxml_err(root, d, "unclosed <!--");

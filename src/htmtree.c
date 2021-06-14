@@ -1,9 +1,6 @@
 
 #include "htmtree.h"
 
-#include <stdint.h>
-#include <stdlib.h>
-
 struct html_tree_entity_def {
    struct tagbstring name;
    struct tagbstring character;
