@@ -120,14 +120,18 @@ void mode_pov_draw_sprite( struct MOBILE* o, struct CLIENT* c, GRAPHICS* g ) {
       sprite_screen_x = 0,
       sprite_screen_w = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
-   GRAPHICS_RECT draw_rect = { 0 }; /* H and W are really EndY and EndX. */
-   GRAPHICS_RECT spritesheet = { 0 };
-   GRAPHICS_RECT current_sprite = { 0 };
+   GRAPHICS_RECT draw_rect; /* H and W are really EndY and EndX. */
+   GRAPHICS_RECT spritesheet;
+   GRAPHICS_RECT current_sprite;
    struct MOBILE_SPRITE_DEF* current_frame = NULL;
 
    if( NULL == o || NULL == o->sprites ) {
       goto cleanup;
    }
+
+   memset( &draw_rect, '\0', sizeof( GRAPHICS_RECT ) );
+   memset( &spritesheet, '\0', sizeof( GRAPHICS_RECT ) );
+   memset( &current_sprite, '\0', sizeof( GRAPHICS_RECT ) );
 
    /* Translate sprite position to relative to camera. */
    sprite_x = o->x - c->cam_pos.precise_x;
@@ -401,7 +405,7 @@ static BOOL mode_pov_draw_floor(
    SCAFFOLD_SIZE set_firstgid = 0;
    GRAPHICS* g_tileset = NULL;
    BOOL ret_error = FALSE;
-   GRAPHICS_RECT tile_tilesheet_pos = { 0 };
+   GRAPHICS_RECT tile_tilesheet_pos;
    int tex_x = 0,
       tex_y = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
@@ -412,6 +416,8 @@ static BOOL mode_pov_draw_floor(
    } else {
       goto cleanup;
    }
+
+   memset( &tile_tilesheet_pos, '\0', sizeof( GRAPHICS_RECT ) );
 
    switch( layer->z ) {
    case POV_LAYER_LEVEL_NONE:
@@ -485,13 +491,13 @@ static BOOL mode_pov_update_view(
    struct CLIENT* c, GRAPHICS* g
 ) {
    int done = 0;
-   GFX_RAY_FLOOR floor_pos = { 0 };
+   GFX_RAY_FLOOR floor_pos;
    uint32_t tile = 0;
    GRAPHICS_COLOR color = GRAPHICS_COLOR_TRANSPARENT;
    BOOL wall_hit = FALSE;
    BOOL ret_error = FALSE,
       ret_tmp = FALSE;
-   GRAPHICS_DELTA wall_map_pos = { 0 };
+   GRAPHICS_DELTA wall_map_pos;
    struct TILEMAP* t = c->active_tilemap;
    GFX_COORD_PIXEL cell_height = 0,
       cell_height_qtr = 0,
@@ -505,6 +511,9 @@ static BOOL mode_pov_update_view(
    BOOL recurse = TRUE;
 
    scaffold_check_null( t );
+
+   memset( &floor_pos, '\0', sizeof( GFX_RAY_FLOOR ) );
+   memset( &wall_map_pos, '\0', sizeof( GRAPHICS_DELTA ) );
 
    /* Do the actual casting. */
    wall_hit = FALSE;
@@ -612,7 +621,7 @@ void mode_pov_draw(
    int i_x = 0,
       layer_max = 0,
       i_layer = 0;
-   GRAPHICS_RAY ray = { 0 };
+   GRAPHICS_RAY ray;
    struct TILEMAP_LAYER* layer_player = NULL;
    uint32_t tile_player = 0;
    struct TWINDOW* twindow = &(c->local_window);
@@ -623,6 +632,8 @@ void mode_pov_draw(
 
    player = c->puppet;
    scaffold_check_null( player );
+
+   memset( &ray, '\0', sizeof( GRAPHICS_RAY ) );
 
    mode_pov_set_facing( c, player->facing );
 

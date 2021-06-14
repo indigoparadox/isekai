@@ -87,3 +87,7 @@ void graphics_sleep( uint16_t milliseconds ) {
 uint32_t graphics_get_ticks() {
    return 0;
 }
+
+void graphics_set_window_title( GRAPHICS* g, bstring title, void* icon ) {
+
+}

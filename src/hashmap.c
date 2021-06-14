@@ -691,7 +691,9 @@ void* hashmap_iterate_nolock(
    void* found = NULL;
    void* data = NULL;
    void* test = NULL;
-   struct CONTAINER_IDX idx = { 0 };
+   struct CONTAINER_IDX idx;
+
+   memset( &idx, '\0', sizeof( struct CONTAINER_IDX ) );
 
    scaffold_check_null( m );
    scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
@@ -754,11 +756,13 @@ SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, 
 #ifndef HASHMAP_NO_LOCK_REMOVE
    BOOL locked = FALSE;
 #endif /* HASHMAP_NO_LOCK_REMOVE */
-   struct CONTAINER_IDX idx = { 0 };
+   struct CONTAINER_IDX idx;
 #ifdef USE_ITERATOR_CACHE
    SCAFFOLD_SIZE iterator_index = 0;
    struct HASHMAP_ELEMENT* e_iterator = NULL;
 #endif /* USE_ITERATOR_CACHE */
+
+   memset( &idx, '\0', sizeof( struct CONTAINER_IDX ) );
 
    /* FIXME: Delete dynamic arrays and reset when empty. */
 

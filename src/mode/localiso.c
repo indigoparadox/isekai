@@ -39,8 +39,7 @@ static void* mode_isometric_tilemap_draw_tile_cb(
    layer_max = vector_count( &(t->layers) );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( &(t->layers), layer_idx );
-      scaffold_assert(
-         TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
+      assert( TILEMAP_ORIENTATION_ISO == layer->tilemap->orientation );
       tile = tilemap_get_tile( layer, pos->x, pos->y );
       if( 0 < tile ) {
          mode_isometric_tilemap_draw_tile(

@@ -9,7 +9,7 @@
 static struct tagbstring str_server_data_path =
    bsStatic( "testdata/server" );
 
-#ifdef _WIN32
+#if defined( _WIN32 ) || defined( __BCC__ )
 #include "wdirent.h"
 #elif defined( __linux )
 #include <dirent.h>
@@ -309,9 +309,11 @@ cleanup:
 }
 
 BOOL files_check_directory( const bstring path ) {
-   struct stat dir_info = { 0 };
+   struct stat dir_info;
    char* path_c = NULL;
    bstring zero_error = NULL;
+
+   memset( &dir_info, '\0', sizeof( struct stat ) );
 
    scaffold_assert( NULL != path );
 

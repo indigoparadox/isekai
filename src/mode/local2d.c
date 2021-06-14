@@ -37,8 +37,7 @@ static void* mode_topdown_tilemap_draw_tile_cb(
    layer_max = vector_count( &(t->layers) );
    for( layer_idx = 0 ; layer_max > layer_idx ; layer_idx++ ) {
       layer = vector_get( &(t->layers), layer_idx );
-      scaffold_assert(
-         TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
+      assert( TILEMAP_ORIENTATION_ORTHO == layer->tilemap->orientation );
       tile = tilemap_get_tile( layer, pos->x, pos->y );
       if( 0 < tile ) {
          mode_topdown_tilemap_draw_tile(
@@ -634,23 +633,6 @@ static BOOL mode_topdown_poll_keyboard( struct CLIENT* c, struct INPUT* p ) {
       ui_control_add( win, &str_client_control_id_chat, control );
       ui_window_push( ui, win );
       return TRUE;
-#ifdef DEBUG_VM
-   //case 'p': windef_show_repl( ui ); return TRUE;
-#endif /* DEBUG_VM */
-#ifdef DEBUG_TILES
-   case 't':
-      if( 0 == p->repeat ) {
-         tilemap_toggle_debug_state();
-         return TRUE;
-      }
-      break;
-   case 'l':
-      if( 0 == p->repeat ) {
-         tilemap_dt_layer++;
-         return TRUE;
-      }
-      break;
-#endif /* DEBUG_TILES */
    }
 
    cleanup:

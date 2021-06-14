@@ -158,7 +158,7 @@ void item_draw_ortho(
    struct ITEM* e, GFX_COORD_PIXEL x, GFX_COORD_PIXEL y, GRAPHICS* g
 ) {
    struct ITEM_SPRITESHEET* catalog = NULL;
-   GRAPHICS_RECT sprite_rect = { 0, 0, 0, 0 };
+   GRAPHICS_RECT sprite_rect;
    struct ITEM_SPRITE* sprite = NULL;
 
    scaffold_assert_client();
@@ -166,6 +166,8 @@ void item_draw_ortho(
    if( NULL == e || NULL == g ) {
       goto cleanup;
    }
+
+   memset( &sprite_rect, '\0', sizeof( GRAPHICS_RECT ) );
 
    catalog = client_get_catalog( e->client_or_server, e->catalog_name );
    if( NULL == catalog ) {

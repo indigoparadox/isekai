@@ -102,7 +102,9 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    line->nick = bstrcpy( nick );
    line->line = bstrcpy( msg );
 
-   backlog_timestamp( line );
+   #ifdef USE_CLOCK
+   ( line );
+   #endif /* USE_CLOCK */
    verr = vector_insert( &global_backlog, 0, line );
    if( 0 > verr ) {
       backlog_line_free( line );
@@ -124,7 +126,9 @@ void backlog_system( const bstring msg ) {
    line->nick = NULL;
    line->line = bstrcpy( msg );
 
+   #ifdef USE_CLOCK
    backlog_timestamp( line );
+   #endif /* USE_CLOCK */
    verr = vector_insert( &global_backlog, 0, line );
    if( 0 > verr ) {
       /* Check below will destroy leftover object. */

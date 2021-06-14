@@ -14,7 +14,6 @@
 
 #ifdef __palmos__
 
-#define SNPRINTF_UNAVAILABLE
 #define TRUE 1
 #define FALSE 0
 #define USE_SYNCBUFF
@@ -24,11 +23,6 @@
 #elif defined( WIN16 )
 
 #include <windows.h>
-
-#define SNPRINTF_UNAVAILABLE
-
-#define SCAFFOLD_SIZE_MAX ULONG_MAX
-#define SCAFFOLD_SIZE_SIGNED_MAX LONG_MAX
 
 #define USE_CLOCK 1
 #define USE_FILE 1
@@ -72,6 +66,10 @@ typedef char int8_t;
 typedef unsigned char uint8_t;
 #endif /* USE_STDINT */
 
+#ifndef USE_SNPRINTF
+#define SNPRINTF_UNAVAILABLE
+#endif /* !USE_SNPRINTF */
+
 #ifndef BYTE
 typedef uint8_t BYTE;
 #endif /* BYTE */
@@ -100,9 +98,7 @@ typedef int32_t SCAFFOLD_SIZE_SIGNED;
 
 /* = Debug = */
 
-#ifdef DEBUG
 #include <assert.h>
-#endif /* DEBUG */
 
 /* = Common Headers = */
 

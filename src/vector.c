@@ -582,13 +582,15 @@ void* vector_iterate_nolock(
    void* cb_return = NULL;
    void* current_iter = NULL;
    SCAFFOLD_SIZE i;
-   struct CONTAINER_IDX idx = { 0 };
+   struct CONTAINER_IDX idx;
    SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
-   scaffold_assert( vector_is_valid( v ) );
+   assert( vector_is_valid( v ) );
    /* TODO: This can work for scalars too, can't it? */
-   scaffold_assert( FALSE == v->scalar );
+   assert( FALSE == v->scalar );
+
+   memset( &idx, '\0', sizeof( struct CONTAINER_IDX ) );
 
    idx.type = CONTAINER_IDX_NUMBER;
 
@@ -622,12 +624,14 @@ void* vector_iterate_r( struct VECTOR* v, vector_search_cb callback, void* arg )
    void* cb_return = NULL;
    void* current_iter = NULL;
    SCAFFOLD_SIZE i;
-   struct CONTAINER_IDX idx = { 0 };
+   struct CONTAINER_IDX idx;
 
    scaffold_check_null( v );
-   scaffold_assert( vector_is_valid( v ) );
+   assert( vector_is_valid( v ) );
    /* TODO: This can work for scalars too, can't it? */
-   scaffold_assert( FALSE == v->scalar );
+   assert( FALSE == v->scalar );
+
+   memset( &idx, '\0', sizeof( struct CONTAINER_IDX ) );
 
    idx.type = CONTAINER_IDX_NUMBER;
 
@@ -654,12 +658,14 @@ struct VECTOR* vector_iterate_v(
    void* cb_return = NULL;
    BOOL ok = FALSE;
    SCAFFOLD_SIZE i;
-   struct CONTAINER_IDX idx = { 0 };
+   struct CONTAINER_IDX idx;
    SCAFFOLD_SIZE_SIGNED add_err = 0;
    SCAFFOLD_SIZE v_count;
 
    scaffold_check_null( v );
-   scaffold_assert( vector_is_valid( v ) );
+   assert( vector_is_valid( v ) );
+
+   memset( &idx, '\0', sizeof( struct CONTAINER_IDX ) );
 
    vector_lock( v, TRUE );
    ok = TRUE;

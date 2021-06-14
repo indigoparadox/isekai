@@ -8,11 +8,13 @@
 #include "callback.h"
 
 void twindow_update_details( struct TWINDOW* twindow ) {
-   struct TILEMAP_POSITION smallest_tile = { 0 };
+   struct TILEMAP_POSITION smallest_tile;
    struct CLIENT* c = NULL;
    struct TILEMAP* t = NULL;
 
    scaffold_print_debug( &module, "Setting up tilemap screen window...\n" );
+
+   memset( &smallest_tile, '\0', sizeof( struct TILEMAP_POSITION ) );
 
    c = scaffold_container_of( twindow, struct CLIENT, local_window );
    t = c->active_tilemap;

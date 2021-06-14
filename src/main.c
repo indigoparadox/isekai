@@ -12,10 +12,6 @@
 #include "channel.h"
 #include "proto.h"
 
-#ifdef USE_CRYPTO
-#include "tnacl.h"
-#endif /* USE_CRYPTO */
-
 #ifdef __GNUC__
 #include <unistd.h>
 #endif /* __GNUC__ */
