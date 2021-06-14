@@ -48,15 +48,6 @@ cleanup:
 void proto_client_leave( struct CLIENT* c, const bstring lname ) {
 }
 
-void proto_send_chunk(
-   struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
-   const bstring filename, const bstring data
-) {
-}
-
-void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
-}
-
 void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type ) {
 }
 

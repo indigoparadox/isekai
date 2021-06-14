@@ -14,10 +14,6 @@ struct CHANNEL;
 struct MOBILE;
 struct UI;
 struct CONNECTION;
-#ifdef USE_CHUNKS
-struct CHUNKER_PROGRESS;
-struct CHUNKER;
-#endif /* USE_CHUNKS */
 
 typedef enum _CLIENT_FLAGS {
    CLIENT_FLAGS_HAVE_USER = 0x01,
@@ -71,10 +67,6 @@ struct CLIENT {
    struct TILEMAP* active_tilemap;
    struct TWINDOW local_window;
 
-#ifdef USE_CHUNKS
-   struct HASHMAP chunkers;
-#endif /* USE_CHUNKS */
-
 #ifndef DISABLE_MODE_POV
    GRAPHICS_PLANE cam_pos;
    GRAPHICS_PLANE plane_pos;
@@ -120,21 +112,12 @@ BOOL client_is_local( struct CLIENT* c );
 void client_remove_all_channels( struct CLIENT* c );
 BOOL client_update( struct CLIENT* c, GRAPHICS* g );
 void client_free_channels( struct CLIENT* c );
-#ifdef USE_CHUNKS
-void client_free_chunkers( struct CLIENT* c );
-#endif /* USE_CHUNKS */
 void client_join_channel( struct CLIENT* c, const bstring name );
 void client_leave_channel( struct CLIENT* c, const bstring lname );
 void client_send( struct CLIENT* c, const bstring buffer );
 void client_printf( struct CLIENT* c, const char* message, ... );
 void client_lock_channels( struct CLIENT* c, BOOL lock );
 void client_stop( struct CLIENT* c );
-#ifdef USE_CHUNKS
-void client_send_file(
-   struct CLIENT* c, DATAFILE_TYPE type,
-   const bstring serverpath, const bstring filepath
-);
-#endif /* USE_CHUNKS */
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o );
 void client_clear_puppet( struct CLIENT* c );
 void client_request_file_later(
@@ -143,10 +126,6 @@ void client_request_file_later(
 void client_request_file(
    struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
 );
-#ifdef USE_CHUNKS
-void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp );
-void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h );
-#endif /* USE_CHUNKS */
 BOOL client_poll_ui(
    struct CLIENT* c, struct CHANNEL* l, struct INPUT* p
 );

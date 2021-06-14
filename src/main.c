@@ -6,7 +6,6 @@
 #include "server.h"
 #include "ui.h"
 #include "callback.h"
-#include "vm.h"
 #include "backlog.h"
 #include "animate.h"
 #include "rng.h"

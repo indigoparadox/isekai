@@ -7,10 +7,8 @@
 #include "client.h"
 #include "server.h"
 #include "proto.h"
-#include "chunker.h"
 #include "tilemap.h"
 #include "ui.h"
-#include "vm.h"
 #include "backlog.h"
 #ifdef USE_EZXML
 #include "datafile.h"
@@ -25,74 +23,6 @@ extern struct UI* last_ui;
 #endif /* DEBUG */
 
 extern struct CLIENT* main_client;
-
-#if 0
-void* callback_ingest_commands( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   SCAFFOLD_SIZE last_read_count = 0;
-   struct SERVER* s = (struct SERVER*)arg;
-   static bstring buffer = NULL;
-   struct CLIENT* c = (struct CLIENT*)iter;
-   IRC_COMMAND* cmd = NULL;
-   const IRC_COMMAND* table = proto_table_server;
-   int bstr_result;
-
-#ifdef ENABLE_LOCAL_CLIENT
-   /* Figure out if we're being called from a client or server. */
-   if( FALSE != ipc_is_local_client( c->link ) ) {
-      table = proto_table_client;
-   } else {
-#endif /* ENABLE_LOCAL_CLIENT */
-   scaffold_assert( NULL != s );
-#ifdef ENABLE_LOCAL_CLIENT
-   }
-#endif /* ENABLE_LOCAL_CLIENT */
-
-   /* Make sure a buffer is present. */
-   if( NULL == buffer ) {
-      buffer = bfromcstralloc( IPC_BUFFER_LEN, "" );
-   } else {
-      bwriteallow( (*buffer) ); /* Unprotect the buffer. */
-      bstr_result = btrunc( buffer, 0 );
-      scaffold_check_nonzero( bstr_result );
-   }
-
-   /* Get the next line and clean it up. */
-   last_read_count = ipc_read(
-      c->link,
-      buffer
-   );
-
-   /* Everything is fine, so tidy up the buffer. */
-   btrimws( buffer );
-   bwriteprotect( (*buffer) ); /* Protect the buffer until next read. */
-
-   if( SCAFFOLD_ERROR_CONNECTION_CLOSED == scaffold_error ) {
-      /* Return an empty command to force abortion of the iteration. */
-      cmd = mem_alloc( 1, IRC_COMMAND );
-      cmd->callback = NULL;
-      cmd->line = bstrcpy( c->nick );
-      goto cleanup;
-   }
-
-   /* The -1 is not bubbled up; the scaffold_error should suffice. */
-   if( 0 >= last_read_count ) {
-      goto cleanup;
-   }
-
-#ifdef DEBUG_NETWORK
-   scaffold_print_debug(
-      &module,
-      "Server: Line received from %d: %s\n",
-      c->link.socket, bdata( buffer )
-   );
-#endif /* DEBUG_NETWORK */
-
-   cmd = irc_dispatch( table, s, c, buffer );
-
-cleanup:
-   return cmd;
-}
-#endif
 
 /* Append all clients to the bstrlist arg. */
 void* callback_concat_clients( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
@@ -230,23 +160,6 @@ void* callback_get_tile_stack_l( struct CONTAINER_IDX* idx, void* parent, void* 
 #endif /* DEBUG_TILES */
    }
    return tdata;
-}
-
-/** \brief Try to download any tilesets that have not yet been downloaded.
- */
-void* callback_download_tileset( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct TILEMAP_TILESET* set = (struct TILEMAP_TILESET*)iter;
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
-
-   scaffold_check_null_msg( idx->value.key, "Invalid tileset key provided." );
-   if( 0 == set->tileheight && 0 == set->tilewidth ) {
-      client_request_file_later( c, DATAFILE_TYPE_TILESET, idx->value.key );
-   }
-
-cleanup:
-   return NULL;
 }
 
 /** \brief Same idea as callback_download_tileset(), but server-side.
@@ -434,28 +347,6 @@ void* callback_search_tilesets_name( struct CONTAINER_IDX* idx, void* parent, vo
    return NULL;
 }
 
-#ifdef USE_CHUNKS
-
-void* callback_proc_client_chunkers(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-   struct CLIENT* c = (struct CLIENT*)arg;
-
-   if( chunker_unchunk_finished( h ) ) {
-      /* Cached file found, so abort transfer. */
-      if( chunker_unchunk_cached( h ) ) {
-         proto_abort_chunker( c, h );
-      }
-
-      return h;
-   }
-
-   return NULL;
-}
-
-#endif /* USE_CHUNKS */
-
 BOOL callback_proc_client_delayed_files(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
 ) {
@@ -473,89 +364,6 @@ BOOL callback_proc_client_delayed_files(
 }
 
 #endif /* ENABLE_LOCAL_CLIENT */
-
-#ifdef USE_CHUNKS
-
-void* callback_send_chunkers_l( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)arg;
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-   bstring chunk_out = NULL;
-   SCAFFOLD_SIZE start_pos = 0;
-
-   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
-
-   if( chunker_chunk_finished( h ) ) {
-      goto cleanup;
-   }
-
-   chunk_out = bfromcstralloc( CHUNKER_DEFAULT_CHUNK_SIZE, "" );
-   start_pos = chunker_chunk_pass( h, chunk_out );
-   proto_send_chunk( c, h, start_pos, idx->value.key, chunk_out );
-
-cleanup:
-   bdestroy( chunk_out );
-   return NULL;
-}
-
-void* callback_proc_chunkers( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct CLIENT* c = (struct CLIENT*)iter;
-
-   /* Process some compression chunks. */
-   hashmap_iterate_v( &(c->chunkers), callback_send_chunkers_l, c );
-
-   /* Removed any finished chunkers. */
-   hashmap_remove_cb(
-      &(c->chunkers), callback_free_finished_chunkers, NULL
-   );
-
-   return NULL;
-}
-
-#endif /* USE_CHUNKS */
-
-#ifdef USE_VM
-
-void* callback_proc_mobile_vms( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct MOBILE* o = (struct MOBILE*)iter;
-
-   scaffold_assert_server();
-
-   if(
-      NULL != o &&
-      !mobile_is_occupied( o ) &&
-      vm_caddy_has_event( o->vm_caddy, &str_vm_tick ) &&
-#ifdef USE_TURNS
-      vm_get_tick( o->vm_tick_prev )
-#else
-      vm_get_tick( 0 )
-#endif /* USE_TURNS */
-   ) {
-      vm_caddy_do_event( o->vm_caddy, &str_vm_tick );
-#ifdef USE_TURNS
-      o->vm_tick_prev++;
-#endif /* USE_TURNS */
-   }
-
-   return NULL;
-}
-
-void* callback_proc_channel_vms( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
-   struct CHANNEL* l = (struct CHANNEL*)iter;
-
-   scaffold_assert_server();
-
-   /*
-   if( channel_vm_can_step( l ) ) {
-      channel_vm_step( l );
-   }
-   */
-
-   vector_iterate( l->mobiles, callback_proc_mobile_vms, NULL );
-
-   return NULL;
-}
-
-#endif /* USE_VM */
 
 void* callback_proc_channel_spawners(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
@@ -701,9 +509,6 @@ void* callback_search_tileset_img_gid(
 
    if(
       NULL == iter
-#ifdef USE_CHUNKS
-      && NULL == hashmap_get( &(c->chunkers), idx->value.key )
-#endif /* USE_CHUNKS */
    ) {
       client_request_file_later( c, DATAFILE_TYPE_TILESET_TILES, idx->value.key );
    }
@@ -712,20 +517,6 @@ void* callback_search_tileset_img_gid(
    }
 
    return NULL;
-
-#if 0
-   if( NULL == o->sprites && NULL == hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      /* No sprites and no request yet, so make one! */
-      client_request_file( twindow->c, CHUNKER_DATA_TYPE_TILESET_IMG, key );
-      goto cleanup;
-   } else if( NULL == o->sprites && NULL != hashmap_get( &(twindow->c->sprites), o->sprites_filename ) ) {
-      o->sprites = (GRAPHICS*)hashmap_get( &(twindow->c->sprites), o->sprites_filename );
-      refcount_inc( o->sprites, "spritesheet" );
-   } else if( NULL == o->sprites ) {
-      /* Sprites must not be ready yet. */
-      goto cleanup;
-   }
-#endif
 }
 
 void* callback_proc_tileset_img_gs(
@@ -1005,41 +796,6 @@ BOOL callback_free_item_caches(
    return FALSE;
 }
 
-#ifdef USE_CHUNKS
-
-BOOL callback_free_chunkers(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-   bstring filename = (bstring)arg;
-   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
-   if( NULL == filename || 0 == bstrcmp( idx->value.key, filename ) ) {
-      struct CHUNKER* h = (struct CHUNKER*)iter;
-      chunker_free( h );
-      return TRUE;
-   }
-   return FALSE;
-}
-
-BOOL callback_free_finished_chunkers(
-   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
-) {
-   struct CHUNKER* h = (struct CHUNKER*)iter;
-
-   scaffold_assert( CONTAINER_IDX_STRING == idx->type );
-
-   if( chunker_chunk_finished( h ) ) {
-      scaffold_print_debug(
-         &module, "(Un)chunker for %s has finished. Removing...\n",
-         bdata( idx->value.key )
-      );
-      chunker_free( h );
-      return TRUE;
-   }
-   return FALSE;
-}
-
-#endif /* USE_CHUNKS */
-
 BOOL callback_free_generic( struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg ) {
    mem_free( iter );
    return TRUE;
@@ -1139,12 +895,3 @@ BOOL callback_free_spawners( struct CONTAINER_IDX* idx, void* parent, void* iter
    }
    return FALSE;
 }
-
-VECTOR_SORT_ORDER callback_sort_chunker_tracks( void* a, void* b ) {
-   CHUNKER_TRACK* cta = (CHUNKER_TRACK*)a;
-   CHUNKER_TRACK* ctb = (CHUNKER_TRACK*)b;
-   if( cta->start == ctb->start ) {
-      return VECTOR_SORT_A_B_EQUAL;
-   }
-   return (cta->start > ctb->start) ? VECTOR_SORT_A_HEAVIER : VECTOR_SORT_A_LIGHTER;
- }

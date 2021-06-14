@@ -9,14 +9,7 @@
 #include "server.h"
 #include "proto.h"
 #include "backlog.h"
-#ifdef USE_TINYPY
-#include "tinypy/tinypy.h"
-#endif /* USE_TINYPY */
-#ifdef USE_DUKTAPE
-#include "duktape/duktape.h"
-#endif /* USE_DUKTAPE */
 #include "rng.h"
-#include "vm.h"
 #include "ipc.h"
 
 static void channel_free_final( const struct REF *ref ) {
@@ -359,12 +352,6 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
    if( 0 >= tilesets_count ) {
       goto cleanup;
    }
-
-#ifdef USE_CHUNKS
-   if( 0 < hashmap_count( &(l->client_or_server->chunkers) ) ) {
-      goto cleanup;
-   }
-#endif /* USE_CHUNKS */
 
    if( 0 < vector_count( &(l->client_or_server->delayed_files) ) ) {
       goto cleanup;

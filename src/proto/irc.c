@@ -3,7 +3,6 @@
 #include "../proto.h"
 
 #include "../callback.h"
-#include "../chunker.h"
 #include "../datafile.h"
 #include "../backlog.h"
 #include "../channel.h"
@@ -194,9 +193,11 @@ static void proto_channel_send(
       skip_nick = c_skip->nick;
    }
 
+#if 0
    l_clients =
       hashmap_iterate_v( l->clients, callback_search_clients_r, skip_nick );
    scaffold_check_null( l_clients );
+#endif
 
    vector_iterate( l_clients, proto_send_cb, buffer );
 
@@ -279,72 +280,6 @@ cleanup:
    bdestroy( buffer );
    return;
 }
-
-#ifdef USE_CHUNKS
-
-void proto_send_chunk(
-   struct CLIENT* c, struct CHUNKER* h, SCAFFOLD_SIZE start_pos,
-   const bstring filename, const bstring data
-) {
-   DATAFILE_TYPE type = DATAFILE_TYPE_INVALID;
-   SCAFFOLD_SIZE chunk_len = 0,
-      raw_len = 0;
-   bstring data_sent = NULL;
-
-   scaffold_assert_server();
-
-   /* Note the starting point and progress for the client. */
-
-   if( NULL != h ) {
-      type = h->type;
-      chunk_len = h->tx_chunk_length;
-      raw_len = h->raw_length;
-      data_sent = bstrcpy( data );
-   } else {
-      /* Make things easy on the arg count validator. */
-      data_sent = bfromcstr( "x" );
-   }
-
-   proto_printf(
-      c, ":server GDB %b TILEMAP %b %d %d %d %d : %b",
-      c->nick, filename, type, start_pos,
-      chunk_len, raw_len, data_sent
-   );
-
-/* cleanup: */
-   bdestroy( data_sent );
-   return;
-}
-
-void proto_abort_chunker( struct CLIENT* c, struct CHUNKER* h ) {
-   scaffold_assert_client();
-   scaffold_print_debug(
-      &module,
-      "Client: Aborting transfer of %s from server due to cached copy.\n",
-      bdata( h->filename )
-   );
-   proto_printf( c, "GDA %b", h->filename );
-}
-
-/** \brief This should ONLY be called by client_request_file(). All requests for
- *         files should go through that function.
- * \param c          Local client object.
- * \param filename   Name/path of the file (relative to the server root).
- * \param type       Type of file requested. Used in return processing.
- */
-void proto_request_file( struct CLIENT* c, const bstring filename, DATAFILE_TYPE type ) {
-   scaffold_assert_client();
-   scaffold_assert( 0 < blength( filename ) );
-   /*
-   scaffold_print_debug(
-      &module, "Client: Requesting %b file: %s\n",
-      chunker_type_names[type].data, bdata( filename )
-   );
-   */
-   proto_printf( c, "GRF %d %b", type, filename );
-}
-
-#endif /* USE_CHUNKS */
 
 void proto_send_mob( struct CLIENT* c, struct MOBILE* o ) {
    bstring owner_nick = NULL;
@@ -737,6 +672,7 @@ static void irc_server_ison(
    SCAFFOLD_SIZE i;
    int bstr_result;
 
+#if 0
    response = bfromcstralloc( IRC_STANZA_ALLOC, "" );
    scaffold_check_null( response );
 
@@ -765,6 +701,7 @@ cleanup:
       mem_free( ison );
    }
    bdestroy( response );
+#endif
    return;
 }
 
@@ -1159,51 +1096,6 @@ void proto_empty_buffer( struct CLIENT* c ) {
    bdestroy( buffer );
    return;
 }
-
-#ifdef USE_CHUNKS
-
-#ifdef ENABLE_LOCAL_CLIENT
-
-static void irc_client_gamedatablock(
-   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
-) {
-   struct CHUNKER_PROGRESS progress;
-
-   irc_detect_malformed( 11, "GDB", line );
-
-   progress.type = bgtoi( (bstring)vector_get( args, 5 ) );
-   progress.current = bgtoi( (bstring)vector_get( args, 6 ) );
-   progress.chunk_size = bgtoi( (bstring)vector_get( args, 7 ) );
-   progress.total = bgtoi( (bstring)vector_get( args, 8 ) );
-   progress.filename = (bstring)vector_get( args, 4 );
-   progress.data = (bstring)vector_get( args, 10 );
-
-   client_process_chunk( c, &progress );
-
-cleanup:
-   return;
-}
-
-#endif /* ENABLE_LOCAL_CLIENT */
-
-static void irc_server_gamedataabort(
-   struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line
-) {
-   irc_detect_malformed( 2, "GDA", line );
-
-   scaffold_print_debug(
-      &module,
-      "Server: Terminating transfer of %s at request of client: %p\n",
-      bdata( (bstring)vector_get( args, 1 ) ), c
-   );
-
-   hashmap_remove_cb( &(c->chunkers), callback_free_chunkers, (bstring)vector_get( args, 1 ) );
-
-cleanup:
-   return;
-}
-
-#endif /* USE_CHUNKS */
 
 static void irc_client_item_cache_start(
    struct CLIENT* c, struct SERVER* s, struct VECTOR* args, bstring line

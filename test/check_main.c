@@ -9,7 +9,6 @@ main_add_test_proto( client )
 main_add_test_proto( b64 )
 main_add_test_proto( channel )
 main_add_test_proto( hashmap )
-main_add_test_proto( chunker )
 /* main_add_test_proto( connection ) */
 main_add_test_proto( syncbuff )
 
@@ -38,7 +37,6 @@ int main( void ) {
    main_add_test( client );
    */
    //main_add_test( hashmap );
-   //main_add_test( chunker );
 
    return( number_failed == 0 ) ? 0 : 1;
 }

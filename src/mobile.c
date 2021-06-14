@@ -3,11 +3,9 @@
 #include "mobile.h"
 
 #include "proto.h"
-#include "chunker.h"
 #include "hashmap.h"
 #include "callback.h"
 #include "datafile.h"
-#include "vm.h"
 #include "backlog.h"
 #include "channel.h"
 #include "ipc.h"

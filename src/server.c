@@ -358,13 +358,6 @@ BOOL server_service_clients( struct SERVER* s ) {
       server_drop_client( s, c_stop->nick );
    }
 
-#ifdef USE_CHUNKS
-
-   /* Send files in progress. */
-   hashmap_iterate( &(s->clients), callback_proc_chunkers, s );
-
-#endif /* USE_CHUNKS */
-
    /* Spawn NPC mobiles. */
    hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, s );
 

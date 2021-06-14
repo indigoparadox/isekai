@@ -455,7 +455,6 @@ struct CONTAINER_IDX {
 
 /** \brief Get the container struct of the given struct. Useful for structs
  *         that only ever exist inside of other structs.
- *(struct CHUNKER*)scaffold_container_of( ref, struct CHUNKER, refcount );
  * \param ptr        Instance pointer to struct to find container of.
  * \param type       Type of the container (e.g. struct SERVER).
  * \param member     Name of the class member in the container that ptr is.

@@ -3,7 +3,6 @@
 #include "item.h"
 
 #include "callback.h"
-#include "chunker.h"
 #include "client.h"
 #include "rng.h"
 

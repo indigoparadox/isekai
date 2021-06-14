@@ -717,68 +717,6 @@ cleanup:
    return found;
 }
 
-/** \brief Build a vector using the specified callback from the hashmap
- *         contents.
- * \param[in]  m        Hashmap to search.
- * \param[in]  callback Callback to create vector by iterating.
- * \param[in]  arg      Argument to pass to the callback.
- * \return A new vector containing all found results.
- */
-struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg ) {
-   struct VECTOR* found = NULL;
-   BOOL ok = FALSE;
-#ifdef USE_ITERATOR_CACHE
-   struct HASHMAP_VECTOR_ADAPTER adp;
-#else
-   struct CONTAINER_IDX* idx = { 0 };
-#endif /* USE_ITERATOR_CACHE */
-
-   scaffold_check_null( m );
-   scaffold_assert( HASHMAP_SENTINAL == m->sentinal );
-   scaffold_check_zero_against_warning(
-      m->last_error, hashmap_count( m ),
-      "Hashmap empty during vector iteration."
-   );
-   hashmap_lock( m, TRUE );
-   ok = TRUE;
-
-#ifdef USE_ITERATOR_CACHE
-   adp.callback = callback;
-   adp.arg = arg;
-
-   found = vector_iterate_v( &(m->iterators), hashvector_search_cb, m, &adp );
-#else
-   idx.type = CONTAINER_IDX_STRING;
-
-   /* Linear probing */
-   for( i = 0; m->table_size > i ; i++ ) {
-      if( 0 != m->data[i].in_use ) {
-         data = (void*)(m->data[i].data);
-         idx.value.key = m->data[i].key;
-         test = callback( &idx, m, data, arg );
-         if( NULL != test ) {
-            if( NULL == found ) {
-               vector_new( found );
-            }
-            verr = vector_add( found, test );
-            if( 0 > verr ) {
-               goto cleanup;
-            }
-         }
-      }
-   }
-#endif /* USE_ITERATOR_CACHE */
-
-cleanup:
-#ifdef DEBUG
-   hashmap_verify_size( m );
-#endif /* DEBUG */
-   if( TRUE == ok ) {
-      hashmap_lock( m, FALSE );
-   }
-   return found;
-}
-
 static
 BOOL hashmap_remove_internal( struct HASHMAP* m, struct HASHMAP_ELEMENT* e ) {
 #ifdef USE_ITERATOR_CACHE

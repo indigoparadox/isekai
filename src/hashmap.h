@@ -93,8 +93,6 @@ void* hashmap_iterate_nolock(
    struct HASHMAP* m, hashmap_search_cb callback, void* arg
 );
 
-struct VECTOR* hashmap_iterate_v( struct HASHMAP* m, hashmap_search_cb callback, void* arg );
-
 SCAFFOLD_SIZE hashmap_remove_cb( struct HASHMAP* m, hashmap_delete_cb callback, void* arg );
 
 /*

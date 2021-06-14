@@ -18,8 +18,5 @@ src/tinypy/*.tpc
 PROCIRCD.VCW
 PROCIRCD.WSP
 PROCIRCD.bsc
-CMakeFiles
 cmake_install.cmake
-CMakeCache.txt
-Makefile
 build

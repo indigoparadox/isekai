@@ -3,7 +3,6 @@
 #include "../datafile.h"
 
 #include "../hashmap.h"
-#include "../vm.h"
 #include "../callback.h"
 #include "../channel.h"
 
