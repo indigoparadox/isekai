@@ -232,24 +232,24 @@ struct CBString : public tagbstring {
 	}
 
 	// Comparison operators
-	bool operator == (const CBString& b) const;
-	bool operator == (const char * s) const;
-	bool operator == (const unsigned char * s) const;
-	bool operator != (const CBString& b) const;
-	bool operator != (const char * s) const;
-	bool operator != (const unsigned char * s) const;
-	bool operator <  (const CBString& b) const;
-	bool operator <  (const char * s) const;
-	bool operator <  (const unsigned char * s) const;
-	bool operator <= (const CBString& b) const;
-	bool operator <= (const char * s) const;
-	bool operator <= (const unsigned char * s) const;
-	bool operator >  (const CBString& b) const;
-	bool operator >  (const char * s) const;
-	bool operator >  (const unsigned char * s) const;
-	bool operator >= (const CBString& b) const;
-	bool operator >= (const char * s) const;
-	bool operator >= (const unsigned char * s) const;
+	BOOL operator == (const CBString& b) const;
+	BOOL operator == (const char * s) const;
+	BOOL operator == (const unsigned char * s) const;
+	BOOL operator != (const CBString& b) const;
+	BOOL operator != (const char * s) const;
+	BOOL operator != (const unsigned char * s) const;
+	BOOL operator <  (const CBString& b) const;
+	BOOL operator <  (const char * s) const;
+	BOOL operator <  (const unsigned char * s) const;
+	BOOL operator <= (const CBString& b) const;
+	BOOL operator <= (const char * s) const;
+	BOOL operator <= (const unsigned char * s) const;
+	BOOL operator >  (const CBString& b) const;
+	BOOL operator >  (const char * s) const;
+	BOOL operator >  (const unsigned char * s) const;
+	BOOL operator >= (const CBString& b) const;
+	BOOL operator >= (const char * s) const;
+	BOOL operator >= (const unsigned char * s) const;
 
 	// Casts
 	inline operator const char* () const { return (const char *)data; }
@@ -345,7 +345,7 @@ struct CBString : public tagbstring {
 	// Write protection methods.
 	void writeprotect ();
 	void writeallow ();
-	inline bool iswriteprotected () const { return mlen <= 0; }
+	inline BOOL iswriteprotected () const { return mlen <= 0; }
 
 	// Join methods.
 #if defined(BSTRLIB_CAN_USE_STL)

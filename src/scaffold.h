@@ -14,20 +14,27 @@
 
 #ifdef __palmos__
 
-#define TRUE 1
-#define FALSE 0
+#define PTR_SZ_16
 #define USE_SYNCBUFF
 #undef __GNUC__
 #define EZXML_NOMMAP
 
 #elif defined( WIN16 )
 
+#define PTR_SZ_16
+
 #include <windows.h>
 
 #define USE_CLOCK 1
 #define USE_FILE 1
 
-#elif defined( _WIN32 )
+#elif defined( _WIN32 ) || defined( _WIN64 )
+
+#if _WIN64
+#define PTR_SZ_64
+#else
+#define PTR_SZ_32
+#endif /* _WIN64 */
 
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
@@ -38,11 +45,29 @@
 
 #elif defined( __linux )
 
+#if __GNUC__
+
+#if __x86_64__ || __ppc64__
+#define PTR_SZ_64
+#else
+#define PTR_SZ_32
+#endif /* __x86_64__ || __ppc64 */
+
 #define _GNU_SOURCE
 #undef _POSIX_SOURCE
 #define _POSIX_SOURCE 1
 #undef __USE_POSIX
 #define __USE_POSIX 1
+
+#else /* !__GNUC__ */
+
+#if UINTPTR_MAX > UINT_MAX
+#define PTR_SZ_64
+#else
+#define PTR_SZ_32
+#endif
+
+#endif /* __GNUC__ */
 
 #include <stdlib.h>
 
@@ -434,6 +459,14 @@ struct CONTAINER_IDX {
 #define scaffold_char_is_printable( c ) \
     (0x7f > (c) && 0x20 < (c))
 
+#ifdef PTR_SZ_32
+typedef long SCAFFOLD_PTR;
+#elif defined( PTR_SZ_16 )
+typedef int SCAFFOLD_PTR;
+#elif defined( PTR_SZ_64 )
+typedef long long SCAFFOLD_PTR;
+#endif /* PTR_SZ */
+
 /** \brief Get the container struct of the given struct. Useful for structs
  *         that only ever exist inside of other structs.
  * \param ptr        Instance pointer to struct to find container of.
@@ -441,7 +474,7 @@ struct CONTAINER_IDX {
  * \param member     Name of the class member in the container that ptr is.
  */
 #define scaffold_container_of( ptr, type, member ) \
-    ((type *)((char *)(ptr) - ((int) &((type *) 0)->member)))
+    ((type *)((char *)(ptr) - ((SCAFFOLD_PTR)&((type *) 0)->member)))
 
 struct VECTOR;
 

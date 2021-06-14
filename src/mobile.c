@@ -3,6 +3,9 @@
 #include "mobile.h"
 
 #include "proto.h"
+#ifdef USE_CHUNKS
+#include "chunker.h"
+#endif /* USE_CHUNKS */
 #include "hashmap.h"
 #include "callback.h"
 #include "datafile.h"

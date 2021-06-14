@@ -5,6 +5,7 @@
 #include "server.h"
 #include "callback.h"
 #include "proto.h"
+#include "chunker.h"
 #include "input.h"
 #include "tilemap.h"
 #include "datafile.h"
@@ -14,6 +15,19 @@
 #include "ipc.h"
 
 bstring client_input_from_ui = NULL;
+
+#ifdef USE_CHUNKS
+static BOOL callback_remove_chunkers(
+   struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
+) {
+   struct CLIENT* c = (struct CLIENT*)arg;
+   struct CHUNKER* h = (struct CHUNKER*)iter;
+
+   client_handle_finished_chunker( c, h );
+
+   return TRUE;
+}
+#endif /* USE_CHUNKS */
 
 static BOOL callback_remove_items(
    struct CONTAINER_IDX* idx, void* parent, void* iter, void* arg
@@ -42,6 +56,9 @@ static void client_cleanup( const struct REF *ref ) {
 
    hashmap_cleanup( &(c->sprites) );
 
+#ifdef USE_CHUNKS
+   hashmap_cleanup( &(c->chunkers) );
+#endif /* USE_CHUNKS */
    vector_cleanup( &(c->delayed_files) );
    hashmap_cleanup( &(c->channels) );
 
@@ -68,6 +85,9 @@ void client_init( struct CLIENT* c ) {
 
    hashmap_init( &(c->channels) );
    hashmap_init( &(c->sprites) );
+#ifdef USE_CHUNKS
+   hashmap_init( &(c->chunkers) );
+#endif /* USE_CHUNKS */
    vector_init( &(c->delayed_files) );
    hashmap_init( &(c->tilesets) );
    hashmap_init( &(c->item_catalogs) );
@@ -158,6 +178,13 @@ cleanup:
  */
 BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
    BOOL retval = FALSE;
+#ifdef DEBUG_TILES
+   int bstr_ret;
+   SCAFFOLD_SIZE steps_remaining_x,
+      steps_remaining_y;
+   static bstring pos = NULL;
+   struct MOBILE* o = NULL;
+#endif /* DEBUG_TILES */
    BOOL keep_going = FALSE;
    struct VECTOR* chunker_removal_queue = NULL;
 
@@ -172,18 +199,93 @@ BOOL client_update( struct CLIENT* c, GRAPHICS* g ) {
       client_stop( c );
    }
 
+#ifdef DEBUG_TILES
+   o = client_get_puppet( c );
+
+   if( NULL == pos ) {
+      pos = bfromcstr( "" );
+   }
+
+   if( NULL != o ) {
+      steps_remaining_x = mobile_get_steps_remaining_x( o, FALSE );
+      steps_remaining_y = mobile_get_steps_remaining_y( o, FALSE );
+
+      bstr_ret = bassignformat( pos,
+         "Player: %d (%d)[%d], %d (%d)[%d]",
+         o->x, o->prev_x, steps_remaining_x,
+         o->y, o->prev_y, steps_remaining_y
+      );
+      scaffold_check_nonzero( bstr_ret );
+      ui_debug_window( c->ui, &str_wid_debug_tiles_pos, pos );
+   }
+
+#ifdef USE_CHUNKS
+   /* Deal with chunkers that will never receive blocks that are finished via
+    * their cache.
+    */
+   chunker_removal_queue = (struct VECTOR*)hashmap_iterate_v( &(c->chunkers), callback_proc_client_chunkers, c );
+   if( NULL != chunker_removal_queue ) {
+      vector_remove_cb( chunker_removal_queue, callback_remove_chunkers, c );
+      vector_free( &chunker_removal_queue );
+   }
+#endif /* USE_CHUNKS */
+
+cleanup:
+#endif /* DEBUG_TILES */
+
    vector_remove_cb( &(c->delayed_files), callback_proc_client_delayed_files, c );
 
    return retval;
 }
 
 void client_free_channels( struct CLIENT* c ) {
-   hashmap_remove_all( &(c->channels) );
-   assert( 0 == hashmap_count( &(c->channels) ) );
+#ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
+
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_all( &(c->channels) );
+      //hashmap_remove_cb( &(c->channels), callback_free_channels, NULL );
+#ifdef DEBUG
+   scaffold_print_debug(
+      &module,
+      "Removed %d channels. %d remaining.\n",
+      deleted, hashmap_count( &(c->channels) )
+   );
+#endif /* DEBUG */
+   scaffold_assert( 0 == hashmap_count( &(c->channels) ) );
 }
+
+#ifdef USE_CHUNKS
+void client_free_chunkers( struct CLIENT* c ) {
+#ifdef DEBUG
+   SCAFFOLD_SIZE deleted;
+
+   deleted =
+#endif /* DEBUG */
+      hashmap_remove_all( &(c->chunkers) );
+#ifdef DEBUG
+   scaffold_print_debug(
+      &module,
+      "Removed %d chunkers. %d remaining.\n",
+      deleted, hashmap_count( &(c->chunkers) )
+   );
+   assert( 0 == hashmap_count( &(c->chunkers) ) );
+#endif /* DEBUG */
+}
+#endif /* USE_CHUNKS */
 
 void client_stop( struct CLIENT* c ) {
    bstring buffer = NULL;
+#ifdef DEBUG
+   SCAFFOLD_SIZE test_count = 0;
+
+   scaffold_assert( CLIENT_SENTINAL == c->sentinal );
+
+   if( FALSE != ipc_connected( c->link ) ) {
+      scaffold_print_info( &module, "Client connection stopping...\n" );
+      ipc_stop( c->link );
+   }
 
 #ifdef ENABLE_LOCAL_CLIENT
 
@@ -197,12 +299,17 @@ void client_stop( struct CLIENT* c ) {
 
 #endif /* ENABLE_LOCAL_CLIENT */
 
+#endif /* DEBUG */
+
    client_clear_puppet( c );
 
    buffer = bfromcstralloc( CLIENT_BUFFER_ALLOC, "" );
    scaffold_check_null( buffer );
 
    client_free_channels( c );
+#ifdef USE_CHUNKS
+   client_free_chunkers( c );
+#endif /* USE_CHUNKS */
 
    /* Empty receiving buffer. */
    proto_empty_buffer( c );
@@ -222,6 +329,36 @@ void client_stop( struct CLIENT* c ) {
    scaffold_assert( FALSE == ipc_connected( c->link ) );
    c->running = FALSE;
 
+#ifdef DEBUG
+
+   if( TRUE == client_is_local( c ) ) {
+      scaffold_assert( FALSE == c->running );
+
+      test_count = hashmap_count( &(c->channels) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->sprites) );
+      scaffold_assert( 0 == test_count );
+
+#ifdef USE_CHUNKS
+      test_count = hashmap_count( &(c->chunkers) );
+      scaffold_assert( 0 == test_count );
+#endif /* USE_CHUNKS */
+
+      test_count = vector_count( &(c->delayed_files) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->tilesets) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = hashmap_count( &(c->item_catalogs) );
+      scaffold_assert( 0 == test_count );
+
+      test_count = vector_count( &(c->unique_items) );
+      scaffold_assert( 0 == test_count );
+   }
+#endif // DEBUG
+
 cleanup:
    bdestroy( buffer );
    return;
@@ -234,6 +371,52 @@ short client_add_channel( struct CLIENT* c, struct CHANNEL* l ) {
    }
    return 0;
 }
+
+#ifdef USE_CHUNKS
+
+void client_send_file(
+   struct CLIENT* c, DATAFILE_TYPE type,
+   const bstring serverpath, const bstring filepath
+) {
+   struct CHUNKER* h = NULL;
+   BOOL valid_file;
+
+   scaffold_print_debug(
+      &module, "Sending file to client %p: %s\n", c, bdata( filepath )
+   );
+
+   /* Begin transmitting tilemap. */
+   h = mem_alloc( 1, struct CHUNKER );
+   scaffold_check_null( h );
+
+   valid_file = chunker_chunk_start_file(
+      h,
+      type,
+      serverpath,
+      filepath,
+      64
+   );
+
+   if( FALSE == valid_file ) {
+      scaffold_print_error(
+         &module, "Server: File not found, canceling: %b\n", filepath
+      );
+      proto_send_chunk( c, NULL, 0, filepath, NULL );
+   }
+
+   scaffold_print_debug(
+      &module, "Server: Adding chunker to send: %b\n", filepath
+   );
+   hashmap_put( &(c->chunkers), filepath, h, TRUE );
+
+cleanup:
+   if( NULL != h ) {
+      chunker_free( h );
+   }
+   return;
+}
+
+#endif /* USE_CHUNKS */
 
 void client_set_puppet( struct CLIENT* c, struct MOBILE* o ) {
    if( NULL != c->puppet ) { /* Take care of existing mob before anything. */
@@ -267,7 +450,185 @@ static void* client_dr_cb(
    return NULL;
 }
 
+#ifndef USE_CHUNKS
+
+static void client_request_file_local(
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
+) {
+   /* FIXME: No file receiving method implemented! */
+   BYTE* data = NULL;
+   SCAFFOLD_SIZE length;
+   bstring filepath = NULL;
+   SCAFFOLD_SIZE bytes_read;
+
+   filepath = files_root( filename );
+
+   scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
+
+   bytes_read = files_read_contents( filepath, &data, &length );
+   scaffold_assert( 0 < bytes_read );
+   scaffold_check_null_msg( data, "Unable to load resource data." );
+   scaffold_check_zero( bytes_read, "Resource is empty." );
+   datafile_handle_stream( type, filename, data, length, c );
+
+cleanup:
+   return;
+}
+
+#endif /* USE_CHUNKS */
+
+void client_request_file_later(
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
+) {
+   struct CLIENT_DELAYED_REQUEST* request = NULL;
+   SCAFFOLD_SIZE_SIGNED verr;
+
+   /* Make sure request wasn't made already. */
+   request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
+   if( NULL != request ) {
+      goto cleanup; /* Silently. */
+   }
+
+   /* Create a new delayed request. */
+   request = mem_alloc( 1, struct CLIENT_DELAYED_REQUEST );
+   scaffold_check_null( request );
+
+   request->filename = bstrcpy( filename );
+   request->type = type;
+
+   verr = vector_add( &(c->delayed_files), request );
+   scaffold_check_negative( verr );
+
+cleanup:
+   return;
+}
+
+void client_request_file(
+   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
+) {
+#ifdef USE_CHUNKS
+   struct CHUNKER* h = NULL;
+
+   hashmap_lock( &(c->chunkers), TRUE );
+
+   scaffold_check_null_msg( filename, "Request for file with null filename." );
+
+   if( FALSE != hashmap_contains_key_nolock( &(c->chunkers), filename ) ) {
+      /* File already requested, so just be patient. */
+      goto cleanup;
+   }
+
+   h = hashmap_get_nolock( &(c->chunkers), filename );
+   if( NULL == h ) {
+      /* Create a chunker and get it started, since one is not in progress. */
+      /* TODO: Verify cached file hash from server. */
+      h = mem_alloc( 1, struct CHUNKER );
+      chunker_unchunk_start(
+         h, type, filename, &str_client_cache_path
+      );
+      scaffold_print_debug(
+         &module, "Adding unchunker to receive: %s\n", bdata( filename )
+      );
+      hashmap_put_nolock( &(c->chunkers), filename, h, TRUE );
+      scaffold_check_nonzero( scaffold_error );
+
+      if( !chunker_unchunk_finished( h ) ) {
+         /* File not in cache. */
+         proto_request_file( c, filename, type );
+      }
+   }
+
+cleanup:
+   hashmap_lock( &(c->chunkers), FALSE );
+#else
+   /* FIXME: No file receiving method implemented! */
+   client_request_file_local( c, type, filename );
+
+cleanup:
+#endif /* USE_CHUNKS */
+   return;
+}
+
 #ifdef ENABLE_LOCAL_CLIENT
+
+#ifdef USE_CHUNKS
+
+void client_process_chunk( struct CLIENT* c, struct CHUNKER_PROGRESS* cp ) {
+   struct CHUNKER* h = NULL;
+   int8_t chunker_percent;
+   BOOL remove_ok;
+
+   scaffold_assert( 0 < blength( cp->filename ) );
+
+   if( cp->current > cp->total ) {
+      scaffold_print_error(
+         &module, "Invalid progress for %s.\n", bdata( cp->filename )
+      );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   h = hashmap_get( &(c->chunkers), cp->filename );
+   if( NULL == h ) {
+      scaffold_print_error(
+         &module,
+         "Client: Invalid data block received (I didn't ask for this?): %s\n",
+         bdata( cp->filename )
+      );
+      scaffold_error = SCAFFOLD_ERROR_MISC;
+      goto cleanup;
+   }
+
+   if( DATAFILE_TYPE_INVALID == cp->type ) {
+      scaffold_assert( NULL != h );
+      scaffold_print_debug(
+         &module, "Removing invalid chunker: %b\n", h->filename );
+      chunker_free( h );
+      remove_ok = hashmap_remove( &(c->chunkers), cp->filename );
+      scaffold_assert( TRUE == remove_ok );
+      goto cleanup;
+   }
+
+   scaffold_assert( 0 < blength( cp->data ) );
+
+   chunker_unchunk_pass( h, cp->data, cp->current, cp->total, cp->chunk_size );
+
+   chunker_percent = chunker_unchunk_percent_progress( h, FALSE );
+   if( 0 < chunker_percent ) {
+      scaffold_print_debug(
+         &module, "Chunker: %s: %d%%\n", bdata( h->filename ), chunker_percent );
+   }
+
+   if( chunker_unchunk_finished( h ) ) {
+      /* Cached file found, so abort transfer. */
+      if( chunker_unchunk_cached( h ) ) {
+         proto_abort_chunker( c, h );
+      }
+
+      client_handle_finished_chunker( c, h );
+   }
+
+cleanup:
+   return;
+}
+
+void client_handle_finished_chunker( struct CLIENT* c, struct CHUNKER* h ) {
+
+   assert( TRUE == chunker_unchunk_finished( h ) );
+
+   datafile_handle_stream( h->type, h->filename, h->raw_ptr, h->raw_length, c );
+
+/* cleanup: */
+   scaffold_print_debug(
+      &module,
+      "Client: Removing finished chunker for: %s\n", bdata( h->filename )
+   );
+   chunker_free( h );
+   hashmap_remove( &(c->chunkers), h->filename );
+   return;
+}
+
+#endif /* USE_CHUNKS */
 
 /** \brief
  * \param
@@ -284,6 +645,26 @@ BOOL client_poll_ui(
    if( NULL != c && NULL != c->puppet && NULL != c->puppet->channel ) {
       t = c->puppet->channel->tilemap;
    }
+
+#ifdef DEBUG_VM
+   /* Poll window: REPL */
+   if( NULL != ui_window_by_id( c->ui, &str_client_window_id_repl ) ) {
+      retval = TRUE; /* Whatever the window does, it consumes input. */
+      if( 0 != ui_poll_input(
+         c->ui, p, &str_client_window_id_repl
+      ) ) {
+         ui_window_pop( c->ui );
+         tilemap_set_redraw_state( t, TILEMAP_REDRAW_ALL );
+
+         /* Process collected input. */
+
+         proto_client_debug_vm( c, l, client_input_from_ui );
+
+         goto reset_buffer;
+      }
+      goto cleanup;
+   } else
+#endif /* DEBUG_VM */
 
    /* Poll window: Chat */
    if( NULL != ui_window_by_id( c->ui, &str_client_window_id_chat ) ) {
@@ -332,65 +713,6 @@ reset_buffer:
    return retval;
 }
 
-static void client_request_file_local(
-   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
-) {
-   /* FIXME: No file receiving method implemented! */
-   BYTE* data = NULL;
-   SCAFFOLD_SIZE length;
-   bstring filepath = NULL;
-   SCAFFOLD_SIZE bytes_read;
-
-   filepath = files_root( filename );
-
-   scaffold_print_debug( &module, "Loading local resource: %b\n", filepath );
-
-   bytes_read = files_read_contents( filepath, &data, &length );
-   scaffold_assert( 0 < bytes_read );
-   scaffold_check_null_msg( data, "Unable to load resource data." );
-   scaffold_check_zero( bytes_read, "Resource is empty." );
-   datafile_handle_stream( type, filename, data, length, c );
-
-cleanup:
-   return;
-}
-
-void client_request_file_later(
-   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
-) {
-   struct CLIENT_DELAYED_REQUEST* request = NULL;
-   SCAFFOLD_SIZE_SIGNED verr;
-
-   /* Make sure request wasn't made already. */
-   request = vector_iterate( &(c->delayed_files), client_dr_cb, filename );
-   if( NULL != request ) {
-      goto cleanup; /* Silently. */
-   }
-
-   /* Create a new delayed request. */
-   request = mem_alloc( 1, struct CLIENT_DELAYED_REQUEST );
-   scaffold_check_null( request );
-   scaffold_check_null( request );
-
-   request->filename = bstrcpy( filename );
-   request->type = type;
-
-   verr = vector_add( &(c->delayed_files), request );
-   scaffold_check_negative( verr );
-
-cleanup:
-   return;
-}
-
-void client_request_file(
-   struct CLIENT* c, DATAFILE_TYPE type, const bstring filename
-) {
-   /* FIXME: No file receiving method implemented! */
-   client_request_file_local( c, type, filename );
-
-cleanup:
-   return;
-}
 
 #endif /* ENABLE_LOCAL_CLIENT */
 

@@ -3,6 +3,7 @@
         "datafile.h": "c",
         "channel.h": "c",
         "hashmap.h": "c",
-        "random": "cpp"
+        "random": "cpp",
+        "hsdecode.h": "c"
     }
 }

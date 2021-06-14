@@ -9,8 +9,11 @@
                 "USE_CONNECT_DIALOG",
                 "USE_SDL_IMAGE",
                 "USE_COLORED_CONSOLE",
-                "DEBUG_FPS",
-                "ENABLE_LOCAL_CLIENT"
+                "ENABLE_LOCAL_CLIENT",
+                "USE_STDINT",
+                "USE_REF_INLINE",
+                "USE_FUNCTION",
+                "USE_SNPRINTF"
             ],
             "intelliSenseMode": "linux-gcc-x64",
             "compilerPath": "/usr/bin/gcc",

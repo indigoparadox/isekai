@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <limits.h>
 #include "bstrwrap.h"
+#include "../scaffold.h"
 
 #if defined(MEMORY_DEBUG) || defined(BSTRLIB_MEMORY_DEBUG)
 #include "memdbg.h"
@@ -381,7 +382,7 @@ const CBString CBString::operator + (const tagbstring& x) const {
 	return retval;
 }
 
-bool CBString::operator == (const CBString& b) const {
+BOOL CBString::operator == (const CBString& b) const {
 	int retval;
 	if (BSTR_ERR == (retval = biseq ((bstring)this, (bstring)&b))) {
 		bstringThrow ("Failure in compare (==)");
@@ -389,7 +390,7 @@ bool CBString::operator == (const CBString& b) const {
 	return retval > 0;
 }
 
-bool CBString::operator == (const char * s) const {
+BOOL CBString::operator == (const char * s) const {
 	int retval;
 	if (NULL == s) {
 		bstringThrow ("Failure in compare (== NULL)");
@@ -400,7 +401,7 @@ bool CBString::operator == (const char * s) const {
 	return retval > 0;
 }
 
-bool CBString::operator == (const unsigned char * s) const {
+BOOL CBString::operator == (const unsigned char * s) const {
 	int retval;
 	if (NULL == s) {
 		bstringThrow ("Failure in compare (== NULL)");
@@ -411,19 +412,19 @@ bool CBString::operator == (const unsigned char * s) const {
 	return retval > 0;
 }
 
-bool CBString::operator != (const CBString& b) const {
+BOOL CBString::operator != (const CBString& b) const {
 	return ! ((*this) == b);
 }
 
-bool CBString::operator != (const char * s) const {
+BOOL CBString::operator != (const char * s) const {
 	return ! ((*this) == s);
 }
 
-bool CBString::operator != (const unsigned char * s) const {
+BOOL CBString::operator != (const unsigned char * s) const {
 	return ! ((*this) == s);
 }
 
-bool CBString::operator < (const CBString& b) const {
+BOOL CBString::operator < (const CBString& b) const {
 	int retval;
 	if (SHRT_MIN == (retval = bstrcmp ((bstring) this, (bstring)&b))) {
 		bstringThrow ("Failure in compare (<)");
@@ -431,21 +432,21 @@ bool CBString::operator < (const CBString& b) const {
 	return retval < 0;
 }
 
-bool CBString::operator < (const char * s) const {
+BOOL CBString::operator < (const char * s) const {
 	if (s == NULL) {
 		bstringThrow ("Failure in compare (<)");
 	}
 	return strcmp ((const char *)this->data, s) < 0;
 }
 
-bool CBString::operator < (const unsigned char * s) const {
+BOOL CBString::operator < (const unsigned char * s) const {
 	if (s == NULL) {
 		bstringThrow ("Failure in compare (<)");
 	}
 	return strcmp ((const char *)this->data, (const char *)s) < 0;
 }
 
-bool CBString::operator <= (const CBString& b) const {
+BOOL CBString::operator <= (const CBString& b) const {
 	int retval;
 	if (SHRT_MIN == (retval = bstrcmp ((bstring) this, (bstring)&b))) {
 		bstringThrow ("Failure in compare (<=)");
@@ -453,41 +454,41 @@ bool CBString::operator <= (const CBString& b) const {
 	return retval <= 0;
 }
 
-bool CBString::operator <= (const char * s) const {
+BOOL CBString::operator <= (const char * s) const {
 	if (s == NULL) {
 		bstringThrow ("Failure in compare (<=)");
 	}
 	return strcmp ((const char *)this->data, s) <= 0;
 }
 
-bool CBString::operator <= (const unsigned char * s) const {
+BOOL CBString::operator <= (const unsigned char * s) const {
 	if (s == NULL) {
 		bstringThrow ("Failure in compare (<=)");
 	}
 	return strcmp ((const char *)this->data, (const char *)s) <= 0;
 }
 
-bool CBString::operator > (const CBString& b) const {
+BOOL CBString::operator > (const CBString& b) const {
 	return ! ((*this) <= b);
 }
 
-bool CBString::operator > (const char * s) const {
+BOOL CBString::operator > (const char * s) const {
 	return ! ((*this) <= s);
 }
 
-bool CBString::operator > (const unsigned char * s) const {
+BOOL CBString::operator > (const unsigned char * s) const {
 	return ! ((*this) <= s);
 }
 
-bool CBString::operator >= (const CBString& b) const {
+BOOL CBString::operator >= (const CBString& b) const {
 	return ! ((*this) < b);
 }
 
-bool CBString::operator >= (const char * s) const {
+BOOL CBString::operator >= (const char * s) const {
 	return ! ((*this) < s);
 }
 
-bool CBString::operator >= (const unsigned char * s) const {
+BOOL CBString::operator >= (const unsigned char * s) const {
 	return ! ((*this) < s);
 }
 

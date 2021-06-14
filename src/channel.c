@@ -21,10 +21,6 @@ static void channel_free_final( const struct REF *ref ) {
       l->name
    );
 
-   #ifdef USE_VM
-   vm_caddy_end( l->vm_caddy );
-   #endif /* USE_VM */
-
    /* These need to be freed first! */
    if( hashmap_is_valid( l->clients ) ) {
       scaffold_assert( 0 == hashmap_count( l->clients ) );
@@ -352,6 +348,12 @@ BOOL channel_is_loaded( struct CHANNEL* l ) {
    if( 0 >= tilesets_count ) {
       goto cleanup;
    }
+ 
+#ifdef USE_CHUNKS
+   if( 0 < hashmap_count( &(l->client_or_server->chunkers) ) ) {
+      goto cleanup;
+   }
+#endif /* USE_CHUNKS */
 
    if( 0 < vector_count( &(l->client_or_server->delayed_files) ) ) {
       goto cleanup;

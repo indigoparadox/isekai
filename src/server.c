@@ -179,9 +179,9 @@ struct CHANNEL* server_add_channel( struct SERVER* s, bstring l_name, struct CLI
          &module, "Unable to add %b to channel %b on server.\n",
          c_first->nick, l->name
       );
-      scaffold_assert( NULL != l->error );
+      assert( NULL != l->error );
    }
-   scaffold_assert( c_first->refcount.count > old_count );
+   assert( c_first->refcount.count > old_count );
 //#endif /* DEBUG */
 
 cleanup:
@@ -357,6 +357,13 @@ BOOL server_service_clients( struct SERVER* s ) {
       );
       server_drop_client( s, c_stop->nick );
    }
+
+#ifdef USE_CHUNKS
+
+   /* Send files in progress. */
+   hashmap_iterate( &(s->clients), callback_proc_chunkers, s );
+
+#endif /* USE_CHUNKS */
 
    /* Spawn NPC mobiles. */
    hashmap_iterate( &(s->self.channels), callback_proc_server_spawners, s );

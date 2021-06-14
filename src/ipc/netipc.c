@@ -11,14 +11,6 @@
 #define IPC_C
 #include "../ipc.h"
 
-#ifdef USE_MBED_TLS
-#include "mbedtls/net_sockets.h"
-#include "mbedtls/ssl.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/debug.h"
-#endif /* USE_MBED_TLS */
-
 #ifdef _GNU_SOURCE
 #include <unistd.h>
 #endif /* _GNU_SOURCE */
@@ -30,13 +22,13 @@
 #include <string.h>
 #ifndef _WIN32
 #include <netdb.h>
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 
 #ifdef USE_MBED_TLS
 mbedtls_entropy_context entropy;

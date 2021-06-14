@@ -103,7 +103,7 @@ void backlog_speak( const bstring nick, const bstring msg ) {
    line->line = bstrcpy( msg );
 
    #ifdef USE_CLOCK
-   ( line );
+   backlog_timestamp( line );
    #endif /* USE_CLOCK */
    verr = vector_insert( &global_backlog, 0, line );
    if( 0 > verr ) {

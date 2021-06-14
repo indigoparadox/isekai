@@ -14,17 +14,14 @@ set(ISEKAI_LIBS)
 set(ISEKAI_INCLUDES)
 
 set(ISEKAI_DEFINES
-   DEBUG
    USE_COLORED_CONSOLE
+   USE_EZXML
    ENABLE_LOCAL_CLIENT)
 
-set(ISEKAI_C_FILES src/animate.c src/backlog.c src/bstrglue.c src/bstrlib/bstraux.c src/bstrlib/bstrlib.c src/bstrlib/buniutil.c src/bstrlib/utf8util.c src/callback.c src/channel.c src/client.c src/datafile.c src/datafile/xml.c src/ezxml.c src/files.c src/graphics.c src/hashmap.c src/htmlrend.c src/htmtree.c src/item.c src/main.c src/mem.c src/mobile.c src/mode.c src/mode/local2d.c src/mode/localiso.c src/mode/localray.c src/rng.c src/savestat.c src/savestat/s_bindmp.c src/savestat/s_sqlite.c src/scaffold.c src/server.c src/tilemap.c src/twindow.c src/vector.c)
+set(ISEKAI_C_FILES src/animate.c src/backlog.c src/bstrglue.c src/bstrlib/bstraux.c src/bstrlib/bstrlib.c src/bstrlib/buniutil.c src/bstrlib/utf8util.c src/callback.c src/channel.c src/datafile.c src/datafile/xml.c src/ezxml.c src/files.c src/graphics.c src/hashmap.c src/htmlrend.c src/htmtree.c src/item.c src/main.c src/mem.c src/mobile.c src/mode.c src/mode/local2d.c src/mode/localiso.c src/mode/localray.c src/rng.c src/savestat.c src/savestat/s_bindmp.c src/savestat/s_sqlite.c src/scaffold.c src/server.c src/tilemap.c src/twindow.c src/vector.c src/client.c)
 
-if(IPC_API MATCHES "NET")
-   list(APPEND ISEKAI_DEFINES USE_NETWORK USE_CONNECT_DIALOG USE_RANDOM_PORT)
-   list(APPEND ISEKAI_C_FILES src/ipc/netipc.c src/proto/irc.c)
-else()
-   list(APPEND ISEKAI_C_FILES src/ipc/shmipc.c src/proto/shmp.c)
+if(CMAKE_BUILD_TYPE MATCHES "DEBUG")
+   list(APPEND ISEKAI_DEFINES DEBUG DEBUG_TILES)
 endif()
 
 if(GFX_API MATCHES "SDL")
@@ -39,6 +36,16 @@ if(GFX_API MATCHES "SDL")
    list(APPEND ISEKAI_INCLUDES ${SDL_INCLUDE_DIRS} ${SDL_IMAGE_INCLUDE_DIR})
 else()
    list(APPEND ISEKAI_C_FILES src/graphics/nullg.c src/input/nulli.c src/ui/nullu.c)
+endif()
+
+if(IPC_API MATCHES "NET")
+   list(APPEND ISEKAI_DEFINES USE_NETWORK USE_RANDOM_PORT USE_CHUNKS USE_FILE_CACHE HEATSHRINK_DYNAMIC_ALLOC)
+   if(GFX_API MATCHES "SDL")
+      list(APPEND ISEKAI_DEFINES USE_CONNECT_DIALOG)
+   endif()
+   list(APPEND ISEKAI_C_FILES src/ipc/netipc.c src/proto/irc.c src/hs/hsencode.c src/hs/hsdecode.c src/chunker.c src/b64.c)
+else()
+   list(APPEND ISEKAI_C_FILES src/ipc/shmipc.c src/proto/shmp.c)
 endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
