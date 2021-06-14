@@ -40,3 +40,6 @@ storage.db
 ValgrindOut.xml
 obj
 src/obj
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt

@@ -1,0 +1,15 @@
+[submodule "libs/libvcol"]
+	path = libs/libvcol
+	url = https://github.com/indigoparadox/libvcol
+[submodule "libs/camgraph"]
+	path = libs/camgraph
+	url = https://github.com/indigoparadox/camgraph
+[submodule "libs/libtwin"]
+	path = libs/libtwin
+	url = https://github.com/indigoparadox/libtwin
+[submodule "libs/camin"]
+	path = libs/camin
+	url = https://github.com/indigoparadox/camin
+[submodule "libs/libgoki"]
+	path = libs/libgoki
+	url = https://github.com/indigoparadox/libgoki
