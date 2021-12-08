@@ -1,4 +1,7 @@
 
+NOTICE: This engine was a youthful experiment and is marked with a degree of impulsivity and, as a result, technical debt that makes it... not much fun. It's also probably super-broken.
+
+I recommend https://github.com/indigoparadox/dsekai instead.
 
 === Mode Plugins ===
 
